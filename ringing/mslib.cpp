@@ -35,7 +35,7 @@
 
 RINGING_START_NAMESPACE
 
-class mslib::entry_type : public library_entry
+class mslib::entry_type : public library_entry::impl
 {
   // The public interface
   virtual string name() const;
@@ -48,7 +48,7 @@ class mslib::entry_type : public library_entry
   entry_type();
   virtual ~entry_type() { };
   virtual bool readentry( ifstream &ifs );
-  virtual library_entry *clone() const { return new entry_type(*this); }
+  virtual library_entry::impl *clone() const { return new entry_type(*this); }
 
   // The current line
   string linebuf;

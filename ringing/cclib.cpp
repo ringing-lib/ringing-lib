@@ -42,7 +42,7 @@
 RINGING_START_NAMESPACE
 
 // A class representing an entry in the collection
-class cclib::entry_type : public library_entry
+class cclib::entry_type : public library_entry::impl
 {
   // The public interface
   virtual string name() const;
@@ -57,7 +57,7 @@ class cclib::entry_type : public library_entry
   void parse_header();
   void parse_title();
   virtual bool readentry( ifstream &ifs );
-  virtual library_entry *clone() const { return new entry_type(*this); }
+  virtual library_entry::impl *clone() const { return new entry_type(*this); }
 
   // The current line
   string linebuf;

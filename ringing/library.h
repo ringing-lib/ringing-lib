@@ -1,5 +1,6 @@
 // -*- C++ -*- library.h - Things for method libraries
-// Copyright (C) 2001 Martin Bright <martin@boojum.org.uk>
+// Copyright (C) 2001, 2002 Martin Bright <martin@boojum.org.uk>
+// and Richard Smith <richard@ex-parrot.com>.
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -66,7 +67,7 @@ public:
   virtual bool remove(const string& name)
     { return false; }
 
-
+  // Library status
   virtual bool good (void) const	// Is it in a usable state?
     { return false; }
   virtual bool writeable(void) const // Is it writeable?
@@ -94,13 +95,34 @@ RINGING_EXPLICIT_RINGING_TEMPLATE cloning_pointer<library_entry>;
 // library_entry : A base class for entries from libraries
 class RINGING_API library_entry {
 public:
-  virtual string name() const = 0;
-  virtual string base_name() const = 0;
-  virtual string pn() const = 0;
-  virtual int bells() const = 0;
+  library_entry() {}
 
-  virtual library_entry *clone() const = 0;
-  virtual bool readentry( ifstream &ifs ) = 0;
+  // Library implementations should subclass this
+  class RINGING_API impl
+  {
+  public:
+    virtual ~impl() {}
+    virtual impl *clone() const = 0;
+
+    virtual string name() const = 0;
+    virtual string base_name() const = 0;
+    virtual string pn() const = 0;
+    virtual int bells() const = 0;
+    
+    virtual bool readentry( ifstream &ifs ) = 0;
+  };
+
+  // Public accessor functions
+  string name() const      { return pimpl->name(); }
+  string base_name() const { return pimpl->base_name(); }
+  string pn() const        { return pimpl->pn(); }
+  int bells() const        { return pimpl->bells(); }
+
+private:
+  friend class library_base::const_iterator;
+  library_entry( impl *pimpl ) : pimpl(pimpl) {}
+
+  cow_pointer< impl > pimpl;
 };
 
 class RINGING_API library_base::const_iterator
@@ -114,8 +136,8 @@ public:
   typedef const value_type *pointer;
 
   // Construction
-  const_iterator( ifstream *ifs = NULL, library_entry *val = NULL ) 
-    : ifs(ifs), val(val), ok( ifs && val && val->readentry( *ifs ) ) 
+  const_iterator( ifstream *ifs = NULL, library_entry::impl *val = NULL ) 
+    : ifs(ifs), val(val), ok( ifs && val && val->readentry(*ifs) ) 
   {}
 
   // Equality Comparable requirements
@@ -125,19 +147,19 @@ public:
     { return !operator==( i ); }
 
   // Trivial Iterator requirements
-  reference operator*() { return *val; }
-  pointer operator->() { return &*val; }
+  value_type operator*() const { return val; }
+  pointer operator->() const { return &val; }
 
   // Input Iterator requirements
   const_iterator &operator++() 
-    { ok = val->readentry( *ifs ); return *this; }
+    { ok = val.pimpl->readentry( *ifs ); return *this; }
   const_iterator operator++(int) 
     { const_iterator tmp(*this); ++*this; return tmp; }
 
 private:
   // Data members
   ifstream *ifs;
-  cloning_pointer< library_entry > val;
+  library_entry val;
   bool ok;
 };
 
