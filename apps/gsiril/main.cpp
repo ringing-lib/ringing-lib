@@ -94,6 +94,7 @@ public:
   
   virtual bool process( const string&, const arg_parser& ) const {
     args.set_msiril_compatible();
+    return true;
   }
 
 private:
