@@ -26,9 +26,11 @@
 #if RINGING_OLD_INCLUDES
 #include <iostream.h>
 #include <iomanip.h>
+#include <set.h>
 #else
 #include <iostream>
 #include <iomanip>
+#include <set>
 #endif
 #if RINGING_OLD_C_INCLUDES
 #include <assert.h>
@@ -42,12 +44,66 @@ RINGING_START_NAMESPACE
 
 RINGING_USING_STD
 
+RINGING_START_ANON_NAMESPACE
+
+class group
+{
+public:
+  group( const vector<row> &generators );
+  group( const row& gen1, const row& gen2 );
+
+  typedef set<row>::const_iterator const_iterator;
+  const_iterator begin() const { return s.begin(); }
+  const_iterator end()   const { return s.end();   }
+  size_t         size()  const { return s.size();  }
+
+private:
+  void generate_recursive( const row& r, const vector<row>& generators );
+
+  set<row> s;
+};
+
+void group::generate_recursive( const row& r, 
+				const vector<row>& generators )
+{
+  for ( vector<row>::const_iterator 
+	  i( generators.begin() ), e( generators.end() );
+	i != e;  ++i )
+    {
+      const row r2( r * *i );
+      if ( s.insert( r2 ).second )
+	generate_recursive( r2, generators );
+    }
+}
+
+group::group( const vector<row> &gens )
+{
+  set< row > group;
+  size_t b(0); // Number of bells
+
+  for ( vector<row>::const_iterator i( gens.begin() ), e( gens.end() );
+	i != e;  ++i )
+    if ( i->bells() > b ) 
+      b = i->bells();
+
+  generate_recursive( row(b), gens );
+}
+
+group::group( const row& gen1, const row& gen2 )
+{
+  vector<row> gens; gens.reserve(2);
+  gens.push_back(gen1);  gens.push_back(gen2);
+  size_t b( gen1.bells() > gen2.bells() ? gen1.bells() : gen2.bells() );
+  generate_recursive( row(b), gens );
+}
+
+RINGING_END_ANON_NAMESPACE
 
 void multtab::swap( multtab &other )
 {
-  partend.swap( other.partend );
   rows.swap( other.rows );
   table.swap( other.table );
+  pends.swap( other.pends );
   RINGING_PREFIX_STD swap( colcount, other.colcount );
 }
 
@@ -57,29 +113,42 @@ multtab &multtab::operator=( const multtab &other )
   return *this;
 }
 
-bool multtab::is_representative( const row &r )
+bool multtab::is_representative( const row& r ) const
 {
-  for ( row x( partend * r ); x != r; x = partend * x )
-    if ( x < r )
-      return false;
+  for ( vector<row>::const_iterator i( pends.begin() ), e( pends.end() ); 
+	i != e; ++i )
+    {
+      row x( *i * r );
+      if ( x < r )
+	return false;
+    }
 
   return true;
 }
 
-row multtab::make_representative( const row &r )
+row multtab::make_representative( const row& r ) const
 {
   row res(r);
 
-  for ( row x( partend * r ); x != r; x = partend * x )
-    if ( x < res )
-      res = x;
+  for ( vector<row>::const_iterator i( pends.begin() ), e( pends.end() ); 
+	i != e; ++i )
+    {
+      row x( *i * r );
+      if ( x < res ) res = x;
+    }
 
   return res;
 }
 
-void multtab::init( const vector< row > &r )
+void multtab::init( const vector< row >& r, 
+		    const row& partend1, const row& partend2 )
 {
-  rows.reserve( r.size() / partend.order() );
+  {
+    group g( partend1, partend2 );
+    copy( g.begin(), g.end(), back_inserter(pends) );
+  }
+
+  rows.reserve( r.size() / pends.size() );
 
   for ( vector<row>::const_iterator i( r.begin() ), e( r.end() ); i != e; ++i )
     if ( is_representative( *i ) )
@@ -103,16 +172,24 @@ void multtab::dump( ostream &os ) const
     }
 
   os << endl;
+
+  os << "Part ends: { ";
+  copy( pends.begin(), pends.end(), ostream_iterator<row>(os, " ") );
+  os << "}" << endl;
 }
 
 multtab::pre_col_t 
 multtab::compute_pre_mult( const row &r )
 {
-  // This only makes sense if r commutes with the partend
-  if ( r * partend != partend * r )
-    throw logic_error
-      ( "Attempted to add a precomputed premultiplication to the "
-	"multiplication table that does not commute with the part end." );
+  // This only makes sense if r commutes with the partends
+  {
+    for ( vector<row>::const_iterator i( pends.begin() ), e( pends.end() ); 
+	  i != e; ++i )
+      if ( r * *i != *i * r )
+	throw logic_error
+	  ( "Attempted to add a precomputed premultiplication to the "
+	    "multiplication table that does not commute with the part ends" );
+  }
 
   size_t i(0);
   for ( vector< row >::const_iterator ri( rows.begin() );
@@ -138,7 +215,7 @@ multtab::compute_post_mult( const row &r )
 }
 
 multtab::row_t 
-multtab::find( const row &r )
+multtab::find( const row &r ) const
 {
   row r2( make_representative( r ) );
 
@@ -148,6 +225,11 @@ multtab::find( const row &r )
 
   assert( false );
   return row_t();
+}
+
+row multtab::find( const multtab::row_t &r ) const
+{
+  return rows[r.n];
 }
 
 RINGING_END_NAMESPACE
