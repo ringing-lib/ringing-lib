@@ -1,5 +1,5 @@
 // expression.cpp - Nodes and factory function for expressions
-// Copyright (C) 2002 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -154,6 +154,36 @@ private:
   vector< change > changes;
 };
 
+class transp_node : public expression::node
+{
+public:
+  transp_node( int bells, const string &r )
+    : transp(bells)
+  {
+    if ( bells == -1 )
+      throw runtime_error( "Must set number of bells before using "
+			   "transpostions" );
+    
+    transp *= r;
+    if ( transp.bells() != bells )
+      throw runtime_error( "Transposition is on the wrong number of bells" );
+  }
+
+protected:
+  virtual void debug_print( ostream &os ) const
+  {
+    os << "'" << transp << "'";
+  }
+
+  virtual void execute( execution_context &ctx )
+  {
+    ctx.permute_and_prove()( transp );
+  }
+
+private:
+  row transp;
+};
+
 class symbol_node : public expression::node
 {
 public:
@@ -260,6 +290,9 @@ expression::make_expr( const parser &p,
 
     case token_type::pn_lit:
       return shared_node_t( new pn_node( p.bells(), first->second ) );
+
+    case token_type::transp_lit:
+      return shared_node_t( new transp_node( p.bells(), first->second ) );
 
     default:
       throw runtime_error( "Unknown token in input" );

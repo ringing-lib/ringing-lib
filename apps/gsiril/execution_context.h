@@ -1,5 +1,5 @@
 // -*- C++ -*- execution_context.h - Environment to evaluate expressions
-// Copyright (C) 2002 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -55,6 +55,7 @@ public:
     typedef bool result_type;
   
     bool operator()( const change &c );
+    bool operator()( const row    &c );
 
   private:
     friend class execution_context;

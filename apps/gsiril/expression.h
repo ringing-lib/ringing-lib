@@ -1,5 +1,5 @@
 // -*- C++ -*- expression.h - Nodes and factory function for expressions
-// Copyright (C) 2002 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -56,7 +56,8 @@ struct token_type
     string_lit,
     pn_lit,
     num_lit,
-    name
+    name,
+    transp_lit
   };
 };
 

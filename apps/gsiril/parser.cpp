@@ -1,5 +1,5 @@
 // parser.cpp - Tokenise and parse lines of input
-// Copyright (C) 2002 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -46,18 +46,18 @@ RINGING_USING_NAMESPACE
 
 RINGING_START_ANON_NAMESPACE
 
-void strip_comment( string &line, bool quoted )
+void strip_comment( string &line, char quote_state )
 {
   // Note:  This function does not use string::iterators due to
-  // an optimiser in gcc-3.1 which previously caused a segfault here. 
+  // an optimiser bug in gcc-3.1 which previously caused a segfault here. 
   for ( const char *i = line.data(), *e = line.data() + line.size(); 
 	i != e; ++i )
     {
-      if ( *i == '"' )
-	{
-	  quoted = !quoted;
-	}
-      else if ( !quoted && *i == '/' )
+      if ( !quote_state && (*i == '"' || *i == '\'') )
+	quote_state = *i;
+      else if ( quote_state && *i == quote_state )
+	quote_state = '\0';
+      else if ( !quote_state && *i == '/' )
 	{
 	  line.erase(i - line.data());
 	  break;
@@ -66,55 +66,65 @@ void strip_comment( string &line, bool quoted )
   return;
 }
 
-bool unmatched_quotes( const string &str )
+bool unmatched_quotes( const string &str, char &quote_state )
 {
-  bool quoted = false;
+  //bool quoted = false;
 
   for ( string::const_iterator i( str.begin() ), e( str.end() ); i != e; ++i )
-    if ( *i == '"' )
-      quoted = !quoted;
+    if ( !quote_state && (*i == '"' || *i == '\'') )
+      quote_state = *i;
+    else if ( quote_state && *i == quote_state )
+      quote_state = '\0';
 
-  return quoted;
+  return quote_state;
 }
 
-void trim_whitespace( string &line, bool quoted )
+void trim_whitespace( string &line, char quote_state )
 {
-  if ( !quoted ) 
+  if ( !quote_state ) 
     trim_leading_whitespace( line );
 
-  if ( !quoted ^ unmatched_quotes(line) && line.size() ) 
+  if ( !unmatched_quotes(line, quote_state) && line.size() ) 
     trim_trailing_whitespace( line );
 }
 
-void make_lowercase( string &line, bool quoted )
+void make_lowercase( string &line, char quote_state )
 {
   for ( string::iterator i( line.begin() ), e( line.end() ); i != e; ++i )
-    if ( *i == '"' )
-      quoted = !quoted;
-    else if ( !quoted )
+    if ( !quote_state && (*i == '"' || *i == '\'') )
+      quote_state = *i;
+    else if ( quote_state && *i == quote_state )
+      quote_state = '\0';
+    else if ( !quote_state )
       *i = tolower(*i);
 }
 
-string read_line(istream &in, bool quoted = false )
+string read_line(istream &in, char &quote_state )
 {
   string line;
   getline( in, line );
-  strip_comment( line, quoted );
-  trim_whitespace( line, quoted );
-  make_lowercase( line, quoted );
+
+  strip_comment( line, quote_state );
+  trim_whitespace( line, quote_state );
+  make_lowercase( line, quote_state );
+
+  // This one updates quote_state, the previous ones did not
+  unmatched_quotes( line, quote_state );
+
+  if ( quote_state ) line += "\n";
+
   return line;
 }
 
 string read_command(istream &in)
 {
-  string cmd = read_line(in);
-  bool quoted = unmatched_quotes( cmd );
+  char quote_state = '\0';
+  string cmd = read_line( in, quote_state );
 
-  while ( quoted || cmd.size() && cmd[cmd.size()-1] == ',' )
+  while ( quote_state || cmd.size() && cmd[cmd.size()-1] == ',' )
     {
-      string line = read_line(in, quoted);
-      if (quoted) cmd += "\n";
-      quoted ^= unmatched_quotes(line);
+      string line = read_line( in, quote_state );
+      ///if (quote_state) cmd += "\n"; // Replace the new line
       cmd += line;
     }
 
@@ -180,6 +190,17 @@ tokenise_command( const string &input )
 	    if ( j == e ) 
 	      throw runtime_error( "Unterminated string literal" );
 	    tokens.push_back( token( token_type::string_lit, string(i, j) ) );
+	    i = ++j;
+	  }
+	  break;
+
+	case '\'':
+	  {
+	    ++i;
+	    string::const_iterator j = find( i, e, '\'' );
+	    if ( j == e ) 
+	      throw runtime_error( "Unterminated transposition literal" );
+	    tokens.push_back( token( token_type::transp_lit, string(i, j) ) );
 	    i = ++j;
 	  }
 	  break;

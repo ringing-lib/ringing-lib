@@ -1,5 +1,5 @@
 // execution_context.cpp - Environment to evaluate expressions
-// Copyright (C) 2002 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -30,10 +30,23 @@
 RINGING_USING_NAMESPACE
 
 execution_context::execution_context( const parser &pa, ostream &os ) 
-  : pa(pa), os(os), r(pa.bells())
-{}
+  : pa(pa), os(os)
+{
+  if ( pa.bells() == -1 )
+    throw runtime_error( "Must set number of bells before proving" ); 
+  r = row(pa.bells());
+}
 
 bool execution_context::permute_and_prove_t::operator()( const change &c )
+{
+  bool rv = p.add_row( r *= c ); 
+  ex.execute_symbol("everyrow");
+  if ( r.isrounds() ) ex.execute_symbol("rounds");
+  if ( !rv ) ex.execute_symbol("conflict");
+  return rv;
+}
+
+bool execution_context::permute_and_prove_t::operator()( const row &c )
 {
   bool rv = p.add_row( r *= c ); 
   ex.execute_symbol("everyrow");
