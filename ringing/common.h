@@ -25,12 +25,12 @@
 // that both parties refuse to believe in the existance of the other), and
 // some Unix-like wrapper such as MinGW or Cygwin is needed in which to run
 // the Autotools.  This 
-#include "common-msvc.h"
+#include <ringing/common-msvc.h>
 #else
-#include "common-am.h"
+#include <ringing/common-am.h>
 #endif
 
-#include "macros.h"
+#include <ringing/macros.h>
 
 #undef RINGING_INSIDE_COMMON_H
 #endif // RINGING_COMMON_H
