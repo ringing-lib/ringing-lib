@@ -1,3 +1,7 @@
+Version 0.2.3 (9 October 2001):
+  Fixed a few more bugs.
+  Improvements to C++ style and fixes of compiler problems.
+
 Version 0.2.2 (27 September 2001):
   Fixed lots of Windows compilation problems.
   Renamed all .cc files to .cpp files.

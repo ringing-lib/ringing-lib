@@ -61,6 +61,8 @@ public:
   drawline_ps();
   bool operator<(const drawline_ps&) const;
   bool operator==(const drawline_ps&) const;
+  bool operator>(const drawline_ps&) const;
+  drawline_ps& operator=(const drawline_ps&);
 };
 
 class printrow_ps : public printrow::base {

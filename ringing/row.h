@@ -255,6 +255,7 @@ public:
 RINGING_END_NAMESPACE
 
 // specialise std::swap
+#if RINGING_USE_STD
 #if RINGING_USE_NAMESPACES
 namespace std 
 {
@@ -263,10 +264,24 @@ namespace std
     { a.swap(b); }
 }
 #else
+namespace std 
+{
+  template <> inline 
+  void swap<row>(row &a, row &b)
+    { a.swap(b); }
+}
+#endif // RINGING_USE_NAMESPACES
+#else
+#if RINGING_USE_NAMESPACES
+template <> inline
+void swap<ringing::row>(ringing::row& a, ringing::row& b)
+  { a.swap(b); }
+#else
 template <> inline 
 void swap<row>(row &a, row &b)
   { a.swap(b); }
-#endif
+#endif // RINGING_USE_NAMESPACES
+#endif // RINGING_USE_STD
 
 #endif
 
