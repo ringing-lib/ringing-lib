@@ -1,5 +1,5 @@
 // -*- C++ -*- row-tests.cc - Tests for the bell and change classes 
-// Copyright (C) 2002 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -235,6 +235,31 @@ void test_row_pblh(void)
   RINGING_TEST( row::pblh(6,2)  == row("124635") );
   RINGING_TEST( row::pblh(7,2)  == row("1246375") );
   RINGING_TEST( row::pblh(9,5)  == row("123457968") );
+}
+
+void test_row_cyclic(void)
+{
+  RINGING_TEST( row::cyclic(0) == row() );
+  RINGING_TEST( row::cyclic(1) == row("1") );
+  RINGING_TEST( row::cyclic(2) == row("12") );
+  RINGING_TEST( row::cyclic(3) == row("132") );
+  RINGING_TEST( row::cyclic(5) == row("13452") );
+  RINGING_TEST( row::cyclic(8) == row("13456782") );
+
+  RINGING_TEST( row::cyclic(3,0) == row("231") );
+  RINGING_TEST( row::cyclic(3,2) == row("123") );
+  RINGING_TEST( row::cyclic(3,3) == row("123") );
+  RINGING_TEST( row::cyclic(3,9) == row("123") ); // or error ???
+  RINGING_TEST( row::cyclic(8,0) == row("23456781") );
+  RINGING_TEST( row::cyclic(8,2) == row("12456783") );
+  RINGING_TEST( row::cyclic(9,2) == row("124567893") );
+
+  RINGING_TEST( row::cyclic(8,1,-1) == row("18234567") );
+  RINGING_TEST( row::cyclic(8,1,0)  == row("12345678") );
+  RINGING_TEST( row::cyclic(8,1,2)  == row("14567823") );
+  RINGING_TEST( row::cyclic(8,1,5)  == row("17823456") );
+  RINGING_TEST( row::cyclic(8,1,7)  == row("12345678") );
+  RINGING_TEST( row::cyclic(8,1,13) == row("18234567") );
 }
 
 void test_row_isrounds(void)
@@ -525,6 +550,7 @@ RINGING_START_TEST_FILE( row )
   RINGING_REGISTER_TEST( test_row_rounds )
   RINGING_REGISTER_TEST( test_row_named_rows )
   RINGING_REGISTER_TEST( test_row_pblh )
+  RINGING_REGISTER_TEST( test_row_cyclic )
   RINGING_REGISTER_TEST( test_row_isrounds )
   RINGING_REGISTER_TEST( test_row_ispblh )
   RINGING_REGISTER_TEST( test_row_sign )
