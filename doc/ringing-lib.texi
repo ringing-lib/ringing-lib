@@ -1345,12 +1345,12 @@ This section describes how to open and read method libraries.
 
 @menu
 * Initialisation for libraries::  
-* Facets::                      
 * The library class::           
 * The library_entry class::     
+* Facets::                      
 @end menu
 
-@node Initialisation for libraries, Facets, Using libraries, Using libraries
+@node Initialisation for libraries, The library class, Using libraries, Using libraries
 @subsection Initialisation
 
 Before the auto-detection of libraries will work, the @code{library}
@@ -1373,89 +1373,7 @@ cclib::registerlib();
 The order in which library types are registered is the order in which
 they will be tried when opening a library.
 
-@node Facets, The library class, Initialisation for libraries, Using libraries
-@subsection Facets
-@cindex facets
-
-In addition to usual information such as name, stage and place notation,
-some method collections contain further information.  For example, the
-Central Council method collections contain the date and place of the
-first peal in each method.  To give access to such information, the
-Ringing Class Library has a fully typed system of method @dfn{facets}.
-
-A facet is something which has a C++ type, and which may or may not be
-part of an entry in a method library.  A few facets are declared as
-standard; library types are free to declare new facets of their own.
-
-For example, one of the standard facets is called @code{rw_ref} and is
-of type @code{string}.  The facet is intended to contain a string citing
-the method's appearance in the @cite{Ringing World}.  The following code
-checks to see whether the first entry in the library @code{l} contains
-this information, and if so prints it.
-
-@example
-library::iterator i = l.begin();
-if( i->has_facet< rw_ref >() )
-  cout << i->get_facet< rw_ref >();
-@end example
-
-For more information on these functions, see @ref{The library_entry class}.
-
-@menu
-* Built-in facets::             
-@end menu
-
-@node Built-in facets,  , Facets, Facets
-@subsubsection Built-in facets
-
-Some facets are declared in @file{ringing/peal.h}.  These facets are
-available in some of the built-in library types.
-
-@table @code
-@item rw_ref
-This facet, of type @code{string}, contains a reference to the method's
-appearance in the @cite{Ringing World}.
-
-@item first_tower_peal
-This facet, of type @code{peal}, contains the date and place of the
-first tower bell peal in the method.
-
-@item first_hand_peal
-This facet, of type @code{peal}, contains the date and place of the
-first handbell peal in the method.
-@end table
-
-The last two are of type @code{peal}, which is a class also declared in
-@file{ringing/peal.h}.  It is a very simple class and defines the
-following functions.
-
-@deftypefn Constructor {} peal (void);
-@deftypefnx Constructor {} peal (const peal::date& @var{DATE}, const string& @var{PLACE});
-These functions construct objects in the obvious way.
-@end deftypefn
-
-@deftypefun {peal::date const&} peal::when (void);
-This function returns the date of the peal.
-@end deftypefun
-
-@deftypefun {string const&} peal::where (void);
-This function returns the location of the peal.
-@end deftypefun
-
-The @code{peal::date} type is also very simple.
-
-@example
-struct peal::date @{
-  int day, month, year;
-@};
-@end example
-
-@deftypefn Constructor {} peal::date (void);
-@deftypefnx Constructor {} peal::date (int @var{DAY}, int @var{MONTH}, int @var{YEAR});
-These functions construct objects in the obvious way.
-@end deftypefn
-
-@node The library class, The library_entry class, Facets, Using libraries
+@node The library class, The library_entry class, Initialisation for libraries, Using libraries
 @subsection The @code{library} class
 @cindex @code{library} class
 
@@ -1571,7 +1489,7 @@ This function loads all the methods in the library and returns them as a
 list.
 @end deftypefun
 
-@node The library_entry class,  , The library class, Using libraries
+@node The library_entry class, Facets, The library class, Using libraries
 @subsection The @code{library_entry} class
 @cindex @code{library_entry} class
 
@@ -1630,12 +1548,95 @@ instantiation.
 For more information on facets and an example of how these functions are
 used, see @ref{Facets}.
 
+@node Facets,  , The library_entry class, Using libraries
+@subsection Facets
+@cindex facets
+
+In addition to usual information such as name, stage and place notation,
+some method collections contain further information.  For example, the
+Central Council method collections contain the date and place of the
+first peal in each method.  To give access to such information, the
+Ringing Class Library has a fully typed system of method @dfn{facets}.
+
+A facet is something which has a C++ type, and which may or may not be
+part of an entry in a method library.  A few facets are declared as
+standard; library types are free to declare new facets of their own.
+
+For example, one of the standard facets is called @code{rw_ref} and is
+of type @code{string}.  The facet is intended to contain a string citing
+the method's appearance in the @cite{Ringing World}.  The following code
+checks to see whether the first entry in the library @code{l} contains
+this information, and if so prints it.
+
+@example
+library::iterator i = l.begin();
+if( i->has_facet< rw_ref >() )
+  cout << i->get_facet< rw_ref >();
+@end example
+
+For more information on these functions, see @ref{The library_entry class}.
+
+@menu
+* Built-in facets::             
+@end menu
+
+@node Built-in facets,  , Facets, Facets
+@subsubsection Built-in facets
+
+Some facets are declared in @file{ringing/peal.h}.  These facets are
+available in some of the built-in library types.
+
+@table @code
+@item rw_ref
+This facet, of type @code{string}, contains a reference to the method's
+appearance in the @cite{Ringing World}.
+
+@item first_tower_peal
+This facet, of type @code{peal}, contains the date and place of the
+first tower bell peal in the method.
+
+@item first_hand_peal
+This facet, of type @code{peal}, contains the date and place of the
+first handbell peal in the method.
+@end table
+
+The last two are of type @code{peal}, which is a class also declared in
+@file{ringing/peal.h}.  It is a very simple class and defines the
+following functions.
+
+@deftypefn Constructor {} peal (void);
+@deftypefnx Constructor {} peal (const peal::date& @var{DATE}, const string& @var{PLACE});
+These functions construct objects in the obvious way.
+@end deftypefn
+
+@deftypefun {peal::date const&} peal::when (void);
+This function returns the date of the peal.
+@end deftypefun
+
+@deftypefun {string const&} peal::where (void);
+This function returns the location of the peal.
+@end deftypefun
+
+The @code{peal::date} type is also very simple.
+
+@example
+struct peal::date @{
+  int day, month, year;
+@};
+@end example
+
+@deftypefn Constructor {} peal::date (void);
+@deftypefnx Constructor {} peal::date (int @var{DAY}, int @var{MONTH}, int @var{YEAR});
+These functions construct objects in the obvious way.
+@end deftypefn
+
 @node Built-in library types, Library framework, Using libraries, Method libraries
 @section Built-in library types
 
 @menu
 * XML libraries::               
 * Central Council libraries::   
+* MicroSIRIL libraries::        
 @end menu
 
 @node XML libraries, Central Council libraries, Built-in library types, Built-in library types
@@ -1707,7 +1708,7 @@ auto-detection mechanism.
 The XML library type supports only the built-in facets.  @xref{Built-in
 facets}.
 
-@node Central Council libraries,  , XML libraries, Built-in library types
+@node Central Council libraries, MicroSIRIL libraries, XML libraries, Built-in library types
 @subsection Central Council libraries
 
 The Methods Committee of the Central Council publishes collections of
@@ -1754,6 +1755,62 @@ method in the library file.  This is the number which appears at the
 beginning of the line containing the method.
 @end table
 
+@node MicroSIRIL libraries,  , Central Council libraries, Built-in library types
+@subsection MicroSIRIL libraries
+
+MicroSIRIL was an ingenious and widely-used early peal proving program
+for PCs.  The method libraries used are in a simple text format, with
+one method per line; they contain, for each method, simply the name,
+lead head code and place notation.
+
+The Ringing Class Library can read MicroSIRIL libraries, providing they
+satisfy one requirement: the last portion of the filename, before any
+extension, must be the number of bells on which all the methods in the
+file are.  This is because it is impossible to tell the stage from just
+the place notation.  So, for example, a method library file might be
+called @file{s8} or @file{new_principles10.txt}.
+
+Beware that the MicroSIRIL library interface will agree to open any file
+having a name satisfying the above requirement.  For this reason, if
+auto-detecting method library types, you may want to put the MicroSIRIL
+library type at the end of your list.
+
+When reading methods from MicroSIRIL libraries, remember that the name
+of each method may only consist of a single word; usually names
+consisting of several words are run together into one.
+
+@menu
+* The mslib class::             
+* MicroSIRIL library facets::   
+@end menu
+
+@node The mslib class, MicroSIRIL library facets, MicroSIRIL libraries, MicroSIRIL libraries
+@subsubsection The @code{mslib} class
+
+The @code{mslib} class is derived from the @code{library} class.
+
+@example
+class mslib : public library;
+@end example
+
+There is one constructor.
+
+@deftypefn Constructor {} mslib::mslib (const string& @var{filename});
+This function attempts to open the given file as a MicroSIRIL method
+library.
+@end deftypefn
+
+@deftypefun {static void} mslib::registerlib (void)
+This function registers the MicroSIRIL library type with the
+library auto-detection mechanism.  It will agree to open any file which
+has a name containing a number just before any extension.
+@end deftypefun
+
+@node MicroSIRIL library facets,  , The mslib class, MicroSIRIL libraries
+@subsubsection MicroSIRIL library facets
+
+There are no facets available for MicroSIRIL libraries.
+
 @node Library framework, Implementing new library classes, Built-in library types, Method libraries
 @section Library framework
 
@@ -1762,7 +1819,7 @@ implement method libraries interact.  It is intended for those writing
 new classes to support new library types.
 
 The basic library framework comprises five classes, all of which are 
-declared in @file{ringing/library.h}.
+declared in the header file @file{ringing/library.h}.
 
 @c Unfortunately it seems that the @code macro cannot be used in the 
 @c name argument of @deftp as makeinfo --html can't cope with it.  
@@ -1937,7 +1994,7 @@ For more information on how to use this, see
 
 @c I've used deftypefn rather than deftp because (i) @deftp formats the 
 @c type incorrectly and (ii) the typedef is for a function-pointer.
-@deftypefn Typedef {typedef library_base* (*} library::init_function {)}(const string& @var{filename});
+@deftypefn Typedef {typedef library_base*} {(* library::init_function )} (const string& @var{filename});
 Functions with this signature are used by the @code{library} construtor to 
 attempt to load a library.  Each derived library class that supports 
 auto-detection should register a function of this signature 
@@ -2579,8 +2636,8 @@ score, they are mainly intended for use by the music class itself. It should
 be noted that the music class takes a copy of the music_details object rather
 than a pointer.
 
-@deftypefn Constructor music_details (const string &e = "", const int &s = 1);
-@deftypefnx Constructor music_details (const char *e, const int &s = 1);
+@deftypefn Constructor {} music_details (const string &e = "", const int &s = 1);
+@deftypefnx Constructor {} music_details (const char *e, const int &s = 1);
 Creates the object and sets the initial expression to e and the score to use
 to s. By default the score is 1. If the specified expression is invalid, the class will throw an @code{music_details::invalid_regex} exception (if they are enabled) or reset the expression to "".
 @end deftypefn
