@@ -68,8 +68,13 @@ RINGING_USE_EXCEPTIONS = @RINGING_USE_EXCEPTIONS@
 RINGING_USE_NAMESPACES = @RINGING_USE_NAMESPACES@
 RINGING_USE_STD = @RINGING_USE_STD@
 VERSION = @VERSION@
+ac_aux_dir = @ac_aux_dir@
 
 SUBDIRS = ringing doc
+
+auxdir = @ac_aux_dir@
+AUX_DIST = $(auxdir)/install-sh $(auxdir)/missing 			$(auxdir)/mkinstalldirs
+
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 mkinstalldirs = $(SHELL) $(top_srcdir)/config/mkinstalldirs
 CONFIG_HEADER = config.h
@@ -280,6 +285,7 @@ distdir: $(DISTFILES)
 	      || exit 1; \
 	  fi; \
 	done
+	$(MAKE) $(AM_MAKEFLAGS) top_distdir="$(top_distdir)" distdir="$(distdir)" dist-hook
 info-am:
 info: info-recursive
 dvi-am:
@@ -353,6 +359,11 @@ install uninstall-am uninstall all-redirect all-am all installdirs-am \
 installdirs mostlyclean-generic distclean-generic clean-generic \
 maintainer-clean-generic clean mostlyclean distclean maintainer-clean
 
+dist-hook:
+	(cd $(distdir) && mkdir $(auxdir))
+	for file in $(AUX_DIST); do \
+	  cp $$file $(distdir)/$$file; \
+	done
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

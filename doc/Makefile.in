@@ -68,6 +68,7 @@ RINGING_USE_EXCEPTIONS = @RINGING_USE_EXCEPTIONS@
 RINGING_USE_NAMESPACES = @RINGING_USE_NAMESPACES@
 RINGING_USE_STD = @RINGING_USE_STD@
 VERSION = @VERSION@
+ac_aux_dir = @ac_aux_dir@
 
 info_TEXINFOS = methlib.texi
 mkinstalldirs = $(SHELL) $(top_srcdir)/config/mkinstalldirs
