@@ -30,7 +30,7 @@
 #include "execution_context.h"
 #include "args.h"
 #include "util.h"
-#include "expression.h"
+#include "expr_base.h"
 #include "prog_args.h"
 #if RINGING_OLD_INCLUDES
 #include <stdexcept.h>

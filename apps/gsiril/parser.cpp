@@ -26,8 +26,9 @@
 #include "parser.h"
 #include "tokeniser.h"
 #include "util.h"
+#include "expr_base.h"
 #include "expression.h"
-#include "common_expr.h"
+#include "statement.h"
 #include "prog_args.h"
 #if RINGING_OLD_INCLUDES
 #include <stdexcept.h>
@@ -42,7 +43,6 @@
 #include <cctype>
 #endif
 #include <ringing/streamutils.h>
-#include <ringing/music.h>
 
 RINGING_USING_NAMESPACE
 
@@ -71,6 +71,8 @@ namespace tok_types
     transp_lit,
     pn_lit,
     def_assign, /* ?= */
+    logic_and,
+    logic_or,
     regex_lit
   };
 };
@@ -111,43 +113,6 @@ private:
   }
 };
 
-void validate_regex( const music_details& desc, int bells )
-{
-  static string allowed;
-  if ( allowed.empty() ) {
-    allowed.append( row(bells).print() );
-    allowed.append("*?[]");
-  }
-
-  string tok( desc.get() );
-
-  if ( tok.find_first_not_of( allowed ) != string::npos )
-    throw runtime_error( make_string() << "Illegal regular expression: " 
-			 << tok );
-
-  bool inbrack(false);
-  for ( string::const_iterator i(tok.begin()), e(tok.end()); i!=e; ++i ) 
-    switch (*i) {
-    case '[':
-      if ( inbrack ) 
-	throw runtime_error( "Unexpected '[' in regular expressions" );
-      inbrack = true;
-      break;
-    case ']':
-      if ( !inbrack )
-	throw runtime_error( "Unexpected ']' in regular expressions" );
-      inbrack = false;
-      break;
-    case '*': case '?':
-      if ( inbrack )
-	throw runtime_error( "Cannot use '*' or '?' in a [] block "
-			     "of a regular expression" );
-      break;
-    }
-
-  // TODO: Check for multiple occurances of the same bell
-}
-
 class mstokeniser : public tokeniser
 {
 public:
@@ -155,15 +120,23 @@ public:
     : tokeniser( in, keep_new_lines, 
 		 args.case_insensitive ? case_insensitive : case_sensitive ), 
       args( args ),
-      c( args.msiril_comments ? "/" : "//" ), r( "/", tok_types::regex_lit ),
-      q( "'", tok_types::transp_lit ), qq( "\"", tok_types::string_lit ), 
-      sym( "&" ), asym( "+" ), defass( "?=", tok_types::def_assign )
+      c( args.msiril_comments ? "/" : "//" ), 
+      r( "/",   tok_types::regex_lit,  string_token::one_line ),
+      q( "'",   tok_types::transp_lit, string_token::one_line ), 
+      qq( "\"", tok_types::string_lit, string_token::one_line ), 
+      sym( "&" ), asym( "+" ), defass( "?=", tok_types::def_assign ),
+      land( "&&", tok_types::logic_and ), lor( "||", tok_types::logic_or )
   {
+    // Note:  It is important that &sym is added after &land; and
+    // similarly, that &r is added after &c.  This is because && is a
+    // longer, and thus more specialised prefix than &, and similarly
+    // for // and /.
+
     add_qtype(&c);
     if ( !args.msiril_comments ) add_qtype(&r);
     add_qtype(&q);    add_qtype(&qq);
+    add_qtype(&defass); add_qtype(&land); add_qtype(&lor);
     add_qtype(&sym);  add_qtype(&asym);
-    add_qtype(&defass);
   }
 
   virtual void validate( const token& t ) const
@@ -174,7 +147,7 @@ public:
     case name: case num_lit: case open_paren: case close_paren:
     case comma: case times: case assignment: case new_line: case semicolon:
     case comment: case string_lit: case transp_lit: case pn_lit: 
-    case def_assign:
+    case def_assign: case logic_and: case logic_or:
       return;
 
     case regex_lit: case open_brace: case close_brace: case colon:
@@ -192,7 +165,7 @@ private:
   line_comment_impl c;
   string_token r, q, qq;
   pn_impl sym, asym;
-  basic_token defass;
+  basic_token defass, land, lor;
 };
 
 
@@ -208,6 +181,7 @@ public:
 
 private:
   virtual statement parse();
+
   int bells() const { return args.bells; }
   void bells(int new_b);
 
@@ -259,7 +233,12 @@ vector< token > msparser::tokenise_command()
 	  // TODO:  Get the tokeniser to discard comments these automatically
 	  if ( tokiter->type() != tok_types::comment &&
 	       tokiter->type() != tok_types::new_line ) {
-	    tok.validate(*tokiter);
+	    try {
+	      tok.validate(*tokiter);
+	    } catch (...) {
+	      ++tokiter; // skip over the bogus token
+	      throw;
+	    }
 	    toks.push_back(*tokiter);
 	  }
 
@@ -357,6 +336,7 @@ statement msparser::parse()
 
   throw runtime_error( "Unknown command" );
 }
+
 
 
 //////////////////////////////////////////////////////////
@@ -468,36 +448,25 @@ msparser::make_expr( vector< token >::const_iterator first,
       while ( last != first ) {
 	// The last semicolon, or the opening brace (FIRST) if there is none.
 	iter_t i( first ); find_last( first+1, last, tok_types::semicolon, i );
+	iter_t j( i );
 
-	// The current alternative is [i+1, last).
-
-	music_details desc;
-	iter_t expr_start;
-	
-	if ( i+2 == last || i[2].type() != tok_types::colon ) {
-	  desc.set( "*" );
-	  expr_start = i+1;
-	} 
-	else if ( i[1].type() != tok_types::regex_lit )
-	  throw runtime_error
-	    ( "Brace group conditional should be a regular expression" );
-	else {
-	  desc.set( i[1] );
-	  expr_start = i+3;
-	}
-
+	// Is there a test?
+	expression test( NULL );
+	if ( find_first( i+1, last, tok_types::colon, j ) )
+	  test = make_expr( i+1, j );
+	else
+	  test = expression( new pattern_node( bells(), "*" ) );
+	  
+	// Is there a expression?
 	expression expr( NULL );
-	if ( expr_start != last)
-	  expr = make_expr( expr_start, last );
-	else 
+	if ( j+1 != last )
+	  expr = make_expr( j+1, last );
+	else
 	  expr = expression( new nop_node );
-	
-	validate_regex( desc, bells() );
-	chain = expression( new if_match_node( bells(), desc, 
-					       expr, chain ) );
+
+	chain = expression( new if_match_node( test, expr, chain ) );
 
 	last = i;
-	
 	while ( last != first && (last-1)->type() == tok_types::semicolon ) 
 	  --last;
       }
@@ -546,6 +515,38 @@ msparser::make_expr( vector< token >::const_iterator first,
 			 make_expr( split+1, last ) ) );
     }
 
+  // Logical operators -- Or (||) is lowest precedence
+  if ( find_first( first, last, tok_types::logic_or, split ) )
+    {
+      if ( first == split )
+	throw runtime_error
+	  ( "Binary operator \"||\" needs first argument" );
+      
+      if ( split+1 == last)
+	throw runtime_error
+	  ( "Binary operator \"||\" needs second argument" );
+
+      return expression
+	( new or_node( make_expr( first, split ),
+		       make_expr( split+1, last ) ) );
+    }
+
+  // Logical operators -- And (||) is next lowest precedence
+  if ( find_first( first, last, tok_types::logic_and, split ) )
+    {
+      if ( first == split )
+	throw runtime_error
+	  ( "Binary operator \"&&\" needs first argument" );
+      
+      if ( split+1 == last)
+	throw runtime_error
+	  ( "Binary operator \"&&\" needs second argument" );
+
+      return expression
+	( new and_node( make_expr( first, split ),
+			make_expr( split+1, last ) ) );
+    }
+
   // A number literal in a repeated block is the
   // only remaining construct that is not a single token.
   if ( first->type() == tok_types::num_lit ||
@@ -589,6 +590,9 @@ msparser::make_expr( vector< token >::const_iterator first,
 
     case tok_types::transp_lit:
       return expression( new transp_node( bells(), *first ) );
+
+    case tok_types::regex_lit:
+      return expression( new pattern_node( bells(), *first ) );
 
     default:
       throw runtime_error( "Unknown token in input" );

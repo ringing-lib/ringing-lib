@@ -1,5 +1,5 @@
-// -*- C++ -*- execution_context.h - Environment to evaluate expressions
-// Copyright (C) 2002, 2003 Richard Smith <richard@ex-parrot.com>
+// -*- C++ -*- execution_context.h - Global environment
+// Copyright (C) 2002, 2003, 2004 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -41,27 +41,13 @@
 #include <ringing/proof.h>
 #include <ringing/pointers.h>
 #include "prog_args.h"
-#include "expression.h" // MSVC 6 requires expression to be complete.
+#include "symbol_table.h"
+#include "expr_base.h" // MSVC 6 requires expression to be complete.
 
 RINGING_USING_STD
 RINGING_USING_NAMESPACE
 
 class expression;
-
-class symbol_table
-{
-public:
-  expression lookup( const string& sym ) const;
-
-  // Returns true for a redefinition and false otherwise
-  bool define( const pair< const string, expression >& defn );
-
-  void undefine( const string& sym );
-
-private:
-  typedef map< string, expression > sym_table_t;
-  sym_table_t sym_table;
-};
 
 class execution_context
 {
@@ -99,57 +85,8 @@ public:
 
 private:
   arguments args;
-
   ostream* os;
-
   symbol_table sym_table;
-};
-
-class proof_context
-{
-public:
-  struct permute_and_prove_t
-  {
-  public:
-    typedef change argument_type;
-    typedef bool result_type;
-  
-    bool operator()( const change &c );
-    bool operator()( const row    &c );
-
-  private:
-    friend class proof_context;
-    permute_and_prove_t( row &r, prover &p, proof_context &pctx );
-  
-    row &r;
-    prover &p;
-    proof_context &pctx;
-  };
-
-  explicit proof_context( const execution_context & );
- ~proof_context();
-  
-  permute_and_prove_t permute_and_prove();
-
-  row current_row() const { return r; }
-  bool isrounds() const { return r == ectx.rounds(); }
-
-  void execute_symbol( const string &sym );
-  void define_symbol( const pair< const string, expression > &defn );
-
-  enum proof_state { rounds, notround, isfalse };
-  proof_state state() const;
-  string substitute_string( const string &str, bool &do_exit );
-
-  void execute_everyrow();
-  void output_string( const string& str );
-
-private:
-  const execution_context &ectx;
-  symbol_table dsym_table; // dynamic symbol table
-  row r;
-  prover p;
-  bool silent;
 };
 
 #endif // GSIRIL_EXECUTION_CONTEXT_INCLUDED

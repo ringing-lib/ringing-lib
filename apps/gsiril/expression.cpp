@@ -1,5 +1,5 @@
 // expression.cpp - Nodes and factory function for expressions
-// Copyright (C) 2002, 2003, 2004 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003, 2004, 2005 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -20,164 +20,15 @@
 #include <ringing/common.h>
 
 #if RINGING_HAS_PRAGMA_INTERFACE
-#pragma implementation "gsiril/expression.h"
-#pragma implementation "gsiril/common_expr.h"
+#pragma implementation
 #endif
 
 #include "expression.h"
-#include "common_expr.h"
-#include "parser.h"
-#include "execution_context.h"
-#if RINGING_OLD_IOSTREAMS
-#include <fstream.h>
-#else
-#include <fstream>
-#endif
+#include "proof_context.h"
 #include <ringing/streamutils.h>
+#include <ringing/music.h>
 
 RINGING_USING_NAMESPACE
-
-
-void definition_stmt::execute( execution_context& e ) const
-{
-  if ( e.define_symbol( defn ) )
-    {
-      if ( e.verbose() ) {
-	if ( defn.second.isnop() )
-	  e.output() << "Definition of '" << defn.first << "' cleared." << endl;
-	else
-	  e.output() << "Redefinition of '" << defn.first << "'." << endl;
-      }
-    }
-  else
-    {
-      if ( e.verbose() ) {
-	if ( ! defn.second.isnop() )
-	  e.output() << "Definition of '" << defn.first << "' added." << endl;
-      }
-    }
-}
-
-void default_defn_stmt::execute( execution_context& e ) const
-{
-  if ( e.default_define_symbol( defn ) )
-    {
-      if ( e.verbose() ) {
-	if ( ! defn.second.isnop() )
-	  e.output() << "Definition of '" << defn.first << "' added." << endl;
-      }
-    }
-}
-
-void null_stmt::execute( execution_context& e ) const
-{
-  if ( e.verbose() )
-    e.output() << diagnostic;
-}
-
-void prove_stmt::execute( execution_context& e ) const
-{
-  try
-    {
-      proof_context p(e);
-
-      try
-	{
-	  p.execute_symbol( "start" );
-	  expr.execute(p);
-	  p.execute_symbol( "finish" );
-      	} 
-      catch( const script_exception& ex ) 
-	{
-	  if ( ex.t == script_exception::do_abort )
-	    p.execute_symbol( "abort" );
-	  return;
-	}
-    
-      switch ( p.state() )
-	{
-	case proof_context::rounds: 
-	  p.execute_symbol( "true" ); 
-	  break;
-	case proof_context::notround:
-	  p.execute_symbol( "notround" ); 
-	  break;
-	case proof_context::isfalse:
-	  p.execute_symbol( "false" ); 
-	  break;
-	}
-    } 
-  catch ( const script_exception& ) 
-    {
-    }
-}
-
-void extents_stmt::execute( execution_context& e ) const
-{
-  e.extents( n );
-
-  if ( e.verbose() )
-    e.output() << "Set extents to " << n << endl;
-}
-
-void bells_stmt::execute( execution_context& e ) const
-{
-  e.bells( bells );
-
-  if ( e.verbose() )
-    e.output() << "Set bells to " << bells << endl;
-}
-
-void rounds_stmt::execute( execution_context& e ) const
-{
-  e.rounds( rounds );
-
-  if ( e.verbose() )
-    e.output() << "Set rounds to " << rounds << endl;
-}
-
-void import_stmt::execute( execution_context& e ) const
-{
-  bool i( e.interactive() );
-  bool v( e.verbose() );
-  int b( e.bells() );
-
-  try
-    {
-      ifstream ifs( name.c_str() );
-      if ( !ifs )
-	throw runtime_error
-	  ( make_string() << "Unable to load resource: " << name );
-      
-      shared_pointer<parser> p( make_default_parser(ifs, e.get_args() ) );
-      e.interactive(false);
-      e.verbose(false);
-      while (true)
-	{
-	  statement s( p->parse() );
-	  if ( s.eof() ) break;
-	  s.execute(e);
-	}
-    }
-  catch (...)
-    {
-      // Restore bells, verbose, interactive flags
-      if (b > 0) e.bells(b);
-      e.interactive(i);
-      e.verbose(v);
-      throw;
-    }
-
-  // Restore bells, verbose, interactive flags
-  if (b > 0) e.bells(b);
-  e.interactive(i);
-  e.verbose(v);
-
-  if ( e.verbose() )
-    e.output() << "Resource \"" << name << "\" loaded" << endl;
-}
-
-
 
 
 void list_node::debug_print( ostream &os ) const
@@ -193,6 +44,17 @@ void list_node::execute( proof_context &ctx )
 {
   car.execute( ctx );
   cdr.execute( ctx );
+}
+
+bool list_node::evaluate( proof_context &ctx ) 
+{
+  car.execute( ctx );
+  return cdr.evaluate( ctx );
+}
+
+expression::type_t list_node::type() const
+{
+  return cdr.type();
 }
 
 void nop_node::debug_print( ostream &os ) const
@@ -307,21 +169,108 @@ void assign_node::execute( proof_context& ctx )
   ctx.define_symbol(defn);
 }
 
+static void validate_regex( const music_details& desc, int bells )
+{
+  static string allowed;
+  if ( allowed.empty() ) {
+    allowed.append( row(bells).print() );
+    allowed.append("*?[]");
+  }
+
+  string tok( desc.get() );
+
+  if ( tok.find_first_not_of( allowed ) != string::npos )
+    throw runtime_error( make_string() << "Illegal regular expression: " 
+			 << tok );
+
+  bool inbrack(false);
+  for ( string::const_iterator i(tok.begin()), e(tok.end()); i!=e; ++i ) 
+    switch (*i) {
+    case '[':
+      if ( inbrack ) 
+	throw runtime_error( "Unexpected '[' in regular expressions" );
+      inbrack = true;
+      break;
+    case ']':
+      if ( !inbrack )
+	throw runtime_error( "Unexpected ']' in regular expressions" );
+      inbrack = false;
+      break;
+    case '*': case '?':
+      if ( inbrack )
+	throw runtime_error( "Cannot use '*' or '?' in a [] block "
+			     "of a regular expression" );
+      break;
+    }
+
+  // TODO: Check for multiple occurances of the same bell
+}
+
+pattern_node::pattern_node( int bells, const string& regex )
+  : mus( bells )
+{
+  music_details md;
+  md.set( regex );
+  validate_regex( md, bells );
+  mus.push_back( md );
+}
+
+bool pattern_node::evaluate( proof_context &ctx ) 
+{
+  row r(ctx.current_row());
+  mus.process_rows( &r, &r + 1 );  // Ugh!
+  return mus.get_score();
+}
+
+void pattern_node::debug_print( ostream &os ) const
+{
+  os << mus.begin()->get();
+}
+
+bool and_node::evaluate( proof_context &ctx )
+{
+  // short-circuits
+  return left.evaluate(ctx) && right.evaluate(ctx);
+}
+
+void and_node::debug_print( ostream &os ) const
+{
+  left.debug_print(os);
+  os << " && ";
+  right.debug_print(os);
+}
+
+bool or_node::evaluate( proof_context &ctx )
+{
+  // short-circuits
+  return left.evaluate(ctx) || right.evaluate(ctx);
+}
+
+void or_node::debug_print( ostream &os ) const
+{
+  left.debug_print(os);
+  os << " || ";
+  right.debug_print(os);
+}
+
+
 void if_match_node::debug_print( ostream &os ) const
 {
-  os << "{ " << mus.begin()->get() << ": ";
+  os << "{ ";
+  test.debug_print(os);
+  os << ": ";
   iftrue.debug_print(os);
-  os << ";";
-  if ( !iffalse.isnull() )
+  if ( !iffalse.isnull() ) {
+    os << ";";
     iffalse.debug_print(os);
+  }
   os << " }";
 }
 
 void if_match_node::execute( proof_context& ctx )
 {
-  row r(ctx.current_row());
-  mus.process_rows( &r, &r + 1 );  // Ugh!
-  if ( mus.get_score() )
+  proof_context ctx2( ctx.silent_clone() );
+  if ( test.evaluate( ctx2 ) )
     iftrue.execute( ctx );
   else if ( !iffalse.isnull() )
     iffalse.execute( ctx );

@@ -2,7 +2,7 @@
 
 # Process this file with automake to produce Makefile.in
 
-# Copyright (C) 2002, 2003 Richard Smith <richard@ex-parrot.com>
+# Copyright (C) 2002, 2003, 2004, 2005 Richard Smith <richard@ex-parrot.com>
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -34,8 +34,10 @@ additional =  rlstream.cpp rlstream.h
 endif
 
 gsiril_SOURCES = main.cpp console_stream.cpp console_stream.h \
-execution_context.cpp execution_context.h expression.cpp expression.h \
-common_expr.h parser.cpp parser.h util.cpp util.h prog_args.h $(additional)
+execution_context.cpp execution_context.h expr_base.cpp expr_base.h \
+proof_context.cpp proof_context.h symbol_table.cpp symbol_table.h \
+expression.h expression.cpp statement.h statement.cpp \
+parser.cpp parser.h util.cpp util.h prog_args.h $(additional)
 
 EXTRA_gsiril_SOURCES = rlstream.cpp rlstream.h
 

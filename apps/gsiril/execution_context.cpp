@@ -1,4 +1,4 @@
-// execution_context.cpp - Environment to evaluate expressions
+// execution_context.cpp - Global environment
 // Copyright (C) 2002, 2003, 2004 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -22,45 +22,16 @@
 #if RINGING_HAS_PRAGMA_INTERFACE
 #pragma implementation
 #endif
+#include "expr_base.h" // Must be before execution_context.h because 
+                       // of bug in MSVC 6.0
+#include "expression.h"
+#include "statement.h"
+#include "execution_context.h"
 
 #include <ringing/streamutils.h>
-#include "expression.h" // Must be before execution_context.h because 
-                        // of bug in MSVC 6.0
-#include "execution_context.h"
-#include "common_expr.h"
 
 RINGING_USING_NAMESPACE
 
-
-expression symbol_table::lookup( const string& sym ) const
-{
-  sym_table_t::const_iterator i = sym_table.find(sym);
-  if ( i == sym_table.end() )
-    return expression( NULL );
-  return i->second;
-}
-
-bool symbol_table::define( const pair<const string, expression>& defn )
-{
-  sym_table_t::iterator i = sym_table.find( defn.first );
-
-  // Is it a redefinition?
-  if ( i != sym_table.end() )
-    {
-      i->second = defn.second;
-      return true;
-    }
-  else
-    {
-      sym_table.insert( defn );
-      return false;
-    }
-}
-
-void symbol_table::undefine( const string& sym )
-{
-  sym_table.erase(sym);
-}
 
 int execution_context::bells( int b ) 
 {
@@ -128,135 +99,4 @@ void execution_context::prove_symbol( const string& sym )
   expression e( new symbol_node(sym) );
   statement s( new prove_stmt(e) );
   s.execute( *this );
-}
-
-proof_context::proof_context( const execution_context &ectx ) 
-  : ectx(ectx), p( ectx.get_args().num_extents ), 
-    silent( ectx.get_args().everyrow_only )
-{
-  if ( ectx.bells() == -1 )
-    throw runtime_error( "Must set number of bells before proving" ); 
-  if ( ectx.rounds().bells() > ectx.bells() )
-    throw runtime_error( "Rounds is on too many bells" ); 
-  r = row(ectx.bells()) * ectx.rounds();
-}
-
-proof_context::~proof_context()
-{
-  // MSVC 7.1 does not line-buffer std::cout (there is no requirement
-  // for it to).
-  ectx.output().flush();
-}
-
-void proof_context::output_string( const string& str )
-{
-  bool do_exit( false );
-  std::string o( substitute_string(str, do_exit) );
-  if ( !silent )
-    ectx.output() << o;
-  if (do_exit)
-    throw script_exception( script_exception::do_abort );
-}
-
-void proof_context::execute_everyrow()
-{
-  // Temporarily disable silent flag if running with -E
-  bool s = silent;
-  if ( ectx.get_args().everyrow_only ) silent = false;
-  execute_symbol("everyrow");
-  silent = s;
-}
-
-bool proof_context::permute_and_prove_t::operator()( const change &c )
-{
-  bool rv = p.add_row( r *= c ); 
-  pctx.execute_everyrow();
-  if ( pctx.isrounds() ) pctx.execute_symbol("rounds");
-  if ( !rv ) pctx.execute_symbol("conflict");
-  return rv;
-}
-
-bool proof_context::permute_and_prove_t::operator()( const row &c )
-{
-  bool rv = p.add_row( r *= c ); 
-  pctx.execute_symbol("everyrow");
-  if ( pctx.isrounds() ) pctx.execute_symbol("rounds");
-  if ( !rv ) pctx.execute_symbol("conflict");
-  return rv;
-}
-
-proof_context::permute_and_prove_t::
-permute_and_prove_t( row &r, prover &p, proof_context &pctx ) 
-  : r(r), p(p), pctx(pctx)
-{
-}
-
-proof_context::permute_and_prove_t 
-proof_context::permute_and_prove()
-{
-  return permute_and_prove_t( r, p, *this );
-}
-
-void proof_context::execute_symbol( const string &sym ) 
-{
-  expression e( dsym_table.lookup(sym) );
-  if ( e.isnull() ) e = ectx.lookup_symbol(sym);
-  e.execute( *this );
-}
-
-void proof_context::define_symbol( const pair<const string, expression>& defn )
-{
-  dsym_table.define(defn);
-}
-
-proof_context::proof_state proof_context::state() const
-{
-  if ( p.truth() && isrounds() ) 
-    return rounds;
-  else if ( p.truth() )
-    return notround;
-  else
-    return isfalse;
-}
-
-string proof_context::substitute_string( const string &str, bool &do_exit )
-{
-  make_string os;
-  bool nl = true;
-
-  for ( string::const_iterator i( str.begin() ), e( str.end() ); i != e; ++i )
-    switch (*i)
-      {
-      case '@':
-	os << r;
-	break;
-      case '$': 
-	if ( i+1 == e || i[1] != '$' )
-	  os << p.duplicates();
-	else
-	  ++i, do_exit = true;
-	break;
-      case '#':
-	os << p.size();
-	break;
-      case '\\':
-	if (i+1 == e) 
-	  nl = false;
-	else if (i[1] == 'n') 
-	  ++i, os << '\n';
-	else if (i[1] == 't') 
-	  ++i, os << '\t';
-	else if (i[1] == '\'' )
-	  ++i, os << '"';
-	else
-	  os << *++i;
-	break;
-      default:
-	os << *i;
-	break;
-      }
-
-  if (nl) 
-    os << '\n';
-  return os;
 }

@@ -1,5 +1,5 @@
-// -*- C++ -*- expression.h - Expression and statement interfaces
-// Copyright (C) 2002, 2003 Richard Smith <richard@ex-parrot.com>
+// -*- C++ -*- expression.h - Code to execute different types of expression
+// Copyright (C) 2003, 2004, 2005 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -23,83 +23,197 @@
 #include <ringing/common.h>
 
 #if RINGING_HAS_PRAGMA_INTERFACE
-#pragma interface "gsiril/expression.h"
+#pragma interface
 #endif
 
-#if RINGING_HAVE_OLD_IOSTREAMS
-#include <ostream.h>
+#include "expr_base.h"
+#if RINGING_OLD_INCLUDES
+#include <utility.h>
 #else
-#include <iosfwd>
+#include <utility>
 #endif
-#include <ringing/pointers.h>
+#include <string>
+#include <ringing/row.h>
+#include <ringing/music.h>
 
 RINGING_USING_NAMESPACE
 
-class proof_context;
-class execution_context;
-class parser;
 
-// Represents a whole statement (e.g. a definition, proof, ...)
-class statement 
+class list_node : public expression::node
 {
 public:
-  class impl
-  {
-  public:
-    virtual ~impl() {}
-    virtual void execute( execution_context& ) const = 0;
-  };
+  list_node( const expression& car, const expression& cdr )
+    : car(car), cdr(cdr) {}
 
-  statement( impl* pimpl = 0 ) : pimpl(pimpl) {}
+protected:
+  virtual void debug_print( ostream &os ) const;
+  virtual void execute( proof_context &ctx );
+  virtual bool evaluate( proof_context &ctx );
+  virtual expression::type_t type() const;
 
-  void execute( execution_context& e ) const { pimpl->execute(e); }
-  bool eof() const { return !pimpl; } 
-
-private:
-  shared_pointer< impl > pimpl;
+private:  
+  expression car, cdr;
 };
 
-// A node in of an expression
-class expression
+class nop_node : public expression::node
+{
+protected:
+  virtual void debug_print( ostream &os ) const;
+  virtual void execute( proof_context & );
+  virtual bool isnop() const;
+};
+
+class repeated_node : public expression::node
 {
 public:
-  class node
-  {
-  public:
-    virtual ~node() {}
-    virtual void debug_print( ostream &os ) const = 0;
-    virtual void execute( proof_context &ctx ) = 0;
-    virtual bool isnop() const { return false; }
-  };
+  repeated_node( int count,
+		 const expression &child )
+    : count(count), child(child) {}
 
-  // Create an expression handle
-  expression( node* impl ) : impl(impl) {}
+protected:
+  virtual void debug_print( ostream &os ) const;
+  virtual void execute( proof_context &ctx );
 
-  bool isnull() const { return !impl; }
-  bool isnop() const { return !impl || impl->isnop(); }
+private:  
+  int count;
+  expression child;
+};
 
-  void debug_print( ostream &os ) const    { impl->debug_print(os); }
-  void execute( proof_context &ctx ) const { impl->execute(ctx);    }
+class string_node : public expression::node
+{
+public:
+  string_node( const string &str ) 
+    : str(str) {}
 
-  RINGING_FAKE_DEFAULT_CONSTRUCTOR(expression);
+protected:
+  virtual void debug_print( ostream &os ) const;
+  virtual void execute( proof_context &ctx );
 
 private:
-  shared_pointer< node > impl;
+  string str;
 };
 
-// An exception thrown when executing a string literal containing a $$.
-struct script_exception
+class pn_node : public expression::node
 {
-  enum type {
-    do_abort,
-    do_stop,
-    do_break
-  };
-  
-  script_exception( type t ) : t(t) {}
+public:
+  pn_node( int bells, const string &pn );
 
-  type t;
+protected:
+  virtual void debug_print( ostream &os ) const;
+  virtual void execute( proof_context &ctx );
+
+private:
+  vector< change > changes;
 };
 
+class transp_node : public expression::node
+{
+public:
+  transp_node( int bells, const string &r );
+
+protected:
+  virtual void debug_print( ostream &os ) const;
+  virtual void execute( proof_context &ctx );
+
+private:
+  row transp;
+};
+
+class symbol_node : public expression::node
+{
+public:
+  symbol_node( const string &sym )
+    : sym(sym) {}
+
+protected:
+  virtual void debug_print( ostream &os ) const;
+  virtual void execute( proof_context &ctx );
+
+private:
+  string sym;
+};
+
+class assign_node : public expression::node
+{
+public:
+  assign_node( const string& sym, const expression& val )
+    : defn( make_pair(sym, val) ) {}
+
+protected:
+  virtual void debug_print( ostream &os ) const;
+  virtual void execute( proof_context &ctx );
+
+private:
+  pair< const string, expression > defn;
+};
+
+class pattern_node : public expression::bnode
+{
+public:
+  pattern_node( int bells, const string& regex );
+
+protected:
+  virtual void debug_print( ostream &os ) const;
+  virtual bool evaluate( proof_context &ctx );
+
+private:
+  music mus;
+};
+
+class and_node : public expression::bnode
+{
+public:
+  and_node( expression const& left, expression const& right )
+    : left(left), right(right) {}
+
+protected:
+  virtual void debug_print( ostream &os ) const;
+  virtual bool evaluate( proof_context &ctx );
+
+private:
+  expression left, right;
+};
+
+class or_node : public expression::bnode
+{
+public:
+  or_node( expression const& left, expression const& right )
+    : left(left), right(right) {}
+
+protected:
+  virtual void debug_print( ostream &os ) const;
+  virtual bool evaluate( proof_context &ctx );
+
+private:
+  expression left, right;
+};
+
+class if_match_node : public expression::node
+{
+public:
+  if_match_node( const expression& test,
+		 const expression& iftrue, const expression& iffalse )
+    : test(test), iftrue(iftrue), iffalse(iffalse) {}
+
+protected:
+  virtual void debug_print( ostream &os ) const;
+  virtual void execute( proof_context &ctx );
+
+private:
+  expression test, iftrue, iffalse;
+};
+
+class exception_node : public expression::node
+{
+public:
+  exception_node( script_exception::type t ) : t(t) {}
+
+protected:
+  virtual void debug_print( ostream &os ) const;
+  virtual void execute( proof_context &ctx );
+
+private:
+  script_exception::type t;
+};
 
 #endif // GSIRIL_EXPRESSION_INCLUDED
