@@ -15,17 +15,6 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-// Parts of this file are taken from the boost lexical_cast library [see
-// http://www.boost.org for details], and are under the following copyright:
-
-//  Copyright Kevlin Henney, 2000, 2001, 2002. All rights reserved.
-//
-//  Permission to use, copy, modify, and distribute this software for any
-//  purpose is hereby granted without fee, provided that this copyright and
-//  permissions notice appear in all copies and derivatives.
-//
-//  This software is provided "as is" without express or implied warranty.
-
 // $Id$
 
 #include <ringing/common.h>
@@ -63,43 +52,6 @@ RINGING_USING_NAMESPACE
 RINGING_USING_STD
 
 // ---------------------------------------------------------------------
-//
-// Lexical cast stuff.  Should this be moved to streamutils.h?
-//
-RINGING_START_ANON_NAMESPACE
-
-// exception used to indicate runtime lexical_cast failure
-class bad_lexical_cast : public bad_cast
-{
-public:
-  virtual const char* what() const throw()
-  {
-    return "bad cast: "
-      "source type value could not be interpreted as target";
-  }
-};
-
-// Last function argument is to make MSVC happy.
-// This is important as omitting it does not give a compile time error
-template<typename Target, typename Source>
-Target lexical_cast(Source arg, Target* = 0)
-{
-#if RINGING_USE_STRINGSTREAM
-  stringstream interpreter;
-#else
-  strstream interpreter; // for out-of-the-box g++ 2.95.2
-# endif
-  Target result;
-  
-  if(!(interpreter << arg) || !(interpreter >> result) ||
-     !(interpreter >> ws).eof())
-    throw bad_lexical_cast();
-  
-  return result;
-}
-
-RINGING_END_ANON_NAMESPACE
-
 
 long expression::s_node::i_evaluate( const method_properties& m ) const
 {
