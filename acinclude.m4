@@ -444,33 +444,56 @@ AC_DEFUN([AC_USE_READLINE],
     AC_CACHE_CHECK(
       [for GNU readline library],
       [ac_cv_use_readline],
-      [AC_CHECK_CXX_LIB(
-	readline, [#include <readline/readline.h>
-	], [ readline(">"); ],
-	ac_cv_use_readline=yes)])
+      [AC_LANG_PUSH(C++)
+       AC_COMPILE_IFELSE(
+         AC_LANG_PROGRAM(
+	   [#include <readline/readline.h>
+	   ], [readline(">");]),
+	 ac_cv_use_readline=yes,
+         # Some versions of readline fail to include <stdio.h> from <readline.h>
+         AC_COMPILE_IFELSE(
+           AC_LANG_PROGRAM(
+	     [#include <stdio.h>
+	      #include <readline/readline.h>
+	     ], [readline(">");]),
+           ac_cv_use_readline=stdio,
+           ac_cv_use_readline=no))
+       AC_LANG_POP(C++)
+    ])
   fi
-  if test -z "$ac_cv_use_readline" ; then
+  if test "$ac_cv_use_readline" != no; then
+    # Now see whether readline needs to link against termcap (or similar)
     AC_CACHE_CHECK(
-      [for GNU readline library with stdio],
-      [ac_cv_use_readline],
-      [AC_CHECK_CXX_LIB(
-	readline, [#include <stdio.h>
-	#include <readline/readline.h>
-	], [ readline(">"); ],
-	ac_cv_use_readline=stdio,
-	ac_cv_use_readline=no)])
+      [whether GNU readline needs additional libraries],
+      [ac_cv_readline_libs],
+      [AC_LANG_PUSH(C++)
+       ac_check_cxx_lib_save_LIBS="$LIBS"
+       for library in "" -ltermcap -lncurses -lcurses; do
+	 if test -z "$ac_cv_readline_libs"; then
+	   LIBS="$ac_check_cxx_lib_save_LIBS -lreadline $library"
+	   AC_LINK_IFELSE(
+	     AC_LANG_PROGRAM(
+	       [#include <stdio.h>
+		#include <readline/readline.h>
+	       ], [readline(">");]),
+	     ac_cv_readline_libs="-lreadline $library")
+	 fi
+       done
+       LIBS="$ac_check_cxx_lib_save_LIBS"
+       AC_LANG_POP(C++)])
+    if test -z "$ac_cv_readline_libs"; then
+      ac_cv_use_readline=no
+    fi
   fi
-  if test "$ac_cv_use_readline" = yes ; then
-    READLINE_LIBS=[-lreadline]
-    USE_READLINE=1
+  READLINE_LIBS="$ac_cv_readline_libs"
+  if test "$ac_cv_use_readline" = no; then
+    USE_READLINE=0
     READLINE_NEEDS_STDIO_H=0
-  elif test "$ac_cv_use_readline" = stdio ; then
-    READLINE_LIBS=[-lreadline]
+  elif test "$ac_cv_use_readline" = stdio; then
     USE_READLINE=1
     READLINE_NEEDS_STDIO_H=1
   else
-    READLINE_LIBS=[]
-    USE_READLINE=0
+    USE_READLINE=1
     READLINE_NEEDS_STDIO_H=0
   fi
 ])
