@@ -57,7 +57,6 @@ RINGING_DEFINE_LIBRARY_FACET( cclib::ref );
 class cclib::impl : public library_base {
 private:
   ifstream f;                   // The file stream we're using
-  int b;                        // Number of bells for files in this lib
   int wr;                       // Is it open for writing?
   int _good;                    // If we have a good filename or not.
 
