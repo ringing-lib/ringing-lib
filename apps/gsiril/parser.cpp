@@ -143,6 +143,11 @@ tokenise_command( const string &input )
 	  ++i;
 	  tokens.push_back( token( token_type::comma, "," ) );
 	  break;
+
+	case '*':
+	  ++i;
+	  tokens.push_back( token( token_type::times, "*" ) );
+	  break;
 	  
 	case '"':
 	  {
@@ -264,16 +269,22 @@ bool parser::maybe_handle_defintion( const string &cmd, ostream &out )
 
   pair< const string, expression > defn( parse_definition( cmd ) );
 
-  if ( interactive )
+  sym_table_t::iterator i = sym_table.find( defn.first );
+
+  // Is it a redefinition?
+  if ( i != sym_table.end() )
     {
-      // Is it a redefinition?
-      if ( sym_table.count( defn.first ) )
+      i->second = defn.second;
+      if ( interactive )
 	cout << "Refinition of '" << defn.first << "'." << endl;
-      else
+    }
+  else
+    {
+      sym_table.insert( defn );
+  
+      if ( interactive )
 	cout << "Defintion of '" << defn.first << "' added." << endl;
     }
-  
-  sym_table.insert( defn );
   
   // Is this the first symbol?  If so, this is the entry point
   if ( entry_sym.empty() )

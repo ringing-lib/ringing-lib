@@ -35,6 +35,7 @@ struct token_type
     open_paren,
     close_paren,
     comma,
+    times,
     string_lit,
     pn_lit,
     num_lit,

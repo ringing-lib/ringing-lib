@@ -217,9 +217,14 @@ expression::make_expr( const parser &p,
   // only remaining construct that is not a single token.
   if ( first->first == token_type::num_lit )
     {
-      return shared_node_t
-	( new repeated_node( string_to_int( first->second ),
-			     make_expr( p, first+1, last ) ) );
+      if ( first+1 != last && (first+1)->first == token_type::times )
+	return shared_node_t
+	  ( new repeated_node( string_to_int( first->second ),
+			       make_expr( p, first+2, last ) ) );
+      else
+	return shared_node_t
+	  ( new repeated_node( string_to_int( first->second ),
+			       make_expr( p, first+1, last ) ) );
     }
 
   // Everything left is a literal of some sort
