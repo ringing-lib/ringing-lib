@@ -130,7 +130,8 @@ public:
   void execute_symbol( const string &sym );
   void define_symbol( const pair< const string, expression > &defn );
 
-  enum proof_state { rounds, notround, isfalse } state() const;
+  enum proof_state { rounds, notround, isfalse };
+  proof_state state() const;
   string substitute_string( const string &str, bool &do_exit );
 
   void execute_everyrow();
