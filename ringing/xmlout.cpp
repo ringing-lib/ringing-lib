@@ -108,8 +108,23 @@ private:
   DOMDocument* doc;
   scoped_pointer< DOMWriter > writer;
   scoped_pointer< XMLFormatTarget > target;
+
+  static const char *txt_classes[12];
 };
 
+const char *xmlout::impl::txt_classes[12] = {
+  "",
+  "principle",
+  "plain/bob",
+  "plain/place",
+  "treble-dodging/treble-bob",
+  "treble-dodging/surprise",
+  "treble-dodging/delight",
+  "treble-place",
+  "alliance",
+  "hybrid",
+  "slow-course"
+};
 
 
 DOMElement* xmlout::impl::add_elt( DOMElement* parent, char const* name )
@@ -229,7 +244,10 @@ void xmlout::impl::append( library_entry const& entry )
     add_simple_elt( meth_elt, "stage", buffer );
   }
 
-  add_simple_elt( meth_elt, "classes", method::classname( meth.methclass() ) );
+  // Classes doesn't include things like Little and Differential
+  int methclass = meth.methclass();
+  add_simple_elt( meth_elt, "classes", 
+		  method::classname( methclass & method::M_MASK ) );
 
   {
     DOMElement* pn_elt = add_elt( meth_elt, "pn" );
@@ -255,16 +273,29 @@ void xmlout::impl::append( library_entry const& entry )
 
   {
     DOMElement* cl_elt = add_elt( meth_elt, "classification" );
+
+    DOMElement* cc_elt = add_elt( cl_elt, "cc-class");
+    if((methclass & method::M_MASK) != method::M_UNKNOWN)
+      cc_elt->setAttribute( TRANSCODE( "class" ), 
+			    TRANSCODE( txt_classes[methclass 
+						   & method::M_MASK] ) );
+    if(methclass & method::M_LITTLE)
+      cc_elt->setAttribute( TRANSCODE( "little" ),
+			    TRANSCODE( "true" ) );
+    if(methclass & method::M_DIFFERENTIAL)
+      cc_elt->setAttribute( TRANSCODE( "differential" ),
+			    TRANSCODE( "true" ) );
+
     DOMElement* lhcode_elt = add_elt( cl_elt, "lhcode" );
-    string lhcode = meth.lhcode();
-    if(lhcode.empty() || lhcode[0] == 'z') {
+    const char *lhcode = meth.lhcode();
+    if(lhcode[0] =='\0' || lhcode[0] == 'z') {
       lhcode_elt->setAttributeNS( TRANSCODE( XSI_XMLNS ),
 				  TRANSCODE( "xsi:nil" ),
 				  TRANSCODE( "true" ) );
     } else {
       lhcode_elt->setAttributeNS( TRANSCODE( METHODS_XMLNS ),
 				  TRANSCODE( "code" ),
-				  TRANSCODE( lhcode.c_str() ));
+				  TRANSCODE( lhcode ));
     }
   }
 

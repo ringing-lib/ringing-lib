@@ -320,7 +320,7 @@ string method::fullname() const
 
   if (myname == "Grandsire" || myname == "Reverse Grandsire"
       || myname == "Double Grandsire" || myname == "Little Grandsire" )
-    ; // Grandsire and it's related methods do not contain either a class
+    ; // Grandsire and its related methods do not contain either a class
       // or a Little modifier.
   else if ( bells()%2 && ( myname == "Union" || myname == "Double Union" 
 			   || myname == "Reverse Union" ) )

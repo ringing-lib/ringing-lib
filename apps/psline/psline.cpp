@@ -602,6 +602,10 @@ int main(int argc, char *argv[])
       m = l.load(args.method_name);
     } else {
       m = method(args.library_name, args.bells);
+      if(m.length() == 0) {
+	cerr << "Method is of zero length!\n";
+	return 1;
+      }
     }
 
     // Set up our options
