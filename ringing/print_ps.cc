@@ -132,7 +132,7 @@ void printpage_ps::text(const string t, const dimension& x,
 
 // This function prints a row: it actually writes the code to print
 // the numbers, and adds the relevant bit to the end of each of the lines
-void printpage_ps::printrow_ps::print(const row& r)
+void printrow_ps::print(const row& r)
 {
   // Start a new column if we need to
   if(!in_column) start_column();
@@ -150,31 +150,31 @@ void printpage_ps::printrow_ps::print(const row& r)
   lastrow = r;
 
   // Add the various bits of lines to the end of the line
-  list<drawline>::iterator i;
+  list<drawline_ps>::iterator i;
   for(i = drawlines.begin(); i != drawlines.end(); i++)
     (*i).add(r);
 }
 
-void printpage_ps::printrow_ps::rule()
+void printrow_ps::rule()
 {
   if(!in_column) return;
   os << lastrow.bells() << " RO\n";
 }
 
-void printpage_ps::printrow_ps::set_position(const dimension& x, const dimension& y)
+void printrow_ps::set_position(const dimension& x, const dimension& y)
 {
   if(in_column) end_column();
   currx = (int)x.in_points();
   curry = (int)y.in_points();
 }
 
-void printpage_ps::printrow_ps::new_column(const dimension& d)
+void printrow_ps::new_column(const dimension& d)
 {
   if(in_column) end_column();
   currx += (int)d.in_points();
 }
 
-void printpage_ps::printrow_ps::start()
+void printrow_ps::start()
 {
   // Select the font we'll be using
   os << '/' << opt.style.font << ' ' << opt.style.size << " F\n";
@@ -186,25 +186,25 @@ void printpage_ps::printrow_ps::start()
      << "exch pop sub 2 div neg /offset exch def pop\n";
 }
 
-void printpage_ps::printrow_ps::start_column()
+void printrow_ps::start_column()
 {
   map<int, printrow::options::line_style>::iterator i;
   for(i = opt.lines.begin(); i != opt.lines.end(); i++)
-    drawlines.push_back(drawline(*this, (*i).first, (*i).second));
+    drawlines.push_back(drawline_ps(*this, (*i).first, (*i).second));
   os << currx << " X " << curry << " Y\n";
   in_column = true;
 }
 
-void printpage_ps::printrow_ps::end_column()
+void printrow_ps::end_column()
 {
-  list<drawline>::iterator i;
+  list<drawline_ps>::iterator i;
   for(i = drawlines.begin(); i != drawlines.end(); i++)
     (*i).output(os, currx, curry);
   drawlines.erase(drawlines.begin(), drawlines.end());
   in_column = false;
 }
 
-void printpage_ps::printrow_ps::dot(int i)
+void printrow_ps::dot(int i)
 {
   if(i == -1) {
     map<int, printrow::options::line_style>::const_iterator j;
@@ -223,7 +223,7 @@ void printpage_ps::printrow_ps::dot(int i)
   }
 }
 
-void printpage_ps::printrow_ps::placebell(int i)
+void printrow_ps::placebell(int i)
 {
   int j = 0;
   while(j < lastrow.bells() && lastrow[j] != i) j++;
@@ -233,9 +233,8 @@ void printpage_ps::printrow_ps::placebell(int i)
   }
 }
 
-void printpage_ps::printrow_ps::text(const string& t, const dimension& x, 
-				     text_style::alignment al,
-				     bool between, bool right)
+void printrow_ps::text(const string& t, const dimension& x, 
+		       text_style::alignment al, bool between, bool right)
 {
   if(right) os << lastrow.bells(); else os << '0';
   os << " MR ";
@@ -253,7 +252,7 @@ void printpage_ps::printrow_ps::text(const string& t, const dimension& x,
   }
 }
 
-void printpage_ps::printrow_ps::drawline::add(const row& r)
+void drawline_ps::add(const row& r)
 {
   int j, b;
   b = (bell == -1) ? 0 : bell;
@@ -275,7 +274,7 @@ void printpage_ps::printrow_ps::drawline::add(const row& r)
   curr = j;
 }
 
-void printpage_ps::printrow_ps::drawline::output(ostream& o, int x, int y)
+void drawline_ps::output(ostream& o, int x, int y)
 {
   list<int>::iterator i;
   int t, count;

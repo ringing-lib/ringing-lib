@@ -40,6 +40,56 @@ RINGING_USING_STD
 
 RINGING_START_NAMESPACE
 
+class printrow_ps;
+
+class drawline_ps {
+private:
+  const printrow_ps& p;
+  int bell;
+  printrow::options::line_style s;
+  list<int> l;
+  int curr;
+  
+public:
+  drawline_ps(const printrow_ps& pr, int b, 
+	   printrow::options::line_style st) : 
+    p(pr), bell(b), s(st), curr(-1) {}
+  void add(const row& r);
+  void output(ostream& o, int x, int y);
+};
+
+class printrow_ps : public printrow::base {
+private:
+  ostream& os;
+  int currx, curry;
+  bool in_column;
+  row lastrow;
+  printrow::options opt;
+  
+  list<drawline_ps> drawlines;
+  friend class drawline_ps;
+  bool has_line(int b) const { return opt.lines.find(b) != opt.lines.end(); }
+  
+  void start();
+  void start_column();
+  void end_column();
+  
+public:
+  printrow_ps(ostream& o, const printrow::options& op) 
+    : os(o), in_column(false), opt(op), lastrow(8) { start(); }
+  ~printrow_ps() { end_column(); }
+  void print(const row& r);
+  void rule();
+  void set_position(const dimension& x, const dimension& y);
+  void new_column(const dimension& gap);
+  void set_options(const printrow::options& o) { opt = o; }
+  const printrow::options& get_options() { return opt; }
+  void dot(int i); 
+  void placebell(int i);
+  void text(const string& t, const dimension& x, 
+	    text_style::alignment al, bool between, bool right);
+};
+
 class printpage_ps : public printpage {
 protected:
   ostream& os;
@@ -62,55 +112,6 @@ private:
 
 protected:
   void set_text_style(const text_style& s);
-
-protected:
-  class printrow_ps : public printrow::base {
-  private:
-    ostream& os;
-    int currx, curry;
-    bool in_column;
-    row lastrow;
-    printrow::options opt;
-
-    class drawline {
-    private:
-      const printrow_ps& p;
-      int bell;
-      printrow::options::line_style s;
-      list<int> l;
-      int curr;
-
-    public:
-      drawline(const printrow_ps& pr, int b, 
-	       printrow::options::line_style st) : 
-	p(pr), bell(b), s(st), curr(-1) {}
-      void add(const row& r);
-      void output(ostream& o, int x, int y);
-    };
-    list<drawline> drawlines;
-    friend class drawline;
-    bool has_line(int b) const { return opt.lines.find(b) != opt.lines.end(); }
-
-    void start();
-    void start_column();
-    void end_column();
-
-  public:
-    printrow_ps(ostream& o, const printrow::options& op) 
-      : os(o), in_column(false), opt(op), lastrow(8) { start(); }
-    ~printrow_ps() { end_column(); }
-    void print(const row& r);
-    void rule();
-    void set_position(const dimension& x, const dimension& y);
-    void new_column(const dimension& gap);
-    void set_options(const printrow::options& o) { opt = o; }
-    const printrow::options& get_options() { return opt; }
-    void dot(int i); 
-    void placebell(int i);
-    void text(const string& t, const dimension& x, 
-	      text_style::alignment al, bool between, bool right);
-  };
-
 };
 
 RINGING_END_NAMESPACE
