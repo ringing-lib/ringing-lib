@@ -30,7 +30,6 @@
 #include <ringing/cclib.h>
 #include <ringing/method.h>
 #include <string>
-
 RINGING_START_NAMESPACE
 
 newlib<cclib> cclib::type;
@@ -52,13 +51,13 @@ method *cclib::load(const char *name)
   int meth_hl = -1;
   int meth_le = -1;
   int meth_lh = -1;
-
   f.seekg(0,ios::beg);		// Go to the beginning of the file
   while(f.good()) {
     
     // first, read in a line
     string linebuf;
     getline(f, linebuf);
+
     if (linebuf.length() > 1)
       {
 	// The second check for No. is used as an extra insurance check...
@@ -84,6 +83,18 @@ method *cclib::load(const char *name)
 	    if (linebuf.length() > meth_name_ends)
 	      {
 		string wordbuf(linebuf, meth_name_starts, meth_name_ends - meth_name_starts);
+		// Copy wordbuf to preserve for later
+		// FIXME: Take whitespace off the end
+		string methodname(wordbuf);
+
+		string::const_iterator i = methodname.end();
+		string::const_iterator j = methodname.end();
+		do {
+		  j = i;
+		  i--;
+		} while (isspace(*i));
+		methodname = methodname.substr(0, j - methodname.begin());
+	
 		for_each(wordbuf.begin(), wordbuf.end(), lowercase);
 		for_each(methname.begin(), methname.end(), lowercase);
 
@@ -103,7 +114,7 @@ method *cclib::load(const char *name)
 			pn.append(linebuf.substr(meth_name_ends, meth_hl - meth_name_ends));
 			// Add half lead notation
 			pn.append(linebuf.substr(meth_hl, meth_le - meth_hl));
-			m = new method(pn, b, name);
+			m = new method(pn, b, methodname);
 			m->push_back(change(b, linebuf.substr(meth_le, meth_lh - meth_le)));
 		      }
 		    else if (meth_hl != -1)
@@ -111,7 +122,7 @@ method *cclib::load(const char *name)
 			// Make this a reflection temporarily
 			pn.append("&");
 		        pn.append(linebuf.substr(meth_name_ends, meth_lh - meth_name_ends));
-			m = new method(pn, b, name);
+			m = new method(pn, b, methodname);
 			// Now remove the last change
 			m->pop_back();
 		      }
@@ -119,7 +130,7 @@ method *cclib::load(const char *name)
 		      {
 			// Add place notation
 			pn.append(linebuf.substr(meth_name_ends, meth_lh - meth_name_ends));
-			m = new method(pn, b, name);
+			m = new method(pn, b, methodname);
 		      }
 		    return m;
 		  }
@@ -133,4 +144,3 @@ method *cclib::load(const char *name)
 }
 
 RINGING_END_NAMESPACE
-

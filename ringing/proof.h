@@ -159,7 +159,6 @@ bool proof<RowIterator>::prove (RowIterator first, RowIterator last)
 {
   RowIterator i;
   RowIterator j;
-  RowIterator k;
   istrue = true;
   int changed_line;
   int count_i = 0;

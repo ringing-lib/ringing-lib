@@ -44,7 +44,7 @@ RINGING_USING_STD
 // cclib : Implement Central Council Method libraries
 class cclib : public library {
 private:
-  fstream f;                    // The iostream we're using
+  ifstream f;                   // The iostream we're using
   int b;                        // Number of bells for files in this lib
   int wr;                       // Is it open for writing?
 
@@ -63,12 +63,15 @@ public:
     b = atoi(s);
     if(b == 0) f.close();
   }
-  ~cclib() {}
+  ~cclib() {
+    f.close();
+  }
 
   static int canread(ifstream& ifs) // Is this file in the right format?
   {
     int valid = 0;
     int temp = -1;
+    ifs.seekg(0, ios::beg);
     while ((ifs.good()) && (valid < 2))
       {
 	string linebuf;
