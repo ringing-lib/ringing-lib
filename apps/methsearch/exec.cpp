@@ -358,15 +358,12 @@ string exec_command( const string& str )
     startInfo.hStdOutput = hChildOutWr;
     startInfo.hStdError = hErr;
 
-    fprintf(stderr, "COMMMAND LINE: %s\n", command_line.c_str() );
-    fflush(stderr);
-
     if (CreateProcess(0,
                       // Const correctness -- we've heard of it
                       const_cast< char* >( command_line.c_str() ),
                       NULL,
                       0, // default security attributes for thread
-                      TRUE, // inherit handles (e.g. helper pipes, oserv socket)
+                      TRUE, // inherit handles (e.g. helper pipes)
                       0,
                       NULL,
                       0, // default starting directory
@@ -401,7 +398,8 @@ string exec_command( const string& str )
   catch( ... ) {
     CloseHandle( hChildOutRd );
 
-    DWORD rv = WaitForMultipleObjects( 1, &procInfo.hProcess, FALSE, INFINITE );
+    DWORD rv = WaitForMultipleObjects( 1, &procInfo.hProcess, 
+				       FALSE, INFINITE );
     if ( rv == WAIT_FAILED ) abort();
 
     throw;
@@ -488,12 +486,15 @@ string exec_command( const string& str )
     }
   } 
   catch( ... ) {
-    try { 
-      do_closepipe( fd, pid ); 
-    } 
-    catch (...) { 
-      _exit( 127 );  // Really bad
+    close( fd );
+
+    // Reap child processes
+    {
+      int status, w;
+      while ( ( w = wait( &status ) ) == -1 && errno == EINTR );
+      if ( w == -1 ) abort();
     }
+
     throw;
   }
 
