@@ -174,7 +174,11 @@ private:
   // is_possibly_canonical() returns true is a canonical complete touch.
   bool is_really_canonical()
   {
-    return calls.back() != calls.front();
+    for ( vector< size_t >::const_iterator i( calls.begin() ); 
+	  i != calls.end(); ++i )
+      if ( *i != calls.front() )
+	return calls.back() != calls.front();
+    return true;
   }
 
   // The main loop of the algorithm   

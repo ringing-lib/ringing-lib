@@ -49,17 +49,18 @@ falseness_table::falseness_table( const method &m, int flags )
   //   F = \{ a b^{-1} : a, b \in M \}
   // where M is the set of rows in the first lead of the method. 
 
-  row r1( m.bells() ), r2( m.bells() );
 
   set<row> fs;
 
+  row r1( m.bells() );
   for ( method::const_iterator i1( m.begin() ); i1 != m.end()-1; ++i1 )
     {
       r1 *= *i1;
+
+      row r2( m.bells() );
       for ( method::const_iterator i2( m.begin() ); i2 != m.end()-1; ++i2 )
 	{
 	  r2 *= *i2;
-	  
 	  row f = r1 / r2;
 	  
 	  if ( !( flags & no_fixed_treble ) && f[0] != 0 )

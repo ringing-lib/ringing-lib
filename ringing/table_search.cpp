@@ -174,7 +174,11 @@ private:
   // is_possibly_canonical() returns true is a canonical complete touch.
   bool is_really_canonical()
   {
-    return calls.back() != calls.front();
+    for ( vector< size_t >::const_iterator i( calls.begin() ); 
+	  i != calls.end(); ++i )
+      if ( *i != calls.front() )
+	return calls.back() != calls.front();
+    return true;
   }
 
   // The main loop of the algorithm   
@@ -190,7 +194,6 @@ private:
 	// Has it come round, and is it in it's canonical form?
 	if ( depth >= lenrange.first && r.isrounds() && is_really_canonical() )
 	  output_touches( output, cur );
-
       }
     else if ( depth < lenrange.second )
       {
