@@ -481,7 +481,7 @@ string method::format( int flags ) const
   string out;
   bool might_need_dot(false), first(true);
 
-  if ( flags & M_SYMMETRY && issym() ) {
+  if ( (flags & M_SYMMETRY) && issym() && !empty() ) {
     out += '&';
     for ( unsigned int i=0; i<size() / 2; ++i )
       do_single_compressed_pn( out, (*this)[i], flags, might_need_dot, first );
