@@ -19,7 +19,7 @@
 
 #include <ringing/common.h>
 
-#ifdef RINGING_HAS_PRAGMA_INTERFACE
+#if RINGING_HAS_PRAGMA_INTERFACE
 #pragma implementation
 #endif
 
@@ -28,6 +28,7 @@
 #include "util.h"
 #include "expression.h"
 #include "common_expr.h"
+#include "prog_args.h"
 #if RINGING_OLD_INCLUDES
 #include <stdexcept.h>
 #include <vector.h>
@@ -67,8 +68,10 @@ public:
     pn_lit
   };
 
-  mstokeniser( istream& in )
-    : tokeniser(in, keep_new_lines), q( "'", transp_lit ), qq( "\"", string_lit ), 
+  mstokeniser( istream& in, bool is_case_insensitive )
+    : tokeniser( in, keep_new_lines, 
+		 is_case_insensitive ? case_insensitive : case_sensitive ), 
+      q( "'", transp_lit ), qq( "\"", string_lit ), 
       sym( "&" ), asym( "+" )
   {
     add_qtype(&c);
@@ -135,13 +138,14 @@ private:
 class msparser : public parser
 {
 public:
-  msparser( istream& in ) 
-    : tok(in), tokiter(tok.begin()), tokend(tok.end()), b(-1) 
+  msparser( istream& in, const arguments& args ) 
+    : args(args), tok(in, args.case_insensitive),
+      tokiter(tok.begin()), tokend(tok.end())
   {}
 
 private:
   virtual statement parse();
-  int bells() const { return b; }
+  int bells() const { return args.bells; }
   void bells(int new_b);
 
   vector< token > tokenise_command();
@@ -150,44 +154,51 @@ private:
 			vector< token >::const_iterator last ) const;
 
 
+  // Data members
+  arguments args;
   mstokeniser tok;
   mstokeniser::const_iterator tokiter, tokend;
-  int b;
 };
 
 vector< token > msparser::tokenise_command()
 {
   vector< token > toks;
 
-  while ( tokiter != tokend && tokiter->type() == mstokeniser::new_line )
+  do 
     {
-      ++tokiter;
+      // Skip lines which are purely whitespace or comments
+      while ( tokiter != tokend && 
+	      ( tokiter->type() == mstokeniser::new_line ||
+		tokiter->type() == mstokeniser::comment ) )
+	++tokiter;
+
+      while ( tokiter != tokend && tokiter->type() != mstokeniser::new_line )
+	{
+	  // TODO:  Get the tokeniser to discard comments these automatically
+	  if ( tokiter->type() != mstokeniser::comment )
+	    toks.push_back(*tokiter);
+
+	  ++tokiter;
+
+	  if (toks.size())
+	    tok.validate( toks.back() );
+	}
     }
-
-  while ( tokiter != tokend && tokiter->type() != mstokeniser::new_line )
-    {
-      if ( tokiter->type() != mstokeniser::comment )
-	toks.push_back(*tokiter);
-      
-      ++tokiter;
-
-      if (toks.size())
-	tok.validate( toks.back() );
-    }
-
+  while  ( !toks.empty() && toks.back().type() == mstokeniser::comma );
+   
   return toks;
 }
 
-void msparser::bells(int new_b)
+void msparser::bells(int b)
 {
-  if ( new_b > (int) bell::MAX_BELLS )
+  if ( b > (int) bell::MAX_BELLS )
     throw runtime_error( make_string() 
 			 << "Number of bells must be less than "
 			 << bell::MAX_BELLS + 1 );
-  else if ( new_b <= 1 )
+  else if ( b <= 1 )
     throw runtime_error( "Number of bells must be greater than 1" );
 
-  b = new_b;
+  args.bells = b;
 }
 
 statement msparser::parse()
@@ -204,7 +215,7 @@ statement msparser::parse()
        && cmd[1].type() == mstokeniser::name && cmd[1] == "bells" )
     {
       bells( string_to_int( cmd[0] ) );
-      return statement( new bells_stmt(b) );
+      return statement( new bells_stmt(args.bells) );
     }
   
   // Import directive
@@ -349,7 +360,8 @@ msparser::make_expr( vector< token >::const_iterator first,
 
 RINGING_END_ANON_NAMESPACE
 
-shared_pointer<parser> make_default_parser( istream& in )
+shared_pointer<parser> 
+make_default_parser( istream& in, const arguments& args )
 {
-  return shared_pointer<parser>( new msparser(in) );
+  return shared_pointer<parser>( new msparser( in, args ) );
 }

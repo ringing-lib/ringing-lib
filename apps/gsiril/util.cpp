@@ -17,11 +17,12 @@
 
 // $Id$
 
-#ifdef RINGING_HAS_PRAGMA_INTERFACE
+#include <ringing/common.h>
+
+#if RINGING_HAS_PRAGMA_INTERFACE
 #pragma implementation
 #endif
 
-#include <ringing/common.h>
 #include "util.h"
 #include <string>
 #include <ringing/streamutils.h>
@@ -39,6 +40,14 @@
 #endif
 
 RINGING_USING_NAMESPACE
+
+string lower_case( const string& str )
+{
+  string s(str);
+  for ( string::iterator i(s.begin()), e(s.end()); i != e; ++i )
+    *i = tolower(*i);
+  return s;
+}
 
 void trim_leading_whitespace( string &line )
 {

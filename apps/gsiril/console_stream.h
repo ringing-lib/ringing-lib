@@ -20,11 +20,12 @@
 #ifndef GSIRIL_CONSOLE_STREAM_INCLUDED
 #define GSIRIL_CONSOLE_STREAM_INCLUDED
 
-#ifdef RINGING_HAS_PRAGMA_INTERFACE
+#include <ringing/common.h>
+
+#if RINGING_HAS_PRAGMA_INTERFACE
 #pragma interface
 #endif
 
-#include <ringing/common.h>
 #if RINGING_HAVE_OLD_IOSTREAMS
 #include <istream.h>
 #else

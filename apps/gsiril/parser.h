@@ -20,11 +20,12 @@
 #ifndef GSIRIL_PARSER_INCLUDED
 #define GSIRIL_PARSER_INCLUDED
 
-#ifdef RINGING_HAS_PRAGMA_INTERFACE
+#include <ringing/common.h>
+
+#if RINGING_HAS_PRAGMA_INTERFACE
 #pragma interface
 #endif
 
-#include <ringing/common.h>
 #if RINGING_OLD_INCLUDES
 #include <utility.h>
 #include <map.h>
@@ -40,9 +41,11 @@
 #endif
 #include <string>
 #include <ringing/pointers.h>
-#include "expression.h"
 
 RINGING_USING_NAMESPACE
+
+struct arguments;
+class statement;
 
 class parser
 {
@@ -54,7 +57,9 @@ public:
   virtual statement parse() = 0;
 };
 
-shared_pointer<parser> make_default_parser( istream& in );
+// if library_mode is set, the parser will not emit final
+shared_pointer<parser> 
+make_default_parser( istream& in, const arguments& args );
 
 
 #endif // GSIRIL_PARSER_INCLUDED

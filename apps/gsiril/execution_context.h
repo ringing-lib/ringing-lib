@@ -20,11 +20,12 @@
 #ifndef GSIRIL_EXECUTION_CONTEXT_INCLUDED
 #define GSIRIL_EXECUTION_CONTEXT_INCLUDED
 
-#ifdef RINGING_HAS_PRAGMA_INTERFACE
+#include <ringing/common.h>
+
+#if RINGING_HAS_PRAGMA_INTERFACE
 #pragma interface
 #endif
 
-#include <ringing/common.h>
 #if RINGING_OLD_INCLUDES
 #include <map.h>
 #else
@@ -39,6 +40,7 @@
 #include <ringing/row.h>
 #include <ringing/proof.h>
 #include <ringing/pointers.h>
+#include "prog_args.h"
 
 RINGING_USING_STD
 RINGING_USING_NAMESPACE
@@ -48,24 +50,28 @@ class expression;
 class execution_context
 {
 public:
-  execution_context( ostream& os, bool interactive = false );
+  execution_context( ostream& os, const arguments& arg );
  ~execution_context();
 
   ostream& output() const { return *os; }
 
   // Returns true for a redefinition and false otherwise
   bool define_symbol( const pair< const string, expression > &defn );
+  void undefine_symbol( const string& sym );
   expression lookup_symbol( const string &sym ) const;
+  void prove_symbol( const string& str ); 
+ 
 
-  int bells( int newb ) { int oldb (b); b=newb; return oldb; }
-  int bells() const  { return b; }
+  int bells( int b ) { swap(b, args.bells.get()); return b; }
+  int bells() const  { return args.bells; }
 
-  bool interactive( bool newi ) { bool oldi(intrv); intrv=newi; return oldi; }
-  bool interactive() const       { return intrv; }
+  bool interactive( bool i ) { swap(i, args.interactive.get()); return i; }
+  bool interactive() const   { return args.interactive; }
+
+  const arguments& get_args() const { return args; }
 
 private:
-  bool intrv;
-  int b;
+  arguments args;
 
   ostream* os;
 
@@ -99,7 +105,7 @@ public:
   ostream &output() { return ectx.output(); }
   permute_and_prove_t permute_and_prove();
 
-  void   execute_symbol( const string &sym );
+  void execute_symbol( const string &sym );
 
   enum proof_state { rounds, notround, isfalse } state() const;
   string substitute_string( const string &str, bool &do_exit );

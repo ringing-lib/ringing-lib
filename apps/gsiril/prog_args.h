@@ -1,5 +1,5 @@
-// -*- C++ -*-  util.h - Various utility functions needed in gsiril
-// Copyright (C) 2002 Richard Smith <richard@ex-parrot.com>
+// -*- C++ -*- prog_args.h - program arguments for gsiril
+// Copyright (C) 2003 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,24 +16,39 @@
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 // $Id$
-#ifndef GSIRIL_UTIL_INCLUDED
-#define GSIRIL_UTIL_INCLUDED
+
+
+#ifndef GSIRIL_ARGS_INCLUDED
+#define GSIRIL_ARGS_INCLUDED
 
 #include <ringing/common.h>
 
 #if RINGING_HAS_PRAGMA_INTERFACE
-#pragma interface
+#pragma interface "gsiril/prog_args.h"
 #endif
 
-#include <string>
+#include "init_val.h"
+
+class arg_parser;
 
 RINGING_USING_NAMESPACE
+RINGING_USING_STD
 
-int string_to_int( const string &num );
 
-void trim_leading_whitespace( string &line );
-void trim_trailing_whitespace( string &line );
+struct arguments
+{
+  init_val<int,0>      bells; // the default number of bells
 
-string lower_case( const string& str );
+  init_val<bool,false> interactive;
+  init_val<bool,false> case_insensitive;
 
-#endif // GSIRIL_UTIL_INCLUDED
+  string               prove_symbol;
+
+  arguments( int argc, char** argv );
+
+private:
+  void bind( arg_parser& p );
+  bool validate( arg_parser& p );
+};
+
+#endif // GSIRIL_ARGS_INCLUDED

@@ -17,17 +17,19 @@
 
 // $Id$
 
-#ifdef RINGING_HAS_PRAGMA_INTERFACE
-#pragma interface
-#endif
+#include <ringing/common.h>
 
 #ifndef GSIRIL_RLSTREAM_INCLUDED
 #define GSIRIL_RLSTREAM_INCLUDED
 
-#include <ringing/common.h>
+#if RINGING_HAS_PRAGMA_INTERFACE
+#pragma interface
+#endif
+
 #if !RINGING_USE_READLINE
 #error "This file requires GNU readline" 
 #endif
+
 #if RINGING_HAVE_OLD_IOSTREAMS
 #include <streambuf.h>
 #else

@@ -17,21 +17,23 @@
 
 // $Id$
 
-#ifdef RINGING_HAS_PRAGMA_INTERFACE
+#include <ringing/common.h>
+
+#if RINGING_HAS_PRAGMA_INTERFACE
 #pragma implementation
 #endif
 
-#include <ringing/common.h>
 #include <ringing/streamutils.h>
 #include "expression.h" // Must be before execution_context.h because 
                         // of bug in MSVC 6.0
 #include "execution_context.h"
+#include "common_expr.h"
 
 RINGING_USING_NAMESPACE
 
 
-execution_context::execution_context( ostream& os, bool interactive )
-  : intrv( interactive ), b(-1), os(&os)
+execution_context::execution_context( ostream& os, const arguments& args )
+  : args(args), os(&os)
 {
 }
 
@@ -47,6 +49,11 @@ expression execution_context::lookup_symbol( const string& sym ) const
   return i->second;
 }
 
+void execution_context::undefine_symbol( const string& sym )
+{
+  sym_table.erase(sym);
+}
+
 bool execution_context::define_symbol( const pair< const string, expression > &defn )
 {
   sym_table_t::iterator i = sym_table.find( defn.first );
@@ -60,10 +67,20 @@ bool execution_context::define_symbol( const pair< const string, expression > &d
   else
     {
       sym_table.insert( defn );
+      if ( sym_table.find( "__first__" ) == sym_table.end() )
+	sym_table.insert
+	  ( pair<const string, expression>( "__first__", defn.second ) );
       return false;
     }
 
   return sym_table.insert( defn ).second;
+}
+
+void execution_context::prove_symbol( const string& sym )
+{
+  expression e( new symbol_node(sym) );
+  statement s( new prove_stmt(e) );
+  s.execute( *this );
 }
 
 proof_context::proof_context( const execution_context &ectx ) 

@@ -19,7 +19,7 @@
 
 #include <ringing/common.h>
 
-#ifdef RINGING_HAS_PRAGMA_INTERFACE
+#if RINGING_HAS_PRAGMA_INTERFACE
 #pragma implementation "gsiril/expression.h"
 #pragma implementation "gsiril/common_expr.h"
 #endif
@@ -63,9 +63,7 @@ void prove_stmt::execute( execution_context& e ) const
   try 
     {
       proof_context p(e);
-      p.execute_symbol( "start" ); 
       expr.execute(p);
-      p.execute_symbol( "end" ); 
       switch ( p.state() )
 	{
 	case proof_context::rounds: 
@@ -103,7 +101,7 @@ void import_stmt::execute( execution_context& e ) const
 	throw runtime_error
 	  ( make_string() << "Unable to load resource: " << name );
       
-      shared_pointer<parser> p( make_default_parser(ifs) );
+      shared_pointer<parser> p( make_default_parser(ifs, e.get_args() ) );
       e.interactive(false);
       while (true)
 	{
@@ -114,12 +112,14 @@ void import_stmt::execute( execution_context& e ) const
     }
   catch (...)
     {
-      if (b != -1) e.bells(b);
+      // Restore bells, interactive flags
+      if (b > 0) e.bells(b);
       e.interactive(i);
       throw;
     }
 
-  if (b != -1) e.bells(b);
+  // Restore bells, interactive flags
+  if (b > 0) e.bells(b);
   e.interactive(i);
 
   if ( e.interactive() )
@@ -180,7 +180,7 @@ void string_node::debug_print( ostream &os ) const
 
 pn_node::pn_node( int bells, const string &pn )
 {
-  if ( bells == -1 )
+  if ( bells <= 0 )
     throw runtime_error( "Must set number of bells before using "
 			 "place notation" );
   

@@ -20,11 +20,12 @@
 #ifndef GSIRIL_COMMON_EXPR_INCLUDED
 #define GSIRIL_COMMON_EXPR_INCLUDED
 
-#ifdef RINGING_HAS_PRAGMA_INTERFACE
+#include <ringing/common.h>
+
+#if RINGING_HAS_PRAGMA_INTERFACE
 #pragma interface "gsiril/common_expr.h"
 #endif
 
-#include <ringing/common.h>
 #include "expression.h"
 #if RINGING_OLD_INCLUDES
 #include <utility.h>

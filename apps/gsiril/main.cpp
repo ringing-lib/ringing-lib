@@ -18,10 +18,19 @@
 // $Id$
 
 #include <ringing/common.h>
+
+#if RINGING_HAS_PRAGMA_INTERFACE
+#pragma interface "gsiril/prog_args.h"
+#endif
+
 #include <ringing/pointers.h>
+#include <ringing/streamutils.h>
 #include "console_stream.h"
 #include "parser.h"
 #include "execution_context.h"
+#include "args.h"
+#include "expression.h"
+#include "prog_args.h"
 #if RINGING_OLD_INCLUDES
 #include <stdexcept.h>
 #else
@@ -49,88 +58,163 @@
 RINGING_USING_NAMESPACE
 
 
-void welcome()
+arguments::arguments( int argc, char** argv ) 
 {
-  cout << "gsiril " RINGING_VERSION "\n"
-          "Ringing Class Library version " RINGING_VERSION << "." 
-       << endl;
+  arg_parser ap( argv[0], "gsiril -- proves touches.\v"
+  "To use gsiril in a microsiril compatible way, use the -IP options",
+		 "OPTIONS" );
+  
+  bind(ap);
+  if ( !ap.parse(argc, argv) ) {
+    ap.usage();
+    exit(1);
+  }
+
+  if ( !validate(ap) )
+    exit(1);
 }
 
-static const char init_string[] = 
-  "true     = \"# rows ending in @\", \"Touch is true\"\n"
-  "notround = \"# rows ending in @\", \"Is this OK?\"\n"
-  "false    = \"# rows ending in @\", \"Touch is false in $ rows\"\n"
-  "conflict = \"# rows ending in @\", \"Touch not completed due to false row$$\"\n"
-  "rounds   = \n"
-  "everyrow = \n"
-  "start    = \n"
-  "end      = \n"
-;
-
-
-int main( int argc, const char *argv[] )
+void arguments::bind( arg_parser& p )
 {
-  bool interactive = false;
+  p.add( new help_opt );
+  p.add( new version_opt );
 
-  for ( int i=1; i<argc; ++i )
+  p.add( new integer_opt
+	 ( 'b', "bells",
+	   "The default number of bells.",  "BELLS",
+	   bells ) );
+
+  p.add( new boolean_opt
+	 ( 'i', "interactive",
+	   "Run in interactive mode", 
+	   interactive ) );
+
+  p.add( new boolean_opt
+	 ( 'I', "case-insensitive",
+	   "Run case insensitively ", 
+	   case_insensitive ) );
+
+  p.add( new string_opt
+	 ( 'P', "prove",
+	   "Proves a particular symbol (or the first if none specified)",
+	   "SYMBOL",
+	   prove_symbol, "__first__" ) );
+
+  // NB __first__ is an alias for the first symbol
+}
+
+bool arguments::validate( arg_parser& ap )
+{
+  if ( bells != 0 && ( bells < 3 || bells >= int(bell::MAX_BELLS) ) )
     {
-      string arg( argv[i] );
-      if (arg == "-i" || arg == "--interactive" )
-	interactive = true;
+      ap.error( make_string() << "The number of bells must be between 3 and " 
+		<< bell::MAX_BELLS-1 << " (inclusive)" );
+      return false;
     }
 
+  return true;
+}
+
+int parse_all( execution_context& e,
+	       const shared_pointer<parser>& p,
+	       const string& error_prefix,
+	       bool errors_are_fatal )
+{
+  int count(0);
+
+  while (true)
+    {
+      try 
+	{
+	  statement s( p->parse() );
+	  if ( s.eof() ) break;
+	  s.execute(e);
+	  ++count;
+	}
+      catch (const exception& ex )
+	{
+	  cerr << error_prefix << ": " << ex.what() << endl;
+	  if (errors_are_fatal) exit(1);
+	}
+    }
+
+  return count;
+}
+
+void welcome()
+{
+  cout << "Ringing Class Library / gsiril " RINGING_VERSION ".\n"
+"Gsiril is free software covered by the GNU General Public License, and you\n"
+"are welcome to change it and/or distribute copies of it under certain\n"
+"conditions."  << endl;
+}
+
+void initialse( execution_context& e, const arguments& args )
+{
+  const char init_string[] = 
+"true     = \"# rows ending in @\", \"Touch is true\"\n"
+"notround = \"# rows ending in @\", \"Is this OK?\"\n"
+"false    = \"# rows ending in @\", \"Touch is false in $ rows\"\n"
+"conflict = \"# rows ending in @\", \"Touch not completed due to false row$$\"\n"
+"rounds   = \n"
+"everyrow = \n"
+"start    = \n"
+"end      = \n";
+
+  // Turn off interactivity whilst it prepopulates the symbol table
+  bool interactive = e.interactive(false);
+
+#if RINGING_USE_STRINGSTREAM
+  istringstream in(init_string);
+#else
+  istrstream in(init_string);
+#endif
+
+  // Prepopulate symbol table
+  parse_all(e, make_default_parser(in, args),
+	    "Error initialising", true);
+
+  e.interactive(interactive);
+
+  // Don't allow any of the predefined symbols to polute 'first'.
+  e.undefine_symbol( "__first__" );
+}
+
+void prove_final_symbol( execution_context& e, const arguments& args )
+{
+  try 
+    {
+      e.prove_symbol( args.prove_symbol );
+    } 
+  catch (const exception& ex ) 
+    {
+      cerr << "Error proving " << args.prove_symbol << ": "
+	   << ex.what() << endl;
+      if (!args.interactive) 
+	exit(1);
+    }
+}
+
+int main( int argc, char *argv[] )
+{
   try
     {
-      execution_context e( cout );
+      arguments args( argc, argv );
 
-      // Prepopulate symbol table
-      {
-#if RINGING_USE_STRINGSTREAM
-	istringstream in(init_string);
-#else
-	istrstream in(init_string);
-#endif
-	shared_pointer<parser> p( make_default_parser(in) );
-	while (true)
-	  {
-	    try 
-	      {
-		statement s( p->parse() );
-		if ( s.eof() ) break;
-		s.execute(e);
-	      }
-	    catch (const exception& ex )
-	      {
-		cerr << "Error initialising: " << ex.what() << endl;
-		return 1;
-	      }
-	  }
-      }
+      execution_context e( cout, args );
+      initialse(e, args);
 
-      e.interactive( interactive );
-      if (interactive) welcome();
+      if (args.interactive) welcome();
 
-      // Read from standard input
-      {
-	console_istream in( interactive );
-	in.set_prompt( "> " );
-	shared_pointer<parser> p( make_default_parser(in) );
-	while (true)
-	  {
-	    try 
-	      {
-		statement s( p->parse() );
-		if ( s.eof() ) break;
-		s.execute( e );
-	      }
-	    catch (const exception& ex )
-	      {
-		cerr << "Error: " << ex.what() << endl;
-		if (!interactive) return 1;
-	      }
-	  }
-      }
+      console_istream cin( args.interactive );
+      cin.set_prompt( "> " );
 
+      bool read_anything 
+	= parse_all(e, make_default_parser(cin, args), 
+		    "Error", !args.interactive);
+
+      if ( read_anything && args.prove_symbol.size() )  
+	prove_final_symbol( e, args );
     }
   catch ( const exception &ex )
     {

@@ -20,11 +20,12 @@
 #ifndef GSIRIL_EXPRESSION_INCLUDED
 #define GSIRIL_EXPRESSION_INCLUDED
 
-#ifdef RINGING_HAS_PRAGMA_INTERFACE
+#include <ringing/common.h>
+
+#if RINGING_HAS_PRAGMA_INTERFACE
 #pragma interface "gsiril/expression.h"
 #endif
 
-#include <ringing/common.h>
 #if RINGING_HAVE_OLD_IOSTREAMS
 #include <ostream.h>
 #else

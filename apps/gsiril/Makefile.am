@@ -35,6 +35,6 @@ endif
 
 gsiril_SOURCES = main.cpp console_stream.cpp console_stream.h \
 execution_context.cpp execution_context.h expression.cpp expression.h \
-common_expr.h parser.cpp parser.h util.cpp util.h $(additional)
+common_expr.h parser.cpp parser.h util.cpp util.h prog_args.h $(additional)
 
 EXTRA_gsiril_SOURCES = rlstream.cpp rlstream.h
