@@ -193,7 +193,11 @@ void interpret_pn(int num, ForwardIterator i, ForwardIterator finish,
     while(i != finish && !(isalnum(*i) || *i == '&' || *i == '-')) ++i;
     // See whether it's a symmetrical block or not
     if(i == finish) return;
-    symblock = (*i == '&'); if(symblock) ++i;
+    symblock = (*i == '&'); 
+    if(symblock) { 
+      ++i;
+      while(i != finish && !(isalnum(*i) || *i == '&' || *i == '-')) ++i;
+    }
     while(i != finish && *i == '.') ++i;
     while(i != finish && (isalnum(*i) || *i == '-')) {
       // Get a change
