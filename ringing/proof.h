@@ -89,7 +89,7 @@ struct linedetail {
   row _row;
   list<int> _lines;
 
-  RINGING_FAKE_COMPARATORS( linedetail );
+  RINGING_FAKE_COMPARATORS( linedetail )
 };
 
 class RINGING_API prover

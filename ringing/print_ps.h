@@ -62,9 +62,9 @@ public:
   void add(const row& r);
   void output(ostream& o, int x, int y);
 
-  RINGING_FAKE_DEFAULT_CONSTRUCTOR( drawline_ps );
-  RINGING_FAKE_COMPARATORS( drawline_ps );
-  RINGING_FAKE_ASSIGNMENT( drawline_ps );
+  RINGING_FAKE_DEFAULT_CONSTRUCTOR( drawline_ps )
+  RINGING_FAKE_COMPARATORS( drawline_ps )
+  RINGING_FAKE_ASSIGNMENT( drawline_ps )
 };
 
 class printrow_ps : public printrow::base {

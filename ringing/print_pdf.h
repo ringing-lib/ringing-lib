@@ -123,9 +123,9 @@ public:
   void add(const row& r);
   void output(pdf_file& f);
 
-  RINGING_FAKE_DEFAULT_CONSTRUCTOR( drawline_pdf );
-  RINGING_FAKE_COMPARATORS( drawline_pdf );
-  RINGING_FAKE_ASSIGNMENT( drawline_pdf );
+  RINGING_FAKE_DEFAULT_CONSTRUCTOR( drawline_pdf )
+  RINGING_FAKE_COMPARATORS( drawline_pdf )
+  RINGING_FAKE_ASSIGNMENT( drawline_pdf )
 };
 
 struct text_bit {
@@ -134,7 +134,7 @@ struct text_bit {
   bool squash;
   string s;
 
-  RINGING_FAKE_COMPARATORS( text_bit );
+  RINGING_FAKE_COMPARATORS( text_bit )
 };
 
 class printrow_pdf : public printrow::base {
