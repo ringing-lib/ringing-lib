@@ -235,7 +235,7 @@ void interpret_pn(int num, ForwardIterator i, ForwardIterator finish,
     }
     // Now output the block
     copy(block.begin(), block.end(), out);
-    if(symblock) { 
+    if(symblock && !block.empty()) { 
       block.pop_back(); 
       copy(block.rbegin(), block.rend(), out);
     }
