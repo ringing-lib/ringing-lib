@@ -122,6 +122,8 @@ xmllib::xmllib( xmllib::file_arg_type type, const string& url )
 xmllib::impl::impl( xmllib::file_arg_type type, const string& url )
   : force_init( init_xerces() )
 {
+  parser.setDoNamespaces(true);
+
   try
     {
       switch (type) 
