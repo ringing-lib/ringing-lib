@@ -29,6 +29,7 @@ int test_main()
   RINGING_RUN_TEST_FILE( change )
   RINGING_RUN_TEST_FILE( row )
   RINGING_RUN_TEST_FILE( method )
+  RINGING_RUN_TEST_FILE( music )
 
   RINGING_USING_TEST
   if ( run_tests( true ) ) 

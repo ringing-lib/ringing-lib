@@ -23,6 +23,7 @@
 
 #include <ringing/common.h>
 #include <ringing/music.h>
+#include <ctype.h>
 
 RINGING_START_NAMESPACE
 
@@ -186,9 +187,27 @@ unsigned int music_details::possible_matches(const unsigned int &bells, const un
 	}
       else if (s[pos] == '[')
 	{
-	  // Calculate number of options, and multiply by rest of matches
-	  unsigned int newpos = s.find(']', pos + 1);
-	  return possible_matches(bells, newpos + 1, s, q) * (newpos - pos - 1);
+	  // Replace the [...] with each item in it and 
+	  // pass through again.
+	  unsigned int lastpos = s.find(']', pos + 1);
+	  unsigned int total = 0;
+	  unsigned int origq = q;
+	  for (unsigned int i = pos + 1; i < lastpos; i++)
+	    {
+	      string modified(s, 0, pos);
+	      unsigned int newpos = modified.size();
+	      // Only do this if the bell isn't in the string
+	      // already.
+	      if (modified.find(s[i]) > modified.size())
+		{
+		  modified += s[i];
+		  modified += s.substr(lastpos + 1, s.size() - lastpos - 1);
+		  // ensure q is reset
+		  q = origq;
+		  total += possible_matches(bells, newpos, modified, q);
+		}
+	    } 
+	  return total;
 	}
       else if (s[pos] == '*')
 	{
@@ -297,7 +316,8 @@ bool music_details::check_expression()
   std::string::iterator i;
   bell b;
   bool valid = true;
-  int brackets = 0;
+  int sqbrackets = 0;
+  int specifier = 0; // incrementing or decrementing run
   for (i = this->begin(); i != this->end(); i++)
     {
       if (!is_bell(*i, b))
@@ -307,7 +327,7 @@ bool music_details::check_expression()
 	    {
 	    case '?':
 	    case '*':
-	      if (brackets != 0)
+	      if (sqbrackets != 0)
 		{
 #if RINGING_USE_EXCEPTIONS
 		  throw invalid_regex();
@@ -317,7 +337,7 @@ bool music_details::check_expression()
 		}
 	      break;
 	    case '[':
-	      if (brackets != 0)
+	      if (sqbrackets != 0)
 		{
 #if RINGING_USE_EXCEPTIONS
 		  throw invalid_regex();
@@ -325,10 +345,10 @@ bool music_details::check_expression()
 		  return false;
 #endif
 		}
-	      brackets = 1;
+	      sqbrackets = 1;
 	      break;
 	    case ']':
-	      if (brackets != 1)
+	      if (sqbrackets != 1)
 		{
 #if RINGING_USE_EXCEPTIONS
 		  throw invalid_regex();
@@ -336,7 +356,7 @@ bool music_details::check_expression()
 		  return false;
 #endif
 		}
-	      brackets = 0;
+	      sqbrackets = 0;
 	      break;
 	    default:
 	      valid = false;
@@ -351,6 +371,14 @@ bool music_details::check_expression()
 	      break;
 	    }
 	}
+    }
+  if (sqbrackets != 0)
+    {
+#if RINGING_USE_EXCEPTIONS
+      throw invalid_regex();
+#else
+      return false;
+#endif
     }
   return valid;
 }
