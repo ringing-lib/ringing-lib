@@ -43,13 +43,90 @@ else
 fi
 AC_SUBST(RINGING_USE_EXCEPTIONS)
 
-AC_CXX_NAMESPACES
-if test "$ac_cv_cxx_namespaces" = yes; then
+dnl Check if compile supports namespaces
+dnl
+dnl The use of the template class is important because it causes msvc-5
+dnl to fail this test by trying to find A in namespace bar during the
+dnl instantiation of the default argument of B::baz (or something equally 
+dnl silly).  This is important because the STL frequently does this.
+AC_CACHE_CHECK(
+  [whether the compiler implements namespaces],
+  [ac_cv_cxx_namespaces],
+  [AC_TRY_COMPILE(
+    [
+      namespace bar
+      {
+        template <class T> struct B 
+	{ 
+	  void baz(const T & = T());
+	};
+      }
+      namespace foo 
+      {
+        using namespace bar;
+        class A {};
+        void f() { B<A> b; b.baz(); }
+      }
+    ],
+    [ foo::f(); ],
+    ac_cv_cxx_namespaces=yes,
+    ac_cv_cxx_namespaces=no
+  )]
+)
+if test "$ac_cv_cxx_namespaces" = yes ; then
   RINGING_USE_NAMESPACES=1;
 else
   RINGING_USE_NAMESPACES=0;
 fi
 AC_SUBST(RINGING_USE_NAMESPACES)
+
+dnl Check if platform supports template function specialisation
+dnl
+AC_CACHE_CHECK(
+  [whether compiler supports template function specialisation],
+  [ac_cv_cxx_template_function_specialisation],
+  [AC_TRY_COMPILE(
+    [
+      template <class T> void foo(const T &) {}
+      template <> void foo<int>(const int &) {}
+    ],  
+    [ foo((int)1); ],
+    ac_cv_cxx_template_function_specialisation=yes,
+    ac_cv_cxx_template_function_specialisation=no
+  )]
+)
+if test "$ac_cv_cxx_template_function_specialisation" = yes ; then
+  RINGING_USE_TEMPLATE_FUNCTION_SPECIALISATION=1
+else
+  RINGING_USE_TEMPLATE_FUNCTION_SPECIALISATION=0
+fi
+AC_SUBST(RINGING_USE_TEMPLATE_FUNCTION_SPECIALISATION)
+
+dnl Check to see whether instantiating a class instantiates its 
+dnl members' definitions or just declarations
+dnl
+AC_CACHE_CHECK(
+  [whether class instantiation prematurely instantiates members],
+  [ac_cv_cxx_premature_member_instantiation],
+  [AC_TRY_COMPILE(
+    [
+      class A {};
+      template <class T> struct foo { 
+        bool bar() const { return a < b; }
+        T a, b;
+      };
+    ],
+    [ foo<A> f; return 0; ],
+    ac_cv_cxx_premature_member_instantiation=no,
+    ac_cv_cxx_premature_member_instantiation=yes
+  )]
+)
+if test "$ac_cv_cxx_premature_member_instantiation" = yes ; then
+  RINGING_PREMATURE_MEMBER_INSTANTIATION=1
+else
+  RINGING_PREMATURE_MEMBER_INSTANTIATION=0
+fi
+AC_SUBST(RINGING_PREMATURE_MEMBER_INSTANTIATION)
 
 dnl Check to see whether the standard includes put their things in
 dnl the std namespace

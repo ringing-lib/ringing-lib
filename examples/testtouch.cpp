@@ -17,12 +17,19 @@
 
 // $Id$
 
+#include <ringing/common.h>
+#if RINGING_OLD_INCLUDES
 #include <iostream.h>
+#else
+#include <iostream>
+#endif
 #include <ringing/touch.h>
 #include <ringing/proof.h>
 #include <ringing/music.h>
 
+#if RINGING_USE_NAMESPACES
 using namespace ringing;
+#endif
 
 int main()
 {
@@ -58,4 +65,6 @@ int main()
   copy(l.begin(), l.end(), ostream_iterator<row>(cout, "\n"));
 
   cout << endl << "Music: " << music(l.begin(), l.end()) << endl;
+
+  return 0;
 }

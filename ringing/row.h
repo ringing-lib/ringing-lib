@@ -30,11 +30,13 @@
 #include <vector.h>
 #include <iterator.h>
 #include <list.h>
+#include <algorithm.h>
 #else
 #include <iostream>
 #include <vector>
 #include <iterator>
 #include <list>
+#include <algorithm>
 #endif
 #if RINGING_OLD_C_INCLUDES
 #include <ctype.h>
@@ -182,7 +184,7 @@ public:
 
   row& operator=(const char *s);	// Assign a string
   int operator==(const row& r) const; // Compare
-  int operator!=(const row& r)
+  int operator!=(const row& r) const
     { return !(*this == r); }
   bell operator[](int i) const	// Return one particular bell (not an lvalue).
     { return data[i]; }
@@ -221,15 +223,32 @@ inline ostream& operator<<(ostream& o, const row& r) {
 // An operator which has to be here
 row& operator*=(row& r, const change& c);
 
-struct permute
+struct permuter
 {
   typedef row result_type;
-  explicit permute(row &r) : r(r) {}  
+  explicit permuter(unsigned n) : r(row::rounds(n)) {}
+
   const row &operator()(const change &c) { return r *= c; }
   const row &operator()(const row &c) { return r *= c; }
+
+private:
+  row r;
+};
+
+struct row_permuter
+{
+  typedef row result_type;
+  explicit row_permuter(row &r) : r(r) {}  
+
+  const row &operator()(const change &c) { return r *= c; }
+  const row &operator()(const row &c) { return r *= c; }
+
 private:
   row &r;
 };
+
+inline permuter permute(unsigned n) { return permuter(n); }
+inline row_permuter permute(row &r) { return row_permuter(r); }
 
 // row_block : Stores some rows, along with a pointer to some
 // changes from which they can be calculated.
@@ -255,37 +274,15 @@ public:
 RINGING_END_NAMESPACE
 
 // specialise std::swap
-#if RINGING_USE_STD
-#if RINGING_USE_NAMESPACES
-namespace std 
-{
-  template <> inline 
-  void swap<ringing::row>(ringing::row &a, ringing::row &b)
-    { a.swap(b); }
-}
-#else
-namespace std 
-{
-  template <> inline 
-  void swap<row>(row &a, row &b)
-    { a.swap(b); }
-}
-#endif // RINGING_USE_NAMESPACES
-#else
-#if RINGING_USE_NAMESPACES
-template <> inline
-void swap<ringing::row>(ringing::row& a, ringing::row& b)
-  { a.swap(b); }
-#else
-template <> inline 
-void swap<row>(row &a, row &b)
-  { a.swap(b); }
-#endif // RINGING_USE_NAMESPACES
-#endif // RINGING_USE_STD
+#if RINGING_USE_TEMPLATE_FUNCTION_SPECIALISATION
+RINGING_START_NAMESPACE_STD
 
+template <> inline 
+void swap<RINGING_PREFIX row>(RINGING_PREFIX row &a, RINGING_PREFIX row &b)
+  { a.swap(b); }
+
+RINGING_END_NAMESPACE_STD
 #endif
 
 
-
-
-
+#endif

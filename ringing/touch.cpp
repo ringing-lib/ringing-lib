@@ -30,7 +30,7 @@ RINGING_USING_STD
 
 touch::iterator::iterator(const touch& t)
 {
-  dummy_node.children.push_back(pair<int, touch::pointer>
+  dummy_node.children.push_back(pair<int, touch_node *>
 				(1, const_cast<touch&>(t).root()));
   trail.push(place(dummy_node));
   ch = current_node().changes.begin();
@@ -72,6 +72,7 @@ touch::iterator& touch::iterator::operator++()
   if(!trail.empty()) ++ch;
   while(!trail.empty() && ch == current_node().changes.end())
     next_node();
+  return *this;
 } 
 
 RINGING_END_NAMESPACE

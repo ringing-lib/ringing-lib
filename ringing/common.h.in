@@ -21,6 +21,26 @@
 // indicated by ***.  The expression @VARIABLE@ should be replaced by
 // the value appropriate for your system.
 
+// When using Microsoft Visual C++ 5, the following options seem to work:
+//  #define RINGING_OLD_INCLUDES 0
+//  #define RINGING_OLD_C_INCLUDES 0
+//  #define RINGING_USE_EXCEPTIONS 1
+//  #define RINGING_USE_NAMESPACES 0
+//  #define RINGING_USE_STD 1
+//  #define RINGING_USE_TEMPLATE_FUNCTION_SPECIALISATION 1
+//  #define RINGING_PREMATURE_MEMBER_INSTANTIATION 1
+
+// In Microsoft Visual C++ 6 and the beta releases of Visual C++ 7, the 
+// following options work:
+//  #define RINGING_OLD_INCLUDES 0
+//  #define RINGING_OLD_C_INCLUDES 0
+//  #define RINGING_USE_EXCEPTIONS 1
+//  #define RINGING_USE_NAMESPACES 1
+//  #define RINGING_USE_STD 1
+//  #define RINGING_USE_TEMPLATE_FUNCTION_SPECIALISATION 1
+//  #define RINGING_PREMATURE_MEMBER_INSTANTIATION 0
+
+
 // $Id$
 
 #ifndef RINGING_COMMON_H
@@ -60,30 +80,47 @@
 // if the definitions are in the global namespace.
 #define RINGING_USE_STD @RINGING_USE_STD@
 
+// *** Define this to be 1 if your compiler supports specialisation of 
+// template functions, or 0 if it does not.
+#define RINGING_USE_TEMPLATE_FUNCTION_SPECIALISATION @RINGING_USE_TEMPLATE_FUNCTION_SPECIALISATION@
+
+// *** Define this to be 1 if your compiler prematurely instantiates the 
+// definitions of member functions (as well as their declarations) when
+// it implicitly instantiates a class, or 0 otherwise.
+#define RINGING_PREMATURE_MEMBER_INSTANTIATION @RINGING_PREMATURE_MEMBER_INSTANTIATION@
+
+
 #if RINGING_USE_NAMESPACES
 #define RINGING_START_NAMESPACE namespace ringing {
 #define RINGING_END_NAMESPACE };
+#define RINGING_PREFIX ringing::
 #else
 #define RINGING_START_NAMESPACE
 #define RINGING_END_NAMESPACE
+#define RINGING_PREFIX
 #endif
 
 #if RINGING_USE_STD
 #define RINGING_USING_STD using namespace std;
+#define RINGING_START_NAMESPACE_STD namespace std {
+#define RINGING_END_NAMESPACE_STD };
 #else
 #define RINGING_USING_STD
+#define RINGING_START_NAMESPACE_STD
+#define RINGING_END_NAMESPACE_STD
 #endif
 
 #if _MSC_VER == 1200 && RINGING_USE_STD && RINGING_USE_NAMESPACES
 // Visual Studio 6 has the amusing bug that the third time you enter
-// namespace a process a using declaration, the using declaration
+// a namespace and process a using declaration, the using declaration
 // is completely ignored.  This only appears to happen the third time,
 // so we safely get this out of its system.  Any more sane suggestions
 // appreciated...
-namespace std {}
+RINGING_START_NAMESPACE_STD RINGING_END_NAMESPACE_STD
 RINGING_START_NAMESPACE RINGING_USING_STD RINGING_END_NAMESPACE
 RINGING_START_NAMESPACE RINGING_USING_STD RINGING_END_NAMESPACE
 RINGING_START_NAMESPACE RINGING_USING_STD RINGING_END_NAMESPACE
 #endif
 
 #endif
+
