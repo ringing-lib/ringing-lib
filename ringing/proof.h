@@ -117,10 +117,10 @@ public:
   int operator!() const;
 
 private:
+  bool return_true(const void*) { return true; };
   void resetfailinfo();
   bool istrue;                    // Well, is it true or not?
   failinfo where;                // Details of where it failed.
-  int _length;
 }; 
 
 /******************************************
@@ -133,7 +133,6 @@ proof<RowIterator>::proof()
 {
   // Set istrue to false as we haven't been given anything to prove yet.
   istrue = false;
-  _length = 0;
   resetfailinfo();
 }
 
@@ -163,6 +162,8 @@ bool proof<RowIterator>::prove (RowIterator first, RowIterator last)
   RowIterator k;
   istrue = true;
   int changed_line;
+  int count_i = 0;
+  int count_j = 0;
 
   // First reset out failed information list
   resetfailinfo();
@@ -172,59 +173,64 @@ bool proof<RowIterator>::prove (RowIterator first, RowIterator last)
   // compare it to the rest (starting from the third, going to the end)
   // and so forth. If it's false the details get stored for later
   // retrival if required.
-  for (i = first; i < last - 1; i++)
+  i = first;
+  while (i != last)
     {
+      count_i++;
       changed_line = 1;
-      k = i + 1;
-      // Does it exist elsewhere in the rows? - Check for all occurances.
-      while ((j = find(k, last, *i)) != last)
+      count_j = count_i;
+      j = i;
+      j++;
+      while (j != last)
 	{
-	  istrue = false;
-	  // add the false rows into the failinfo mmap.
-	  // does it exist already?
-	  int exists = 0;
-	  failinfo::iterator fi = where.begin();
-	  // Search only if there is something to search
-	  if (where.size() > 0)
+	  count_j++;
+	  if (*j == *i)
 	    {
-	      fi = where.begin();
-	      while ((fi != where.end()) && (exists == 0))
+	      istrue = false;
+	      // add the false rows into the failinfo mmap.
+	      // does it exist already?
+	      int exists = 0;
+	      failinfo::iterator fi = where.begin();
+	      // Search only if there is something to search
+	      if (where.size() > 0)
 		{
-		  if ((*fi)._row == *i)
+		  fi = where.begin();
+		  while ((fi != where.end()) && (exists == 0))
 		    {
-		      exists = 1;
+		      if ((*fi)._row == *i)
+			{
+			  exists = 1;
+			}
+		      else
+			{
+			  fi++;
+			}
 		    }
-		  else
+		}
+	      if (exists == 0)
+		{
+		  // no, so start a new item.
+		  linedetail l;
+		  l._row = *i;
+		  l._lines.push_back(count_i);
+		  l._lines.push_back(count_j);
+		  where.push_back(l);
+		  changed_line = 0;
+		}
+	      else
+		{
+		  // yes it does, but only record the first time a
+		  // change is entered
+		  if (changed_line == 0)
 		    {
-		      fi++;
+		      (*fi)._lines.push_back(count_j);
 		    }
 		}
 	    }
-	  if (exists == 0)
-	    {
-	      // no, so start a new item.
-	      linedetail l;
-	      l._row = *i;
-	      l._lines.push_back(i - first);
-	      l._lines.push_back(j - first);
-	      where.push_back(l);
-	      changed_line = 0;
-	    }
-	  else
-	    {
-	      // yes it does, but only record the first time a
-	      // change is entered
-	      if (changed_line == 0)
-		{
-		  (*fi)._lines.push_back(j - first);
-		}
-	    }
-	  // Check to see if it's found anywhere else...
-	  k = j + 1;
+	  j++;
 	}
+      i++;
     }
-  // Update the length variable for the length function.
-  _length = last - first - 1;
 
   return istrue;
 }
@@ -234,10 +240,10 @@ template <class RowIterator>
 bool proof<RowIterator>::prove (RowIterator first, RowIterator last,
 				const int max, hash_function f)
 {
-  istrue = true;
   RowIterator i;
+  int count_i = 0;
   mmap m;
-  istrue = 1;
+  istrue = true;
 
   // First reset out failed information list
   resetfailinfo();
@@ -245,8 +251,10 @@ bool proof<RowIterator>::prove (RowIterator first, RowIterator last,
   // This time we go through the list once, checking that we haven't
   // exceeded max, the limit for the number of rows. If we do, then
   // we add the item onto a list for later reference.
-  for(i = first; i < last; i++)
+  i = first;
+  while (i != last)
     {
+      count_i++;
       if ((int) m.count(f(*i)) >= max)
 	{
 	  istrue = false;
@@ -275,23 +283,31 @@ bool proof<RowIterator>::prove (RowIterator first, RowIterator last,
 	      // no, so start a new item.
 	      linedetail l;
 	      l._row = *i;
-	      l._lines.push_back(find(first, last, *i) - first);
-	      l._lines.push_back(i - first);
+	      RowIterator j = first;
+	      int count_j = 1;
+	      while ((j != i))
+		{
+		  if (*j == *i)
+		    {
+		      l._lines.push_back(count_j);
+		    }
+		  count_j++;
+		  j++;
+		}
+	      l._lines.push_back(count_i);
 	      where.push_back(l);
 	    }
 	  else
 	    {
 	      // yes, add this one onto the existing item.
-	      (*fi)._lines.push_back(i - first);
+	      (*fi)._lines.push_back(count_i);
 	    }
 	}
       // Insert the pair into the multimap
       m.insert(make_pair(f(*i), *i));
+      i++;
     }
 
-  // Update the length variable for the length function.
-  _length = last - first - 1;
-  
   return istrue;
 }
 
