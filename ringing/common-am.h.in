@@ -1,4 +1,4 @@
-// -*- C++ -*- common.h.in - Common macros and so on.
+// -*- C++ -*- common-am.h.in - Common macros and so on.
 // Copyright (C) 2001 Martin Bright <M.Bright@dpmms.cam.ac.uk>
 
 // This program is free software; you can redistribute it and/or modify
@@ -16,42 +16,21 @@
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 // ******** INSTRUCTIONS
-// This file is turned into common.h by the configure script.
+// This file is turned into common-am.h by the configure script.
 // If you are editing this file by hand, you should change everything
 // indicated by ***.  The expression @VARIABLE@ should be replaced by
 // the value appropriate for your system.
 
-// When using Microsoft Visual C++ 5, the following options seem to work:
-//  #define RINGING_OLD_INCLUDES 0
-//  #define RINGING_OLD_C_INCLUDES 0
-//  #define RINGING_USE_EXCEPTIONS 1
-//  #define RINGING_USE_NAMESPACES 0
-//  #define RINGING_USE_STD 1
-//  #define RINGING_USE_TEMPLATE_FUNCTION_SPECIALISATION 1
-//  #define RINGING_PREMATURE_MEMBER_INSTANTIATION 1
-
-// In Microsoft Visual C++ 6 and the beta releases of Visual C++ 7, the 
-// following options work:
-//  #define RINGING_OLD_INCLUDES 0
-//  #define RINGING_OLD_C_INCLUDES 0
-//  #define RINGING_USE_EXCEPTIONS 1
-//  #define RINGING_USE_NAMESPACES 1
-//  #define RINGING_USE_STD 1
-//  #define RINGING_USE_TEMPLATE_FUNCTION_SPECIALISATION 1
-//  #define RINGING_PREMATURE_MEMBER_INSTANTIATION 0
-
-
 // $Id$
 
-#ifndef RINGING_COMMON_H
-#define RINGING_COMMON_H
+#ifndef RINGING_COMMON_AM_H
+#define RINGING_COMMON_AM_H
 
 // *** Define this to be the name of the package (i.e. ringing-lib)
 // #define RINGING_PACKAGE ringing-lib
 #define RINGING_PACKAGE "@PACKAGE@"
 
 // *** Define this to be the version number of the package
-// #define RINGING_VERSION 0.2.6
 #define RINGING_VERSION "@VERSION@"
 
 // *** Define this to be 1 to use old-style standard C++ header names
@@ -84,11 +63,6 @@
 // definitions of member functions (as well as their declarations) when
 // it implicitly instantiates a class, or 0 otherwise.
 #define RINGING_PREMATURE_MEMBER_INSTANTIATION @RINGING_PREMATURE_MEMBER_INSTANTIATION@
-
-
-#define RINGING_INSIDE_COMMON_H
-#include "macros.h"
-#undef RINGING_INSIDE_COMMON_H
 
 #endif
 

@@ -25,6 +25,7 @@
 #include <stdexcept>
 #endif
 #include <ringing/method.h>
+#include <ringing/extent.h>
 #include <string>
 
 #if RINGING_USE_NAMESPACES
@@ -124,6 +125,10 @@ int main()
     cout << "Full name: " << m.fullname(s) << endl;
     cout << "Lead head code: " << m.lhcode() << endl;
   }
+
+  cout << "\nThere are "
+       << distance( extent_iterator( 5, 1, 8 ), extent_iterator() )
+       << " tenors-together lead-ends on eight bells" << endl;
     
   return 0;
 }

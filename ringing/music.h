@@ -110,7 +110,7 @@ public:
 
   // Have to know how many bells there are
   music_node() { bells = 0; }
-  music_node(const unsigned int &b = 0) { bells = b; }
+  music_node(const unsigned int &b) { bells = b; }
   ~music_node();
 
   void set_bells(const unsigned int &b);

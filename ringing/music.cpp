@@ -164,7 +164,7 @@ void music_node::add(const music_details &md, const unsigned int &i, const unsig
 	{
 	  b.from_char(md[i]);
 	}
-      catch (exception &e)
+      catch (exception &)
 	{
 	  isbell = false;
 	}

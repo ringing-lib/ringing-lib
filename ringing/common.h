@@ -1,4 +1,4 @@
-// -*- C++ -*- stuff.h - Random useful things
+// -*- C++ -*- common.h - Common macros and so on.
 // Copyright (C) 2001 Martin Bright <M.Bright@dpmms.cam.ac.uk>
 
 // This program is free software; you can redistribute it and/or modify
@@ -15,34 +15,22 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-// $Id$
+#ifndef RINGING_COMMON_H
+#define RINGING_COMMON_H
+#define RINGING_INSIDE_COMMON_H
 
-#ifndef RINGING_STUFF_H
-#define RINGING_STUFF_H
+#ifdef _MSC_VER
+// Getting the GNU Autotools, and even the configure script, working with 
+// Microsoft Visual Studio is complicated (not in the least by the fact
+// that both parties refuse to believe in the existance of the other), and
+// some Unix-like wrapper such as MinGW or Cygwin is needed in which to run
+// the Autotools.  This 
+#include "common-msvc.h"
+#else
+#include "common-am.h"
+#endif
 
-#include <ringing/common.h>
+#include "macros.h"
 
-RINGING_START_NAMESPACE
-
-// A buffer which allocates and frees itself
-class buffer {
-private:
-  char *p;
-  int s;
-
-public:
-  buffer(int siz) : s(siz) { p = new char[s]; }
-  ~buffer() { delete[] p; }
-  
-  int size() { return s; }
-  operator char*() { return p; }
-  operator const char *() const { return p; }
-  char& operator[](int i) { return p[i]; }
-  const char& operator[](int i) const { return p[i]; }
-};
-
-RINGING_END_NAMESPACE
-
-#endif  
-
-
+#undef RINGING_INSIDE_COMMON_H
+#endif // RINGING_COMMON_H

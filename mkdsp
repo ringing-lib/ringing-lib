@@ -30,7 +30,7 @@
 
 # Enable msvc-6 specific extentions?
 # (Note: this will not prevent it compilation in msvc-5.)
-my $assume_msvc6 = 1;
+my $assume_msvc6 = 0;
 
 # Always create DLLs where unix static libraries are used?
 my $always_dll = 0;

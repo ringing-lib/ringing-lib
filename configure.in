@@ -163,10 +163,10 @@ fi
 if test "$can_build" = no; then
   AC_MSG_WARN([Some problems were encountered which mean that you will not
 be able to build the Ringing Class Library.  You will still be able to install
-and read the documentation.  If you edit the file ringing/common.h to reflect
-what environment will be present when using the library, then you will also 
-be able to install the header files.]);
+and read the documentation.  If you edit the file ringing/common-am.h to 
+reflect what environment will be present when using the library, then you will
+also be able to install the header files.]);
 fi
 
 AC_OUTPUT(Makefile ringing/Makefile doc/Makefile examples/Makefile 
-  ringing/common.h)
+  ringing/common-am.h)
