@@ -1,3 +1,9 @@
+Version 0.2.6 (13 January 2002):
+  More method library improvements and tidying.
+  Add printing of whole methods, and colour printing.  Command-line
+    program examples/psline for method printing.
+  New touch classes (still experimental).
+
 Version 0.2.5 (4 December 2001):
   Many method library improvements, including the ability to read
     Central Council method lists.  More changes probably on the way

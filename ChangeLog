@@ -1,6 +1,99 @@
+2002-01-13 23:35  mjb47
+
+	* configure.in, ringing/common.h.in: Prepare for 0.2.6 build
+
+2002-01-13 12:52  mjb47
+
+	* examples/testtouch.cpp, ringing/touch.cpp, ringing/touch.h: New
+	touch stuff
+
+2002-01-09 17:31  mjb47
+
+	* doc/Makefile.am, doc/ringing-lib.texi, examples/psline.cpp,
+	ringing/print_ps.cpp, ringing/print_ps.h, ringing/printm.cpp:
+	Landscape printing; a few doc changes
+
+2002-01-08 19:40  mjb47
+
+	* config.h.in, configure.in, examples/psline.cpp,
+	ringing/printm.cpp, ringing/printm.h: Few changes to psline
+
+2002-01-08 17:27  mjb47
+
+	* Makefile.am, doc/Makefile.am, doc/ringing-lib.texi,
+	examples/Makefile.am, examples/psline.cpp, examples/testbase.cpp,
+	examples/testprint.cpp, examples/testtouch.cpp,
+	ringing/Makefile.am, ringing/dimension.cpp, ringing/dimension.h,
+	ringing/method.cpp, ringing/method.h, ringing/print.cpp,
+	ringing/print.h, ringing/print_ps.cpp, ringing/print_ps.h,
+	ringing/printm.cpp, ringing/printm.h, ringing/row.cpp,
+	ringing/row.h: Printing of whole methods, with a command-line
+	program
+
+2002-01-06 16:28  standardeight
+
+	* doc/ringing-lib.texi: Further documentation for the library
+	classes.
+
+2001-12-12 01:45  ras52
+
+	* ringing/row.cpp: * A minor bug fix
+
+2001-12-12 00:36  ras52
+
+	* ringing/macros.h: file macros.h was initially added on branch
+	libtool-branch.
+
+2001-12-12 00:36  ras52
+
+	* README, mkdsp, examples/testbase.cpp, ringing/Makefile.am,
+	ringing/cclib.cpp, ringing/cclib.h, ringing/common.h.in,
+	ringing/library.h, ringing/macros.h, ringing/method.h,
+	ringing/mslib.h, ringing/row.h, ringing/stl_stub.cpp: * New macros
+	to wrap up __declspec(dllexport) and extern template.  *
+	Application of new macros to row, method and printing files *
+	Non-standard use of std::string::compare fixed in cclib.cpp
+
+2001-12-12 00:36  ras52
+
+	* ringing/stl_stub.cpp: file stl_stub.cpp was initially added on
+	branch libtool-branch.
+
+2001-12-11 12:03  mjb47
+
+	* config.h.in, doc/ringing-lib.texi, examples/testprint.cpp,
+	ringing/print.cpp, ringing/print.h, ringing/print_ps.cpp,
+	ringing/print_ps.h: Colour printing!
+
+2001-12-08 19:54  standardeight
+
+	* doc/ringing-lib.texi, examples/testbase.cpp,
+	examples/testlibrary.cpp, ringing/cclib.cpp, ringing/cclib.h,
+	ringing/library.cpp, ringing/library.h, ringing/method.h,
+	ringing/mslib.cpp, ringing/mslib.h, ringing/row.cpp: * Fix MSVC
+	compilation problem in cclib * Further tidy up of warnings
+	generated when using -Wall * Removal of library test from
+	testbase.cpp. It is covered by testlibrary.cpp * General tidy up of
+	library files.	* Declare exception invalid_name within
+	library_base class rather than xxlib classes * Add default
+	constructor for method class.  * Define dir function for mslib and
+	cclib - provides list of methods in library file * Fix possible
+	race condition in row_block(const vector<change>&) constructor.  *
+	Update current documentation to match new structures.
+
+2001-12-04 23:47  mjb47
+
+	* ChangeLog, NEWS: ChangeLog and NEWS for 0.2.5
+
 2001-12-04 23:39  mjb47
 
 	* configure.in, ringing/common.h.in: Prepare for 0.2.5 build
+
+2001-12-04 23:34  mjb47
+
+	* config.h.in, configure.ac, configure.in, config/config.guess,
+	config/config.sub, config/ltmain.sh, examples/Makefile.am,
+	ringing/Makefile.am: Added shared library support with libtool 1.4b
 
 2001-12-04 23:34  mjb47
 
@@ -409,4 +502,17 @@
 	ringing/row.cc, ringing/mslib.h, ringing/print.h,
 	ringing/print_ps.h, ringing/Makefile.am, ringing/row.h,
 	ringing/stuff.h, ringing/Makefile.in: Initial revision
+
+2001-04-28 17:59  mjb47
+
+	* AUTHORS, configure, configure.in, stamp-h.in, Makefile.am,
+	Makefile.in, aclocal.m4, config.h.in, ChangeLog, NEWS, README,
+	acinclude.m4, doc/Makefile.am, doc/methlib.texi, doc/Makefile.in,
+	ringing/dimension.cc, ringing/library.cc, ringing/method.cc,
+	ringing/mslib.cc, ringing/print.cc, ringing/print_ps.cc,
+	ringing/dimension.h, ringing/library.h, ringing/method.h,
+	ringing/row.cc, ringing/mslib.h, ringing/print.h,
+	ringing/print_ps.h, ringing/Makefile.am, ringing/row.h,
+	ringing/stuff.h, ringing/Makefile.in: Imported initial version of
+	project
 
