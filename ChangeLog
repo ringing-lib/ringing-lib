@@ -1,3 +1,32 @@
+2001-06-11 13:35  mjb47
+
+	* configure, configure.in, ringing/Makefile.in,
+	ringing/common.h.in: Prepare for 0.2.0 build
+
+2001-06-10 20:07  standardeight
+
+	* ringing/: Makefile.am, Makefile.in: Added proof.cc, proof.h,
+	music.h to build list
+
+2001-06-10 20:05  standardeight
+
+	* ringing/music.h: Changed to conform to coding standardsand
+	improved algorithms
+
+2001-06-10 20:04  standardeight
+
+	* ringing/: proof.h, proof.cc: Changed to conform to coding
+	standards and to work with new row class.
+
+2001-06-10 20:02  standardeight
+
+	* doc/methlib.texi: Added Proof and Music Class information to
+	documents
+
+2001-06-07 18:13  mjb47
+
+	* ChangeLog: Make ChangeLog for release 0.1.0
+
 2001-06-07 18:03  mjb47
 
 	* Makefile.am, Makefile.in, configure, configure.in,
