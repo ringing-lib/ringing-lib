@@ -1,5 +1,5 @@
 // -*- C++ -*- extent.h - Classes for iterating through an extent
-// Copyright (C) 2001-2 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2001, 2002, 2003 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -24,6 +24,11 @@
 #endif
 
 #include <ringing/extent.h>
+#if RINGING_OLD_C_INCLUDES
+#include <assert.h>
+#else
+#include <cassert>
+#endif
 #if RINGING_OLD_INCLUDES
 #include <algo.h>
 #else
@@ -157,21 +162,22 @@ row random_row( unsigned int nw, unsigned int nh, unsigned int nt )
 {
   int idx( random_int( factorial(nw) ) );
   string s( nt, '?' );
-  for (unsigned i=0; i<nh; ++i) s[i] = bell(i).to_char();
-  for (unsigned i=nh; i<nw+nh; ++i)
+  unsigned i;
+  for (i=0; i<nh; ++i) s[i] = bell(i).to_char();
+  for (i=nh; i<nw+nh; ++i)
     {
       const int fact( factorial(nw-i+nh-1) );
       int b = idx / fact;
       idx %= fact;
-
+      
       for (unsigned ob=0; ob<=b; ++ob)
 	for (unsigned j=0; j<i; ++j)
 	  if ( bell(ob).to_char() == s[j] )
 	    ++b;
-
+      
       s[i] = bell(b).to_char();
     }
-  for (unsigned i=nw+nh; i<nt; ++i) s[i] = bell(i).to_char();
+  for (i=nw+nh; i<nt; ++i) s[i] = bell(i).to_char();
   return s;
 }
 
