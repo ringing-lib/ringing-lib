@@ -139,7 +139,7 @@ multtab::compute_pre_mult( const row &r )
   // improves speed a factor of over 100.
   map< row, row_t > finder;
   for ( size_t i(0); i < table.size(); ++i )
-    finder[ rows[i] ] = row_t(i);
+    finder[ rows[i] ] = row_t::from_index(i);
 
   for ( size_t i(0); i < table.size(); ++i )
     table[i].push_back( finder[ r * rows[i] ] );
@@ -163,7 +163,7 @@ multtab::compute_post_mult( const row &r )
   // improves speed a factor of over 100.
   map< row, row_t > finder;
   for ( size_t i(0); i < table.size(); ++i )
-    finder[ rows[i] ] = row_t(i);
+    finder[ rows[i] ] = row_t::from_index(i);
 
   for ( size_t i(0); i < table.size(); ++i )
     table[i].push_back( finder[ rows[i] * r ] );
