@@ -34,6 +34,28 @@ RINGING_START_NAMESPACE
 
 RINGING_USING_STD
 
+unsigned factorial(unsigned n)
+{
+  if (!n) return 1;
+  unsigned f = n;
+  while (--n)
+    f *= n;
+  return f;
+}
+
+unsigned fibonacci(unsigned n)
+{
+  if (!n) return 1;
+  unsigned f1=1, f2=1;
+  while (--n)
+    {
+      unsigned sum =f1+f2;
+      f1 = f2;
+      f2 = sum;
+    }
+  return f2;
+}
+
 struct extent_iterator::bellsym_cmp
 {
   bool operator()( char a, char b )
@@ -63,6 +85,45 @@ extent_iterator &extent_iterator::operator++()
 			    bellsym_cmp() );
   if (!end) r = s.c_str();
   return *this;
+}
+
+void changes_iterator::next()
+{
+  if ( stk.size() == nw && stk.back() == nw+nh-1 )
+    {
+      c = change();
+      return;
+    }
+  
+  while ( stk.back() > nh+1 && !c.findswap( stk.back()-2 ) )
+    stk.pop_back();
+  
+  if ( c.findswap( stk.back()-2 ) )
+    {
+      c.swappair( stk.back() - 2 );
+      --stk.back();
+    }
+  
+  while ( stk.back() < nw+nh-1 )
+    {
+      c.swappair( stk.back() );
+      stk.push_back( stk.back() + 2 );
+    }
+}
+
+changes_iterator::changes_iterator( unsigned int nw, unsigned int nh )
+  : nw(nw), nh(nh), c(nw ? nw+nh : 0)
+{
+  stk.push_back(nh); 
+  if ( nw>1 ) next(); 
+}
+
+changes_iterator::changes_iterator( unsigned int nw, unsigned int nh, 
+				    unsigned int nt )
+  : nw(nw), nh(nh), c(nw ? nt : 0) 
+{
+  stk.push_back(nh); 
+  if ( nw>1 ) next(); 
 }
 
 RINGING_END_NAMESPACE

@@ -32,12 +32,8 @@ RINGING_START_NAMESPACE
 
 RINGING_USING_STD
 
-inline unsigned factorial(unsigned n)
-{
-  unsigned f = n;
-  while (--n) f *= n;
-  return f;
-}
+unsigned factorial(unsigned n);
+unsigned fibonacci(unsigned n);
 
 class RINGING_API extent_iterator
   : public RINGING_STD_CONST_ITERATOR( forward_iterator_tag, row )
@@ -84,6 +80,53 @@ private:
   bool end;
   row r;
   string s;
+};
+
+class RINGING_API changes_iterator
+  : public RINGING_STD_CONST_ITERATOR( forward_iterator_tag, change )
+{
+public:
+  // Standard iterator typedefs
+  typedef forward_iterator_tag iterator_category;
+  typedef change value_type;
+  typedef ptrdiff_t difference_type;
+  typedef const change *pointer;
+  typedef const change &reference;
+
+  // The end iterator
+  changes_iterator() {}
+
+  // The beginning iterator
+  //   nw == The number of working bells 
+  //   nh == The number of initial fixed (hunt) bell  [ default = 0 ]
+  //   nt == The total number of bells                [ default = nh + nw ]
+  // E.g. The set of valid changes on eight bells leaving the 1, 7 and 8 still
+  // has nw = 5, nh = 1, nt = 8.
+  changes_iterator( unsigned int nw, unsigned int nh, unsigned int nt );
+  changes_iterator( unsigned int nw, unsigned int nh = 0u );
+
+  // Trivial Iterator implementation
+  const change *operator->() const { return &c; }
+  const change &operator*() const { return c; }
+
+  // Equality Comparable implementation
+  bool operator==( const changes_iterator &i ) const 
+    { return c == i.c; }
+  bool operator!=( const changes_iterator &i ) const 
+    { return !operator==(i); }
+
+  // Forward Iterator implementation
+  changes_iterator &operator++() { next(); return *this; }
+  changes_iterator operator++(int)
+    { changes_iterator tmp(*this); ++*this; return tmp; }
+
+
+private:
+  void next();
+
+  unsigned nw, nh;
+  change c;
+  vector<int> stk;
 };
 
 RINGING_END_NAMESPACE
