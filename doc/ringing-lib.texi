@@ -77,6 +77,7 @@ versions.
 
 @menu
 * Introduction::                
+* Installing and using the library::  
 * Rows and Changes::            
 * Methods::                     
 * Method Libraries::            
@@ -88,7 +89,7 @@ versions.
 * Index::                       
 @end menu
 
-@node Introduction, Rows and Changes, Top, Top
+@node Introduction, Installing and using the library, Top, Top
 @chapter Introduction
 @cindex introduction
 
@@ -126,11 +127,35 @@ to report bugs, request features, use forums and access the CVS
 repository, visit the project web page at
 @uref{http://ringing-lib.sourceforge.net}.
 
+@node Installing and using the library, Rows and Changes, Introduction, Top
+@chapter Installing and using the library
+@cindex installation
+
+The Ringing Class Library has been developed primarily for use on
+Unix-like and Microsoft Windows platforms.  As the library is written in
+portable C++ and uses only standard library functions, it should be
+possible to use it on any standard-conforming platform.  If you do find
+a platform on which it is not possible to compile and use the library,
+the authors would be interested to hear about it.
+
+Various characteristics of the C++ compiler need to be determined before
+compiling the library, and are assumed to be that same when the library
+is compiled and linked into an application.  If you get a new C++
+compiler or a new standard C++ library, you should reconfigure and
+(probably) recompile the library before trying to use it in an
+application.  The necessary data is stored in @file{ringing/common.h}:
+on Unix systems this file is generated automatically; on other systems,
+you may have to generate it by hand from the template in
+@file{ringing/common.h.in}.
+
 @menu
 * The Standard Template Library::  
+* Unix-like systems::           
+* Microsoft Windows::           
+* Using the library in your programs::  
 @end menu
 
-@node The Standard Template Library,  , Introduction, Introduction
+@node The Standard Template Library, Unix-like systems, Installing and using the library, Installing and using the library
 @section The Standard Template Library
 @cindex Standard Template Library
 @cindex STL
@@ -155,7 +180,100 @@ care of finding out how your particular implementation works.
 Otherwise, you will need to edit the file @file{ringing/common.h.in}
 before compiling.
 
-@node Rows and Changes, Methods, Introduction, Top
+@node Unix-like systems, Microsoft Windows, The Standard Template Library, Installing and using the library
+@section Unix-like systems
+
+The Ringing Class Library package uses the GNU tool @command{autoconf}
+to take away the problems of coping with differences between platforms.  
+This means that you should be able to change to the top-level directory
+of the source distribution and type
+@example
+./configure
+@end example
+@noindent
+to configure the package.  This will determine the characteristics of
+your C++ compiler and create a file @file{ringing/common.h} which defines
+various symbols used in the compilation.  This file is also installed
+with the rest of the class library, so that the installed header files
+will have access to it.
+
+You can control many aspects of how the package is compiled and installed
+by passing arguments to the @command{configure} script; for example, you 
+can control where the library is installed (for example, in @file{/usr/lib}
+or @file{/usr/local/lib}).  For details of all the options which are
+accepted, type
+@example
+./configure --help
+@end example
+@noindent
+in the top-level directory of the distribution.  Some more instructions
+for using the @command{configure} script are given in the file
+@file{INSTALL}.
+
+At the moment it is only possible to create a version of the library for
+static linking; in the near future we hope to use GNU Libtool to provide
+a portable mechanism for creating shared libraries.
+
+@node Microsoft Windows, Using the library in your programs, Unix-like systems, Installing and using the library
+@section Microsoft Windows
+
+When compiling on Microsoft Windows, the range of different compilers and
+lack of a standard powerful scripting language make it difficult to
+provide a genuinely portable infrastructure to the package.  However, the
+task of compiling and installing the library is not complicated, and easy
+to achieve by hand.  The following steps are necessary:
+@itemize @bullet
+@item Create the file @file{ringing/common.h} by editing @file{common.h.in}
+to reflect the characteristics of your C++ compiler;
+
+@item Compile all the @file{.cpp} source files in the @file{ringing}
+subdirectory into a library, which you will probably want to call
+@file{ringing.lib};
+
+@item Install the compiled library and the header files in places where
+your compiler and linker will be able to find them;
+
+@item Copy the documentation to somewhere permanent.
+@end itemize
+
+Note that the header files are designed to be included from a
+subdirectory called @file{ringing} within your system's collection of
+header files.
+
+If you are using Microsoft Developer Studio, then you can use the
+supplied workspace file @file{ringing-lib.dsw} to accomplish the
+compiling and linking of the library without any effort.
+
+Currently the class library should normally be compiled into a static
+library (@file{.lib} file).  It is not yet straightforward to make the
+library into a DLL; if you choose to do this, you are on your own but
+the authors would be please to hear of any success.
+
+@node Using the library in your programs,  , Microsoft Windows, Installing and using the library
+@section Using the library in your programs
+
+To use the Ringing Class Library in your programs, you simply include
+the relevant header files in your source code, and then link the library
+into your final program.
+
+Header files are expected to be found in the subdirectory @file{ringing};
+thus you might type
+@example
+#include <ringing/row.h>
+#include <ringing/proof.h>
+@end example
+@noindent
+at the top of a C++ source code file.  If this does not work, either your
+compiler is not looking in the right place for the header files, or you
+have not installed them in the right place.  You may be able to correct
+this by adding an option (@code{-I} on most systems) to your compiler
+command line.
+
+To link to the installed library, simply add the appropriate option to
+the command line when linking your program.  On most Unix systems, you
+will have to add @code{-lringing} to link with the library.
+
+@node Rows and Changes, Methods, Installing and using the library, Top
 @chapter Row and Change classes
 @cindex row
 @cindex change
@@ -1727,6 +1845,11 @@ corner.
 The @code{printpage} class is a pure virtual class:  the only way to create
 one is by constructing an object of a derived class.
 
+@deftypefun void printpage::new_page (void);
+This tells the @code{printpage} object to finish printing the current
+page and start a new page.  
+@end deftypefun
+
 @deftypefun {virtual void} printpage::text (const string @var{t}, const dimension& @var{x}, const dimension& @var{y}, text_style::alignment @var{a}, const text_style& @var{s});
 This function places a text string on the page.  The string is given in
 @var{t} and should consist of printable characters.  The position at
@@ -1928,10 +2051,12 @@ as given in the example above.
 The Ringing Class Library provides subclasses of the @code{printpage} and
 @code{printrow} classes for producing output in the PostScript language.  
 These classes are declared in the @file{ringing/print_ps.h} header file.
+The output conforms to the Document Structuring Conventions (@acronym{DSC})
+version 3.0 and uses only Level 1 language.
 
 The @code{printpage_ps} class is derived from @code{printpage}, and handles
-all output to a PostScript stream.  The only new functions in this class
-are its constructors.
+all output to a PostScript stream.  The new functions in this class are
+constructors and some PostScript-specific operations.
 
 @deftypefn Constructor {} printpage_ps::printpage_ps (ostream& @var{o});
 This creates a new PostScript printing object, which will send its
