@@ -20,11 +20,12 @@
 #ifndef GSIRIL_TOKENISER_INCLUDED
 #define GSIRIL_TOKENISER_INCLUDED
 
-#ifdef RINGING_HAS_PRAGMA_INTERFACE
+#include <ringing/common.h>
+
+#if RINGING_HAS_PRAGMA_INTERFACE
 #pragma interface
 #endif
 
-#include <ringing/common.h>
 #if RINGING_HAVE_OLD_IOSTREAMS
 #include <istream.h>
 #else
@@ -77,9 +78,11 @@ RINGING_PROTECTED_IMPL:
 
 protected:
   enum new_line_policy { keep_new_lines, discard_new_lines };
+  enum case_policy { case_sensitive, case_insensitive };
 
   tokeniser( istream& in, 
-	     new_line_policy nlp = discard_new_lines );
+	     new_line_policy nlp = discard_new_lines,
+	     case_policy cp = case_sensitive );
 
   void add_qtype( const basic_token* qtype );
   void set_id_chars( const char *idfchs, const char *idochs );
@@ -91,6 +94,7 @@ private:
   bool parse( token& tok );
 
   new_line_policy nlp;
+  case_policy cp;
   vector< const basic_token* > qtypes;  // Not owned
   const char *id_first_chars, *id_other_chars;
 

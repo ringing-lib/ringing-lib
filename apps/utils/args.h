@@ -1,5 +1,6 @@
 // -*- C++ -*- args.h - argument-parsing things
-// Copyright (C) 2001 Martin Bright <martin@boojum.org.uk>
+// Copyright (C) 2001, 2002, 2003 Martin Bright <martin@boojum.org.uk> and
+// Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -29,6 +30,7 @@
 #include <list>
 #endif
 #include <string>
+#include "init_val.h"
 
 RINGING_USING_STD
 
@@ -94,15 +96,21 @@ private:
 //
 // Some convenient subclasses of option:
 //
+// In all of the constructors, 
+//   c    is the short form of the option,
+//   l    is the long form of the option,
+//   d    is the description string
+//   a    is the name of the argument (if applicable)
+// 
 
-class boolean_opt : public option
-{
+class boolean_opt : public option {
 public:
   boolean_opt( char c, const string &l, const string &d,
-	       bool &opt, bool val=true ) 
-    : option(c, l, d), opt(opt), val(val)
-  {}
+	       bool &opt, bool val=true );
 
+  boolean_opt( char c, const string &l, const string &d,
+	       init_val_base<bool> &opt, bool val=true );
+  
 private:
   // Sets opt = val.
   virtual bool process( const string &, const arg_parser & ) const;
@@ -112,17 +120,19 @@ private:
 
 class integer_opt : public option {
 public:
-  // Use this constructor if the argument is not optional
+  // Use these constructor if the argument is not optional
   integer_opt( char c, const string &l, const string &d, const string &a,
-	       int &opt )
-    : option(c, l, d, a), opt(opt)
-  {}
+	       int &opt );
+
+  integer_opt( char c, const string &l, const string &d, const string &a,
+	       init_val_base<int> &opt );
 
   // Use this constructor if the argument is optional
   integer_opt( char c, const string& l, const string& d, const string& a,
-	       int& opt, int default_val )
-    : option(c, l, d, a, true), opt(opt), default_val(default_val)
-  {}
+	       int& opt, int default_val );
+
+  integer_opt( char c, const string& l, const string& d, const string& a,
+	       init_val_base<int>& opt, int default_val );
 
 private:
   // If an argument is given, sets opt to the integer value of that string
@@ -134,28 +144,27 @@ private:
 
 class string_opt : public option {
 public:
+  // Use these constructor if the argument is not optional
   string_opt( char c, const string& l, const string& d, const string& a,
-	      string& opt ) 
-    : option(c, l, d, a), opt(opt)
-  {}
+	      string& opt );
+
+  // Use this constructor if the argument is optional
+  string_opt( char c, const string& l, const string& d, const string& a,
+	      string& opt, const string& default_val );
 
 private:
   // Sets opt to the given argument.
   virtual bool process( const string&, const arg_parser& ) const;
-  string &opt;
+  string &opt, default_val;
 };
 
 class delegate_opt : public option {
 public:
   delegate_opt( char c, const string& l, const string& d, const string& a,
-		void (*fn)(const string&) )
-    : option(c, l, d, a), fn1(fn), fn_has_ap(false)
-  {}
+		void (*fn)(const string&) );
 
   delegate_opt( char c, const string& l, const string& d, const string& a,
-		void (*fn)(const string&, const arg_parser&) )
-    : option(c, l, d, a), fn2(fn), fn_has_ap(true)
-  {}
+		void (*fn)(const string&, const arg_parser&) );
 
 private:
   // Calls the function fn with the argument.
@@ -190,5 +199,6 @@ private:
   // Just calls ap.version() and exits successfully
   virtual bool process( const string &, const arg_parser & ) const;
 };
+
 
 #endif

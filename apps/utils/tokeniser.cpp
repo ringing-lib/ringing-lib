@@ -19,7 +19,7 @@
 
 #include <ringing/common.h>
 
-#ifdef RINGING_HAS_PRAGMA_INTERFACE
+#if RINGING_HAS_PRAGMA_INTERFACE
 #pragma implementation
 #endif
 
@@ -68,7 +68,7 @@ tokeniser::basic_token::basic_token( const char* initial_sequence, int type )
 bool tokeniser::basic_token::matches( string::const_iterator i,
 				      string::const_iterator e ) const
 {
-  return e-i >= len && strncmp( &*i, init_seq, len ) == 0;
+  return size_t(e-i) >= len && strncmp( &*i, init_seq, len ) == 0;
 }
 
 tokeniser::basic_token::parse_result 
@@ -110,8 +110,9 @@ tokeniser::string_token::parse( string::const_iterator& i,
 }
 
 tokeniser::tokeniser( istream& in, 
-		      tokeniser::new_line_policy nlp )
-  : nlp( nlp ), 
+		      tokeniser::new_line_policy nlp,
+		      tokeniser::case_policy cp )
+  : nlp( nlp ), cp( cp ),
     id_first_chars( NULL ), id_other_chars( NULL ),
     buffer(), i( buffer.begin() ), e( buffer.end() ), 
     in( &in ) 
@@ -182,6 +183,11 @@ bool tokeniser::parse( token& tok )
 	++i;
 
       tok = string( j, i );
+      if ( cp == case_insensitive )
+	for ( string::iterator i1( tok.begin() ), e1( tok.end() );
+	      i1 != e1; ++i1 )
+	  *i1 = tolower(*i1);
+      
       tok.type( id_first_chars ? id_first_chars[0] : 'A' );
       return true;
     }

@@ -1,5 +1,6 @@
 // -*- C++ -*- args.cpp - argument-parsing things
-// Copyright (C) 2001 Martin Bright <martin@boojum.org.uk>
+// Copyright (C) 2001, 2002, 2003 Martin Bright <martin@boojum.org.uk> and
+// Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -223,16 +224,18 @@ void arg_parser::help() const
       }
     }
 
+  if(had_opt) cout << '\n';
+
   if(had_arg) cout << 
 "Required or optional arguments to long options are also required or\n"
     "optional arguments to the corresponding short options.\n";
-  if(had_opt) cout << '\n';
   
   if(vtab != description.end()) {
     wrap(string(vtab, description.end()), 0, 78, 0);
-    cout << '\n';
-  }
-     
+    cout << "\n\n";
+  } else if ( had_arg ) {
+    cout << "\n";
+  }     
 }
 
 void arg_parser::usage() const
@@ -249,17 +252,44 @@ void arg_parser::error(const string &msg) const
 }
 
 
-bool string_opt::process( const string &arg, const arg_parser & ) const
-{
-  opt = arg;
-  return true;
-}
+
+boolean_opt::boolean_opt( char c, const string &l, const string &d,
+			  bool &opt, bool val ) 
+  : option(c, l, d), opt(opt), val(val)
+{}
+
+boolean_opt::boolean_opt( char c, const string &l, const string &d,
+			  init_val_base<bool> &opt, bool val ) 
+  : option(c, l, d), opt(opt.get()), val(val)
+{}
 
 bool boolean_opt::process( const string &, const arg_parser & ) const
 {
   opt = val;
   return true;
 }
+
+
+integer_opt::integer_opt( char c, const string &l, const string &d, 
+			  const string &a, int &opt )
+  : option(c, l, d, a), opt(opt)
+{}
+
+integer_opt::integer_opt( char c, const string &l, const string &d, 
+			  const string &a, init_val_base<int> &opt )
+  : option(c, l, d, a), opt(opt.get())
+{}
+
+integer_opt::integer_opt( char c, const string& l, const string& d, 
+			  const string& a, int& opt, int default_val )
+  : option(c, l, d, a, true), opt(opt), default_val(default_val)
+{}
+
+integer_opt::integer_opt( char c, const string& l, const string& d, 
+			  const string& a, init_val_base<int>& opt, 
+			  int default_val )
+  : option(c, l, d, a, true), opt(opt.get()), default_val(default_val)
+{}
 
 bool integer_opt::process( const string &arg, const arg_parser &ap ) const
 {
@@ -279,6 +309,38 @@ bool integer_opt::process( const string &arg, const arg_parser &ap ) const
   }
   return true;
 }
+
+
+string_opt::string_opt( char c, const string& l, const string& d, 
+			const string& a, string& opt ) 
+  : option(c, l, d, a), opt(opt)
+{}
+
+string_opt::string_opt( char c, const string& l, const string& d, 
+			const string& a, string& opt, 
+			const string& default_val  ) 
+  : option(c, l, d, a, true), opt(opt), default_val(default_val)
+{}
+
+bool string_opt::process( const string &arg, const arg_parser & ) const
+{
+  if ( (flags & opt_arg) && arg.empty() )
+    opt = default_val;
+  else 
+    opt = arg;
+  return true;
+}
+
+delegate_opt::delegate_opt( char c, const string& l, const string& d, 
+			    const string& a, void (*fn)(const string&) )
+  : option(c, l, d, a), fn1(fn), fn_has_ap(false)
+{}
+
+delegate_opt::delegate_opt( char c, const string& l, const string& d, 
+			    const string& a, 
+			    void (*fn)(const string&, const arg_parser&) )
+  : option(c, l, d, a), fn2(fn), fn_has_ap(true)
+{}
 
 bool delegate_opt::process( const string &arg, const arg_parser &ap ) const
 {
