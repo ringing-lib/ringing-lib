@@ -242,9 +242,11 @@ string get_short_compressed_pn( const method &m )
 
 bool has_rotational_symmetry( const method &m )
 {
+  const int n( m.size() );
+
   {
     // Rotational symmetry about a change
-    for ( int i=0, n=m.size(); i<n/2+1; ++i )
+    for ( int i=0; i<n/2+1; ++i )
       {
 	// Try m[i] as the rotational symmetry point
 	bool ok = true;
@@ -259,7 +261,7 @@ bool has_rotational_symmetry( const method &m )
   }
   {
     // Rotational symmetry about a row
-    for ( int i=0, n=m.size(); i<n/2+1; ++i )
+    for ( int i=0; i<n/2+1; ++i )
       {
 	// Try m[i] / m[(i+1)%n] as the rotational symmetry point
 	bool ok = true;
@@ -278,12 +280,12 @@ bool has_rotational_symmetry( const method &m )
 bool has_conventional_symmetry( const method& m )
 {
   const int n( m.size() );
-  for ( int i=0; i<n/2; ++i )
+  for ( int i=0; i < (n%2==0 ? n/2 : n); ++i )
     {
       // try m[i] as the sym point
       bool ok(true);
 
-      for ( int j=1; ok && j<n/2; ++j ) 
+      for ( int j=1; ok && j<(n%2==0 ? n/2 : n/2+1); ++j ) 
 	if ( m[(i+j) % n] != m[(i-j+n) % n] )
 	  ok = false;
 
@@ -306,6 +308,8 @@ bool has_mirror_symmetry( const method& m )
 bool has_glide_symmetry( const method& m )
 {
   const int n( m.size() );
+  if ( n % 2 == 1 ) return false;
+
   for ( int i=0; i<n/2; ++i )
     if ( m[i] != m[(i + n/2) % n].reverse() )
       return false;
@@ -315,8 +319,6 @@ bool has_glide_symmetry( const method& m )
 
 string method_symmetry_string( const method& m )
 {
-  assert( m.size() % 2 == 0 );
-
   string rv;
   if ( has_conventional_symmetry(m) ) rv += 'P';
   if ( has_mirror_symmetry(m) )       rv += 'M';
