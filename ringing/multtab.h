@@ -53,10 +53,7 @@ RINGING_START_DETAILS_NAMESPACE
 class multtab_row_t
 {
 public:
-  // The number_of_bells parameter is ignored.  It is here
-  // to give the constructor of multtab::row_t and row the 
-  // same interface.
-  explicit multtab_row_t( int number_of_bells = 0 ) : n(0u) {}
+  multtab_row_t() : n(0u) {}
   bool isrounds() const { return n == 0; }
   size_t index() const { return n; }
 
@@ -123,6 +120,9 @@ private:
 public:
   multtab_post_col_t() : n(0), t(NULL) {}
 
+  bool operator==( multtab_post_col_t const& o ) const { return n == o.n; }
+  bool operator!=( multtab_post_col_t const& o ) const { return n != o.n; }
+
   RINGING_FAKE_COMPARATORS( multtab_post_col_t )
 
 private:
@@ -144,6 +144,9 @@ private:
 
 public:
   multtab_pre_col_t() : n(0), t(NULL) {}
+
+  bool operator==( multtab_pre_col_t const& o ) const { return n == o.n; }
+  bool operator!=( multtab_pre_col_t const& o ) const { return n != o.n; }
 
   RINGING_FAKE_COMPARATORS( multtab_pre_col_t )
 
