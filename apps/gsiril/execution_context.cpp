@@ -62,6 +62,20 @@ void symbol_table::undefine( const string& sym )
   sym_table.erase(sym);
 }
 
+int execution_context::bells( int b ) 
+{
+  if ( b > args.rounds.bells() )
+    args.rounds *= row(b);
+  else 
+    {
+      if ( !args.rounds.isrounds() )
+	output() << "Warning: Rounds reset";
+      args.rounds = row(b);
+    }
+
+  swap( b, args.bells.get() );
+  return b;
+}
 
 execution_context::execution_context( ostream& os, const arguments& args )
   : args(args), os(&os)

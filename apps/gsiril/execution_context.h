@@ -83,7 +83,7 @@ public:
  
   void extents( int n ) { args.num_extents = n; }
 
-  int bells( int b ) { swap(b, args.bells.get()); return b; }
+  int bells( int b );
   int bells() const  { return args.bells; }
 
   bool interactive( bool i ) { swap(i, args.interactive.get()); return i; }
