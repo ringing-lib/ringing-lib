@@ -161,6 +161,8 @@ void interpret_pn(int num, ForwardIterator i, ForwardIterator finish,
 	i = j;
       }
       while(i != finish && *i == '.') ++i;
+      // Skip any other rubbish
+      while(i != finish && !(isalnum(*i) || *i == '&' || *i == '-' || *i == '.')) ++i;
     }
     // Now output the block
     copy(block.begin(), block.end(), out);
