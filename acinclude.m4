@@ -411,7 +411,24 @@ AC_DEFUN([AC_CXX_USE_STRINGSTREAM],
   fi
 ])
 dnl --------------------------------------------------------------------------
-dnl @synopsis AC_CXX_USE_READLINE
+dnl @synopsis AC_CHECK_CXX_LIB(LIBRARY, INCLUDES, MAIN, ACTION-IF-FOUND,
+dnl                            [ACTION-IF-NOT-FOUND], [OTHER-LIBRARIES])
+dnl
+dnl Check to see whether a given library exists and is usable from C++
+dnl
+dnl @author Richard Smith <richard@ex-parrot.com>
+dnl
+AC_DEFUN([AC_CHECK_CXX_LIB],
+ [AC_LANG_SAVE
+  AC_LANG_CPLUSPLUS
+  ac_check_cxx_lib_save_LIBS=$LIBS
+  LIBS="-l$1 $6 $LIBS"
+  AC_TRY_LINK([$2],[$3],[$4],[$5])
+  LIBS=$ac_check_cxx_lib_save_LIBS
+  AC_LANG_RESTORE
+])
+dnl --------------------------------------------------------------------------
+dnl @synopsis AC_USE_READLINE
 dnl
 dnl See whether we've got GNU readline installed
 dnl
@@ -424,11 +441,15 @@ AC_DEFUN([AC_USE_READLINE],
     ac_cv_use_readline=$withval
   )
   if test -z "$ac_cv_use_readline" ; then
-    AC_CHECK_LIB( 
-      readline, readline, 
-      ac_cv_use_readline=yes,
-      ac_cv_use_readline=no
-    )
+    AC_CACHE_CHECK(
+      [for GNU readline library],
+      [ac_cv_use_readline],
+      [AC_CHECK_CXX_LIB(
+	readline, [#include <readline/readline.h>
+	], [ readline(">"); ],
+	ac_cv_use_readline=yes,
+	ac_cv_use_readline=no
+    )])
   fi
   if test "$ac_cv_use_readline" = yes ; then
     READLINE_LIBS=[-lreadline]
@@ -436,6 +457,41 @@ AC_DEFUN([AC_USE_READLINE],
   else
     READLINE_LIBS=[]
     USE_READLINE=0
+  fi
+])
+dnl --------------------------------------------------------------------------
+dnl @synopsis AC_USE_XERCES
+dnl
+dnl See whether we've got the Apache Xerces library installed
+dnl
+dnl @author Richard Smith <richard@ex-parrot.com>
+dnl
+AC_DEFUN([AC_USE_XERCES],
+ [AC_ARG_WITH(
+    xerces,
+    AC_HELP_STRING([--with-xerces], [support XML libraries with Xerces]),
+    ac_cv_use_xerces=$withval
+  )
+  if test -z "$ac_cv_use_xerces" ; then
+    AC_CACHE_CHECK(
+      [for Apache xerces-c library],
+      [ac_cv_use_xerces],
+      [AC_CHECK_CXX_LIB(
+        xerces-c, 
+        [#include <xercesc/util/XercesDefs.hpp>
+         #include <xercesc/util/PlatformUtils.hpp>
+         XERCES_CPP_NAMESPACE_USE
+        ], [ XMLPlatformUtils::Initialize(); ],
+        ac_cv_use_xerces=yes,
+        ac_cv_use_xerces=no
+    )])
+  fi
+  if test "$ac_cv_use_xerces" = yes ; then
+    XERCES_LIBS=[-lxerces-c]
+    USE_XERCES=1
+  else
+    XERCES_LIBS=[]
+    USE_XERCES=0
   fi
 ])
 dnl --------------------------------------------------------------------------

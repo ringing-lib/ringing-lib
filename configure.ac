@@ -42,6 +42,10 @@ AM_CONDITIONAL(HAVE_READLINE, test "$USE_READLINE" = 1 )
 AC_SUBST(USE_READLINE)
 AC_SUBST(READLINE_LIBS)
 
+AC_USE_XERCES
+AC_SUBST(USE_XERCES)
+AC_SUBST(XERCES_LIBS)
+
 dnl --------------------------------------------------------------------------
 dnl Checks for header files.
 AC_HEADER_STDC
