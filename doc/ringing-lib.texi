@@ -107,27 +107,34 @@ your program; for example, a method editing program would use the method
 classes, whereas a program to simulate call changes would just use the
 row and change classes.
 
+To get information about latest releases of the Ringing Class Library,
+to report bugs, and to access the CVS repository, visit the project web
+page at @uref{http://ringing-lib.sourceforge.net}.
+
 @node The STL, Rows and Changes, Introduction, Top
 @chapter The Standard Template Library
 @cindex Standard Template Library
 @cindex STL
 
 Before you can use the Ringing Class Library, you will need to have a
-copy of the Standard Template Library (STL) which works with your
-compiler. The STL is a set of templates which define containers such as
-lists and sets, iterators to move through them, and various other useful
-things.  If your compiler complains about not being able to find files
-such as @file{vector.h} and @file{list.h} then this probably means that
-you don't have the STL and need to get hold of it.
+copy of the Standard Template Library (@acronym{STL}) which works with
+your compiler. The @acronym{STL} is a set of templates which define
+containers such as lists and sets, iterators to move through them, and
+various other useful things.  If your compiler complains about not being
+able to find files such as @file{vector.h} and @file{list.h} then this
+probably means that you don't have the @acronym{STL} and need to get
+hold of it.
 
-A suitable version of the STL is included with most major C++
+A suitable version of the @acronym{STL} is included with most major C++
 compilers.  If you don't have a working version, you may be able to
-download one.  Implementations differ slightly in how the header files
-are named and whether namespaces are used.  If you are compiling the
-Ringing Class Library on a Unix-like platform, the configuration process
-should take care of finding out how your particular implementation
-works.  Otherwise, you will need to edit the file
-@file{ringing/common.h.in} before compiling.
+download one: in particular, there is a free implementation of the
+@acronym{STL} available currently at @uref{http://www.sgi.com/tech/stl}.
+Implementations differ slightly in how the header files are named and
+whether namespaces are used.  If you are compiling the Ringing Class
+Library on a Unix-like platform, the configuration process should take
+care of finding out how your particular implementation works.
+Otherwise, you will need to edit the file @file{ringing/common.h.in}
+before compiling.
 
 @node Rows and Changes, Methods, The STL, Top
 @chapter Row and Change classes
@@ -144,9 +151,9 @@ notation (for example @samp{X} or @samp{1258}).
 * Row Operations::              Explanation of algebra on rows
 * Row Properties::              Explanation of other properties of rows
 * Changes::                     How ringing-lib deals with changes
+* The bell Class::              
 * The row Class::               
 * The change Class::            
-* The rows and changes Classes::  
 * The row_block class::         
 @end menu
 
@@ -160,7 +167,7 @@ notation (for example @samp{X} or @samp{1258}).
 Rows have a set of operations which we can use on them; in mathematical
 terms, they form a group. The most important operation is that of row
 multiplication or transposition - in this operation, the bells in one
-row are rearranged according to another row.
+row are rearranged according to the order given by another row.
 
 For example,
 @example
@@ -228,7 +235,7 @@ repeated; for example, @samp{21345678} has only one cycle, which is
 @samp{(12)}; and @samp{12356478} has one cycle, which is
 @samp{(456)}. Combining these two cycles will give us the row @samp{213564678}.
 
-@node Changes, The row Class, Row Properties, Rows and Changes
+@node Changes, The bell Class, Row Properties, Rows and Changes
 @section Changes
 @cindex change
 
@@ -237,21 +244,86 @@ by swapping over pairs of bells, and no bell may move more than one
 place.
 
 @cindex place notation
+@cindex swap
 The normal way of representing a change is by place notation; a single
 change is represented by a series of numbers which each correspond to a
 place being made; for example, @samp{12} means that all bells swap,
 apart from the 1 and the 2, which stay in the same place. If all the
 bells swap, the place notation is @samp{X}.
 
-@cindex swap
-However, place notation is not the best way to store a change for the
-purposes of calculation. Internally, the Ringing Class Library stores a
-change as a series of swaps; each swap refers to a pair of bells which
-are swapped over. This makes it particularly quick to apply a change to
-a row; just go through the list of swaps, and swap each pair of bells
-which appear.
+@node The bell Class, The row Class, Changes, Rows and Changes
+@section The @code{bell} class
+@cindex @code{bell} class
 
-@node The row Class, The change Class, Changes, Rows and Changes
+The @code{bell} class represents a single bell.  An object of type
+@code{bell} is essentially an integer, and bells are numbered starting
+with the treble as 0.  Member functions are provided to convert between
+this numerical representation and a printable character.
+
+@menu
+* bell Derivation::             
+* bell Constructors::           
+* bell Operators::              
+* Other bell Functions::        
+@end menu
+
+@node bell Derivation, bell Constructors, The bell Class, The bell Class
+@subsection Derivation
+
+This class is not derived from any other classes.
+
+@example
+class bell;
+@end example
+
+@node bell Constructors, bell Operators, bell Derivation, The bell Class
+@subsection Constructors
+
+@deftypefn Constructor {} bell::bell ();
+This constructor initialises the bell object to zero (0).
+@end deftypefn
+
+@deftypefn Constructor {} bell::bell (int @var{i});
+This constructor initialises the bell object to the integer @var{i},
+where bells are numbered starting from 0.
+@end deftypefn
+
+@node bell Operators, Other bell Functions, bell Constructors, The bell Class
+@subsection Operators
+
+@deftypefn Operator bell& bell::operator= (int @var{i});
+This assigns the integer value @var{i} to the bell object, where bells
+are numbered starting from 0.
+@end deftypefn
+
+@deftypefn Operator int {bell::operator int} ();
+This casts a bell object to the corresponding integer.
+@end deftypefn
+
+@deftypefn Operator ostream& operator<< (ostream& @var{o}, const bell
+@var{b});
+This operator writes the character representing the bell @var{b} to the
+output stream @var{o}.
+@end deftypefn
+
+@node Other bell Functions,  , bell Operators, The bell Class
+@subsection Other functions
+
+@deftypefun void bell::from_char (char @var{c});
+This function interprets the character @var{c} as a bell, and assigns
+that value to the bell object.  See the next function for the mapping
+between characters and bells.
+@end deftypefun
+
+@deftypefun char bell::to_char () const;
+This function returns a character indicating the bell represented by the
+object.  The characters used are, in order:
+@example
+1234567890ETABCDFGHJKLMNPQRSUVWYZ
+@end example
+@end deftypefun
+
+@node The row Class, The change Class, The bell Class, Rows and Changes
 @section The @code{row} class
 @cindex @code{row} class
 
@@ -278,16 +350,20 @@ class row;
 @node row Constructors, row Operators, row Derivation, The row Class
 @subsection Constructors
 
+@deftypefn Constructor {} row::row ();
+This constructs an empty row.
+@end deftypefn
+
 @deftypefn Constructor {} row::row (int @var{bells});
 This constructs an empty row, where @var{bells} is the number of bells
-which the row is to contain. Note that it is not initialised to
+which the row is to contain.  Note that it is not initialised to
 anything.
 @end deftypefn
 
 @deftypefn Constructor {} row::row (char *@var{s});
 This constructs a row from a string, which should be the textual
 representation of the row you wish to construct, for example
-@samp{135246} or @samp{2143658709TE}.
+@samp{"135246"} or @samp{"2143658709TE"}.
 @end deftypefn
 
 @deftypefn Constructor {} row::row (const row& @var{r});
@@ -303,8 +379,7 @@ This copies one row to another.
 
 @deftypefn Operator row& row::operator= (char *@var{s});
 This sets the value of a row, given a string. The string @var{s} should
-contain a textual representation of a row, such as @samp{21436587}. It
-should also have the same number of bells as this row.
+contain a textual representation of a row, such as @samp{21436587}.
 @end deftypefn
 
 @deftypefn Operator int row::operator== (const row& @var{r}) const;
@@ -312,26 +387,30 @@ should also have the same number of bells as this row.
 These compare two rows.
 @end deftypefn
 
-@deftypefn Operator int row::operator[] (int @var{i}) const;
-This returns the @var{i}th bell in the row, with 0 being the treble,
-and so on. Note that this is not an lvalue, so you cannot assign a value
-to an individual bell in a row.
+@deftypefn Operator bell row::operator[] (int @var{i}) const;
+This returns the @var{i}th bell in the row.  Note that this is not an
+lvalue, so you cannot assign a value to an individual bell in a row.
 @end deftypefn
 
 @deftypefn Operator row row::operator* (const row& @var{r}) const;
 @deftypefnx Operator row& row::operator*= (const row& @var{r});
-These functions multiply two rows together as explained above.
+These functions multiply two rows together as explained above.  If the
+rows are not of the same length, the shorter row is considered to be
+first padded out to the length of the longer row by adding the extra
+bells in order at the end.
 @end deftypefn
 
 @deftypefn Operator row row::operator/ (const row& @var{r}) const;
 @deftypefnx Operator row& row::operator/= (const row& @var{r});
-These functions divide two rows, as explained above.
+These functions divide two rows, as explained above.  If the rows are
+not of the same length, the shorter row is padded as for multiplication.
 @end deftypefn
 
 @deftypefn Operator row& operator*= (row& @var{r}, const change& @var{c});
 @deftypefnx Operator row row::operator* (const change& @var{c}) const;
-These functions apply a change to a row, by swapping over all the pairs
-of bells which are specified in the change.
+These functions apply a change to a row.  If the number of bells @var{c}
+differs from the number of bells in @var{r}, then @var{c} is considered
+to be padded or truncated in the obvious way.
 @end deftypefn
 
 @deftypefn Operator ostream& operator<< (ostream& @var{o}, const row& @var{r});
@@ -362,17 +441,24 @@ This sets the row to rounds.
 This returns 1 if the row is rounds, and 0 otherwise.
 @end deftypefun
 
+@deftypefun int row::ispblh (void) const;
+If the row is a lead head of Plain Bob, Grandsire or, more generally, of
+the Plain Bob type method with any number of hunt bells, then this
+function returns an integer indicating which lead head it is.
+Otherwise, it returns 0.
+@end deftypefun
+
 @deftypefun {char *} row::print (char *@var{s}) const;
 This prints the row to the string @var{s}. Note that @var{s} must be
 long enough.
 @end deftypefun
 
 @deftypefun row row::inverse (void) const;
-This returns the inverse or a row, as explained above.
+This returns the inverse of a row, as explained above.
 @end deftypefun
 
 @deftypefun int row::sign (void) const;
-This returns the sign or parity of a row; 1 for even, -1 for odd.
+This returns the sign or parity of a row:  1 for even, -1 for odd.
 @end deftypefun
 
 @deftypefun int row::order (void) const;
@@ -383,28 +469,23 @@ This returns the order of the row.
 This expresses the row as separate cycles. The string @var{result} will
 afterwards contain a list of all the cycles in the row, separated by
 commas; for example @code{row("21453678").cycles(s)} will return the
-string @code{"12,345,6,7,8"}. Note that the string must be long enough.
+string @code{"12,345,6,7,8"}. Note that @var{result} must be long enough.
 @end deftypefun
 
 @node row static Functions,  , Other row Functions, The row Class
 @subsection @code{static} functions
 
-@deftypefun {static char} row::b_to_c (char @var{b});
-This returns the character representation of the given bell, specified
-with 0 for the treble, and so on. Thus @code{row::b_to_c(2) == '3'} and
-@code{row::b_to_c(10) = 'E'}.
-@end deftypefun
-
-@deftypefun {static int} row::c_to_b (char @var{c});
-This returns the bell number which corresponds to the given character,
-or -1 if the character doesn't represent a bell.
-@end deftypefun
-
 @deftypefun {static row} row::rounds (int @var{n});
 This returns the row corresponding to rounds on @var{n} bells.
 @end deftypefun
 
-@node The change Class, The rows and changes Classes, The row Class, Rows and Changes
+@deftypefun {static row} row::pblh (int @var{n}, int @var{h} = 1);
+This returns the first lead head of Plain Bob (@var{h} = 1), Grandsire
+(@var{h} = 2), or more generally the Plain Bob type method on @var{n}
+bells with @var{h} hunt bells.
+@end deftypefun
+
+@node The change Class, The row_block class, The row Class, Rows and Changes
 @section The @code{change} class
 @cindex @code{change} class
 
@@ -430,6 +511,10 @@ class change;
 @node change Constructors, change Operators, change Derivation, The change Class
 @subsection Constructors
 
+@deftypefn Constructor {} change::change ();
+This constructs an empty change.
+@end deftypefn
+
 @deftypefn Constructor {} change::change (int @var{n});
 This constructs an empty change for @var{n} bells, which will initially
 contain no swaps, i.e. all bells will remain in the same place.
@@ -441,7 +526,7 @@ This is the copy constructor; it makes a new copy of @var{c}.
 
 @deftypefn Constructor {} change::change (int @var{n}, char *@var{pn});
 This constructs a change on @var{n} bells, with place notation as given
-in @var{pn}. This should consist of a sequence of numbers which signify
+in @var{pn}. This should consist of a sequence of characters which signify
 the places to be made, arranged in ascending order. If no places are to
 be made, the string @code{"X"} should be used. Note that you
 can miss out external places, unless no internal places are made at all.
@@ -454,20 +539,17 @@ can miss out external places, unless no internal places are made at all.
 This assigns the value of one change to another.
 @end deftypefn
 
-@deftypefn Operator change& change::operator= (char *@var{pn});
-This sets the change to the value indicated by the place notation in
-string @var{pn}.
-@end deftypefn
-
 @deftypefn Operator int change::operator== (const change& @var{c}) const;
 @deftypefnx Operator int change::operator!= (const change& @var{c}) const;
-These compare two changes.
+These compare two changes.  Note that to be equal, the changes must be
+defined on the same number of bells; for example, @samp{"12"} on 4
+bells is different from @samp{"12"} on 6 bells.
 @end deftypefn
 
-@deftypefn Operator int& operator*= (int& @var{i}, const change& @var{c});
-@deftypefnx Operator int operator* (int @var{i}, const change& @var{c});
+@deftypefn Operator bell& operator*= (bell& @var{b}, const change& @var{c});
+@deftypefnx Operator bell operator* (bell @var{b}, const change& @var{c});
 These return the effect of applying the change @var{c} to the bell
-@var{i}. For example, @code{3 * "34" == 4}. This is useful in tracing
+@var{b}. For example, @code{3 * "34" == 4}. This is useful in tracing
 the path of one particular bell through a series of changes.
 @end deftypefn
 
@@ -483,20 +565,25 @@ output stream.
 This returns the number of bells on which the change is defined.
 @end deftypefun
 
-@deftypefun int change::findswap (int @var{i}) const;
+@deftypefun int change::sign (void) const;
+This returns the sign of the change: -1 if an odd number of pairs are
+swapped, +1 if an even number of pairs are swapped.
+@end deftypefun
+
+@deftypefun int change::findswap (bell @var{i}) const;
 Returns 1 if the change swaps bells @var{i} and @var{i+1}, and 0
 otherwise.
 @end deftypefun
 
-@deftypefun int change::findplace (int @var{i}) const;
+@deftypefun int change::findplace (bell @var{i}) const;
 Returns 1 if the change doesn't move the bell in the @var{i}th place
 (i.e. if @var{i}ths place is made), and 0 otherwise.
 @end deftypefun
 
 @deftypefun int change::swap (int @var{i});
 If the change doesn't currently swap bells @var{i} and @var{i+1}, then
-this will add that swap. If those bells are swapped, this will remove
-the swap. If the bells @var{i-1} and @var{i}, or @var{i+1} and
+this will add that swap.  If those bells are swapped, this will remove
+the swap.  If the bells @var{i-1} and @var{i}, or @var{i+1} and
 @var{i+2}, are currently swapped, those swaps are removed.
 
 This function makes it possible for the user to edit changes in such a
@@ -513,98 +600,22 @@ so on.
 This returns 1 if the change contains internal places, and 0 otherwise.
 @end deftypefun
 
-@node The rows and changes Classes, The row_block class, The change Class, Rows and Changes
-@section The @code{rows} and @code{changes} classes
-@cindex @code{rows} class, @code{changes} class
-
-The @code{rows} and @code{changes} classes hold an array of rows or
-changes, respectively.  For example, @code{changes} could hold a lead of
-a method or a bob or single; @code{rows} could hold the rows for a particular
-lead of a method, or course ends for a composition.
-
-@menu
-* rows and changes Derivation::  
-* rows and changes Constructors::  
-* rows and changes Operators::  
-* Other rows and changes Functions::  
-@end menu
-
-@node rows and changes Derivation, rows and changes Constructors, The rows and changes Classes, The rows and changes Classes
-@subsection Derivation
-
-These classes are derived from @code{vector<row>} and @code{vector<change>}
-classes respectively, but with the @code{protected} attribute.
-
-@example
-class rows : protected vector<row>;
-class changes : protected vector<change>;
-@end example
-
-@node rows and changes Constructors, rows and changes Operators, rows and changes Derivation, The rows and changes Classes
-@subsection Constructors
-
-@deftypefn Constructor {} rows::rows (void);
-@deftypefnx Constructor {} changes::changes (void);
-These create empty arrays.
-@end deftypefn
-
-@deftypefn Constructor {} rows::rows (int @var{l}, int @var{b});
-@deftypefnx Constructor {} changes::changes (int @var{l}, int @var{b});
-These create an array of rows or changes containing @var{l} members,
-each on @var{b} bells.
-@end deftypefn
-
-@deftypefn Constructor {} rows::rows (rows& @var{r});
-@deftypefnx Constructor {} changes::changes (changes& @var{c});
-Copy constructors.
-@end deftypefn
-
-@node rows and changes Operators, Other rows and changes Functions, rows and changes Constructors, The rows and changes Classes
-@subsection Operators
-
-@deftypefn Operator rows& rows::operator= (rows& @var{r});
-@deftypefnx Operator changes& changes::operator= (changes& @var{c});
-Copy assignment operators.
-@end deftypefn
-
-@deftypefn Operator row& rows::operator[] (int @var{i});
-@deftypefnx Operator {const row&} rows::operator[] (int @var{i}) const;
-@deftypefnx Operator changes& changes::operator[] (int @var{i});
-@deftypefnx Operator {const changes&} changes::operator[] (int @var{i}) const;
-These operators return the @var{i}th member of the array.
-@end deftypefn
-
-@node Other rows and changes Functions,  , rows and changes Operators, The rows and changes Classes
-@subsection Other functions
-
-@deftypefun int rows::length (void);
-@deftypefunx int changes::length (void);
-These return the number of elements in the array.
-@end deftypefun
-
-@deftypefun int rows::bells (void);
-@deftypefunx int changes::bells (void);
-These return the number of bells used by the rows or changes in the array.
-@end deftypefun
-
-@deftypefun row changes::asrow (void) const;
-This returns a row which is the cumulative effect of all the changes in
-the array, found by starting with rounds and applying all of the changes
-to it one after the other.  For example, if the @code{changes} object
-contains one lead of a method, then @code{asrow} will return the lead end
-of the method.
-@end deftypefun
-
-@node The row_block class,  , The rows and changes Classes, Rows and Changes
+@node The row_block class,  , The change Class, Rows and Changes
 @section The @code{row_block} class
 @cindex @code{row_block} class
 
 The @code{row_block} class is an array of rows which has associated with
-it a pointer to an array of changes, and can recalculate itself from those
-changes.  For example, suppose that the variable @code{c} of type
-@code{changes} holds one lead of a method; then it is possible to define a
-variable of type @code{row_class} which, once it is told what the lead head
-is, will calculate the rows for one lead of the method.
+it a reference to an array of changes, and can recalculate itself from
+those changes.  For example, suppose that the variable @code{c} of type
+@code{vector<change>} holds one lead of a method; then it is possible to
+define a variable of type @code{row_class} which, once it is told what
+the lead head is, will calculate the rows for one lead of the method.
+
+Note that the @code{row_block} object does not store its own copy of the
+@code{vector<change>} object from which it is calculated.  This means
+that the changes may be altered and the resulting rows recalculated
+easily; it also means that the changes must not be deallocated while the
+@code{row_block} object is in existence.
 
 @menu
 * row_block Derivation::        
@@ -615,21 +626,22 @@ is, will calculate the rows for one lead of the method.
 @node row_block Derivation, row_block Constructors, The row_block class, The row_block class
 @subsection Derivation
 
-The @code{row_block} class is derived from @code{rows}.
+The @code{row_block} class is derived from @code{vector<row>}.
 
 @example
-class row_block : public rows;
+class row_block : public vector<row>;
 @end example
 
 @node row_block Constructors, Other row_block Functions, row_block Derivation, The row_block class
 @subsection Constructors
 
-@deftypefn Constructor {} row_block::row_block (changes& @var{c});
+@deftypefn Constructor {} row_block::row_block (const vector<change>& @var{c});
 This creates a block of rows using the changes in @var{c}, starting
 from rounds.
 @end deftypefn
 
-@deftypefn Constructor {} row_block::row_block (changes& @var{c}, row& @var{r});
+@deftypefn Constructor {} row_block::row_block (const vector<change>&
+@var{c}, const row& @var{r});
 This creates a block of rows using the changes in @var{c}, starting from
 the row given in @var{r}.
 @end deftypefn
@@ -672,13 +684,13 @@ all the rows, just the ones after that point.
 @end iftex
 
 @ifinfo
-@deftypefun changes& row_block::get_changes (void) const;
-This returns the @code{changes} object on which the row block is based.
+@deftypefun {const vector<change>&} row_block::get_changes (void) const;
+This returns the @code{vector<change>} object on which the row block is based.
 @end deftypefun
 @end ifinfo
 @iftex
-@deftypefun changes@& row_block::get_changes (void) const;
-This returns the @code{changes} object on which the row block is based.
+@deftypefun {const vector<change>@&} row_block::get_changes (void) const;
+This returns the @code{vector<change>} object on which the row block is based.
 @end deftypefun
 @end iftex
 
@@ -696,24 +708,34 @@ method is called a @dfn{principle} and the leads are called @dfn{divisions}.
 Any bells is a method which end up in the same place at the end of a lead
 are called @dfn{hunt bells}.
 
-The Ringing Class Library defines an object @code{method} which is simply
-a block of changes (it is derived from @code{changes}) and which provides
-a large range of member functions.  Many of these are used for finding
-out things about the method, such as the number of leads in the plain course,
-the type of method, the full name and so on. 
+The Ringing Class Library defines an object @code{method} which is
+simply a block of changes (it is derived from @code{vector<change>}) and
+which provides a large range of member functions.  Many of these are
+used for finding out things about the method, such as the number of
+leads in the plain course, the type of method, the full name and so on.
 
 @node Proof, Musical Analysis, Methods, Top
 @chapter Method and Touch Proving
 @cindex proving rows
 @cindex proof class
 
-The proof class provides a simple way of checking that a block of rows are true. It provides functions for finding out where a particular block has failed. Additionally, it will can check blocks that are more than one extent long.
+The proof class provides a simple way of checking that a block of rows
+are true.  It provides functions for finding out where a particular block
+has failed.  Additionally, it will can check blocks that are more than
+one extent long.
 
-It is a template class, defined as @code{template <class RowIterator> class proof;}. You can therefore decide on your own block of rows format, as long as you can provide an iterator (see the STL) for it.
+It is a template class, defined as @code{template <class RowIterator>
+class proof;}.  You can therefore decide on your own method of
+generating rows, as long as you can provide an iterator (see the
+@acronym{STL}) for it.
 
-It will check ALL rows given, therefore if rounds are at the start and end, then one of them should be removed before passing to the object.
+It will check ALL rows given; therefore, if rounds are at the start and
+end, then one of them should be removed before passing to the object.
 
-The proof class only stores the results, it does not make a copy of the actual rows. However, pointers to false rows will be stored, so don't destroy your rows before getting all the proof results. This may be changed in a later release.
+The proof class only stores the results: it does not make a copy of the
+actual rows.  However, pointers to false rows will be stored, so don't
+destroy your rows before getting all the proof results.  This may be
+changed in a later release.
 
 @menu
 * proof Derivation::            
@@ -736,36 +758,36 @@ template <class RowIterator> class proof;
 @node proof Constructors, proof Functions, proof Derivation, Proof
 @subsection Constructors
 
-@deftypefn Constructor {} proof::proof();
+@deftypefn Constructor {} proof::proof ();
 Default Constructor. Sets trueness to false. Use the prove function to provide the rows to prove.
 @end deftypefn
 
-@deftypefn Constructor {} proof::proof(RowIterator @var{first}, RowIterator @var{last});
+@deftypefn Constructor {} proof::proof (RowIterator @var{first}, RowIterator @var{last});
 This checks for repeated rows from first to last. Expects up to 1 extent only. Result is stored in class for later retrieval.
 @end deftypefn
 
-@deftypefn Constructor {} proof::proof(RowIterator @var{first}, RowIterator @var{last}, const int @var{max}, proof::hash_function @var{f});
+@deftypefn Constructor {} proof::proof (RowIterator @var{first}, RowIterator @var{last}, const int @var{max}, proof::hash_function @var{f});
 This checks for repeated rows from first to last. Expects up to @var{max} extents. Result is stored in class for later retrieval.
 @end deftypefn
 
 @node proof Functions, proof Operators, proof Constructors, Proof
 @subsection Functions
 
-@deftypefn Function bool proof::proof(RowIterator @var{first}, RowIterator @var{last});
+@deftypefn Function bool proof::proof (RowIterator @var{first}, RowIterator @var{last});
 This checks for repeated rows from first to last. Expects up to 1 extent only. Full result is stored in class for later retrieval, but trueness of rows is returned.
 @end deftypefn
 
-@deftypefn Function bool proof::proof(RowIterator @var{first}, RowIterator @var{last}, const int @var{max}, proof::hash_function @var{f});
+@deftypefn Function bool proof::proof (RowIterator @var{first}, RowIterator @var{last}, const int @var{max}, proof::hash_function @var{f});
 This checks for repeated rows from first to last. Expects up to @var{max} extents. Full result is stored in class for later retrieval, but trueness of rows is returned.
 @end deftypefn
 
 @ifinfo
-@deftypefn Function const failinfo& proof::failed() const;
+@deftypefn Function {const failinfo&} proof::failed () const;
 This function simply returns the data detailing where the touch has failed. (*note Falseness Storage::).
 @end deftypefn
 @end ifinfo
 @iftex
-@deftypefn Function const failinfo@& proof::failed() const;
+@deftypefn Function {const failinfo@&} proof::failed () const;
 This function simply returns the data detailing where the touch has failed.
 @end deftypefn
 @end iftex
@@ -773,21 +795,21 @@ This function simply returns the data detailing where the touch has failed.
 @node proof Operators, Falseness Storage, proof Functions, Proof
 @subsection Operators
 
-@deftypefn Operator operator proof::int() const;
+@deftypefn Operator operator proof::int () const;
 This returns true (or 1) if the touch is true.
 @end deftypefn
 
-@deftypefn Operator int proof::operator!() const;
+@deftypefn Operator int proof::operator! () const;
 This returns true (or 1) if the touch is not true.
 @end deftypefn
 
 @ifinfo
-@deftypefn Operator friend ostream& operator<< <>(ostream& @var{o}, const proof<RowIterator>& @var{p});
+@deftypefn Operator {friend ostream&} operator<< <>(ostream& @var{o}, const proof<RowIterator>& @var{p});
 Outputs to the ostream, @var{o}, if @var{p} is true or false in a predefined format. If p is false, then additional information regarding where is also output.
 @end deftypefn
 @end ifinfo
 @iftex
-@deftypefn Operator friend ostream@& operator<< <>(ostream@& @var{o}, const proof<RowIterator>@& @var{p});
+@deftypefn Operator {friend ostream@&} operator<< <>(ostream@& @var{o}, const proof<RowIterator>@& @var{p});
 Outputs to the ostream, @var{o}, if @var{p} is true or false in a predefined format. If p is false, then additional information regarding where is also output.
 @end deftypefn
 @end iftex
@@ -862,72 +884,72 @@ template <class RowIterator> class music;
 @node music Constructors, music Functions, music Derivation, Musical Analysis
 @subsection Constructors
 
-@deftypefn Constructor {} music::music();
+@deftypefn Constructor {} music::music ();
 Default Constructor. Resets all the music variables to zero.
 @end deftypefn
 
-@deftypefn Constructor {} music::music(RowIterator @var{first}, RowIterator @var{last});
+@deftypefn Constructor {} music::music (RowIterator @var{first}, RowIterator @var{last});
 This constructor takes the rows and passes them to @code{music::change_rows} which resets the music variables and analyses all the rows. First and last should be an iterator to a container that stores rows. The first should also be a handstroke row.
 @end deftypefn
 
 @node music Functions, music Operators, music Constructors, Musical Analysis
 @subsection Functions
 
-@deftypefn Function inline void music::change_rows(RowIterator @var{first}, RowIterator @var{last});
+@deftypefn Function {inline void} music::change_rows (RowIterator @var{first}, RowIterator @var{last});
 This function resets all the music variables and the analyses the rows. First and last should be an iterator to a container that stores rows. The first should also be a handstroke row.
 @end deftypefn
 
 The following functions all return values depending on the last block of rows analysed.
 
-@deftypefn Function bool music::queens(void) const;
+@deftypefn Function bool music::queens (void) const;
 This function returns true if queens was present.
 @end deftypefn
 
-@deftypefn Function bool music::titums(void) const;
+@deftypefn Function bool music::titums (void) const;
 This function returns true if titums was present.
 @end deftypefn
 
-@deftypefn Function bool music::kings(void) const;
+@deftypefn Function bool music::kings (void) const;
 This function returns true if kings was present.
 @end deftypefn
 
-@deftypefn Function bool music::reverse_rounds(void) const;
+@deftypefn Function bool music::reverse_rounds (void) const;
 This function returns true if reverse_rounds was present.
 @end deftypefn
 
-@deftypefn Function int music::t_tminus1_at_back(void) const;
+@deftypefn Function int music::t_tminus1_at_back (void) const;
 This function returns the number of 65s, 87s, 09s etc present at backstroke
 @end deftypefn
 
-@deftypefn Function int music::tminus2_t_at_the_back_hs(void) const;
+@deftypefn Function int music::tminus2_t_at_the_back_hs (void) const;
 This function returns the number of 46s, 68s, etc at the end of the change present at handstroke. Note, this also includes the number of 246s, 468s etc.
 @end deftypefn
 
-@deftypefn Function int music::tminus4_tminus2_t_at_the_back_hs(void) const;
+@deftypefn Function int music::tminus4_tminus2_t_at_the_back_hs (void) const;
 This function returns the number of 246s, 468s, etc at the end of the change present at handstroke.
 @end deftypefn
 
-@deftypefn Function int music::tminus2_t_at_the_back_bs(void) const;
+@deftypefn Function int music::tminus2_t_at_the_back_bs (void) const;
 This function returns the number of 46s, 68s, etc at the end of the change present at backstroke. Note, this also includes the number of 246s, 468s etc.
 @end deftypefn
 
-@deftypefn Function int music::tminus4_tminus2_t_at_the_back_bs(void) const;
+@deftypefn Function int music::tminus4_tminus2_t_at_the_back_bs (void) const;
 This function returns the number of 246s, 468s, etc at the end of the change present at backstroke.
 @end deftypefn
 
-@deftypefn Function int music::rollup_3(void) const;
+@deftypefn Function int music::rollup_3 (void) const;
 This function returns the number of three bell rollups present on the back, this does not include other numbers of rollups.
 @end deftypefn
 
-@deftypefn Function int music::rollup_4(void) const;
+@deftypefn Function int music::rollup_4 (void) const;
 This function returns the number of four bell rollups present on the back, this does not include other numbers of rollups.
 @end deftypefn
 
-@deftypefn Function int music::reverse_rollup_3(void) const;
+@deftypefn Function int music::reverse_rollup_3 (void) const;
 This functoin returns the number of reverse three bell rollups present on the front (e.g. 876, 654), this does not include other number of rollups.
 @end deftypefn
 
-@deftypefn Function int music::reverse_rollup_4(void) const;
+@deftypefn Function int music::reverse_rollup_4 (void) const;
 This functoin returns the number of reverse four bell rollups present on the front (e.g. 8765, 6543), this does not include other number of rollups.
 @end deftypefn
 
@@ -935,7 +957,7 @@ This functoin returns the number of reverse four bell rollups present on the fro
 @subsection Operators
 
 @ifinfo
-@deftypefn Operator friend ostream& operator<< <>(ostream& @var{o}, const music<RowIterator>& @var{m});
+@deftypefn Operator {friend ostream&} operator<< <>(ostream& @var{o}, const music<RowIterator>& @var{m});
 Outputs to the ostream a string containing the following details:
 
 @example
@@ -981,17 +1003,34 @@ r = reverse rounds
 @end example
 
 Otherwise numbers provide the following information
-@example
-1 = Number of 3 bell rollups in the touch (i.e.  678 on the back)
-2 = Number of 4 bell rollups in the touch (i.e. 5678 on the back)
-3 = Number of reverse 3 bell rollups off the front (i.e. 654 or 876)
-4 = Number of reverse 4 bell rollups off the front (i.e. 6543 or 8765)
-5 = Number of 46s or 68s etc at handstroke (note: this also adds in total for item 7).
-6 = Number of 46s or 68s etc at backstroke (note: this also adds in total for item 8).
-7 = Number of 246s or 468s etc at handstroke
-8 = Number of 246s or 468s etc at backstroke
-9 = Number of 65s or 87s at backstroke (will be zero for odd nos of bells)
-@end example
+@table @asis
+@item 1
+Number of 3 bell rollups in the touch (i.e.  678 on the back)
+
+@item 2
+Number of 4 bell rollups in the touch (i.e. 5678 on the back)
+
+@item 3
+Number of reverse 3 bell rollups off the front (i.e. 654 or 876)
+
+@item 4
+Number of reverse 4 bell rollups off the front (i.e. 6543 or 8765)
+
+@item 5
+Number of 46s or 68s etc at handstroke (note: this also adds in total
+for item 7).
+
+@item 6
+Number of 46s or 68s etc at backstroke (note: this also adds in total
+for item 8).  
+
+@item 7
+Number of 246s or 468s etc at handstroke 
+
+@item 8
+Number of 246s or 468s etc at backstroke 9 = Number of 65s or 87s at backstroke
+(will be zero for odd nos of bells)
+@end table
 @end deftypefn
 @end iftex
 
