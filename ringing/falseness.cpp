@@ -53,14 +53,11 @@ falseness_table::falseness_table( const method &m, int flags )
   set<row> fs;
 
   row r1( m.bells() );
-  for ( method::const_iterator i1( m.begin() ); i1 != m.end()-1; ++i1 )
+  for ( method::const_iterator i1( m.begin() ); i1 != m.end(); r1 *= *i1++ )
     {
-      r1 *= *i1;
-
       row r2( m.bells() );
-      for ( method::const_iterator i2( m.begin() ); i2 != m.end()-1; ++i2 )
+      for ( method::const_iterator i2( m.begin() ); i2 != m.end(); r2 *= *i2++)
 	{
-	  r2 *= *i2;
 	  row f = r1 / r2;
 	  
 	  if ( !( flags & no_fixed_treble ) && f[0] != 0 )
@@ -72,6 +69,7 @@ falseness_table::falseness_table( const method &m, int flags )
 	  fs.insert( f );
 	}
     }
+
   
   // Put the falsenesses into the vector 
   t.reserve( fs.size() );
