@@ -270,13 +270,12 @@ row::row(const char *s)
 {
   for(const char *t = s; *t != '\0'; t++)
     data[t - s].from_char(*t);
-  vector<bell>::const_iterator b(data.begin()), e(data.end());
 #if RINGING_USE_EXCEPTIONS
   vector<bool> found(bells());
   int i;
   for(i=0; i<bells(); ++i) found[i] = false;
   for(i=0; i<bells(); ++i) 
-    if (data[i] < 0 || data[i] >= data.size() || found[data[i]])
+    if (data[i] < 0 || data[i] >= (int) data.size() || found[data[i]])
       throw invalid();
     else
       found[data[i]] = true;

@@ -1066,14 +1066,24 @@ http://www.methods.clara.net/method-collections/zip-files/index.htm
 
 @menu
 * General Use::                 
+* The Library Classes::         
+* Deriving Library Classes::    
 @end menu
 
-@node General Use,  , Method Libraries, Method Libraries
-@subsection General Use
+@node General Use, The Library Classes, Method Libraries, Method Libraries
+@section General Use
 
 An introduction into how to use the classes should help the user to understand
 the inner workings more easily.
 
+@menu
+* Initialisation::              
+* Opening Files::               
+* Loading Methods::             
+* Saving Methods::              
+@end menu
+
+@node Initialisation, Opening Files, General Use, General Use
 @subsection Initialisation
 
 The first thing to do is to include the libraries that you wish to use. In
@@ -1084,26 +1094,25 @@ our case, we will include both the support libraries:
 #include <ringing/cclib.h>
 @end example
 
-Now we have to declare the type of libraries that we are using to the library
-class. This is done by a statement (before the main function) as follows:
+Now we have to register the type of libraries that we are using to the library
+class. This is done by a function call for each library; these can be placed anywhere before the library is used. As they are calls to static functions, once they are registered, they will remain so until the program finishes. For mslib and cclib to be included use the following function calls:
 
 @example
-libtypes* library::libtypes[] = @{ &cclib::type, &mslib::type @};
+mslib::register();
+cclib::register();
 @end example
 
 This declares our libraries. If we only wish to load one type of library, then
-we only use one @code{&xxlib::type} and if we wish to use more we add them in.
+we only use one call, otherwise we add more as required.
 
-What this actually does is to declare the class types in a private static
-member of the library class for later reference.
-
+@node Opening Files, Loading Methods, Initialisation, General Use
 @subsection Opening Files
 
 Once we are ready to use the method library, the first thing we do is to open
 a file:
 
 @example
-library *l = library::open(filename);
+library l(filename);
 @end example
 
 The variable @var{filename} should be of type @code{char*}, (the function
@@ -1114,37 +1123,132 @@ What the library class now does is to go through each type of library that was
 declared to see if it can open and read the file. If a derived library cannot
 read the format of the file, library moves onto the next one.
 
-If no libraries can be found to read the file, a NULL pointer is returned.
-
-If a library can be found, then a pointer to that library, initialised with
-the file is returned. Hence, you do not need to worry about which type of
-library the filename is, you only have to be concerned with the detail of if
-any library has been able to read the file.
-
-@subsection Loading Methods
-
-Now we have an open file loaded into a library, you will want to open it. To
-do this use the following:
+To check that a valid (it exists, and there is a library that can read it) file has been created use the good function, thus:
 
 @example
-method *m = l->load(methname);
+if (l.good())
+@{
+// we are ok to proceed
+@}
+else
+@{
+// we haven't got a good library.
+@}
 @end example
 
-Again, methname should be a pointer to a string of characters. If the load
-function returns NULL, it has not been able to load the method, from the file
-that was opened earlier. If it has been sucessful, a populated method class is
-returned, and that can then be used as you wish.
+Now you have a library loaded, you can use it to load multiple methods from that file.
+
+@node  Loading Methods, Saving Methods, Opening Files, General Use
+@subsection Loading Methods
+
+Now we have a file loaded into a library, you will want to get a method definition from it. To do this use the following:
+
+@example
+method m = l.load(methname);
+@end example
+
+Again, methname should be a pointer to a string of characters. If the load function is successful (method found in the file), all will be happy and continue nicely. If not, then one of two things will happen.
+
+If exceptions are enabled, an exception will be thrown which you should catch, otherwise the program will probably exit. Catch it like this:
+
+@example
+try 
+@{
+  method m = l.load(methname);  
+@}
+catch (exception &e)
+@{
+  cerr << "Error: " << e.what() << endl;
+  // Do some error handling here.
+@}
+@end example
+
+If exceptions are not enabled, then you will need to check the method name. If it is equal to "Not Found", this means that the method wasn't found. Otherwise it should contain the name of your method.
 
 Note: It is worth examining the contents of the method libraries to note the
-different format of the method names. Both mslib and cclib are case-insenstive
+different format of the method names. Both mslib and cclib are case-insensitive
 when specifying methname.
 
+@node Saving Methods,  , Loading Methods, General Use
 @subsection Saving Methods
 
 Due to the human read/write style formats for the method library files, there
 are currently no available save commands. At some point in the future a better
 machine writeable format may be developed that will enable the saving of the
 methods.
+
+@node The Library Classes, Deriving Library Classes, General Use, Method Libraries
+@section The @code{Library} classes
+
+The library classes form the base of the library loading system. @code{Library.h} declares 4 classes, these are:
+
+@deftypefn @code{class libtype}
+A type of library, the base for newlib
+@end deftypefn
+@deftypefn @code{template <class mylibrary> class newlib : public libtype}
+Each library must declare one of these. It's the handler by which the derived library class can be accessed.
+@end deftypefn
+@deftypefn @code{class library_base}
+This is the base class for all method libraries.
+@end deftypefn
+@deftypefn @code{class library}
+This is the interface class for accessing method libraries.
+@end deftypefn
+
+@menu
+* The libtype class::           
+* The newlib class::            
+* The library_base class::      
+* The library class::           
+@end menu
+
+@node The libtype class, The newlib class, The Library Classes, The Library Classes
+@subsection The @code{libtype} class
+
+This class is a base class for the method library type. It is used with the method libraries but does not need to be accessed externally.
+
+It is a friend of the library class so that it's only function can be accessed.
+
+It contains just one function definition that is protected:
+
+@deftypefn @code{virtual library_base *open(const char *n) const}
+This function is the prototype that the @code{library} class will use to attempt to open a library file. For this class it simply returns null.
+@end deftypefn
+
+@node The newlib class, The library_base class, The libtype class, The Library Classes
+@subsection The @code{newlib} class
+
+Each new method library must declare one of these. The user must then register it with the library class to allow the method library to be used. The library class calls the open method to see if the method library is able to load the library:
+
+@example
+  library_base *open(const char *name) const @{
+    if(mylibrary::canread(name)) @{
+      return new mylibrary(name);
+    @} else
+      return NULL;
+  @}
+@end example
+
+The @code{mylibrary::canread} function is a static function that must be present in the derived class. The open function uses this to determine if the library can read the file that is given to it.
+
+@node The library_base class, The library class, The newlib class, The Library Classes
+@subsection The @code{library_base} class
+
+The @code{library_base} class is the base class for any new method library classes that are developed.
+
+The rest of this section is still to be written.
+
+@node The library class,  , The library_base class, The Library Classes
+@subsection The @code{library} class
+
+The @code{library} class is the main interface to the individual method libraries. It provides a interface that will automatically determine which library to use and deal with the creation and deletion of that library as necessary.
+
+The rest of this section is still to be written.
+
+@node Deriving Library Classes,  , The Library Classes, Method Libraries
+@section Deriving Library Classes
+
+This section is still to be witten
 
 @node Proof, Musical Analysis, Method Libraries, Top
 @chapter Method and Touch Proving

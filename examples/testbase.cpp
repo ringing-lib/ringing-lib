@@ -114,8 +114,8 @@ int main()
     cout << "Method name: ";
     getline(cin, methname);
 
-    library::addtype(&mslib::type);
-    library::addtype(&cclib::type);
+    mslib::registerlib();
+    cclib::registerlib();
 
     library l(filename.c_str());
     if (!l.good())

@@ -50,7 +50,7 @@ protected:
   { return NULL; }			  // Return NULL if it's not the
 					  // right sort of library.
   friend class library;
-};
+  };
 
 // newlib : Each new type of library should declare one of these
 template <class mylibrary>

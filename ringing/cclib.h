@@ -46,27 +46,36 @@ RINGING_USING_STD
 // cclib : Implement Central Council Method libraries
 class cclib : public library_base {
 private:
-  ifstream f;                   // The iostream we're using
+  string filename;              // The filename we're using
   int b;                        // Number of bells for files in this lib
   int wr;                       // Is it open for writing?
+  int _good;                    // If we have a good filename or not.
 
-public:
   static newlib<cclib> type;    // Provide a handle to this library type
 
-  cclib(const char *name) : wr(0) {
-    f.open(name, ios::in | ios::out);
-    if(f.good()) wr = 1; else f.open(name, ios::in);
-    const char *s;
-    // Get the number off the end of the file name
-    // Is there a '.'? e.g. '.txt', if so account for it
-    const char* last = find(name, name + strlen(name) - 1, '.');
-    // now start to reverse from last.
-    for(s = last - 1; s > name && isdigit(s[-1]); s--);
-    b = atoi(s);
-    if(b == 0) f.close();
+public:
+  static void registerlib(void) {
+    library::addtype(&type);
+  }
+
+  cclib(const char *name) : wr(0), filename(name), _good(0) {
+    // Open file. Not going to bother to see if it's writeable as the
+    // save function is not currently planned to be implemented.
+    ifstream f(filename.c_str());
+    if(f.good())
+      {
+	_good = 1;
+	const char *s;
+	// Get the number off the end of the file name
+	// Is there a '.'? e.g. '.txt', if so account for it
+	const char* last = find(name, name + strlen(name) - 1, '.');
+	// now start to reverse from last.
+	for(s = last - 1; s > name && isdigit(s[-1]); s--);
+	b = atoi(s);
+	f.close();
+      }
   }
   ~cclib() {
-    f.close();
   }
 
   static int canread(const char* const name) // Is this file in the right format?
@@ -84,7 +93,7 @@ public:
 	    if (linebuf.length() > 1)
 	      {
 		// The second check for No. is used as an extra insurance check...
-		if ((linebuf.find("Name") != -1) && (linebuf.find("No.") != -1))
+		if ((linebuf.find("Name") != string::npos) && (linebuf.find("No.") != string::npos))
 		  {
 		    temp = linebuf.find("Name") - 1;
 		    valid++;
@@ -103,7 +112,7 @@ public:
   }
 
   int good(void) const          // Is the library in a usable state?
-    { return !!f; }
+    { return _good; }
 
   int writeable(void) const     // Is this library writeable?
     { return wr; }

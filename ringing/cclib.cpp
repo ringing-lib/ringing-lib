@@ -45,13 +45,15 @@ method cclib::load(const char *name)
 {
   string methname(name);
 
-  // These *must* be initialised as -1 for later
-  int meth_name_starts = -1;
-  int meth_name_ends = -1;
-  int meth_hl = -1;
-  int meth_le = -1;
-  int meth_lh = -1;
-  f.seekg(0,ios::beg);		// Go to the beginning of the file
+  // These *must* be initialised as string::npos for later
+  string::size_type meth_name_starts = string::npos;
+  string::size_type meth_name_ends = string::npos;
+  string::size_type meth_hl = string::npos;
+  string::size_type meth_le = string::npos;
+  string::size_type meth_lh = string::npos;
+
+  ifstream f(filename.c_str());
+
   while(f.good()) {
     // first, read in a line
     string linebuf;
@@ -59,50 +61,60 @@ method cclib::load(const char *name)
     if (linebuf.length() > 1)
       {
 	// The second check for No. is used as an extra insurance check...
-	if ((linebuf.find("Name") != -1) && (linebuf.find("No.") != -1))
+	if ((linebuf.find("Name") != string::npos) && (linebuf.find("No.") != string::npos))
 	  {
-	    // we now have start and end position.
+	    // This is a header line - use it to get the start and end position
+	    // of fields
 	    meth_name_starts = linebuf.find("Name");
 	    meth_name_ends = linebuf.find("Notation");
 	    meth_hl = linebuf.find("hl");
-	    if (meth_hl != -1)
+
+	    // If we have a half lead then take note accordingly.
+	    if (meth_hl != string::npos)
 	      {
 		meth_le = linebuf.find("le");
 		meth_lh = linebuf.find("lh");
 	      }
 	    else
 	      {
-		meth_le = -1;
+		meth_le = string::npos;
 		meth_lh = linebuf.find("lh");
 	      }
 	  }
+	// This if checks that we have found at least one header line.
 	else if (meth_name_starts != meth_name_ends)
 	  {
+	    // This could be a line detailing a method.
 	    if (linebuf.length() > meth_name_ends)
 	      {
+		// Extract the method name section
 		string wordbuf(linebuf, meth_name_starts, meth_name_ends - meth_name_starts);
-		// Copy wordbuf to preserve for later
-		string methodname(wordbuf);
-
-		string::const_iterator i = methodname.end();
-		string::const_iterator j = methodname.end();
+		// Remove whitespace from end of method name
+		string::const_iterator i = wordbuf.end();
+		string::const_iterator j = wordbuf.end();
 		do {
 		  j = i;
 		  i--;
 		} while (isspace(*i));
-		methodname = methodname.substr(0, j - methodname.begin());
-	
+
+		wordbuf = wordbuf.substr(0, j - wordbuf.begin());
+
+		// Copy wordbuf to preserve for later
+		string methodname(wordbuf);
+
+		// Make all letters lower case
 		for_each(wordbuf.begin(), wordbuf.end(), lowercase);
 		for_each(methname.begin(), methname.end(), lowercase);
 
-		// FIXME: This will match "Plain" to "Plain Bob"
-		if (wordbuf.compare(methname, 0, methname.length()) == 0)
+		// Do we have the correct line for the method?
+		if ((wordbuf.length() == methname.length()) &&
+		    (wordbuf.compare(methname, 0, methname.length()) == 0))
 		  {
 		    // we have found the method.
 		    // now get the rest of the details
 		    string pn;
 		    // Get place notation
-		    if ((meth_hl != -1) && (meth_le != -1))
+		    if ((meth_hl != string::npos) && (meth_le != string::npos))
 		      {
 			// We have a reflection
 			pn.append("&");
@@ -110,6 +122,8 @@ method cclib::load(const char *name)
 			pn.append(linebuf.substr(meth_name_ends, meth_hl - meth_name_ends));
 			// Add half lead notation
 			pn.append(linebuf.substr(meth_hl, meth_le - meth_hl));
+
+			// Now create the method
 			method m(pn, b, methodname);
 
 			// Strip any whitespace
@@ -122,22 +136,33 @@ method cclib::load(const char *name)
 			change c(b, ch);
 			m.push_back(c);
 
+			// We've finished now.
 			return m;
 		      }
-		    else if (meth_hl != -1)
+		    else if (meth_hl != string::npos)
 		      {
+			// This is for methods like Grandsire which the CC
+			// have entered in an awkward way.
+
 			// Make this a reflection temporarily
 			pn.append("&");
 		        pn.append(linebuf.substr(meth_name_ends, meth_lh - meth_name_ends));
+
+			// Create the method
 			method m(pn, b, methodname);
+
 			// Now remove the last change
 			m.pop_back();
 			return m;
 		      }
 		    else
 		      {
+			// This is for the non-reflecting irregular methods.
+
 			// Add place notation
 			pn.append(linebuf.substr(meth_name_ends, meth_lh - meth_name_ends));
+
+			// Create the method and return it.
 			method m(pn, b, methodname);
 			return m;
 		      }
@@ -146,13 +171,19 @@ method cclib::load(const char *name)
 	  }
 
       }
-    // else ignore  
+    // else ignore the line (length < 1)
   }
+  f.close();
+  // If we are here we couldn't find the method.
 #if RINGING_USE_EXCEPTIONS
+  // If we are using exceptions, throw one to notify it couldn't be found.
   throw invalid_name();
 #else
-  method m(1,2);
-  return m;			// Couldn't find it
+  // Otherwise we have to return something to avoid warning and errors, so
+  // make up something strange. Give it a name so it can always be checked
+  // against.
+  method m(1,2, "Not Found");
+  return m;
 #endif
 }
 

@@ -38,8 +38,8 @@ method mslib::load(const char *name)
 {
   const char *s;
   char *x;
+  ifstream f(filename.c_str());
 
-  f.seekg(0,ios::beg);		// Go to the beginning of the file
   while(f.good()) {
     s = name;
     // See whether the name matches
@@ -81,11 +81,17 @@ method mslib::load(const char *name)
 
     while(!f.eof() && f.get() != '\n');	// Skip to the next line
   }
+  f.close();
+  // If we are here we couldn't find the method.
 #if RINGING_USE_EXCEPTIONS
+  // If we are using exceptions, throw one to notify it couldn't be found.
   throw invalid_name();
 #else
-  method m(1,2);                // We have to return something...
-  return m;			// Couldn't find it
+  // Otherwise we have to return something to avoid warning and errors, so
+  // make up something strange. Give it a name so it can always be checked
+  // against.
+  method m(1,2, "Not Found");
+  return m;
 #endif
 }
 

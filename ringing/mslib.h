@@ -46,24 +46,42 @@ RINGING_USING_STD
 // mslib : Implement MicroSIRIL libraries
 class mslib : public library_base {
 private:
-  fstream f;                    // The iostream we're using
+  string filename;              // The filename we're using.
   int b;                        // Number of bells for files in this lib
   int wr;                       // Is it open for writing?
-
-public:
+  int _good;
   static newlib<mslib> type;    // Provide a handle to this library type
 
-  mslib(const char *name) : wr(0) {
-    f.open(name, ios::in | ios::out);
-    if(f.good()) wr = 1; else f.open(name, ios::in);
-    const char *s;
-    // Get the number off the end of the file name
-    for(s = name + strlen(name) - 1; s > name && isdigit(s[-1]); s--);
-    b = atoi(s);
-    if(b == 0) f.close();
+public:
+  static void registerlib(void) {
+    library::addtype(&type);
+  }
+
+  mslib(const char *name) : wr(0), filename(name), _good(0) {
+    ifstream f(filename.c_str(), ios::in | ios::out);
+    if(f.good())
+      {
+	wr = 1;
+	_good = 1;
+      }
+    else
+      {
+	f.open(name, ios::in);
+	if (f.good())
+	  {
+	    _good = 1;
+	  }
+      }
+    if (_good)
+      {
+	const char *s;
+	// Get the number off the end of the file name
+	for(s = name + strlen(name) - 1; s > name && isdigit(s[-1]); s--);
+	b = atoi(s);
+	f.close();
+      }
   }
   ~mslib() {
-    f.close();
   }
 
   // Is this file in the right format?
@@ -81,7 +99,7 @@ public:
 	      getline(ifs, linebuf);
 	      if (linebuf.length() > 1)
 		{
-		  if ((linebuf.find("Name") != -1) && (linebuf.find("No.") != -1))
+		  if ((linebuf.find("Name") != string::npos) && (linebuf.find("No.") != string::npos))
 		    {
 		      notvalid = 1;
 		    }
@@ -98,7 +116,7 @@ public:
     }
 
   int good(void) const          // Is the library in a usable state?
-    { return !!f; }
+    { return _good; }
 
   int writeable(void) const     // Is this library writeable?
     { return wr; }
