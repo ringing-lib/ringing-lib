@@ -63,6 +63,13 @@ void dimension::reduce()
   if(d < 0) { d = -d; n = -n; }
 }
 
+void dimension::set_float(float value, int denom, units uu)
+{
+  d = denom;
+  n = static_cast<int>(value * d); u = uu;
+  reduce();
+}
+
 ostream& operator<<(ostream& o, const dimension& d)
 {
   if(d.d == 0) return o;
@@ -137,7 +144,7 @@ void dimension::read(const char *s)
 void dimension::read_units(const char *s)
 {
   while(isspace(*s)) s++;
-  const char *t = s; while(!isspace(*t)) t++;
+  const char *t = s; while(*t != '\0' && !isspace(*t)) t++;
   map<string, units>::const_iterator i = unit_names.find(string(s,t));
   if(i != unit_names.end())
     u = (*i).second;

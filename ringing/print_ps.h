@@ -48,15 +48,15 @@ class printpage_ps;
 class drawline_ps {
 private:
   const printrow_ps& p;
-  int bell;
+  bell bellno;
   printrow::options::line_style s;
   list<int> l;
   int curr;
   
 public:
-  drawline_ps(const printrow_ps& pr, int b, 
+  drawline_ps(const printrow_ps& pr, bell b, 
 	   printrow::options::line_style st) : 
-    p(pr), bell(b), s(st), curr(-1) {}
+    p(pr), bellno(b), s(st), curr(-1) {}
   void add(const row& r);
   void output(ostream& o, int x, int y);
 
@@ -96,7 +96,7 @@ public:
   void print(const row& r);
   void rule();
   void set_position(const dimension& x, const dimension& y);
-  void new_column(const dimension& gap);
+  void move_position(const dimension& x, const dimension& y);
   void set_options(const printrow::options& o) { opt = o; }
   const printrow::options& get_options() { return opt; }
   void dot(int i); 

@@ -76,7 +76,8 @@ public:
   void name(const string n)
     { myname = n; }
   char *fullname(char *c) const; // Return the full name
-  
+  string fullname() const;
+
   static const char *stagename(int n); // Get the name of this stage
   static const char *classname(int cl) // Get the name of the class
     { return txt_classes[cl & M_MASK]; }

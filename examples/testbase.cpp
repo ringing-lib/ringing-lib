@@ -58,6 +58,7 @@ int main()
     cout << r << " * " << c << " = " << (r * c) << endl;
     c.set(8,"1278");
     cout << r << " * " << c << " = " << (r * c) << endl;
+    cout << c << " contains " << c.count_places() << " places.\n";
     c.set(8,"123678");
     cout << r << " * " << c << " = " << (r * c) << endl;
     c.set(8,"12");

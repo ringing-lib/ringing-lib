@@ -130,6 +130,7 @@ public:
   int findplace(bell which) const; // Check whether a particular place is made
   int swappair(bell which);		// Swap or unswap a pair
   int internal(void) const;	// Does it contain internal places?
+  int count_places(void) const; // Count the number of places made
 
   // So that we can put changes into containers
   bool operator<(const change& c) const {

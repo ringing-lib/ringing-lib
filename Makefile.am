@@ -1,5 +1,6 @@
 ## Makefile.am -- process this file with automake to produce Makefile.in
 
+AUTOMAKE_OPTIONS = dist-zip
 SUBDIRS = ringing doc examples
 
 MAINTAINERCLEANFILES = Makefile.in configure aclocal.m4
@@ -14,17 +15,6 @@ dist-hook:
 	  cp $$file $(distdir)/$$file; \
 	done
 	cd $(distdir) && ./mkdsp 
-
-dist-zip: distdir
-	chmod -R a+r $(distdir)
-	zip -lr $(distdir).zip $(distdir)
-	-rm -rf $(distdir)
-
-dist-both: distdir
-	chmod -R a+r $(distdir)
-	GZIP=$(GZIP_ENV) $(TAR) chozf $(distdir).tar.gz $(distdir)
-	zip -lr $(distdir).zip $(distdir)
-	-rm -rf $(distdir)
 
 docdir = $(top_builddir)/doc
 html:

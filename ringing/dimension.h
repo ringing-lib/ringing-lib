@@ -58,12 +58,16 @@ public:
   void read(const string& s) { read(s.c_str()); }
   void reduce();
   float in_points() const { return to_points[u] * n / d; }
+  void set_float(float value, int denom, units uu = points);
 
   bool operator==(int i) const { return (i == 0) && (n == 0); }
   bool operator!=(int i) const { return !(*this == i); }
 
   dimension& operator*=(int i) { n *= i; reduce(); return *this; }
-  dimension operator*(int i) { dimension d = *this; d *= i; return d; }
+  dimension operator*(int i) { dimension dim = *this; dim *= i; return dim; }
+  dimension& operator/=(int i) { d *= i; reduce(); return *this; }
+  dimension operator/(int i) { dimension dim = *this; dim /= i; return dim; }
+  dimension operator-() { dimension dim = *this; dim.n = -dim.n; return dim; }
 
 private:
   class unit_names_map : public map<string, units> {

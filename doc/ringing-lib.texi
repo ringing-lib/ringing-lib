@@ -44,11 +44,11 @@ Version @value{VERSION}.  Last updated @value{UPDATED}.
 Copyright @copyright{} 2001 Martin Bright and Mark Banner
 
 Permission is granted to copy, distribute and/or modify this document
-under the terms of the GNU Free Documentation License, Version 1.1
-or any later version published by the Free Software Foundation;
-with no the Invariant Sections, with no the Front-Cover Texts being, 
-and with no Back-Cover Texts.  A copy of the license is included in 
-the section entitled ``GNU Free Documentation License''.
+under the terms of the GNU Free Documentation License, Version 1.1 or
+any later version published by the Free Software Foundation; with no the
+Invariant Sections, with no Front-Cover Texts, and with no Back-Cover
+Texts.  A copy of the license is included in the section entitled ``GNU
+Free Documentation License''.
 
 This document was produced using GNU Texinfo. On-line versions in both
 HTML and GNU Info formats are also available.
@@ -1799,6 +1799,13 @@ output of rows and lines.  These classes are both pure virtual classes,
 which are specialised by subclasses to allow for different output
 formats.
 
+There are certain rules which should be followed when using the printing
+classes.  For a single @code{printpage} object, only one @code{printrow} 
+object may exist at any one time.  All @code{printrow} objects associated
+to a @code{printpage} object must be destroyed before starting a new page,
+and before destroying the @code{printpage} object.  Failure to observe
+these rules may result in unusable output.
+
 @menu
 * Auxiliary classes::           
 * The printpage class::         
@@ -2020,11 +2027,12 @@ place on the page, measured from the bottom left.  The position given is
 where the first bell of the next row printed will appear.
 @end deftypefun
 
-@deftypefun void printrow::new_column(const dimension& @var{gap});
-If one column of rows has already been printed, this function can be used
-to start a new column.  The new column will start at the same vertical
-position as the previous one, and a distance of @var{gap} further to
-the right.
+@deftypefun void printrow::move_position (const dimension& @var{x}, const dimension& @var{y});
+This function is like the preceding one, but the position given by @var{x} 
+and @var{y} are taken relative to the current position of the @code{printrow}
+object.  The current position is either the place where the top left bell of
+the last column printed appeared, or as set by a @code{set_position} or
+@code{move_position} function call, whichever is more recent.
 @end deftypefun
 
 Certain options (@pxref{Row printing options}) may be changed while the

@@ -23,8 +23,8 @@
 #include <iostream>
 #endif
 #include <ringing/method.h>
-#include <ringing/print.h>
 #include <ringing/print_ps.h>
+#include <ringing/printm.h>
 
 #if RINGING_USE_NAMESPACES
 using namespace ringing;
@@ -34,33 +34,19 @@ int main() {
   method m("&-5-4.5-5.36.4-4.5-4-1,1",8,"Bristol");
 
   printpage_ps pp(cout);
-  {
-    printrow pr(pp);
+  printmethod pm(m);
 
-    printrow::options o = pr.get_options();
-    {
-      printrow::options::line_style s;
-      s.width = dimension(0);
-      s.col.grey = false; s.col.red = 1.0; s.col.green = 0; s.col.blue = 0;
-      o.lines[-1] = s;
-    }
-    o.flags |= printrow::options::miss_numbers;
-    pr.set_options(o);
-    pr.set_position(24,11*72);
-    
-    row_block b(m);
-    for(int i = 0; i < 7; i++) {
-      pr << b[0]; pr.dot(1); pr.placebell(1); pr.rule();
-      for(int j = 1; j < b.size(); j++) {
-	if(i == 0 && (j <= (b.size()-1)/2 || j == (b.size()-1)))
-	  pr.text(m[j-1].print(), 12, text_style::right, true, false);
-	pr << b[j];
-	if((j & 3) == 3) pr.rule();
-      }
-      pr.new_column(140);
-      b[0] = b[b.size() - 1]; b.recalculate();
-    }
-  }
+  pm.defaults();
+  
+  pm.xoffset.n = 1; pm.xoffset.d = 2; pm.xoffset.u = dimension::inches;
+  pm.yoffset.n = 11; pm.yoffset.d = 1; pm.yoffset.u = dimension::inches;
+
+  pm.fit_to_space(7*72, 11*72, true, 1.0);
+
+  pm.number_mode = printmethod::miss_lead;
+  pm.placebells = 7;
+
+  pm.print(pp);
 
   return 0;
 }

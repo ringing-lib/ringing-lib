@@ -233,6 +233,22 @@ int change::internal(void) const
   return 0;
 }
 
+// Count the places made
+// Useful for finding out how long the place notation is
+int change::count_places(void) const
+{
+  if(n == 0) return 0;
+  vector<bell>::const_iterator s;
+  int count = 0;
+  bell b = 0;
+  for(s = swaps.begin(); s != swaps.end() && *s < n; ++s) {
+    count += (*s - b);
+    b = *s + 2;
+  }
+  count += (n - b);
+  return count;
+}
+
 // Return whether it's odd or even
 int change::sign(void) const
 {

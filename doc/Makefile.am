@@ -15,7 +15,9 @@ html: version.texi $(html_docs)
 
 dist_docs = $(html_docs) ringing-lib.ps
 docdistfile = $(PACKAGE)-doc-$(VERSION).tar.gz
+docdistzip = $(PACKAGE)-doc-$(VERSION).zip
 docdist: $(dist_docs)
 	$(TAR) cozf $(docdistfile) $(dist_docs)
+	zip -rq $(docdistzip) $(dist_docs)
 
 DISTCLEANFILES = ringing-lib.html $(docdistfile)

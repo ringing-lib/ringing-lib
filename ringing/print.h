@@ -69,8 +69,9 @@ public:
     struct line_style {
       dimension width;
       colour col;
+      bool crossing;
     };
-    map<int, line_style> lines; // What lines draw in what styles
+    map<bell, line_style> lines; // What lines draw in what styles
 
     void defaults();
   };
@@ -82,7 +83,7 @@ public:
     virtual void print(const row& r) = 0; // Print a row
     virtual void rule() = 0;
     virtual void set_position(const dimension& x, const dimension& y) = 0;
-    virtual void new_column(const dimension& gap) = 0;
+    virtual void move_position(const dimension& x, const dimension& y) = 0;
     virtual void set_options(const options& o) = 0;
     virtual const options& get_options() = 0;
     virtual void dot(int i) = 0;
@@ -107,8 +108,8 @@ public:
   void rule() { pr->rule(); }
   void set_position(const dimension& x, const dimension& y)  
     { pr->set_position(x, y); }
-  void new_column(const dimension& gap)
-    { pr->new_column(gap); }
+  void move_position(const dimension& x, const dimension& y)
+    { pr->move_position(x, y); }
   void set_options(const options& o)
     { pr->set_options(o); }
   const options& get_options()

@@ -274,6 +274,18 @@ char *method::fullname(char *c) const
   return c;
 }
 
+string method::fullname() const
+{
+  string result = myname;
+  int cl = methclass();
+  result += ' ';
+  if(cl & M_LITTLE) { result += txt_little; result += ' '; }
+  result += classname(cl);
+  result += ' ';
+  result += stagename(bells());
+  return result;
+}
+
 // Return the lead head code for this method
 char *method::lhcode(void) const
 {

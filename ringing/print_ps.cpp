@@ -58,6 +58,8 @@ const string printpage_ps::def_string =
 "/SL {setlinewidth} BD\n"
 "/SC {setrgbcolor} BD\n"
 "/SG {setgray} BD\n"
+"/GS {gsave} BD\n"
+"/GR {grestore} BD\n"
 "/buf 1 string def\n"
 "/W { \n"
 "   /xpos xstart def\n"
@@ -75,6 +77,7 @@ const string printpage_ps::def_string =
 "/G {yspace mul ypos exch sub /ypos exch def} BD\n"
 "/X {/xstart exch def} BD\n"
 "/Y {/ypos exch def} BD\n"
+"/Q {yspace 2 div neg} BD\n"
 "/DL1 { 1 exch { dup 49 ge exch dup 57 le 3 -1 roll \n"
 "and { 48 sub exch pop }\n"
 "{ 2 index exch get exch { dup dup type /stringtype eq\n"
@@ -112,8 +115,8 @@ printpage_ps::printpage_ps(ostream& o, int x0, int y0, int x1, int y1)
   pages = 0;
   os << "%!PS-Adobe-3.0 EPSF-3.0\n"
      << "%%BoundingBox: " << x0 << ' ' << y0 
-     << ' ' << x1 << ' ' << y1
-     << "%%Pages: 0\n" << header_string << def_string;
+     << ' ' << x1 << ' ' << y1 
+     << "\n%%Pages: 0\n" << header_string << def_string;
 }
 
 printpage_ps::~printpage_ps()
@@ -161,6 +164,7 @@ void printpage_ps::text(const string t, const dimension& x,
 			const dimension& y, text_style::alignment al, 
 			const text_style& s)
 {
+  os << "GS\n";
   set_text_style(s);
   os << x.in_points() << ' ' << y.in_points() << " (";
   string::const_iterator i;
@@ -168,9 +172,9 @@ void printpage_ps::text(const string t, const dimension& x,
     if(isprint(*i)) os << *i;
   os << ") ";
   switch(al) {
-    case text_style::left: os << "TL\n"; break;
-    case text_style::right: os << "TR\n"; break;
-    case text_style::centre: os << "TC\n"; break;
+    case text_style::left: os << "TL GR\n"; break;
+    case text_style::right: os << "TR GR\n"; break;
+    case text_style::centre: os << "TC GR\n"; break;
   }
 }
 
@@ -183,9 +187,12 @@ void printrow_ps::print(const row& r)
 
   // Print the row
   if(opt.flags & printrow::options::numbers) {
+    map<bell, printrow::options::line_style>::const_iterator i;
     pp.os << '(';
     for(int j = 0; j < r.bells(); j++) 
-      if((opt.flags & printrow::options::miss_numbers) && has_line(r[j]))
+      if((opt.flags & printrow::options::miss_numbers) 
+	 && ((i = opt.lines.find(r[j])) != opt.lines.end())
+	 && !((*i).second.crossing))
 	pp.os << ' ';
       else
 	pp.os << r[j];
@@ -223,10 +230,11 @@ void printrow_ps::set_position(const dimension& x, const dimension& y)
   curry = static_cast<int>(y.in_points());
 }
 
-void printrow_ps::new_column(const dimension& d)
+void printrow_ps::move_position(const dimension& x, const dimension& y)
 {
   if(in_column) end_column();
-  currx += static_cast<int>(d.in_points());
+  currx += static_cast<int>(x.in_points());
+  curry += static_cast<int>(y.in_points());
 }
 
 void printrow_ps::start()
@@ -237,13 +245,13 @@ void printrow_ps::start()
   pp.os << "/xspace " << opt.xspace.in_points() << " def /yspace "
 	<< opt.yspace.in_points() << " def\n";
   // Find the height of an X
-  pp.os << "gsave N 0 0 M (X) true charpath pathbbox grestore\n"
+  pp.os << "GS N 0 0 M (X) true charpath pathbbox GR\n"
 	<< "exch pop sub 2 div neg /offset exch def pop\n";
 }
 
 void printrow_ps::start_column()
 {
-  map<int, printrow::options::line_style>::iterator i;
+  map<bell, printrow::options::line_style>::iterator i;
   for(i = opt.lines.begin(); i != opt.lines.end(); i++)
     drawlines.push_back(drawline_ps(*this, (*i).first, (*i).second));
   pp.os << currx << " X " << curry << " Y\n";
@@ -255,10 +263,10 @@ void printrow_ps::end_column()
 {
   if(!drawlines.empty()) {
     list<drawline_ps>::iterator i;
-    pp.os << "gsave\n";
+    pp.os << "GS\n";
     for(i = drawlines.begin(); i != drawlines.end(); i++)
       (*i).output(pp.os, currx, curry);
-    pp.os << "grestore\n";
+    pp.os << "GR\n";
     drawlines.erase(drawlines.begin(), drawlines.end());
   }
   in_column = false;
@@ -268,20 +276,20 @@ void printrow_ps::dot(int i)
 {
   fill_gap();
   if(i == -1) {
-    map<int, printrow::options::line_style>::const_iterator j;
+    map<bell, printrow::options::line_style>::const_iterator j;
     for(j = opt.lines.begin(); j != opt.lines.end(); j++)
       if((*j).first >= 0) dot((*j).first);
   } else {
     int j = 0;
     while(j < lastrow.bells() && lastrow[j] != i) j++;
     if(j < lastrow.bells()) {
-      map<int, printrow::options::line_style>::const_iterator k;
+      map<bell, printrow::options::line_style>::const_iterator k;
       k = opt.lines.find(i);
       if(k != opt.lines.end()) {
-	pp.os << "gsave ";
+	pp.os << "GS ";
 	pp.set_colour((*k).second.col);
 	pp.os << "0 SL " << (*k).second.width.in_points() 
-	   << ' ' << j << " O grestore\n";
+	   << ' ' << j << " O GR\n";
       }
     }
   }
@@ -304,7 +312,7 @@ void printrow_ps::text(const string& t, const dimension& x,
   if(right) pp.os << lastrow.bells(); else pp.os << '0';
   pp.os << " MR ";
   if(right) pp.os << x.in_points(); else pp.os << -(x.in_points());
-  if(between) pp.os << " yspace 2 div neg "; else pp.os << " 0 ";
+  if(between) pp.os << " Q "; else pp.os << " 0 ";
   pp.os << " R (";
   string::const_iterator i;
   for(i = t.begin(); i != t.end(); i++)
@@ -319,15 +327,14 @@ void printrow_ps::text(const string& t, const dimension& x,
 
 void drawline_ps::add(const row& r)
 {
-  int j, b;
-  b = (bell == -1) ? 0 : bell;
-  for(j = 0; j < r.bells() && r[j] != b; j++);
+  int j;
+  for(j = 0; j < r.bells() && r[j] != bellno; j++);
   if(j == r.bells()) j = -1;
   if(curr == -1)
     l.push_back(j);
   else {
     if(j != -1) {
-      if(bell != -1 || (j != curr && p.has_line(r[curr]))) {
+      if(!s.crossing || (j != curr && p.has_line(r[curr]))) {
 	if(j == curr) l.push_back(-3);
 	else if(j == curr - 1) l.push_back(-4);
 	else if(j == curr + 1) l.push_back(-2);
