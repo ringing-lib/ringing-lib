@@ -1,5 +1,5 @@
 // main.cpp - Entry point for gsiril
-// Copyright (C) 2002 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@
 #include <ringing/pointers.h>
 #include "console_stream.h"
 #include "parser.h"
+#include "execution_context.h"
 #if RINGING_OLD_INCLUDES
 #include <stdexcept.h>
 #else
@@ -30,7 +31,7 @@
 #else
 #include <iostream>
 #endif
-
+#include <sstream>
 
 RINGING_USING_NAMESPACE
 
@@ -42,15 +43,15 @@ void welcome()
        << endl;
 }
 
-static const char *init_strings[] = {
-  "true     = \"# rows ending in @\", \"Touch is true\"",
-  "notround = \"# rows ending in @\", \"Is this OK?\"",
-  "false    = \"# rows ending in @\", \"Touch is false in $ rows\"",
-  "conflict = \"# rows ending in @\", \"Touch not completed due to false row$$\"",
-  "rounds   = ",
-  "everyrow = ",
-  NULL
-};
+static const char init_string[] = 
+  "true     = \"# rows ending in @\", \"Touch is true\"\n"
+  "notround = \"# rows ending in @\", \"Is this OK?\"\n"
+  "false    = \"# rows ending in @\", \"Touch is false in $ rows\"\n"
+  "conflict = \"# rows ending in @\", \"Touch not completed due to false row$$\"\n"
+  "rounds   = \n"
+  "everyrow = \n"
+;
+
 
 int main( int argc, const char *argv[] )
 {
@@ -70,16 +71,45 @@ int main( int argc, const char *argv[] )
       console_istream in( interactive );
       in.set_prompt( "> " );
 
-      parser p;
-      p.set_interactive( interactive );
+      shared_pointer<parser> p( make_default_parser() );
+      execution_context e( cout );
 
       // Prepopulate symbol table
-      for ( const char **str = init_strings; *str; ++str )
-	p.init_with( *str );
+      {
+	istringstream is(init_string);
+	while (true)
+	  {
+	    try 
+	      {
+		statement s( p->parse(is) );
+		if ( s.eof() ) break;
+		s.execute(e);
+	      }
+	    catch (const exception& ex )
+	      {
+		cerr << "Error initialising: " << ex.what() << endl;
+		return 1;
+	      }
+	  }
+      }
 
-      p.read_file( in, cout );
+      e.interactive( interactive );
 
-      p.run_final_proof( cout );
+      while (true)
+	{
+	  try 
+	    {
+	      statement s( p->parse(in) );
+	      if ( s.eof() ) break;
+	      s.execute( e );
+	    }
+	  catch (const exception& ex )
+	    {
+	      cerr << "Error: " << ex.what() << endl;
+	      if (!interactive) return 1;
+	    }
+	}
+
     }
   catch ( const exception &ex )
     {

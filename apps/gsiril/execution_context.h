@@ -43,9 +43,37 @@
 RINGING_USING_STD
 RINGING_USING_NAMESPACE
 
-class parser;
+class expression;
 
 class execution_context
+{
+public:
+  execution_context( ostream& os, bool interactive = false );
+ ~execution_context();
+
+  ostream& output() const { return *os; }
+
+  // Returns true for a redefinition and false otherwise
+  bool define_symbol( const pair< const string, expression > &defn );
+  expression lookup_symbol( const string &sym ) const;
+
+  void bells( int b ) { this->b = b; }
+  int  bells() const  { return b; }
+
+  void interactive( bool intrv ) { this->intrv = intrv; }
+  bool interactive() const       { return intrv; }
+
+private:
+  bool intrv;
+  int b;
+
+  ostream* os;
+
+  typedef map< string, expression > sym_table_t;
+  sym_table_t sym_table;
+};
+
+class proof_context
 {
 public:
   struct permute_and_prove_t
@@ -58,29 +86,26 @@ public:
     bool operator()( const row    &c );
 
   private:
-    friend class execution_context;
-    permute_and_prove_t( row &r, prover &p, execution_context &ex );
+    friend class proof_context;
+    permute_and_prove_t( row &r, prover &p, proof_context &ex );
   
     row &r;
     prover &p;
-    execution_context &ex;
+    proof_context &ex;
   };
 
-  execution_context( const parser &pa, ostream &os );
+  explicit proof_context( const execution_context & );
   
-  ostream &output() { return os; }
-
+  ostream &output() { return ectx.output(); }
   permute_and_prove_t permute_and_prove();
 
-  void execute_symbol( const string &sym );
+  void   execute_symbol( const string &sym );
 
-  string final_symbol() const;
-
+  enum proof_state { rounds, notround, isfalse } state() const;
   string substitute_string( const string &str, bool &do_exit );
 
 private:
-  const parser &pa;
-  ostream &os;
+  const execution_context &ectx;
   row r;
   prover p;
 };

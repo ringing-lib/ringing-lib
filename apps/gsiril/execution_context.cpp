@@ -25,19 +25,55 @@
 #include <ringing/streamutils.h>
 #include "execution_context.h"
 #include "expression.h"
-#include "parser.h"
 
 RINGING_USING_NAMESPACE
 
-execution_context::execution_context( const parser &pa, ostream &os ) 
-  : pa(pa), os(os)
+
+execution_context::execution_context( ostream& os, bool interactive )
+  : intrv( interactive ), b(-1), os(&os)
 {
-  if ( pa.bells() == -1 )
+}
+
+execution_context::~execution_context() 
+{
+}
+
+expression execution_context::lookup_symbol( const string& sym ) const
+{
+  sym_table_t::const_iterator i = sym_table.find(sym);
+  if ( i == sym_table.end() )
+    throw runtime_error( make_string() << "Unknown symbol: " << sym );
+  return i->second;
+}
+
+bool execution_context::define_symbol( const pair< const string, expression > &defn )
+{
+  sym_table_t::iterator i = sym_table.find( defn.first );
+
+  // Is it a redefinition?
+  if ( i != sym_table.end() )
+    {
+      i->second = defn.second;
+      return true;
+    }
+  else
+    {
+      sym_table.insert( defn );
+      return false;
+    }
+
+  return sym_table.insert( defn ).second;
+}
+
+proof_context::proof_context( const execution_context &ectx ) 
+  : ectx(ectx)
+{
+  if ( ectx.bells() == -1 )
     throw runtime_error( "Must set number of bells before proving" ); 
-  r = row(pa.bells());
+  r = row(ectx.bells());
 }
 
-bool execution_context::permute_and_prove_t::operator()( const change &c )
+bool proof_context::permute_and_prove_t::operator()( const change &c )
 {
   bool rv = p.add_row( r *= c ); 
   ex.execute_symbol("everyrow");
@@ -46,7 +82,7 @@ bool execution_context::permute_and_prove_t::operator()( const change &c )
   return rv;
 }
 
-bool execution_context::permute_and_prove_t::operator()( const row &c )
+bool proof_context::permute_and_prove_t::operator()( const row &c )
 {
   bool rv = p.add_row( r *= c ); 
   ex.execute_symbol("everyrow");
@@ -55,34 +91,34 @@ bool execution_context::permute_and_prove_t::operator()( const row &c )
   return rv;
 }
 
-execution_context::permute_and_prove_t::
-permute_and_prove_t( row &r, prover &p, execution_context &ex ) 
+proof_context::permute_and_prove_t::
+permute_and_prove_t( row &r, prover &p, proof_context &ex ) 
   : r(r), p(p), ex(ex)
 {
 }
 
-execution_context::permute_and_prove_t 
-execution_context::permute_and_prove()
+proof_context::permute_and_prove_t 
+proof_context::permute_and_prove()
 {
   return permute_and_prove_t( r, p, *this );
 }
 
-void execution_context::execute_symbol( const string &sym ) 
+void proof_context::execute_symbol( const string &sym ) 
 {
-  pa.lookup_symbol( sym ).execute( *this );
+  ectx.lookup_symbol( sym ).execute( *this );
 }
 
-string execution_context::final_symbol() const
+proof_context::proof_state proof_context::state() const
 {
   if ( p.truth() && r.isrounds() ) 
-    return "true";
+    return rounds;
   else if ( p.truth() )
-    return "notround";
+    return notround;
   else
-    return "false";
+    return isfalse;
 }
 
-string execution_context::substitute_string( const string &str, bool &do_exit )
+string proof_context::substitute_string( const string &str, bool &do_exit )
 {
   make_string os;
 

@@ -1,5 +1,5 @@
-// -*- C++ -*- parser.h - Tokenise and parse lines of input
-// Copyright (C) 2002 Richard Smith <richard@ex-parrot.com>
+// -*- C++ -*- parser.h - Tokenise and parse lines of input into statements
+// Copyright (C) 2002, 2003 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -44,42 +44,17 @@
 
 RINGING_USING_NAMESPACE
 
-class expression;
-
 class parser
 {
 public:
-  parser();
- ~parser();
+  virtual ~parser() {}
 
-  void init_with( const string &str );
-  void read_file( istream &in, ostream &out );
-  bool run_final_proof( ostream &out ) const;
-
-  int bells() const { return b; } 
-  void set_interactive( bool i ) { interactive = i; }
-
-  expression lookup_symbol( const string &sym ) const;
-
-private:
-  bool run_proof( ostream &out, const expression &node ) const;
-
-  bool maybe_handle_bells_command( const string &cmd, ostream &out );
-  bool maybe_handle_prove_command( const string &cmd, ostream &out );
-  bool maybe_handle_definition( const string &cmd, ostream &out );
-  pair< const string, expression > parse_definition( const string &cmd ) const;
-
-  bool interactive;
-  int b;
-
-  // Make it uncopyable
-  parser &operator=( const parser & );
-  parser( const parser & );
-
-  typedef map< string, expression > sym_table_t;
-
-  sym_table_t sym_table;
-  string entry_sym;
+  // Retrieves one statement from the input
+  // or a null pointer for EOF
+  virtual statement parse( istream& in ) = 0;
 };
+
+shared_pointer<parser> make_default_parser();
+
 
 #endif // GSIRIL_PARSER_INCLUDED

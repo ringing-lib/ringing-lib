@@ -1,4 +1,4 @@
-// -*- C++ -*- expression.h - Nodes and factory function for expressions
+// -*- C++ -*- expression.h - Expression and statement interfaces
 // Copyright (C) 2002, 2003 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -21,18 +21,10 @@
 #define GSIRIL_EXPRESSION_INCLUDED
 
 #ifdef __GNUG__
-#pragma interface
+#pragma interface "gsiril/expression.h"
 #endif
 
 #include <ringing/common.h>
-#if RINGING_OLD_INCLUDES
-#include <vector.h>
-#include <utility.h>
-#else
-#include <vector>
-#include <utility>
-#endif
-#include <string>
 #if RINGING_HAVE_OLD_IOSTREAMS
 #include <ostream.h>
 #else
@@ -42,51 +34,51 @@
 
 RINGING_USING_NAMESPACE
 
+class proof_context;
 class execution_context;
 class parser;
 
-struct token_type
-{ 
-  enum enum_t 
-  { 
-    open_paren,
-    close_paren,
-    comma,
-    times,
-    string_lit,
-    pn_lit,
-    num_lit,
-    name,
-    transp_lit
+// Represents a whole statement (e.g. a definition, proof, ...)
+class statement 
+{
+public:
+  class impl
+  {
+  public:
+    virtual ~impl() {}
+    virtual void execute( execution_context& ) const = 0;
   };
+
+  statement( impl* pimpl = 0 ) : pimpl(pimpl) {}
+
+  void execute( execution_context& e ) const { pimpl->execute(e); }
+  bool eof() const { return !pimpl; } 
+
+private:
+  shared_pointer< impl > pimpl;
 };
 
-typedef pair< token_type::enum_t, string > token;
-
+// A node in of an expression
 class expression
 {
 public:
-  expression( const parser &p, const vector< token > &tokens );
-
   class node
   {
   public:
     virtual ~node() {}
     virtual void debug_print( ostream &os ) const = 0;
-    virtual void execute( execution_context &ctx ) = 0;
+    virtual void execute( proof_context &ctx ) = 0;
   };
 
-  void debug_print( ostream &os ) const        { impl->debug_print(os); }
-  void execute( execution_context &ctx ) const { impl->execute(ctx);    }
+  // Create an expression handle
+  expression( node* impl ) : impl(impl) {}
+
+  void debug_print( ostream &os ) const    { impl->debug_print(os); }
+  void execute( proof_context &ctx ) const { impl->execute(ctx);    }
 
   RINGING_FAKE_DEFAULT_CONSTRUCTOR(expression);
 
 private:
-  static shared_pointer< node > 
-  make_expr( const parser &p,
-	     vector< token >::const_iterator first, 
-	     vector< token >::const_iterator last );
-
   shared_pointer< node > impl;
 };
 

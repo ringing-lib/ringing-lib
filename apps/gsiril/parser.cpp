@@ -24,8 +24,8 @@
 #include <ringing/common.h>
 #include "parser.h"
 #include "expression.h"
+#include "common_expr.h"
 #include "util.h"
-#include "execution_context.h"
 #include "console_stream.h" // To fix getline bug in MSVC.
 #if RINGING_OLD_INCLUDES
 #include <stdexcept.h>
@@ -39,7 +39,6 @@
 #else
 #include <cctype>
 #endif
-#include <ringing/row.h>
 #include <ringing/streamutils.h>
 
 RINGING_USING_NAMESPACE
@@ -149,6 +148,26 @@ void validate_name( const string &name )
 			 "numbers or an underscore" );
 }
 
+//////////////////////////////////////////////////////////
+
+struct token_type
+{ 
+  enum enum_t 
+  { 
+    open_paren,
+    close_paren,
+    comma,
+    times,
+    string_lit,
+    pn_lit,
+    num_lit,
+    name,
+    transp_lit
+  };
+};
+
+typedef pair< token_type::enum_t, string > token;
+
 vector< token > 
 tokenise_command( const string &input )
 {
@@ -246,13 +265,75 @@ tokenise_command( const string &input )
   return tokens;
 }
 
-RINGING_END_ANON_NAMESPACE
+//////////////////////////////////////////////////////////
 
-parser::parser() : b(-1) {}
-parser::~parser() {}
+class default_parser : public parser
+{
+public:
+  default_parser() : b(-1) {}
 
-pair< const string, expression >
-parser::parse_definition( const string &cmd ) const
+private:
+  virtual statement parse( istream& in );
+  int bells() const { return b; }
+
+  bool is_bells_directive(const string& cmd) const;
+  statement handle_bells_directive(const string& cmd);
+
+  bool is_prove_command(const string& cmd) const;
+  statement handle_prove_command(const string& cmd);
+
+  bool is_definition(const string& cmd) const;
+  statement handle_definition(const string& cmd);
+
+  expression make_expr( const vector< token >& tokens ) const;
+  expression make_expr( vector< token >::const_iterator first, 
+			vector< token >::const_iterator last ) const;
+
+  int b;
+};
+
+inline bool default_parser::is_bells_directive(const string& cmd) const 
+{
+  return cmd.size() > 5 && cmd.substr( cmd.size() - 5 ) == "bells" 
+    && !isalpha( cmd[ cmd.size() - 6 ] );
+}
+
+statement default_parser::handle_bells_directive(const string& cmd)
+{
+  int n = string_to_int( cmd.substr( 0, cmd.size() - 5 ) );
+  
+  if ( n > (int) bell::MAX_BELLS )
+    throw runtime_error( make_string() 
+			 << "Number of bells must be less than "
+			 << bell::MAX_BELLS + 1 );
+  else if ( n <= 1 )
+    throw runtime_error( "Number of bells must be greater than 1" );
+  
+  b = n;
+
+  return statement( new bells_stmt(b) );
+}
+
+inline bool default_parser::is_prove_command(const string& cmd) const
+{
+  return cmd.size() > 6 && cmd.substr( 0, 6 ) == "prove "
+    && cmd.find("=") == string::npos;
+}
+
+statement default_parser::handle_prove_command(const string& cmd)
+{
+  string name( cmd.substr(6) );
+  trim_leading_whitespace( name );
+  return statement
+    ( new prove_stmt( make_expr( tokenise_command( name ) ) ) );
+}
+
+inline bool default_parser::is_definition(const string& cmd) const
+{
+  return !( cmd.find( '=' ) == string::npos );
+}
+
+statement default_parser::handle_definition(const string& cmd)
 {
   string::size_type idx = cmd.find_first_of( '=' );
 
@@ -264,164 +345,149 @@ parser::parse_definition( const string &cmd ) const
   trim_trailing_whitespace( name );
   validate_name( name );
 
-  return pair< const string, expression >
-    ( name, expression( *this, tokenise_command( cmd.substr( idx + 1 ) ) ) );
+  return statement( new definition_stmt
+    ( name, make_expr( tokenise_command( cmd.substr( idx + 1 ) ) ) ) );
 }
 
-bool parser::maybe_handle_prove_command( const string &cmd, ostream &out )
+
+statement default_parser::parse( istream& in )
 {
-  if ( cmd.size() > 6 && cmd.substr( 0, 6 ) == "prove "
-       && cmd.find("=") == string::npos )
-    {
-      string name( cmd.substr(6) );
-      trim_leading_whitespace( name );
-
-      run_proof( out, expression( *this, tokenise_command( name ) ) );
-      return true;
-    }
-  else
-    return false;
-}
-
-bool parser::maybe_handle_bells_command( const string &cmd, ostream &out )
-{
-  if ( cmd.size() > 5 && cmd.substr( cmd.size() - 5 ) == "bells" 
-       && !isalpha( cmd[ cmd.size() - 6 ] ) )
-    {
-      int n = string_to_int( cmd.substr( 0, cmd.size() - 5 ) );
-
-      if ( n > (int) bell::MAX_BELLS )
-	throw runtime_error( make_string() 
-			     << "Number of bells must be less than "
-			     << bell::MAX_BELLS + 1 );
-      else if ( n <= 1 )
-	throw runtime_error( "Number of bells must be greater than 1" );
+  string cmd = read_command(in);
       
-      b = n;
+  // Actual end of file
+  if ( !in ) 
+    return statement( NULL );
 
-      if (interactive)
-	out << "Set bells to " << b << endl;
-      return true;
-    }
-  else
-    return false;
-}
-
-bool parser::maybe_handle_definition( const string &cmd, ostream &out )
-{
-  if ( cmd.find( '=' ) == string::npos )
-    return false;
-
-  pair< const string, expression > defn( parse_definition( cmd ) );
-
-  sym_table_t::iterator i = sym_table.find( defn.first );
-
-  // Is it a redefinition?
-  if ( i != sym_table.end() )
-    {
-      i->second = defn.second;
-      if ( interactive )
-	cout << "Redefinition of '" << defn.first << "'." << endl;
-    }
-  else
-    {
-      sym_table.insert( defn );
+  // Trap empty commands
+  else if ( cmd.empty() )
+    return statement( new null_stmt );
   
-      if ( interactive )
-	cout << "Definition of '" << defn.first << "' added." << endl;
-    }
-  
-  // Is this the first symbol?  If so, this is the entry point
-  if ( entry_sym.empty() )
-    entry_sym = defn.first;
+  // End marker
+  else if ( cmd == "end" || cmd == "quit" || cmd == "exit" )
+    return statement();
 
-  return true;
+  // Is it a `bells' directive?
+  else if ( is_bells_directive(cmd) )
+    return handle_bells_directive(cmd);
+
+  // Is it a `prove' command?
+  else if ( is_prove_command(cmd) )
+    return handle_prove_command(cmd);
+
+  // Or a definition?
+  else if ( is_definition(cmd) )
+    return handle_definition(cmd);
+
+  else
+    throw runtime_error( "Unknown command" );
 }
 
-void parser::read_file( istream &in, ostream &out )
+//////////////////////////////////////////////////////////
+
+expression 
+default_parser::make_expr( vector< token >::const_iterator first, 
+			   vector< token >::const_iterator last ) const
 {
-  while (true)
+  typedef vector< token >::const_iterator iter_t;
+
+  if ( first == last ) 
+    throw runtime_error( "Expression expected" );
+
+  // Parentheses first
+  if ( first->first == token_type::open_paren && 
+       (last-1)->first == token_type::close_paren )
     {
-      try 
+      int depth = 0;
+      bool ok = true;
+      for ( iter_t i(first); ok && i != last; ++i )
 	{
-	  string cmd = read_command(in);
-	  
-	  // Actual end of file
-	  if ( !in )
-	    { out << endl; break; }
-	  
-	  // Trap empty commands
-	  else if ( cmd.empty() )
-	    continue;
-	  
-	  // End marker
-	  else if ( cmd == "end" || cmd == "quit" || cmd == "exit" )
-	    break;
+	  if ( i->first == token_type::open_paren )
+	    ++depth;
+	  else if ( i->first == token_type::close_paren )
+	    --depth;
 
-	  // A command to set the number of bells
-	  else if ( maybe_handle_bells_command( cmd, out ) )
-	    ;
-	  
-	  // A command to prove a touch 
-	  else if ( maybe_handle_prove_command( cmd, out ) )
-	    ;
-
-	  // A symbol definition
-	  else if ( maybe_handle_definition( cmd, out ) )
-	    ;
-
-	  else
-	    throw runtime_error( "Unknown command" );
+	  if ( depth == 0 && i != last-1 ) 
+	    ok = false;
 	}
-      catch ( const exception &ex )
-	{
-	  out << "Error: " << ex.what() << endl;
-	  if (!interactive) break;
-	}
+
+      if (ok && depth) 
+	throw runtime_error( "Unmatched parentheses 1" );
+
+      if (ok)
+	return make_expr( first+1, last-1 );
     }
-}
 
-void parser::init_with( const string &str )
-{
-  sym_table.insert( parse_definition( str ) );
-}
+  // Comma is the lowest precedence operator
+  // It is left associative
+  {
+    int depth = 0;
+    for ( iter_t i(first); i != last; ++i )
+      {
+	if ( i->first == token_type::open_paren )
+	  ++depth;
+	else if ( i->first == token_type::close_paren )
+	  --depth;
+	else if ( i->first == token_type::comma && depth == 0 )
+	  return expression
+	    ( new list_node( make_expr( first, i ),
+			     make_expr( i+1, last ) ) );
+      }
 
+    if (depth) 
+      throw runtime_error( "Unmatched parentheses" );
+  }
 
-bool parser::run_proof( ostream &out, const expression &node ) const
-
-{
-  try 
+  // A number literal in a repeated block is the
+  // only remaining construct that is not a single token.
+  if ( first->first == token_type::num_lit )
     {
-      execution_context ectx( *this, out );
-      node.execute( ectx );
-      ectx.execute_symbol( ectx.final_symbol() );
-    }
-  catch ( const script_exception & )
-    {
-      return false;
-    }
-  catch ( const exception &ex )
-    {
-      out << "Error whilst proving: " << ex.what() << endl;
-      return false;
+      if ( first+1 != last && (first+1)->first == token_type::times )
+	return expression
+	  ( new repeated_node( string_to_int( first->second ),
+			       make_expr( first+2, last ) ) );
+      else
+	return expression
+	  ( new repeated_node( string_to_int( first->second ),
+			       make_expr( first+1, last ) ) );
     }
 
-  return true;
+  // Everything left is a literal of some sort
+  if ( last - first != 1 )
+    throw runtime_error( "Parse error" );
+
+  switch ( first->first )
+    {
+    case token_type::string_lit:
+      return expression( new string_node( first->second ) );
+
+    case token_type::name:
+      return expression( new symbol_node( first->second ) );
+
+    case token_type::pn_lit:
+      return expression( new pn_node( bells(), first->second ) );
+
+    case token_type::transp_lit:
+      return expression( new transp_node( bells(), first->second ) );
+
+    default:
+      throw runtime_error( "Unknown token in input" );
+      return expression( NULL ); // To keep MSVC 5 happy
+    }
 }
 
-// MicroSiril always proved the first entry in the file
-bool parser::run_final_proof( ostream &out ) const
+expression default_parser::make_expr( const vector< token >& tokens ) const
 {
-  if ( ! entry_sym.empty() && ! interactive )
-    return run_proof( cout, lookup_symbol( entry_sym ) );
-
-  return true;
+  if ( tokens.empty() )
+    return expression( new nop_node );
+  else
+    return make_expr( tokens.begin(), tokens.end() );
 }
 
-expression parser::lookup_symbol( const string &sym ) const
+//////////////////////////////////////////////////////////
+
+RINGING_END_ANON_NAMESPACE
+
+shared_pointer<parser> make_default_parser()
 {
-  sym_table_t::const_iterator i = sym_table.find(sym);
-  if ( i == sym_table.end() )
-    throw runtime_error( make_string() << "Unknown symbol: " << sym );
-  return i->second;
+  return shared_pointer<parser>( new default_parser );
 }
