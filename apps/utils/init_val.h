@@ -44,10 +44,6 @@ public:
   init_val() : init_val_base<Type>( Init ) {}
   init_val( Type val ) : init_val_base<Type>( val ) {}
 
-  template <Type OtherInit>
-  init_val<Type, Init>& operator=( const init_val<Type, OtherInit>& other)
-    { init_val_base<Type>::operator=(other); return *this; }
-
   init_val<Type, Init>& operator=( Type val )
     { init_val_base<Type>::operator=(val); return *this; }
 };

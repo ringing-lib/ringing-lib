@@ -41,6 +41,7 @@
 #include <ringing/proof.h>
 #include <ringing/pointers.h>
 #include "prog_args.h"
+#include "expression.h" // MSVC 6 requires expression to be complete.
 
 RINGING_USING_STD
 RINGING_USING_NAMESPACE

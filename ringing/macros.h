@@ -1,6 +1,6 @@
 // -*- C++ -*- macros.h.in - Macros to hide system specific constructs
 //
-// Copyright (C) 2001, 2002 Martin Bright <martin@boojum.org.uk> 
+// Copyright (C) 2001, 2002, 2003 Martin Bright <martin@boojum.org.uk> 
 // and Richard Smith <richard@ex-parrot.com>
 
 // This library is free software; you can redistribute it and/or
@@ -92,7 +92,7 @@
 RINGING_START_NAMESPACE_STD RINGING_END_NAMESPACE_STD
 RINGING_START_NAMESPACE RINGING_USING_STD RINGING_END_NAMESPACE
 
-#if _MSC_VER == 1200 && RINGING_USE_STD && RINGING_USE_NAMESPACES
+#if _MSC_VER <= 1200 && RINGING_USE_STD && RINGING_USE_NAMESPACES
 // Visual Studio 6 has the amusing bug that the third time you enter
 // a namespace and process a using directive, the using directive
 // is completely ignored.  This only appears to happen the third time,
@@ -105,6 +105,11 @@ RINGING_START_NAMESPACE RINGING_USING_STD RINGING_END_NAMESPACE
 // seven of these using declarations!
 RINGING_START_NAMESPACE RINGING_USING_STD RINGING_END_NAMESPACE
 RINGING_START_NAMESPACE RINGING_USING_STD RINGING_END_NAMESPACE
+RINGING_START_NAMESPACE RINGING_USING_STD RINGING_END_NAMESPACE
+RINGING_START_NAMESPACE RINGING_USING_STD RINGING_END_NAMESPACE
+
+// ... or nine as we now appear to have reached.  I *really* don't 
+// understand what's going on here.
 RINGING_START_NAMESPACE RINGING_USING_STD RINGING_END_NAMESPACE
 RINGING_START_NAMESPACE RINGING_USING_STD RINGING_END_NAMESPACE
 #endif
