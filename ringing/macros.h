@@ -114,6 +114,13 @@ RINGING_START_NAMESPACE RINGING_USING_STD RINGING_END_NAMESPACE
 RINGING_START_NAMESPACE RINGING_USING_STD RINGING_END_NAMESPACE
 #endif
 
+// Are we running on Windows?
+#if defined(_WIN32) || defined(__WIN32__) || defined(WIN32) || defined(__CYGWIN__)
+#  define RINGING_WINDOWS 1
+#else
+#  define RINGING_WINDOWS 0
+#endif
+
 // Macros ready for Windows DLL support.
 #if RINGING_AS_DLL
 #  // Symbols exported from the dll:
