@@ -70,6 +70,7 @@ struct arguments
   init_val<bool,false>    whole_courses;
   init_val<bool,false>    tenors_together;
   init_val<bool,false>    in_course;
+  init_val<bool,false>    principle;
 
   init_val<int,1>         loop;
 
@@ -156,6 +157,11 @@ void arguments::bind( arg_parser& p )
 	   "Look for in-course lead-heads (or course-heads)",
 	   in_course ) );
 
+  p.add( new boolean_opt
+	 ( 'p', "principle",
+	   "Do not require a fixed treble",
+	   principle ) );
+
   p.add( new integer_opt
 	 ( 'l', "loop",
 	   "Repeat some number of times (or indefinitely)", "NUM",
@@ -214,6 +220,11 @@ bool arguments::validate( arg_parser& ap )
     return false;
   }
 
+  if ( principle & whole_courses ) {
+    ap.error( "Searching for principles in whole courses is not supported" );
+    return false;
+  }
+
   generate_pends();
   // TODO: Warning if partends generate the extent? 
   // Or anything equally silly?
@@ -228,7 +239,8 @@ public:
   {
     in_course_only  = 0x01,
     tenors_together = 0x02,
-    whole_courses   = 0x04
+    whole_courses   = 0x04,
+    principle       = 0x08
   };
 
   state( const method& m, int flags, const group& pgrp );
@@ -321,7 +333,7 @@ private:
   double beta;
   int sc;
   int flags;
-  int nw;
+  int nw, nh;
   scoped_pointer<multtab> mt;
   vector<fch_t> fchs;
   vector<bool> leads;
@@ -330,20 +342,23 @@ private:
 state::state( const method& m, int flags, const group& pgrp )
   : bells(bells), beta(0), flags(flags)
 {
+  nh = flags & principle ? 0 : 1;
+
   // Init nw
   if ( flags & whole_courses )
-    nw = flags & tenors_together ? 5 : m.bells() - 2;
+    nw = flags & tenors_together ? 5 : m.bells() - 1 - nh;
   else
-    nw = m.bells() - 1;
+    nw = m.bells() - nh;
   
+
   status_out( "Generating multiplication table ..." );
 
   // Init mt
   if ( flags & in_course_only )
-    mt.reset( new multtab( incourse_extent_iterator(nw, 1, m.bells()),
+    mt.reset( new multtab( incourse_extent_iterator(nw, nh, m.bells()),
 			   incourse_extent_iterator(), pgrp ) );
   else
-    mt.reset( new multtab( extent_iterator(nw, 1, m.bells()),
+    mt.reset( new multtab( extent_iterator(nw, nh, m.bells()),
 			   extent_iterator(), pgrp ) );
   
   // Init fchs
@@ -351,8 +366,7 @@ state::state( const method& m, int flags, const group& pgrp )
     {
       false_courses ft
 	(m, ( flags & tenors_together ? false_courses::tenors_together : 0 )
-	 |  ( flags & in_course_only  ? false_courses::in_course_only : 0 ));
-
+	 |  ( flags & in_course_only  ? false_courses::in_course_only  : 0 ) );
       
       fchs.reserve( ft.size() );
       
@@ -377,7 +391,8 @@ state::state( const method& m, int flags, const group& pgrp )
       status_out( "Calculating false lead table ..." );
 
       falseness_table ft
-	( m, flags & in_course_only ? falseness_table::in_course_only : 0 );
+	( m, ( flags & in_course_only ? falseness_table::in_course_only : 0  ) 
+	  |  ( flags & principle      ? falseness_table::no_fixed_treble : 0 ));
 
       fchs.reserve( ft.size() );
       
@@ -505,6 +520,7 @@ int main( int argc, char* argv[] )
       if ( args.in_course )       stflags |= state::in_course_only;
       if ( args.whole_courses )   stflags |= state::whole_courses;
       if ( args.tenors_together ) stflags |= state::tenors_together;
+      if ( args.principle )       stflags |= state::principle;
       
       s.reset( new state( args.meth, stflags, args.pends ) );
       clear_status();
