@@ -69,8 +69,8 @@ public:
 
 private:
   vector<row> t;
-  row lh;
   int flags;
+  row lh;
 };
 
 // The set of course heads that are false against the plain course
@@ -107,8 +107,8 @@ private:
   friend class initialiser;
 
   vector<row> t;
-  row lh;
   int flags;
+  row lh;
 };
 
 RINGING_END_NAMESPACE

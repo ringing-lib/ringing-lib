@@ -259,6 +259,11 @@ void printpage_pdf::text(const string t, const dimension& x,
     case text_style::centre :
       x1 -= cw(t) * s.size / 2000.0f;
       break;
+  default:
+    // I.e. left, assume we don't need to do
+    // anything here - but put in default to 
+    // stop warnings in build.
+    break;
   }
   
   f << "q "; set_colour(s.col);
@@ -367,6 +372,11 @@ void printrow_pdf::end_column()
 	case text_style::centre :
 	  x -= cw((*i).s) * opt.style.size * sq / 2000.0f;
 	  break;
+      default:
+	// I.e. left, assume we don't need to do
+	// anything here - but put in default to 
+	// stop warnings in build.
+	break;
       }
       y = curry - opt.style.size * 0.3f - (*i).y;
       pp.f << x - tx << ' ' << y - ty << " Td ";

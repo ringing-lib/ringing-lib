@@ -215,9 +215,9 @@ private:
   void init( const vector< row > &r );
 
   row partend;
+  size_t colcount;
   vector< row > rows;
   vector< vector< row_t > > table;
-  size_t colcount;
 };
 
 RINGING_END_NAMESPACE

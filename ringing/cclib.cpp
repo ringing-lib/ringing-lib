@@ -53,6 +53,7 @@ class cclib::entry_type : public library_entry
   // Helper functions
   friend class cclib;
   entry_type();
+  virtual ~entry_type() { };
   void parse_header();
   void parse_title();
   virtual bool readentry( ifstream &ifs );

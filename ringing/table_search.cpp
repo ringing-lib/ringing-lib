@@ -228,12 +228,12 @@ private:
   vector< size_t > calls;		// The calls we've had so far
   touch t;				// The current touch
   touch_child_list *tl;
+  multtab table;			// A precomputed multiplication table
   bool ignore_rotations;		// Are we to ignore rotations?
 
   vector< bool > leads;			// The leads had so far
   vector< post_col_t > call_lhs;	// The effect of each call (inc. Pl.)
   vector< post_col_t > falsenesses;	// The falsenesses of the method
-  multtab table;			// A precomputed multiplication table
 };
 
 search_base::context_base *table_search::new_context() const 

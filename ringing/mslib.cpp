@@ -46,6 +46,7 @@ class mslib::entry_type : public library_entry
   // Helper functions
   friend class mslib;
   entry_type();
+  virtual ~entry_type() { };
   virtual bool readentry( ifstream &ifs );
   virtual library_entry *clone() const { return new entry_type(*this); }
 

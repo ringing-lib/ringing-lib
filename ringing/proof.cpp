@@ -82,7 +82,7 @@ bool prover::add_row( const row &r )
   if ( n > 1 )
     ++dups;
 
-  if ( n > max_occurs )
+  if ( (int) n > max_occurs )
     {
       is_true = false; 
       if ( fi )

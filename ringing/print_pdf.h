@@ -45,8 +45,8 @@ RINGING_USING_STD
 
 class counting_streambuf : public streambuf {
 private:
-  streambuf& sb;
   int c;
+  streambuf& sb;
 
 public:
   counting_streambuf(streambuf* s) : c(0), sb(*s) {}
@@ -67,8 +67,8 @@ public:
 // This represents a PDF file.
 class pdf_file {
 private:
-  ostream os;
   counting_streambuf csb;
+  ostream os;
   int obj_count;
   map<int, int> offsets;
   int width, height;
