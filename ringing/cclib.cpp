@@ -35,10 +35,254 @@
 #if defined(SEPERATE_FILES)
 // Be warned that dirent.h is not in the either the C99 or C++98 standards.
 // Also indentifiers containing two adjacent underscores or one leading one
-// are prohibited.
+// followed by an uppercaes letter are prohibited.
 #include <dirent.h>
 #endif
 RINGING_START_NAMESPACE
+
+
+class cclib::iterator
+{
+public:
+  // Standard iterator typedefs
+  class value_type;
+  typedef input_iterator_tag iterator_category;
+  typedef ptrdiff_t difference_type;
+  typedef value_type &reference;
+  typedef value_type *pointer;
+
+  // Construction
+  iterator( ifstream &f ) : ifs(&f) { ok = val.readentry( *ifs ); }
+  iterator() : ifs(0), ok(false) {}
+
+  // Equality Comparable requirements
+  bool operator==( const iterator &i ) const
+    { return ok ? (i.ok && ifs == i.ifs) : !i.ok; }
+  bool operator!=( const iterator &i ) const
+    { return !operator==( i ); }
+
+  // Trivial Iterator requirements
+  reference operator*() { return val; }
+  pointer operator->() { return &val; }
+
+  // Input Iterator requirements
+  iterator &operator++() { ok = val.readentry( *ifs ); return *this; }
+  iterator operator++(int) { iterator tmp(*this); ++*this; return tmp; }
+
+  // A class representing an entry in the collection
+  class value_type
+  {
+  public:
+    // The name of the method
+    string name() const;
+
+    // The place notation of the method
+    string pn() const;
+
+  private:
+    // Helper functions
+    friend class cclib::iterator;
+    value_type();
+    void parse_header();
+    bool readentry( ifstream &ifs );
+
+    // The current line
+    string linebuf;
+
+    // The previous line sometimes contains just the name
+    // when it is too long (e.g. "A Fishmonger and Judith's Hat
+    // Surprise Minor").
+    string wrapped_name;
+
+    // Offsets for the start/end of various columns
+    string::size_type meth_name_starts;
+    string::size_type meth_name_ends;
+    string::size_type meth_hl;
+    string::size_type meth_le;
+    string::size_type meth_lh;
+  };
+
+private:
+  // Data members
+  ifstream *ifs;
+  value_type val;
+  bool ok;
+};
+
+cclib::iterator cclib::begin() 
+{
+  // return file to the start.
+  f.clear();
+  f.seekg(0, ios::beg);
+  return iterator(f);
+}
+
+cclib::iterator cclib::end()
+{
+  return iterator();
+}
+
+cclib::iterator::value_type::value_type()
+  : meth_name_starts( string::npos ),
+    meth_name_ends  ( string::npos ),
+    meth_hl         ( string::npos ),
+    meth_le         ( string::npos ),
+    meth_lh         ( string::npos )
+{}
+
+bool cclib::iterator::value_type::readentry( ifstream &ifs )
+{
+  // Go through a line at a time.
+  while ( ifs )
+    {
+      wrapped_name = "";
+      getline( ifs, linebuf );
+      
+      // The second check for No. is used as an extra insurance check...
+      if ( linebuf.find("Name") != string::npos
+	   && linebuf.find("No.") != string::npos )
+	{
+	  parse_header();
+	}
+      else if (meth_name_starts != meth_name_ends)
+	{
+	  // Even wrapped lines are always longer than meth_name_ends-3
+	  if ( linebuf.length() > meth_name_ends-3
+	       // Check first bit equates to a number...
+	       && atoi( string(linebuf, 0, meth_name_starts).c_str() ) )
+	    {
+	      bool is_wrapped(true);
+
+	      // Unfortunately, I can't see a non-heuristical way
+	      // of doing this.  
+	      {
+		string wrap( linebuf, meth_name_ends - 4, string::npos );
+		
+		for ( string::const_iterator i(wrap.begin()), e(wrap.end()-1); 
+		      i < e; ++i )
+		  {
+		    if ( // Does it have multiple consecutive spaces?
+			 *i == ' ' && i[1] == ' ' 
+			 // Or does it contain characters that are not
+			 // from [A-Za-z\']?
+			 || *i != ' ' && !isalnum(*i) && *i != '\'' )
+		      { 
+			is_wrapped = false; 
+			break; 
+		      }
+		  }
+	      }
+
+	      if ( is_wrapped )
+		{
+		  wrapped_name = linebuf;
+		  getline( ifs, linebuf );
+		}
+
+	      if ( linebuf.length() > meth_lh )
+		break;
+	    }
+	}
+    }
+  return ifs;
+}
+
+void cclib::iterator::value_type::parse_header()
+{
+  meth_name_starts = linebuf.find("Name");
+  meth_name_ends = linebuf.find("Notation");
+
+  meth_hl = linebuf.find("hl");
+  
+  // If we have a half lead then take note accordingly.
+  if (meth_hl != string::npos)
+    {
+      meth_le = linebuf.find("le");
+      meth_lh = linebuf.find("lh");
+    }
+  else
+    {
+      meth_le = string::npos;
+      meth_lh = linebuf.find("lh");
+    }
+}
+
+string cclib::iterator::value_type::name() const
+{
+  string n( linebuf, meth_name_starts, 
+	    meth_name_ends - meth_name_starts ); 
+
+  if ( !wrapped_name.empty() )
+    n = wrapped_name.substr( meth_name_starts, string::npos );
+
+  // Remove whitespace from end of method name
+  string::const_iterator i = n.end();
+  while ( i > n.begin() && isspace( i[-1] ) )
+    --i;
+
+  return n.substr( 0, i - n.begin() );
+}
+
+string cclib::iterator::value_type::pn() const
+{
+  string pn;
+
+  // Get place notation
+  if ( meth_hl != string::npos && meth_le != string::npos )
+    {
+      // We have a reflection
+      pn.append("&");
+      // Add place notation
+      pn.append(linebuf.substr(meth_name_ends, meth_hl - meth_name_ends));
+      // Add half lead notation
+      pn.append(linebuf.substr(meth_hl, meth_le - meth_hl));
+      // And the lead head change
+      pn.append(",");
+      pn.append(linebuf.substr(meth_le, meth_lh - meth_le));
+    }
+
+  else if (meth_hl != string::npos)
+    {
+      // This is for methods like Grandsire which the CC
+      // have entered in an awkward way.
+
+      // As an example, for Grandsire Doubles we return "3,&1.5.1.5.1".
+      // This is not a very standard form, but it works fine in our place 
+      // notation handling code.
+      switch ( linebuf[meth_name_ends] )
+	{
+	case 'X': case 'x': case '-':
+	  pn.append( "-,&" );
+	  pn.append( linebuf.substr( meth_name_ends+1, 
+				     meth_lh - meth_name_ends ) );
+	  break;
+
+	default:
+	  {
+	    string::const_iterator i( linebuf.begin() + meth_name_ends );
+	    string::const_iterator j(i), e( linebuf.begin() + meth_lh );
+
+	    while ( j < e && isalnum(*j) && *j != 'X' && *j != 'x') 
+	      ++j;
+
+	    pn.append( i, j );
+	    pn.append( ",&" );
+	    pn.append( j, e );
+	  }
+	}
+    }
+
+  else
+    {
+      // This is for the non-reflecting irregular methods.
+      pn.append( linebuf.substr(meth_name_ends, meth_lh - meth_name_ends) );
+    }
+
+  return pn;
+}
+
+// ---------------------------------------------------------------------
+
 
 newlib<cclib> cclib::type;
 
@@ -106,30 +350,11 @@ cclib::cclib(const string& name) : f(name.c_str()), wr(0), _good(0)
 // Is this file in the right format?
 int cclib::canread(ifstream& ifs)
 {
-  int valid = 0;
-  int temp = -1;
+  // Rewind the stream
   ifs.clear();
   ifs.seekg(0, ios::beg);
-  while ((ifs.good()) && (valid < 2))
-    {
-      string linebuf;
-      getline(ifs, linebuf);
-      if (linebuf.length() > 1)
-	{
-	  // The second check for No. is used as an extra insurance check...
-	  if ((linebuf.find("Name") != string::npos) && (linebuf.find("No.") != string::npos))
-	    {
-	      temp = linebuf.find("Name") - 1;
-	      valid++;
-	    }
-	  else if ((temp != -1) && (atoi(linebuf.substr(0, temp).c_str()) != 0))
-	    {
-	      valid++;
-	    }
-	}
-    }
-  // if valid is 2 both the checks have been successful
-  return (valid == 2 ? 1 : 0);
+
+  return iterator(ifs) != iterator();
 }
 
 // Return a list of items
@@ -138,46 +363,8 @@ int cclib::dir(list<string>& result)
   if (_good != 1)
     return 0;
 
-  // return file to the start.
-  f.clear();
-  f.seekg(0, ios::beg);
-
-  string line;
-  string::size_type meth_name_starts = string::npos;
-  string::size_type meth_name_ends = string::npos;
-
-  // Go through a line at a time.
-  while(f.good()) {
-    getline(f, line);
-
-    if (line.length() > 1)
-      {
-        // The second check for No. is used as an extra insurance check...
-        if ((line.find("Name") != string::npos) && (line.find("No.") != string::npos))
-          {
-            // we now have start and end position.
-            meth_name_starts = line.find("Name");
-            meth_name_ends = line.find("Notation");
-          }
-        else if (meth_name_starts != meth_name_ends)
-          {
-            // Check first bit equates to a number...
-            string startof(line, 0, meth_name_starts);
-
-            if ((line.length() > meth_name_ends) && (atoi(startof.c_str()) != 0))
-              {
-		// Remove spaces from end of line
-		string thename = line.substr(meth_name_starts, meth_name_ends - meth_name_starts);
-		string::const_iterator j = thename.end();
-		while ((j >= thename.begin()) && (isspace(*(j - 1))))
-		  {
-		    j--;
-		  }
-                result.push_back(thename.substr(0, j - thename.begin()));
-              }
-          }
-      }
-  }
+  for ( iterator i(begin()); i != end(); ++i )
+    result.push_back( i->name() );
 
   return result.size();
 }
@@ -187,134 +374,30 @@ method cclib::load(const char *name)
 {
   string methname(name);
 
-  // These *must* be initialised as string::npos for later
-  string::size_type meth_name_starts = string::npos;
-  string::size_type meth_name_ends = string::npos;
-  string::size_type meth_hl = string::npos;
-  string::size_type meth_le = string::npos;
-  string::size_type meth_lh = string::npos;
+  for ( iterator i(begin()); i != end(); ++i )
+    {
+      // Extract the method name section
+      string wordbuf( i->name() );
+      
+      // Copy wordbuf to preserve for later
+      string methodname(wordbuf);
+      
+      // Make all letters lower case
+      for_each(wordbuf.begin(), wordbuf.end(), lowercase);
+      for_each(methname.begin(), methname.end(), lowercase);
+	    
+      // Do we have the correct line for the method?
+      if ((wordbuf.length() == methname.length()) &&
+	  (wordbuf.compare(methname) == 0))
+	{
+	  // we have found the method.
+	  return method( i->pn(), b,
+			 simple_name( methodname ) );
+	}
+    }
 
-  f.clear();
-  f.seekg(0, ios::beg);
-
-  while(f.good()) {
-    // first, read in a line
-    string linebuf;
-    getline(f, linebuf);
-    if (linebuf.length() > 1)
-      {
-	// The second check for No. is used as an extra insurance check...
-	if ((linebuf.find("Name") != string::npos) && (linebuf.find("No.") != string::npos))
-	  {
-	    // This is a header line - use it to get the start and end position
-	    // of fields
-	    meth_name_starts = linebuf.find("Name");
-	    meth_name_ends = linebuf.find("Notation");
-	    meth_hl = linebuf.find("hl");
-
-	    // If we have a half lead then take note accordingly.
-	    if (meth_hl != string::npos)
-	      {
-		meth_le = linebuf.find("le");
-		meth_lh = linebuf.find("lh");
-	      }
-	    else
-	      {
-		meth_le = string::npos;
-		meth_lh = linebuf.find("lh");
-	      }
-	  }
-	// This if checks that we have found at least one header line.
-	else if (meth_name_starts != meth_name_ends)
-	  {
-	    // This could be a line detailing a method.
-	    if (linebuf.length() > meth_name_ends)
-	      {
-		// Extract the method name section
-		string wordbuf(linebuf, meth_name_starts, meth_name_ends - meth_name_starts);
-		// Remove whitespace from end of method name
-		string::const_iterator i = wordbuf.end();
-		string::const_iterator j = wordbuf.end();
-		do {
-		  j = i;
-		  i--;
-		} while (isspace(*i));
-
-		wordbuf = wordbuf.substr(0, j - wordbuf.begin());
-
-		// Copy wordbuf to preserve for later
-		string methodname(wordbuf);
-
-		// Make all letters lower case
-		for_each(wordbuf.begin(), wordbuf.end(), lowercase);
-		for_each(methname.begin(), methname.end(), lowercase);
-
-		// Do we have the correct line for the method?
-		if ((wordbuf.length() == methname.length()) &&
-		    (wordbuf.compare(methname) == 0))//, 0, methname.length()) == 0))
-		  {
-		    // we have found the method.
-		    // now get the rest of the details
-		    string pn;
-		    // Get place notation
-		    if ((meth_hl != string::npos) && (meth_le != string::npos))
-		      {
-			// We have a reflection
-			pn.append("&");
-			// Add place notation
-			pn.append(linebuf.substr(meth_name_ends, meth_hl - meth_name_ends));
-			// Add half lead notation
-			pn.append(linebuf.substr(meth_hl, meth_le - meth_hl));
-
-			// Now create the method
-			method m(pn, b, simple_name(methodname));
-			// Strip any whitespace
-			string ch(linebuf, meth_le, meth_lh - meth_le);
-			string::const_iterator i = ch.begin();
-			while(!isspace(*i)) i++;
-			// Create the change
-			ch = ch.substr(0, i - ch.begin());
-			change c(b, ch);
-			m.push_back(c);
-
-			// We've finished now.
-			return m;
-		      }
-		    else if (meth_hl != string::npos)
-		      {
-			// This is for methods like Grandsire which the CC
-			// have entered in an awkward way.
-
-			// Make this a reflection temporarily
-			pn.append("&");
-		        pn.append(linebuf.substr(meth_name_ends, meth_lh - meth_name_ends));
-
-			// Create the method
-			method m(pn, b, simple_name(methodname));
-
-			// Now remove the last change
-			m.pop_back();
-			return m;
-		      }
-		    else
-		      {
-			// This is for the non-reflecting irregular methods.
-
-			// Add place notation
-			pn.append(linebuf.substr(meth_name_ends, meth_lh - meth_name_ends));
-
-			// Create the method and return it.
-			method m(pn, b, simple_name(methodname));
-			return m;
-		      }
-		  }
-	      }
-	  }
-
-      }
-    // else ignore the line (length < 1)
-  }
   // If we are here we couldn't find the method.
+
 #if RINGING_USE_EXCEPTIONS
   // If we are using exceptions, throw one to notify it couldn't be found.
   throw invalid_name();
@@ -328,7 +411,7 @@ method cclib::load(const char *name)
   return m;
 }
 
-#if defined(SEPERATE_FILES_)
+#if defined(SEPERATE_FILES)
 // This function is designed to seperate the cc method collection files into
 // seperate ones - they have a nasty habit of bundling them together which
 // makes them impossible to search through easily. Especially if you are only

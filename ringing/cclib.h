@@ -58,6 +58,10 @@ private:
 
   string simple_name(const string&);
 
+  class iterator;
+  iterator begin();
+  iterator end();
+
 public:
   static void registerlib(void) {
     library::addtype(&type);
