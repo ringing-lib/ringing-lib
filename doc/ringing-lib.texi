@@ -1402,12 +1402,21 @@ The @code{library_base} class is the base class for any new method library class
 As our class is virtual, we must also have a virtual destructor. This function does that and performs no activites.
 @end deftypefn
 
-@deftypefun {virtual method} library_base::load (const char* @var{name}) = 0;
-@code{load} is a pure virtual function and therefore must be defined before any derived class can be used.
+@deftypefun {virtual method} library_base::load (const char* @var{name}, 
+                                                 int @var{stage}) = 0;
+@code{load} is a pure virtual function and therefore must be defined before 
+any derived class can be used.
 
-The function is intended to load a method called @var{name} from the current specified file. If the function cannot load the method given, then one of two things will happen.
+The function is intended to load a method called @var{name} from the current 
+specified file. If the function cannot load the method given, then one of two 
+things will happen.  If @var{stage} is non-zero, the function should look for
+a method on this stage; if @var{stage} is zero, the first method with the 
+given name should be returned.
 
-If exceptions are enabled, an exception of class @code{library_base::invalid_name} will be thrown. If exceptions are not enabled, the method returned will be an empty object.
+If exceptions are enabled, an exception of class 
+@code{library_base::invalid_name} will be thrown. If exceptions are not 
+enabled, the method returned will be an empty method with the name "Not 
+found".
 @end deftypefun
 
 @deftypefun {virtual bool} library_base::save (const method& @var{m});
@@ -1423,7 +1432,7 @@ This function is intended to remove the method with the name @var{name1} from th
 @end deftypefun
 
 @deftypefun {virtual int} library_base::dir (list<string>& @var{result});
-This function is intended to list the method names contained within the currently loaded method library.  The function should return the number of methods in the library.  The implementation in @code{library_base} always returns 0.
+This function is intended append to @var{result} (using @code{list<string>::push_back}) the method names contained within the currently loaded method library.  The function should return the number of methods in the library.  The implementation in @code{library_base} always returns 0.
 @end deftypefun
 
 @deftypefun {virtual bool} library_base::good (void) const;
