@@ -43,7 +43,7 @@ public:
   void operator()( const touch &t ) const
   {
     row r;
-    int n=0, l=0;
+    int n=0;
     for ( touch::const_iterator i( t.begin() ); i != t.end(); ++i )
       {
 	if ( ++n % leadlen == 0 )
