@@ -38,7 +38,7 @@ bool is_bell(const char &c, bell &b)
     {
       b.from_char(c);
     }
-  catch (const bell::invalid &e)
+  catch (const bell::invalid &)
     {
       isbell = false;
     }
