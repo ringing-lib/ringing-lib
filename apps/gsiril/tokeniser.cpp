@@ -32,7 +32,11 @@
 #include <vector>
 #endif
 #include <string>
+#if RINGING_HAVE_OLD_IOSTREAMS
+#include <istream.h>
+#else
 #include <istream>
+#endif
 #if RINGING_OLD_C_INCLUDES
 #include <stddef.h>
 #include <string.h>
