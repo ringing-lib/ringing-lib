@@ -60,7 +60,7 @@ public:
   
   friend class multtab;
   friend class multtab_row_iterator;
-  RINGING_FAKE_COMPARATORS( multtab_row_t );
+  RINGING_FAKE_COMPARATORS( multtab_row_t )
 
 private:
   size_t n; 
@@ -113,7 +113,7 @@ private:
 public:
   multtab_post_col_t() : n(0), t(NULL) {}
 
-  RINGING_FAKE_COMPARATORS( multtab_post_col_t );
+  RINGING_FAKE_COMPARATORS( multtab_post_col_t )
 
 private:
   size_t n; 
@@ -135,7 +135,7 @@ private:
 public:
   multtab_pre_col_t() : n(0), t(NULL) {}
 
-  RINGING_FAKE_COMPARATORS( multtab_pre_col_t );  
+  RINGING_FAKE_COMPARATORS( multtab_pre_col_t )
 
 private:
   size_t n; 
@@ -165,14 +165,14 @@ public:
   template < class InputIterator >
   multtab( InputIterator first, InputIterator last, const row &partend )
     : colcount( 0u )
-  { init( make_vector( first, last ), partend, row(first->bells()) ); }
+  { init( make_vector( first, last ), vector<row>( 1u, partend ) ); }
 
   // ... And more complicated part end groups.
   template < class InputIterator >
   multtab( InputIterator first, InputIterator last, 
-	   const row &partend1, const row& partend2 )
+	   const vector< row >& partends )
     : colcount( 0u )
-  { init( make_vector( first, last ), partend1, partend2 ); }
+  { init( make_vector( first, last ), partends ); }
 
   typedef RINGING_DETAILS_PREFIX multtab_row_t      row_t;
   typedef RINGING_DETAILS_PREFIX multtab_post_col_t post_col_t;
@@ -221,8 +221,7 @@ private:
   bool is_representative( const row &r ) const;
   row make_representative( const row &r ) const;
 
-  void init( const vector< row > &r, 
-	     const row& partend1, const row& partend2 );
+  void init( const vector< row > &r, const vector< row >& gens );
 
   size_t colcount;
   vector< row > rows;

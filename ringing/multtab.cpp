@@ -50,7 +50,6 @@ class group
 {
 public:
   group( const vector<row> &generators );
-  group( const row& gen1, const row& gen2 );
 
   typedef set<row>::const_iterator const_iterator;
   const_iterator begin() const { return s.begin(); }
@@ -89,13 +88,6 @@ group::group( const vector<row> &gens )
   generate_recursive( row(b), gens );
 }
 
-group::group( const row& gen1, const row& gen2 )
-{
-  vector<row> gens; gens.reserve(2);
-  gens.push_back(gen1);  gens.push_back(gen2);
-  size_t b( gen1.bells() > gen2.bells() ? gen1.bells() : gen2.bells() );
-  generate_recursive( row(b), gens );
-}
 
 RINGING_END_ANON_NAMESPACE
 
@@ -140,11 +132,10 @@ row multtab::make_representative( const row& r ) const
   return res;
 }
 
-void multtab::init( const vector< row >& r, 
-		    const row& partend1, const row& partend2 )
+void multtab::init( const vector< row >& r, const vector< row >& gens )
 {
   {
-    group g( partend1, partend2 );
+    group g( gens );
     copy( g.begin(), g.end(), back_inserter(pends) );
   }
 
