@@ -114,8 +114,8 @@ public:
     { return lb->rename_method(name1, name2); }
   int remove(const string name) { return lb->remove(name); }
   int dir(list<string>& result) { return lb->dir(result); }
-  bool good() { return lb && lb->good(); }
-  int writeable() { return lb && lb->writeable(); }
+  bool good() { return bool(lb) && lb->good(); }
+  int writeable() { return bool(lb) && lb->writeable(); }
 
   static void addtype(libtype* lt) { libtypes.push_back(lt); }
 };

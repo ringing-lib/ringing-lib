@@ -108,21 +108,22 @@ int main()
 
     cout << "Results for both strokes:\n";
 
-    for (int k = 0; k < j; k++)
+    int k; // MSVC-5/6 don't correctly understand for scope.
+    for ( k = 0; k < j; k++)
       cout << "Total " << k << ": " << mu.Get_Results(i[k]) << " : " << mu.Get_Score(i[k]) << endl;
 
     cout << "Total Score: " << mu.Get_Score() << endl;
 
     cout << "Results for handstrokes:\n";
 
-    for (int k = 0; k < j; k++)
+    for ( k = 0; k < j; k++)
       cout << "Total " << k << ": " << mu.Get_Results(i[k], eHandstroke) << " : " << mu.Get_Score(i[k], eHandstroke) << endl;
 
     cout << "Total Score: " << mu.Get_Score(eHandstroke) << endl;
 
     cout << "Results for backstrokes:\n";
 
-    for (int k = 0; k < j; k++)
+    for ( k = 0; k < j; k++)
       cout << "Total " << k << ": " << mu.Get_Results(i[k], eBackstroke) << " : " << mu.Get_Score(i[k], eBackstroke) << endl;
 
     cout << "Total Score: " << mu.Get_Score(eBackstroke) << endl;

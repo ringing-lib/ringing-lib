@@ -55,7 +55,7 @@ public:
   };
 
   class iterator
-#if defined(_MSC_VER) && _MSC_VER < 1200
+#if defined(_MSC_VER) && _MSC_VER <= 1200
     // The base class is needed to get some of msvc-5's stl's algorithms
     // working.  But we can't unconditionally derive from it because 
     // glibc++-2 does not have an iterator class if it doesn't think the
