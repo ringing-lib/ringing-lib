@@ -5,7 +5,7 @@ AUTOMAKE_OPTIONS = dist-zip
 MAINTAINERCLEANFILES = Makefile.in configure aclocal.m4
 EXTRA_DIST = mkdsp
 
-SUBDIRS = ringing doc examples tests 
+SUBDIRS = ringing apps doc examples tests 
 
 auxdir			= @ac_aux_dir@
 AUX_DIST		= $(auxdir)/install-sh $(auxdir)/missing \
