@@ -34,13 +34,12 @@
 #include <ringing/row.h>
 #include <ringing/stuff.h>
 
-
 RINGING_START_NAMESPACE
 
 RINGING_USING_STD
 
 // method - A method.
-class method : public vector<change> {
+class RINGING_API method : public vector<change> {
 private:
   string myname;		// The name of the method, without Major etc. 
 

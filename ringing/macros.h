@@ -113,5 +113,4 @@ RINGING_END_NAMESPACE_STD
 #define RINGING_DELEGATE_STD_SWAP(type)
 #endif
 
-#endif
-
+#endif // RINGING_MACROS_H

@@ -438,14 +438,18 @@ row row::queens(const int n)
     {
       half = n / 2;
     }
-  for (int i = 0; i <= half; i++)
-    {
-      r.data[i] = (i * 2);
-    }
-  for (int i = 0; i < (n / 2); i++)
-    {
-      r.data[i + half] = (i * 2) + 1;
-    }
+  {
+    for (int i = 0; i <= half; i++)
+      {
+	r.data[i] = (i * 2);
+      }
+  }
+  {
+    for (int i = 0; i < (n / 2); i++)
+      {
+	r.data[i + half] = (i * 2) + 1;
+      }
+  }
   return r;
 }
 
@@ -463,14 +467,18 @@ row row::kings(const int n)
     {
       half = n / 2;
     }
-  for (int i = 0; i <= half; i++)
-    {
-      r.data[i] = (half * 2) - (i * 2) - 2;
-    }
-  for (int i = 0; i < (n / 2); i++)
-    {
-      r.data[i + half] = (i * 2) + 1;
-    }
+  {
+    for (int i = 0; i <= half; i++)
+      {
+	r.data[i] = (half * 2) - (i * 2) - 2;
+      }
+  }
+  {
+    for (int i = 0; i < (n / 2); i++)
+      {
+	r.data[i + half] = (i * 2) + 1;
+      }
+  }
 
   return r;
 }

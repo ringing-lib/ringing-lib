@@ -83,8 +83,8 @@ public:
   // Return the uncalculated score
   int raw_score() const { return _score; }
 
-  friend music;
-  friend music_node;
+  friend class music;
+  friend class music_node;
 private:
   // Clear the current counts
   void clear();
