@@ -88,8 +88,18 @@ private:
 };
 
 // An exception thrown when executing a string literal containing a $$.
-class script_exception
+struct script_exception
 {
+  enum type {
+    do_abort,
+    do_stop,
+    do_break
+  };
+  
+  script_exception( type t ) : t(t) {}
+
+  type t;
 };
+
 
 #endif // GSIRIL_EXPRESSION_INCLUDED

@@ -49,89 +49,145 @@ RINGING_START_ANON_NAMESPACE
 
 //////////////////////////////////////////////////////////
 
-class mstokeniser : public tokeniser
+namespace tok_types
 {
-public:
-  enum tok_types 
+  enum enum_t 
   { 
     name        = 'A',
     num_lit     = '0',
     open_paren  = '(',
     close_paren = ')',
+    open_brace  = '{',
+    close_brace = '}',
+    colon       = ':',
     comma       = ',',
     times       = '*',
     assignment  = '=',
     new_line    = '\n',
     semicolon   = ';',
-    comment     = first_token,
+    comment     = tokeniser::first_token,
     string_lit,
     transp_lit,
     pn_lit,
-    def_assign  /* ?= */
+    def_assign, /* ?= */
+    regex_lit
   };
+};
 
-  mstokeniser( istream& in, bool is_case_insensitive )
+class pn_impl : public tokeniser::basic_token
+{
+public:
+  pn_impl(const char *init) : basic_token(init, tok_types::pn_lit) {}
+  
+private:
+  virtual parse_result parse( string::const_iterator& i, 
+			      string::const_iterator e, 
+			      token& tok ) const
+  {
+    string::const_iterator j = i;
+    if ( *j != '&' && *j != '+' ) return failed; ++j;
+    while ( j < e && ( *j == '.' || *j == '-' || isalnum(*j) ) ) ++j;
+    tok.assign(i, j); tok.type( tok_types::pn_lit ); i = j;
+    return done;
+  }
+};
+
+class line_comment_impl : public tokeniser::basic_token
+{
+public:
+  line_comment_impl( char const* delim )
+    : basic_token( delim, tok_types::comment) {}
+  
+private:
+  virtual parse_result parse( string::const_iterator& i, 
+			      string::const_iterator e, 
+			      token& tok ) const
+  {
+    string::const_iterator j = i;
+    while ( j < e && *j != '\n' ) ++j;
+    tok = string(i, j); tok.type( tok_types::comment ); i = j;
+    return done;
+  }
+};
+
+void validate_regex( const token& tok, int bells )
+{
+  static string allowed;
+  if ( allowed.empty() ) {
+    allowed.append( row(bells).print() );
+    allowed.append("*?[]");
+  }
+
+  if ( tok.find_first_not_of( allowed ) != string::npos )
+    throw runtime_error( make_string() << "Illegal regular expression: " 
+			 << tok );
+
+  bool inbrack(false);
+  for ( string::const_iterator i(tok.begin()), e(tok.end()); i!=e; ++i ) 
+    switch (*i) {
+    case '[':
+      if ( inbrack ) 
+	throw runtime_error( "Unexpected '[' in regular expressions" );
+      inbrack = true;
+      break;
+    case ']':
+      if ( !inbrack )
+	throw runtime_error( "Unexpected ']' in regular expressions" );
+      inbrack = false;
+      break;
+    case '*': case '?':
+      if ( inbrack )
+	throw runtime_error( "Cannot use '*' or '?' in a [] block "
+			     "of a regular expression" );
+      break;
+    }
+
+  // TODO: Check for multiple occurances of the same bell
+}
+
+class mstokeniser : public tokeniser
+{
+public:
+  mstokeniser( istream& in, arguments const& args )
     : tokeniser( in, keep_new_lines, 
-		 is_case_insensitive ? case_insensitive : case_sensitive ), 
-      q( "'", transp_lit ), qq( "\"", string_lit ), 
-      sym( "&" ), asym( "+" ), defass( "?=", def_assign )
+		 args.case_insensitive ? case_insensitive : case_sensitive ), 
+      args( args ),
+      c( args.msiril_comments ? "/" : "//" ), r( "/", tok_types::regex_lit ),
+      q( "'", tok_types::transp_lit ), qq( "\"", tok_types::string_lit ), 
+      sym( "&" ), asym( "+" ), defass( "?=", tok_types::def_assign )
   {
     add_qtype(&c);
+    if ( !args.msiril_comments ) add_qtype(&r);
     add_qtype(&q);    add_qtype(&qq);
     add_qtype(&sym);  add_qtype(&asym);
     add_qtype(&defass);
   }
 
-
   virtual void validate( const token& t ) const
   {
-    switch ( t.type() )
-      case name: case num_lit: case open_paren: case close_paren:
-      case comma: case times: case assignment: case new_line: case semicolon:
-      case comment: case string_lit: case transp_lit: case pn_lit: case def_assign:
-	return;
-    
+    using namespace tok_types;
+
+    switch ( t.type() ) {
+    case name: case num_lit: case open_paren: case close_paren:
+    case comma: case times: case assignment: case new_line: case semicolon:
+    case comment: case string_lit: case transp_lit: case pn_lit: 
+    case def_assign:
+      return;
+
+    case regex_lit: case open_brace: case close_brace: case colon:
+      // These can only work when msiril comments are disabled
+      if ( !args.msiril_comments ) return;
+      break;
+    }
+     
     throw runtime_error( make_string() << "Unknown token in input: " << t );
   }
 
 private:
-  class pn_impl : public tokeniser::basic_token
-  {
-  public:
-    pn_impl(const char *init) : basic_token(init, pn_lit) {}
+  const arguments& args;
 
-  private:
-    virtual parse_result parse( string::const_iterator& i, 
-				string::const_iterator e, 
-				token& tok ) const
-    {
-      string::const_iterator j = i;
-      if ( *j != '&' && *j != '+' ) return failed; ++j;
-      while ( j < e && ( *j == '.' || *j == '-' || isalnum(*j) ) ) ++j;
-      tok.assign(i, j); tok.type( pn_lit ); i = j;
-      return done;
-    }
-  };
-
-  class comment_impl : public tokeniser::basic_token
-  {
-  public:
-    comment_impl() : basic_token("/", comment) {}
-
-  private:
-    virtual parse_result parse( string::const_iterator& i, 
-				string::const_iterator e, 
-				token& tok ) const
-    {
-      string::const_iterator j = i;
-      while ( j < e && *j != '\n' ) ++j;
-      tok = string(i, j); tok.type( comment ); i = j;
-      return done;
-    }
-  };
-
-  comment_impl c;
-  string_token q, qq;
+  line_comment_impl c;
+  string_token r, q, qq;
   pn_impl sym, asym;
   basic_token defass;
 };
@@ -143,7 +199,7 @@ class msparser : public parser
 {
 public:
   msparser( istream& in, const arguments& args ) 
-    : args(args), tok(in, args.case_insensitive),
+    : args(args), tok(in, args),
       tokiter(tok.begin()), tokend(tok.end())
   {}
 
@@ -167,23 +223,34 @@ private:
 vector< token > msparser::tokenise_command()
 {
   vector< token > toks;
+  int nesting = 0;
 
   do 
     {
       // Skip empty commands
       while ( tokiter != tokend && 
-	      ( tokiter->type() == mstokeniser::new_line ||
-		tokiter->type() == mstokeniser::semicolon ||
-		tokiter->type() == mstokeniser::comment ) )
+	      ( tokiter->type() == tok_types::new_line ||
+		tokiter->type() == tok_types::semicolon ||
+		tokiter->type() == tok_types::comment ) )
 	++tokiter;
 
       while ( tokiter != tokend && 
-	      ( tokiter->type() != mstokeniser::new_line && 
-		tokiter->type() != mstokeniser::semicolon ) )
+	      ( tokiter->type() != tok_types::new_line && 
+		tokiter->type() != tok_types::semicolon 
+		|| nesting ) )
 	{
 	  // TODO:  Get the tokeniser to discard comments these automatically
-	  if ( tokiter->type() != mstokeniser::comment )
+	  if ( tokiter->type() != tok_types::comment )
 	    toks.push_back(*tokiter);
+
+	  // Keep track of nesting
+	  if ( tokiter->type() == tok_types::open_paren || 
+	       tokiter->type() == tok_types::open_brace ) 
+	    ++nesting;
+	  if ( tokiter->type() == tok_types::close_paren || 
+	       tokiter->type() == tok_types::close_brace ) 
+	    if ( nesting > 0 )
+	      --nesting;
 
 	  ++tokiter;
 
@@ -191,7 +258,8 @@ vector< token > msparser::tokenise_command()
 	    tok.validate( toks.back() );
 	}
     }
-  while  ( !toks.empty() && toks.back().type() == mstokeniser::comma );
+  while  ( !toks.empty() && ( toks.back().type() == tok_types::comma 
+			      || nesting ) );
    
   return toks;
 }
@@ -218,36 +286,36 @@ statement msparser::parse()
     return statement( NULL );
 
   // Bells directive
-  if ( cmd.size() == 2 && cmd[0].type() == mstokeniser::num_lit
-       && cmd[1].type() == mstokeniser::name && cmd[1] == "bells" )
+  if ( cmd.size() == 2 && cmd[0].type() == tok_types::num_lit
+       && cmd[1].type() == tok_types::name && cmd[1] == "bells" )
     {
       bells( string_to_int( cmd[0] ) );
       return statement( new bells_stmt(args.bells) );
     }
 
   // Extents directive
-  if ( cmd.size() == 2 && cmd[0].type() == mstokeniser::num_lit
-       && cmd[1].type() == mstokeniser::name && cmd[1] == "extents" )
+  if ( cmd.size() == 2 && cmd[0].type() == tok_types::num_lit
+       && cmd[1].type() == tok_types::name && cmd[1] == "extents" )
     {
       return statement( new extents_stmt( string_to_int(cmd[0]) ) );
     }
 
   // Import directive
-  if ( cmd.size() == 2 && cmd[0].type() == mstokeniser::name
-       && cmd[0] == "import" && ( cmd[1].type() == mstokeniser::name ||
-				  cmd[1].type() == mstokeniser::string_lit ) )
+  if ( cmd.size() == 2 && cmd[0].type() == tok_types::name
+       && cmd[0] == "import" && ( cmd[1].type() == tok_types::name ||
+				  cmd[1].type() == tok_types::string_lit ) )
     return statement( new import_stmt(cmd[1]) );
   
 
   // Prove command
-  if ( cmd.size() > 1 && cmd[0].type() == mstokeniser::name
+  if ( cmd.size() > 1 && cmd[0].type() == tok_types::name
        && cmd[0] == "prove" )
     return statement
       ( new prove_stmt( make_expr( cmd.begin() + 1, cmd.end() ) ) );
 
   // Definition
-  if ( cmd.size() > 1 && cmd[0].type() == mstokeniser::name
-       && cmd[1].type() == mstokeniser::assignment )
+  if ( cmd.size() > 1 && cmd[0].type() == tok_types::name
+       && cmd[1].type() == tok_types::assignment )
     return statement
       ( new definition_stmt
         ( cmd[0], cmd.size() == 2 
@@ -255,8 +323,8 @@ statement msparser::parse()
 	            : make_expr( cmd.begin() + 2, cmd.end() ) ) );
 
   // Default definition
-  if ( cmd.size() > 1 && cmd[0].type() == mstokeniser::name
-       && cmd[1].type() == mstokeniser::def_assign )
+  if ( cmd.size() > 1 && cmd[0].type() == tok_types::name
+       && cmd[1].type() == tok_types::def_assign )
     return statement
       ( new default_defn_stmt
         ( cmd[0], cmd.size() == 2 
@@ -279,16 +347,16 @@ msparser::make_expr( vector< token >::const_iterator first,
     throw runtime_error( "Expression expected" );
 
   // Parentheses first
-  if ( first->type() == mstokeniser::open_paren && 
-       (last-1)->type() == mstokeniser::close_paren )
+  if ( first->type() == tok_types::open_paren && 
+       (last-1)->type() == tok_types::close_paren )
     {
       int depth = 0;
       bool ok = true;
       for ( iter_t i(first); ok && i != last; ++i )
 	{
-	  if ( i->type() == mstokeniser::open_paren )
+	  if ( i->type() == tok_types::open_paren )
 	    ++depth;
-	  else if ( i->type() == mstokeniser::close_paren )
+	  else if ( i->type() == tok_types::close_paren )
 	    --depth;
 
 	  if ( depth == 0 && i != last-1 ) 
@@ -307,22 +375,95 @@ msparser::make_expr( vector< token >::const_iterator first,
 	}
     }
 
+  // Do Dixonoid braces next
+  // syntax:  {regex: expr; regex: expr; ... }
+  if ( first->type() == tok_types::open_brace && 
+       (last-1)->type() == tok_types::close_brace )
+    {
+      int depth = 0;
+      bool ok = true;
+      for ( iter_t i(first); ok && i != last; ++i )
+	{
+	  if ( i->type() == tok_types::open_brace )
+	    ++depth;
+	  else if ( i->type() == tok_types::close_brace )
+	    --depth;
+
+	  if ( depth == 0 && i != last-1 ) 
+	    ok = false;
+	}
+      
+      if (ok) {
+	if (depth) 
+	  throw runtime_error( "Unmatched braces" );
+	
+	if (first+1 == last-1 )
+	  throw runtime_error( "Empty braces" );
+	
+	expression chain( NULL );
+	--last;
+	while ( last != first && (last-1)->type() == tok_types::semicolon ) 
+	  --last;
+
+	while ( last != first ) {
+
+	  // Find last semicolon respecting braces
+	  iter_t i(first);
+	  for ( iter_t j(first+1); j != last; ++j ) {
+	    if ( j->type() == tok_types::open_brace )
+	      ++depth;
+	    else if ( j->type() == tok_types::close_brace )
+	      --depth;
+	    if ( !depth && j->type() == tok_types::semicolon )
+	      i = j;
+	  }
+	  assert( i != last-1 );
+
+	  if ( i[1].type() != tok_types::regex_lit )
+	    throw runtime_error
+	      ( "Brace group element should start with regular expression" );
+
+	  if ( i+2 == last || i[2].type() != tok_types::colon )
+	    throw runtime_error
+	      ( "Regular expression should be followed by a colon" );
+
+	  expression expr( NULL );
+	  if ( i+3 != last)
+	    expr = make_expr( i+3, last );
+	  else 
+	    expr = expression( new nop_node );
+
+	  validate_regex( i[1], bells() );
+	  chain = expression( new if_match_node( bells(), i[1], 
+						 expr, chain ) );
+
+	  last = i;
+
+	  while ( last != first && (last-1)->type() == tok_types::semicolon ) 
+	    --last;
+	}
+	if ( chain.isnull() )
+	  throw runtime_error( "Empty braces" );
+	return chain;
+      }
+    }
+
   // Assignment is the lowest precedence operator
   {
     int depth = 0;
     for ( iter_t i(first); i != last; ++i )
       {
-	if ( i->type() == mstokeniser::open_paren )
+	if ( i->type() == tok_types::open_paren )
 	  ++depth;
-	else if ( i->type() == mstokeniser::close_paren )
+	else if ( i->type() == tok_types::close_paren )
 	  --depth;
-	else if ( i->type() == mstokeniser::assignment && depth == 0 )
+	else if ( i->type() == tok_types::assignment && depth == 0 )
 	  {
 	    if ( first == i )
 	      throw runtime_error
 		( "Assignment operator needs first argument" );
 	    
-	    if ( first->type() != mstokeniser::name || 
+	    if ( first->type() != tok_types::name || 
 		 first+1 != i )
 	      throw runtime_error
 		( "First argument of assignment operator must be"
@@ -347,11 +488,11 @@ msparser::make_expr( vector< token >::const_iterator first,
     int depth = 0;
     for ( iter_t i(first); i != last; ++i )
       {
-	if ( i->type() == mstokeniser::open_paren )
+	if ( i->type() == tok_types::open_paren )
 	  ++depth;
-	else if ( i->type() == mstokeniser::close_paren )
+	else if ( i->type() == tok_types::close_paren )
 	  --depth;
-	else if ( i->type() == mstokeniser::comma && depth == 0 )
+	else if ( i->type() == tok_types::comma && depth == 0 )
 	  {
 	    if ( first == i )
 	      throw runtime_error
@@ -373,38 +514,46 @@ msparser::make_expr( vector< token >::const_iterator first,
 
   // A number literal in a repeated block is the
   // only remaining construct that is not a single token.
-  if ( first->type() == mstokeniser::num_lit )
+  if ( first->type() == tok_types::num_lit ||
+       first->type() == tok_types::name && *first == "repeat" )
     {
       iter_t begin_arg = first + 1;
 
-      if ( begin_arg != last && begin_arg->type() == mstokeniser::times )
+      if ( begin_arg != last && begin_arg->type() == tok_types::times )
 	++begin_arg;
 
       if ( begin_arg == last )
 	throw runtime_error
 	  ( "The repetition operator requires an argument" );
 
+      int times(-1);
+      if ( first->type() == tok_types::num_lit )
+	times = string_to_int( *first );
+
       return expression
-	( new repeated_node( string_to_int( *first ),
+	( new repeated_node( times,
 			     make_expr( begin_arg, last ) ) );
     }
 
   // Everything left is a literal of some sort
   if ( last - first != 1 )
-    throw runtime_error( "Parse error" );
+    throw runtime_error( make_string() << "Parse error before " << *first  );
 
   switch ( first->type() )
     {
-    case mstokeniser::string_lit:
+    case tok_types::string_lit:
       return expression( new string_node( *first ) );
 
-    case mstokeniser::name:
-      return expression( new symbol_node( *first ) );
+    case tok_types::name:
+      if ( *first == "break" )
+	return expression( new exception_node( script_exception::do_break ) );
+      else
+	return expression( new symbol_node( *first ) );
 
-    case mstokeniser::pn_lit:
+    case tok_types::pn_lit:
       return expression( new pn_node( bells(), *first ) );
 
-    case mstokeniser::transp_lit:
+    case tok_types::transp_lit:
       return expression( new transp_node( bells(), *first ) );
 
     default:

@@ -83,6 +83,7 @@ arguments::arguments( int argc, char** argv )
 
 void arguments::set_msiril_compatible()
 {
+  msiril_comments = true;
   case_insensitive = true;
   prove_symbol = "__first__";
 }

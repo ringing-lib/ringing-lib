@@ -127,6 +127,8 @@ public:
   
   permute_and_prove_t permute_and_prove();
 
+  row current_row() const { return r; }
+
   void execute_symbol( const string &sym );
   void define_symbol( const pair< const string, expression > &defn );
 

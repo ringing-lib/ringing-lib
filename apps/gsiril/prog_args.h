@@ -43,6 +43,7 @@ struct arguments
   init_val<bool,false> interactive;
   init_val<bool,false> verbose;
   init_val<bool,false> case_insensitive;
+  init_val<bool,false> msiril_comments;
 
   init_val<bool,false> everyrow_only;
 

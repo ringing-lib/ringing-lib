@@ -72,7 +72,6 @@ public:
 
   enum { first_token = 256 };
 
-RINGING_PROTECTED_IMPL:
   class basic_token;
   class string_token;
 

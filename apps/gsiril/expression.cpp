@@ -87,9 +87,10 @@ void prove_stmt::execute( execution_context& e ) const
 	  expr.execute(p);
 	  p.execute_symbol( "finish" );
       	} 
-      catch( const script_exception& ) 
+      catch( const script_exception& ex ) 
 	{
-	  p.execute_symbol( "abort" );
+	  if ( ex.t == script_exception::do_abort )
+	    p.execute_symbol( "abort" );
 	  return;
 	}
     
@@ -208,8 +209,19 @@ void repeated_node::debug_print( ostream &os ) const
 
 void repeated_node::execute( proof_context &ctx )
 {
-  for (int i=0; i<count; ++i) 
-    child.execute( ctx );
+  try {
+    if ( count != -1 )
+      for (int i=0; i<count; ++i) 
+	child.execute( ctx );
+    else
+      while ( true )
+	child.execute( ctx );
+  } catch ( script_exception const& ex ) {
+    if ( ex.t == script_exception::do_break ) 
+      return;
+    else
+      throw;
+  }
 }
 
 void string_node::execute( proof_context &ctx )
@@ -285,4 +297,34 @@ void assign_node::debug_print( ostream &os ) const
 void assign_node::execute( proof_context& ctx )
 {
   ctx.define_symbol(defn);
+}
+
+void if_match_node::debug_print( ostream &os ) const
+{
+  os << "{ " << mus.begin()->get() << ": ";
+  iftrue.debug_print(os);
+  os << ";";
+  if ( !iffalse.isnull() )
+    iffalse.debug_print(os);
+  os << " }";
+}
+
+void if_match_node::execute( proof_context& ctx )
+{
+  row r(ctx.current_row());
+  mus.process_rows( &r, &r + 1 );  // Ugh!
+  if ( mus.get_score() )
+    iftrue.execute( ctx );
+  else if ( !iffalse.isnull() )
+    iffalse.execute( ctx );
+}
+
+void exception_node::debug_print( ostream &os ) const
+{
+  os << "break";
+}
+
+void exception_node::execute( proof_context& ctx )
+{
+  throw script_exception( t );
 }

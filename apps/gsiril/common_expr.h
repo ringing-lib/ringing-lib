@@ -34,6 +34,7 @@
 #endif
 #include <string>
 #include <ringing/row.h>
+#include <ringing/music.h>
 
 RINGING_USING_NAMESPACE
 
@@ -240,6 +241,38 @@ protected:
 
 private:
   pair< const string, expression > defn;
+};
+
+class if_match_node : public expression::node
+{
+public:
+  if_match_node( int bells, const music_details& regex, 
+		 const expression& iftrue, const expression& iffalse )
+    : mus(bells), iftrue(iftrue), iffalse(iffalse)
+  {
+    mus.push_back( regex );
+  }
+
+protected:
+  virtual void debug_print( ostream &os ) const;
+  virtual void execute( proof_context &ctx );
+
+private:
+  music mus;
+  expression iftrue, iffalse;
+};
+
+class exception_node : public expression::node
+{
+public:
+  exception_node( script_exception::type t ) : t(t) {}
+
+protected:
+  virtual void debug_print( ostream &os ) const;
+  virtual void execute( proof_context &ctx );
+
+private:
+  script_exception::type t;
 };
 
 #endif // GSIRIL_EXPRESSION_INCLUDED

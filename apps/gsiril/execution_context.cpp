@@ -132,7 +132,7 @@ void proof_context::output_string( const string& str )
   if ( !silent )
     ectx.output() << o;
   if (do_exit)
-    throw script_exception();
+    throw script_exception( script_exception::do_abort );
 }
 
 void proof_context::execute_everyrow()
