@@ -1,3 +1,12 @@
+Version 0.2.5 (4 December 2001):
+  Many method library improvements, including the ability to read
+    Central Council method lists.  More changes probably on the way
+    here.
+  Distribute as a .zip file as well as .tar.gz.
+  More documentation.
+  Some exceptions added in various places.
+  Minor improvements to generated PostScript files.
+
 Version 0.2.4 (30 October 2001):
   More Windows fixes.
   Fixes to printing classes.

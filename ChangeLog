@@ -1,17 +1,119 @@
-2001-11-08 02:03  ras52
+2001-12-04 23:39  mjb47
 
-	* README, mkdsp, Makefile.am: Automatically generated msvc 
-	project / workspace files.
+	* configure.in, ringing/common.h.in: Prepare for 0.2.5 build
 
-	* examples/testbase.cpp, examples/testprint.cpp: msvc-5 compatibility
-	bug fixes.
+2001-12-04 23:34  mjb47
 
-	* ringing/row.cpp, ringing/row.h: row::row(const char *) now checks 
-	row's validity and throws row::invalid; row::row(int) now defaults to 
-	rounds; minor bug fix in interpret_pn.
+	* config/config.guess: file config.guess was initially added on
+	branch libtool-branch.
 
-	* ringing/touch.h, ringing/touch.cpp: minor bug fix in touch::iterator
-	
+2001-12-04 23:34  mjb47
+
+	* config/config.sub: file config.sub was initially added on branch
+	libtool-branch.
+
+2001-12-04 23:34  mjb47
+
+	* configure.ac: file configure.ac was initially added on branch
+	libtool-branch.
+
+2001-12-04 23:34  mjb47
+
+	* config/ltmain.sh: file ltmain.sh was initially added on branch
+	libtool-branch.
+
+2001-12-04 23:19  mjb47
+
+	* doc/ringing-lib.texi: More documentation
+
+2001-12-04 21:36  mjb47
+
+	* ringing/: print.h, print_ps.cpp, print_ps.h: Add new_page()
+	function to printpage; proper DSC 3.0 support in PostScript output
+
+2001-12-02 13:23  standardeight
+
+	* doc/ringing-lib.texi, examples/Makefile.am,
+	examples/testbase.cpp, examples/testlibrary.cpp, ringing/cclib.cpp,
+	ringing/cclib.h, ringing/library.h, ringing/mslib.cpp,
+	ringing/mslib.h, ringing/row.cpp: * Improved interface for
+	registering library classes.  * Tidy warnings raised when compiled
+	with -Wall * Fix cclib matching of names so that 'Plain' doesn't
+	equal 'Plain Bob' * Add some comments to both cclib and mslib.	*
+	Added more documentation for the library classes.  * Added test
+	library example code.  * Changed mslib and cclib to both load files
+	as required and not just once	- This solves the not being able to
+	load multiple methods from one library	   problem.
+
+2001-11-29 22:14  standardeight
+
+	* examples/testbase.cpp, ringing/cclib.cpp, ringing/cclib.h,
+	ringing/library.cpp, ringing/library.h, ringing/mslib.cpp,
+	ringing/mslib.h: * Added new library interface * Added some
+	exceptions to the library classes * Corrected error in mslib.cpp -
+	a final change got added even when   a method wasn't reflected.  *
+	Revise canread functions in libraries so that identifying a file
+	works.
+
+2001-11-22 10:56  mjb47
+
+	* doc/ringing-lib.texi: Finished documenting printing classes
+
+2001-11-21 18:50  mjb47
+
+	* Makefile.am, doc/ringing-lib.texi, ringing/row.cpp,
+	ringing/row.h: Minor alterations; added a few exceptions to row.h
+
+2001-11-20 22:58  mjb47
+
+	* Makefile.am: Create .zip distribution file as well as .tar.gz
+
+2001-11-18 22:41  standardeight
+
+	* ringing/library.h: Minor Tidy to Library.h
+
+2001-11-18 22:36  standardeight
+
+	* ringing/: cclib.cpp, cclib.h, proof.h: * Reset input stream in
+	mslib and cclib before attempting canread().  * Pass full method
+	name to method class.  * Tidy library.h and proof.h slightly.
+
+2001-11-11 13:41  standardeight
+
+	* ringing/cclib.cpp: Added fix to allow loading of Double Hunt
+	methods from cc libraries
+
+2001-11-09 18:40  standardeight
+
+	* doc/ringing-lib.texi, examples/testbase.cpp, ringing/Makefile.am,
+	ringing/cclib.cpp, ringing/cclib.h, ringing/library.h,
+	ringing/mslib.cpp, ringing/mslib.h: * Changed Library and Mslib to
+	accept const char* arguments, instead of char* * Created new cclib
+	to be able to load the Central Council Method Libraries * Updated
+	canread function in Mslib to determine if it can read a file
+	properly * Updated testbase.cpp example to use either library.	*
+	Started to document the library class and it's derived classes
+
+2001-11-08 02:04  ras52
+
+	* ChangeLog, Makefile.am, README, config.h.in, mkdsp,
+	examples/testbase.cpp, examples/testprint.cpp, ringing/row.cpp,
+	ringing/row.h, ringing/touch.cpp, ringing/touch.h: * row::row(const
+	char *) now checks throws row::invalid * row::row(int) now defaults
+	to rounds on n * minor bug fix in touch::iterator with dummy_node *
+	minor bug fix in interpret_pn * msvc-5 compatibility fixes for
+	testbase and testprint * automatically generated msvc project /
+	workspace files
+
+2001-11-07 18:35  standardeight
+
+	* ringing/row.h: Changed interpret_pn so that it will accomodate
+	whitespace within place notation i.e. 1.  5. 1. 4
+
+2001-10-30 22:24  mjb47
+
+	* ChangeLog: ChangeLog 0.2.4
+
 2001-10-30 21:52  mjb47
 
 	* NEWS, config.h.in, configure.in, ringing/common.h.in: Prepare for
@@ -295,19 +397,6 @@
 	* acinclude.m4, aclocal.m4, COPYING, INSTALL, config/install-sh,
 	config/missing, config/mkinstalldirs: Checked in extra files
 	created by automake
-
-2001-04-28 17:59  mjb47
-
-	* AUTHORS, configure, configure.in, stamp-h.in, Makefile.am,
-	Makefile.in, aclocal.m4, config.h.in, ChangeLog, NEWS, README,
-	acinclude.m4, doc/Makefile.am, doc/methlib.texi, doc/Makefile.in,
-	ringing/dimension.cc, ringing/library.cc, ringing/method.cc,
-	ringing/mslib.cc, ringing/print.cc, ringing/print_ps.cc,
-	ringing/dimension.h, ringing/library.h, ringing/method.h,
-	ringing/row.cc, ringing/mslib.h, ringing/print.h,
-	ringing/print_ps.h, ringing/Makefile.am, ringing/row.h,
-	ringing/stuff.h, ringing/Makefile.in: Imported initial version of
-	project
 
 2001-04-28 17:59  mjb47
 
