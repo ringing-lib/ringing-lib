@@ -40,6 +40,8 @@
 #define DEBUG( expr ) (void)(false)
 #endif
 
+#define ENABLE_CHECKS 1
+
 using namespace std;
 using namespace ringing;
 
@@ -94,6 +96,9 @@ struct weighting
 {
   weighting();
 
+  double base;
+  double linked_course;
+
   double in_course;
   double out_of_course;
   double tenors_together; // together in usual orientation
@@ -101,7 +106,9 @@ struct weighting
 };
 
 weighting::weighting()
-  : in_course(0.0),
+  : base(1.0),
+    linked_course(1.0),
+    in_course(0.0),
     out_of_course(0.0),
     tenors_together(0.0),
     tenors_over(0.0)
@@ -295,6 +302,10 @@ bool weighting_opt::process( const string& arg, const arg_parser& ap ) const
     w.tenors_together = v;
   else if ( opt == "f" || opt == "tenors-over" )
     w.tenors_over = v;
+  else if ( opt == "k" || opt == "linked" )
+    w.linked_course = v;
+  else if ( opt == "b" || opt == "base" )
+    w.base = v;
   else {
     ap.error( make_string() << "Unknown option: '" << opt << "'" );
     return false;
@@ -371,6 +382,11 @@ void arguments::bind( arg_parser& p )
 	 ( 'q', "quiet",
 	   "Supress all output other than the maximum score",
 	   quiet ) );
+
+  p.add( new boolean_opt
+	 ( 'u', "quiet",
+	   "Display the current status",
+	   status ) );
 
   p.add( new boolean_opt
 	 ( '\0', "print-leads",
@@ -565,6 +581,8 @@ private:
  
  
   const int bells, courselen;
+  const double link_weight;
+
   double beta;
   double sc;
   int len, links;
@@ -637,7 +655,7 @@ void state::init_mt( method const& m, group const& pgrp,
   assert( mt->size() * pgrp.size() 
 	  == factorial(nw) / ( (flags & in_course_only) ? 2 : 1 ) );
 
-  vector<double>( mt->size(), 1.0 ).swap( weight );
+  vector<double>( mt->size(), wprof.base ).swap( weight );
 
   for ( int i=0; i<mt->size(); ++i )
     {
@@ -876,7 +894,9 @@ void state::init_qsets( method const& m, vector<change> const& calls )
 state::state( const method& m, int flags, const group& pgrp, 
 	      const vector<row>& required_rows, const vector<change>& calls,
 	      const weighting& wprof )
-  : bells(m.bells()), courselen(m.leads()), beta(0), flags(flags)
+  : bells(m.bells()), courselen(m.leads()), 
+    link_weight( wprof.linked_course ),
+    beta(0), flags(flags)
 {
   nh = flags & principle ? 0 : 1;
 
@@ -938,14 +958,13 @@ bool state::check() const
 {
   double realsc = 0;
   int linkage = 0;
-  for ( int i=0; i<leads.size(); ++i ) {
+  for ( int i=0; i<leads.size(); ++i ) 
     if ( is_present( leads[i] ) ) {
       realsc += weight[i];
       if ( qsets.size() && 
 	   check_linkage( row_t::from_index(i) ) != size_t(-1) )
-	++realsc, ++linkage;
+	realsc += link_weight, ++linkage;
     }
-  }
 
   if ( linkage != links ) {
     cerr << "ERROR: Linkage mismatch: actual " << linkage << "; expected " << links << endl;
@@ -996,7 +1015,12 @@ public:
   bool add_row   ( row_t const& r );
   bool remove_row( row_t const& r, lead_state new_state = absent );
 
-  double delta() const { assert(check_delta()); return d; }
+  double delta() const { 
+#if ENABLE_CHECKS
+    assert(check_delta()); 
+#endif
+    return d; 
+  }
 
   void commit( state& );
   void commit_permanently( state& );
@@ -1049,7 +1073,7 @@ inline void state::perturbation::do_add_link( row_t const& r, size_t link )
 
   DEBUG( "Actually adding link " << r.index() << ": " << link );
 
-  ++d; 
+  d += s.link_weight; 
   x.first++; 
   x.second = link; 
 }
@@ -1060,7 +1084,7 @@ inline void state::perturbation::do_rm_link( row_t const& r )
 
   DEBUG( "Actually removing link " << r.index() << ": " << get_linkage(r) );
 
-  --d; 
+  d -= s.link_weight; 
   if ( --x.first == 0 ) 
     ldiff.erase(r); 
   else 
@@ -1120,7 +1144,7 @@ bool state::perturbation::check_delta() const
 
   for ( map< row_t, pair<int, size_t> >::const_iterator 
 	  i(ldiff.begin()), e(ldiff.end());  i != e;  ++i )
-    real_delta += i->second.first;
+    real_delta += i->second.first * s.link_weight;
 
   return real_delta == d;
 }
@@ -1268,10 +1292,12 @@ void state::perturbation::commit2( state& s, lead_state add, lead_state rm )
       DEBUG( "Commit link: " << i->first.index() << ", score " << i->second.first );
 
       s.linkage[ i->first.index() ] = i->second.second;
-      s.sc += i->second.first;
+      s.sc += i->second.first * s.link_weight;
       s.links += i->second.first;
     }
+#if ENABLE_CHECKS
   assert( s.check() );
+#endif
 }
 
 void state::perturbation::commit( state& s )
@@ -1361,13 +1387,22 @@ int main( int argc, char* argv[] )
       for ( double beta = beta_init ; beta < beta_final; beta *= beta_mult ) {
 	s->set_beta(beta);
 	s->perturb();
+
+	if ( args.status ) {
+	  static int n = 0;
+	  if ( n++% 1000 == 0 )
+	    status_out( make_string() << floor(double(n)/args.num_steps * 1000)/10. << "% done" );
+	}
       }
 
+      clear_status();
+#if ENABLE_CHECKS
       if (!s->check()) { 
 	cerr << "ERROR!!!" << endl;
 	s->dump( cerr );
 	exit(1);
       }
+#endif
 
       if ( s->length() > mx && ( !args.linkage || s->fully_linked() ) ) 
 	mx = s->length();
