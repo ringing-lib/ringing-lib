@@ -1,7 +1,15 @@
+			      MethSearch
+                              ----------
+
+MethSearch is a program for generating an exhaustive list of methods matching
+a given set of criteria.  It can also be used as a tool to assist in finding 
+particularly musical or interesting method.
+
+
+
 General Options
 ---------------
 
-General options:
   -?, --help             Print this help message
   -V, --version          Print this help message
   -b, --bells=BELLS      The number of bells
@@ -71,6 +79,7 @@ must match.  The --regular-hls option requires that the half lead-heads and
 ends are the same as the half-lead heads and ends of Plain Bob (although 
 it is permitted for the methods half-lead head to be the half-lead end of 
 Plain Bob and vice versa).
+
 
 
 Falseness Options
@@ -283,11 +292,11 @@ the weight (five not four as they were counted once by -M<4-runs> anyway).
 
 
 Method Masks
--------------
+------------
 
 The -m option can be used to supply a mask that a method must match.  At its
-simplest, a mask is just a method place-notation.  Thus -b6 -m'&-4-3.234.5,2'
-lists just Armitage Bob Minor.  The syntax for place-notations is fairly 
+simplest, a mask is just a method place notation.  Thus -b6 -m'&-4-3.234.5,2'
+lists just Armitage Bob Minor.  The syntax for place notations is fairly 
 flexible:  a '.' only need be used where it is necessary to separate two 
 non-cross changes, although may be used to separate any changes; external
 places can be left implicit; the cross change may be specified '-', 'x' or 
@@ -299,7 +308,7 @@ hand for '-4-3.234.5.234.3-4-2'.  The '&' needn't be at the start of the
 place notation, for example, the place notation of Grandsire Major can be 
 written '3,&1-1-1-1-' (note the comma before the ampersand).
 
-As well as just containing place-notation, a mask may also use the '?' and '*'
+As well as just containing place notation, a mask may also use the '?' and '*'
 metacharacters, which respectively represent exactly one and zero or more 
 unspecified changes.  So, for a plain minor method the mask '-?-?-?-?-?-?' 
 is equivalent to the -w (right-place) option.

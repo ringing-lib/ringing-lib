@@ -1,0 +1,284 @@
+				GSiril
+				------
+
+GSiril is a program for proving touches.  Its syntax is backwards compatible
+with that of MicroSiRiL.
+
+
+
+Command Line Options
+--------------------
+
+  -?, --help             Print this help message
+  -V, --version          Print the program version
+  -b, --bells=BELLS      The default number of bells.
+  -n, --extents=NUM      The number of extents required.
+  -i, --interactive      Run in interactive mode
+  -I, --case-insensitive Run case insensitively 
+  -P, --prove[=SYMBOL]   Proves a particular symbol (or the first if none
+                         specified)
+  --msiril               Run in microsiril compatibile mode
+
+
+In the current version --msiril is equivalent to -IP.  If the program is
+named msiril or microsiril, then gsiril automatically runs in microsiril 
+compatibility mode.    (If you have compiled and installed gsiril from source
+on a Unix machine, there will probably be version installed as msiril.)
+
+GSiril attempts from standard input.  This means it is possible to type 
+the gsiril language directly into the program.  Frequently, however, it is
+more convenient to get gsiril to read from a file.  This can be done in most
+shells via redirection:
+
+  gsiril < filename.sir
+
+When typing directly into gsiril, the -i option can be used to put gsiril 
+into interactive mode.  This is does two things: errors in user input do 
+not cause gsiril to exit immediately, and on systems that support it, more
+advanced line editting is enabled (for example, via the GNU readline library).
+The -v option can also be useful in this situation.
+
+
+
+Language Basics
+---------------
+
+Several gsiril statements in gsiril may be placed on one line, in which case
+they are separated by semicolons (';').  Line breaks are also used to mark
+the end of a statement.  A semicolon at the end of the line is optional.
+Comments start with a single slash ('/') and continue to the end of the line.
+Unless the -I option has been used, keywords and identifiers are all case 
+sensitive.
+
+When gsiril proves a touch, it needs to know two things: the number of bells
+and the number of times each row is allowed.  There are two ways of 
+specifying these pieces of information.   They can be set from the command 
+line, via the -b and -n options.  Alternatively, they can be using the
+bells and extents statements.  For example,
+
+  6 bells;    // Sets the number of bells to 6
+  2 extents;  // The touch is allowed to contain rows twice.
+
+By default, gsiril only allows rows to occur once; it does not have a default
+number of bells, and this must be set by hand.
+
+GSiril will continue parsing its input until the end of the file is reached.
+When typing directly into gsiril, it is usually possible to explicitly signal
+end of file.  This is usually done with Control-D, but on Windows it is done
+with Control-Z.  Alternatively, a statement containing just the single word 
+"end", "quit" or "exit" will cause gsiril to finish parsing its input and 
+exit.
+
+
+
+Definitions
+-----------
+
+Definitions are a way of assigning a symbolic name to a block of place 
+notation.  The syntax for a definition statement is 
+
+  <name> = <expression>
+
+The <name> must start with a letter, and may contain letters, numbers or
+underscores.   The syntax of the <expression> on the right-hand side of the
+equals sign is probably best explained by example.  The simplest example of
+an expression is a piece of place notation.  The syntax for place notation 
+is fairly flexible:  a '.' only need be used where it is necessary to 
+separate two non-cross changes, although may be used to separate any changes;
+external places can be left implicit; the cross change may be specified '-', 
+'x' or 'X'; and the symbols for bells may be specified in upper or lower case.
+
+Place notation comes in two types: symmetrical and symmetrical blocks.  
+Symmetrical blocks must be prefixed '&' and asymmetric blocks must be prefixed
+'+'.  Commas may be used to separate blocks of place notation.  Some examples
+are given below.
+
+  PB = &-6-6-6, +2;     // A plain lead of Plain Bob Minor
+  Gr = +3.6-6-6-6-6-6;  // A plain lead of Grandsire Minor
+
+Defintions can also reference other symbols:
+
+  lead = &-6-6-6;
+  p = lead, +2;
+  b = lead, +4;
+
+Repetition can be handled by prefixing an expression with a number, optionally
+followed by a '*'.  As names may never begin with a digit, it is safe to omit
+any whitespace between the number and a symbol to be repeated.  For example,
+the following three expressions are identical.
+
+  course = b, 3*p, b;
+  course = b, 3 p, b; 
+  course = b, 3p, b;
+
+Parentheses can be used to group blocks, such as when they are to be repeated.
+For example, the 120 of Plain Bob Minor, WHWH, could be written as follows.
+
+  touch = 2(b, 3p, b);
+
+
+
+Formatted Output
+----------------
+
+In addition to place notation, expressions may contain string literals that
+are printed.  String literals are put in double quotes.  There are several
+characters, or sequences of characters, that do special things when included
+in string literals.  These are listed below.
+
+  @	Prints the current row
+  $$	Terminate the current proof immediately
+  $	Prints the number of repeated rows
+  #	Prints the total number of rows
+  \n    Prints a new line character
+  \t	Prints a tab character
+  \'    Prints a literal " sign [sic]
+  \?    (Where ? is any other character.) Prints the literal character.
+
+Ordinarily, string literals will end with an implicit new line character; to
+suppress this put a backslash immediately before the closing double quote 
+of the string.
+
+A common use for string literals is in outputting information about the
+touch being proved.  The next example demonstrates this.
+
+  p = lead, +2, "  @";
+  b = lead, +4, "- @";
+  header = "  @", "  ------";
+
+  touch = header, 2(b, 3p, b);  
+
+When this touch is proved, it will print the following.
+
+    123456
+    ------
+  - 123564
+    136245
+    164352
+    145623
+  - 145236
+  - 145362
+    156423
+    162534
+    123645
+  - 123456
+
+
+
+Proof
+-----
+
+There are two ways to prove touches: using the -P option, or using the prove 
+statement.  The -P option takes an optional argument giving the name of the
+symbol to be proved.  If no argument is supplied, then the first symbol 
+defined will be proved.  (This is for compatibility with microsiril.)
+
+When entering input directly into gsiril, or when you want to prove more than
+one touch, the prove statement is often more useful.  This statement simply
+consists of the word 'prove' followed by an expression to prove.  For example,
+
+  prove 3(b,3p,2b,4p);
+
+will prove WHWx3 for Plain Bob Minor.
+
+
+
+Builtin Symbols
+---------------
+
+GSiril defines a number of special symbols that are used by the program to
+communicate the result of proving a touch.  These symbols, and their default
+values, are given below.
+
+  start    =;
+
+  everyrow =;
+  rounds   =;
+  conflict = "# rows ending in @", "Touch not completed due to false row$$";
+
+  abort    =;
+  finish   =;
+  
+  true     = "# rows ending in @", "Touch is true";
+  notround = "# rows ending in @", "Is this OK?";
+  false    = "# rows ending in @", "Touch is false in $ rows";
+
+
+The 'start' symbol is proved immediately before the proof is started.  It
+is often used to print the initial rounds, or to print column headings.
+
+During proving, the 'everyrow' symbol is executed for every row that is 
+proved; the 'rounds' symbol is executed whenever rounds occurs in the 
+composition; and the 'conflict' symbol is executed whenever a row is 
+repeated more times than is allowed.  If a single row causes more than
+one of these symbols to be executed, then they are executed in the order
+listed.
+
+Immediately after proving the touch, the 'finish' symbol is executed. This 
+can be used to print any closing text required.
+
+If any of these causes the search to be terminated by a "$$" string (as, for
+example, the default 'conflict' symbold does), the 'abort' symbol is executed,
+and no further output is produced.  Otherwise depending on whether the touch 
+was true and came round, was true but didn't come round, or was false, the
+relevant one of 'true', 'notround' or 'false' gets executed.
+
+
+
+Dynamic Assignments
+-------------------
+
+Dynamic assignments were an extension added to the language to make it easier
+to enter touches in a more natural manner.  For example, if would be nice
+if it were possible to define the symbols, 'Cm', 'Pr' and 'b' such that the
+Parker splice between Cambridge and Primrose Surprise Minor could be proved
+with the following statement.
+
+  prove 3( Cm,b,Cm,Pr,Pr,Cm,Cm,b,Cm,Pr,Pr,Cm,b );
+
+This is done by allowing the assignment operator '=' to be used within
+expressions being proved.  The assignment operator has higher precedence 
+than the comma operator, and it is right-to-left associative (i.e. the 
+expression a=b=c is equivalent to a=(b=c).)  The assignment only takes 
+effect when the expression is executed during the proof process, and at the
+end of the proof, all dynamic assignments are reset.
+
+For example, in the following it is used to switch the meaning of the symbol
+'p' depending on whether the method has a 2nds or 6ths place lead head.
+
+  6 bells;
+
+  b = +4;
+  Cm = &-3-4-2-3-4-5, (p = +2);
+  Pr = &-3-4-2-3-4-5, (p = +6);
+
+  prove 3(Cm,b,Cm,p,Pr,p,Pr,p,Cm,p,Cm,b,Cm,p,Pr,p,Pr,p,Cm,b);
+
+Dynamic variables can also be used (in conjuction with the 'final' symbol, 
+describe above) to make the 'p' symbol option in the previous example. 
+This is demonstrated in the final example, which also includes an code to 
+format the touch in a convenient manner.
+
+  6 bells;
+
+  lh = "\";
+
+  start  = "  @ \";
+  finish = lh, "\n";
+
+  p2lh = +2,   "  @ \";
+  p6lh = +6,   "  @ \";
+  blh  = +4,   "- @ \";
+
+  lh2 = (p = lh=p2lh), (b = lh=blh), (lh=p2lh);
+  lh6 = (p = lh=p6lh), (b = lh=blh), (lh=p6lh);
+
+  Cm = lh, &-3-4-2-3-4-5, lh2, "Cm";
+  Pr = lh, &-3-4-2-3-4-5, lh6, "Pr";
+
+  prove 3( Cm,b,Cm,Pr,Pr,Cm,Cm,b,Cm,Pr,Pr,Cm,b );
+
+
+--
+Richard Smith
+<richard@ex-parrot.com>
