@@ -285,6 +285,9 @@ private:
   bool is_definition(const string& cmd) const;
   statement handle_definition(const string& cmd);
 
+  bool is_import_command(const string& cmd) const;
+  statement handle_import_command(const string& cmd);
+
   expression make_expr( const vector< token >& tokens ) const;
   expression make_expr( vector< token >::const_iterator first, 
 			vector< token >::const_iterator last ) const;
@@ -314,6 +317,28 @@ statement default_parser::handle_bells_directive(const string& cmd)
   return statement( new bells_stmt(b) );
 }
 
+inline bool default_parser::is_import_command(const string& cmd) const
+{
+  return cmd.size() > 7 && cmd.substr( 0, 7 ) == "import "
+    && cmd.find("=") == string::npos;
+}
+
+statement default_parser::handle_import_command(const string& cmd)
+{
+  string name( cmd.substr(7) );
+  trim_leading_whitespace(name);
+  trim_trailing_whitespace(name);
+
+  if (name.size() && name[0] == '"')
+    {
+      if (name[ name.size()-1 ] != '"' )
+	throw runtime_error( "Resource name is incorrectly quoted" );
+      name = name.substr(1,name.size()-2);
+    }
+
+  return statement( new import_stmt(name) );
+}
+
 inline bool default_parser::is_prove_command(const string& cmd) const
 {
   return cmd.size() > 6 && cmd.substr( 0, 6 ) == "prove "
@@ -322,10 +347,10 @@ inline bool default_parser::is_prove_command(const string& cmd) const
 
 statement default_parser::handle_prove_command(const string& cmd)
 {
-  string name( cmd.substr(6) );
-  trim_leading_whitespace( name );
+  string expr( cmd.substr(6) );
+  trim_leading_whitespace( expr );
   return statement
-    ( new prove_stmt( make_expr( tokenise_command( name ) ) ) );
+    ( new prove_stmt( make_expr( tokenise_command( expr ) ) ) );
 }
 
 inline bool default_parser::is_definition(const string& cmd) const
@@ -373,6 +398,10 @@ statement default_parser::parse( istream& in )
   // Is it a `prove' command?
   else if ( is_prove_command(cmd) )
     return handle_prove_command(cmd);
+
+  // Is it a `import' command?
+  else if ( is_import_command(cmd) )
+    return handle_import_command(cmd);
 
   // Or a definition?
   else if ( is_definition(cmd) )

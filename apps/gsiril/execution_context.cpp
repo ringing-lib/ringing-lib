@@ -121,6 +121,7 @@ proof_context::proof_state proof_context::state() const
 string proof_context::substitute_string( const string &str, bool &do_exit )
 {
   make_string os;
+  bool nl = true;
 
   for ( string::const_iterator i( str.begin() ), e( str.end() ); i != e; ++i )
     switch (*i)
@@ -134,9 +135,25 @@ string proof_context::substitute_string( const string &str, bool &do_exit )
 	else
 	  ++i, do_exit = true;
 	break;
-      case '#' : os << p.size();        break;
-      default:   os << *i;              break;
+      case '#':
+	os << p.size();
+	break;
+      case '\\':
+	if (i+1 == e) 
+	  nl = false;
+	else if (i[1] == 'n') 
+	  ++i, os << '\n';
+	else if (i[1] == 't') 
+	  ++i, os << '\t';
+	else
+	  os << '\\';
+	break;
+      default:
+	os << *i;
+	break;
       }
 
+  if (nl) 
+    os << '\n';
   return os;
 }

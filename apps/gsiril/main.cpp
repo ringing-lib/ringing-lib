@@ -50,6 +50,8 @@ static const char init_string[] =
   "conflict = \"# rows ending in @\", \"Touch not completed due to false row$$\"\n"
   "rounds   = \n"
   "everyrow = \n"
+  "start    = \n"
+  "end      = \n"
 ;
 
 

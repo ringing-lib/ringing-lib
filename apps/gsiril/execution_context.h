@@ -57,10 +57,10 @@ public:
   bool define_symbol( const pair< const string, expression > &defn );
   expression lookup_symbol( const string &sym ) const;
 
-  void bells( int b ) { this->b = b; }
-  int  bells() const  { return b; }
+  int bells( int newb ) { int oldb (b); b=newb; return oldb; }
+  int bells() const  { return b; }
 
-  void interactive( bool intrv ) { this->intrv = intrv; }
+  bool interactive( bool newi ) { bool oldi(intrv); intrv=newi; return oldi; }
   bool interactive() const       { return intrv; }
 
 private:

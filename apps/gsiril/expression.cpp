@@ -25,7 +25,13 @@
 #include <ringing/common.h>
 #include "expression.h"
 #include "common_expr.h"
+#include "parser.h"
 #include "execution_context.h"
+#if RINGING_OLD_IOSTREAMS
+#include <fstream.h>
+#else
+#include <fstream>
+#endif
 #include <ringing/streamutils.h>
 
 RINGING_USING_NAMESPACE
@@ -56,7 +62,9 @@ void prove_stmt::execute( execution_context& e ) const
   try 
     {
       proof_context p(e);
+      p.execute_symbol( "start" ); 
       expr.execute(p);
+      p.execute_symbol( "end" ); 
       switch ( p.state() )
 	{
 	case proof_context::rounds: 
@@ -82,6 +90,40 @@ void bells_stmt::execute( execution_context& e ) const
     e.output() << "Set bells to " << bells << endl;
 }
 
+void import_stmt::execute( execution_context& e ) const
+{
+  bool i( e.interactive() );
+  int b( e.bells() );
+
+  try
+    {
+      ifstream ifs( name.c_str() );
+      if ( !ifs )
+	throw runtime_error
+	  ( make_string() << "Unable to load resource: " << name );
+      
+      shared_pointer<parser> p( make_default_parser() );
+      e.interactive(false);
+      while (true)
+	{
+	  statement s( p->parse(ifs) );
+	  if ( s.eof() ) break;
+	  s.execute(e);
+	}
+    }
+  catch (...)
+    {
+      if (b != -1) e.bells(b);
+      e.interactive(i);
+      throw;
+    }
+
+  if (b != -1) e.bells(b);
+  e.interactive(i);
+
+  if ( e.interactive() )
+    e.output() << "Resource \"" << name << "\" loaded" << endl;
+}
 
 
 
@@ -125,7 +167,7 @@ void repeated_node::execute( proof_context &ctx )
 void string_node::execute( proof_context &ctx )
 {
   bool do_exit = false;
-  ctx.output() << ctx.substitute_string(str, do_exit) << endl;
+  ctx.output() << ctx.substitute_string(str, do_exit);
   if (do_exit)
     throw script_exception();
 }
