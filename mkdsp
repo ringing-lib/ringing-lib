@@ -182,11 +182,11 @@ sub dsp_head($$$)
     my $dirs = <<EOF;
 # PROP BASE Use_MFC 0
 # PROP BASE Output_Dir "\@\@\@BUILDTYPE\@\@\@"
-# PROP BASE Intermediate_Dir "\@\@\@BUILDTYPE\@\@\@"
+# PROP BASE Intermediate_Dir "\@\@\@BUILDTYPE\@\@\@/$name"
 # PROP BASE Target_Dir ""
 # PROP Use_MFC 0
 # PROP Output_Dir "\@\@\@BUILDTYPE\@\@\@"
-# PROP Intermediate_Dir "\@\@\@BUILDTYPE\@\@\@"
+# PROP Intermediate_Dir "\@\@\@BUILDTYPE\@\@\@/$name"
 # PROP Target_Dir ""
 # PROP Ignore_Export_Lib 0
 EOF
