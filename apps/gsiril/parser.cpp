@@ -42,6 +42,7 @@
 #include <cctype>
 #endif
 #include <ringing/streamutils.h>
+#include <ringing/music.h>
 
 RINGING_USING_NAMESPACE
 
@@ -110,13 +111,15 @@ private:
   }
 };
 
-void validate_regex( const token& tok, int bells )
+void validate_regex( const music_details& desc, int bells )
 {
   static string allowed;
   if ( allowed.empty() ) {
     allowed.append( row(bells).print() );
     allowed.append("*?[]");
   }
+
+  string tok( desc.get() );
 
   if ( tok.find_first_not_of( allowed ) != string::npos )
     throw runtime_error( make_string() << "Illegal regular expression: " 
@@ -240,8 +243,11 @@ vector< token > msparser::tokenise_command()
 		|| nesting ) )
 	{
 	  // TODO:  Get the tokeniser to discard comments these automatically
-	  if ( tokiter->type() != tok_types::comment )
+	  if ( tokiter->type() != tok_types::comment &&
+	       tokiter->type() != tok_types::new_line ) {
+	    tok.validate(*tokiter);
 	    toks.push_back(*tokiter);
+	  }
 
 	  // Keep track of nesting
 	  if ( tokiter->type() == tok_types::open_paren || 
@@ -253,9 +259,6 @@ vector< token > msparser::tokenise_command()
 	      --nesting;
 
 	  ++tokiter;
-
-	  if (toks.size())
-	    tok.validate( toks.back() );
 	}
     }
   while  ( !toks.empty() && ( toks.back().type() == tok_types::comma 
@@ -419,22 +422,29 @@ msparser::make_expr( vector< token >::const_iterator first,
 	  }
 	  assert( i != last-1 );
 
-	  if ( i[1].type() != tok_types::regex_lit )
-	    throw runtime_error
-	      ( "Brace group element should start with regular expression" );
+	  music_details desc;
+	  iter_t expr_start;
 
-	  if ( i+2 == last || i[2].type() != tok_types::colon )
+	  if ( i+2 == last || i[2].type() != tok_types::colon ) {
+	    desc.set( "*" );
+	    expr_start = i+1;
+	  } 
+	  else if ( i[1].type() != tok_types::regex_lit )
 	    throw runtime_error
-	      ( "Regular expression should be followed by a colon" );
+	      ( "Brace group conditional should be a regular expression" );
+	  else {
+	    desc.set( i[1] );
+	    expr_start = i+3;
+	  }
 
 	  expression expr( NULL );
-	  if ( i+3 != last)
-	    expr = make_expr( i+3, last );
+	  if ( expr_start != last)
+	    expr = make_expr( expr_start, last );
 	  else 
 	    expr = expression( new nop_node );
 
-	  validate_regex( i[1], bells() );
-	  chain = expression( new if_match_node( bells(), i[1], 
+	  validate_regex( desc, bells() );
+	  chain = expression( new if_match_node( bells(), desc, 
 						 expr, chain ) );
 
 	  last = i;
