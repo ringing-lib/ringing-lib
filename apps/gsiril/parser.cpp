@@ -1,5 +1,5 @@
 // parser.cpp - Tokenise and parse lines of input
-// Copyright (C) 2002, 2003, 2004 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003, 2004, 2005 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -216,6 +216,20 @@ private:
   expression make_expr( vector< token >::const_iterator first, 
 			vector< token >::const_iterator last ) const;
 
+  bool is_enclosed( vector< token >::const_iterator first, 
+		    vector< token >::const_iterator last,
+		    tok_types::enum_t open, tok_types::enum_t close,
+		    string const& name ) const;
+
+  bool find_first( vector< token >::const_iterator first, 
+		   vector< token >::const_iterator last,
+		   tok_types::enum_t tt,
+		   vector< token >::const_iterator &result ) const;
+
+  bool find_last( vector< token >::const_iterator first, 
+		  vector< token >::const_iterator last,
+		  tok_types::enum_t tt,
+		  vector< token >::const_iterator &result ) const;
 
   // Data members
   arguments args;
@@ -347,6 +361,84 @@ statement msparser::parse()
 
 //////////////////////////////////////////////////////////
 
+// Is the range [first, last) enclosed in a correctly-matched (open, close)
+// pair?  E.g. ``(&-6-6-6,+2)'' is enclosed in parentheses; 
+// ``(&-6-6-6),(+2)'' is not.
+bool msparser::is_enclosed( vector< token >::const_iterator first, 
+			    vector< token >::const_iterator const last,
+			    tok_types::enum_t open, tok_types::enum_t close,
+			    string const& name ) const
+{
+  if ( first->type() != open || (last-1)->type() != close )
+    return false;
+
+  int depth = 0;
+  for ( ; first != last; ++first )
+    {
+      if      ( first->type() == open  ) ++depth;
+      else if ( first->type() == close ) --depth;
+      
+      if ( depth == 0 && first != last-1 ) 
+	return false;
+    }
+
+  if (depth) 
+    throw runtime_error( make_string() << "Unmatched " << name );
+
+  if (first+1 == last-1)
+    throw runtime_error( make_string() << "Empty " << name );
+
+  return true;
+}
+
+bool msparser::find_last( vector< token >::const_iterator first, 
+			  vector< token >::const_iterator const last,
+			  tok_types::enum_t tt,
+			  vector< token >::const_iterator &result ) const
+{
+  int depth( 0 );
+  bool found( false );
+  for ( ; first != last; ++first )
+    if      ( first->type() == tok_types::open_brace ||
+	      first->type() == tok_types::open_paren )
+      ++depth;
+    else if ( first->type() == tok_types::close_brace ||
+	      first->type() == tok_types::close_paren )
+      --depth;
+    else if ( !depth && first->type() == tt ) 
+      result = first, found = true;
+
+  if (depth) 
+    throw runtime_error( "Syntax Error (Unmatched brackets?)" );
+
+  return found;
+}
+
+
+bool msparser::find_first( vector< token >::const_iterator first, 
+			   vector< token >::const_iterator const last,
+			   tok_types::enum_t tt,
+			   vector< token >::const_iterator &result ) const
+{
+  int depth( 0 );
+  for ( ; first != last; ++first )
+    if      ( first->type() == tok_types::open_brace ||
+	      first->type() == tok_types::open_paren )
+      ++depth;
+    else if ( first->type() == tok_types::close_brace ||
+	      first->type() == tok_types::close_paren )
+      --depth;
+    else if ( !depth && first->type() == tt ) {
+      result = first;
+      return true;
+    }
+
+  if (depth) 
+    throw runtime_error( "Syntax Error (Unmatched brackets?)" );
+
+  return false;
+}
+
 expression 
 msparser::make_expr( vector< token >::const_iterator first, 
 		     vector< token >::const_iterator last ) const
@@ -357,176 +449,102 @@ msparser::make_expr( vector< token >::const_iterator first,
     throw runtime_error( "Expression expected" );
 
   // Parentheses first
-  if ( first->type() == tok_types::open_paren && 
-       (last-1)->type() == tok_types::close_paren )
+  if ( is_enclosed( first, last, tok_types::open_paren, 
+		    tok_types::close_paren, "parentheses" ) )
+    return make_expr( first+1, last-1 );
+
+
+  // Alternative blocks are enclosed in braces
+  if ( is_enclosed( first, last, tok_types::open_brace, 
+		    tok_types::close_brace, "braces" ) )
     {
-      int depth = 0;
-      bool ok = true;
-      for ( iter_t i(first); ok && i != last; ++i )
-	{
-	  if ( i->type() == tok_types::open_paren )
-	    ++depth;
-	  else if ( i->type() == tok_types::close_paren )
-	    --depth;
-
-	  if ( depth == 0 && i != last-1 ) 
-	    ok = false;
-	}
-
-      if (ok)
-	{
-	  if (depth) 
-	    throw runtime_error( "Unmatched parentheses" );
-
-	  if (first+1 == last-1 )
-	    throw runtime_error( "Empty parentheses" );
-
-	  return make_expr( first+1, last-1 );
-	}
-    }
-
-  // Do Dixonoid braces next
-  // syntax:  {regex: expr; regex: expr; ... }
-  if ( first->type() == tok_types::open_brace && 
-       (last-1)->type() == tok_types::close_brace )
-    {
-      int depth = 0;
-      bool ok = true;
-      for ( iter_t i(first); ok && i != last; ++i )
-	{
-	  if ( i->type() == tok_types::open_brace )
-	    ++depth;
-	  else if ( i->type() == tok_types::close_brace )
-	    --depth;
-
-	  if ( depth == 0 && i != last-1 ) 
-	    ok = false;
-	}
-      
-      if (ok) {
-	if (depth) 
-	  throw runtime_error( "Unmatched braces" );
-	
-	if (first+1 == last-1 )
-	  throw runtime_error( "Empty braces" );
-	
-	expression chain( NULL );
+      expression chain( NULL );
+      --last;
+      while ( last != first && (last-1)->type() == tok_types::semicolon ) 
 	--last;
+
+      // Doesn't use recursion because the contents of the braces is 
+      // not a single valid expression.
+      while ( last != first ) {
+	// The last semicolon, or the opening brace (FIRST) if there is none.
+	iter_t i( first ); find_last( first+1, last, tok_types::semicolon, i );
+
+	// The current alternative is [i+1, last).
+
+	music_details desc;
+	iter_t expr_start;
+	
+	if ( i+2 == last || i[2].type() != tok_types::colon ) {
+	  desc.set( "*" );
+	  expr_start = i+1;
+	} 
+	else if ( i[1].type() != tok_types::regex_lit )
+	  throw runtime_error
+	    ( "Brace group conditional should be a regular expression" );
+	else {
+	  desc.set( i[1] );
+	  expr_start = i+3;
+	}
+
+	expression expr( NULL );
+	if ( expr_start != last)
+	  expr = make_expr( expr_start, last );
+	else 
+	  expr = expression( new nop_node );
+	
+	validate_regex( desc, bells() );
+	chain = expression( new if_match_node( bells(), desc, 
+					       expr, chain ) );
+
+	last = i;
+	
 	while ( last != first && (last-1)->type() == tok_types::semicolon ) 
 	  --last;
-
-	while ( last != first ) {
-
-	  // Find last semicolon respecting braces
-	  iter_t i(first);
-	  for ( iter_t j(first+1); j != last; ++j ) {
-	    if ( j->type() == tok_types::open_brace )
-	      ++depth;
-	    else if ( j->type() == tok_types::close_brace )
-	      --depth;
-	    if ( !depth && j->type() == tok_types::semicolon )
-	      i = j;
-	  }
-
-	  music_details desc;
-	  iter_t expr_start;
-
-	  if ( i+2 == last || i[2].type() != tok_types::colon ) {
-	    desc.set( "*" );
-	    expr_start = i+1;
-	  } 
-	  else if ( i[1].type() != tok_types::regex_lit )
-	    throw runtime_error
-	      ( "Brace group conditional should be a regular expression" );
-	  else {
-	    desc.set( i[1] );
-	    expr_start = i+3;
-	  }
-
-	  expression expr( NULL );
-	  if ( expr_start != last)
-	    expr = make_expr( expr_start, last );
-	  else 
-	    expr = expression( new nop_node );
-
-	  validate_regex( desc, bells() );
-	  chain = expression( new if_match_node( bells(), desc, 
-						 expr, chain ) );
-
-	  last = i;
-
-	  while ( last != first && (last-1)->type() == tok_types::semicolon ) 
-	    --last;
-	}
-	if ( chain.isnull() )
-	  throw runtime_error( "Empty braces" );
-	return chain;
       }
+      if ( chain.isnull() )
+	throw runtime_error( "Empty braces" );
+      return chain;
     }
 
+  iter_t split;
+
   // Assignment is the lowest precedence operator
-  {
-    int depth = 0;
-    for ( iter_t i(first); i != last; ++i )
-      {
-	if ( i->type() == tok_types::open_paren )
-	  ++depth;
-	else if ( i->type() == tok_types::close_paren )
-	  --depth;
-	else if ( i->type() == tok_types::assignment && depth == 0 )
-	  {
-	    if ( first == i )
-	      throw runtime_error
-		( "Assignment operator needs first argument" );
-	    
-	    if ( first->type() != tok_types::name || 
-		 first+1 != i )
-	      throw runtime_error
-		( "First argument of assignment operator must be"
-		  " a variable name" );
-
-	    if ( i+1 == last)
-	      return expression
-		( new assign_node( *first, expression( new nop_node ) ) );
-	    else
-	      return expression
-		( new assign_node( *first, make_expr( i+1, last ) ) );
-	  }
-      }
-
-    if (depth) 
-      throw runtime_error( "Unmatched parentheses" );
-  }
+  if ( find_first( first, last, tok_types::assignment, split ) )
+    {
+      if ( first == split )
+	throw runtime_error
+	  ( "Assignment operator needs first argument" );
+      
+      if ( first->type() != tok_types::name || 
+	   first+1 != split )
+	throw runtime_error
+	  ( "First argument of assignment operator must be"
+	    " a variable name" );
+      
+      if ( split+1 == last)
+	return expression
+	  ( new assign_node( *first, expression( new nop_node ) ) );
+      else
+	return expression
+	  ( new assign_node( *first, make_expr( split+1, last ) ) );
+    }
 
   // Comma is the next lowest precedence operator
   // It is left associative
-  {
-    int depth = 0;
-    for ( iter_t i(first); i != last; ++i )
-      {
-	if ( i->type() == tok_types::open_paren )
-	  ++depth;
-	else if ( i->type() == tok_types::close_paren )
-	  --depth;
-	else if ( i->type() == tok_types::comma && depth == 0 )
-	  {
-	    if ( first == i )
-	      throw runtime_error
-		( "Binary operator \",\" needs first argument" );
-	    
-	    if ( i+1 == last)
-	      throw runtime_error
-		( "Binary operator \",\" needs second argument" );
-
-	    return expression
-	      ( new list_node( make_expr( first, i ),
-			       make_expr( i+1, last ) ) );
-	  }
-      }
-
-    if (depth) 
-      throw runtime_error( "Unmatched parentheses" );
-  }
+  if ( find_first( first, last, tok_types::comma, split ) )
+    {
+      if ( first == split )
+	throw runtime_error
+	  ( "Binary operator \",\" needs first argument" );
+      
+      if ( split+1 == last)
+	throw runtime_error
+	  ( "Binary operator \",\" needs second argument" );
+      
+      return expression
+	( new list_node( make_expr( first, split ),
+			 make_expr( split+1, last ) ) );
+    }
 
   // A number literal in a repeated block is the
   // only remaining construct that is not a single token.
