@@ -40,6 +40,9 @@
 #define DEBUG( expr ) (void)(false)
 #endif
 
+// The checks controlled by this #define are quite expensive
+// but probably worth leaving in to catch any false touches
+// if and when they are generated.
 #define ENABLE_CHECKS 1
 
 using namespace std;
@@ -462,6 +465,8 @@ public:
 
   void set_beta(double b) { beta = b; }
   bool perturb(); // returns true if perturbation was kept
+
+  void prune_unlinked();
 
   int length() const {
     return len * mt->group_size() * ( flags & whole_courses ? courselen : 1 );
@@ -1057,6 +1062,9 @@ public:
   bool add_row   ( row_t const& r );
   bool remove_row( row_t const& r, lead_state new_state = absent );
 
+  // Returns true if any pruning occurred
+  bool prune_unlinked( row_t const& r );  
+
   double delta() const { 
 #if ENABLE_CHECKS
     assert(check_delta()); 
@@ -1092,15 +1100,16 @@ private:
     { double const w( s.weight[ r.index() ] ); 
       d -= w; if ( (rdiff[r] -= w) == 0 ) rdiff.erase(r); }
 
-
-  size_t get_linkage( row_t const& r ) const; // either type of linkage
+  //
+  // General linkage
+  //
+  size_t get_linkage( row_t const& r ) const;
+  void do_add_link( row_t const& r, size_t link );
+  void do_rm_link( row_t const& r );
 
   //
   // Q-set linkage
   //
-  void do_add_link( row_t const& r, size_t link );
-  void do_rm_link( row_t const& r );
-
   void remove_qset( row_t const& r );
   void try_add_qset( row_t const& r );
 
@@ -1433,6 +1442,47 @@ void state::perturbation::commit_permanently( state& s )
   commit2( s, required, disallowed );
 }
 
+bool state::perturbation::prune_unlinked( row_t const& r )
+{
+  if ( ( s.is_present(r) && !is_removed(r) ||
+	 s.is_absent (r) &&  is_added  (r) ) &&
+       get_linkage(r) == size_t(-1) )
+    {
+      do_rm_row(r);
+
+      if ( s.qsets.size() )
+	remove_qset(r);
+      else if ( s.lhs.size() ) 
+	remove_lh(r);
+
+      return true;
+    }
+
+  return false;
+}
+
+void state::prune_unlinked()
+{
+  while (true)
+    {
+      bool done_anything = false;
+      perturbation p( *this );
+      
+      for ( int i=0; i != leads.size(); ++i )
+	// NB avoid short circuit
+	done_anything = p.prune_unlinked( row_t::from_index(i) ) 
+	  || done_anything;
+      
+      if ( done_anything ) 
+	p.commit( *this );
+      else
+	{
+	  assert( fully_linked() );
+	  return;
+	}
+    }
+}
+
 bool state::perturb()
 {
   perturbation p( *this );
@@ -1517,6 +1567,9 @@ int main( int argc, char* argv[] )
 			<< "% done" );
 	}
       }
+
+      if ( args.linkage && !s->fully_linked() )
+	s->prune_unlinked();
 
       clear_status();
 
