@@ -37,10 +37,12 @@
 
 // Support for the ringing namespace
 #if RINGING_USE_NAMESPACES
+# define RINGING_USING_NAMESPACE using namespace ringing;
 # define RINGING_START_NAMESPACE namespace ringing {
 # define RINGING_END_NAMESPACE };
 # define RINGING_PREFIX ringing::
 #else
+# define RINGING_USING_NAMESPACE
 # define RINGING_START_NAMESPACE
 # define RINGING_END_NAMESPACE
 # define RINGING_PREFIX
@@ -82,13 +84,26 @@
 # define RINGING_END_ANON_NAMESPACE 
 #endif
 
+// Declare the ringing, the std namespace, and make all the names
+// in namespace std in scope in namespace ringing.  This is necessary 
+// so that all of the files in programs that use the library can do
+// RINGING_USING_NAMESPACE, which is necessary to get around another
+// Visual Studio 6 namespace bugs. 
+RINGING_START_NAMESPACE_STD RINGING_END_NAMESPACE_STD
+RINGING_START_NAMESPACE RINGING_USING_STD RINGING_END_NAMESPACE
+
 #if _MSC_VER == 1200 && RINGING_USE_STD && RINGING_USE_NAMESPACES
 // Visual Studio 6 has the amusing bug that the third time you enter
 // a namespace and process a using directive, the using directive
 // is completely ignored.  This only appears to happen the third time,
 // so we safely get this out of its system.  Any more sane suggestions
 // appreciated...
-RINGING_START_NAMESPACE_STD RINGING_END_NAMESPACE_STD
+RINGING_START_NAMESPACE RINGING_USING_STD RINGING_END_NAMESPACE
+RINGING_START_NAMESPACE RINGING_USING_STD RINGING_END_NAMESPACE
+
+// Suddenly, three are no longer enough, and we find ourselves needing
+// seven of these using declarations!
+RINGING_START_NAMESPACE RINGING_USING_STD RINGING_END_NAMESPACE
 RINGING_START_NAMESPACE RINGING_USING_STD RINGING_END_NAMESPACE
 RINGING_START_NAMESPACE RINGING_USING_STD RINGING_END_NAMESPACE
 RINGING_START_NAMESPACE RINGING_USING_STD RINGING_END_NAMESPACE

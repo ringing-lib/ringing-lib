@@ -191,6 +191,9 @@ void test_method_issym(void)
   RINGING_TEST( ! method( "+5.3.1.3.1.3",          5 ).issym() ); // ???
 }
 
+// TODO  -- Write tests for isdouble, isregular, huntbells, leads, methclass,
+// lhcode and the bell overloads of issym, isplain, hasdodges and hasplaces.
+
 // ---------------------------------------------------------------------
 // Register the tests
 

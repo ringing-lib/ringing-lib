@@ -1,5 +1,6 @@
 // -*- C++ -*- proof.h - Proving Stuff
-// Copyright (C) 2001 Mark Banner <mark@standard8.co.uk>
+// Copyright (C) 2001-2 Mark Banner <mark@standard8.co.uk>
+// and Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -91,6 +92,46 @@ struct linedetail {
   RINGING_FAKE_COMPARATORS( linedetail );
 };
 
+class prover
+{
+public:
+  typedef list<linedetail> failinfo;
+
+  // max_occurs is the number of times a row is permitted to occur
+  // in the touch before it is considered false.
+  explicit prover( int max_occurs = 1 )
+    : max_occurs(max_occurs), lineno(0), is_true(true), dups(0u), fi(NULL)
+  {}
+
+  // fi is a structure into which information about duplicate lines 
+  // are inserted.
+  explicit prover( failinfo &fi, int max_occurs = 1 )
+    : max_occurs(max_occurs), lineno(0), is_true(true), dups(0u), fi(&fi)
+  {}
+
+  // Adds a row to the touch, and returns true if the touch (so far) 
+  // contains no rows more than max_occurs times.  Inserts rows present 
+  // more than max_occurs times into the failinfo structure (if one was 
+  // supplied).
+  bool add_row( const row &r );
+
+  // The length of the touch
+  size_t size() const { return m.size(); }
+
+  size_t duplicates() const { return dups; }
+
+  bool truth() const { return is_true; }
+
+private:
+  typedef multimap<row, int> mmap;
+  int max_occurs;
+  int lineno;
+  bool is_true;
+  size_t dups;
+  mmap m;
+  failinfo *fi;
+};
+
 template <class RowIterator>
 class proof {
 public:
@@ -180,7 +221,7 @@ proof<RowIterator>::proof(RowIterator first,
 			  bool qp)
 {
   // Prove it
-  istrue = prove(first, last, max, qp, f);
+  istrue = prove(first, last, max, qp);
 }
 
 template <class RowIterator>
@@ -210,8 +251,7 @@ proof<RowIterator>::proof(RowIterator true_first,
 		 unknown_first,
 		 unknown_last,
 		 max,
-		 qp,
-		 f);
+		 qp);
 }
 
 // Prove function for rows up to one extent.
