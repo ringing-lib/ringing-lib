@@ -72,7 +72,14 @@ protected:
 
 RINGING_END_DETAILS_NAMESPACE
 
-// A smart pointer that calls a clone member function to perform the copy
+template <class T> 
+struct delete_helper {
+  static void fn( T *&ptr ) { delete ptr; ptr = NULL; }
+};
+
+// A smart pointer that calls a clone member function to perform a deep copy
+// This class has value semantics and has separate const and non-const 
+// accessors to propogates constness to its held pointer.
 template <class T>
 class cloning_pointer : private RINGING_DETAILS_PREFIX safe_bool
 {
@@ -80,10 +87,15 @@ public:
   // Standard auto pointer typedefs
   typedef T element_type;
     
-  // Accessors 
-  element_type *operator->() const { return ptr; }
-  element_type &operator*() const { return *ptr; }
-  element_type *get() const { return ptr; }
+  // Accessors
+  const element_type *operator->() const { return ptr; }
+  const element_type &operator*() const { return *ptr; }
+  const element_type *get() const { return ptr; }
+
+  // Non-const accessors
+  element_type *operator->() { return ptr; }
+  element_type &operator*() { return *ptr; }
+  element_type *get() { return ptr; }
     
   // Construction and destruction
   explicit cloning_pointer( T *src = 0 ) : ptr(src) {}
@@ -117,7 +129,8 @@ private:
   T *ptr;
 };
 
-// A smart pointer that reference counts its pointee 
+// A smart pointer that reference counts its pointee and provides handle
+// (reference) semantics. 
 // Based on boost's shared_ptr, but simplified to compile under MSVC-5.
 template <class T>
 class shared_pointer : private RINGING_DETAILS_PREFIX safe_bool
@@ -186,6 +199,17 @@ private:
   mutable int *rc;
 };
 
+
+RINGING_START_DETAILS_NAMESPACE
+
+// Never use this directly
+template <class T> 
+struct auto_delete_helper {
+  static void fn( T *&ptr ) { delete ptr; ptr = NULL; }
+};
+
+RINGING_END_DETAILS_NAMESPACE
+
 // A smart pointer that prohibits copying, but ensures the destructor
 // is correctly called.  Based on boost's scoped_ptr.
 template <class T>
@@ -194,6 +218,7 @@ class scoped_pointer : private RINGING_DETAILS_PREFIX safe_bool
 public:
   // Standard auto pointer typedefs
   typedef T element_type;
+  typedef void (*deletor_type)( element_type *& );
 
   // Accessors
   element_type *operator->() const { return ptr; }
@@ -201,11 +226,26 @@ public:
   element_type *get() const { return ptr; }
 
   // Construction and destruction
-  explicit scoped_pointer( T *src = 0 ) : ptr( src ) {}
- ~scoped_pointer() { delete ptr; }
+  // 
+  // Note: there is some magic going on here to get it all working
+  // correctly in MSVC 5.  Normally, you can completely ignore the
+  // second argument to these constructors, however, in code that 
+  // needs to compile in MSVC 5, if the class is used on an incomplete 
+  // type (e.g. in the pimpl idiom), pass delete_helper<T>::fn
+  // as the second argument and ignore all the warnings of the 
+  // 
+  explicit scoped_pointer( T *src, deletor_type d )
+    : ptr( src ), deletor(d) 
+  {}
+  explicit scoped_pointer( T *src = 0 )
+    : ptr( src ), 
+      deletor( RINGING_DETAILS_PREFIX auto_delete_helper<T>::fn )
+  {}
+
+ ~scoped_pointer() { deletor(ptr); }
 
   // Reset the pointer
-  void reset( T *x = 0 ) { delete ptr; ptr = x; }
+  void reset( T *x = 0 ) { deletor(ptr); ptr = x; }
 
   // Safe boolean conversions
   operator safe_bool_t() const { return make_safe_bool( ptr ); }
@@ -226,15 +266,116 @@ private:
   void operator=( const scoped_pointer &o );
 
 private:
+  void (*deletor)( element_type *&ptr );
   T *ptr;
 };
 
-// An STL functor to delete pointers
-struct delete_pointers
+
+
+// A smart pointer somewhere between cloning_pointer and shared_pointer. 
+// Used correctly it provides value semantics, but, unlike cloning_pointer
+// it provides the copy-on-write optimisation.  
+//
+// Note:  Because the language provides no way to differentiate calls to
+// const and non-const member functions of the pointee, the class is only
+// effective when the cow_pointer has the same constness as the member 
+// function to be called.  This is typically the case when cow_pointers are 
+// used to implement the pimpl idiom with lightweight forwarder functions
+// to the implementation class.
+template <class T> 
+class cow_pointer : private RINGING_DETAILS_PREFIX safe_bool
 {
-  template <class T>
-  void operator()( T *&ptr ) const { delete ptr; ptr = NULL; }
+public:
+  // Standard auto pointer typedefs
+  typedef T element_type;
+    
+  // Const accessors 
+  const element_type *operator->() const { return ptr; }
+  const element_type &operator*() const { return *ptr; }
+  const element_type *get() const { return ptr; }
+
+  // Non-const accessors.  Trigger a deep copy.
+  element_type *operator->() { clone(); return ptr; }
+  element_type &operator*() { clone(); return *ptr; }
+  element_type *get() { clone(); return ptr; }
+
+  // Construction and destruction
+  explicit cow_pointer( T *src = 0 ) 
+    : ptr(src) 
+  {
+# if RINGING_USE_EXCEPTIONS
+    try { rc = new int(1); } 
+    catch (...) { delete ptr; throw; } 
+# else
+    rc = new int(1);
+# endif
+  }
+ ~cow_pointer() { if ( !--*rc ) { delete ptr; delete rc; } }
+
+  // Swapping, assignment and copying
+  void swap( cow_pointer &o )
+    { std::swap( ptr, o.ptr ); 
+      std::swap( rc, o.rc ); }
+  cow_pointer( const cow_pointer &o )
+    : ptr( o.ptr ) { ++*( rc = o.rc ); }
+  cow_pointer &operator=( const cow_pointer &o )
+    { cow_pointer( o ).swap(*this); return *this; }
+
+  // Reset the pointer
+  void reset( T *src = 0 ) 
+  { 
+    if ( ptr == src ) return;
+    else if ( !--*rc ) { delete ptr; }
+# if RINGING_USE_EXCEPTIONS
+    else try { rc = new int(0); } 
+    catch (...) { ++*rc; delete src; throw; } 
+# else
+    else rc = new int(0); 
+# endif
+    *rc = 1;
+    ptr = src;
+  }
+
+  // Force a deep copy to happen if the refcount isn't 1.
+  void clone() { if ( *rc > 1 && ptr ) reset( ptr->clone() ); }
+
+  // Safe boolean conversions
+  operator safe_bool_t() const { return make_safe_bool( ptr ); }
+  bool operator!() const { return !bool( *this ); }
+
+  // Comparison operators.  
+  // Needed if we want to put them in a STL container in MSVC-5.
+  bool operator< ( const cow_pointer<T> &o ) const { return ptr <  o.ptr; }
+  bool operator> ( const cow_pointer<T> &o ) const { return ptr >  o.ptr; }
+  bool operator<=( const cow_pointer<T> &o ) const { return ptr <= o.ptr; }
+  bool operator>=( const cow_pointer<T> &o ) const { return ptr >= o.ptr; }
+  bool operator==( const cow_pointer<T> &o ) const { return ptr == o.ptr; }
+  bool operator!=( const cow_pointer<T> &o ) const { return ptr != o.ptr; }
+
+private:
+  T *ptr;
+  mutable int *rc;
 };
+
+
+RINGING_START_DETAILS_NAMESPACE
+
+template <class T>
+class operator_arrow_proxy 
+{
+private:
+  typedef T proxy_type;
+
+public:
+  operator_arrow_proxy( const proxy_type &c ) : c(c) {}
+  const proxy_type *operator->() const { return &c; }
+  operator const proxy_type *() const { return &c; }
+
+private:
+  proxy_type c;
+};
+
+RINGING_END_DETAILS_NAMESPACE
 
 RINGING_END_NAMESPACE
 
