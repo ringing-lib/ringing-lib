@@ -74,11 +74,11 @@ EXTRA_DIST = common.h.in
 DISTCLEANFILES = common.h
 
 lib_LIBRARIES = libringing.a
-libringing_a_SOURCES = row.cc row.h method.cc method.h library.cc library.h mslib.cc mslib.h print.cc print.h print_ps.cc print_ps.h dimension.cc dimension.h stuff.h
+libringing_a_SOURCES = row.cc row.h method.cc method.h library.cc library.h mslib.cc mslib.h proof.cc proof.h music.h print.cc print.h print_ps.cc print_ps.h dimension.cc dimension.h stuff.h
 
 
 myincludedir = $(includedir)/ringing
-myinclude_HEADERS = row.h method.h library.h mslib.h print.h print_ps.h dimension.h stuff.h common.h
+myinclude_HEADERS = row.h method.h library.h mslib.h proof.h music.h print.h print_ps.h dimension.h stuff.h common.h
 
 mkinstalldirs = $(SHELL) $(top_srcdir)/config/mkinstalldirs
 CONFIG_HEADER = ../config.h
@@ -91,7 +91,7 @@ CPPFLAGS = @CPPFLAGS@
 LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
 libringing_a_LIBADD = 
-libringing_a_OBJECTS =  row.o method.o library.o mslib.o print.o \
+libringing_a_OBJECTS =  row.o method.o library.o mslib.o proof.o print.o \
 print_ps.o dimension.o
 AR = ar
 CXXFLAGS = @CXXFLAGS@
@@ -109,10 +109,10 @@ DIST_COMMON =  Makefile.am Makefile.in common.h.in
 
 DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
 
-TAR = tar
+TAR = gtar
 GZIP_ENV = --best
 DEP_FILES =  .deps/dimension.P .deps/library.P .deps/method.P \
-.deps/mslib.P .deps/print.P .deps/print_ps.P .deps/row.P
+.deps/mslib.P .deps/print.P .deps/print_ps.P .deps/proof.P .deps/row.P
 SOURCES = $(libringing_a_SOURCES)
 OBJECTS = $(libringing_a_OBJECTS)
 
@@ -241,7 +241,7 @@ distdir: $(DISTFILES)
 	@for file in $(DISTFILES); do \
 	  d=$(srcdir); \
 	  if test -d $$d/$$file; then \
-	    cp -pr $$d/$$file $(distdir)/$$file; \
+	    cp -pr $$/$$file $(distdir)/$$file; \
 	  else \
 	    test -f $(distdir)/$$file \
 	    || ln $$d/$$file $(distdir)/$$file 2> /dev/null \
