@@ -90,7 +90,7 @@ public:
   cloning_pointer( const cloning_pointer &o ) 
     : ptr( o.ptr ? o.ptr->clone() : 0 ) {}
   cloning_pointer &operator=( const cloning_pointer &o )
-    { cloning_pointer( o ).swap(*this); return *this; }
+    { cloning_pointer<T>( o ).swap(*this); return *this; }
 
   // Reset the pointer
   void reset( T *x = 0 ) { delete ptr; ptr = x; } 

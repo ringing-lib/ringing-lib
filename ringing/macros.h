@@ -84,7 +84,7 @@ RINGING_START_NAMESPACE RINGING_USING_STD RINGING_END_NAMESPACE
 #   define RINGING_API __declspec(dllimport)
 #  endif
 #  // Explicit instantiations of some STL containers:
-#  ifdef RINGING_IN_STL_STUB
+#  ifdef RINGING_DO_STL_INSTANTIATIONS
 #   define RINGING_EXPLICIT_TEMPLATE template 
 #  else
 #   // Disable warnings about extern before explicit template instantiation
