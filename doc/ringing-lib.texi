@@ -22,7 +22,7 @@
 This is the manual for the Ringing Class Library, version
 @value{VERSION}.  Last updated @value{UPDATED}.
 
-Copyright 2001--2 Martin Bright and Mark Banner
+Copyright 2001--2 Martin Bright, Mark Banner and Richard Smith
 
 Permission is granted to copy, distribute and/or modify this document
 under the terms of the GNU Free Documentation License, Version 1.1
@@ -58,19 +58,16 @@ HTML and GNU Info formats are also available.
 
 @node Top, Introduction, (dir), (dir)
 @top
-@ifinfo
 
 The Ringing Class Library (ringing-lib) is a library of C++ classes designed
 for writing change ringing application programs.
 
+@ifinfo
 This menu lists the available topics in the documentation. This
 documentation is also available in HTML and PostScript versions.
 @end ifinfo
+
 @ifhtml
-
-The Ringing Class Library (ringing-lib) is a library of C++ classes designed
-for writing change ringing application programs.
-
 This menu lists the available topics in the documentation. This
 documentation is also available in GNU Info and PostScript 
 versions.
@@ -604,11 +601,11 @@ This function swaps this row with @var{other} in an efficient manner.
 @end deftypefun
 
 @c Silly bit to get round a bug
-@ifinfo
+@ifnottex
 @deftypefun row& row::rounds (void);
 This sets the row to rounds.
 @end deftypefun
-@end ifinfo
+@end ifnottex
 @iftex
 @deftypefun row@& row::rounds (void);
 This sets the row to rounds, and returns @code{*this}.
@@ -919,13 +916,13 @@ the row given in @var{r}.
 @node  Other row_block Functions,  , row_block Constructors, The row_block class
 @subsection Other functions
 
-@ifinfo
+@ifnottex
 @deftypefun row& row_block::set_start (const row& @var{r});
 This sets the first row to @var{r}.  Note that this function does @emph{not}
 recalculate the rest of the rows afterwards; you must do this by calling
 @code{recalculate()}.
 @end deftypefun
-@end ifinfo
+@end ifnottex
 @iftex
 @deftypefun row@& row_block::set_start (const row& @var{r});
 This sets the first row to @var{r}.  Note that this function does @emph{not}
@@ -934,7 +931,7 @@ recalculate the rest of the rows afterwards; you must do this by calling
 @end deftypefun
 @end iftex
 
-@ifinfo
+@ifnottex
 @deftypefun row_block& row_block::recalculate (int @var{start} = 0);
 This recalculates all the rows in the array, starting from the element
 numbered @var{start}; if this is not specified, all the rows are recalculated.
@@ -942,7 +939,7 @@ If, for example, you know that the @code{changes} object which the row block
 is based on has been changes halfway through, you don't have to recalculate
 all the rows, just the ones after that point.
 @end deftypefun
-@end ifinfo
+@end ifnottex
 @iftex
 @deftypefun row_block@& row_block::recalculate (int @var{start} = 0);
 This recalculates all the rows in the array, starting from the element
@@ -953,11 +950,11 @@ all the rows, just the ones after that point.
 @end deftypefun
 @end iftex
 
-@ifinfo
+@ifnottex
 @deftypefun {const vector<change>&} row_block::get_changes (void) const;
 This returns the @code{vector<change>} object on which the row block is based.
 @end deftypefun
-@end ifinfo
+@end ifnottex
 @iftex
 @deftypefun {const vector<change>@&} row_block::get_changes (void) const;
 This returns the @code{vector<change>} object on which the row block is based.
@@ -1990,11 +1987,11 @@ The failure information is reset before the analysis takes place, hence any fals
 This function acts like the previous, except it will expect up to @var{max} extents (and hence repititions).
 @end deftypefn
 
-@ifinfo
+@ifnottex
 @deftypefn Function {const failinfo&} proof::failed (void) const;
 This function simply returns the data detailing where the touch has failed. (*note Falseness Storage::).
 @end deftypefn
-@end ifinfo
+@end ifnottex
 @iftex
 @deftypefn Function {const failinfo@&} proof::failed (void) const;
 This function simply returns the data detailing where the touch has failed.
@@ -2017,11 +2014,11 @@ This returns true (or 1) if the touch is not true.
 
 Output of the proof class is achieved in one of two ways. Either, the functions proof::int and failed() are used, or an overloaded ostream operator for a fixed format.
 
-@ifinfo
+@ifnottex
 @deftypefn Operator {template <class RowIterator> ostream&} operator<< (ostream& @var{o}, const proof<RowIterator>& @var{p});
 Outputs to the ostream, @var{o}, if @var{p} is true or false in a predefined format. If p is false, then additional information regarding where is also output.
 @end deftypefn
-@end ifinfo
+@end ifnottex
 @iftex
 @deftypefn Operator {template <class RowIterator> ostream@&} operator<< (ostream@& @var{o}, const proof<RowIterator>@& @var{p});
 Outputs to the ostream, @var{o}, if @var{p} is true or false in a predefined format. If p is false, then additional information regarding where is also output.
