@@ -1,5 +1,5 @@
 // -*- C++ -*- multtab.h - A precomputed multiplication table of rows
-// Copyright (C) 2002, 2003 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003, 2004 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -64,10 +64,17 @@ public:
   bool operator==( multtab_row_t const& o ) const { return n == o.n; }
   bool operator!=( multtab_row_t const& o ) const { return n != o.n; }
 
-  
+  RINGING_FAKE_COMPARATORS( multtab_row_t )
+
+  struct cmp {
+    bool operator()( multtab_row_t const& x, 
+		     multtab_row_t const& y ) const
+    { return x.n < y.n; }
+  };
+
   friend class multtab;
   friend class multtab_row_iterator;
-  RINGING_FAKE_COMPARATORS( multtab_row_t )
+  friend struct cmp;
 
 private:
   size_t n; 
@@ -123,7 +130,17 @@ public:
   bool operator==( multtab_post_col_t const& o ) const { return n == o.n; }
   bool operator!=( multtab_post_col_t const& o ) const { return n != o.n; }
 
+  bool null() const { return !t; } // Is it default constructed
+
   RINGING_FAKE_COMPARATORS( multtab_post_col_t )
+
+  struct cmp {
+    bool operator()( multtab_post_col_t const& x, 
+		     multtab_post_col_t const& y ) const
+    { return x.n < y.n; }
+  };
+
+  friend struct cmp;
 
 private:
   size_t n; 
@@ -148,7 +165,18 @@ public:
   bool operator==( multtab_pre_col_t const& o ) const { return n == o.n; }
   bool operator!=( multtab_pre_col_t const& o ) const { return n != o.n; }
 
+  bool null() const { return !t; } // Is it default constructed
+
   RINGING_FAKE_COMPARATORS( multtab_pre_col_t )
+
+
+  struct cmp {
+    bool operator()( multtab_pre_col_t const& x, 
+		     multtab_pre_col_t const& y ) const
+    { return x.n < y.n; }
+  };
+
+  friend struct cmp;
 
 private:
   size_t n; 
