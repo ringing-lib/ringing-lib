@@ -443,10 +443,10 @@ bool arguments::validate( arg_parser &ap )
       return false;
     }
 
-  if ( require_offset_cyclic && !treble_dodges )
+  if ( require_offset_cyclic && !treble_dodges && hunt_bells )
     {
       ap.error( "The `offset-cyclic' option requires a treble-dodging"
-		" path (e.g. -G1)" );
+		" path (e.g. -G1) or a principle (e.g. -U0)" );
       return false;
     }
 

@@ -200,26 +200,19 @@ bool searcher::is_acceptable_method()
     if ( ! try_principle_symmetry() )
       return false;
 
-  if ( args.require_offset_cyclic )
+  if ( args.hunt_bells && args.require_offset_cyclic )
     {
+      // Offset cyclic methods are started from the last backstroke
+      // snap and have cyclic rows at these points.
+
+      // r is the row at the point of cylicity.
       row r(bells);
       for (size_t i=0; i< div_len-2; ++i) r *= m[i];
 
-      // Generate the row 13456782 (or similar)
-      string s; s.reserve(bells);
-      { 
-	for (int i=0; i<args.hunt_bells; ++i)
-	  s.append(1u, bell(i).to_char() );
-      }
-      {
-	for (int i=args.hunt_bells+1; i<bells; ++i)
-	  s.append(1u, bell(i).to_char() );
-      }
-      s.append(1u, bell(args.hunt_bells).to_char() );
+      // This is the lead head predicted by assuming cyclicity
+      const row rlh( r * row::cyclic( bells, args.hunt_bells ) * r.inverse() );
 
-      const row k(s);
-      const row rlh( r * k * r.inverse() );
-
+      // And this is the actual lead head
       const row lh( m.lh() );
 
       // Is lh a power of rlh?
@@ -234,6 +227,27 @@ bool searcher::is_acceptable_method()
 
       if (!ok)
 	return false;
+    }
+
+  if ( !args.hunt_bells && args.require_offset_cyclic )
+    {
+      bool ok(false);
+      const int n( m.size() );
+
+      // Offset cyclic principles can be started anywhere.
+      // Try all possibilities until we find one we like.
+      for ( int o=0; o<n; ++o )
+	{
+	  row r(bells);
+	  for ( int i=0; i<n; ++i )
+	    r *= m[ (i+o)%n ];
+
+	  ok = is_cyclic_le(r, args.hunt_bells);
+
+	  if (ok) break;
+	}
+
+      if (!ok) return false;
     }
 
   if ( args.true_course )
@@ -436,22 +450,18 @@ bool searcher::try_halflead_sym_change( const change &ch )
 
 bool searcher::try_offset_start_change( const change &ch) 
 {
-  const row r( m.lh() * ch );
-  
-  // Generate the row 13456782 (or similar)
-  string s; s.reserve(bells);
-  {
-    for (int i=0; i<args.hunt_bells; ++i)
-      s.append(1u, bell(i).to_char() );
-  }
-  {
-    for (int i=args.hunt_bells+1; i<bells; ++i)
-      s.append(1u, bell(i).to_char() );
-  }
-  s.append(1u, bell(args.hunt_bells).to_char() );
+  // Offset cyclic methods are started from the last backstroke snap of 
+  // the treble's 1-2 up dodge.   This function is called to test that
+  // row.
 
-  const row k(s);
-  const row lh( r * k * r.inverse() );
+  // Because we are requiring that cyclicity occurs at this point, we 
+  // can use this to determine the lead heads, and thus check whether
+  // a valid lead head is possible.   This offers a big saving if we
+  // want to restrict the lead head.
+
+  const row r( m.lh() * ch ); // the offset change
+  
+  const row lh( r * row::cyclic( bells, args.hunt_bells ) * r.inverse() );
 
   return is_acceptable_leadhead( lh );
 }
@@ -651,7 +661,7 @@ void searcher::new_midlead_change()
 	    if ( ! try_leadend_sym_change( ch ) )
 	      continue;
 	  
-	  if ( args.require_offset_cyclic && div_len > 3
+	  if ( args.hunt_bells && args.require_offset_cyclic && div_len > 3
 	       && depth == div_len-3 )
 	    if ( ! try_offset_start_change( ch ) )
 	      continue;

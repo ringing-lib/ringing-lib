@@ -134,6 +134,10 @@ string method_properties::impl2::get_property( int num_opt,
     {
       switch ( prop_name[0] ) 
 	{
+	case 'L':
+	  os << setw(num_opt) << m.size();
+	  break;
+	  
 	case 'l': 
 	  os << m.lh();
 	  break;

@@ -188,6 +188,8 @@ The -H and -R formats accept the following format specifiers:
   $O     The tenors-together coursing order
   $y     The symmetry string: 'P' for palindromic, 'M' for mirror, 'G' for
          glide, 'R' for rotational
+  $[N]L  The number of changes per lead;  if a number, N, is specified,
+         it is the minimum width of the field
   $$     A literal $
   $)     A literal )
   $[...] An expression; see below
