@@ -1,5 +1,6 @@
 // -*- C++ -*- extent.h - Classes for iterating through an extent
-// Copyright (C) 2001, 2002, 2003 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2001, 2002, 2003, 2005 
+// Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -62,13 +63,33 @@ unsigned fibonacci(unsigned n)
   return f2;
 }
 
+RINGING_START_ANON_NAMESPACE
+
+static int (*rand_fn)() = &rand;
+static int rand_max    = RAND_MAX;
+
+RINGING_END_ANON_NAMESPACE
+
+pair<int (*)(), int> random_fn( int (*randfn)(), int randmax )
+{
+  pair< int(*)(), int > old = make_pair( rand_fn, rand_max );
+
+  if (randfn) {
+    rand_fn  = randfn;
+    rand_max = randmax;
+  }
+  
+  return old;
+}
+
+
 unsigned random_int(unsigned max) 
 {
   assert( max );
 
   unsigned r;
   do 
-    r = (unsigned)( (double)rand() * ((double)max / (double)RAND_MAX) );
+    r = (unsigned)( (double)rand_fn() * ((double)max / (double)rand_max) );
   while ( r == max );
   
   assert( r < max );
@@ -153,10 +174,11 @@ changes_iterator::changes_iterator( unsigned int nw, unsigned int nh,
   if ( nw>1 ) next(); 
 }
 
-RINGING_START_ANON_NAMESPACE
-
-
-RINGING_END_ANON_NAMESPACE
+bool random_bool( double ptrue )
+{
+  assert( ptrue <= 1 );
+  return rand_fn() < rand_max * ptrue;
+}
 
 row random_row( unsigned int nw, unsigned int nh, unsigned int nt )
 {

@@ -1,5 +1,5 @@
 // -*- C++ -*- extent.h - Classes for iterating through an extent
-// Copyright (C) 2001-2 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2001, 2002, 2005 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -29,8 +29,10 @@
 #include <string>
 #if RINGING_OLD_INCLUDES
 #include <vector.h>
+#include <utility.h>
 #else
 #include <vector>
+#include <utility>
 #endif
 #include <ringing/row.h>
 
@@ -43,6 +45,13 @@ RINGING_API unsigned fibonacci(unsigned n);
 
 // Uniformly distributed, 0 <= random_int(max) < max
 RINGING_API unsigned random_int(unsigned max);
+
+// Returns true with probability ptrue
+RINGING_API bool random_bool( double ptrue = 0.5 );
+
+// Supply and alternative random number generator
+// If rand is NULL, then just return the existing one
+RINGING_API pair<int (*)(), int> random_fn( int (*randfn)(), int max_rand );
 
 class RINGING_API extent_iterator
   : public RINGING_STD_CONST_ITERATOR( forward_iterator_tag, row )
