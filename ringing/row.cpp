@@ -133,6 +133,7 @@ change change::reverse(void) const
 string change::print() const
 {
   string p;
+  p.reserve( bells() );
 
   if(n != 0) {
     bell i = 0;
@@ -400,6 +401,7 @@ row row::operator*(const change& c) const
 string row::print() const
 {
   string s;
+  s.reserve( bells() );
 
   if(!data.empty())
     for(vector<bell>::const_iterator i = data.begin(); 
@@ -562,6 +564,9 @@ string row::cycles() const
   // Note: If you change the format of the output of this function,
   // make sure you verify that row::sign() still works.
   string result;
+  result.reserve( 2*bells() ); // Although max. final valueis 2*bells()-1 we 
+			       // can temporarily exceed this before the
+			       // trailing ',' is removed.
 
   if (data.empty()) return result;
   vector<bool> done(bells(), false);
