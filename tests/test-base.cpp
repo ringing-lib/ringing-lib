@@ -1,5 +1,5 @@
 // -*- C++ -*- test-base.cpp - Framework for testing the ringing class library 
-// Copyright (C) 2002 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -143,6 +143,30 @@ bool run_tests( bool verbose )
     {
       cout << failures << " tests failed" << endl;
       return false;
+    }
+}
+
+// Move a bit of the exception handling out of line
+void handle_exception( const location& loc )
+{
+  // This is always called during execution of a catch handler,
+  // therefore we can perfectly safely rethrow and catch the exception
+  // internally to recover type information:
+  try 
+    {
+      throw;
+    }
+  catch ( const test_failure& )
+    {
+      throw;
+    }
+  catch ( const exception& e )
+    {
+      throw unexpected_exception(loc, e);
+    }
+  catch ( ... )
+    {
+      throw unexpected_exception(loc);
     }
 }
 

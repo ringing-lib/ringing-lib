@@ -1,5 +1,5 @@
 // -*- C++ -*- test-base.h - Framework for testing the ringing class library 
-// Copyright (C) 2002 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -85,6 +85,8 @@ public:
 void register_test( const char *str, void (*test)(void) );
 bool run_tests( bool verbose );
 
+void handle_exception( const location& loc );
+
 RINGING_END_NAMESPACE_TEST
 
 RINGING_END_NAMESPACE
@@ -95,12 +97,8 @@ RINGING_END_NAMESPACE
     location loc( __FILE__, __LINE__ );					\
     try {								\
       if ( !(CONDITION) ) throw condition_failure( loc, #CONDITION );	\
-    } catch ( const test_failure & ) {					\
-      throw;								\
-    } catch ( const exception &e ) {					\
-      throw unexpected_exception( loc, e );				\
     } catch ( ... ) {							\
-      throw unexpected_exception( loc );				\
+      handle_exception(loc);						\
     }									\
   } while ( false )
 
@@ -111,14 +109,10 @@ RINGING_END_NAMESPACE
     location loc( __FILE__, __LINE__ );					\
     try {								\
       (STATEMENT); throw missing_exception( loc, #STATEMENT );		\
-    } catch ( const test_failure & ) {					\
-      throw;								\
     } catch ( const EXCEPTION & ) {					\
       ;									\
-    } catch ( const exception &e ) {					\
-      throw unexpected_exception( loc, e );				\
     } catch ( ... ) {							\
-      throw unexpected_exception( loc );				\
+      handle_exception(loc);						\
     }									\
   } while ( false )
 
