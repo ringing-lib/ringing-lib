@@ -90,4 +90,5 @@ what environment will be present when using the library, then you will also
 be able to install the header files.]);
 fi
 
-AC_OUTPUT(Makefile ringing/Makefile doc/Makefile ringing/common.h)
+AC_OUTPUT(Makefile ringing/Makefile doc/Makefile examples/Makefile 
+  ringing/common.h)

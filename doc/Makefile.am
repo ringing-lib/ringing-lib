@@ -1,5 +1,7 @@
 ## Makefile.am - process with automake to generate Makefile.in
 
+MAINTAINERCLEANFILES = Makefile.in
+
 info_TEXINFOS = ringing-lib.texi
 
 SUFFIXES = .html

@@ -2,6 +2,7 @@
 
 EXTRA_DIST = common.h.in
 DISTCLEANFILES = common.h
+MAINTAINERCLEANFILES = Makefile.in
 
 lib_LIBRARIES = libringing.a
 libringing_a_SOURCES = row.cc row.h method.cc method.h library.cc library.h \

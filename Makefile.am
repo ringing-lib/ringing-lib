@@ -1,6 +1,8 @@
 ## Makefile.am -- process this file with automake to produce Makefile.in
 
-SUBDIRS = ringing doc
+SUBDIRS = ringing doc examples
+
+MAINTAINERCLEANFILES = Makefile.in configure aclocal.m4
 
 auxdir			= @ac_aux_dir@
 AUX_DIST		= $(auxdir)/install-sh $(auxdir)/missing \
