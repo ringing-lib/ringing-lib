@@ -22,11 +22,9 @@
 #if RINGING_OLD_INCLUDES
 #include <iostream.h>
 #include <fstream.h>
-#include <strstream.h>
 #else
 #include <iostream>
 #include <fstream>
-#include <strstream>
 #endif
 #include <string>
 #include <ringing/row.h>
@@ -36,6 +34,7 @@
 #include <ringing/print_pdf.h>
 #include <ringing/mslib.h>
 #include <ringing/cclib.h>
+#include <ringing/streamutils.h>
 #include "args.h"
 
 #if RINGING_USE_NAMESPACES
@@ -85,9 +84,9 @@ inline int divu(int a, int b) { return (a - 1) / b + 1; }
 
 bool parse_int(const string& arg, int& i)
 {
-  istrstream is(arg.data(), arg.length()); 
-  is >> i;
-  if(!is || is.get() != EOF) {
+  try {
+    i = lexical_cast<int>(arg);
+  } catch(bad_lexical_cast const&) {
     cerr << "Invalid integer argument: \"" << arg << "\"\n";
     return false;
   }
@@ -96,9 +95,9 @@ bool parse_int(const string& arg, int& i)
 
 bool parse_float(const string& arg, float& f)
 {
-  istrstream is(arg.data(), arg.length()); 
-  is >> f;
-  if(!is || is.get() != EOF) {
+  try {
+    f = lexical_cast<float>(arg);
+  } catch(bad_lexical_cast const&) {
     cerr << "Invalid integer argument: \"" << arg << "\"\n";
     return false;
   }
@@ -119,41 +118,41 @@ bool parse_dimension(const string& arg, dimension& d)
 
 bool parse_colour(const string& arg, colour& col)
 {
-  istrstream is(arg.data(), arg.length());
-  int i; char c;
-  is >> i;
-  if(!is || ((c = is.get()) != EOF && c != '-')) {
+  try {
+    string::size_type j = arg.find('-');
+    int i = lexical_cast<int>( arg.substr(0,j) );
+    if(i < 0 || i > 100) {
+      cerr << "Colour out of range: " << i << endl;
+      return false;
+    }
+    if(j==string::npos) { col.grey = true; col.red = i/100.0; return true; }
+    col.red = i/100.0;
+    
+    string::size_type k = arg.find('-', j+1);
+    if (k==string::npos) {
+      cerr << "Invalid colour: \"" << arg << "\"\n";
+      return false;
+    }
+    i = lexical_cast<int>( arg.substr(j+1, k-j-1) );
+    if(i < 0 || i > 100) {
+      cerr << "Colour out of range: " << i << endl;
+      return false;
+    }
+    col.green = i/100.0;
+
+    i = lexical_cast<int>( arg.substr(k+1, string::npos) );
+    if(i < 0 || i > 100) {
+      cerr << "Colour out of range: " << i << endl;
+      return false;
+    }
+    col.blue = i/100.0;
+    col.grey = false;
+    return true;
+  } 
+  catch (bad_lexical_cast const&) {
     cerr << "Invalid colour: \"" << arg << "\"\n";
     return false;
   }
-  if(i < 0 || i > 100) {
-    cerr << "Colour out of range: " << i << endl;
-    return false;
-  }
-  if(is.eof()) { col.grey = true; col.red = i/100.0; return true; }
-  col.red = i/100.0;
-  is >> i;
-  if(!is || ((c = is.get()) != '-')) {
-    cerr << "Invalid colour: \"" << arg << "\"\n";
-    return false;
-  }
-  if(i < 0 || i > 100) {
-    cerr << "Colour out of range: " << i << endl;
-    return false;
-  }
-  col.green = i/100.0;
-  is >> i;
-  if(!is || (is.get() != EOF)) {
-    cerr << "Invalid colour: \"" << arg << "\"\n";
-    return false;
-  }
-  if(i < 0 || i > 100) {
-    cerr << "Colour out of range: " << i << endl;
-    return false;
-  }
-  col.blue = i/100.0;
-  col.grey = false;
-  return true;
 }
 
 string next_bit(const string& s, string::const_iterator& i)
