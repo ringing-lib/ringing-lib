@@ -31,6 +31,62 @@
 
 RINGING_START_NAMESPACE
 
+
+// *********************************************************************
+// *                Functions for class touch_changes                  *
+// *********************************************************************
+
+class touch_changes::iterator : public touch_node::iterator_base {
+private:
+  vector<change>::const_iterator i;
+public:
+  iterator() {}
+ ~iterator() {}
+  change operator*() const { return *i; }
+  touch_node::iterator_base& operator++() { ++i; return *this; }
+  bool operator==(const touch_node::iterator_base& ib) const {
+    const iterator* j = dynamic_cast<const iterator*>(&ib);
+    return (j && (i == j->i));
+  }
+  touch_node::iterator_base* clone() { return new iterator(*this); }
+private:
+  friend class touch_changes;
+  iterator(vector<change>::const_iterator j) : i(j) {}
+};
+
+touch_node::const_iterator touch_changes::begin() const
+{ return touch_node::const_iterator(new iterator(c.begin())); }
+
+touch_node::const_iterator touch_changes::end() const
+{ return touch_node::const_iterator(new iterator(c.end())); }
+
+// *********************************************************************
+// *               Functions for class touch_child_list                *
+// *********************************************************************
+
+class touch_child_list::iterator : public touch_node::iterator_base {
+private:
+  list<entry>::const_iterator i, last;
+  touch_node::const_iterator ci;
+  int count;
+public:
+  iterator() {}
+  ~iterator() {}
+  change operator*() const { return *ci; }
+  touch_node::iterator_base& operator++();
+  bool operator==(const touch_node::iterator_base& ib) const {
+    const iterator* j = dynamic_cast<const iterator*>(&ib);
+    return (j && (i == j->i && (i == last || ci == j->ci)));
+  }
+  touch_node::iterator_base* clone() { return new iterator(*this); }
+private:
+  friend class touch_child_list;
+  iterator(list<entry>::const_iterator j, 
+	   list<entry>::const_iterator k) : i(j), last(k)
+  { if(i != last) { count = 0; ci = (*i).second->begin(); } }
+};
+
+
 touch_node::iterator_base& touch_child_list::iterator::operator++()
 {
   ++ci;
@@ -48,6 +104,18 @@ touch_node::iterator_base& touch_child_list::iterator::operator++()
   }
   return *this;
 }
+
+
+touch_node::const_iterator touch_child_list::begin() const {
+  return touch_node::const_iterator(new iterator(ch.begin(), ch.end()));
+}
+touch_node::const_iterator touch_child_list::end() const {
+  return touch_node::const_iterator(new iterator(ch.end(), ch.end())); 
+}
+
+// *********************************************************************
+// *                    Functions for class touch                      *
+// *********************************************************************
 
 void touch::push_back( touch_node *node )
 {

@@ -43,7 +43,7 @@ RINGING_START_NAMESPACE
 RINGING_USING_STD
 
 class touch_node {
-public:
+RINGING_PROTECTED_IMPL:
   class iterator_base {
   public:
     virtual change operator*() const = 0;
@@ -53,6 +53,7 @@ public:
     virtual iterator_base* clone() = 0; 
   };
 
+public:
   class const_iterator
     : public RINGING_STD_CONST_ITERATOR( forward_iterator_tag, change )
   {
@@ -104,27 +105,9 @@ public:
 class touch_changes : public touch_node {
 private:
   vector<change> c;
+  class iterator;
 
 public:
-
-  class iterator : public touch_node::iterator_base {
-  private:
-    vector<change>::const_iterator i;
-  public:
-    iterator() {}
-    ~iterator() {}
-    change operator*() const { return *i; }
-    touch_node::iterator_base& operator++() { ++i; return *this; }
-    bool operator==(const touch_node::iterator_base& ib) const {
-      const iterator* j = dynamic_cast<const iterator*>(&ib);
-      return (j && (i == j->i));
-    }
-    touch_node::iterator_base* clone() { return new iterator(*this); }
-  private:
-    friend class touch_changes;
-    iterator(vector<change>::const_iterator j) : i(j) {}
-  };
-
   touch_changes() {}
   touch_changes(const vector<change>& cc) : c(cc) {}
   template <class InputIterator> 
@@ -137,10 +120,8 @@ public:
 
   void push_back( const change &ch ) { c.push_back(ch); }
 
-  touch_node::const_iterator begin() const
-    { return touch_node::const_iterator(new iterator(c.begin())); }
-  touch_node::const_iterator end() const
-    { return touch_node::const_iterator(new iterator(c.end())); }
+  virtual touch_node::const_iterator begin() const;
+  virtual touch_node::const_iterator end() const;
 };
 
 class touch_child_list : public touch_node {
@@ -149,39 +130,14 @@ public:
 
 private:
   list<entry> ch;
+  class iterator;
 
 public:
-  class iterator : public touch_node::iterator_base {
-  private:
-    list<entry>::const_iterator i, last;
-    touch_node::const_iterator ci;
-    int count;
-  public:
-    iterator() {}
-    ~iterator() {}
-    change operator*() const { return *ci; }
-    touch_node::iterator_base& operator++();
-    bool operator==(const touch_node::iterator_base& ib) const {
-      const iterator* j = dynamic_cast<const iterator*>(&ib);
-      return (j && (i == j->i && (i == last || ci == j->ci)));
-    }
-    touch_node::iterator_base* clone() { return new iterator(*this); }
-  private:
-    friend class touch_child_list;
-    iterator(list<entry>::const_iterator j, 
-	     list<entry>::const_iterator k) : i(j), last(k)
-      { if(i != last) { count = 0; ci = (*i).second->begin(); } }
-  };
-
   touch_child_list() {}
-  ~touch_child_list() {}
+ ~touch_child_list() {}
 
-  touch_node::const_iterator begin() const {
-    return touch_node::const_iterator(new iterator(ch.begin(), ch.end()));
-  }
-  touch_node::const_iterator end() const {
-    return touch_node::const_iterator(new iterator(ch.end(), ch.end())); 
-  }
+  virtual touch_node::const_iterator begin() const;
+  virtual touch_node::const_iterator end() const;
 
   list<entry>& children() { return ch; }
   const list<entry>& children() const { return ch; }

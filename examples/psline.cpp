@@ -568,9 +568,10 @@ int main(int argc, char *argv[])
     // Print the method!
     switch(args.format) {
       case eps :
-	pp = new printpage_ps(*os, 0, 0, pm.total_width(), pm.total_height() 
-			      + (args.title.empty() ? 0 
-				 : args.title_style.size * 2));
+	pp = new printpage_ps(*os, 0, 0, int(pm.total_width()), 
+			      int(pm.total_height() 
+				   + (args.title.empty() ? 0 
+				      : args.title_style.size * 2)));
 	break;
       case ps:
 	if(args.landscape) {
