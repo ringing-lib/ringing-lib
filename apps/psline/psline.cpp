@@ -51,7 +51,7 @@ struct arguments {
   string title; text_style title_style;
   string font; int font_size; colour col;
   bool custom_lines;
-  map<bell, printrow::options::line_style> lines;
+  map<int, printrow::options::line_style> lines;
   bool custom_rules;
   list<pair<int,int> > rules;
   bool numbers;
@@ -112,8 +112,8 @@ bool parse_colour(const string& arg, colour& col)
     cerr << "Colour out of range: " << i << endl;
     return false;
   }
-  if(is.eof()) { col.grey = true; col.red = i/100; return true; }
-  col.red = i/100;
+  if(is.eof()) { col.grey = true; col.red = i/100.0; return true; }
+  col.red = i/100.0;
   is >> i;
   if(!is || ((c = is.get()) != '-')) {
     cerr << "Invalid colour: \"" << arg << "\"\n";
@@ -123,7 +123,7 @@ bool parse_colour(const string& arg, colour& col)
     cerr << "Colour out of range: " << i << endl;
     return false;
   }
-  col.green = i/100;
+  col.green = i/100.0;
   is >> i;
   if(!is || (is.get() != EOF)) {
     cerr << "Invalid colour: \"" << arg << "\"\n";
@@ -133,7 +133,7 @@ bool parse_colour(const string& arg, colour& col)
     cerr << "Colour out of range: " << i << endl;
     return false;
   }
-  col.blue = i/100;
+  col.blue = i/100.0;
   col.grey = false;
   return true;
 }
@@ -158,6 +158,7 @@ public:
 
 void setup_args(arg_parser& p)
 {
+  p.set_default(new myopt('\0', "", ""));
   p.add(new myopt("General options:"));
   p.add(new myopt('?', "help", "Print this help message"));
   p.add(new myopt('V', "version", "Print the program version"));
@@ -173,6 +174,9 @@ void setup_args(arg_parser& p)
     " full name of the method.  If no arguments are specifed, print the"
     " name of the method as the title.", "TITLE[,FONT[,SIZE[,COLOUR]]]",
 		  true));
+  p.add(new myopt('\001', "title-font", "", "FONT"));
+  p.add(new myopt('\002', "title-size", "", "SIZE"));
+  p.add(new myopt('\003', "title-colour", "", "COLOUR"));
   p.add(new myopt("Style options:"));
   p.add(new myopt('f', "font", "Use PostScript font FONT.  If this option"
     " is not specified, the font defaults to Helvetica.", "FONT"));
@@ -340,20 +344,39 @@ bool myopt::process(const string& arg, const arg_parser& ap) const
     case 'l' :
       args.custom_lines = true;
       if(!arg.empty()) {
+	list<int> bl;
 	s = arg.begin();
-	bell b;
-	try {
-	  b.from_char(*s);
-	}
-	catch(bell::invalid e) {
-	  cerr << "Invalid bell: '" << *s << "'\n";
-	  return false;
+	if(*s == ':') {
+	  ++s;
+	  if(s == arg.end()) { cerr << "Invalid bell: ':'\n"; return false; }
+	  switch(*s) {
+	    case 'a' : bl.push_back(-1); break;
+	    case 'h' : bl.push_back(-2); break;
+            case 'w' : bl.push_back(-3); break;
+            case 'v' : bl.push_back(-4); break;
+            default : 
+	      cerr << "Invalid bell: ':" << *s << "'\n";
+	      return false;
+	  }
+	  ++s;
+	} else {
+	  bell b;
+	  do {
+	    try {
+	      b.from_char(*s);
+	    }
+	    catch(bell::invalid e) {
+	      cerr << "Invalid bell: '" << *s << "'\n";
+	      return false;
+	    }
+	    bl.push_back(b);
+	    ++s;
+	  } while(s != arg.end() && *s != 'x' && *s != 'X' && *s != ',');
 	}
 	printrow::options::line_style st;
 	st.width.n = 1; st.width.d = 2; st.width.u = dimension::points;
 	st.col.grey = false; st.col.red = st.col.green = 0; st.col.blue = 1.0;
 	st.crossing = false;
-	++s;
 	if(s != arg.end()) {
 	  if(*s == 'x' || *s == 'X') { st.crossing = true; ++s; }
 	  if(s != arg.end()) {
@@ -370,7 +393,9 @@ bool myopt::process(const string& arg, const arg_parser& ap) const
 	    }
 	  }
 	}
-	args.lines[b] = st;
+	list<int>::iterator j;
+	for(j = bl.begin(); j != bl.end(); ++j)
+	  args.lines[*j] = st;
       } else
 	args.lines.clear();
       break;
@@ -414,6 +439,13 @@ bool myopt::process(const string& arg, const arg_parser& ap) const
       } else
 	args.title = "$";
       break;
+    case '\001' :
+      args.title_style.font = arg;
+      break;
+    case '\002' :
+      return parse_int(arg, args.title_style.size);
+    case '\003' :
+      return parse_colour(arg, args.title_style.col);
     case 'm' :
       if(!arg.empty()) {
 	if(arg == "always") 
@@ -554,14 +586,44 @@ int main(int argc, char *argv[])
       pm.total_rows = args.total_leads * m.length();
     else if(args.total_rows)
       pm.total_rows = args.total_rows;
-    if(args.custom_lines) pm.opt.lines = args.lines;
+    row lh = m.lh();
+    if(args.custom_lines) {
+      pm.opt.lines.clear();
+      map<int, printrow::options::line_style>::const_iterator j;
+      bell b;
+      change c = m[m.length() - 1];
+      bool found_working_bell = false;
+      for(b = 0; b < m.bells(); b = b + 1) {
+	j = args.lines.find(b);
+	if(j == args.lines.end()) {
+	  if(lh[b] == b) 
+	    j = args.lines.find(-2);
+	  else {
+	    if(!found_working_bell && c.findplace(b)) { 
+	      j = args.lines.find(-4);
+	      if(j == args.lines.end()) j = args.lines.find(-3);
+	      found_working_bell = true;
+	    } else
+	      j = args.lines.find(-3);
+	  }
+	  if(j == args.lines.end())
+	    j = args.lines.find(-1);
+	}
+	if(j != args.lines.end()) pm.opt.lines[b] = (*j).second;
+      }
+      if(!found_working_bell 
+	 && (j = args.lines.find(-4)) != args.lines.end()) {
+	for(b = 0; b < m.bells(); b = b + 1)
+	  if(lh[b] != b)
+	    pm.opt.lines[b] = (*j).second;
+      }
+    }
     if(args.custom_rules) pm.rules = args.rules;
     if(args.placebells == -2) {
       bell b;
-      row r = m.lh();
       pm.placebells = -1;
       for(b = 0; b < m.bells(); b = b + 1)
-	if(r[b] != b && pm.opt.lines.find(b) != pm.opt.lines.end()) {
+	if(lh[b] != b && pm.opt.lines.find(b) != pm.opt.lines.end()) {
 	  if(pm.placebells == -1)
 	    pm.placebells = b;
 	  else {

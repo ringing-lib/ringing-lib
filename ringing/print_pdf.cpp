@@ -266,7 +266,7 @@ void printpage_pdf::text(const string t, const dimension& x,
     break;
   }
   
-  f << "q "; set_colour(s.col);
+  f << "q "; set_colour(s.col, true);
   f << "BT\n/"
     << f.get_font(cw.font()) << ' ' << s.size << " Tf\n"
     << x1 << ' ' << y.in_points() << " Td\n";
@@ -341,7 +341,8 @@ void printrow_pdf::start_column()
     drawlines.push_back(drawline_pdf(*this, (*i).first, (*i).second));
   in_column = true;
   count = gapcount = 0;
-  pp.set_colour(opt.style.col);
+  pp.set_colour(opt.style.col, true);
+  pp.set_colour(opt.style.col, false);
   pp.f << opt.style.size / 20.0 << " w\n";
 }
 
