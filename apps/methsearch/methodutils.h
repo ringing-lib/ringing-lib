@@ -1,5 +1,5 @@
 // -*- C++ -*- methodutils.h - utility functions missing from the ringing-lib
-// Copyright (C) 2002 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -31,6 +31,7 @@
 
 // Forward declare ringing::method
 RINGING_START_NAMESPACE
+class row;
 class change;
 class method;
 RINGING_END_NAMESPACE
@@ -41,8 +42,8 @@ RINGING_USING_STD
 
 change merge_changes( const change &a, const change &b );
 bool have_same_places( const change &a, const change &b );
-bool has_pbles( const method &m, int hunts );
-bool has_cyclic_les( const method &m, int hunts );
+bool is_pble( const row &lh, int hunts );
+bool is_cyclic_le( const row &lh, int hunts );
 bool is_division_false( const method &m, const change &c, size_t divlen );
 bool is_too_many_places( const method &m, const change &c, size_t max );
 

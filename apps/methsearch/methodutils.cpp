@@ -1,5 +1,5 @@
 // -*- C++ -*- methodutils.h - utility functions missing from the ringing-lib
-// Copyright (C) 2002 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -73,15 +73,18 @@ bool have_same_places( const change &a, const change &b )
   return false;
 }
 
-bool has_pbles( const method &m, int hunts )
+bool is_pble( const row &lh, int hunts )
 {
-  return m.huntbells() == hunts && m.isregular();
+  int actual_hunts(0);
+  for(int i = 0; i < lh.bells(); i++)
+    if(lh[i] == i) actual_hunts++;
+
+  return actual_hunts == hunts && lh.ispblh();
 }
 
-bool has_cyclic_les( const method &m, int hunts )
+bool is_cyclic_le( const row &lh, int hunts )
 {
-  const row lh( m.lh() );
-  const int n( m.bells() - hunts );
+  const int n( lh.bells() - hunts );
 
   // Rounds doesn't count...
   if ( lh[hunts] == hunts ) 
@@ -198,7 +201,8 @@ bool division_bad_parity_hack( const method &m, const change &c,
 void do_single_compressed_pn( make_string &os, const change &ch, 
 			      bool &might_need_dot, bool is_lh = false )
 {
-  if ( ch == change( ch.bells(), "X" ) ) 
+  const int n = ch.bells();
+  if ( ch == change( ch.bells(), "X" ) && n % 2 == 0 ) 
     {
       os << '-'; might_need_dot = false;
     } 
@@ -206,13 +210,16 @@ void do_single_compressed_pn( make_string &os, const change &ch,
     {
       string p( ch.print() );
       
-      if ( p[0] == bell(0).to_char() )
-	p = p.substr(1);
-      if ( p[ p.size()-1 ] == bell( ch.bells() - 1 ).to_char() )
-	p = p.substr( 0, p.size() - 1 );
-      if ( p.empty() )
-	p = bell( is_lh ? ch.bells() - 1 : 0 ).to_char();
-      
+      if ( p.size() > 1 )
+	{
+	  if ( p[0] == bell(0).to_char() )
+	    p = p.substr(1);
+	  if ( !p.empty() && p[ p.size()-1 ] == bell( n-1 ).to_char() )
+	    p = p.substr( 0, p.size() - 1 );
+	  if ( p.empty() )
+	    p =  bell( is_lh ? n-1 : 0 ).to_char();
+	}
+
       if (might_need_dot) os << '.';
       os << p;
       might_need_dot = true;
