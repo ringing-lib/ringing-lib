@@ -1,7 +1,21 @@
+// proof.h - Proving Stuff
+// Copyright (C) 2001 Mark Banner <mark@standard8.co.uk>
+
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
+
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
 /********************************************************************
- * File            : proof.h
- * Last Modified by: Mark Banner
- * Last Modified   : 24/04/01
  * Description     :
  *    This class provides functions for proving a set of rows
  * unique. The constructor normally does the main proving bit, it
@@ -38,16 +52,22 @@
 // of each row, so it seems unnecessary to keep track of the count
 // for each row, and it's a waste of space, so don't bother.
 
-#ifndef __PROOF_H
-#define __PROOF_H
+#ifndef RINGING_PROOF_H
+#define RINGING_PROOF_H
 
 #ifdef __GNUG__
 #pragma interface
 #endif
 
-#include <stl.h>
-#include <iostream.h>
-#include "row.h"
+#include <ringing/common.h>
+#include RINGING_STD_HEADER(iostream)
+#include RINGING_STD_HEADER(list)
+#include RINGING_STD_HEADER(map)
+#include RINGING_STD_HEADER(algorithm)
+#include RINGING_LOCAL_HEADER(row)
+RINGING_USING_STD
+
+RINGING_START_NAMESPACE
 
 // Our hash function
 int our_hash(const row& r);           // Default hash function
@@ -64,7 +84,7 @@ ostream& operator<< (ostream&, const proof<RowIterator>&);
 
 // Struct to store falseness details
 struct linedetail {
-  row *_row;
+  row _row;
   list<int> _lines;
 };
 
@@ -87,7 +107,6 @@ public:
   inline bool prove(RowIterator first, RowIterator last,
 		    const int max, hash_function f = &our_hash);
 
-  int length(void) const;        // Return location where it first failed
   const failinfo& failed() const // Return rows where it failed.
     { return where; } 
   operator int() const;          // Is touch true or false?
@@ -131,20 +150,6 @@ proof<RowIterator>::proof(RowIterator first, RowIterator last,
   istrue = prove(first, last, max, f);
 }
 
-// Length - return the length of the rows.
-template <class RowIterator>
-int proof<RowIterator>::length(void) const
-{
-  if (istrue)
-    {
-      return _length;
-    }
-  else
-    {
-      return *(*where.begin())._lines.begin();
-    }
-}
-
 // Prove function for rows up to one extent.
 template <class RowIterator>
 bool proof<RowIterator>::prove (RowIterator first, RowIterator last)
@@ -168,7 +173,6 @@ bool proof<RowIterator>::prove (RowIterator first, RowIterator last)
       while ((j = find(k, last, *i)) != last)
 	{
 	  istrue = false;
-
 	  // add the false rows into the failinfo mmap.
 	  // does it exist already?
 	  int exists = 0;
@@ -179,7 +183,7 @@ bool proof<RowIterator>::prove (RowIterator first, RowIterator last)
 	      fi = where.begin();
 	      while ((fi != where.end()) && (exists == 0))
 		{
-		  if (*(*fi)._row == *i)
+		  if ((*fi)._row == *i)
 		    {
 		      exists = 1;
 		    }
@@ -193,7 +197,7 @@ bool proof<RowIterator>::prove (RowIterator first, RowIterator last)
 	    {
 	      // no, so start a new item.
 	      linedetail l;
-	      l._row = i;
+	      l._row = *i;
 	      l._lines.push_back(i - first);
 	      l._lines.push_back(j - first);
 	      where.push_back(l);
@@ -245,7 +249,7 @@ bool proof<RowIterator>::prove (RowIterator first, RowIterator last,
 	      fi = where.begin();
 	      while ((fi != where.end()) && (exists == 0))
 		{
-		  if (*(*fi)._row == *i)
+		  if ((*fi)._row == *i)
 		    {
 		      exists = 1;
 		    }
@@ -259,7 +263,7 @@ bool proof<RowIterator>::prove (RowIterator first, RowIterator last,
 	    {
 	      // no, so start a new item.
 	      linedetail l;
-	      l._row = i;
+	      l._row = *i;
 	      l._lines.push_back(find(first, last, *i) - first);
 	      l._lines.push_back(i - first);
 	      where.push_back(l);
@@ -310,7 +314,7 @@ ostream& operator<<(ostream &o, const proof<RowIterator> &p)
       proof<RowIterator>::failinfo::iterator fi;
       for (fi = faili.begin(); fi != faili.end(); fi++)
 	{
-	  o << "Row " << *(*fi)._row << " is repeated on lines";
+	  o << "Row " << (*fi)._row << " is repeated on lines";
 	  list<int>::iterator i;
 	  for (i = (*fi)._lines.begin(); i != (*fi)._lines.end(); i++)
 	    {
@@ -321,5 +325,7 @@ ostream& operator<<(ostream &o, const proof<RowIterator> &p)
     }
   return o;
 }
+
+RINGING_END_NAMESPACE
 
 #endif
