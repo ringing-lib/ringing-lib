@@ -75,7 +75,7 @@ public:
   void Set(const char *, const int& = 1);
 
   // Return the expression
-  string Get() const { return *this; }
+  string Get() const;
 
   // Return the count
   unsigned int count(const EStroke& = eBoth) const;
@@ -83,7 +83,7 @@ public:
   int total(const EStroke& = eBoth) const;
 
   // Return the uncalculated score
-  int raw_score() const { return _score; }
+  int raw_score() const;
 
   friend class music;
   friend class music_node;
@@ -109,8 +109,8 @@ public:
   typedef DetailsVector::iterator DetailsVectorIterator;
 
   // Have to know how many bells there are
-  music_node() { bells = 0; }
-  music_node(const unsigned int &b) { bells = b; }
+  music_node();
+  music_node(const unsigned int &b);
   ~music_node();
 
   void set_bells(const unsigned int &b);
@@ -136,14 +136,25 @@ private:
 class RINGING_API music
 {
 public:
+  // Various defintions for accessing the music_details structure.
   typedef vector<music_details> mdvector;
-
-  unsigned int specify_music(const music_details&);
-  //  bool remove_music(const int&);
+  typedef vector<music_details>::iterator iterator;
+  typedef vector<music_details>::const_iterator const_iterator;
+  typedef vector<music_details>::size_type size_type;
 
   music(const unsigned int &b = 0);         // Default Constructor
 
-  void set_bells(const unsigned int &b);
+  void push_back(const music_details&); // "Specify items" to end of vector
+  //  void pop_back(); // Remove items from end of vector
+
+  iterator begin(); // begining of the music_details vector
+  const_iterator begin() const;
+  iterator end(); // end of the music_details vector
+  const_iterator end() const;
+
+  size_type size() const; // number of music_details stored
+
+  void set_bells(const unsigned int &b); // set the number of bells to match
 
   // Main Processing function
   template <class RowIterator>
@@ -160,14 +171,17 @@ public:
       }
   }
 
-  unsigned int Get_Results(const unsigned int&, const EStroke& = eBoth);
-  int Get_Score(const unsigned int&, const EStroke& = eBoth);
+  // Get the total score - individual scores now obtained from accessing
+  // the items within the music_details vector.
   int Get_Score(const EStroke& = eBoth);
+  // Get the total matches.
+  unsigned int Get_Count(const EStroke& = eBoth);
 
 private:
+  // The music specification details
   mdvector MusicInfo;
+  // The tree containing the structure for matching rows
   music_node TopNode;
-  int bells;
 
   // The main processing function
   void process_row(const row&, const bool&);

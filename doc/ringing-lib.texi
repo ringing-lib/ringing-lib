@@ -154,6 +154,7 @@ you may have to generate it by hand from the template in
 * The Standard Template Library::  
 * Unix-like systems::           
 * Microsoft Windows::           
+* Testing the library::         
 * Using the library in your programs::  
 @end menu
 
@@ -216,7 +217,7 @@ At the moment it is only possible to create a version of the library for
 static linking; in the near future we hope to use GNU Libtool to provide
 a portable mechanism for creating shared libraries.
 
-@node Microsoft Windows, Using the library in your programs, Unix-like systems, Installing and using the library
+@node Microsoft Windows, Testing the library, Unix-like systems, Installing and using the library
 @section Microsoft Windows
 
 When compiling on Microsoft Windows, the range of different compilers and
@@ -254,7 +255,14 @@ library (@file{.lib} file).  It is not yet straightforward to make the
 library into a DLL; if you choose to do this, you are on your own but
 the authors would be please to hear of any success.
 
-@node Using the library in your programs,  , Microsoft Windows, Installing and using the library
+@node Testing the library, Using the library in your programs, Microsoft Windows, Installing and using the library
+@section Testing the library
+
+The library is now being provided with basic test facilities that exercise the main classes and provide confidence that they are working correctly.
+
+The tests are found under the 'tests' directory and are linked into one executable called 'test'. If all tests are succesfully a message will be printed stating this on the last line of output of the program.
+
+@node Using the library in your programs,  , Testing the library, Installing and using the library
 @section Using the library in your programs
 
 To use the Ringing Class Library in your programs, you simply include
@@ -1785,9 +1793,8 @@ Expressions.
 
 The music class processes each row just once, it does not store any
 rows. It assumes that the first row given is a handstroke row. The class
-should be able to handle any number of bells. If an odd number of bells
-is given, e.g. 5, then a tenor is assumed in looking for items like
-queens, e.g. 13524 essentially becomes 135246.
+should be able to handle any number of bells that the row class can. Note,
+that matches for complete rows should be done on a same number of bells basis.
 
 Each time the analysis function is called, the results stored in the
 class are reset to zero, and then incremented based on the rows given.
@@ -1903,12 +1910,96 @@ are matching with a 6 bell method):
 @subsection Music Details class
 @cindex music_details
 
-To be written
+The music_details class allows the specification of music via a regular
+expression to the music class. Although functions are provided to return the
+score, they are mainly intended for use by the music class itself. It should
+be noted that the music class takes a copy of the music_details object rather
+than a pointer.
+
+@deftypefn Constructor music_details (const string &e = "", const int &s = 1);
+@deftypefnx Constructor music_details (const char *e, const int &s = 1);
+Creates the object and sets the initial expression to e and the score to use
+to s. By default the score is 1.
+@end deftypefn
+
+@deftypefn Destructor ~music_details ();
+Destructor. Doesn't do much in this case.
+@end deftypefn
+
+@deftypefun {void} Set (const string &e, const int &s = 1);
+@deftypefunx {void} Set (const char *e, const int &s = 1);
+Sets the expression to e and the score to s. It will also reset the counts
+of rows matched.
+@end deftypefun
+
+@deftypefun {string} Get () const;
+Returns the currently stored expression.
+@end deftypefun
+
+@deftypefun {unsigned int} count (const EStroke& = eBoth) const;
+Returns the number of rows matched based on the stroke that is passed in.
+If eBoth is passed, then the result will be the handstroke count plus the
+backstroke count.
+@end deftypefun
+
+@deftypefun {int} total (const EStroke& = eBoth) const;
+Returns the total score based on the stroke that is passed in.
+If eBoth is passed, then the result will be the handstroke score plus the
+backstroke score.
+@end deftypefun
+
+@deftypefun {int} raw_score const;
+Returns the score previously specified to the object.
+@end deftypefun
 
 @node Using the Music Class, music class definition, Music Regular Expressions, Musical Analysis
 @section Using the Music Class
 
-To be written
+The basic process of using the music class is to create it, specify to it the music that you wish to look for in a set of rows, tell it to process the rows and then obtain the results.
+
+We now describe this in more detail. First create an instance of the music class, specifying to it the number of bells you wish to work with:
+
+@example
+music mu(5);
+@end example
+
+Now specify the music that you are looking for via the music details class (see @ref{Expression Language} for how to do this). The music class behaves like a @code{vector<music_details>} structure so you can access the elements individually before and after. To add a music specification, do something like this:
+
+@example
+music_details md("*45");
+mu.push_back(md);
+@end example
+
+If you want, more can be added in the same way or by modifying md and pushing the new structure onto the back of the music list:
+
+@example
+md.Set("*345*");
+mu.push_back(md);
+@end example
+
+Now you can supply the music class with rows to search against the specified music (note pbdoubles is a vector<row>)
+
+@example
+mu.process_rows(pbdoubles.begin(), pbdoubles.end());
+@end example
+
+Now you can obtain the results from the music class. You can do this in several ways. The first is to obtain the overall total score, for both strokes, or for one:
+
+@example
+cout << "Total Score: " << mu.Get_Score() << endl;
+cout << "Total Score (Backstroke): " << mu.Get_Score(eBackStroke) << endl;
+@end example
+
+The second way is to obtain results for individual items:
+
+@example
+music::const_iterator k;
+
+for (k = mu.begin(); k != mu.end(); k++)
+  cout << "Total for " << k->Get() << ": " << t->count() << " : " << k->total() << endl;
+@end example
+
+This produces three columns, the first is the music expression that was searched for, the second is the number of matches, the third is the number of matches based on the score. See the @ref{Music_Details class} for more details on these functions.
 
 @node music class definition, music node class definition, Using the Music Class, Musical Analysis
 @section Music Class definition

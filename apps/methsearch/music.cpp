@@ -97,7 +97,7 @@ void musical_analysis::analyser::init_n_runs( int n )
 	os << '*';
 	for ( int j=0; j<n; ++j ) os << bell( i+j );
 	os << '*';
-	mu.specify_music( music_details( os ) );
+	mu.push_back(music_details(os));
       }
   }
   {
@@ -107,7 +107,7 @@ void musical_analysis::analyser::init_n_runs( int n )
 	os << '*';
 	for ( int j=n-1; j>=0; --j ) os << bell( i+j );
 	os << '*';
-	mu.specify_music( music_details( os ) );
+	mu.push_back(music_details(os));
       }
   }
 }
@@ -125,7 +125,7 @@ void musical_analysis::analyser::init_crus()
 	for ( int k = 6; k < bells; ++k )
 	  os << bell(k);
 	
-	mu.specify_music( music_details( os ) );
+	mu.push_back(music_details(os));
       }
 }
 
@@ -146,20 +146,20 @@ musical_analysis::analyser::analyser( int bells )
 	      string n( i->substr( 1, i->size()-2 ) );
 
 	      if ( n == "queens" )
-		mu.specify_music
+		mu.push_back
 		  ( music_details( row::queens( bells ).print() ) );
 
 	      else if ( n == "kings" )
-		mu.specify_music
+		mu.push_back
 		  ( music_details( row::kings( bells ).print() ) );
 
 	      else if ( n == "tittums" )
-		mu.specify_music
+		mu.push_back
 		  ( music_details( row::tittums( bells ).print() ) );
 
 
 	      else if ( n == "reverse-rounds" )
-		mu.specify_music
+		mu.push_back
 		  ( music_details( row::reverse_rounds( bells ).print() ) );
 
 	      else if ( n == "CRUs" )
@@ -186,7 +186,7 @@ musical_analysis::analyser::analyser( int bells )
 	    }
 	  else
 	    {
-	      mu.specify_music( music_details( *i ) );
+	      mu.push_back( music_details( *i ) );
 	    }
 	}
     }
@@ -221,4 +221,3 @@ void musical_analysis::force_init( int bells )
   // Going into this function initialises the static there.
   analyser::instance( bells );
 }
-

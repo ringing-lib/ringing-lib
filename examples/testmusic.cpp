@@ -62,8 +62,7 @@ int main()
     }
 
   {
-    vector<int> thedetails;
-    vector<int>::const_iterator k;
+    music::const_iterator k;
 
     cout << "Testing Music Class...\n\n";
     
@@ -76,28 +75,23 @@ int main()
       {
 #endif
 	music_details md("*45");
-	thedetails.push_back(mu.specify_music(md));
-	cout << thedetails[thedetails.size() - 1] << ":" << md << endl;
+	mu.push_back(md);
 
 	md.Set("*345*");
-	thedetails.push_back(mu.specify_music(md));
-	cout << thedetails[thedetails.size() - 1] << ":" << md << endl;
-	
+	mu.push_back(md);
+
 	md.Set("54*", 2);
-	thedetails.push_back(mu.specify_music(md));
-	cout << thedetails[thedetails.size() - 1] << ":" << md << endl;
-	
+	mu.push_back(md);
+
 	md.Set("12??5", 4);
-	thedetails.push_back(mu.specify_music(md));
-	cout << thedetails[thedetails.size() - 1] << ":" << md << endl;
+	mu.push_back(md);
 	
 	md.Set("??345", 6);
-	thedetails.push_back(mu.specify_music(md));
-	cout << thedetails[thedetails.size() - 1] << ":" << md << endl;
+	mu.push_back(md);
 
 	md.Set("13524", 6);
-	thedetails.push_back(mu.specify_music(md));
-	cout << thedetails[thedetails.size() - 1] << ":" << md << endl;
+	mu.push_back(md);
+
 #if RINGING_USE_EXCEPTIONS
       }
     catch (exception &e)
@@ -109,22 +103,22 @@ int main()
 
     cout << "Results for both strokes:\n";
 
-    for ( k = thedetails.begin(); k != thedetails.end(); k++)
-      cout << "Total " << *k << ": " << mu.Get_Results(*k) << " : " << mu.Get_Score(*k) << endl;
+    for (k = mu.begin(); k != mu.end(); k++)
+      cout << "Total " << k->Get() << "\t: " << k->count() << " : " << k->total() << endl;
 
     cout << "Total Score: " << mu.Get_Score() << endl;
 
     cout << "Results for handstrokes:\n";
 
-    for ( k = thedetails.begin(); k != thedetails.end(); k++)
-      cout << "Total " << *k << ": " << mu.Get_Results(*k, eHandstroke) << " : " << mu.Get_Score(*k, eHandstroke) << endl;
+    for (k = mu.begin(); k != mu.end(); k++)
+      cout << "Total " << k->Get() << "\t: " << k->count(eHandstroke) << " : " << k->total(eHandstroke) << endl;
 
     cout << "Total Score: " << mu.Get_Score(eHandstroke) << endl;
 
     cout << "Results for backstrokes:\n";
 
-    for ( k = thedetails.begin(); k != thedetails.end(); k++)
-      cout << "Total " << *k << ": " << mu.Get_Results(*k, eBackstroke) << " : " << mu.Get_Score(*k, eBackstroke) << endl;
+    for (k = mu.begin(); k != mu.end(); k++)
+      cout << "Total " << k->Get() << "\t: " << k->count(eBackstroke) << " : " << k->total(eBackstroke) << endl;
 
     cout << "Total Score: " << mu.Get_Score(eBackstroke) << endl;
   }

@@ -68,6 +68,11 @@ void music_details::Set(const char *e, const int &s)
   _count_backstroke = 0;
 }
 
+string music_details::Get() const
+{
+  return *this;
+}
+
 // Return the count
 unsigned int music_details::count(const EStroke &stroke) const
 {
@@ -92,6 +97,11 @@ unsigned int music_details::count(const EStroke &stroke) const
 int music_details::total(const EStroke &stroke) const
 {
   return count(stroke) * _score;
+}
+
+int music_details::raw_score() const
+{
+  return _score;
 }
 
 // Clear the Current counts
@@ -122,6 +132,16 @@ void music_details::increment(const EStroke &stroke)
 music_node::memory_error::memory_error() 
   : overflow_error("Not enough memory to allocate to music_node item") {}
 #endif
+
+music_node::music_node()
+{
+  bells = 0;
+}
+
+music_node::music_node(const unsigned int &b)
+{
+  bells = b;
+}
 
 music_node::~music_node()
 {
@@ -291,30 +311,52 @@ void music_node::match(const row &r, const unsigned int &pos, vector<music_detai
 // default constructor.
 music::music(const unsigned int &b) : TopNode(b)
 {
-  bells = 0;
-
   // Reset the music
   reset_music();
 }
 
-unsigned int music::specify_music(const music_details &md)
+// Specify the music and add it into the search structure
+void music::push_back(const music_details &md)
 {
   MusicInfo.push_back(md);
   TopNode.add(md, 0, MusicInfo.size() - 1, 0);
-  return MusicInfo.size() - 1;
+}
+
+music::iterator music::begin()
+{
+  return MusicInfo.begin();
+}
+
+music::const_iterator music::begin() const
+{
+  return MusicInfo.begin();
+}
+
+music::iterator music::end()
+{
+  return MusicInfo.end();
+}
+
+music::const_iterator music::end() const
+{
+  return MusicInfo.end();
+}
+
+music::size_type music::size() const
+{
+  return MusicInfo.size();
 }
 
 void music::set_bells(const unsigned int &b)
 {
-  bells = b;
   TopNode.set_bells(b);
 }
 
 // reset_music - clears all the music information entries.
 void music::reset_music(void)
 {
-  mdvector::iterator i;
-  for (i = MusicInfo.begin(); i != MusicInfo.end(); i++)
+  music::iterator i;
+  for (i = begin(); i != end(); i++)
     i->clear();
 }
 
@@ -328,23 +370,24 @@ void music::process_row(const row &r, const bool &back)
     TopNode.match(r, 0, MusicInfo, eHandstroke);
 }
 
-unsigned int music::Get_Results(const unsigned int &i, const EStroke &stroke)
-{
-  return MusicInfo[i].count(stroke);
-}
-
-int music::Get_Score(const unsigned int &i, const EStroke &stroke)
-{
-  return MusicInfo[i].total(stroke);
-}
-
+// Return the total score for all items
 int music::Get_Score(const EStroke &stroke)
 {
   int total = 0;
-  mdvector::iterator i;
-  for (i = MusicInfo.begin(); i != MusicInfo.end(); i++)
+  music::const_iterator i;
+  for (i = begin(); i != end(); i++)
     total += i->total(stroke);
   return total;
+}
+
+// Return the total matches for all items
+unsigned int music::Get_Count(const EStroke &stroke)
+{
+  unsigned int count = 0;
+  music::const_iterator i;
+  for (i = begin(); i != end(); i++)
+    count += i->count(stroke);
+  return count;
 }
 
 RINGING_END_NAMESPACE
