@@ -165,7 +165,7 @@ library_base::const_iterator cclib::impl::begin() const
   ifs->clear();
   ifs->seekg(0, ios::beg);
   return const_iterator(const_cast< cclib::impl * >(this), 
-			new cclib::impl::entry_type);
+			new entry_type);
 }
  
 cclib::impl::entry_type::entry_type()

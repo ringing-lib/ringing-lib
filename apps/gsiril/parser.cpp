@@ -420,7 +420,6 @@ msparser::make_expr( vector< token >::const_iterator first,
 	    if ( !depth && j->type() == tok_types::semicolon )
 	      i = j;
 	  }
-	  assert( i != last-1 );
 
 	  music_details desc;
 	  iter_t expr_start;

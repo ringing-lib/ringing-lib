@@ -125,6 +125,13 @@ proof_context::proof_context( const execution_context &ectx )
   r = row(ectx.bells());
 }
 
+proof_context::~proof_context()
+{
+  // MSVC 7.1 does not line-buffer std::cout (there is no requirement
+  // for it to).
+  ectx.output().flush();
+}
+
 void proof_context::output_string( const string& str )
 {
   bool do_exit( false );

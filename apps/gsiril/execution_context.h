@@ -124,6 +124,7 @@ public:
   };
 
   explicit proof_context( const execution_context & );
+ ~proof_context();
   
   permute_and_prove_t permute_and_prove();
 

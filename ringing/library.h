@@ -132,7 +132,8 @@ public:
   {
     shared_pointer< library_facet_base > f( pimpl->get_facet( Facet::id ) );
     if ( !f.get() ) throw runtime_error( "No such facet" );
-    return typename Facet::type( static_cast< const Facet& >( *f ) );
+	typedef typename Facet::type facet_type;
+    return facet_type( static_cast< const Facet& >( *f ) );
   }
 
   template <class Facet>

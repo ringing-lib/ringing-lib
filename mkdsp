@@ -46,7 +46,7 @@ EOF
 my $assume_msvc6;  $assume_msvc6 = 1 if grep /^--assume-msvc6$/, @ARGV;
 
 # Always create DLLs where unix static libraries are used?
-my $use_dll = 1 if grep /^--force-dll$/, @ARGV;
+my ($force_dll, $use_dll) = (1,1) if grep /^--force-dll$/, @ARGV;
 
 #############################################################################
 
@@ -408,7 +408,8 @@ sub process_makefile($)
 	    {
 		for my $p (split /[ \t+]+/, $val)
 		{
-		    my $tp = (($use_dll or $p =~ /.la$/) ? 'dll' : 'lib');
+		    my $tp = ( ($force_dll or $use_dll and $p =~ /.la$/) 
+                               ? 'dll' : 'lib' );
 			       
 		    $p =~ s/\.l?a$//;
 		    $p =~ s/^lib//;
