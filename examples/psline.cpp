@@ -104,6 +104,7 @@ void parse_colour(struct argp_state* state, const string& arg, colour& col)
   if(i < 0 || i > 100)
     argp_error(state, "Colour out of range: %d", i);
   if(is.eof()) { col.grey = true; col.red = i/100; return; }
+  col.red = i/100;
   is >> i;
   if(!is || ((c = is.get()) != '-'))
     argp_error(state, "Invalid colour: \"%s\"", arg.c_str());
