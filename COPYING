@@ -17,14 +17,19 @@ At the time of writing the following files are licenced under the LGPL
   ./ringing/common.h
   ./ringing/common-am.h.in
   ./ringing/common-msvc.h
+  ./ringing/libfacet.cpp
+  ./ringing/libfacet.h
   ./ringing/library.cpp
   ./ringing/library.h
   ./ringing/macros.h
   ./ringing/method.cpp
   ./ringing/method.h
+  ./ringing/peal.cpp
+  ./ringing/peal.h
   ./ringing/pointers.h
   ./ringing/row.cpp
   ./ringing/row.h
+  ./ringing/stl.cpp
   ./ringing/xmllib.cpp
   ./ringing/xmllib.h
 
