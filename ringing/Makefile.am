@@ -5,16 +5,20 @@ DISTCLEANFILES = common-am.h
 MAINTAINERCLEANFILES = Makefile.in
 INCLUDES = -I$(top_srcdir)
 
-lib_LIBRARIES = libringing.a
+lib_LIBRARIES = libringingcore.a libringing.a
 
-LIBS += @XERCES_LIBS@
+# These source files are released under the LGPL
+libringingcore_a_SOURCES = row.cpp method.cpp library.cpp libfacet.cpp \
+libout.cpp stl.cpp xmllib.cpp xmlout.cpp peal.cpp
 
-libringing_a_SOURCES = row.cpp method.cpp library.cpp mslib.cpp cclib.cpp \
+# These source files are released under the GPL
+libringing_a_SOURCES = mslib.cpp cclib.cpp \
 proof.cpp music.cpp print.cpp print_ps.cpp dimension.cpp touch.cpp \
-printm.cpp print_pdf.cpp pdf_fonts.cpp stl.cpp extent.cpp falseness.cpp \
+printm.cpp print_pdf.cpp pdf_fonts.cpp extent.cpp falseness.cpp \
 search_base.cpp basic_search.cpp multtab.cpp table_search.cpp streamutils.cpp \
-xmllib.cpp falseness.dat group.cpp libfacet.cpp peal.cpp xmlout.cpp libout.cpp
+falseness.dat group.cpp $(libringingcore_a_SOURCES)
 
+# TODO: Split this into a list of GPL'd and LGPL'd files.
 myincludedir = $(includedir)/ringing
 myinclude_HEADERS = macros.h row.h method.h library.h mslib.h cclib.h proof.h \
 music.h print.h print_ps.h dimension.h common.h common-am.h common-msvc.h \
