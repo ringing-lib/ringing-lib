@@ -1165,15 +1165,19 @@ class music;
 Default constructor. Resets all the music variables to zero.
 @end deftypefn
 
-@deftypefn Constructor {template<class RowIterator>} music::music (RowIterator @var{first}, RowIterator @var{last});
-This constructor takes the rows and passes them to @code{music::change_rows} which resets the music variables and analyses all the rows. First and last should be an iterator to a container that stores rows. The first should also be a handstroke row.
+@deftypefn Constructor {template<class RowIterator>} music::music (RowIterator @var{first}, RowIterator @var{last}, bool @var{backstroke} = false);
+This constructor takes the rows and passes them to @code{music::change_rows} which resets the music variables and analyses all the rows. First and last should be an iterator to a container that stores rows.
+
+The backstroke operator allows the user to specify if the first row is a backstroke row (@var{backstroke} = true) or a handstroke row (default, @var{backstroke} = false).
 @end deftypefn
 
 @node music Functions, music Operators, music Constructors, Musical Analysis
 @subsection Functions
 
-@deftypefn Function {template<class RowIterator> inline void} music::change_rows (RowIterator @var{first}, RowIterator @var{last});
-This function resets all the music variables and the analyses the rows. First and last should be an iterator to a container that stores rows. The first should also be a handstroke row.
+@deftypefn Function {template<class RowIterator> inline void} music::change_rows (RowIterator @var{first}, RowIterator @var{last}, bool @var{backstroke} = false);
+This function resets all the music variables and the analyses the rows. First and last should be an iterator to a container that stores rows.
+
+The backstroke operator allows the user to specify if the first row is a backstroke row (@var{backstroke} = true) or a handstroke row (default, @var{backstroke} = false).
 @end deftypefn
 
 The following functions all return values depending on the last block of rows analysed.

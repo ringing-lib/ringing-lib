@@ -112,23 +112,21 @@ class music
   music();                           // Default Constructor
 
   template <class RowIterator>       // Processing Constructor
-  music(RowIterator first, RowIterator last)
-    { change_rows(first, last);  }
+  music(RowIterator first, RowIterator last, bool backstroke = false)
+    { change_rows(first, last, backstroke);  }
 
   // Main Processing function
   template <class RowIterator>
-  inline void change_rows(RowIterator first, RowIterator last)
+  inline void change_rows(RowIterator first, RowIterator last, bool backstroke = false)
   {
     // reset row line information
     reset_music();
     
-    bool back = false; // start at hand, false = hand.
-    
     // Go through each row, noting hand and back.
     for (; first != last; first++) 
       {
-	process_row(*first, back);
-	back = (back ? false : true);
+	process_row(*first, backstroke);
+	backstroke = (backstroke ? false : true);
       }
   }
 
