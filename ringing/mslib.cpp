@@ -123,7 +123,7 @@ method mslib::load(const char *name)
 
   f.clear();
   f.seekg(0, ios::beg);
-
+  
   while(f.good()) {
     s = name;
     // See whether the name matches
@@ -131,36 +131,30 @@ method mslib::load(const char *name)
     if(*s == '\0' && isspace(f.get())) { // Found it
       char lh[16];		       // Get the lead head code
       f.get(lh,16,' ');
-      string linebuf;
+
+      // Now extract the rest of the line for the place notation
+      string linebuf = "";
       getline(f, linebuf);
       string::iterator x = linebuf.begin();
 
-      // Remove whitespace
+      string placenotation = "";
+
+      // Remove whitespace from the place notation by copying it
+      // into another string.
       while (x != linebuf.end())
 	{
-	  if (isspace(*x) && (*x != '\n'))
+	  if (!isspace(*x) && (*x != '\n'))
 	    {
-	      if (x == linebuf.begin())
-		{
-		  linebuf.erase(x);
-		  x = linebuf.begin();
-		}
-	      else
-		{
-		  linebuf.erase(x);
-		}
+	      placenotation += *x;
 	    }
-	  else
-	    {
-	      x++;
-	    }
+	  x++;
 	}
 
       // if we have a + on the front it is not a reflection method,
       // hence don't add the last change.
-      bool final_change = (linebuf[0] != '+');
+      bool final_change = (placenotation[0] != '+');
 
-      method m(linebuf,b,name);
+      method m(placenotation,b,name);
       if(*lh) {
 	char *y;
 	y = lh + strlen(lh) - 1;
