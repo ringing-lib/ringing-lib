@@ -1,5 +1,5 @@
 // -*- C++ -*- multtab.cpp - A precomputed multiplication table of rows
-// Copyright (C) 2002, 2003 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003, 2004 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -27,9 +27,11 @@
 #if RINGING_OLD_INCLUDES
 #include <iostream.h>
 #include <iomanip.h>
+#include <map.h>
 #else
 #include <iostream>
 #include <iomanip>
+#include <map>
 #endif
 #if RINGING_OLD_C_INCLUDES
 #include <assert.h>
@@ -131,8 +133,16 @@ multtab::compute_pre_mult( const row &r )
 	return pre_col_t( i, this );
   }
 
+  // Build up a map in O(n) to get O(ln n) lookups.
+  // The alternative -- doing direct lookups -- is
+  // O(n ln n).  For a 1-part table on 8 bells, this
+  // improves speed a factor of over 100.
+  map< row, row_t > finder;
   for ( size_t i(0); i < table.size(); ++i )
-    table[i].push_back( find( r * rows[i] ) );
+    finder[ rows[i] ] = row_t(i);
+
+  for ( size_t i(0); i < table.size(); ++i )
+    table[i].push_back( finder[ r * rows[i] ] );
   
   cols.push_back( make_pair( r, pre_mult ) );
   return pre_col_t( cols.size() - 1, this );
@@ -147,8 +157,16 @@ multtab::compute_post_mult( const row &r )
 	return post_col_t( i, this );
   }
 
+  // Build up a map in O(n) to get O(ln n) lookups.
+  // The alternative -- doing direct lookups -- is
+  // O(n ln n).  For a 1-part table on 8 bells, this
+  // improves speed a factor of over 100.
+  map< row, row_t > finder;
   for ( size_t i(0); i < table.size(); ++i )
-    table[i].push_back( find( rows[i] * r ) );
+    finder[ rows[i] ] = row_t(i);
+
+  for ( size_t i(0); i < table.size(); ++i )
+    table[i].push_back( finder[ rows[i] * r ] );
 
   cols.push_back( make_pair( r, post_mult ) );
   return post_col_t( cols.size() - 1, this );
