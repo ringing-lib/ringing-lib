@@ -1,5 +1,5 @@
 // -*- C++ -*- xmllib.cpp - Access to the online XML method library
-// Copyright (C) 2003 Richard Smith <richard@ex-parrot.com>.
+// Copyright (C) 2003, 2004 Richard Smith <richard@ex-parrot.com>.
 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -81,7 +81,7 @@ DOMElement* next_sibling_element( DOMNode* start, const string& name )
   while ( start 
 	  && ( start->getNodeType() != DOMNode::ELEMENT_NODE ||
 	       transcode( static_cast<DOMElement*>(start)->getTagName() )
-	       .to_string() != name ) )
+	       .to_string() != name ) ) 
     start = start->getNextSibling();
 
   return static_cast<DOMElement*>(start);
@@ -150,9 +150,9 @@ xmllib::impl::impl( xmllib::file_arg_type type, const string& url )
 	throw runtime_error( "No document element" );
 
       if ( transcode( doc->getDocumentElement()->getTagName() )
-	   .to_string() != "results" )
+	   .to_string() != "methods" ) 
 	throw runtime_error
-	  ( "Document root should be a <results/> element" );
+	  ( "Document root should be a <methods/> element" );
     } 
   catch ( const XMLException& e ) 
     {
@@ -174,6 +174,7 @@ library_base *xmllib::canread( const string& name )
 class xmllib::impl::entry_type : public library_entry::impl
 {
   string get_field( const string& ) const;
+  string extract_text( const DOMElement* e ) const;
 
   virtual string name() const;
   virtual string base_name() const;
@@ -196,23 +197,28 @@ string xmllib::impl::entry_type::get_field( const string& name ) const
     throw runtime_error( make_string() << "XML method element has no "
 			 << name << " sub-element" );
   
-  make_string value;
+
+  return extract_text( e );
+}
+
+string xmllib::impl::entry_type::extract_text( const DOMElement* e ) const
+{
+  string value;
 
   for ( DOMNode *t = e->getFirstChild(); t; t = t->getNextSibling() )
     if ( t->getNodeType() == DOMNode::TEXT_NODE )
       {
 	DOMCharacterData *cd = static_cast<DOMCharacterData*>(t);
 	if (cd)
-	  value << transcode( cd->getData() ).to_string();
+	  value.append( transcode( cd->getData() ).to_string() );
       }
 
   return value;
 }
 
-
 string xmllib::impl::entry_type::name() const
 {
-  return get_field("fullname"); 
+  return get_field("title"); 
 }
 
 string xmllib::impl::entry_type::base_name() const
@@ -222,13 +228,38 @@ string xmllib::impl::entry_type::base_name() const
 
 string xmllib::impl::entry_type::pn() const
 {
-  string pn = get_field("pn");
-  string le = get_field("le");
+  DOMElement *pn_elt = next_sibling_element( meth->getFirstChild(), "pn" );
 
-  if ( le.empty() )
-    return pn;
+  if ( !pn_elt ) 
+    throw runtime_error
+      ( "XML method element has no <pn> element" );
+
+  if ( DOMElement *block_elt 
+       = next_sibling_element( pn_elt->getFirstChild(), "block" ) )
+    {
+      return extract_text( block_elt );
+    }
+  else if ( DOMElement *sym_elt
+	= next_sibling_element( pn_elt->getFirstChild(), "symblock" ) )
+    {
+      string value( 1u, '&' );
+      value.append( extract_text( sym_elt ) );
+      value.append( 1u, ',');
+      
+      sym_elt = next_sibling_element( pn_elt->getFirstChild(), "symblock" );
+
+      if ( !sym_elt )
+	throw runtime_error
+	  ( "XML <pn> element has only one <symblock> element" );
+
+      value.append( 1u, '&' );
+      value.append( extract_text( sym_elt ) );
+
+      return value;
+    }
   else 
-    return make_string() << '&' << pn << ',' << le;
+    throw runtime_error
+      ( "XML <pn> element has unrecognised content" );
 }
 
 int xmllib::impl::entry_type::bells() const 
