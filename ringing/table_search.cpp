@@ -60,7 +60,8 @@ class table_search::context : public search_base::context_base
 public:
   context( const table_search *s ) 
     : lenrange( s->lenrange ), 
-      table( extent_iterator( s->meth.bells()-1, 1 ),
+      table( s->meth.lh()[0] ? extent_iterator( s->meth.bells() )
+	                     : extent_iterator( s->meth.bells() - 1, 1 ),
 	     extent_iterator() ),
       ignore_rotations( s->ignore_rotations )
   {
