@@ -77,19 +77,31 @@ int main()
 	music_details md("*45");
 	mu.push_back(md);
 
-	md.set("*345*");
-	mu.push_back(md);
-
 	md.set("54*", 2);
 	mu.push_back(md);
 
 	md.set("12??5", 4);
 	mu.push_back(md);
 	
-	md.set("??345", 6);
+	md.set("13524", 6);
 	mu.push_back(md);
 
-	md.set("13524", 6);
+	md.set("*[34]5");
+	mu.push_back(md);
+
+	md.set("*34?");
+	mu.push_back(md);
+       
+	md.set("?45*");
+	mu.push_back(md);
+	
+	md.set("5[34]*");
+	mu.push_back(md);
+
+	md.set("*345*");
+	mu.push_back(md);
+
+	md.set("?*34*");
 	mu.push_back(md);
 
 #if RINGING_USE_EXCEPTIONS
@@ -101,10 +113,10 @@ int main()
 #endif
     mu.process_rows(pbdoubles.begin(), pbdoubles.end());
 
-    cout << "Results for both strokes:\n";
+    cout << "Results for both strokes (and max possibilities in last column):\n";
 
     for (k = mu.begin(); k != mu.end(); k++)
-      cout << "Total " << k->get() << "\t: " << k->count() << " : " << k->total() << endl;
+      cout << "Total " << k->get() << "\t: " << k->count() << " : " << k->total() << " : " << k->possible_matches(5) << endl;
 
     cout << "Total Score: " << mu.get_score() << endl;
 

@@ -2173,6 +2173,12 @@ Representing any bells in any order:
 *
 @end example
 
+Representing one of several bells in a set position:
+
+@example
+[34]
+@end example
+
 These constructs can be formed into the following (in all these cases we
 are matching with a 6 bell method):
 
@@ -2196,6 +2202,10 @@ are matching with a 6 bell method):
 "*456*" In this case we wish to know how many rows have 456 in the middle of them, note this includes rows that start 456 and end 456 as well.
 @end example
 
+@example
+"*[56]78" in this case we wish to know how many rows end in 578 or 678.
+@end example
+
 @node Music_Details class,  , Expression Language, Music Regular Expressions
 @subsection Music Details class
 @cindex music_details
@@ -2209,21 +2219,25 @@ than a pointer.
 @deftypefn Constructor music_details (const string &e = "", const int &s = 1);
 @deftypefnx Constructor music_details (const char *e, const int &s = 1);
 Creates the object and sets the initial expression to e and the score to use
-to s. By default the score is 1.
+to s. By default the score is 1. If the specified expression is invalid, the class will throw an @code{music_details::invalid_regex} exception (if they are enabled) or reset the expression to "".
 @end deftypefn
 
 @deftypefn Destructor ~music_details ();
 Destructor. Doesn't do much in this case.
 @end deftypefn
 
-@deftypefun {void} Set (const string &e, const int &s = 1);
-@deftypefunx {void} Set (const char *e, const int &s = 1);
+@deftypefun {void} set (const string &e, const int &s = 1);
+@deftypefunx {void} set (const char *e, const int &s = 1);
 Sets the expression to e and the score to s. It will also reset the counts
 of rows matched.
 @end deftypefun
 
-@deftypefun {string} Get () const;
+@deftypefun {string} get () const;
 Returns the currently stored expression.
+@end deftypefun
+
+@deftypefun {unsigned int} possible matches (const unsigned int &bells) const;
+Returns the maximum number of possible matches (in one true extent) for the currently specified expression. @var{bells} must be specified as the @code{music_details} class has no knowledge of this under normal circumstances.
 @end deftypefun
 
 @deftypefun {unsigned int} count (const EStroke& = eBoth) const;
@@ -2263,7 +2277,7 @@ mu.push_back(md);
 If you want, more can be added in the same way or by modifying md and pushing the new structure onto the back of the music list:
 
 @example
-md.Set("*345*");
+md.set("*345*");
 mu.push_back(md);
 @end example
 
@@ -2276,8 +2290,8 @@ mu.process_rows(pbdoubles.begin(), pbdoubles.end());
 Now you can obtain the results from the music class. You can do this in several ways. The first is to obtain the overall total score, for both strokes, or for one:
 
 @example
-cout << "Total Score: " << mu.Get_Score() << endl;
-cout << "Total Score (Backstroke): " << mu.Get_Score(eBackStroke) << endl;
+cout << "Total Score: " << mu.get_score() << endl;
+cout << "Total Score (Backstroke): " << mu.get_score(eBackStroke) << endl;
 @end example
 
 The second way is to obtain results for individual items:
@@ -2286,7 +2300,7 @@ The second way is to obtain results for individual items:
 music::const_iterator k;
 
 for (k = mu.begin(); k != mu.end(); k++)
-  cout << "Total for " << k->Get() << ": " << t->count() << " : " << k->total() << endl;
+  cout << "Total for " << k->get() << ": " << t->count() << " : " << k->total() << endl;
 @end example
 
 This produces three columns, the first is the music expression that was searched for, the second is the number of matches, the third is the number of matches based on the score. See the @ref{Music_Details class} for more details on these functions.

@@ -61,7 +61,7 @@ enum EStroke
 };
 
 // Class to store details of the expressions and count.
-class RINGING_API music_details : public string
+class RINGING_API music_details : private string
 {
 public:
   music_details(const string& = "", const int& = 1);
@@ -70,12 +70,15 @@ public:
   
   // Set the expression and score
   // From String
-  void set(const string&, const int& = 1);
+  bool set(const string&, const int& = 1);
   // From Character String
-  void set(const char *, const int& = 1);
+  bool set(const char *, const int& = 1);
 
   // Return the expression
   string get() const;
+
+  // Return the number of possible matches
+  unsigned int possible_matches(const unsigned int &bells) const;
 
   // Return the count
   unsigned int count(const EStroke& = eBoth) const;
@@ -87,12 +90,21 @@ public:
 
   friend class music;
   friend class music_node;
+
+#if RINGING_USE_EXCEPTIONS
+  struct invalid_regex : public invalid_argument {
+    invalid_regex();
+  };
+#endif
+
 private:
   // Clear the current counts
   void clear();
   // Which count to increment
   void increment(const EStroke& = eBackstroke);
-
+  bool check_expression();
+  unsigned int possible_matches(const unsigned int &bells, const unsigned int& pos, const string &s, int &q) const;
+  
   unsigned int _count_handstroke;
   unsigned int _count_backstroke;
   int _score;

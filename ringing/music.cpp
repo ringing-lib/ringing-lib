@@ -28,12 +28,76 @@ RINGING_START_NAMESPACE
 
 RINGING_USING_STD
 
+// General function to work out if it's a bell or not
+// according to exceptions or not.
+bool is_bell(const char &c, bell &b)
+{
+  bool isbell = true;
+#if RINGING_USE_EXCEPTIONS
+  try
+    {
+      b.from_char(c);
+    }
+  catch (const bell::invalid &e)
+    {
+      isbell = false;
+    }
+#else
+  b.from_char(c);
+  if (b > bell::MAX_BELLS)
+    {
+      isbell = false;
+    }
+#endif
+  return isbell;
+}
+
+unsigned int count_bells(const string &s)
+{
+  unsigned int total = 0;
+  string::const_iterator i;
+  bell b;
+  int brackets = 0;
+  for (i = s.begin(); i != s.end(); i++)
+    {
+      if (*i == '?')
+	{
+	  total++;
+	}
+      else if (*i == '[')
+	{
+	  brackets = 1;
+	}
+      else if (*i == ']')
+	{
+	  total++; // [] = 1 bell.
+	  brackets = 0;
+	}
+      else if ((brackets == 0) && (is_bell(*i, b)))
+	{
+	  total++;
+	}
+    }
+  return total;
+}
+
 // ********************************************************
 // function definitions for MUSIC_DETAILS
 // ********************************************************
 
+#if RINGING_USE_EXCEPTIONS
+music_details::invalid_regex::invalid_regex() 
+  : invalid_argument("Invalid musical expression supplied.") {}
+#endif
+
 music_details::music_details(const string &e, const int &s) : string(e)
 {
+  if ((e != "") && (!check_expression()))
+    {
+      // Can't do match if we don't use exceptions, so
+      // just set the expression to "", hopefully the user will catch this.
+      *this = "";
+    }
   _score = s;
   _count_handstroke = 0;
   _count_backstroke = 0;
@@ -41,6 +105,12 @@ music_details::music_details(const string &e, const int &s) : string(e)
 
 music_details::music_details(const char *e, const int &s) : string(e)
 {
+  if ((string(e) != "") && (!check_expression()))
+    {
+      // Can't do match if we don't use exceptions, so
+      // just set the expression to "", hopefully the user will catch this.
+      *this = "";
+    }
   _score = s;
   _count_handstroke = 0;
   _count_backstroke = 0;
@@ -50,27 +120,123 @@ music_details::~music_details()
 {
 }
 
-void music_details::set(const string &e, const int &s)
+bool music_details::set(const string &e, const int &s)
 {
   *this = e;
   _score = s;
   // Should reset this here as we have changed the expression
   _count_handstroke = 0;
   _count_backstroke = 0;
+  bool isvalid = check_expression();
+  if (!isvalid)
+    {
+      // Can't do match if we don't use exceptions, so
+      // just set the expression to "", hopefully the user will catch this.
+      *this = "";
+    }
+  return isvalid;
 }
 
-void music_details::set(const char *e, const int &s)
+bool music_details::set(const char *e, const int &s)
 {
   *this = (string) e;
   _score = s;
   // Should reset this here as we have changed the expression
   _count_handstroke = 0;
   _count_backstroke = 0;
+  bool isvalid = check_expression();
+  if (!isvalid)
+    {
+      // Can't do match if we don't use exceptions, so
+      // just set the expression to "", hopefully the user will catch this.
+      *this = "";
+    }
+  return isvalid;
 }
 
 string music_details::get() const
 {
   return *this;
+}
+
+unsigned int music_details::possible_matches(const unsigned int &bells) const
+{
+  int q = 1;
+  return possible_matches(bells, 0, *this, q);
+}
+
+unsigned int music_details::possible_matches(const unsigned int &bells, const unsigned int &pos, const string &s, int &q) const
+{
+  if (pos >= s.size()) // was >= bells
+    {
+      return 1;
+    }
+  else
+    {
+      bell b;
+      if (is_bell(s[pos], b))
+	{
+	  return possible_matches(bells, pos + 1, s, q);
+	}
+      else if (s[pos] == '?')
+	{
+	  unsigned int count = possible_matches(bells, pos + 1, s, q) * q;
+	  q++;
+	  return count;
+	}
+      else if (s[pos] == '[')
+	{
+	  // Calculate number of options, and multiply by rest of matches
+	  unsigned int newpos = s.find(']', pos + 1);
+	  return possible_matches(bells, newpos + 1, s, q) * (newpos - pos - 1);
+	}
+      else if (s[pos] == '*')
+	{
+	  if ((s.size() == pos + 1) || 
+	      (s.find('*', pos + 1) > s.size() - pos))
+	    {
+	      // Just 1 star, therefore replace with maximum ?
+	      string modified(s, 0, pos);
+	      // Now add ?
+	      for (unsigned int i = 0; i < bells - count_bells(s.substr(0, pos)) - count_bells(s.substr(pos + 1, s.size() - pos - 1)); i++)
+		{
+		  modified += '?';
+		}
+	      // Now add rest of string
+	      modified += s.substr(pos + 1, s.size() - pos - 1);
+	      return possible_matches(bells, pos, modified, q);
+	    }
+	  else
+	    {
+	      // More than 1 star. Replace string with 0, 1, 2... '?'
+	      // and calculate at each stage
+	      unsigned int total = 0;
+	      unsigned int origq = q;
+	      for (unsigned int i = 0; i <= bells - count_bells(s.substr(pos + 1, s.size() - pos - 1)) - count_bells(s.substr(0, pos)); i++)
+		{
+		  string modified(s, 0, pos);
+		  for (unsigned int j = 0; j < i; j++)
+		    {
+		      modified += '?';
+		    }
+
+		  // Now add rest of string
+		  modified += s.substr(pos + 1, s.size() - pos - 1);
+		  // reset q to ensure we start with the same each time.
+		  q = origq;
+		  total += possible_matches(bells, pos, modified, q);
+		}
+	      return total;
+	    }
+	}
+      else
+	{
+#if RINGING_USE_EXCEPTIONS
+	  throw invalid_regex();
+#endif
+	  return 0;
+	}
+    }
 }
 
 // Return the count
@@ -122,6 +288,71 @@ void music_details::increment(const EStroke &stroke)
     {
       _count_handstroke++;
     }
+}
+
+// Function to provide a brief check if an expression is valid/invalid.
+bool music_details::check_expression()
+{
+  // check all items are valid.
+  std::string::iterator i;
+  bell b;
+  bool valid = true;
+  int brackets = 0;
+  for (i = this->begin(); i != this->end(); i++)
+    {
+      if (!is_bell(*i, b))
+	{
+	  // Check it is not another valid character
+	  switch (*i)
+	    {
+	    case '?':
+	    case '*':
+	      if (brackets != 0)
+		{
+#if RINGING_USE_EXCEPTIONS
+		  throw invalid_regex();
+#else
+		  return false;
+#endif
+		}
+	      break;
+	    case '[':
+	      if (brackets != 0)
+		{
+#if RINGING_USE_EXCEPTIONS
+		  throw invalid_regex();
+#else
+		  return false;
+#endif
+		}
+	      brackets = 1;
+	      break;
+	    case ']':
+	      if (brackets != 1)
+		{
+#if RINGING_USE_EXCEPTIONS
+		  throw invalid_regex();
+#else
+		  return false;
+#endif
+		}
+	      brackets = 0;
+	      break;
+	    default:
+	      valid = false;
+	    }
+	  if (!valid)
+	    {
+#if RINGING_USE_EXCEPTIONS
+	      throw invalid_regex();
+#else
+	      return false;
+#endif
+	      break;
+	    }
+	}
+    }
+  return valid;
 }
 
 // ********************************************************
@@ -177,25 +408,7 @@ void music_node::add(const music_details &md, const unsigned int &i, const unsig
   else if (pos <= bells)
     {
       bell b;
-      bool isbell = true;
-
-#if RINGING_USE_EXCEPTIONS
-      try
-	{
-	  b.from_char(md[i]);
-	}
-      catch (exception &)
-	{
-	  isbell = false;
-	}
-#else
-      b.from_char(md[i]);
-      if (b > bell::MAX_BELLS)
-	{
-	  isbell = false;
-	}
-#endif
-      if (isbell)
+      if (is_bell(md[i], b))
 	{
 	  // Simple bell, add it and move on.
 	  add_to_subtree(b + 1, md, i, key,  pos, false);
@@ -205,6 +418,24 @@ void music_node::add(const music_details &md, const unsigned int &i, const unsig
 	  if (md[i] == '?')
 	    {
 	      add_to_subtree(0, md, i, key, pos, false);
+	    }
+	  else if (md[i] == '[')
+	    {
+	      unsigned int j = i;
+	      // 'remove' the [] section from the string
+	      unsigned int newpos = md.find(']', i + 1);
+	      j++;
+	      // We have an option, so add to each tree until ] occurs.
+	      while (md[j] != ']')
+		{
+		  if (is_bell(md[j], b))
+		    {
+		      add_to_subtree(b + 1, md, newpos, key, pos, false);
+		    }
+		  // else ignore it for now...
+		  j++;
+		}
+	      // ok, that's all for here.
 	    }
 	  else if (md[i] == '*')
 	    {
@@ -220,7 +451,7 @@ void music_node::add(const music_details &md, const unsigned int &i, const unsig
 		  // Any of them '*'s?
 		  if (md.find('*', i + 1) >= md.size())
 		    {
-		      // Deal with the only *5 to go in the add_to_subtree
+		      // Deal with the only * to go in the add_to_subtree
 		      // function.
 		      add_to_subtree(0, md, i, key, pos, true);
 		    }
@@ -264,7 +495,7 @@ void music_node::add_to_subtree(const unsigned int &place, const music_details &
   if (process_star)
     {
       // We are to process star data star.
-      if ((bells - pos == md.size() - i) &&
+      if ((bells - pos == count_bells(md.substr(i, md.size() - i)) + 1) &&
 	  (md.find('*', i + 1) >= md.size()))
 	{
 	  // There are now only numbers to go.
