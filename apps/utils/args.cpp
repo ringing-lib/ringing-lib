@@ -248,7 +248,11 @@ bool integer_opt::process( const string &arg, const arg_parser &ap ) const
   if ( (flags & opt_arg) && arg.empty() )
     opt = default_val;
   else {
-    istringstream is(arg); 
+#if RINGING_USE_STRINGSTREAM
+    istringstream is(arg);
+#else
+    istrstream is(arg.c_str());
+#endif
     is >> opt;
     if(!is || is.get() != EOF) {
       ap.error( make_string() << "Invalid integer argument: \"" << arg << "\"" );
