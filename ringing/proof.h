@@ -125,6 +125,7 @@ public:
   // Output to the ostream about true/falseness
   friend ostream& operator<< <>(ostream& o, const proof<RowIterator>& p);
 private:
+  void resetfailinfo();
   bool istrue;                    // Well, is it true or not?
   failinfo where;                // Details of where it failed.
   int _length;
@@ -141,6 +142,7 @@ proof<RowIterator>::proof()
   // Set istrue to false as we haven't been given anything to prove yet.
   istrue = false;
   _length = 0;
+  resetfailinfo();
 }
 
 // Constructor - 1 extent only.
@@ -169,6 +171,9 @@ bool proof<RowIterator>::prove (RowIterator first, RowIterator last)
   RowIterator k;
   istrue = true;
   int changed_line;
+
+  // First reset out failed information list
+  resetfailinfo();
 
   // The basic algorithm here is to look at the first line and
   // compare it to the rest, then to look at the second and 
@@ -241,6 +246,10 @@ bool proof<RowIterator>::prove (RowIterator first, RowIterator last,
   RowIterator i;
   mmap m;
   istrue = 1;
+
+  // First reset out failed information list
+  resetfailinfo();
+
   // This time we go through the list once, checking that we haven't
   // exceeded max, the limit for the number of rows. If we do, then
   // we add the item onto a list for later reference.
@@ -334,6 +343,12 @@ ostream& operator<<(ostream &o, const proof<RowIterator> &p)
 	}
     }
   return o;
+}
+
+template <class RowIterator>
+void proof<RowIterator>::resetfailinfo()
+{
+  where.erase(where.begin(), where.end());
 }
 
 RINGING_END_NAMESPACE
