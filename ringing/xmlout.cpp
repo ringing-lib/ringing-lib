@@ -230,12 +230,14 @@ void xmlout::impl::append( library_entry const& entry )
   // methods that are known to be unnamed (which should have xsi:nil set)
   // and methods that are not known to be named (which should not).
   // We play it safe and never set xsi:nil for unnamed methods.
+  // Note that not having a name doesn't mean that a method has no name!
+  // Remember Little Bob.
   {
     string name( meth.name() );
-    if ( name.size() ) {
+    //    if ( name.size() ) {
       add_simple_elt( meth_elt, "name", name );
       add_simple_elt( meth_elt, "title", meth.fullname() );
-    }
+      //}
   }
 
   { // We don't use make_sting because this file is LGPL'd.

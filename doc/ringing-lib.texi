@@ -1723,20 +1723,22 @@ methods on its web site, in a text format.  The classes declared in
 @subsubsection The @code{cclib} class
 
 The @code{cclib} class is derived from the @code{library} class.
-Actually it isn't for some reason, but it should be.
 
 @example
 class cclib : public library;
 @end example
 
-It has no constructor for some reason, but it should have.
+There is one constructor.
+
+@deftypefn Constructor {} cclib::cclib (const string& @var{filename});
+This function attempts to open the given file as a Central Council method 
+library.
+@end deftypefn
 
 @deftypefun {static void} cclib::registerlib (void)
 This function registers the Central Council library type with the
-library auto-detection mechanism.  Beware that at the moment it will
-agree to open absolutely any file, whether or not it looks like a CC
-method collection.  I don't know why.  You should put it last in your
-list of library types.
+library auto-detection mechanism.  It will agree to open any file which
+has the correct CC copyright notice in the first line.
 @end deftypefun
 
 @node Central Council library facets,  , The cclib class, Central Council libraries
