@@ -111,6 +111,7 @@ private:
   int n;			// Number of bells
   vector<bell> swaps;		// List of pairs to swap
 
+  void init( const string & );
 public:
   change() : n(0) {}	        //
   explicit change(int num) : n(num) {}   // Construct an empty change
@@ -178,6 +179,13 @@ inline RINGING_API bell operator*(bell i, const change& c)
   bell j = i; j *= c; return j;
 }
 
+struct place_notation { 
+  // Exception thrown if place-notation is malformed 
+  struct invalid : public invalid_argument {
+    invalid();
+  };
+};
+
 // Take the place notation between start and finish, and send it as
 // a sequence of changes to out.
 template<class OutputIterator, class ForwardIterator>
@@ -187,18 +195,15 @@ void interpret_pn(int num, ForwardIterator i, ForwardIterator finish,
   ForwardIterator j;
   bool symblock;
   change cross = change(num,"X");
+  while(i != finish && isspace(*i)) ++i; // Skip whitespace
   while(i != finish) {
     list<change> block;
-    // Skip rubbish
-    while(i != finish && !(isalnum(*i) || *i == '&' || *i == '-')) ++i;
     // See whether it's a symmetrical block or not
-    if(i == finish) return;
     symblock = (*i == '&'); 
     if(symblock) { 
-      ++i;
-      while(i != finish && !(isalnum(*i) || *i == '&' || *i == '-')) ++i;
+      ++i; 
+      while(i != finish && isspace(*i)) ++i; // Skip whitespace
     }
-    while(i != finish && *i == '.') ++i;
     while(i != finish && (isalnum(*i) || *i == '-')) {
       // Get a change
       if(*i == 'X' || *i == 'x' || *i == '-') {
@@ -211,15 +216,20 @@ void interpret_pn(int num, ForwardIterator i, ForwardIterator finish,
 	if(j != i) block.push_back(change(num, string(i, j)));
 	i = j;
       }
-      while(i != finish && *i == '.') ++i;
-      // Skip any other rubbish
-      while(i != finish && !(isalnum(*i) || *i == '&' || *i == '-' || *i == '.' || *i == ',')) ++i;
+      while(i != finish && isspace(*i)) ++i; // Skip whitespace
+      if(i != finish && *i == '.') ++i; // Skip a '.' separator
+      while(i != finish && isspace(*i)) ++i; // Skip whitespace
     }
     // Now output the block
     copy(block.begin(), block.end(), out);
     if(symblock) { 
       block.pop_back(); 
       copy(block.rbegin(), block.rend(), out);
+    }
+    if(i != finish) {
+      if (*i != ',') throw place_notation::invalid(); 
+      ++i; // Skip a ',' separator
+      while(i != finish && isspace(*i)) ++i; // Skip whitespace
     }
   }
 }

@@ -66,55 +66,51 @@ bell::invalid::invalid()
 // *                    Functions for class change                     *
 // *********************************************************************
 
-// Construct from place notation to a change
-change::change(int num, const char *pn)
-{
-  n = num; swaps.erase(swaps.begin(), swaps.end());
-  if(*pn == '\0') return;
-  bell b, c, d;
-  if(*pn == 'X' || *pn == 'x' || *pn == '-')
-    c = 0;
-  else {
-    b.from_char(*pn); if(b > 0 && b & 1) c = 1; else c = 0;
-    while(*pn != '\0') {
-      b.from_char(*pn);
-#if RINGING_USE_EXCEPTIONS
-      if(b >= n || b < c-1) throw invalid();
-#endif
-      if(b >= c) {
-	for(d = c; d < b-1; d = d + 2) swaps.push_back(d);
-	c = b + 1;
-      }
-      ++pn;
-    }
-  }
-  for(d = c; d < n-1; d = d + 2) swaps.push_back(d);
-}
-
-// Construct from place notation to a change
-change::change(int num, const string& pn)
+void change::init( const string &pn )
 {
   string::const_iterator p = pn.begin();
-  n = num; swaps.erase(swaps.begin(), swaps.end());
-  if(p == pn.end()) return;
+  swaps.erase(swaps.begin(), swaps.end());
+  if(pn.empty()) {
+#if RINGING_USE_EXCEPTIONS
+    if (n != 0) throw invalid();
+#endif
+    return;
+  }
   bell b, c, d;
-  if(*p == 'X' || *p == 'x' || *p == '-')
+  if( pn.size() == 1 && (*p == 'X' || *p == 'x' || *p == '-') )
     c = 0;
   else {
     b.from_char(*p); if(b > 0 && b & 1) c = 1; else c = 0;
     while(p != pn.end()) {
       b.from_char(*p);
 #if RINGING_USE_EXCEPTIONS
-      if(b >= n || b < c-1) throw invalid();
+      if(b >= n || b <= c-1) throw invalid();
 #endif
       if(b >= c) {
 	for(d = c; d < b-1; d = d + 2) swaps.push_back(d);
+#if RINGING_USE_EXCEPTIONS
+	if ( d == b-1 ) throw invalid();
+#endif
 	c = b + 1;
       }
       ++p;
     }
   }
   for(d = c; d < n-1; d = d + 2) swaps.push_back(d);
+}
+
+// Construct from place notation to a change
+change::change(int num, const char *pn)
+  : n( num )
+{
+  init( pn );
+}
+
+// Construct from place notation to a change
+change::change(int num, const string& pn)
+  : n( num )
+{
+  init( pn );
 }
 
 change::invalid::invalid() 
@@ -161,8 +157,7 @@ char *change::print(char *pn) const
 // Check whether a particular swap is done
 bool change::findswap(bell which) const
 {
-  if(which < 0) return 0;
-  if(n == 0) return 0;
+  if(n == 0) return false;
   for(vector<bell>::const_iterator s = swaps.begin(); 
       s != swaps.end() && *s <= which; s++)
     if(*s == which) return true;
@@ -183,7 +178,7 @@ bool change::findplace(bell which) const
 // Return 1 if we swapped them, 0 if we unswapped them
 bool change::swappair(bell which)
 {
-  if(which + 1 > n)
+  if(which + 2 > n)
 #if RINGING_USE_EXCEPTIONS
     throw out_of_range();
 #else
@@ -265,6 +260,9 @@ bell& operator*=(bell& b, const change& c)
   return b;
 }
 
+place_notation::invalid::invalid()
+  : invalid_argument("The place notation supplied was invalid")
+{}
 
 // *********************************************************************
 // *                    Functions for class row                        *
@@ -348,8 +346,10 @@ row row::operator/(const row& r) const
   int i;
   for(i = 0; i < bells() && i < r.bells(); i++)
     quotient.data[r.data[i]] = data[i];
-  for(; i < m; i++)
-    quotient.data[i] = i;
+  for(; i < bells(); i++)
+    quotient.data[i] = data[i];
+  for(; i < r.bells(); i++)
+    quotient.data[r.data[i]] = i;
   return quotient;
 }
 
@@ -425,6 +425,7 @@ row& row::rounds(void)
 row row::queens(const int n)
 {
   row r(n);
+  if ( n <= 2 ) return r;
 
   int half = 0;
   if (n % 2 == 1)
@@ -454,6 +455,7 @@ row row::queens(const int n)
 row row::kings(const int n)
 {
   row r(n);
+  if ( n <= 2 ) return r;
 
   int half = 0;
   if (n % 2 == 1)
@@ -513,16 +515,20 @@ row row::reverse_rounds(const int n)
 row row::pblh(int n, int h)
 {
   row r(n);
-  change c(n);
-  int i;
 
-  r.rounds();
-  for(i = h; i < n-1; i += 2)
-    c.swappair(i);
-  r *= c;
-  for(i = h+1; i < n-1; i += 2)
-    c.swappair(i);
-  r *= c;
+  {
+    change c(n);
+    for(int i = h; i < n-1; i += 2)
+      c.swappair(i);
+    r *= c;
+  }
+  {
+    change c(n);
+    for(int i = h+1; i < n-1; i += 2)
+      c.swappair(i);
+    r *= c;
+  }
+
   return r;
 }
 
@@ -614,6 +620,7 @@ int row::order(void) const
 int row::sign(void) const
 {
   // Express it in cycles and take the length of the string
+  if ( bells() == 0 ) return 1;
   return ( cycles().length() & 1 ) ? 1 : -1;
 }
 
