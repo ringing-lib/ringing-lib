@@ -56,15 +56,18 @@ int hcf(int a, int b)
 
 char bell::symbols[] = "1234567890ETABCDFGHJKLMNPQRSUVWYZ";
 
+bell::invalid::invalid()
+  : invalid_argument("The bell supplied was invalid") {}
+
 // *********************************************************************
 // *                    Functions for class change                     *
 // *********************************************************************
 
-// Assign place notation to a change
-change& change::set(int num, const char *pn)
+// Construct from place notation to a change
+change::change(int num, const char *pn)
 {
   n = num; swaps.erase(swaps.begin(), swaps.end());
-  if(*pn == '\0') return *this;
+  if(*pn == '\0') return;
   bell b, c, d;
   if(*pn == 'X' || *pn == 'x' || *pn == '-')
     c = 0;
@@ -72,6 +75,9 @@ change& change::set(int num, const char *pn)
     b.from_char(*pn); if(b > 0 && b & 1) c = 1; else c = 0;
     while(*pn != '\0') {
       b.from_char(*pn);
+#if RINGING_USE_EXCEPTIONS
+      if(b >= n || b < c-1) throw invalid();
+#endif
       if(b >= c) {
 	for(d = c; d < b-1; d = d + 2) swaps.push_back(d);
 	c = b + 1;
@@ -80,8 +86,36 @@ change& change::set(int num, const char *pn)
     }
   }
   for(d = c; d < n-1; d = d + 2) swaps.push_back(d);
-  return *this;
 }
+
+// Construct from place notation to a change
+change::change(int num, const string& pn)
+{
+  string::const_iterator p = pn.begin();
+  n = num; swaps.erase(swaps.begin(), swaps.end());
+  if(p == pn.end()) return;
+  bell b, c, d;
+  if(*p == 'X' || *p == 'x' || *p == '-')
+    c = 0;
+  else {
+    b.from_char(*p); if(b > 0 && b & 1) c = 1; else c = 0;
+    while(p != pn.end()) {
+      b.from_char(*p);
+#if RINGING_USE_EXCEPTIONS
+      if(b >= n || b < c-1) throw invalid();
+#endif
+      if(b >= c) {
+	for(d = c; d < b-1; d = d + 2) swaps.push_back(d);
+	c = b + 1;
+      }
+      ++p;
+    }
+  }
+  for(d = c; d < n-1; d = d + 2) swaps.push_back(d);
+}
+
+change::invalid::invalid() 
+  : invalid_argument("The change supplied was invalid") {}
 
 // Return the reverse of a change
 change change::reverse(void) const
@@ -154,7 +188,7 @@ int change::findplace(bell which) const
 
 // Swap or unswap a pair of bells
 // Return 1 if we swapped them, 0 if we unswapped them
-int change::swap(bell which)
+int change::swappair(bell which)
 {
   if(which + 1 > n)
     return -1;
@@ -242,7 +276,7 @@ row::row(const char *s)
   int i;
   for(i=0; i<bells(); ++i) found[i] = false;
   for(i=0; i<bells(); ++i) 
-    if (found[data[i]])
+    if (data[i] < 0 || data[i] >= data.size() || found[data[i]])
       throw invalid();
     else
       found[data[i]] = true;
@@ -385,10 +419,10 @@ row row::pblh(int n, int h)
 
   r.rounds();
   for(i = h; i < n-1; i += 2)
-    c.swap(i);
+    c.swappair(i);
   r *= c;
   for(i = h+1; i < n-1; i += 2)
-    c.swap(i);
+    c.swappair(i);
   r *= c;
   return r;
 }

@@ -27,7 +27,7 @@ Copyright 2001 Martin Bright and Mark Banner
 Permission is granted to copy, distribute and/or modify this document
 under the terms of the GNU Free Documentation License, Version 1.1
 or any later version published by the Free Software Foundation;
-with no the Invariant Sections, with no the Front-Cover Texts being, 
+with no the Invariant Sections, with no Front-Cover Texts, 
 and with no Back-Cover Texts.  A copy of the license is included in 
 the section entitled ``GNU Free Documentation License''.
 @end ifnottex
@@ -80,7 +80,7 @@ versions.
 * The STL::                     
 * Rows and Changes::            
 * Methods::                     
-* Method Libraries::
+* Method Libraries::            
 * Proof::                       
 * Musical Analysis::            
 * Method classification::       
@@ -102,16 +102,19 @@ The library is split into several sections:
 @itemize @bullet
 @item
 Classes for dealing with individual rows and changes, and how the
-interact with each other
+interact with each other;
 
 @item
-Classes for building and manipulating methods
+Classes for building and manipulating methods;
 
 @item
-Classes for accessing method libraries
+Classes for accessing method libraries;
 
 @item
-Classes for proving and analysing sequences of rows
+Classes for proving and analysing sequences of rows;
+
+@item
+Classes for producing printed output.
 @end itemize
 
 Thus it is possible to use whatever part of the library is necessary for
@@ -120,8 +123,9 @@ classes, whereas a program to simulate call changes would just use the
 row and change classes.
 
 To get information about latest releases of the Ringing Class Library,
-to report bugs, and to access the CVS repository, visit the project web
-page at @uref{http://ringing-lib.sourceforge.net}.
+to report bugs, request features, use forums and access the CVS
+repository, visit the project web page at
+@uref{http://ringing-lib.sourceforge.net}.
 
 @node The STL, Rows and Changes, Introduction, Top
 @chapter The Standard Template Library
@@ -166,7 +170,7 @@ notation (for example @samp{X} or @samp{1258}).
 * The bell Class::              
 * The row Class::               
 * The change Class::            
-* The permute class::           
+* The permute function::        
 * The row_block class::         
 * Other functions in row.h::    
 @end menu
@@ -522,7 +526,7 @@ This returns the first lead head of Plain Bob (@var{h} = 1), Grandsire
 bells with @var{h} hunt bells.
 @end deftypefun
 
-@node The change Class, The permute class, The row Class, Rows and Changes
+@node The change Class, The permute function, The row Class, Rows and Changes
 @section The @code{change} class
 @cindex @code{change} class
 
@@ -599,6 +603,11 @@ output stream.
 @node Other change Functions,  , change Operators, The change Class
 @subsection Other functions
 
+@deftypefun void change::swap (change& @var{c});
+This function swaps this change with the change given by @var{c} in an
+efficient manner.
+@end deftypefun
+
 @deftypefun int change::bells (void) const;
 This returns the number of bells on which the change is defined.
 @end deftypefun
@@ -618,7 +627,7 @@ Returns 1 if the change doesn't move the bell in the @var{i}th place
 (i.e. if @var{i}ths place is made), and 0 otherwise.
 @end deftypefun
 
-@deftypefun int change::swap (int @var{i});
+@deftypefun int change::swappair (int @var{i});
 If the change doesn't currently swap bells @var{i} and @var{i+1}, then
 this will add that swap.  If those bells are swapped, this will remove
 the swap.  If the bells @var{i-1} and @var{i}, or @var{i+1} and
@@ -647,28 +656,53 @@ This function prints the place notation for the change to the string
 This function prints the place notation for the change to a string.
 @end deftypefun
 
-@node The permute class, The row_block class, The change Class, Rows and Changes
-@section The @code{permute} class
-@cindex @code{permute} class
+@deftypefun {template <> void} swap<change> (change& @var{a}, change& @var{b});
+This specialised the @code{swap} function which is defined in the
+standard library.  The result is that certain standard algorithms may 
+become much more efficient.  Note that according to your namespace
+setup, @code{swap} may need to be in namespace @code{std}; similarly,
+@code{change} may or may not be in namespace @code{ringing}.  This is all
+taken care of.
+@end deftypefun
 
-The @code{permute} class is a utility class which makes it possible to
-use some of the standard algorithms contained in the C++ library.  It
-looks like a function object:  it is constructed with a row, and can
-then be called with rows or changes as arguments.  Each time it is called,
-the current row is permuted by the argument and the new row is returned.
+@node The permute function, The row_block class, The change Class, Rows and Changes
+@section The @code{permute} function
+@cindex @code{permute} function
 
-@deftypefn Constructor explicit permute::permute(const row& @var{r});
-This creates a @code{permute} function object with its permutation
-initially set to @var{r}.
-@end deftypefn
+The @code{permute} function is a utility function which makes it possible to
+use some of the standard algorithms contained in the C++ library.  There are 
+two forms of the function:  the first takes an unsigned integer as
+its argument, and the second takes a reference to a row.  In either case,
+a function object (of type @code{permuter} or @code{row_permuter}) is returned,
+which can be used with standard algorithms.
 
-@deftypefn Operator {const row&} permute::operator() (const row& @var{r});
-@deftypefnx Operator {const row&} permute::operator() (const change& @var{c});
-These operators multiply the permutation contained in the @code{permute}
+@deftypefun {inline permuter} permute(unsigned @var{n});
+This global function returns a function object of type @code{permuter}, which
+contains a row initialised to rounds on @var{n} bells.  When the function
+object is called with an argument of either a row or change, its internal
+row is multiplied by that row or change and then returned.
+@end deftypefun
+
+@deftypefun {inline row_permuter} permute(row& @var{r});
+This global function creates a @code{row_permuter} function object, which
+contains a reference to the row @var{r}.  When the function object is called
+with a row or change as an argument, the row @var{r} will be multiplied
+by that row or change.
+@end deftypefun
+
+@deftypefn Operator {const row&} permuter::operator() (const row& @var{r});
+@deftypefnx Operator {const row&} permuter::operator() (const change& @var{c});
+These operators multiply the permutation contained in the @code{permuter}
 object by the given row or change, and return the new permutation.
 @end deftypefn
 
-@node The row_block class, Other functions in row.h, The permute class, Rows and Changes
+@deftypefn Operator {const row&} row_permuter::operator() (const row& @var{r});
+@deftypefnx Operator {const row&} row_permuter::operator() (const change& @var{c});
+These operators multiply the row which the @code{row_permuter} object refers
+to by the given row or change.  A reference to that row is returned.
+@end deftypefn
+
+@node The row_block class, Other functions in row.h, The permute function, Rows and Changes
 @section The @code{row_block} class
 @cindex @code{row_block} class
 
@@ -1024,7 +1058,7 @@ http://www.methods.clara.net/method-collections/zip-files/index.htm
 @end example
 
 @menu
-* General Use::
+* General Use::                 
 @end menu
 
 @node General Use,  , Method Libraries, Method Libraries

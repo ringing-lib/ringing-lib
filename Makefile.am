@@ -20,7 +20,7 @@ dist-zip: distdir
 	zip -lr $(distdir).zip $(distdir)
 	-rm -rf $(distdir)
 
-dist-all: distdir
+dist-both: distdir
 	chmod -R a+r $(distdir)
 	GZIP=$(GZIP_ENV) $(TAR) chozf $(distdir).tar.gz $(distdir)
 	zip -lr $(distdir).zip $(distdir)

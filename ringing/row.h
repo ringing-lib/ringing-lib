@@ -71,12 +71,22 @@ public:
   void from_char(char c) {
     c = toupper(c);
     for(x = 0; x < 33 && symbols[x] != c; x++);
-    if(x == 33) x = 0;
+    if(x == 33) 
+#if RINGING_USE_EXCEPTIONS
+      throw invalid();
+#else
+      x = 0;
+#endif
   }
   operator int() const { return x; }
   bell& operator=(int i) { x = i; return *this; }
   char to_char() const { return (x < 33) ? symbols[x] : '*'; }
+
+  struct invalid : public invalid_argument {
+    invalid();
+  };
 };
+
 inline ostream& operator<<(ostream& o, const bell b) 
   { return o << b.to_char(); }
 
@@ -91,17 +101,23 @@ private:
 public:
   change() : n(0) {}	        //
   explicit change(int num) : n(num) {}   // Construct an empty change
-  change(int num, const char *pn) { set(num, pn); }
-  change(int num, const string& s) { set(num, s); }
+  change(int num, const char *pn);
+  change(int num, const string& s);
   // Use default copy constructor and assignment
 
-  change& set(int num, const char *pn); // Assign from place notation
-  change& set(int num, const string& s) { return set(num, s.c_str()); }
+  change& set(int num, const char *pn) // Assign from place notation
+    { change(num, pn).swap(*this); return *this; }
+  change& set(int num, const string& pn)
+    { change(num, pn).swap(*this); return *this; }
   int operator==(const change& c) const
   { return (n == c.n) && (n == 0 || swaps == c.swaps); }
   int operator!=(const change& c) const
     { return !(*this == c); }
   change reverse(void) const;		 // Return the reverse
+  void swap(change& other) {  // Swap this with another change 
+    int t = n; n = other.n; other.n = t;
+    swaps.swap(other.swaps);
+  }
 
   friend row& operator*=(row& r, const change& c);
   friend bell& operator*=(bell& i, const change& c);
@@ -112,7 +128,7 @@ public:
   int sign(void) const;		// Return whether it's odd or even
   int findswap(bell which) const; // Check whether a particular swap is done
   int findplace(bell which) const; // Check whether a particular place is made
-  int swap(bell which);		// Swap or unswap a pair
+  int swappair(bell which);		// Swap or unswap a pair
   int internal(void) const;	// Does it contain internal places?
 
   // So that we can put changes into containers
@@ -122,6 +138,11 @@ public:
   bool operator>(const change& c) const {
     return (n > c.n) || (n == c.n && swaps > c.swaps);
   }
+
+  struct invalid : public invalid_argument {
+    invalid();
+  };
+
 };
 
 inline ostream& operator<<(ostream& o, const change& c) {
@@ -287,6 +308,11 @@ RINGING_START_NAMESPACE_STD
 
 template <> inline 
 void swap<RINGING_PREFIX row>(RINGING_PREFIX row &a, RINGING_PREFIX row &b)
+  { a.swap(b); }
+
+template <> inline 
+void swap<RINGING_PREFIX change>(RINGING_PREFIX change &a, 
+				 RINGING_PREFIX change &b)
   { a.swap(b); }
 
 RINGING_END_NAMESPACE_STD
