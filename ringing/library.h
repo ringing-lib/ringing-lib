@@ -36,9 +36,10 @@
 #endif
 #include <ringing/method.h>
 #include <ringing/stuff.h>
-RINGING_USING_STD
 
 RINGING_START_NAMESPACE
+
+RINGING_USING_STD
 
 class library;
 

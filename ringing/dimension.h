@@ -34,9 +34,9 @@
 #include <map>
 #endif
 
-RINGING_USING_STD
-
 RINGING_START_NAMESPACE
+
+RINGING_USING_STD
 
 class dimension {
 public:

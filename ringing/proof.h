@@ -75,9 +75,9 @@
 #endif
 #include <ringing/row.h>
 
-RINGING_USING_STD
-
 RINGING_START_NAMESPACE
+
+RINGING_USING_STD
 
 // Our hash function
 int our_hash(const row& r);           // Default hash function

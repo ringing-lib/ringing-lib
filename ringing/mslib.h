@@ -31,9 +31,10 @@
 #include <cctype>
 #endif
 #include <ringing/library.h>
-RINGING_USING_STD
 
 RINGING_START_NAMESPACE
+
+RINGING_USING_STD
 
 // mslib : Implement MicroSIRIL libraries
 class mslib : public library {

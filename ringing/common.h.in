@@ -26,6 +26,10 @@
 #ifndef RINGING_COMMON_H
 #define RINGING_COMMON_H
 
+#ifdef _MSC_VER
+#pragma warning(disable: 4786)
+#endif
+
 // *** Define this to be the name of the package (i.e. ringing-lib)
 // #define RINGING_PACKAGE ringing-lib
 #define RINGING_PACKAGE @PACKAGE@
@@ -68,6 +72,18 @@
 #define RINGING_USING_STD using namespace std;
 #else
 #define RINGING_USING_STD
+#endif
+
+#if _MSC_VER == 1200 && RINGING_USE_STD && RINGING_USE_NAMESPACES
+// Visual Studio 6 has the amusing bug that the third time you enter
+// namespace a process a using declaration, the using declaration
+// is completely ignored.  This only appears to happen the third time,
+// so we safely get this out of its system.  Any more sane suggestions
+// appreciated...
+namespace std {}
+RINGING_START_NAMESPACE RINGING_USING_STD RINGING_END_NAMESPACE
+RINGING_START_NAMESPACE RINGING_USING_STD RINGING_END_NAMESPACE
+RINGING_START_NAMESPACE RINGING_USING_STD RINGING_END_NAMESPACE
 #endif
 
 #endif

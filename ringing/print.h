@@ -36,9 +36,9 @@
 #include <ringing/dimension.h>
 #include <ringing/row.h>
 
-RINGING_USING_STD
-
 RINGING_START_NAMESPACE
+
+RINGING_USING_STD
 
 class printpage;
 

@@ -22,11 +22,6 @@
 #endif
 
 #include <ringing/common.h>
-#if RINGING_OLD_INCLUDES
-#include <memory.h>
-#else
-#include <memory>
-#endif
 #if RINGING_OLD_C_INCLUDES
 #include <ctype.h>
 #include <stdlib.h>
@@ -189,8 +184,7 @@ int change::internal(void) const
 // Write it to a stream
 ostream& operator<<(ostream& o, const change& c)
 {
-  auto_ptr<char> s1(new char[c.bells() + 1]);
-  char *s = s1.get();
+  buffer s(c.bells() + 1);
   c.print(s);
   o << s;
   return o;
@@ -221,16 +215,16 @@ bell& operator*=(bell& b, const change& c)
 // *********************************************************************
 
 // Construct a row from a string
-row::row(char *s)
+row::row(const char *s)
 {
   *this = s;
 }
 
 // Assign a string value to a row
-row& row::operator=(char *s)
+row& row::operator=(const char *s)
 {
   data = vector<bell>(strlen(s));
-  char *t;
+  const char *t;
   for(t = s; *t != '\0'; t++)
     data[t - s].from_char(*t);
   return *this;
@@ -248,8 +242,11 @@ row row::operator*(const row& r) const
   int m = (bells() < r.bells()) ? r.bells() : bells();
   row product(m);
   int i;
-  for(i = 0; i < bells() && i < r.bells(); i++)
-    product.data[i] = data[r.data[i]];
+  for(i = 0; i < r.bells(); i++)
+    if(r.data[i] < bells())
+      product.data[i] = data[r.data[i]];
+    else
+      product.data[i] = r.data[i];
   for(;i < m; i++)
     product.data[i] = i;
   return product;
@@ -294,6 +291,9 @@ row row::inverse(void) const
 // Apply a change to a row
 row& operator*=(row& r, const change& c)
 {
+  while(r.bells() < c.bells())
+    r.data.push_back(r.bells());
+
   char t;
 
   if(c.n != 0 && !r.data.empty()) {
@@ -401,8 +401,7 @@ char *row::cycles(char *result) const
     *result = '\0';
     return result;
   }
-  auto_ptr<char> done1(new char[bells()]);
-  char *done = done1.get();
+  buffer done(bells());
   int i;
 
   for(i = 0;i < bells();i++) done[i] = 0;
@@ -426,8 +425,8 @@ char *row::cycles(char *result) const
 int row::order(void) const
 {
   if(data.empty()) return 1;
-  auto_ptr<char> cyc1(new char[2*bells()]);
-  char *cyc = cyc1.get(), *s;
+  buffer cyc(2 * bells());
+  char *s;
   int o = 1;
 
   // We do this by expressing the row as disjoint cycles, then by taking the
@@ -447,8 +446,7 @@ int row::order(void) const
 int row::sign(void) const
 {
   if(data.empty()) return 1;
-  auto_ptr<char> c1(new char[bells()*2]);
-  char *c = c1.get();
+  buffer c(bells() * 2);
   cycles(c);                    // Express it in cycles
   int sgn = (strlen(c) + 1) & 1; // Just take the length of the string
   return sgn ? 1 : -1;

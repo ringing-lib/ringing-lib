@@ -26,17 +26,18 @@
 
 #include <ringing/common.h>
 #if RINGING_OLD_INCLUDES
-#include <list.h>
+#include <vector.h>
 #else
-#include <list>
+#include <vector>
 #endif
 #include <string>
 #include <ringing/row.h>
 #include <ringing/stuff.h>
 
-RINGING_USING_STD
 
 RINGING_START_NAMESPACE
+
+RINGING_USING_STD
 
 // method - A method.
 class method : public vector<change> {
@@ -94,6 +95,11 @@ public:
 		 back_insert_iterator<vector<change> >(*this));
   }
   ~method() {}
+
+  void push_back(const change &ch)
+    { vector<change>::push_back(ch); }
+  void push_back(const string &str)
+    { vector<change>::push_back(change(bells(), str)); }
 
   int length() const { return size(); }
   int bells() const { return empty() ? 0 : (*this)[0].bells(); }

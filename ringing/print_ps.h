@@ -36,9 +36,9 @@
 #endif
 #include <ringing/print.h>
 
-RINGING_USING_STD
-
 RINGING_START_NAMESPACE
+
+RINGING_USING_STD
 
 class printrow_ps;
 

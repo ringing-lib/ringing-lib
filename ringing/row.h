@@ -43,9 +43,9 @@
 #endif
 #include <string>
 
-RINGING_USING_STD
-
 RINGING_START_NAMESPACE
+
+RINGING_USING_STD
 
 // Declare a couple of random functions for hcf and lcm
 int hcf(int a, int b);
@@ -86,7 +86,7 @@ private:
 
 public:
   change() : n(0) {}	        //
-  change(int num) : n(num) {}   // Construct an empty change
+  explicit change(int num) : n(num) {}   // Construct an empty change
   change(int num, const char *pn) { set(num, pn); }
   change(int num, const string& s) { set(num, s); }
   // Use default copy constructor and assignment
@@ -168,11 +168,11 @@ private:
 
 public:
   row() {}
-  row(int num) : data(num) {}	// Construct an empty row
-  row(char *s);			// Construct a row from a string
+  explicit row(int num) : data(num) {}	// Construct an empty row
+  row(const char *s);			// Construct a row from a string
   // Use default copy constructor and copy assignment
 
-  row& operator=(char *s);	// Assign a string
+  row& operator=(const char *s);	// Assign a string
   int operator==(const row& r) const; // Compare
   int operator!=(const row& r)
     { return !(*this == r); }
@@ -198,6 +198,7 @@ public:
   char *cycles(char *result) const; // Express it as a product of disjoint cycles
   int order(void) const;	    // Return the order
   friend ostream& operator<<(ostream&, const row&);
+  void swap(row &other) { data.swap(other.data); }
 
   // Keep MS happy
   bool operator<(const row&) const;
@@ -207,6 +208,16 @@ ostream& operator<<(ostream& o, const row& r); // Write a row to a stream
 
 // An operator which has to be here
 row& operator*=(row& r, const change& c);
+
+struct permute
+{
+  typedef row result_type;
+  explicit permute(row &r) : r(r) {}  
+  const row &operator()(const change &c) { return r *= c; }
+  const row &operator()(const row &c) { return r *= c; }
+private:
+  row &r;
+};
 
 // row_block : Stores some rows, along with a pointer to some
 // changes from which they can be calculated.
@@ -222,7 +233,7 @@ public:
   row_block(const vector<change> &c);	         // Starting from rounds
   row_block(const vector<change> &c, const row &r); // Starting from the given row
 
-  row& set_start(row& r)	// Set the first row
+  row& set_start(const row& r)	// Set the first row
     { (*this)[0] = r; return (*this)[0]; }
   row_block& recalculate(int start = 0); // Recalculate rows from changes
   const vector<change>& get_changes(void) const // Return the changes which we are using
@@ -230,6 +241,20 @@ public:
 };
       
 RINGING_END_NAMESPACE
+
+// specialise std::swap
+#if RINGING_USE_NAMESPACES
+namespace std 
+{
+  template <> inline 
+  void swap<ringing::row>(ringing::row &a, ringing::row &b)
+    { a.swap(b); }
+}
+#else
+template <> inline 
+void swap<row>(row &a, row &b)
+  { a.swap(b); }
+#endif
 
 #endif
 
