@@ -255,11 +255,6 @@ bool arguments::generate_calls( arg_parser& ap )
       return false;
     }
 
-  if ( linkage && !whole_courses ) {
-    ap.error( "Linkage is only implemented for whole-course compositions" );
-    return false;
-  }
-
   return true;
 }
 
@@ -561,6 +556,7 @@ private:
   void init_flhs( method const& m );
   void init_req( method const& m, vector<row> const& required_rows );
   void init_qsets( method const& m, vector<change> const& calls );
+  void init_lhs( method const& m, vector<change> const& calls );
 
   struct perturbation;
   
@@ -577,7 +573,8 @@ private:
   bool is_present( row_t r ) const { return is_present( leads[r.index()] ); }
   bool is_absent( row_t r ) const { return is_absent( leads[r.index()] ); }
 
-  size_t check_linkage( row_t r ) const;
+  size_t check_qsets( row_t r ) const;
+  size_t check_lhs( row_t r ) const;
  
  
   const int bells, courselen;
@@ -595,8 +592,10 @@ private:
   vector< pair< vector< pair< fch_t, 
 			      size_t /*inverse qset index*/> >, 
                 size_t /*change_index*/> > qsets;
+  vector< pair< fch_t, fch_t > > lhs; // forward & reverse
   vector<lead_state> leads;
-  vector<size_t> linkage; // indices into the qsets vector, or size_t(-1)
+  vector<size_t> linkage; // if qsets.size(), indices into the qsets vector, or size_t(-1)
+                          // else if lhs.size(), indices into the lhs vector
 };
 
 void state::dump( ostream& os ) const
@@ -610,26 +609,34 @@ void state::dump( ostream& os ) const
 	  os << setw(3) << i << ": " << rr
 	     << ( rr.sign() > 0 ? '+' : '-' ) << ' ';
 
-	  for ( size_t qidx(0); qidx != qsets.size(); ++qidx )
-	    {
-	      size_t count(0);
-	      make_string desc;
-	      desc << " Q" << qidx << " (" << i;
-	      
-	      for ( size_t i(0), n(qsets[qidx].first.size()); 
-		    i != n && count == i; ++i )
-		{
-		  row_t q = r * qsets[qidx].first[i].first;
-		  if (q != r && is_present(q) ) {
-		    ++count;
-		    desc << " " << q.index();
-		  }
-		}
-	      desc << ")";
+	  if ( qsets.size() ) 
+	    for ( size_t qidx(0); qidx != qsets.size(); ++qidx )
+	      {
+		size_t count(0);
+		make_string desc;
+		desc << " Q" << qidx << " (" << i;
 
-	      if ( count == qsets[qidx].first.size() ) 
-		os << string(desc);
-	    }
+		for ( size_t i(0), n(qsets[qidx].first.size()); 
+		      i != n && count == i; ++i )
+		  {
+		    row_t q = r * qsets[qidx].first[i].first;
+		    if (q != r && is_present(q) ) {
+		      ++count;
+		      desc << " " << q.index();
+		    }
+		  }
+		desc << ")";
+
+		if ( count == qsets[qidx].first.size() ) 
+		  os << string(desc);
+	      }
+	  else 
+	    for ( size_t i(0); i != lhs.size(); ++i )
+	      {
+		row_t p = r * lhs[i].first;
+		if (p != r && is_present(p) )
+		  os << " " << p.index();
+	      }
 
 	  os << "\n";
 	}
@@ -768,6 +775,23 @@ void state::init_req( const method& m, vector<row> const& required_rows )
   clear_status();
 }
 
+void state::init_lhs( method const& m, vector<change> const& calls )
+{
+  assert( !( flags & whole_courses ) );
+
+  lhs.push_back( make_pair( mt->compute_post_mult( m.lh() ),
+			    mt->compute_post_mult( m.lh().inverse() ) ) );
+
+  row const le( m.lh() * m.back() );
+
+  for ( size_t ci(0); ci != calls.size(); ++ci ) 
+    {
+      row const lh( le * calls[ci] );
+      lhs.push_back( make_pair( mt->compute_post_mult( lh ),
+				mt->compute_post_mult( lh.inverse() ) ) );
+    }
+}
+
 void state::init_qsets( method const& m, vector<change> const& calls )
 {
   assert( flags & whole_courses );
@@ -873,11 +897,11 @@ void state::init_qsets( method const& m, vector<change> const& calls )
 	      if ( qsets[i].second == qsets[k].second ) 
 		{
 		  assert( qsets[k].first.size() == m );
-		    if ( qsets[i].first[j].first == qinverses[k][jinv] )
-		      {  
-			qsets[i].first[j].second = k;
-			found = true;
-		      }
+		  if ( qsets[i].first[j].first == qinverses[k][jinv] )
+		    {  
+		      qsets[i].first[j].second = k;
+		      found = true;
+		    }
 		}
 	    assert(found);
 	  }
@@ -916,12 +940,30 @@ state::state( const method& m, int flags, const group& pgrp,
     init_req( m, required_rows );
 
   if ( calls.size() )
-    init_qsets( m, calls );
+    {
+      if ( flags & whole_courses )
+	init_qsets( m, calls );
+      else
+	init_lhs( m, calls );
+    }
 
   clear();
 }
 
-size_t state::check_linkage( row_t r ) const
+size_t state::check_lhs( row_t r ) const 
+{
+  for ( size_t i(0); i != lhs.size(); ++i )
+    {
+      row_t const p( r * lhs[i].first );
+
+      if ( r != p && is_present(p) )
+	return i;
+    }
+
+  return size_t(-1);
+}
+
+size_t state::check_qsets( row_t r ) const
 {
   for ( size_t qi(0); qi != qsets.size(); ++qi )
     {
@@ -961,8 +1003,8 @@ bool state::check() const
   for ( int i=0; i<leads.size(); ++i ) 
     if ( is_present( leads[i] ) ) {
       realsc += weight[i];
-      if ( qsets.size() && 
-	   check_linkage( row_t::from_index(i) ) != size_t(-1) )
+      if ( qsets.size() && check_qsets( row_t::from_index(i) ) != size_t(-1) ||
+	   lhs.size()   && check_lhs  ( row_t::from_index(i) ) != size_t(-1) )
 	realsc += link_weight, ++linkage;
     }
 
@@ -1027,6 +1069,13 @@ public:
   
 
 private:
+  void commit2( state& s, lead_state add, lead_state rm );
+
+  bool check_delta() const;
+
+  //
+  // Row status
+  //
   bool is_added( row_t const& r ) const
     { map<row_t, double>::const_iterator i = rdiff.find(r);
       return i != rdiff.end() && i->second > 0; }
@@ -1043,17 +1092,27 @@ private:
     { double const w( s.weight[ r.index() ] ); 
       d -= w; if ( (rdiff[r] -= w) == 0 ) rdiff.erase(r); }
 
-  size_t get_linkage( row_t const& r ) const;
+
+  size_t get_linkage( row_t const& r ) const; // either type of linkage
+
+  //
+  // Q-set linkage
+  //
   void do_add_link( row_t const& r, size_t link );
   void do_rm_link( row_t const& r );
 
-  void remove_link( row_t const& r );
-  void try_add_link( row_t const& r );
+  void remove_qset( row_t const& r );
+  void try_add_qset( row_t const& r );
 
-  bool check_delta() const;
-
-  void commit2( state& s, lead_state add, lead_state rm );
-
+  //
+  // Lead linkage
+  //
+  void remove_lh( row_t const& r );
+  void try_add_lh( row_t const& r );
+  
+  //
+  // Data members
+  //
   state const& s;
 
   map<row_t, double, row_t::cmp> rdiff; // +1 to add, -1 to remove
@@ -1105,7 +1164,7 @@ void state::clear()
   sc = len = links = 0;
   vector<lead_state>( mt->size(), absent ).swap( leads );
 
-  if ( qsets.size() )
+  if ( qsets.size() || lhs.size() )
     vector<size_t>( mt->size(), size_t(-1) ).swap( linkage );
 
   perturbation init(*this);
@@ -1149,7 +1208,7 @@ bool state::perturbation::check_delta() const
   return real_delta == d;
 }
 
-void state::perturbation::try_add_link( row_t const& r )
+void state::perturbation::try_add_qset( row_t const& r )
 {
   if ( ( s.is_present(r) && !is_removed(r) ||
 	 s.is_absent (r) &&  is_added  (r) ) &&
@@ -1194,11 +1253,11 @@ void state::perturbation::try_add_link( row_t const& r )
     }
 }
 
-void state::perturbation::remove_link( row_t const& r )
+void state::perturbation::remove_qset( row_t const& r )
 {
   if ( get_linkage(r) != size_t(-1) )
     {
-      DEBUG( "Remove link " << r.index() );
+      DEBUG( "Remove Q-set link " << r.index() );
 
       do_rm_link(r);
 
@@ -1215,7 +1274,66 @@ void state::perturbation::remove_link( row_t const& r )
       // Fix up new links elsewhere in the Q-set if possible
       for ( size_t i=0, n=s.qsets.size(); i != n; ++i ) 
 	for ( size_t j=0, m=s.qsets[i].first.size(); j != m; ++j )
-	  try_add_link( r * s.qsets[i].first[j].first );
+	  try_add_qset( r * s.qsets[i].first[j].first );
+    }
+}
+
+void state::perturbation::remove_lh( row_t const& r )
+{
+  DEBUG( "Remove link " << r.index() );
+
+  if ( get_linkage(r) != size_t(-1) )
+    do_rm_link(r);
+
+  // Remove links elsewhere
+  for ( size_t i=0, n=s.lhs.size(); i != n; ++i )
+    {
+      row_t const p( r * s.lhs[i].second );
+      
+      if ( get_linkage(p) == i ) {
+	do_rm_link(p);
+	try_add_lh(p);
+      }
+    }
+}
+
+void state::perturbation::try_add_lh( row_t const& r )
+{
+  if ( ( s.is_present(r) && !is_removed(r) ||
+	 s.is_absent (r) &&  is_added  (r) ) &&
+       get_linkage(r) == size_t(-1) )
+    {
+      DEBUG( "Attempting to add linkage from " << r.index() );
+
+      for ( size_t i=0, n=s.lhs.size(); i != n; ++i )
+	{
+	  row_t const p( r * s.lhs[i].first );
+
+	  if ( p == r )
+	    ;
+	  else if ( s.is_present(p) && !is_removed(p) ||
+		    s.is_absent(p) && is_added(p) )
+	    {
+	      do_add_link(r, i);
+	      break;
+	    }
+	}
+    }
+  DEBUG( "Attempting to add linkage to " << r.index() );
+
+  // preceeding
+  // TODO -- suboptimal.  Only needs to be done if called from add_row,
+  // not if called from remove_link
+  for ( size_t i=0, n=s.lhs.size(); i != n; ++i )
+    {
+      row_t const p( r * s.lhs[i].second );
+
+      if ( p == r )
+	;
+      else if ( ( s.is_present(p) && !is_removed(p) ||
+		  s.is_absent (p) &&  is_added  (p) ) &&
+		get_linkage(p) == size_t(-1) )
+	do_add_link(p, i);
     }
 }
 
@@ -1233,7 +1351,9 @@ bool state::perturbation::remove_row( row_t const& r, lead_state new_state )
       do_rm_row(r);
   
       if ( s.qsets.size() )
-	remove_link(r);
+	remove_qset(r);
+      else if ( s.lhs.size() ) 
+	remove_lh(r);
     }
   return true;
 }
@@ -1259,7 +1379,9 @@ bool state::perturbation::add_row( row_t const& r )
       do_add_row(r);
 
       if ( s.qsets.size() )
-	try_add_link(r);
+	try_add_qset(r);
+      else if ( s.lhs.size() )
+	try_add_lh(r);
     }
   return true;
 }
@@ -1295,6 +1417,7 @@ void state::perturbation::commit2( state& s, lead_state add, lead_state rm )
       s.sc += i->second.first * s.link_weight;
       s.links += i->second.first;
     }
+
 #if ENABLE_CHECKS
   assert( s.check() );
 #endif
@@ -1382,20 +1505,21 @@ int main( int argc, char* argv[] )
       const double beta_mult
 	= pow( beta_final / beta_init, 1/double(args.num_steps) );
       
-      int nw = 4;
-      
+      int n = 0;
       for ( double beta = beta_init ; beta < beta_final; beta *= beta_mult ) {
 	s->set_beta(beta);
 	s->perturb();
 
 	if ( args.status ) {
-	  static int n = 0;
 	  if ( n++% 1000 == 0 )
-	    status_out( make_string() << floor(double(n)/args.num_steps * 1000)/10. << "% done" );
+	    status_out( make_string() << "Currently " 
+			<< floor(double(n)/args.num_steps * 1000)/10. 
+			<< "% done" );
 	}
       }
 
       clear_status();
+
 #if ENABLE_CHECKS
       if (!s->check()) { 
 	cerr << "ERROR!!!" << endl;
