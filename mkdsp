@@ -26,14 +26,27 @@
 #   cd into the root directory of the package and run this script.
 #                  
 
+if ( grep /^--help$/, @ARGV )
+{
+    print <<EOF
+Usage:  mkdsp [ OPTIONS ]
 
+Options:
+  --help           Display this message
+  --assume-msvc6   Enable MSVC 6 specific extensions 
+  --force-dll      Always use DLLs instead of static libraries
+
+EOF
+    ;
+    exit;
+}
 
 # Enable msvc-6 specific extentions?
 # (Note: this will not prevent it compilation in msvc-5.)
-my $assume_msvc6 = 0;
+my $assume_msvc6;  $assume_msvc6 = 1 if grep /^--assume-msvc6$/, @ARGV;
 
 # Always create DLLs where unix static libraries are used?
-my $always_dll = 0;
+my $force_dll;  $force_dll = 1 if grep /^--force-dll$/, @ARGV;
 
 #############################################################################
 
@@ -321,7 +334,7 @@ my %actions = (
 	       # As soon as we dynamically link against anything, it is 
 	       # probably safe to assume we need the dynamic runtime.
 	       $vptr->{type} = 'dprog' 
-		   if ( $2 eq 'l' or $always_dll) && $vptr->{type} == 'prog';
+		   if ( $2 eq 'l' or $force_dll) && $vptr->{type} == 'prog';
 	   }
        }
    },
@@ -375,7 +388,7 @@ sub process_makefile($)
 	    {
 		for my $p (split /[ \t+]+/, $val)
 		{
-		    my $tp = (($always_dll or $p =~ /.la$/) ? 'dll' : 'lib');
+		    my $tp = (($force_dll or $p =~ /.la$/) ? 'dll' : 'lib');
 			       
 		    $p =~ s/\./_/g;
 		    $p =~ s/^lib//;

@@ -67,4 +67,6 @@
 # define RINGING_HAVE_STD_ITERATOR 1
 #endif
 
+#define RINGING_AS_DLL 0
+
 #endif // RINGING_COMMON_MSVC_H

@@ -17,6 +17,9 @@
 
 // $Id$
 
+#ifndef RINGING_ARGS_INCLUDED
+#define RINGING_ARGS_INCLUDED
+
 #include <ringing/common.h>
 #if RINGING_OLD_INCLUDES
 #include <iostream.h>
@@ -28,6 +31,8 @@
 #include <list>
 #endif
 #include <string>
+
+RINGING_USING_STD
 
 class arg_parser;
 
@@ -75,3 +80,5 @@ public:
 private:
   void wrap(const string& s, int l, int r, int c) const;
 };
+
+#endif

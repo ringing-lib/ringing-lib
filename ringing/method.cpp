@@ -85,23 +85,23 @@ const char *method::txt_little = "Little";
 
 // issym : Find out whether the method is symmetrical
 // This means symmetrical, not counting the half-lead or lead end.
-int method::issym(void) const
+bool method::issym(void) const
 {
   if(length() & 1) return 0;	// Must have an even length
   for(int i = 0; i < length() / 2 - 1; i++)
-    if((*this)[i] != (*this)[length() - i - 2]) return 0;
-  return 1;
+    if((*this)[i] != (*this)[length() - i - 2]) return false;
+  return true;
 }
 
 // isdouble : Find out whether the method is double
 // This doesn't necessarily mean it's symmetrical
 // (e.g. Double Oxford Bob Triples)
-int method::isdouble(void) const
+bool method::isdouble(void) const
 {
   if(length() & 1) return 0;	// Must have even length
   for(int i = 0; i < length() / 2; i++)
-    if((*this)[i] != (*this)[length() / 2 + i].reverse()) return 0;
-  return 1;
+    if((*this)[i] != (*this)[length() / 2 + i].reverse()) return false;
+  return true;
 }
 
 // huntbells : Find the number of hunt bells
@@ -115,29 +115,29 @@ int method::huntbells(void) const
 }
 
 // issym : Is this bell's path symmetrical?
-int method::issym(bell b) const
+bool method::issym(bell b) const
 {
   if(length() & 1) return 0;	// Must have even length
   for(int i = 0; i < length() / 2 - 1; i++) {
     if((*this)[i].findswap(b-1) != (*this)[length() - i - 2].findswap(b-1))
-      return 0;
+      return false;
     if((*this)[i].findswap(b) != (*this)[length() - i - 2].findswap(b))
-      return 0;
+      return false;
     b *= (*this)[i];
   }
   if(b * (*this)[length()/2-1] != b) // Must make a place at the half lead
-    return 0;
-  return 1;
+    return false;
+  return true;
 }
 
 // isplain : Does this bell plain hunt?
-int method::isplain(bell b) const
+bool method::isplain(bell b) const
 {
   int j = b;
   int dir = j & 1;		// Odd bells out, even bells in
   int dirchanges = 0;		// Count changes of direction
   for(int i = 0; i < length(); i++) {
-    if((*this)[i].findswap(j-1+dir)) return 0; // No, that's a dodge.
+    if((*this)[i].findswap(j-1+dir)) return false; // No, that's a dodge.
     if((*this)[i].findswap(j-dir)) // Carry on in the same direction
       if(dir) j--; else j++;
     else {			// Make a place and change direction
@@ -149,20 +149,20 @@ int method::isplain(bell b) const
 }
 
 // hasdodges : Does this bell do any dodges?
-int method::hasdodges(bell b) const
+bool method::hasdodges(bell b) const
 {
   int i;
   bell j = b, j1 = -1, j2 = -1;
   for(i = 0; i < length(); i++) {
     j2 = j1; j1 = j;
     j *= (*this)[i];
-    if(j == j2 && j != j1) return 1;
+    if(j == j2 && j != j1) return true;
   }
-  return 0;
+  return false;
 }
 
 // hasplaces : Does this bell make any internal places?
-int method::hasplaces(bell b) const
+bool method::hasplaces(bell b) const
 {
   int i;
   bell j = b, j1;
@@ -170,9 +170,9 @@ int method::hasplaces(bell b) const
     j1 = j;
     j *= (*this)[i];
     if(j == j1 && j > 0 && j < bells())
-      return 1;
+      return true;
   }
-  return 0;
+  return false;
 }
     
 // meth_class : What class of method is it?

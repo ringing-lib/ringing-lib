@@ -17,7 +17,7 @@
 
 // $Id$
 
-#include <args.h>
+#include "args.h"
 #if RINGING_OLD_C_INCLUDES
 #include <ctype.h>
 #else

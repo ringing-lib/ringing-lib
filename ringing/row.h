@@ -139,10 +139,10 @@ public:
   char *print(char *pn) const;	// This overload is deprecated.
   int bells(void) const { return n; } // Return number of bells
   int sign(void) const;		// Return whether it's odd or even
-  int findswap(bell which) const; // Check whether a particular swap is done
-  int findplace(bell which) const; // Check whether a particular place is made
-  int swappair(bell which);		// Swap or unswap a pair
-  int internal(void) const;	// Does it contain internal places?
+  bool findswap(bell which) const; // Check whether a particular swap is done
+  bool findplace(bell which) const; // Check whether a particular place is made
+  bool swappair(bell which);		// Swap or unswap a pair
+  bool internal(void) const;	// Does it contain internal places?
   int count_places(void) const; // Count the number of places made
 
   // So that we can put changes into containers
@@ -153,6 +153,12 @@ public:
     return (n > c.n) || (n == c.n && swaps > c.swaps);
   }
 
+  // Thrown by swappair if the pair to swap is out of range
+  struct out_of_range : public RINGING_PREFIX_STD out_of_range {
+    out_of_range();
+  };
+
+  // Thrown by the constructor if an invalid place-notation is given 
   struct invalid : public invalid_argument {
     invalid();
   };
@@ -251,7 +257,7 @@ public:
 
   static row pblh(int n, int h=1); // Return first plain bob lead head on 
                                 // n bells with h hunt bells
-  int isrounds(void) const;	// Is it rounds?
+  bool isrounds(void) const;	// Is it rounds?
   int ispblh(void) const;	// Which plain bob lead head is it?
   int sign(void) const;         // Return whether it's odd or even
   string cycles() const;        // Express it as a product of disjoint cycles

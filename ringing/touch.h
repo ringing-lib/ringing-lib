@@ -42,19 +42,25 @@ RINGING_START_NAMESPACE
 
 RINGING_USING_STD
 
-class touch_node {
+class RINGING_API touch_node_iterator_base {
+public:
+  virtual change operator*() const = 0;
+  virtual touch_node_iterator_base& operator++() = 0;
+  virtual bool operator==(const touch_node_iterator_base& i) const = 0;
+  virtual ~touch_node_iterator_base() {}
+  virtual touch_node_iterator_base* clone() = 0; 
+};
+
+#if RINGING_AS_DLL
+RINGING_EXPLICIT_RINGING_TEMPLATE cloning_pointer< touch_node_iterator_base >;
+#endif
+
+class RINGING_API touch_node {
 RINGING_PROTECTED_IMPL:
-  class iterator_base {
-  public:
-    virtual change operator*() const = 0;
-    virtual iterator_base& operator++() = 0;
-    virtual bool operator==(const iterator_base& i) const = 0;
-    virtual ~iterator_base() {}
-    virtual iterator_base* clone() = 0; 
-  };
+  typedef touch_node_iterator_base iterator_base;
 
 public:
-  class const_iterator
+  class RINGING_API const_iterator
     : public RINGING_STD_CONST_ITERATOR( forward_iterator_tag, change )
   {
   private:
@@ -102,7 +108,13 @@ public:
   virtual ~touch_node() {}
 };
 
-class touch_changes : public touch_node {
+#if RINGING_AS_DLL
+RINGING_EXPLICIT_STL_TEMPLATE      list< pair<int, touch_node *> >;
+RINGING_EXPLICIT_RINGING_TEMPLATE  shared_pointer< touch_node >;
+RINGING_EXPLICIT_STL_TEMPLATE      vector< shared_pointer< touch_node > >;
+#endif
+
+class RINGING_API touch_changes : public touch_node {
 private:
   vector<change> c;
   class iterator;
@@ -124,7 +136,7 @@ public:
   virtual touch_node::const_iterator end() const;
 };
 
-class touch_child_list : public touch_node {
+class RINGING_API touch_child_list : public touch_node {
 public:
   typedef pair<int, touch_node*> entry;
 
@@ -149,7 +161,7 @@ public:
 };
 
 // A wrapper around a list of touch_nodes to manage their memory
-class touch
+class RINGING_API touch
 {
 public:
   typedef change value_type;
@@ -163,23 +175,15 @@ public:
   void push_back( touch_node *node );
   void set_head( touch_node *node ) { head = node; }
 
-  touch_node *get_node( size_t idx ) { return (*nodes)[idx]; }
+  touch_node *get_node( size_t idx ) { return nodes[idx].get(); }
   const touch_node *get_head() const { return head; }
   touch_node *get_head() { return head; }
 
   touch() : head(0) {}
 
 private:
-  class touch_node_list : private vector< touch_node * >
-  {
-  public:
-    using vector< touch_node * >::push_back;
-    using vector< touch_node * >::operator[];
-   ~touch_node_list();
-  };
-
   touch_node *head;
-  shared_pointer< touch_node_list > nodes;
+  vector< shared_pointer< touch_node > > nodes;
 };
 
 RINGING_END_NAMESPACE

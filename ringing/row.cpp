@@ -120,6 +120,9 @@ change::change(int num, const string& pn)
 change::invalid::invalid() 
   : invalid_argument("The change supplied was invalid") {}
 
+change::out_of_range::out_of_range()
+  : RINGING_PREFIX_STD out_of_range("The place supplied was out of range") {}
+
 // Return the reverse of a change
 change change::reverse(void) const
 {
@@ -156,71 +159,75 @@ char *change::print(char *pn) const
 
 
 // Check whether a particular swap is done
-int change::findswap(bell which) const
+bool change::findswap(bell which) const
 {
   if(which < 0) return 0;
   if(n == 0) return 0;
   for(vector<bell>::const_iterator s = swaps.begin(); 
       s != swaps.end() && *s <= which; s++)
-    if(*s == which) return 1;
-  return 0;
+    if(*s == which) return true;
+  return false;
 }
 
 // Check whether a particular place is made
-int change::findplace(bell which) const
+bool change::findplace(bell which) const
 {
-  if(n == 0) return 1;
+  if(n == 0) return true;
   for(vector<bell>::const_iterator s = swaps.begin(); 
       s != swaps.end() && *s <= which; s++)
-    if(*s == which || *s == which-1) return 0;
-  return 1;
+    if(*s == which || *s == which-1) return false;
+  return true;
 }
 
 // Swap or unswap a pair of bells
 // Return 1 if we swapped them, 0 if we unswapped them
-int change::swappair(bell which)
+bool change::swappair(bell which)
 {
   if(which + 1 > n)
-    return -1;
+#if RINGING_USE_EXCEPTIONS
+    throw out_of_range();
+#else
+    return false;
+#endif
 
   vector<bell>::iterator s;
 
   for(s = swaps.begin(); s != swaps.end() && *s <= which + 1; s++) {
     if(*s == which) { // The swap is already there, so take it out
       swaps.erase(s);
-      return 0;
+      return false;
     }
     if(*s == which - 1) { // The swap before it is there. Replace it
                           // with our new swap.
       *s++ = which;
       if(*s == which + 1) // The swap after it is there too. Take it out.
 	swaps.erase(s);
-      return 1;
+      return true;
     }
     if(*s == which + 1) { // The swap after it is there. Replace it with
                           // our new swap.
       *s = which;
-      return 1;
+      return true;
     }
   }
   // OK, we just need to add it.
   swaps.insert(s, which);
-  return 1;
+  return true;
 }
 
 // Does it contain internal places?
-int change::internal(void) const
+bool change::internal(void) const
 {
-  if(n == 0) return 0;
-  if(!swaps.empty() && swaps[0] > 1) return 1;
+  if(n == 0) return false;
+  if(!swaps.empty() && swaps[0] > 1) return true;
   vector<bell>::const_iterator s = swaps.begin();
   bell b = swaps[0];
   for(++s; s != swaps.end(); ++s) {
-    if((*s - b) > 2) return 1;
+    if((*s - b) > 2) return true;
     b = *s;
   }
-  if((n - *s) > 2) return 1;
-  return 0;
+  if((n - *s) > 2) return true;
+  return false;
 }
 
 // Count the places made
@@ -514,12 +521,12 @@ row row::pblh(int n, int h)
 }
 
 // Check whether it is rounds
-int row::isrounds(void) const
+bool row::isrounds(void) const
 {
   if(data.empty()) return 1;
   for(int i = 0; i < bells(); i++)
-    if(data[i] != i) return 0;
-  return 1;
+    if(data[i] != i) return false;
+  return true;
 }
 
 // Return which plain bob lead head it is

@@ -17,13 +17,21 @@
 
 // $Id$
 
-#include <ringing/common.h>
+#if RINGING_AS_DLL
 
 #define RINGING_DO_STL_INSTANTIATIONS
+
+#if defined(_MSC_VER)
+#pragma warning( disable: 4660 )
+#endif
 
 // include all headers that contain explicit template instantiations here...
 #include <ringing/row.h>
 #include <ringing/library.h>
+#include <ringing/touch.h>
+#include <ringing/basic_search.h>
+#include <ringing/table_search.h>
 
 #undef RINGING_DO_STL_INSTANTIATIONS
 
+#endif // RINGING_AS_DLL

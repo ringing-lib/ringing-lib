@@ -29,12 +29,12 @@
 #include <string>
 #include <ringing/row.h>
 #include <ringing/method.h>
+#include <ringing/printm.h>
 #include <ringing/print_ps.h>
 #include <ringing/print_pdf.h>
-#include <ringing/printm.h>
 #include <ringing/mslib.h>
 #include <ringing/cclib.h>
-#include <args.h>
+#include "args.h"
 
 #if RINGING_USE_NAMESPACES
 using namespace ringing;

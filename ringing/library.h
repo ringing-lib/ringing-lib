@@ -95,7 +95,8 @@ public:
 };
 
 #if RINGING_AS_DLL
-RINGING_EXPLICIT_STL_TEMPLATE list<libtype*>;
+RINGING_EXPLICIT_STL_TEMPLATE     list<libtype*>;
+RINGING_EXPLICIT_RINGING_TEMPLATE shared_pointer<library_base>;
 #endif
 
 class RINGING_API library {

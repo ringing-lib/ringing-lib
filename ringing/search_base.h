@@ -30,7 +30,7 @@ RINGING_START_NAMESPACE
 
 class touch;
 
-class search_base
+class RINGING_API search_base
 {
 public:
   virtual ~search_base() {}
@@ -45,7 +45,7 @@ public:
   void run( outputer &o ) const;
 
 RINGING_PROTECTED_IMPL:
-  class context_base
+  class RINGING_API context_base
   {
   public:
     virtual void run( outputer & ) = 0;

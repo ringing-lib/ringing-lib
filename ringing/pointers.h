@@ -44,7 +44,7 @@ RINGING_START_DETAILS_NAMESPACE
 
 // A class that helps provide a safe conversion to bool, inspired by the 
 // safe_bool operator in boost's function_base.hpp [ http://www.boost.org ].
-class safe_bool
+class RINGING_API safe_bool
 {
 private:
   struct dummy
@@ -104,6 +104,15 @@ public:
   operator safe_bool_t() const { return make_safe_bool( ptr ); }
   bool operator!() const { return !bool( *this ); }
 
+  // Comparison operators.  
+  // Needed if we want to put them in a STL container in MSVC-5.
+  bool operator< ( const cloning_pointer<T> &o ) const { return ptr <  o.ptr; }
+  bool operator> ( const cloning_pointer<T> &o ) const { return ptr >  o.ptr; }
+  bool operator<=( const cloning_pointer<T> &o ) const { return ptr <= o.ptr; }
+  bool operator>=( const cloning_pointer<T> &o ) const { return ptr >= o.ptr; }
+  bool operator==( const cloning_pointer<T> &o ) const { return ptr == o.ptr; }
+  bool operator!=( const cloning_pointer<T> &o ) const { return ptr != o.ptr; }
+
 private:
   T *ptr;
 };
@@ -155,6 +164,15 @@ public:
   operator safe_bool_t() const { return make_safe_bool( ptr ); }
   bool operator!() const { return !bool( *this ); }
 
+  // Comparison operators.  
+  // Needed if we want to put them in a STL container in MSVC-5.
+  bool operator< ( const shared_pointer<T> &o ) const { return ptr <  o.ptr; }
+  bool operator> ( const shared_pointer<T> &o ) const { return ptr >  o.ptr; }
+  bool operator<=( const shared_pointer<T> &o ) const { return ptr <= o.ptr; }
+  bool operator>=( const shared_pointer<T> &o ) const { return ptr >= o.ptr; }
+  bool operator==( const shared_pointer<T> &o ) const { return ptr == o.ptr; }
+  bool operator!=( const shared_pointer<T> &o ) const { return ptr != o.ptr; }
+
 private:
   T *ptr;
   mutable int *rc;
@@ -174,7 +192,7 @@ public:
   element_type &operator*() const { return *ptr; }
   element_type *get() const { return ptr; }
 
-  // Construction and descruction
+  // Construction and destruction
   explicit scoped_pointer( T *src = 0 ) : ptr( src ) {}
  ~scoped_pointer() { delete ptr; }
 
@@ -184,6 +202,15 @@ public:
   // Safe boolean conversions
   operator safe_bool_t() const { return make_safe_bool( ptr ); }
   bool operator!() const { return !bool( *this ); }
+
+  // Comparison operators.  
+  // Needed if we want to put them in a STL container in MSVC-5.
+  bool operator< ( const scoped_pointer<T> &o ) const { return ptr <  o.ptr; }
+  bool operator> ( const scoped_pointer<T> &o ) const { return ptr >  o.ptr; }
+  bool operator<=( const scoped_pointer<T> &o ) const { return ptr <= o.ptr; }
+  bool operator>=( const scoped_pointer<T> &o ) const { return ptr >= o.ptr; }
+  bool operator==( const scoped_pointer<T> &o ) const { return ptr == o.ptr; }
+  bool operator!=( const scoped_pointer<T> &o ) const { return ptr != o.ptr; }
 
 private:
   // Assignment and copying disabled

@@ -38,8 +38,12 @@ RINGING_START_NAMESPACE
 
 RINGING_USING_STD
 
+#if RINGING_AS_DLL
+RINGING_EXPLICIT_TEMPLATE 
+struct RINGING_API RINGING_PREFIX_STD pair<size_t, size_t>;
+#endif
 
-class table_search : public search_base
+class RINGING_API table_search : public search_base
 {
 public:
   // Constructors

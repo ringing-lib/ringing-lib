@@ -81,11 +81,9 @@ public:
   static const char *classname(int cl) // Get the name of the class
     { return txt_classes[cl & M_MASK]; }
 
-  method(int l = 0, int b = 0, const char *n = "Untitled") : vector<change>(l)
-    {
-      if (l > 0) (*this)[0] = change(b);
-      name(n);
-    }
+  method(int l = 0, int b = 0, const char *n = "Untitled") 
+    : vector<change>(l, change(b)), myname(n) {}
+
   // Make a method from place notation
   method(const char *pn, int b, const char *n = "Untitled") {
     name(n);
@@ -112,17 +110,17 @@ public:
     for(i=begin(); i != end(); i++) r *= *i;
     return r;
   }
-  int issym(void) const;	// Is it symmetrical?
-  int isdouble(void) const;	// Is it double?
-  int isregular(void) const 	// Is it regular?
+  bool issym(void) const;	// Is it symmetrical?
+  bool isdouble(void) const;	// Is it double?
+  bool isregular(void) const 	// Is it regular?
     { return !!lh().ispblh(); }
   int huntbells(void) const;	// Number of hunt bells
   int leads(void) const 	// Number of leads in a plain course
     { return lh().order(); }
-  int issym(bell b) const;	// Is this bell's path symmetrical?
-  int isplain(bell b=0) const;	// Does this bell plain hunt?
-  int hasdodges(bell b) const;	// Does this bell ever dodge?
-  int hasplaces(bell b) const;	// Does this bell make internal places?
+  bool issym(bell b) const;	// Is this bell's path symmetrical?
+  bool isplain(bell b=0) const;	// Does this bell plain hunt?
+  bool hasdodges(bell b) const;	// Does this bell ever dodge?
+  bool hasplaces(bell b) const;	// Does this bell make internal places?
   int methclass(void) const; // What sort of method is it?
   char *lhcode(void) const;	 // Return the lead head code
 };

@@ -119,13 +119,7 @@ touch_node::const_iterator touch_child_list::end() const {
 
 void touch::push_back( touch_node *node )
 {
-  if ( !nodes.get() ) nodes.reset( new touch_node_list );
-  nodes->push_back( node ); 
-}
-
-touch::touch_node_list::~touch_node_list()
-{
-  for_each( begin(), end(), delete_pointers() );
+  nodes.push_back( shared_pointer<touch_node>( node ) ); 
 }
 
 

@@ -1,4 +1,4 @@
-// -*- C++ -*- mslib.h - Central Council Method libraries
+// -*- C++ -*- cclib.h - Central Council Method libraries
 // Copyright (C) 2001 Mark Baner <mark@standard8.co.uk>
 
 // This program is free software; you can redistribute it and/or modify

@@ -40,7 +40,7 @@ inline unsigned factorial(unsigned n)
 }
 
 class RINGING_API extent_iterator
-  : public RINGING_STD_ITERATOR( forward_iterator_tag, change )
+  : public RINGING_STD_CONST_ITERATOR( forward_iterator_tag, row )
 {
 public:
   // Standard iterator typedefs
@@ -53,7 +53,7 @@ public:
   // The end iterator
   extent_iterator() : end(true) {}
   
-  // The begining iterator
+  // The beginning iterator
   //   nw == The number of working bells 
   //   nh == The number of fixed (hunt) bells  [ default = 0 ]
   //   nt == The total number of bells         [ default = nh + nw ]
