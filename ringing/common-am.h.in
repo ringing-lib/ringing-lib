@@ -36,52 +36,52 @@
 // *** Define this to be 1 to use old-style standard C++ header names
 // (<iostream.h>, <list.h> and so on) or 0 to use new-style ones
 // (<iostream>, <list>).
-#define RINGING_OLD_INCLUDES @RINGING_OLD_INCLUDES@
+#define RINGING_OLD_INCLUDES @OLD_INCLUDES@
 
 // *** Define this to be 1 to use old-style standard C header names
 // (<stdio.h> and so on) or 0 to use new-style ones (<cstdio>).
-#define RINGING_OLD_C_INCLUDES @RINGING_OLD_C_INCLUDES@
+#define RINGING_OLD_C_INCLUDES @OLD_C_INCLUDES@
 
 // *** Define this to be 1 if you want the Ringing Class Library to use
 // exceptions, or 0 otherwise.
-#define RINGING_USE_EXCEPTIONS @RINGING_USE_EXCEPTIONS@
+#define RINGING_USE_EXCEPTIONS @USE_EXCEPTIONS@
 
 // *** Define this to be 1 if you want the Ringing Class Library to put
 // its definitions in a namespace called `ringing', or 0 otherwise.
-#define RINGING_USE_NAMESPACES @RINGING_USE_NAMESPACES@
+#define RINGING_USE_NAMESPACES @USE_NAMESPACES@
 
 // *** Define this to be 1 if your standard include files (as indicated above
 // by RINGING_HEADER_EXT) place their definitions in namespace `std', or 0
 // if the definitions are in the global namespace.
-#define RINGING_USE_STD @RINGING_USE_STD@
+#define RINGING_USE_STD @USE_STD@
 
 // *** Define this to be 1 if your compiler supports specialisation of 
 // template functions, or 0 if it does not.
-#define RINGING_USE_TEMPLATE_FUNCTION_SPECIALISATION @RINGING_USE_TEMPLATE_FUNCTION_SPECIALISATION@
+#define RINGING_USE_TEMPLATE_FUNCTION_SPECIALISATION @USE_TEMPLATE_FUNCTION_SPECIALISATION@
 
 // *** Define this to be 1 if your compiler allows bases classes of 
 // member classes to be protected member classes of a base of the outer class.
-#define RINGING_PROTECTED_MEMBER_BASES @RINGING_PROTECTED_MEMBER_BASES@
+#define RINGING_PROTECTED_MEMBER_BASES @PROTECTED_MEMBER_BASES@
 
 // *** Define this to be 1 if your compiler prematurely instantiates the 
 // definitions of member functions (as well as their declarations) when
 // it implicitly instantiates a class, or 0 otherwise.
-#define RINGING_PREMATURE_MEMBER_INSTANTIATION @RINGING_PREMATURE_MEMBER_INSTANTIATION@
+#define RINGING_PREMATURE_MEMBER_INSTANTIATION @PREMATURE_MEMBER_INSTANTIATION@
 
 // *** Define this to be 1 if your STL only has pre-standard, non-templated
 // iostreams, or to 0 if it has standard templated iostreams.
-#define RINGING_HAVE_OLD_IOSTREAMS @RINGING_HAVE_OLD_IOSTREAMS@
+#define RINGING_HAVE_OLD_IOSTREAMS @HAVE_OLD_IOSTREAMS@
 
 // *** Define this to be 1 if your STL has a compliant std::iterator class
-#define RINGING_HAVE_STD_ITERATOR @RINGING_HAVE_STD_ITERATOR@
+#define RINGING_HAVE_STD_ITERATOR @HAVE_STD_ITERATOR@
 
 // *** Define this to be 1 if your STL has working {o,i}stringstream classes,
 // or to 0 otherwise.
-#define RINGING_USE_STRINGSTREAM @RINGING_USE_STRINGSTREAM@
+#define RINGING_USE_STRINGSTREAM @USE_STRINGSTREAM@
 
 // *** Define this to be 1 if want to include GNU readline support
 // or to 0 otherwise.
-#define RINGING_USE_READLINE @RINGING_USE_READLINE@
+#define RINGING_USE_READLINE @USE_READLINE@
 
 #endif
 
