@@ -124,6 +124,18 @@ public:
   bool hasplaces(bell b) const;	// Does this bell make internal places?
   int methclass(void) const; // What sort of method is it?
   char *lhcode(void) const;	 // Return the lead head code
+  int symmetry_point() const;   // Point of palindromic symmetry (or -1)
+
+  enum m_format {
+    M_DOTS       =  01,  // Include all dots
+    M_EXTERNAL   =  02,  // Include all external places
+    M_UCROSS     =  04,  // Use an upper-case 'X' for the cross change
+    M_LCROSS     = 010,  // Use a lower-case 'x' for the cross change
+    M_DASH       = 020,  // Use a dash ('-') for the cross change
+    M_SYMMETRY   = 040,  // Separate palindromic methods into two components
+  };
+
+  string format( int flags = 0 ) const; // Format the place notation for output
 };
 
 RINGING_END_NAMESPACE

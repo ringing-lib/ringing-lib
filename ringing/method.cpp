@@ -1,5 +1,6 @@
 // method.cpp - routines for methods, positions and calls
-// Copyright (C) 2001 Martin Bright <martin@boojum.org.uk>
+// Copyright (C) 2001, 2004 Martin Bright <martin@boojum.org.uk>
+// and Richard Smith <richard@ex-parrot.com>
 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -413,6 +414,88 @@ char *method::lhcode(void) const
   }
   
   return buff;
+}
+
+
+int method::symmetry_point() const
+{
+  const int n( size() );
+  for ( int i=0; i<n/2; ++i )
+    {
+      // try m[i] as the sym point
+      bool ok(true);
+
+      for ( int j=1; ok && j<n/2; ++j ) 
+	if ( (*this)[(i+j) % n] != (*this)[(i-j+n) % n] )
+	  ok = false;
+
+      if (ok) return i;
+    }
+
+  return -1;
+}
+
+RINGING_START_ANON_NAMESPACE
+
+void do_single_compressed_pn( string &out, const change &ch, 
+			      int flags, bool &might_need_dot, bool &first )
+{
+  const int n = ch.bells();
+  if ( ch.count_places() == 0 )
+    {
+      if ( (flags & method::M_DOTS) && !first ) out += '.';
+
+      out += (flags & method::M_UCROSS) ? 'X' 
+	   : (flags & method::M_LCROSS) ? 'x' 
+	   : (flags & method::M_DASH)   ? '-'
+	   : 'X'; // Default is same as in change::print()
+
+      might_need_dot = false;
+    } 
+  else 
+    {
+      string p( ch.print() );
+      
+      if ( !(flags & method::M_EXTERNAL) && p.size() > 1 )
+	{
+	  if ( p[0] == bell(0).to_char() )
+	    p = p.substr(1);
+	  if ( !p.empty() && p[ p.size()-1 ] == bell( n-1 ).to_char() )
+	    p = p.substr( 0, p.size() - 1 );
+	  if ( p.empty() )
+	    p = bell( 0 ).to_char();
+	}
+
+      if ( ( might_need_dot || (flags & method::M_DOTS) ) && !first ) 
+	out += '.';
+      out += p;
+      might_need_dot = true;
+    }
+  first = false;
+}
+
+RINGING_END_ANON_NAMESPACE
+
+string method::format( int flags ) const
+{
+  string out;
+  bool might_need_dot(false), first(true);
+
+  if ( flags & M_SYMMETRY && issym() ) {
+    out += '&';
+    for ( int i=0; i<size() / 2; ++i )
+      do_single_compressed_pn( out, (*this)[i], flags, might_need_dot, first );
+
+    out += ','; 
+    might_need_dot = false; first = true;
+    do_single_compressed_pn( out, back(), flags, might_need_dot, first );
+
+  } else {
+    for ( int i=0; i<size(); ++i )
+      do_single_compressed_pn( out, (*this)[i], flags, might_need_dot, first );
+  }
+
+  return out;
 }
 
 RINGING_END_NAMESPACE
