@@ -19,7 +19,7 @@
 
 #include <ringing/common.h>
 
-#ifdef RINGING_HAS_PRAGMA_INTERFACE
+#if RINGING_HAS_PRAGMA_INTERFACE
 #pragma implementation
 #endif
 
@@ -176,44 +176,6 @@ static const struct init_data_t {
   { NULL, NULL }
 };
 
-static row corow( const row& r )
-{
-  const size_t b( r.bells() );
-
-  vector<bool> done(b, false), current(b, false);
-
-  string result( row(b).print() );
-
-  int i = 0;
-  for (;;) {
-    while ( i < b && done[i] ) ++i;
-    if ( i == b ) break;
-
-    string tmp;
-    do {
-      tmp.append( 1, bell(i).to_char() );
-      done[i] = true; current[i] = true;
-      i = r[i];
-    } while (!done[i]);
-
-    for ( int j=0, k=0; j<b; ++j )
-      if ( current[j] ) {
-	result[j] = tmp[k++];
-	current[j] = false;
-      }    
-  }
-
-  return result;
-}
-//
-// returns m such that a = m.b.m^{-1}
-static row conjugator( const row& a, const row& b )
-{
-  row m( corow(a) ); 
-  m *= corow(b).inverse();
-  assert( a == m * b * m.inverse() );
-  return m;
-}
 
 // An optional cache for efficiency
 static shared_pointer< map<row, string> > optimised_table;
@@ -261,8 +223,6 @@ string false_courses::symbols() const
   if ( b % 2 )
     throw std::logic_error("Odd-bell falseness groups not handled");
 
-
-  const vector<row>* fch = &t;
   row conj(b);
 
   if ( !lh.ispblh() )
