@@ -311,7 +311,7 @@ row row::operator*(const row& r) const
     else
       product.data[i] = r.data[i];
   for(;i < m; i++)
-    product.data[i] = i;
+    product.data[i] = data[i];
   return product;
 }
 
