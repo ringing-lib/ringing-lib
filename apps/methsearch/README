@@ -27,8 +27,9 @@ General Options
                          Count frequencies of different method properties
   -R, --format=FMT       Use FMT to format methods as found
   --require=EXPR         Require EXPR to be true (see below)
-  -h, --any-hl-le        Allow any change at the half-lead and lead-end
   -e, --restricted-le    Only allow 12 and 1N (or 1 and 12N lead ends)
+  -E, --prefer-restricted-le
+                         Prefer 12 and 1N (or 1 and 12N lead ends)
   -w, --right-place      Require right place methods
   -f, --no-78s           Prohibit 78s (on 8 bells) in the place notation
 			 (except at the half-lead).
@@ -79,6 +80,11 @@ must match.  The --regular-hls option requires that the half lead-heads and
 ends are the same as the half-lead heads and ends of Plain Bob (although 
 it is permitted for the methods half-lead head to be the half-lead end of 
 Plain Bob and vice versa).
+
+The -E (--prefer-restricted-le) option will only include methods with lead
+end changes other than 12 or 1N if neither the 12 nor the 1N version conforms
+to the required criteria.  This is the same restriction that the CC applies
+in, say, the Plain Minor Collection.
 
 
 
@@ -137,6 +143,8 @@ The -H and -R formats accept the following format specifiers:
   $p     The place notation (-R only).
   $q     The place notation (-R only), but in a slightly more compressed 
          format
+  $Q     The place notation minus the lead-head change (-R only), 
+         in the slightly more compressed format
   $Nr    The Nth row in the lead -- N should be an integer starting at 0
   $Nh    The Nth change in the lead -- N should be an integer starting at 1
   $[N]b  The maximum number of consecutive blows in one place;  if a number,

@@ -774,7 +774,7 @@ private:
   const format_string &f;
 
   row lead_head;
-  string pn, compressed_pn;
+  string pn, compressed_pn, short_compressed_pn;
   map< size_t, row > rows;
   map< size_t, string > paths;
   method changes;
@@ -823,6 +823,14 @@ bool histogram_entry::cmp::operator()( const histogram_entry &x,
       if ( x.compressed_pn < y.compressed_pn )
 	return true;
       else if ( x.compressed_pn > y.compressed_pn )
+	return false;
+    }
+
+  if ( x.f.has_short_compressed_pn )
+    {
+      if ( x.short_compressed_pn < y.short_compressed_pn )
+	return true;
+      else if ( x.short_compressed_pn > y.short_compressed_pn )
 	return false;
     }
 
@@ -960,6 +968,11 @@ histogram_entry::histogram_entry( const format_string &f, const method &m )
       compressed_pn = get_compressed_pn(m);
     }
 
+  if ( f.has_short_compressed_pn )
+    {
+      short_compressed_pn = get_short_compressed_pn(m);
+    }
+
   if ( f.has_rows.size() )
     for ( vector<size_t>::const_iterator i( f.has_rows.begin() ), 
 	    e( f.has_rows.end() ); i != e; ++i )
@@ -1058,6 +1071,7 @@ void histogram_entry::print( ostream &os2, size_t count ) const
 		case 'l': os << lead_head;  break;
 		case 'p': os << pn; break;
 		case 'q': os << compressed_pn; break;
+		case 'Q': os << short_compressed_pn; break;
 		case 'r': os << rows.find( num_opt )->second; break;
 		case 'h': os << changes[ num_opt-1 ]; break;
 		case 'b': os << setw(num_opt) << blow_count; break;
@@ -1151,6 +1165,7 @@ format_string::format_string( const string &fmt,
   : has_lead_head(false),
     has_pn(false),
     has_compressed_pn(false),
+    has_short_compressed_pn(false),
     has_blow_count(false),
     has_lh_order(false),
     has_lh_code(false),
@@ -1213,7 +1228,7 @@ format_string::format_string( const string &fmt,
 				      " can only be used in stats formats" );
 	      break;
 
-	    case 'p': case 'q': case 'n': case 'N': case 'P': 
+	    case 'p': case 'q': case 'Q': case 'n': case 'N': case 'P': 
 	    case '[': // Don't want to think about this in stats, yet.
 	      if ( type != normal_type )
 		throw argument_error( make_string() << "The `$" << *iter << "'"
@@ -1242,7 +1257,7 @@ format_string::format_string( const string &fmt,
 	      // Option may but needn't have a number
 	      break;
 
-	    case 'n': case 'N': case 'p': case 'q': case 'l': 
+	    case 'n': case 'N': case 'p': case 'q': case 'Q': case 'l': 
 	    case 'C': case 'S': case 'F': case 'd':
 	      if ( iter != iter2 )
 		throw argument_error
@@ -1272,6 +1287,10 @@ format_string::format_string( const string &fmt,
 
 	    case 'q': 
 	      has_compressed_pn = true; 
+	      break;
+
+	    case 'Q': 
+	      has_short_compressed_pn = true; 
 	      break;
 
 	    case 'b':

@@ -227,6 +227,29 @@ void do_single_compressed_pn( make_string &os, const change &ch,
     }
 }
 
+string get_short_compressed_pn( const method &m )
+{
+  make_string os;
+
+  bool might_need_dot(false);
+
+  if ( m.issym() )
+    {
+      os << '&';
+      for ( int i=0; i < m.length() / 2; ++i)
+	do_single_compressed_pn( os, m[i], might_need_dot );
+
+      os << ','; might_need_dot = false;
+    }
+  else
+    {
+      for ( int i=0; i < m.length() - 1; ++i)
+	do_single_compressed_pn( os, m[i], might_need_dot );
+    }
+
+  return os;
+}
+
 string get_compressed_pn( const method &m )
 {
   make_string os;

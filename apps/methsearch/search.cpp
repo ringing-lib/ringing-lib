@@ -76,6 +76,7 @@ private:
   inline bool is_rev_cyclic_hl( const row& hl );
   inline bool is_regular_hl( const row& hl );
   inline void swap_overlap( change &ch, const pair< int, int > &posn );
+  bool is_limited_le( const change& ch );
 
   void new_midlead_change();
   void new_principle_change();
@@ -88,11 +89,11 @@ private:
   bool try_midlead_change( const change &ch );
   bool try_quarterlead_change( const change &ch );
   bool try_offset_start_change( const change &ch);
-
+  bool try_with_limited_le( const change& ch );
   bool try_principle_symmetry();
 
+  bool is_acceptable_method();
   void found_method();
-  void maybe_found_method();
 
   bool is_acceptable_leadhead( const row &lh );
 
@@ -149,11 +150,48 @@ bool searcher::try_principle_symmetry()
   return true;
 }
 
-void searcher::maybe_found_method()
+bool searcher::try_with_limited_le( const change& ch )
 {
+  change orig( m.back() );
+  m.pop_back();
+
+  int depth = m.length();
+  assert( depth == size_t(args.lead_len-1) );
+
+  if ( !try_midlead_change(ch) )
+    {
+      m.push_back(orig);
+      return false;
+    }
+  
+  if ( ! try_leadend_change( ch ) )
+    {
+      m.push_back(orig);
+      return false;
+    }
+
+  if ( args.hunt_bells % 2 == 1 && depth == 2*hl_len-1 ||
+       args.hunt_bells % 2 == 0 && depth == 0 )
+    if ( ! try_leadend_sym_change( ch ) )
+      {
+	m.push_back(orig);
+	return false;
+      }
+
+  m.push_back(ch);
+  bool ok = is_acceptable_method();
+  m.back() = orig;
+  return ok;
+}
+
+bool searcher::is_acceptable_method()
+{
+  if ( ! is_acceptable_leadhead( m.lh() ) )
+    return false;
+
   if ( !args.hunt_bells )
     if ( ! try_principle_symmetry() )
-      return;
+      return false;
 
   if ( args.require_offset_cyclic )
     {
@@ -188,7 +226,7 @@ void searcher::maybe_found_method()
       while ( !r.isrounds() );
 
       if (!ok)
-	return;
+	return false;
     }
 
   if ( args.true_course )
@@ -203,7 +241,7 @@ void searcher::maybe_found_method()
 
       sort( rows.begin(), rows.end() );
       if ( adjacent_find( rows.begin(), rows.end() ) != rows.end() )
-	return;
+	return false;
     }
 
   else if ( args.true_lead )
@@ -215,22 +253,27 @@ void searcher::maybe_found_method()
 
       sort( rows.begin(), rows.end() );
       if ( adjacent_find( rows.begin(), rows.end() ) != rows.end() )
-	return;
+	return false;
     }
 
   if ( args.require_CPS && !is_cps( m ) )
-    return;
+    return false;
 
   if ( args.true_extent && !might_support_extent(m) )
-    return;
+    return false;
 
   if ( args.true_positive_extent && !might_support_positive_extent(m) )
-    return;
+    return false;
 
   if ( !args.require_expr.null() && !args.require_expr.b_evaluate(m) )
-    return;
+    return false;
 
-  found_method();
+  if ( args.prefer_limited_le && !is_limited_le( m.back() ) &&
+       ( try_with_limited_le( change( bells, "1"  ) ) ||
+	 try_with_limited_le( change( bells, "12" ) ) ) )
+    return false;
+
+  return true;
 }
 
 inline void searcher::call_recurse( const change &ch )
@@ -349,29 +392,29 @@ bool searcher::try_halflead_change( const change &ch )
   return true;
 }
 
+bool searcher::is_limited_le( const change& ch )
+{
+  string pn("1");
+  pn += bell( args.hunt_bells ).to_char();
+  
+  if ( ch == change( bells, "1" ) || ch == change( bells, pn ) )
+    return true;
+  else
+    return false;
+}
+
 bool searcher::try_halflead_sym_change( const change &ch )
 {
-  if ( args.require_single_place_lh_le 
-       && ch.count_places() >= 4 )
-    return false;
-
   if ( args.true_trivial 
        && ch.count_places() == bells )
     return false;
 
-  if ( (args.skewsym || args.doubsym) && args.require_limited_le )
-    {
-      string pn("1");
-      pn += bell( args.hunt_bells ).to_char();
-      
-      change ch2( ch.reverse() );
-      if ( ch2 != change( bells, "1" ) && ch2 != change( bells, pn ) )
-	return false;
-    }
+  if ( (args.skewsym || args.doubsym) && args.require_limited_le 
+       && !is_limited_le( ch.reverse() ) )
+    return false;
 
   if ( (args.skewsym || args.doubsym) &&
-       args.no_78_pns && !args.require_single_place_lh_le 
-       && ch.findplace(1) )
+       args.no_78_pns && ch.findplace(1) )
     return false;
 
   if ( args.sym && args.max_consec_blows
@@ -440,25 +483,14 @@ bool searcher::try_leadend_change( const change &ch )
 
 bool searcher::try_leadend_sym_change( const change &ch )
 {
-  if ( args.require_single_place_lh_le 
-       && ch.count_places() >= 4 )
-    return false;
-
   if ( args.true_trivial 
        && ch.count_places() == bells )
     return false;
  
-  if ( args.require_limited_le )
-    {
-      string pn("1");
-      pn += bell( args.hunt_bells ).to_char();
-      
-      if ( ch != change( bells, "1" ) && ch != change( bells, pn ) )
-	return false;
-    }
+  if ( args.require_limited_le && !is_limited_le(ch) ) 
+    return false;
 
-  if ( args.no_78_pns && !args.require_single_place_lh_le 
-       && ch.findplace(bells-2) )
+  if ( args.no_78_pns && ch.findplace(bells-2) )
     return false;
 
   if ( args.sym && args.max_consec_blows
@@ -820,8 +852,8 @@ void searcher::general_recurse()
   // Found something
   if ( depth == size_t(args.lead_len) )
     {
-      if ( is_acceptable_leadhead( m.lh() ) )
-	maybe_found_method();
+      if ( is_acceptable_method() )
+	found_method();
     }
 
 

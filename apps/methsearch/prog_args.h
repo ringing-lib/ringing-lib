@@ -53,8 +53,8 @@ struct arguments
   init_val<int,0>  lead_len;
   init_val<int,0>  max_consec_places; 
 
-  init_val<bool,true>  require_single_place_lh_le; 
-  init_val<bool,false> require_limited_le; 
+  init_val<bool,false> require_limited_le;
+  init_val<bool,false> prefer_limited_le;
   init_val<bool,false> require_pbles;
   init_val<bool,false> require_cyclic_les;
   init_val<bool,false> require_cyclic_hlh;

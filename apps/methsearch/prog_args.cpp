@@ -174,14 +174,14 @@ void arguments::bind( arg_parser &p )
 	   require_str ) );
 
   p.add( new boolean_opt
-	 ( 'h', "any-hl-le",
-	   "Allow any change at the half-lead and lead-end",
-	   require_single_place_lh_le, false ) );
-
-  p.add( new boolean_opt
 	 ( 'e', "restricted-le",
 	   "Only allow 12 and 1N (or 1 and 12N lead ends)",
 	   require_limited_le ) );
+
+  p.add( new boolean_opt
+	 ( 'E', "prefer-restricted-le",
+	   "Prefer 12 and 1N (or 1 and 12N lead ends)",
+	   prefer_limited_le ) );
 
   p.add( new boolean_opt
 	 ( 'w', "right-place", 
@@ -324,6 +324,12 @@ bool arguments::validate( arg_parser &ap )
     {
       ap.error( make_string() << "The number of bells must be between 3 and " 
 		<< bell::MAX_BELLS-1 << " (inclusive)" );
+      return false;
+    }
+
+  if ( prefer_limited_le && require_limited_le )
+    {
+      ap.error( "The -e and -E options are mutually exclusive" );
       return false;
     }
 

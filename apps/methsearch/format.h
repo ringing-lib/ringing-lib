@@ -104,6 +104,7 @@ struct format_string
   bool has_lead_head;
   bool has_pn;
   bool has_compressed_pn;
+  bool has_short_compressed_pn;
   bool has_blow_count;
   bool has_lh_order;
   bool has_lh_code;

@@ -55,6 +55,7 @@ bool has_consec_places( const change &c, size_t max_count = 1u );
 bool division_bad_parity_hack( const method &m, const change &c, 
 			       size_t divlen );
 string get_compressed_pn( const method &m );
+string get_short_compressed_pn( const method &m );
 
 
 #endif // METHSEARCH_METHODUTILS_INCLUDED
