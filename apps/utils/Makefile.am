@@ -24,7 +24,7 @@ MAINTAINERCLEANFILES = Makefile.in
 
 noinst_LIBRARIES = libstuff.a
 INCLUDES = -I$(top_srcdir)
-libstuff_a_SOURCES = args.cpp
+libstuff_a_SOURCES = args.cpp args.h
 
 
 
