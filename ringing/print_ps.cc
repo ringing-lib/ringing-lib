@@ -27,63 +27,62 @@
 RINGING_START_NAMESPACE
 
 const string printpage_ps::def_string =
-"/BD {bind def} bind def
-/C {dup stringwidth pop 2 div neg offset neg rmoveto show} BD
-/TR {dup stringwidth pop neg 4 -1 roll add 3 -1 roll moveto show} BD
-/TC {dup stringwidth pop 2 div neg 4 -1 roll add 3 -1 roll moveto show} BD
-/TL {3 1 roll moveto show} BD
-/F {exch findfont exch scalefont setfont} BD
-/O {
-  newpath 
-  xspace mul xstart add ypos yspace add 
-  3 -1 roll 2 mul 0 360 arc closepath fill
-} BD
-/D {0 offset neg rmoveto show} BD
-/DR {dup stringwidth pop 2 div neg offset neg rmoveto show} BD
-/E {currentpoint gsave translate 0.8 1 scale 0 0 M C grestore} BD
-/PB {
-  dup 20 div setlinewidth
-  exch 1 add xspace mul xstart add ypos yspace add 
-  newpath 2 copy 5 -1 roll 2 mul 3 div 0 360 arc stroke
-  moveto
-} BD 
-/MR {xspace mul xstart add ypos yspace add moveto} BD
-/M {moveto} BD
-/L {lineto} BD
-/R {rlineto} BD
-/S {stroke} BD
-/N {newpath} BD
-/SL {setlinewidth} BD
-/buf 1 string def
-/W { 
-   /xpos xstart def
-   {
-      buf dup 0 4 -1 roll put
-      xpos dup xspace add /xpos exch def ypos M C
-   } forall
-   /ypos ypos yspace sub def
-} BD
-/RO {
-  0 SL N
-  xstart xspace 2 div sub ypos yspace 2 div add M
-  xspace mul 0 R S
-} BD
-/X {/xstart exch def} BD
-/Y {/ypos exch def} BD
-/DL1 { 1 exch { dup 49 ge exch dup 57 le 3 -1 roll 
-and { 48 sub exch pop }
-{ 2 index exch get exch { dup dup type /stringtype eq
-{ 2 index exch DL1 pop } { exec } ifelse } repeat pop 1 } ifelse }
-forall pop } BD 
-/DL { DLD exch DL1 pop } BD
-/DLD 4 dict def
-/defline { exch 0 get DLD 3 1 roll exch put } BD
-(u) { xspace yspace neg R } defline
-(d) { xspace neg yspace neg R } defline
-(p) { 0 yspace neg R } defline
-/J { yspace mul neg exch xspace mul xstart add 
-currentpoint pop neg add exch rmoveto } BD
-";
+"/BD {bind def} bind def\n"
+"/C {dup stringwidth pop 2 div neg offset neg rmoveto show} BD\n"
+"/TR {dup stringwidth pop neg 4 -1 roll add 3 -1 roll moveto show} BD\n"
+"/TC {dup stringwidth pop 2 div neg 4 -1 roll add 3 -1 roll moveto show} BD\n"
+"/TL {3 1 roll moveto show} BD\n"
+"/F {exch findfont exch scalefont setfont} BD\n"
+"/O {\n"
+"  newpath \n"
+"  xspace mul xstart add ypos yspace add \n"
+"  3 -1 roll 2 mul 0 360 arc closepath fill\n"
+"} BD\n"
+"/D {0 offset neg rmoveto show} BD\n"
+"/DR {dup stringwidth pop 2 div neg offset neg rmoveto show} BD\n"
+"/E {currentpoint gsave translate 0.8 1 scale 0 0 M C grestore} BD\n"
+"/PB {\n"
+"  dup 20 div setlinewidth\n"
+"  exch 1 add xspace mul xstart add ypos yspace add \n"
+"  newpath 2 copy 5 -1 roll 2 mul 3 div 0 360 arc stroke\n"
+"  moveto\n"
+"} BD \n"
+"/MR {xspace mul xstart add ypos yspace add moveto} BD\n"
+"/M {moveto} BD\n"
+"/L {lineto} BD\n"
+"/R {rlineto} BD\n"
+"/S {stroke} BD\n"
+"/N {newpath} BD\n"
+"/SL {setlinewidth} BD\n"
+"/buf 1 string def\n"
+"/W { \n"
+"   /xpos xstart def\n"
+"   {\n"
+"      buf dup 0 4 -1 roll put\n"
+"      xpos dup xspace add /xpos exch def ypos M C\n"
+"   } forall\n"
+"   /ypos ypos yspace sub def\n"
+"} BD\n"
+"/RO {\n"
+"  0 SL N\n"
+"  xstart xspace 2 div sub ypos yspace 2 div add M\n"
+"  xspace mul 0 R S\n"
+"} BD\n"
+"/X {/xstart exch def} BD\n"
+"/Y {/ypos exch def} BD\n"
+"/DL1 { 1 exch { dup 49 ge exch dup 57 le 3 -1 roll \n"
+"and { 48 sub exch pop }\n"
+"{ 2 index exch get exch { dup dup type /stringtype eq\n"
+"{ 2 index exch DL1 pop } { exec } ifelse } repeat pop 1 } ifelse }\n"
+"forall pop } BD \n"
+"/DL { DLD exch DL1 pop } BD\n"
+"/DLD 4 dict def\n"
+"/defline { exch 0 get DLD 3 1 roll exch put } BD\n"
+"(u) { xspace yspace neg R } defline\n"
+"(d) { xspace neg yspace neg R } defline\n"
+"(p) { 0 yspace neg R } defline\n"
+"/J { yspace mul neg exch xspace mul xstart add \n"
+"currentpoint pop neg add exch rmoveto } BD\n";
 
 printpage_ps::printpage_ps(ostream& o) : os(o), eps(false)
 {
