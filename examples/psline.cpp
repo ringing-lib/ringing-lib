@@ -1,5 +1,5 @@
 // -*- C++ -*- psline.cpp - print out lines for methods
-// Copyright (C) 2001 Martin Bright <M.Bright@dpmms.cam.ac.uk>
+// Copyright (C) 2001-2 Martin Bright <M.Bright@dpmms.cam.ac.uk>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -17,9 +17,6 @@
 
 // $Id$
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
 #include <ringing/common.h>
 
 #if RINGING_OLD_INCLUDES
@@ -37,11 +34,7 @@
 #include <ringing/printm.h>
 #include <ringing/mslib.h>
 #include <ringing/cclib.h>
-
-#if !HAVE_ARGP_PARSE
-#error Sorry, at the moment you need the argp library to build this program.
-#endif
-#include <argp.h>
+#include <args.h>
 
 #if RINGING_USE_NAMESPACES
 using namespace ringing;
@@ -50,13 +43,13 @@ using namespace ringing;
 enum format_t { ps, eps, pdf };
 
 struct arguments {
-  const char* output_file;
-  const char* library_name;
-  const char* method_name;
+  string output_file;
+  string library_name;
+  string method_name;
   int bells;
   format_t format;
   string title; text_style title_style;
-  char *font; int font_size; colour col;
+  string font; int font_size; colour col;
   bool custom_lines;
   map<bell, printrow::options::line_style> lines;
   bool custom_rules;
@@ -79,355 +72,399 @@ struct arguments {
   int total_rows;
 };
 
-void parse_int(struct argp_state *state, const string& arg, int& i)
+arguments args;
+string progname;
+
+bool parse_int(const string& arg, int& i)
 {
   istrstream is(arg.data(), arg.length()); 
   is >> i;
-  if(!is || is.get() != EOF)
-    argp_error(state, "Invalid integer argument: \"%s\"", arg.c_str());
+  if(!is || is.get() != EOF) {
+    cerr << "Invalid integer argument: \"" << arg << "\"\n";
+    return false;
+  }
+  return true;
 }
 
-void parse_dimension(struct argp_state *state, const string& arg, dimension& d)
+bool parse_dimension(const string& arg, dimension& d)
 {
   try {
     d.read(arg);
   }
   catch(dimension::bad_format) {
-    argp_error(state, "Invalid dimension: \"%s\"", arg.c_str());
+    cerr << "Invalid dimension: \"" << arg << "\"\n";
+    return false;
   }
+  return true;
 }
 
-void parse_colour(struct argp_state* state, const string& arg, colour& col)
+bool parse_colour(const string& arg, colour& col)
 {
   istrstream is(arg.data(), arg.length());
   int i; char c;
   is >> i;
-  if(!is || ((c = is.get()) != EOF && c != '-'))
-    argp_error(state, "Invalid colour: \"%s\"", arg.c_str());
-  if(i < 0 || i > 100)
-    argp_error(state, "Colour out of range: %d", i);
-  if(is.eof()) { col.grey = true; col.red = i/100; return; }
+  if(!is || ((c = is.get()) != EOF && c != '-')) {
+    cerr << "Invalid colour: \"" << arg << "\"\n";
+    return false;
+  }
+  if(i < 0 || i > 100) {
+    cerr << "Colour out of range: " << i << endl;
+    return false;
+  }
+  if(is.eof()) { col.grey = true; col.red = i/100; return true; }
   col.red = i/100;
   is >> i;
-  if(!is || ((c = is.get()) != '-'))
-    argp_error(state, "Invalid colour: \"%s\"", arg.c_str());
-  if(i < 0 || i > 100)
-    argp_error(state, "Colour out of range: %d", i);
+  if(!is || ((c = is.get()) != '-')) {
+    cerr << "Invalid colour: \"" << arg << "\"\n";
+    return false;
+  }
+  if(i < 0 || i > 100) {
+    cerr << "Colour out of range: " << i << endl;
+    return false;
+  }
   col.green = i/100;
   is >> i;
-  if(!is || (is.get() != EOF))
-    argp_error(state, "Invalid colour: \"%s\"", arg.c_str());
-  if(i < 0 || i > 100)
-    argp_error(state, "Colour out of range: %d", i);
+  if(!is || (is.get() != EOF)) {
+    cerr << "Invalid colour: \"" << arg << "\"\n";
+    return false;
+  }
+  if(i < 0 || i > 100) {
+    cerr << "Colour out of range: " << i << endl;
+    return false;
+  }
   col.blue = i/100;
   col.grey = false;
+  return true;
 }
 
-string next_bit(const char*& s)
+string next_bit(const string& s, string::const_iterator& i)
 {
-  const char* t = s;
-  while(*t != '\0' && *t != ',') t++;
-  string result(s,t);
-  s = (*t == '\0') ? 0 : t+1;
+  string::const_iterator j = i;
+  while(j != s.end() && *j != ',') j++;
+  string result(i, j);
+  i = j; if(i != s.end()) ++i;
   return result;
 }
 
-const char* argp_program_version = RINGING_VERSION;
-static char doc[] = "psline -- print out lines for methods in PostScript.\v"
-"Most options have sensible defaults.  In particular, unless you specify"
-" otherwise, the image will be fitted to the page; and lines will be drawn"
-" for the treble and for the bell which makes the lead end place."
-"  Options requiring a DIMENSION may be specified in many different ways,"
-" as for example \"1 3/8 in\", \"1/2pt\" or \"1.3cm\".  Options requiring"
-" a COLOUR may be specified as either an integer between 0 and 100,"
-" signifying a grey level; or as three integers between 0 and 100, separated"
-" by minus signs (`-'), specifying red, green and blue levels.";
-static char args_doc[] = "LIBRARY METHOD\nBELLS:PLACE-NOTATION";
-static struct argp_option options[] = {
-  { 0, 0, 0, 0, "General options:" },
-  { "output-file", 'o', "FILE", 0, 
-    "Output to FILE instead of standard output" },
-  { "eps", 'e', 0, 0, "Generate an Encapsulated PostScript (EPS) file" },
-  { "pdf", 'P', 0, 0, "Generate a Portable Document Format (PDF) file" },
-  { "title", 't', "TITLE[,FONT[,SIZE[,COLOUR]]]", OPTION_ARG_OPTIONAL,
+class myopt : public option {
+public:
+  myopt(char c, string l, string d) : option(c, l, d) {}
+  myopt(string d) : option(d) {}
+  myopt(char c, string l, string d, string n, bool o = false) 
+    : option(c, l, d, n, o) {}
+  bool process(const string& a, const arg_parser& ap) const;
+};
+
+void setup_args(arg_parser& p)
+{
+  p.add(new myopt("General options:"));
+  p.add(new myopt('?', "help", "Print this help message"));
+  p.add(new myopt('V', "version", "Print the program version"));
+  p.add(new myopt('o', "output-file", 
+		  "Output to FILE instead of standard output", "FILE"));
+  p.add(new myopt('e', "eps", 
+		  "Generate an Encapsulated PostScript (EPS) file"));
+  p.add(new myopt('P', "pdf", 
+		  "Generate a Portable Document Format (PDF) file"));
+  p.add(new myopt('t', "title",
     "Print TITLE above the method, using the font, size and colour"
     " specified.  In the string TITLE, the character `$' stands for the"
     " full name of the method.  If no arguments are specifed, print the"
-    " name of the method as the title." },
-  { 0, 0, 0, 0, "Style options:" },
-  { "font", 'f', "FONT", 0, "Use PostScript font FONT.  If this option"
-    " is not specified, the font defaults to Helvetica." },
-  { "font-size", 's', "SIZE", 0, "Use font size SIZE, in points" },
-  { "colour", 'c', "COLOUR", 0, "Print everything except lines in COLOUR" },
-  { "line", 'l', "BELL[x][,COLOUR[,DIMENSION]]", OPTION_ARG_OPTIONAL, 
+    " name of the method as the title.", "TITLE[,FONT[,SIZE[,COLOUR]]]",
+		  true));
+  p.add(new myopt("Style options:"));
+  p.add(new myopt('f', "font", "Use PostScript font FONT.  If this option"
+    " is not specified, the font defaults to Helvetica.", "FONT"));
+  p.add(new myopt('s', "font-size", "Use font size SIZE, in points", 
+		  "SIZE"));
+  p.add(new myopt('c', "colour", "Print everything except lines in COLOUR",
+		  "COLOUR"));
+  p.add(new myopt('l', "line",
     "Draw a line for BELL"
     " with colour COLOUR and thickness DIMENSION.  If `x' is included after"
     " BELL, draw the line only when that bell is passing another bell which"
     " has a line drawn.  If no arguments are given, don't draw any lines."
-    "  This option may be used multiple times." },
-  { "no-numbers", 'n', 0, 0, "Don't print numbers:  print only lines" },
-  { "place-bells", 'b', "BELL|x", OPTION_ARG_OPTIONAL, "Print place bells for"
+    "  This option may be used multiple times.",
+		  "BELL[x][,COLOUR[,DIMENSION]]", true));
+  p.add(new myopt('n', "no-numbers", "Don't print numbers: print only lines"));
+  p.add(new myopt('b', "place-bells", "Print place bells for"
     " BELL.  If BELL is not specified, print place bells for the first"
     " working bell which has a line drawn.  If BELL is `x', don't print"
-    " place bells." },
-  { "place-notation", 'p', "first|all|none", OPTION_ARG_OPTIONAL, "Print place"
+		  " place bells.", "BELL|x", true));
+  p.add(new myopt('p', "place-notation", "Print place"
     " notation for the first lead, every lead, or no leads.  The default is"
-    " to print place notation for the first lead." },
-  { "rule", 'r', "A[,B]", OPTION_ARG_OPTIONAL, "Print rule-offs"
+    " to print place notation for the first lead.", "first|all|none",
+		  true));
+  p.add(new myopt('r', "rule", "Print rule-offs"
     " (thin horizontal lines) after the Ath change in each lead, and every B"
     " changes after that.  For example, use \"-r2,6\" for Stedman.  If no"
     " argument is given, don't draw any rule-offs."
-    "  This option may be used multiple times." },
-  { "miss-numbers", 'm', "always|never|lead|column", OPTION_ARG_OPTIONAL,
+    "  This option may be used multiple times.", "A[,B]", true));
+  p.add(new myopt('m', "miss-numbers", 
     "Miss out the numbers for bells which have lines drawn:  always, never,"
     " except at lead heads, or except at the beginning and end of a column."
-    " If no argument is given, the default is `lead'." },
-  { 0, 0, 0, 0, "Layout options:" },
-  { "landscape", 'L', 0, 0, 
-    "Print in landscape orientation instead of portrait (not for EPS files)" },
-  { "paper-size", 'S', "DIMENSION,DIMENSION", 0, "Set the paper size to the"
-    " width and height given (not for EPS files).  The default is A4." },
-  { "fit", 'F', "DIMENSION,DIMENSION", OPTION_ARG_OPTIONAL, "Fit the image"
+    " If no argument is given, the default is `lead'.", 
+		  "always|never|lead|column", true));
+  p.add(new myopt("Layout options:"));
+  p.add(new myopt('L', "landscape",
+    "Print in landscape orientation instead of portrait (not for EPS files)"));
+  p.add(new myopt('S', "paper-size",  "Set the paper size to the"
+    " width and height given (not for EPS files).  The default is A4.",
+		  "DIMENSION,DIMENSION"));
+  p.add(new myopt('F', "fit", "Fit the image"
     " to the width and height specified, or to the page (less a half-inch"
-    " margin) if no argument is given" },
-  { "across-first", 'a', 0, 0, "Print the second lead to the right of the"
-    " first, instead of below the first." },
-  { "xspace", 'x', "DIMENSION", 0, "Set the horizontal distance between"
-    " consecutive bells in a row to DIMENSION" },
-  { "yspace", 'y', "DIMENSION", 0, "Set the vertical distance between"
-    " consecutive rows to DIMENSION" },
-  { "hgap", 'h', "DIMENSION", 0, "Set the horizontal gap between successive"
-    " columns to DIMENSION" },
-  { "vgap", 'v', "DIMENSION", 0, "Set the vertical gap between successive sets"
-    " of columns to DIMENSION" },
-  { "leads-per-column", 'i', "NUMBER", 0, "Print NUMBER leads per column" },
-  { "rows-per-column", 'I', "NUMBER", 0, "Print NUMBER rows per column" },
-  { "columns-across", 'k', "NUMBER", 0, 
-    "Print NUMBER columns across the page" },
-  { "total-leads", 'j', "NUMBER", 0, "Print NUMBER leads in total" },
-  { "total-rows", 'J', "NUMBER", 0, "Print NUMBER rows in total" },
-  { 0 }
-};
+    " margin) if no argument is given", "DIMENSION,DIMENSION", true));
+  p.add(new myopt('a', "across-first", "Print the second lead to the"
+		  " right of the first, instead of below the first."));
+  p.add(new myopt('x', "xspace", "Set the horizontal distance between"
+		  " consecutive bells in a row to DIMENSION", "DIMENSION"));
+  p.add(new myopt('y', "yspace", "Set the vertical distance between"
+		  " consecutive rows to DIMENSION", "DIMENSION"));
+  p.add(new myopt('h', "hgap", "Set the horizontal gap between successive"
+		  " columns to DIMENSION", "DIMENSION"));
+  p.add(new myopt('v', "vgap", "Set the vertical gap between successive"
+		  " sets of columns to DIMENSION"));
+  p.add(new myopt('i', "leads-per-column", "Print NUMBER leads per column",
+		  "NUMBER"));
+  p.add(new myopt('I', "rows-per-column", "Print NUMBER rows per column",
+		  "NUMBER"));
+  p.add(new myopt('j', "total-leads", "Print NUMBER leads in total",
+		  "NUMBER"));
+  p.add(new myopt('J', "total-rows", "Print NUMBER rows in total",
+		  "NUMBER"));
+  p.add(new myopt('k', "columns-across", "Print NUMBER columns across"
+		  " the page", "NUMBER"));
+}
 
-static error_t parser (int key, char *arg, struct argp_state *state)
+bool myopt::process(const string& arg, const arg_parser& ap) const
 {
-  arguments* args = static_cast<arguments*>(state->input);
-  const char* s;
-  switch(key) {
-    case ARGP_KEY_ARG :
-      if(state->arg_num == 0)
-	args->library_name = arg;
-      else if(state->arg_num == 1)
-	args->method_name = arg;
-      else argp_usage(state);
+  string::const_iterator s;
+  switch(shortname) {
+    case '\0' :
+      if(args.library_name.empty())
+	args.library_name = arg;
+      else if(args.method_name.empty())
+	args.method_name = arg;
+      else return false;
       break;
-    case ARGP_KEY_END :
-      if(state->arg_num == 0)
-	argp_usage(state);
-      else if(state->arg_num == 1) { // Place notation
-	s = args->library_name;
-	while(*s != '\0' && *s != ':') ++s;
-	if(*s == '\0') argp_usage(state);
-	parse_int(state, string(args->library_name, s), args->bells);
-	args->library_name = s + 1;
-      };
-      break;
+    case '?' :
+      ap.help();
+      exit(0);
+    case 'V' :
+      cout << "psline is from the Ringing Class Library version "
+	RINGING_VERSION ".\n";
+      exit(0);
     case 'e' :
-      args->format = eps;
+      args.format = eps;
       break;
     case 'P' :
-      args->format = pdf;
+      args.format = pdf;
       break;
     case 'n' :
-      args->numbers = false;
+      args.numbers = false;
       break;
     case 'a':
-      args->vgap_mode = true;
+      args.vgap_mode = true;
       break;
     case 'L':
-      args->landscape = true;
+      args.landscape = true;
       break;
     case 'o' :
-      args->output_file = arg;
+      args.output_file = arg;
       break;
     case 'f' :
-      args->font = arg;
+      args.font = arg;
       break;
     case 's' :
-      parse_int(state, arg, args->font_size);
-      break;
+      return parse_int(arg, args.font_size);
     case 'i' :
-      parse_int(state, arg, args->leads_per_column);
-      args->rows_per_column = 0;
-      break;
+      args.rows_per_column = 0;
+      return parse_int(arg, args.leads_per_column);
     case 'I' :
-      parse_int(state, arg, args->rows_per_column);
-      args->leads_per_column = 0;
-      break;
+      args.leads_per_column = 0;
+      return parse_int(arg, args.rows_per_column);
     case 'j' :
-      parse_int(state, arg, args->total_leads);
-      args->total_rows = 0;
-      break;
+      args.total_rows = 0;
+      return parse_int(arg, args.total_leads);
     case 'J' :
-      parse_int(state, arg, args->total_rows);
-      args->total_leads = 0;
-      break;
+      args.total_leads = 0;
+      return parse_int(arg, args.total_rows);
     case 'k' :
-      parse_int(state, arg, args->columns_per_set);
-      break;
+      return parse_int(arg, args.columns_per_set);
     case 'x' :
-      args->fit = false;
-      parse_dimension(state, arg, args->xspace);
-      break;
+      args.fit = false;
+      return parse_dimension(arg, args.xspace);
     case 'y' :
-      args->fit = false;
-      parse_dimension(state, arg, args->yspace);
-      break;
+      args.fit = false;
+      return parse_dimension(arg, args.yspace);
     case 'h' :
-      parse_dimension(state, arg, args->hgap);
-      break;
+      return parse_dimension(arg, args.hgap);
     case 'v' :
-      parse_dimension(state, arg, args->vgap);
-      break;
+      return parse_dimension(arg, args.vgap);
     case 'F' :
-      args->fit = true;
-      if(arg) {
-	s = arg; 
-	parse_dimension(state, next_bit(s), args->fitwidth);
-	if(s == 0)
-	  argp_error(state, "Not enough arguments: \"%s\"", arg);
-	parse_dimension(state, next_bit(s), args->fitheight);
-	if(s != 0)
-	  argp_error(state, "Too many arguments: \"%s\"", arg);
+      args.fit = true;
+      if(!arg.empty()) {
+	s = arg.begin();
+	if(!parse_dimension(next_bit(arg, s), args.fitwidth)) return false;
+	if(s == arg.end()) {
+	  cerr << "Not enough arguments: \"" << arg << "\"\n";
+	  return false;
+	}
+	if(!parse_dimension(next_bit(arg, s), args.fitheight)) return false;
+	if(s != arg.end()) {
+	  cerr << "Too many arguments: \"" << arg << "\"\n";
+	  return false;
+	}
       }
       break;
     case 'S' :
-      s = arg;
-      parse_dimension(state, next_bit(s), args->width);
-      if(s == 0)
-	argp_error(state, "Not enough arguments: \"%s\"", arg);
-      parse_dimension(state, next_bit(s), args->height);
-      if(s != 0)
-	argp_error(state, "Too many arguments: \"%s\"", arg);
+      s = arg.begin();
+      if(!parse_dimension(next_bit(arg, s), args.width)) return false;
+      if(s == arg.end()) {
+	 cerr << "Not enough arguments: \"" << arg << "\"\n";
+	 return false;
+      }
+      if(!parse_dimension(next_bit(arg, s), args.height)) return false;
+      if(s != arg.end()) {
+	cerr << "Too many arguments: \"" << arg << "\"\n";
+	return false;
+      }
       break;
     case 'c' :
-      parse_colour(state, arg, args->col);
-      break;
+      return parse_colour(arg, args.col);
     case 'l' :
-      args->custom_lines = true;
-      if(arg) {
+      args.custom_lines = true;
+      if(!arg.empty()) {
+	s = arg.begin();
 	bell b;
 	try {
-	  b.from_char(*arg);
+	  b.from_char(*s);
 	}
 	catch(bell::invalid e) {
-	  argp_error(state, "Invalid bell: '%c'", *arg);
+	  cerr << "Invalid bell: '" << *s << "'\n";
+	  return false;
 	}
 	printrow::options::line_style st;
 	st.width.n = 1; st.width.d = 2; st.width.u = dimension::points;
 	st.col.grey = false; st.col.red = st.col.green = 0; st.col.blue = 1.0;
 	st.crossing = false;
-	if(arg[1] != '\0') {
-	  s = arg+1; 
+	++s;
+	if(s != arg.end()) {
 	  if(*s == 'x' || *s == 'X') { st.crossing = true; ++s; }
-	  if(*s != '\0') {
-	    if(*s++ != ',')
-	      argp_error(state, "Invalid bell: \"%s\"", arg);
-	    parse_colour(state, next_bit(s), st.col);
-	    if(s != 0) parse_dimension(state, next_bit(s), st.width);
-	    if(s != 0) argp_error(state, "Too many arguments: \"%s\"", arg);
+	  if(s != arg.end()) {
+	    if(*s++ != ',') {
+	      cerr << "Invalid bell: \"" << arg << "\"\n";
+	      return false;
+	    }
+	    if(!parse_colour(next_bit(arg, s), st.col)) return false;
+	    if(s != arg.end() && !parse_dimension(next_bit(arg, s), st.width))
+	      return false;
+	    if(s != arg.end()) {
+	      cerr << "Too many arguments: \"" << arg << "\"\n";
+	      return false;
+	    }
 	  }
 	}
-	args->lines[b] = st;
+	args.lines[b] = st;
       } else
-	args->lines.clear();
+	args.lines.clear();
       break;
     case 'b' :
-      if(arg) {
-	if(*arg == 'X' || *arg == 'x')
-	  args->placebells = -1;
+      if(!arg.empty()) {
+	s = arg.begin();
+	if(*s == 'X' || *s == 'x')
+	  args.placebells = -1;
 	else {
 	  bell b;
 	  try {
-	    b.from_char(*arg);
+	    b.from_char(*s);
 	  }
 	  catch(bell::invalid e) {
-	    argp_error(state, "Invalid bell: '%c'", *arg);
+	    cerr << "Invalid bell: '" << *s << "'\n";
+	    return false;
 	  }
-	  args->placebells = b;
+	  args.placebells = b;
 	}
       }
       break;
     case 't' :
-      if(arg) {
-	s = arg;
-	args->title = next_bit(s);
-	if(s != 0) {
-	  args->title_style.font = next_bit(s);
-	  if(s != 0) {
-	    parse_int(state, next_bit(s), args->title_style.size);
-	    if(s != 0) {
-	      parse_colour(state, next_bit(s), args->title_style.col);
-	      if(s != 0)
-		argp_error(state, "Too many arguments: \"%s\"", arg);
+      if(!arg.empty()) {
+	s = arg.begin();
+	args.title = next_bit(arg, s);
+	if(s != arg.end()) {
+	  args.title_style.font = next_bit(arg, s);
+	  if(s != arg.end()) {
+	    if(!parse_int(next_bit(arg, s), args.title_style.size))
+	      return false;
+	    if(s != arg.end()) {
+	      if(!parse_colour(next_bit(arg, s), args.title_style.col))
+		return false;
+	      if(s != arg.end()) {
+		cerr << "Too many arguments: \"" << arg << "\"\n";
+		return false;
+	      }
 	    }
 	  }
 	}
       } else
-	args->title = "$";
+	args.title = "$";
       break;
     case 'm' :
-      if(arg) {
-	if(arg == string("always")) 
-	  args->number_mode = printmethod::miss_always;
-	else if(arg == string("never")) 
-	  args->number_mode = printmethod::miss_never;
-	else if(arg == string("lead")) 
-	  args->number_mode = printmethod::miss_lead;
-	else if(arg == string("column")) 
-	  args->number_mode = printmethod::miss_column;
-	else
-	  argp_error(state, "Unrecognised argument: \"%s\"", arg);
+      if(!arg.empty()) {
+	if(arg == "always") 
+	  args.number_mode = printmethod::miss_always;
+	else if(arg == "never") 
+	  args.number_mode = printmethod::miss_never;
+	else if(arg == "lead") 
+	  args.number_mode = printmethod::miss_lead;
+	else if(arg == "column") 
+	  args.number_mode = printmethod::miss_column;
+	else {
+	  cerr << "Unrecognised argument: \"" << arg << "\"\n";
+	  return false;
+	}
       } else
-	args->number_mode = printmethod::miss_lead;
+	args.number_mode = printmethod::miss_lead;
       break;	     
     case 'p' :
-      if(arg) {
-	if(arg == string("none"))
-	  args->pn_mode = printmethod::pn_none;
-	else if(arg == string("first"))
-	  args->pn_mode = printmethod::pn_first;
-	else if(arg == string("all"))
-	  args->pn_mode = printmethod::pn_all;
+      if(!arg.empty()) {
+	if(arg == "none")
+	  args.pn_mode = printmethod::pn_none;
+	else if(arg == "first")
+	  args.pn_mode = printmethod::pn_first;
+	else if(arg == "all")
+	  args.pn_mode = printmethod::pn_all;
+	else {
+	  cerr << "Unrecognised argument: \"" << arg << "\"\n";
+	  return false;
+	}
       } else
-	args->pn_mode = printmethod::pn_all;
+	args.pn_mode = printmethod::pn_all;
       break;
     case 'r' :
-      args->custom_rules = true;
-      if(arg) {
+      args.custom_rules = true;
+      if(!arg.empty()) {
 	int a, b = 0;
-	s = arg;
-	parse_int(state, next_bit(s), a);
-	if(s != 0) {
-	  parse_int(state, next_bit(s), b);
-	  if(s != 0)
-	    argp_error(state, "Too many arguments: \"%s\"", arg);
+	s = arg.begin();
+	if(!parse_int(next_bit(arg, s), a)) return false;
+	if(s != arg.end()) {
+	  if(!parse_int(next_bit(arg, s), b)) return false;
+	  if(s != arg.end())
+	    cerr << "Too many arguments: \"" << arg << "\"\n";
 	}
-	args->rules.push_back(pair<int,int>(a,b));
+	args.rules.push_back(pair<int,int>(a,b));
       } else
-	args->rules.clear();
+	args.rules.clear();
       break;
     default :
-      return ARGP_ERR_UNKNOWN;
+      cerr << "Unrecognised argument.  This shouldn't happen.\n";
+      return false;
   }
-  return 0;
+  return true;
 }
 
 int main(int argc, char *argv[])
 {
-  argp our_argp = { options, parser, args_doc, doc };
-  arguments args = { 0 };
-
   // Set up some default arguments
   args.width.n = 210; args.width.d = 1; args.width.u = dimension::mm;
   args.height.n = 297; args.height.d = 1; args.height.u = dimension::mm;
@@ -436,20 +473,55 @@ int main(int argc, char *argv[])
   args.numbers = true;
   args.format = ps;
   args.fit = true;
+  args.vgap_mode = false;
   args.title_style.font = "Helvetica";
   args.title_style.size = 18;
   args.title_style.col.grey = true;
   args.title_style.col.red = 0;
   args.number_mode = printmethod::miss_lead;
   args.pn_mode = -1;
+  args.rows_per_column = 0;
+  args.leads_per_column = 0;
+  args.columns_per_set = 0;
+  args.total_leads = 0;
+  args.total_rows = 0;
+  args.custom_lines = false;
+  args.custom_rules = false;
 
   // Parse the arguments
-  argp_parse(&our_argp, argc, argv, 0, 0, &args);
+  {
+    arg_parser p(argv[0], new myopt(0, "", 
+      "psline -- print out lines for methods in PostScript or PDF.\v"
+"Most options have sensible defaults.  In particular, unless you specify"
+" otherwise, the image will be fitted to the page; and lines will be drawn"
+" for the treble and for the bell which makes the lead end place."
+"  Options requiring a DIMENSION may be specified in many different ways,"
+" as for example \"1 3/8 in\", \"1/2pt\" or \"1.3cm\".  Options requiring"
+" a COLOUR may be specified as either an integer between 0 and 100,"
+" signifying a grey level; or as three integers between 0 and 100, separated"
+" by minus signs (`-'), specifying red, green and blue levels.",
+			   "LIBRARY METHOD\nBELLS:PLACE-NOTATION"));
+    setup_args(p);
+
+    if(!p.parse(argc, argv)) {
+      p.usage();
+      return 1;
+    }
+
+    if(args.method_name.empty()) { // Place notation
+      string::iterator s = args.library_name.begin();
+      while(s != args.library_name.end() && *s != ':') ++s;
+      if(s == args.library_name.end() 
+	 || !parse_int(string(args.library_name.begin(), s), args.bells)) 
+        { p.usage(); return 1; }
+      args.library_name = string(++s, args.library_name.end());
+    };
+  }
 
   method m;
 
   try {
-    if(args.method_name) {
+    if(!args.method_name.empty()) {
       // Load the method
       mslib::registerlib();
       cclib::registerlib();
@@ -512,7 +584,7 @@ int main(int argc, char *argv[])
 				 args.vgap_mode, args.numbers ? 1 : 2);
 
     // Set up the things which override the fitting, and everything else
-    if(args.font) pm.opt.style.font = args.font;
+    if(!args.font.empty()) pm.opt.style.font = args.font;
     if(args.font_size) pm.opt.style.size = args.font_size;
     pm.opt.style.col = args.col;
     if(args.xspace != 0) pm.opt.xspace = args.xspace;
@@ -544,8 +616,8 @@ int main(int argc, char *argv[])
     // Find a stream to write to
     ostream* os = &cout;
     ofstream ofs;
-    if(args.output_file) { // Open the output file
-      ofs.open(args.output_file, ios::binary);
+    if(!args.output_file.empty()) { // Open the output file
+      ofs.open(args.output_file.c_str(), ios::binary);
       if(!ofs.good()) {
 	cerr << argv[0] << ": Can't open output file " << args.output_file
 	     << endl;
@@ -564,8 +636,6 @@ int main(int argc, char *argv[])
 
     // Create a printpage object
     printpage* pp;
-
-    // Print the method!
     switch(args.format) {
       case eps :
 	pp = new printpage_ps(*os, 0, 0, int(pm.total_width()), 
@@ -574,14 +644,16 @@ int main(int argc, char *argv[])
 				      : args.title_style.size * 2)));
 	break;
       case ps:
-	if(args.landscape) {
+	if(args.landscape)
 	  pp = new printpage_ps(*os, args.height);
-	} else {
+	else
 	  pp = new printpage_ps(*os);
-	} 
 	break;
       case pdf:
-	pp = new printpage_pdf(*os);
+	if(args.landscape)
+	  pp = new printpage_pdf(*os, args.height, args.width, true);
+	else
+	  pp = new printpage_pdf(*os, args.width, args.height);
 	break;
     }
 
