@@ -34,9 +34,10 @@ RINGING_START_NAMESPACE
 RINGING_USING_STD
 
 // mslib : Implement MicroSIRIL libraries
-class RINGING_API mslib {
+class RINGING_API mslib : public library {
 public:
   static void registerlib();
+  mslib(const string& filename);
 
 private:
   class impl;

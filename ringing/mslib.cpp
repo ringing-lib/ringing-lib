@@ -58,6 +58,7 @@ private:
   // Construction handled by library class
   impl(const string& filename);
  ~impl() { if (_good == 1) f.close(); }
+  friend class mslib;
 
 public:
   // Is this file in the right format?
@@ -81,6 +82,9 @@ void mslib::registerlib()
 {
   library::addtype(&impl::canread);
 }
+
+mslib::mslib(const string& filename)
+  : library( new impl(filename) ) {}
 
 class mslib::impl::entry_type : public library_entry::impl
 {
