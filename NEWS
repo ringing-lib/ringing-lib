@@ -1,3 +1,11 @@
+Version 0.2.7 (26 March 2002):
+  New, greatly improved music classes.
+  Mechanism for exhaustive search for touches in a method.
+  Printing in PDF.
+  Many small improvements to methods, libraries and other classes.
+  More portability work.  Start working towards compiling as a DLL
+    under Windows.
+
 Version 0.2.6 (13 January 2002):
   More method library improvements and tidying.
   Add printing of whole methods, and colour printing.  Command-line

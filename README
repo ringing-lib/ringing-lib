@@ -48,7 +48,8 @@ Using the library
 
   The documentation describing how to use the library is in the `doc' sub-
 directory.  If you don't have the software necessary to build the Texinfo
-documentation, you can download it separately in various formats.
+documentation, you can download it separately in various formats from the
+project web page (see above).
 
 
 Supported compilers
