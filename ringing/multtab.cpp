@@ -1,5 +1,5 @@
 // -*- C++ -*- multtab.cpp - A precomputed multiplication table of rows
-// Copyright (C) 2002 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -26,11 +26,9 @@
 #if RINGING_OLD_INCLUDES
 #include <iostream.h>
 #include <iomanip.h>
-#include <set.h>
 #else
 #include <iostream>
 #include <iomanip>
-#include <set>
 #endif
 #if RINGING_OLD_C_INCLUDES
 #include <assert.h>
@@ -43,53 +41,6 @@
 RINGING_START_NAMESPACE
 
 RINGING_USING_STD
-
-RINGING_START_ANON_NAMESPACE
-
-class group
-{
-public:
-  group( const vector<row> &generators );
-
-  typedef set<row>::const_iterator const_iterator;
-  const_iterator begin() const { return s.begin(); }
-  const_iterator end()   const { return s.end();   }
-  size_t         size()  const { return s.size();  }
-
-private:
-  void generate_recursive( const row& r, const vector<row>& generators );
-
-  set<row> s;
-};
-
-void group::generate_recursive( const row& r, 
-				const vector<row>& generators )
-{
-  for ( vector<row>::const_iterator 
-	  i( generators.begin() ), e( generators.end() );
-	i != e;  ++i )
-    {
-      const row r2( r * *i );
-      if ( s.insert( r2 ).second )
-	generate_recursive( r2, generators );
-    }
-}
-
-group::group( const vector<row> &gens )
-{
-  set< row > group;
-  size_t b(0); // Number of bells
-
-  for ( vector<row>::const_iterator i( gens.begin() ), e( gens.end() );
-	i != e;  ++i )
-    if ( i->bells() > b ) 
-      b = i->bells();
-
-  generate_recursive( row(b), gens );
-}
-
-
-RINGING_END_ANON_NAMESPACE
 
 void multtab::swap( multtab &other )
 {
@@ -107,7 +58,7 @@ multtab &multtab::operator=( const multtab &other )
 
 bool multtab::is_representative( const row& r ) const
 {
-  for ( vector<row>::const_iterator i( pends.begin() ), e( pends.end() ); 
+  for ( group::const_iterator i( pends.begin() ), e( pends.end() ); 
 	i != e; ++i )
     {
       row x( *i * r );
@@ -122,7 +73,7 @@ row multtab::make_representative( const row& r ) const
 {
   row res(r);
 
-  for ( vector<row>::const_iterator i( pends.begin() ), e( pends.end() ); 
+  for ( group::const_iterator i( pends.begin() ), e( pends.end() ); 
 	i != e; ++i )
     {
       row x( *i * r );
@@ -132,13 +83,8 @@ row multtab::make_representative( const row& r ) const
   return res;
 }
 
-void multtab::init( const vector< row >& r, const vector< row >& gens )
+void multtab::init( const vector< row >& r )
 {
-  {
-    group g( gens );
-    copy( g.begin(), g.end(), back_inserter(pends) );
-  }
-
   rows.reserve( r.size() / pends.size() );
 
   for ( vector<row>::const_iterator i( r.begin() ), e( r.end() ); i != e; ++i )

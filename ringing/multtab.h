@@ -1,5 +1,5 @@
 // -*- C++ -*- multtab.h - A precomputed multiplication table of rows
-// Copyright (C) 2002 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -26,6 +26,7 @@
 
 #include <ringing/common.h>
 #include <ringing/row.h>
+#include <ringing/group.h>
 #if RINGING_OLD_INCLUDES
 #include <iosfwd.h>
 #include <vector.h>
@@ -146,7 +147,8 @@ RINGING_END_DETAILS_NAMESPACE
 
 // --------------------------------------------------------------
 // 
-// The main class
+// The main multiplication table class
+//
 class multtab
 {
 public:
@@ -159,18 +161,19 @@ public:
   template < class InputIterator >
   multtab( InputIterator first, InputIterator last )
     : rows( make_vector( first, last ) ), table( rows.size() )
-  { pends.push_back( row(first->bells()) ); }
+  {}
 
   // As above but use factor out some part-end.
   template < class InputIterator >
   multtab( InputIterator first, InputIterator last, const row &partend )
-  { init( make_vector( first, last ), vector<row>( 1u, partend ) ); }
+    : pends( partend )
+  { init( make_vector( first, last ) ); }
 
   // ... And more complicated part end groups.
   template < class InputIterator >
-  multtab( InputIterator first, InputIterator last, 
-	   const vector< row >& partends )
-  { init( make_vector( first, last ), partends ); }
+  multtab( InputIterator first, InputIterator last, const group& partends )
+    : pends( partends )
+  { init( make_vector( first, last ) ); }
 
   typedef RINGING_DETAILS_PREFIX multtab_row_t      row_t;
   typedef RINGING_DETAILS_PREFIX multtab_post_col_t post_col_t;
@@ -190,6 +193,7 @@ public:
   // The number of rows in the table
   size_t size() const { return table.size(); }
 
+  const group& partends() const { return pends; }
   size_t group_size() const { return pends.size(); }
 
   // Iterate through the rows in the multiplication table
@@ -219,11 +223,12 @@ private:
   bool is_representative( const row &r ) const;
   row make_representative( const row &r ) const;
 
-  void init( const vector< row > &r, const vector< row >& gens );
+  void init( const vector< row > &r );
 
+  // Data members
   vector< row > rows;
   vector< vector< row_t > > table;
-  vector< row > pends;
+  group pends;
   enum pre_or_post { pre_mult, post_mult };
   vector< pair< row, pre_or_post > > cols;
 };
