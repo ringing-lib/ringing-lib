@@ -1,4 +1,4 @@
-// method.cc - routines for methods, positions and calls
+// method.cpp - routines for methods, positions and calls
 // Copyright (C) 2001 Martin Bright <M.Bright@dpmms.cam.ac.uk>
 
 // This program is free software; you can redistribute it and/or modify

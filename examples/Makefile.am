@@ -6,5 +6,5 @@ INCLUDES = -I$(top_srcdir)
 noinst_PROGRAMS = testbase testprint
 LDADD = $(top_builddir)/ringing/libringing.a
 
-testbase_SOURCES = testbase.cc
-testprint_SOURCES = testprint.cc
+testbase_SOURCES = testbase.cpp
+testprint_SOURCES = testprint.cpp

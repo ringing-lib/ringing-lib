@@ -1,4 +1,4 @@
-// -*- C++ -*- testprint.cc - test the printing classes
+// -*- C++ -*- testprint.cpp - test the printing classes
 // Copyright (C) 2001 Martin Bright <M.Bright@dpmms.cam.ac.uk>
 
 // This program is free software; you can redistribute it and/or modify

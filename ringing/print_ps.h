@@ -81,7 +81,7 @@ private:
   
 public:
   printrow_ps(ostream& o, const printrow::options& op) 
-    : os(o), in_column(false), opt(op), lastrow(8) { start(); }
+    : os(o), in_column(false), lastrow(8), opt(op) { start(); }
   ~printrow_ps() { end_column(); }
   void print(const row& r);
   void rule();

@@ -1,4 +1,4 @@
-// row.cc - Classes for row and changes
+// row.cpp - Classes for row and changes
 // Copyright (C) 2001 Martin Bright <M.Bright@dpmms.cam.ac.uk>
 
 // This program is free software; you can redistribute it and/or modify
@@ -428,7 +428,7 @@ int row::order(void) const
   if(data.empty()) return 1;
   auto_ptr<char> cyc1(new char[2*bells()]);
   char *cyc = cyc1.get(), *s;
-  int o = 1, i;
+  int o = 1;
 
   // We do this by expressing the row as disjoint cycles, then by taking the
   // lowest common multiple of the lengths of all the cycles.
@@ -461,7 +461,7 @@ int row::sign(void) const
 
 // Constructor
 row_block::row_block(const vector<change> &c) 
-  : ch(c), vector<row>(c.size() + 1)
+  : vector<row>(c.size() + 1), ch(c)
 {
   if(ch.size() > 0) {
     (*this)[0] = row::rounds(ch[1].bells());
@@ -471,7 +471,7 @@ row_block::row_block(const vector<change> &c)
 
 // Another constructor
 row_block::row_block(const vector<change> &c, const row &r) 
-  : ch(c), vector<row>(c.size() + 1)
+  : vector<row>(c.size() + 1), ch(c)
 {
   (*this)[0] = r;
   recalculate();

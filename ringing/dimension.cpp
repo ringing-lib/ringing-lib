@@ -1,4 +1,4 @@
-// dimension.cc
+// dimension.cpp
 // Copyright (C) 2001 Martin Bright <M.Bright@dpmms.cam.ac.uk>
 
 // This program is free software; you can redistribute it and/or modify

@@ -1,5 +1,5 @@
-// library.cc : Libraryish things
-// Copyright (C) 2001 Martin Bright <M.Bright@dpmms.cam.ac.uk>
+// proof.cpp - Proving Stuff
+// Copyright (C) 2001 Mark Banner <mark@standard8.co.uk>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -17,12 +17,35 @@
 
 // $Id$
 
+/********************************************************************
+ * Description     :
+ *     This is the implementation part of proof.h. As proof is a
+ * template class, most of it is defined in the header, however the
+ * hash function must be defined here.
+ ********************************************************************/
+
 #ifdef __GNUG__
 #pragma implementation
 #endif
 
 #include <ringing/common.h>
-#include <ringing/library.h>
+#include <ringing/proof.h>
 
+RINGING_USING_STD
 
+RINGING_START_NAMESPACE
 
+// Our default hash function
+int our_hash(const row& r)
+{
+  int sum = 0;
+  int factor = 1;
+  for (int i = 0; i < r.bells(); i++)
+    {
+      sum += (r[i] + 1) * factor;
+      factor *= 10;
+    }
+  return sum;
+}
+
+RINGING_END_NAMESPACE

@@ -1,5 +1,5 @@
-// proof.cc - Proving Stuff
-// Copyright (C) 2001 Mark Banner <mark@standard8.co.uk>
+// print.cpp - Printing stuff
+// Copyright (C) 2001 Martin Bright <M.Bright@dpmms.cam.ac.uk>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -17,35 +17,35 @@
 
 // $Id$
 
-/********************************************************************
- * Description     :
- *     This is the implementation part of proof.h. As proof is a
- * template class, most of it is defined in the header, however the
- * hash function must be defined here.
- ********************************************************************/
-
 #ifdef __GNUG__
 #pragma implementation
 #endif
 
 #include <ringing/common.h>
-#include <ringing/proof.h>
-
-RINGING_USING_STD
+#include <ringing/print.h>
 
 RINGING_START_NAMESPACE
 
-// Our default hash function
-int our_hash(const row& r)
+void printrow::options::defaults()
 {
-  int sum = 0;
-  int factor = 1;
-  for (int i = 0; i < r.bells(); i++)
-    {
-      sum += (r[i] + 1) * factor;
-      factor *= 10;
-    }
-  return sum;
+  flags = numbers;
+  style.size = 10;
+  style.font = "Helvetica";
+  xspace.n = 12; xspace.d = 1; xspace.u = dimension::points; 
+  yspace.n = 12; yspace.d = 1; yspace.u = dimension::points;
+  line_style s; s.width.n = 1; s.width.d = 2; s.width.u = dimension::points;
+  lines[1] = s;
+}
+
+printrow::printrow(printpage& pp)
+{ 
+  options o; o.defaults();
+  pr = pp.new_printrow(o); 
+}
+
+printrow::printrow(printpage& pp, const options& o)
+{ 
+  pr = pp.new_printrow(o); 
 }
 
 RINGING_END_NAMESPACE
