@@ -44,10 +44,12 @@ RINGING_USING_STD
 class group
 {
 public:
-  group() : v(1u) {} // The group containing just the identity
+  group() : b(0), v(1u) {} // The group containing just the identity
   explicit group( const row& generator );
   explicit group( const row& generator1, const row& generator2 );
   explicit group( const vector<row> &generators );
+
+  size_t bells() const { return b; }
 
   // Container interface
   typedef vector<row>::const_iterator const_iterator;
@@ -62,6 +64,7 @@ public:
   static group alternating_group(int nw, int nh = 0, int nt = 0);
 
 private:
+  size_t b;
   vector<row> v;
 };
 

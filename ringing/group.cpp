@@ -61,6 +61,7 @@ group group::symmetric_group(int nw, int nh, int nt)
 {
   if (!nt) nt = nh + nw;
   group g; 
+  g.b = nt;
   g.v.clear();
   g.v.reserve( factorial(nw) );
   copy( extent_iterator(nw, nh, nt), extent_iterator(), 
@@ -72,6 +73,7 @@ group group::alternating_group(int nw, int nh, int nt)
 {
   if (!nt) nt = nh + nw;
   group g; 
+  g.b = nt;
   g.v.clear();
   g.v.reserve( factorial(nw) / 2 );
   copy( incourse_extent_iterator(nw, nh, nt), incourse_extent_iterator(), 
@@ -80,6 +82,7 @@ group group::alternating_group(int nw, int nh, int nt)
 }
 
 group::group( const row& gen )
+  : b( gen.bells() )
 {
   set< row > s;
   generate_group_recursive( s, row(gen.bells()), vector<row>(1u, gen) );
@@ -87,6 +90,7 @@ group::group( const row& gen )
 }
 
 group::group( const row& g1, const row& g2 )
+  : b( g1.bells() > g2.bells() ? g1.bells() : g2.bells() )
 {
   vector<row> gens; gens.reserve(2); 
   gens.push_back(g1); gens.push_back(g2);
@@ -99,15 +103,14 @@ group::group( const row& g1, const row& g2 )
 }
 
 group::group( const vector<row>& gens )
+  : b(0)
 {
   set< row > s;
 
   // Find the maximum number of bells in any of the gens
-  int b(0);
-
   for ( vector<row>::const_iterator i( gens.begin() ), e( gens.end() );
 	i != e;  ++i )
-    if ( i->bells() > b ) 
+    if ( size_t(i->bells()) > b ) 
       b = i->bells();
 
   generate_group_recursive( s, row(b), gens );
