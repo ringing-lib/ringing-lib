@@ -691,14 +691,14 @@ bool parse_mask( arguments &args, const arg_parser &ap )
 	    }
 	}
 
-      sort( changes_to_try.begin(), changes_to_try.end() );
+      sort( changes_to_try.begin(), changes_to_try.end(), &compare_changes );
       changes_to_try.erase
 	( unique( changes_to_try.begin(), changes_to_try.end() ),
 	  changes_to_try.end() );
 
       if ( changes_to_try.empty() )
 	throw mask_error( make_string() << "No such method can exist: "
-			  "There no possible changes as position " << i );
+			  "There no possible changes at position " << i );
     }
 
   return true;

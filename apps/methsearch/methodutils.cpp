@@ -1,5 +1,5 @@
 // -*- C++ -*- methodutils.h - utility functions missing from the ringing-lib
-// Copyright (C) 2002, 2003 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003, 2004 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -432,4 +432,16 @@ string tenors_together_coursing_order( const method& m )
   } while ( b != m.bells() - 1 );
 
   return ms;
+}
+
+bool compare_changes( change const& a, change const& b )
+{
+  if (a.count_places() == 0)
+    return b.count_places() > 0;
+  else if (b.count_places() == 0)
+    return false;
+
+  // TODO:  This coule be much more efficient
+  const string sa(a.print()), sb(b.print());
+  return sa < sb;
 }
