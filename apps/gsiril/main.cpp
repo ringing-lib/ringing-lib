@@ -68,22 +68,17 @@ int main( int argc, const char *argv[] )
 
   try
     {
-      if (interactive) welcome();
-
-      console_istream in( interactive );
-      in.set_prompt( "> " );
-
-      shared_pointer<parser> p( make_default_parser() );
       execution_context e( cout );
 
       // Prepopulate symbol table
       {
-	istringstream is(init_string);
+	istringstream in(init_string);
+	shared_pointer<parser> p( make_default_parser(in) );
 	while (true)
 	  {
 	    try 
 	      {
-		statement s( p->parse(is) );
+		statement s( p->parse() );
 		if ( s.eof() ) break;
 		s.execute(e);
 	      }
@@ -96,21 +91,28 @@ int main( int argc, const char *argv[] )
       }
 
       e.interactive( interactive );
+      if (interactive) welcome();
 
-      while (true)
-	{
-	  try 
-	    {
-	      statement s( p->parse(in) );
-	      if ( s.eof() ) break;
-	      s.execute( e );
-	    }
-	  catch (const exception& ex )
-	    {
-	      cerr << "Error: " << ex.what() << endl;
-	      if (!interactive) return 1;
-	    }
-	}
+      // Read from standard input
+      {
+	console_istream in( interactive );
+	in.set_prompt( "> " );
+	shared_pointer<parser> p( make_default_parser(in) );
+	while (true)
+	  {
+	    try 
+	      {
+		statement s( p->parse() );
+		if ( s.eof() ) break;
+		s.execute( e );
+	      }
+	    catch (const exception& ex )
+	      {
+		cerr << "Error: " << ex.what() << endl;
+		if (!interactive) return 1;
+	      }
+	  }
+      }
 
     }
   catch ( const exception &ex )

@@ -102,11 +102,11 @@ void import_stmt::execute( execution_context& e ) const
 	throw runtime_error
 	  ( make_string() << "Unable to load resource: " << name );
       
-      shared_pointer<parser> p( make_default_parser() );
+      shared_pointer<parser> p( make_default_parser(ifs) );
       e.interactive(false);
       while (true)
 	{
-	  statement s( p->parse(ifs) );
+	  statement s( p->parse() );
 	  if ( s.eof() ) break;
 	  s.execute(e);
 	}

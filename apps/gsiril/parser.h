@@ -51,10 +51,10 @@ public:
 
   // Retrieves one statement from the input
   // or a null pointer for EOF
-  virtual statement parse( istream& in ) = 0;
+  virtual statement parse() = 0;
 };
 
-shared_pointer<parser> make_default_parser();
+shared_pointer<parser> make_default_parser( istream& in );
 
 
 #endif // GSIRIL_PARSER_INCLUDED
