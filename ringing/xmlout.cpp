@@ -25,6 +25,7 @@
 
 #include <ringing/xmlout.h>
 #include <ringing/library.h>
+#include <ringing/peal.h>
 
 #if RINGING_USE_XERCES
 #include <xercesc/dom/DOM.hpp>
@@ -96,6 +97,7 @@ private:
   void add_simple_elt( DOMElement* parent, char const* name, 
                        string const& content );
 
+  void add_peal( DOMElement* peal_elt, peal const& p );
 
   bool force_init;
   DOMDocument* doc;
@@ -174,6 +176,23 @@ xmlout::impl::~impl()
     doc->release();
 }
 
+void xmlout::impl::add_peal( DOMElement* peal_elt, peal const& p )
+{
+  // A date of {0,0,0} is used to mean 'unspecified'.
+  if ( p.when().day ) {
+    char buffer[32];
+    snprintf( buffer, 32, "%4d-%02d-%02d", 
+	      p.when().year, p.when().month, p.when().day );
+    add_simple_elt( peal_elt, "date", buffer );
+  }
+
+  // TODO:  This is contrary to the methods XML schema, but I 
+  // don't have the information in a structured format. This 
+  // probably reflects a deficiency in the methods XML schema.
+  if ( p.where().size() )
+    add_simple_elt( peal_elt, "location", p.where() );
+}
+
 void xmlout::impl::append( library_entry const& entry ) 
 {
   if ( !doc )
@@ -223,6 +242,14 @@ void xmlout::impl::append( library_entry const& entry )
   }
 
   add_simple_elt( meth_elt, "lead-head", meth.lh().print() );
+
+  if ( entry.has_facet< first_tower_peal >() )
+    add_peal( add_elt( meth_elt, "first-tower" ),
+	      entry.get_facet< first_tower_peal >() );
+
+  if ( entry.has_facet< first_hand_peal >() )
+    add_peal( add_elt( meth_elt, "first-hand" ),
+	      entry.get_facet< first_hand_peal >() );
 }
 
 xmlout::xmlout( const string& filename )
