@@ -77,7 +77,6 @@ versions.
 
 @menu
 * Introduction::                
-* The STL::                     
 * Rows and Changes::            
 * Methods::                     
 * Method Libraries::            
@@ -89,7 +88,7 @@ versions.
 * Index::                       
 @end menu
 
-@node Introduction, The STL, Top, Top
+@node Introduction, Rows and Changes, Top, Top
 @chapter Introduction
 @cindex introduction
 
@@ -127,8 +126,12 @@ to report bugs, request features, use forums and access the CVS
 repository, visit the project web page at
 @uref{http://ringing-lib.sourceforge.net}.
 
-@node The STL, Rows and Changes, Introduction, Top
-@chapter The Standard Template Library
+@menu
+* The Standard Template Library::  
+@end menu
+
+@node The Standard Template Library,  , Introduction, Introduction
+@section The Standard Template Library
 @cindex Standard Template Library
 @cindex STL
 
@@ -152,10 +155,13 @@ care of finding out how your particular implementation works.
 Otherwise, you will need to edit the file @file{ringing/common.h.in}
 before compiling.
 
-@node Rows and Changes, Methods, The STL, Top
+@node Rows and Changes, Methods, Introduction, Top
 @chapter Row and Change classes
 @cindex row
 @cindex change
+
+Classes for manupulating rows and changes, and all the other classes and
+functions described in this chapter, are declared in @file{ringing/row.h}.
 
 For ease of notation, I am using the idea that a @dfn{row} is an
 individual permutation of bells (such as @samp{13572468}), and a
@@ -848,7 +854,8 @@ leads in the plain course, the type of method, the full name and so on.
 @cindex @code{method} class
 
 The @code{method} class represents a method by storing the changes which
-make up one lead of the method.
+make up one lead of the method.  This class is declared in
+@file{ringing/method.h}.
 
 A method may have a name, which is a string variable.  This name is the
 @dfn{base name} of the method, that is, it is the name without any extra
@@ -1498,6 +1505,7 @@ formats.
 * The text_style class::        
 * The printpage class::         
 * The printrow class::          
+* Printing in PostScript::      
 @end menu
 
 @node The dimension class, The text_style class, Producing printed output, Producing printed output
@@ -1609,29 +1617,11 @@ has been created, it can be used to place text directly on the page.  It
 can also be used to create @code{printrow} objects for printing rows and
 lines.
 
-@menu
-* printpage Derivation::        
-* printpage Constructors::      
-* Other printpage Functions::   
-@end menu
+Note that positions on the page are always measured from the bottom left 
+corner.
 
-@node printpage Derivation, printpage Constructors, The printpage class, The printpage class
-@subsection Derivation
-
-This class is not derived from any base classes.
-
-@example
-class printpage;
-@end example
-
-@node printpage Constructors, Other printpage Functions, printpage Derivation, The printpage class
-@subsection Constructors
-
-There are no constructors; a @code{printpage} object must be created by
-instantiating a subclass.
-
-@node Other printpage Functions,  , printpage Constructors, The printpage class
-@subsection Other functions
+The @code{printpage} class is a pure virtual class:  the only way to create
+one is by constructing an object of a derived class.
 
 @deftypefun {virtual void} printpage::text (const string @var{t}, const dimension& @var{x}, const dimension& @var{y}, text_style::alignment @var{a}, const text_style& @var{s});
 This function places a text string on the page.  The string is given in
@@ -1642,7 +1632,7 @@ about this point is given by @var{a}, and the text style is given by
 @var{s}.
 @end deftypefun
 
-@node The printrow class,  , The printpage class, Producing printed output
+@node The printrow class, Printing in PostScript, The printpage class, Producing printed output
 @section The @code{printrow} class
 
 Printing of rows and lines is handled by the @code{printrow} class and its
@@ -1653,12 +1643,99 @@ actual numbers representing the row may or may not be printed, and lines
 can be drawn for selected bells.
 
 @menu
+* Using the printrow class::    
 * Row printing options::        
-* printrow Derivation::         
-* printrow Constructors::       
 @end menu
 
-@node Row printing options, printrow Derivation, The printrow class, The printrow class
+@node Using the printrow class, Row printing options, The printrow class, The printrow class
+@subsection Using the @code{printrow} class
+
+A @code{printrow} object is created by one of the following constructors.
+Note that there are certain options which cannot be changed once the
+object has been created, so unless the default options are going to be
+used it is necessary to use the second form of the constructor.
+
+@deftypefn Constructor {} printrow::printrow (const printpage& @var{pp});
+This constructor builds a @code{printrow} object associated to the
+@code{printpage} object given by @var{pp}.  The options are initialised
+to the default options.
+@end deftypefn
+
+@deftypefn Constructor {} printrow::printrow (const printpage& @var{pp}, const printrow::options& @var{op});
+This constructor builds a @code{printrow} object associated to the
+@code{printpage} object given by @var{pp}, and initialised the options
+to @var{op}.
+@end deftypefn
+
+Once the @code{printrow} object has been created, it must be positioned
+on the page before any rows can be printed.
+
+@deftypefun void printrow::set_position (const dimension& @var{x}, const dimension& @var{y});
+This function sets the position of the @code{printrow} object to the given
+place on the page, measured from the bottom left.  The position given is 
+where the first bell of the next row printed will appear.
+@end deftypefun
+
+@deftypefun void printrow::new_column(const dimension& @var{gap});
+If one column of rows has already been printed, this function can be used
+to start a new column.  The new column will start at the same vertical
+position as the previous one, and a distance of @var{gap} further to
+the right.
+@end deftypefun
+
+Certain options (@pxref{Row printing options}) may be changed while the
+@code{printrow} object exists.
+
+@deftypefun {const printrow::options&} printrow::get_options (void);
+This function returns the current options.
+@end deftypefun
+
+@deftypefun void printrow::set_options (const printrow::options& @var{o});
+This function sets the options to those given by @var{o}.  Note that
+only certain option changes will have any effect once the object has
+the object has been constructed.
+@end deftypefun
+
+After setting the position, rows can be printed.
+
+@deftypefn Operator printrow& printrow::operator<< (const printrow& @var{pr}, const row& @var{r});
+This operator is used to print a row @var{r} using the @code{printrow} 
+object @var{pr}.  This prints the numbers of the row if the @code{numbers}
+flag of the options is set, and also draws the lines for any bells which
+have been specified in the options.  The row is printed underneath the 
+previous row.
+@end deftypefn
+
+@deftypefun void printrow::rule (void);
+This function draws a horizontal rule below the last row printed.
+@end deftypefun
+
+@deftypefun void printrow::dot (int @var{i});
+This function draws a small dot at the place where bell @var{i} was in the
+last row printed.  If @var{i} is -1, prints dots for all bells which are
+having lines drawn.
+@end deftypefun
+
+@deftypefun void printrow::placebell(int @var{i});
+This function finds what place the bell @var{i} was at in the last row 
+printed, and then prints this number in a circle to the right of that row.
+@end deftypefun
+
+@deftypefun  void printrow::text (const string& @var{t}, const dimension& @var{x}, text_style::alignment @var{al}, bool @var{between}, bool @var{right});
+This function prints some text to one side of the last row printed.  The text
+is given in @var{t} and is printed in the same style as the rows.  If the
+boolean argument @var{right} is true, the text is printed to the right of
+the row; otherwise the text is printed to the left of the row.  The
+dimension @var{x} is a distance from the leftmost or rightmost number in
+the row, and the text is aligned about this point as given by @var{al}
+(@pxref{The text_style class}).  If the argument @var{between} is true,
+then the text is not aligned vertically with the previous row, but rather
+appears halfway between the previous row and the next one to be printed.
+This last option is useful, for example, for print place notation beside
+a method.
+@end deftypefun
+
+@node Row printing options,  , Using the printrow class, The printrow class
 @subsection Row printing options
 
 The way in which rows are printed by a @code{printrow} object is
@@ -1698,21 +1775,25 @@ appear underneath lines are missed out.  An example of this may be seen
 in the @cite{Ringing World} diary, where all rows except lead heads are
 printed with this property.
 @end itemize
+This option may be changed, with immediate effect, at any point during 
+printing.
 
 The @code{style} member controls the style in which the rows are
 printed; for the declaration of the @code{text_style} class, see
-@ref{The text_style class}.
+@ref{The text_style class}.  This option may not be changed during printing.
 
 The @code{xspace} and @code{yspace} members give the horizontal space
 between numbers in a row, and the vertical space between rows, respectively.
 For the declaration of the @code{dimension} class, see
-@ref{The dimension class}.
+@ref{The dimension class}.  These options may not be changed during 
+printing.
 
 The @code{lines} member controls which ``blue lines'' are printed.  Each
 element of the map has an integer, denoting the bell number, and a
 @code{line_style} element which defines the style of the line.  Currently
 the only member is @code{line_style} is a @code{dimension} object giving
-the width of the line.
+the width of the line.  This option may be changed in between columns,
+but not in the middle of a column.
 
 For example, suppose that we wish to print rows in 10-point Helvetica, with
 spacing of 12 points horizontally and vertically.  We want to draw a
@@ -1737,29 +1818,35 @@ This function sets up the @code{printrow::options} object to the defaults
 as given in the example above.
 @end deftypefun
 
-@node printrow Derivation, printrow Constructors, Row printing options, The printrow class
-@subsection Derivation
+@node Printing in PostScript,  , The printrow class, Producing printed output
+@section Printing in PostScript
 
-This class is not derived from any other classes.
+The Ringing Class Library provides subclasses of the @code{printpage} and
+@code{printrow} classes for producing output in the PostScript language.  
+These classes are declared in the @file{ringing/print_ps.h} header file.
 
-@example
-class printrow;
-@end example
+The @code{printpage_ps} class is derived from @code{printpage}, and handles
+all output to a PostScript stream.  The only new functions in this class
+are its constructors.
 
-@node printrow Constructors,  , printrow Derivation, The printrow class
-@subsection Constructors
-
-@deftypefn Constructor {} printrow::printrow (const printpage& @var{pp});
-This constructor builds a @code{printrow} object associated to the
-@code{printpage} object given by @var{pp}.  The options are initialised
-to the default options.
+@deftypefn Constructor {} printpage_ps::printpage_ps (ostream& @var{o});
+This creates a new PostScript printing object, which will send its
+output to the stream @var{o}.
 @end deftypefn
 
-@deftypefn Constructor {} printrow::printrow (const printpage& @var{pp}, const printrow::options& @var{op});
-This constructor builds a @code{printrow} object associated to the
-@code{printpage} object given by @var{pp}, and initialised the options
-to @var{op}.
+@deftypefn Constructor {} printpage_ps::printpage_ps (ostream @var{o}, int @var{x0}, int @var{y0}, int @var{x1}, int @var{y1});
+This creates a new object which will write an Encapsulated PostScript
+(@acronym{EPS}) file to the stream @var{o}.  The bounding box for the
+@acronym{EPS} file is specified in points by the arguments @var{x0}, @var{y0},
+@var{x1} and @var{y1}.  This bounding box has no effect on where you can
+print things using this object, but other applications manipulating the
+@acronym{EPS} file may rely on the bounding box in order to work properly.
 @end deftypefn
+
+The @code{printrow_ps} class is for printing rows to a @code{printpage_ps}
+object.  You will probably never have to deal with this class directly, as
+it should be created and dealt with by the interface for the @code{printrow}
+class.
 
 @node Copying this manual, Index, Producing printed output, Top
 @appendix Copying this manual
