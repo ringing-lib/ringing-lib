@@ -34,7 +34,7 @@ void test_bell(void)
 {
   RINGING_TEST( bell() == 0 );
   RINGING_TEST( bell(4) == 4 );
-  RINGING_TEST( bell(bell::MAX_BELLS) == bell::MAX_BELLS );
+  RINGING_TEST( bell(bell::MAX_BELLS) == int(bell::MAX_BELLS) );
 }
 
 void test_bell_from_char(void)
