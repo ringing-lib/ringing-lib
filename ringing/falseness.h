@@ -48,8 +48,8 @@ public:
   // What gets included in the falseness table?
   enum
   {
-    no_fixed_treble = 0x01,
-    in_course_only  = 0x02
+    in_course_only   = 0x01,
+    no_fixed_treble  = 0x02
   };
 
   // falseness table for the method.  
@@ -69,11 +69,52 @@ public:
 
 private:
   vector<row> t;
+  row lh;
+  int flags;
+};
+
+// The set of course heads that are false against the plain course
+class false_courses
+{
+public:
+  // Contains just the trivial falseness (a row is false against itself)
+  false_courses();
+
+  // What gets included in the list of false course heads?
+  enum
+  {
+    in_course_only   = 0x01,
+    tenors_together  = 0x02
+  };
+
+  // false course heads for the method.  
+  false_courses( const method &m, int flags = 0 );
+
+  // Assignment and swapping
+  void swap( false_courses &other ) { t.swap( other.t ); }
+
+  // Iterators
+  typedef row value_type;
+  typedef vector<row>::const_iterator const_iterator;
+  const_iterator begin() const { return t.begin(); }
+  const_iterator end() const   { return t.end(); }
+
+  // Number of elements
+  size_t size() const { return t.size(); }
+
+private:
+  class initialiser;
+  friend class initialiser;
+
+  vector<row> t;
+  row lh;
+  int flags;
 };
 
 RINGING_END_NAMESPACE
 
 // specialise std::swap
 RINGING_DELEGATE_STD_SWAP( falseness_table )
+RINGING_DELEGATE_STD_SWAP( false_courses )
 
 #endif
