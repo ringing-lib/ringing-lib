@@ -1,5 +1,5 @@
 // rlstream.cpp - A streambuf that uses GNU readline
-// Copyright (C) 2002 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -27,6 +27,13 @@
 #error "This file requires GNU readline" 
 #endif
 #include "rlstream.h"
+#if RINGING_READLINE_NEEDS_STDIO_H
+#if RINGING_OLD_C_INCLUDES
+#include <stdio.h>
+#else
+#include <cstdio>
+#endif
+#endif
 #include <readline/readline.h>
 #include <readline/history.h>
 #if RINGING_OLD_C_INCLUDES

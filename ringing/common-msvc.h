@@ -77,6 +77,12 @@
 // or to 0 otherwise.
 #define RINGING_USE_READLINE 0
 
+// *** Define this to be 1 if your copy of GNU readline has broken
+// headers requiring <stdio.h> to be included before <readline/readline.h>
+// or to 0 otherwise
+#define RINGING_USE_READLINE 0
+
+
 // *** Define this to be 1 if want to include XML support via the 
 // Apache Xerces library, or to 0 otherwise.
 #define RINGING_USE_XERCES 0
