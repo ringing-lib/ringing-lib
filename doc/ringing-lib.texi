@@ -949,8 +949,7 @@ This creates a block of rows using the changes in @var{c}, starting
 from rounds.
 @end deftypefn
 
-@deftypefn Constructor {} row_block::row_block (const vector<change>&
-@var{c}, const row& @var{r});
+@deftypefn Constructor {} row_block::row_block (const vector<change>& @var{c}, const row& @var{r});
 This creates a block of rows using the changes in @var{c}, starting from
 the row given in @var{r}.
 @end deftypefn
@@ -1334,6 +1333,84 @@ they will be tried when opening a library.
 @subsection Facets
 @cindex facets
 
+In addition to usual information such as name, stage and place notation,
+some method collections contain further information.  For example, the
+Central Council method collections contain the date and place of the
+first peal in each method.  To give access to such information, the
+Ringing Class Library has a fully typed system of method @dfn{facets}.
+
+A facet is something which has a C++ type, and which may or may not be
+part of an entry in a method library.  A few facets are declared as
+standard; library types are free to declare new facets of their own.
+
+For example, one of the standard facets is called @code{rw_ref} and is
+of type @code{string}.  The facet is intended to contain a string citing
+the method's appearance in the @cite{Ringing World}.  The following code
+checks to see whether the first entry in the library @code{l} contains
+this information, and if so prints it.
+
+@example
+library::iterator i = l.begin();
+if( i->has_facet< rw_ref >() )
+  cout << i->get_facet< rw_ref >();
+@end example
+
+For more information on these functions, see @ref{The library_entry class}.
+
+@menu
+* Built-in facets::             
+@end menu
+
+@node Built-in facets,  , Facets, Facets
+@subsubsection Built-in facets
+
+Some facets are declared in @file{ringing/peal.h}.  These facets are
+available in some of the built-in library types.
+
+@table @code
+@item rw_ref
+This facet, of type @code{string}, contains a reference to the method's
+appearance in the @cite{Ringing World}.
+
+@item first_tower_peal
+This facet, of type @code{peal}, contains the date and place of the
+first tower bell peal in the method.
+
+@item first_hand_peal
+This facet, of type @code{peal}, contains the date and place of the
+first handbell peal in the method.
+@end table
+
+The last two are of type @code{peal}, which is a class also declared in
+@file{ringing/peal.h}.  It is a very simple class and defines the
+following functions.
+
+@deftypefn Constructor {} peal (void);
+@deftypefnx Constructor {} peal (const peal::date& @var{DATE}, const string& @var{PLACE});
+These functions construct objects in the obvious way.
+@end deftypefn
+
+@deftypefun {peal::date const&} peal::when (void);
+This function returns the date of the peal.
+@end deftypefun
+
+@deftypefun {string const&} peal::where (void);
+This function returns the location of the peal.
+@end deftypefun
+
+The @code{peal::date} type is also very simple.
+
+@example
+struct peal::date @{
+  int day, month, year;
+@};
+@end example
+
+@deftypefn Constructor {} peal::date (void);
+@deftypefnx Constructor {} peal::date (int @var{DAY}, int @var{MONTH}, int @var{YEAR});
+These functions construct objects in the obvious way.
+@end deftypefn
+
 @node The library class, The library_entry class, Facets, Using libraries
 @subsection The @code{library} class
 @cindex @code{library} class
@@ -1357,12 +1434,22 @@ expects.  For example, in MicroSIRIL libraries, method names are run
 together into one word, say @samp{Doubledublin}.
 
 @menu
+* library derivation::          
 * library constructors::        
 * library iteration functions::  
 * Other library functions::     
 @end menu
 
-@node library constructors, library iteration functions, The library class, The library class
+@node library derivation, library constructors, The library class, The library class
+@subsubsection Derivation
+
+This class is not derived from any other classes.
+
+@example
+class library;
+@end example
+
+@node library constructors, library iteration functions, library derivation, The library class
 @subsubsection Constructors
 
 @deftypefn Constructor {} library::library (void);
@@ -1376,7 +1463,7 @@ interpret it.   For a library type to be correctly auto-detected, that
 type must be registered @pxref{Initialisation for libraries}.
 
 After constructing a library, the @code{library::good} function can be
-used see if auto-detection succeeded.
+used to see whether auto-detection succeeded.
 @end deftypefn
 
 In addition to this constructor, which auto-detects the type of library,
@@ -1410,13 +1497,13 @@ library::const_iterator i;
 
 // Print the base name of each method in it
 for(i = l.begin(); i != l.end(); ++i)
-  cout << (*i).base_name() << endl;
+  cout << i->base_name() << endl;
 @end example
 
 @node Other library functions,  , library iteration functions, The library class
 @subsubsection Other functions
 
-@deftypefun {bool} library_base::good (void) const;
+@deftypefun {bool} library::good (void) const;
 This function returns true if the library is open and ready to read
 methods, and false otherwise.
 @end deftypefun
@@ -1448,54 +1535,172 @@ The @code{library_entry} class is the value type of the iterator on a
 library.  It is used to get information about the method from the
 library without constructing a @code{method} object.
 
-@deftypefun string name (void) const;
+@deftypefun string library_entry::name (void) const;
 This returns the method's name in whatever form the library stores it 
 internally.  Thus it may or may not contain the class name(s) or stage name
 of the method.  In the case of MicroSIRIL libraries, it will not even have
 whitespace in the name.
 @end deftypefun
 
-@deftypefun string base_name (void) const;
+@deftypefun string library_entry::base_name (void) const;
 This returns the base name of the method (i.e. the name with the class name(s)
 and stage name removed).  The value returned is suitable for passing to 
 the @code{method} constructor.
 @end deftypefun
 
-@deftypefun string pn (void) const;
+@deftypefun string library_entry::pn (void) const;
 This returns a string containing the method's place notation.
 @end deftypefun
 
-@deftypefun int bells (void) const;
+@deftypefun int library_entry::bells (void) const;
 This returns the number of bells on which the method is defined.
 @end deftypefun
 
-@deftypefun method meth (void) const
+@deftypefun method library_entry::meth (void) const
 This constructs and return a @code{method} object.
 @end deftypefun
+
+@deftypefun {template <class Facet> bool} library_entry::has_facet (Facet const* @var{f} = NULL ) const;
+This function returns @code{true} if the method entry contains
+information about the given facet.  Note that just because a method
+library type supports a certain facet, that does not necessarily mean
+that every method in the library actually has that facet.  For example,
+an entry in a Central Council library may not contain any information
+about the first peals in a method; or an entry in an XML library may not
+contain certain elements.  
+
+The contents of the argument @var{f} are not used, but this may be used
+to indicate the type of the facet as an alternative to explicit template
+instantiation.
+@end deftypefun
+
+@deftypefun {template <class Facet> typename Facet::type} library_entry::get_facet (Facet const* @var{f} = NULL ) const;
+This function returns the value of the specified facet of the method
+entry.  
+
+The contents of the argument @var{f} are not used, but this may be used
+to indicate the type of the facet as an alternative to explicit template
+instantiation.
+@end deftypefun
+
+For more information on facets and an example of how these functions are
+used, see @ref{Facets}.
 
 @node Built-in library types, Library framework, Using libraries, Method libraries
 @section Built-in library types
 
 @menu
 * XML libraries::               
+* Central Council libraries::   
 @end menu
 
-@node XML libraries,  , Built-in library types, Built-in library types
+@node XML libraries, Central Council libraries, Built-in library types, Built-in library types
 @subsection XML libraries
 @cindex XML libraries
-@cindex @code{xmllib} class
 
 A specification for method libraries in XML can be found at
-@uref{http://methods.ringing.org}.  This site is also home to a server
-which serves XML method data in response to HTTP queries.  The routines
+@uref{http://methods.ringing.org/}.  This site is also home to a server
+which serves XML method data in response to HTTP queries.  The classes
 declared in @file{ringing/xmllib.h} can not only parse the XML data, but
 can also automatically download method data from the server.
 
 To use XML method libraries, you need to have the Xerces library
 from the Apache project, available at @uref{http://xml.apache.org/}.
 
+@menu
+* The xmllib class::            
+* XML library facets::          
+@end menu
+
+@node The xmllib class, XML library facets, XML libraries, XML libraries
+@subsubsection The @code{xmllib} class
+@cindex @code{xmllib} class
+
+The @code{xmllib} class is derived from the @code{library} class.
+
+@example
+class xmllib : public library;
+@end example
+
+@deftypefn Constructor {} xmllib::xmllib (xmllib::file_arg_type @var{TYPE}, const string& @var{NAME}); 
+This constructor opens an XML library.  The first argument @var{TYPE}
+describes what sort of resource is to be opened, and should be one of
+the following:
+
+@table @code
+@item xmllib::filename
+Open a file; @var{NAME} contains the name of the file.
+
+@item xmllib::url
+Open a URL; @var{NAME} contains the URL.  To use this, Xerces must have
+been built with Internet access.
+
+@item xmllib::default_url
+Query the online method database at @uref{http://methods.ringing.org/}.
+The argument @var{NAME} contains the query string, that is, the part of
+the URL after the @samp{?} character.  For information on what this
+should contain, see the detailed information on the database's web site.
+@end table
+@end deftypefn
+
+@example
+// Query the database for all methods named Lincolnshire
+xmllib l(xmllib::default_url, "name=Lincolnshire");
+@end example
+
+An XML method collection in a file may also be opened using the library
+auto-detection mechanism, by simply constructing a @code{library}
+object.  @xref{library constructors}.
+
+@deftypefun {static void} xmllib::registerlib (void)
+This function registers the XML library type with the library
+auto-detection mechanism.
+@end deftypefun
+
+@node XML library facets,  , The xmllib class, XML libraries
+@subsubsection XML library facets
+
+@node Central Council libraries,  , XML libraries, Built-in library types
+@subsection Central Council libraries
+
+The Methods Committee of the Central Council publishes collections of
+methods on its web site, in a text format.  The classes declared in
+@file{ringing/cclib.h} can read these method collections.
+
+@menu
+* The cclib class::             
+* Central Council library facets::  
+@end menu
+
+@node The cclib class, Central Council library facets, Central Council libraries, Central Council libraries
+@subsubsection The @code{cclib} class
+
+The @code{cclib} class is derived from the @code{library} class.
+Actually it isn't for some reason, but it should be.
+
+@example
+class cclib : public library;
+@end example
+
+It has no constructor for some reason, but it should have.
+
+@deftypefun {static void} cclib::registerlib (void)
+This function registers the Central Council library type with the
+library auto-detection mechanism.  Beware that at the moment it will
+agree to open absolutely any file, whether or not it looks like a CC
+method collection.  I don't know why.  You should put it last in your
+list of library types.
+@end deftypefun
+
+@node Central Council library facets,  , The cclib class, Central Council libraries
+@subsubsection Central Council library facets
+
 @node Library framework, Implementing new library classes, Built-in library types, Method libraries
 @section Library framework
+
+This section describes in greater detail how the various classes which
+implement method libraries interact.  It is intended for those writing
+new classes to support new library types.
 
 The basic library framework comprises five classes, all of which are 
 declared in @file{ringing/library.h}.
@@ -1727,29 +1932,17 @@ This constructor initialises the @code{library_entry} with a @code{NULL}
 any accessor functions on a default constructed @code{library_entry}.
 @end deftypefn
 
+@deftypefn Constructor {} library_entry::library_entry (library_entry::impl* @var{PIMPL});
+This constructor creates a new object from the given pointer.
+@end deftypefn
+
 @deftypefun string name (void) const;
-This returns the method's name in whatever form the library stores it 
-internally.  Thus it may or may not contain the class name(s) or stage name
-of the method.  In the case of MicroSiril libraries, it will not even have
-whitespace in the name.
-@end deftypefun
-
-@deftypefun string base_name (void) const;
-This returns the base name of the method (i.e. the name with the class name(s)
-and stage name removed).  The value returned is suitable for passing to 
-the @code{method} constructor.
-@end deftypefun
-
-@deftypefun string pn (void) const;
-This returns a string containing the method's place notation.
-@end deftypefun
-
-@deftypefun int bells (void) const;
-This returns the number of bells on which the current method is defined.
-@end deftypefun
-
-@deftypefun method meth (void) const
-This returns the current method.
+@deftypefunx string base_name (void) const;
+@deftypefunx string pn (void) const;
+@deftypefunx int bells (void) const;
+@deftypefunx method meth (void) const
+These functions all call the corresponding function on the
+@code{library_entry::impl} object.
 @end deftypefun
 
 @node The library_entry impl class,  , library_entry internals, Library framework
