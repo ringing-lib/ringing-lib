@@ -1,5 +1,5 @@
 // -*- C++ -*- multtab.cpp - A precomputed multiplication table of rows
-// Copyright (C) 2002, 2003, 2004 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003, 2004, 2005 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -61,15 +61,7 @@ multtab &multtab::operator=( const multtab &other )
 
 bool multtab::is_representative( const row& r ) const
 {
-  for ( group::const_iterator i( pends.begin() ), e( pends.end() ); 
-	i != e; ++i )
-    {
-      row x( *i * r );
-      if ( x < r )
-	return false;
-    }
-
-  return true;
+  return r == make_representative(r);
 }
 
 row multtab::make_representative( const row& r ) const
@@ -80,7 +72,10 @@ row multtab::make_representative( const row& r ) const
 	i != e; ++i )
     {
       row x( *i * r );
-      if ( x < res ) res = x;
+      if ( x < res && 
+	   RINGING_PREFIX_STD find( rows.begin(), rows.end(), 
+				    x ) != rows.end() )
+	res = x;
     }
 
   return res;
