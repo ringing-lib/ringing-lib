@@ -1,10 +1,11 @@
 ## Makefile.am -- process this file with automake to produce Makefile.in
 
 AUTOMAKE_OPTIONS = dist-zip
-SUBDIRS = ringing doc examples
 
 MAINTAINERCLEANFILES = Makefile.in configure aclocal.m4
 EXTRA_DIST = mkdsp
+
+SUBDIRS = ringing doc examples tests 
 
 auxdir			= @ac_aux_dir@
 AUX_DIST		= $(auxdir)/install-sh $(auxdir)/missing \

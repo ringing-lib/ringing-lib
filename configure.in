@@ -285,4 +285,4 @@ also be able to install the header files.]);
 fi
 
 AC_OUTPUT(Makefile ringing/Makefile doc/Makefile examples/Makefile 
-  ringing/common-am.h)
+  tests/Makefile ringing/common-am.h)
