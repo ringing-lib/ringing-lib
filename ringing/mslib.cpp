@@ -63,10 +63,11 @@ public:
   // Is this file in the right format?
   static library_base *canread(const string& filename);
 
+  // Needs to be public because of a compiler bug in MSVC 6.0
+  class entry_type;
+
 private:
   // Iterators into the library
-  class entry_type;
-  friend class entry_type;
   virtual const_iterator begin() const;
 
   // Is the library in a usable state?
