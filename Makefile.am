@@ -10,3 +10,8 @@ dist-hook:
 	for file in $(AUX_DIST); do \
 	  cp $$file $(distdir)/$$file; \
 	done
+
+docdir = $(top_builddir)/doc
+html:
+	@echo Making $@ in $(docdir)
+	@cd $(docdir) && make $@

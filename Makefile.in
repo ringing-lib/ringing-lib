@@ -75,6 +75,8 @@ SUBDIRS = ringing doc
 auxdir = @ac_aux_dir@
 AUX_DIST = $(auxdir)/install-sh $(auxdir)/missing 			$(auxdir)/mkinstalldirs
 
+
+docdir = $(top_builddir)/doc
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 mkinstalldirs = $(SHELL) $(top_srcdir)/config/mkinstalldirs
 CONFIG_HEADER = config.h
@@ -364,6 +366,9 @@ dist-hook:
 	for file in $(AUX_DIST); do \
 	  cp $$file $(distdir)/$$file; \
 	done
+html:
+	@echo Making $@ in $(docdir)
+	@cd $(docdir) && make $@
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
