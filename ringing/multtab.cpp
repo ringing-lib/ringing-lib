@@ -110,10 +110,6 @@ void multtab::dump( ostream &os ) const
     }
 
   os << endl;
-
-  os << "Part ends: { ";
-  copy( pends.begin(), pends.end(), ostream_iterator<row>(os, " ") );
-  os << "}" << endl;
 }
 
 multtab::pre_col_t 

@@ -50,7 +50,8 @@ public:
   enum
   {
     in_course_only   = 0x01,
-    no_fixed_treble  = 0x02
+    no_fixed_treble  = 0x02,
+    half_lead_only   = 0x04
   };
 
   // falseness table for the method.  

@@ -117,4 +117,39 @@ group::group( const vector<row>& gens )
   copy( s.begin(), s.end(), back_inserter(v) );
 }
 
+group group::conjugate( const row& r ) const
+{
+  group g;
+
+  g.b = b;
+  g.v.clear();  // Default constructor populates it with a single element
+  g.v.reserve( v.size() );
+
+  const row ri( r.inverse() );
+
+  for ( vector<row>::const_iterator i( v.begin() ), e( v.end() );
+	i != e;  ++i )
+    g.v.push_back( ri * *i * r );
+
+  // Keep it sorted so that comparison is cheap(ish)
+  sort( g.v.begin(), g.v.end() );
+
+  return g;
+}
+
+bool operator==( const group& a, const group& b )
+{
+  return a.b == b.b && a.v == b.v;
+}
+
+bool operator<( const group& a, const group& b )
+{
+  return a.b < b.b || a.b == b.b && a.v < b.v;
+}
+
+bool operator>( const group& a, const group& b )
+{
+  return a.b > b.b || a.b == b.b && a.v > b.v;
+}
+
 RINGING_END_NAMESPACE

@@ -63,6 +63,17 @@ public:
   static group symmetric_group(int nw, int nh = 0, int nt = 0);
   static group alternating_group(int nw, int nh = 0, int nt = 0);
 
+  // Congugate by r to get { r^-1 g r : g \in *this }
+  group conjugate( const row& r ) const; 
+
+  friend bool operator==( const group& a, const group& b );
+  friend bool operator< ( const group& a, const group& b );
+  friend bool operator> ( const group& a, const group& b );
+
+  friend bool operator!=( const group& a, const group& b ) { return !(a==b); }
+  friend bool operator<=( const group& a, const group& b ) { return !(a>b); }
+  friend bool operator>=( const group& a, const group& b ) { return !(a<b); }
+
 private:
   size_t b;
   vector<row> v;
