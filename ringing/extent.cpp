@@ -19,7 +19,7 @@
 
 #include <ringing/common.h>
 
-#ifdef RINGING_HAS_PRAGMA_INTERFACE
+#if RINGING_HAS_PRAGMA_INTERFACE
 #pragma implementation
 #endif
 
@@ -55,6 +55,19 @@ unsigned fibonacci(unsigned n)
       f2 = sum;
     }
   return f2;
+}
+
+unsigned random_int(unsigned max) 
+{
+  assert( max );
+
+  unsigned r;
+  do 
+    r = (unsigned)( (double)rand() * ((double)max / (double)RAND_MAX) );
+  while ( r == max );
+  
+  assert( r < max );
+  return r;
 }
 
 struct extent_iterator::bellsym_cmp
@@ -134,6 +147,34 @@ changes_iterator::changes_iterator( unsigned int nw, unsigned int nh,
   stk.push_back(nh); 
   if ( nw>1 ) next(); 
 }
+
+RINGING_START_ANON_NAMESPACE
+
+
+RINGING_END_ANON_NAMESPACE
+
+row random_row( unsigned int nw, unsigned int nh, unsigned int nt )
+{
+  int idx( random_int( factorial(nw) ) );
+  string s( nt, '?' );
+  for (unsigned i=0; i<nh; ++i) s[i] = bell(i).to_char();
+  for (unsigned i=nh; i<nw+nh; ++i)
+    {
+      const int fact( factorial(nw-i+nh-1) );
+      int b = idx / fact;
+      idx %= fact;
+
+      for (unsigned ob=0; ob<=b; ++ob)
+	for (unsigned j=0; j<i; ++j)
+	  if ( bell(ob).to_char() == s[j] )
+	    ++b;
+
+      s[i] = bell(b).to_char();
+    }
+  for (unsigned i=nw+nh; i<nt; ++i) s[i] = bell(i).to_char();
+  return s;
+}
+
 
 RINGING_END_NAMESPACE
 

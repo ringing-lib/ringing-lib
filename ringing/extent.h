@@ -20,11 +20,12 @@
 #ifndef RINGING_EXTENT_H
 #define RINGING_EXTENT_H
 
-#ifdef RINGING_HAS_PRAGMA_INTERFACE
+#include <ringing/common.h>
+
+#if RINGING_HAS_PRAGMA_INTERFACE
 #pragma interface
 #endif
 
-#include <ringing/common.h>
 #include <string>
 #if RINGING_OLD_INCLUDES
 #include <vector.h>
@@ -37,8 +38,11 @@ RINGING_START_NAMESPACE
 
 RINGING_USING_STD
 
-unsigned factorial(unsigned n);
-unsigned fibonacci(unsigned n);
+RINGING_API unsigned factorial(unsigned n);
+RINGING_API unsigned fibonacci(unsigned n);
+
+// Uniformly distributed, 0 <= random_int(max) < max
+RINGING_API unsigned random_int(unsigned max);
 
 class RINGING_API extent_iterator
   : public RINGING_STD_CONST_ITERATOR( forward_iterator_tag, row )
@@ -178,6 +182,13 @@ private:
   change c;
   vector<unsigned int> stk;
 };
+
+RINGING_API row random_row( unsigned nw, unsigned nh, unsigned nt );
+
+RINGING_API inline row random_row( unsigned nw, unsigned nh = 0 ) { 
+  return random_row( nw, nh, nw+nh ); 
+}
+
 
 RINGING_END_NAMESPACE
 
