@@ -508,6 +508,9 @@ string exec_command( const string& str )
       THROW_SYSTEM_ERROR( "wait" );
   }
 
+  if ( result.size() && result[result.size()-1] == '\n' )
+    result.erase( result.size()-1 );
+
   return result;
 }
 
