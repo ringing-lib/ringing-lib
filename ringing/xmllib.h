@@ -32,7 +32,7 @@ RINGING_START_NAMESPACE
 
 RINGING_USING_STD
 
-class xmllib : public library 
+class RINGING_API xmllib : public library 
 {
 public:
   enum file_arg_type { filename, url, default_url };
@@ -43,12 +43,12 @@ public:
   //   just as if it had been read using the registerlib mechanism.
   // - If the first argument is url, this reads a URL to fetch and 
   //   read.  This requires Xerces to have been built with net access.
-  // - If the first argumnet is default_url, the string is the CGI
+  // - If the first argument is default_url, the string is the CGI
   //   parameters (excluding initial '?') to be passed to 
   //   http://methods.ringing.org/cgi-bin/simple.pl
   explicit xmllib( file_arg_type, const string&);
 
-  static RINGING_API void registerlib(void) {
+  static void registerlib(void) {
     library::addtype(&canread);
   }
 
