@@ -166,7 +166,7 @@ public:
 
   void print( ostream &os, size_t count ) const;
 
-  RINGING_FAKE_DEFAULT_CONSTRUCTOR( histogram_entry );
+  RINGING_FAKE_DEFAULT_CONSTRUCTOR( histogram_entry )
 
 private:
   friend struct cmp;

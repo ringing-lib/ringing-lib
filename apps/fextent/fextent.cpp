@@ -90,7 +90,7 @@ void status_out( string const& msg )
   status_size = m.size();
 }
 
-inline bool clear_status() 
+inline void clear_status() 
 {
   status_out("");
 }
@@ -501,7 +501,7 @@ public:
     typedef row const* pointer;
 
     const_iterator& operator++() {
-      ++idx; fixup();
+      ++idx; fixup(); return *this;
     }
 
     const_iterator operator++(int) {
@@ -531,14 +531,15 @@ public:
     }
 
     friend class state;
-    const_iterator( int idx, vector<lead_state> const* v, multtab const *mt ) 
+    const_iterator( size_t idx, vector<lead_state> const* v, 
+		    multtab const *mt ) 
       : idx(idx), v(v), mt(mt)
     {
       fixup();
     }
 
     // Data members
-    int idx;
+    size_t idx;
     vector<lead_state> const* const v;
     multtab const* const mt;
   };
@@ -605,7 +606,7 @@ private:
 
 void state::dump( ostream& os ) const
 {
-  for ( int i=0; i<leads.size(); ++i )
+  for ( size_t i=0; i<leads.size(); ++i )
     {
       row_t const r( row_t::from_index(i) );
       if ( is_present(r) )
@@ -669,7 +670,7 @@ void state::init_mt( method const& m, group const& pgrp,
 
   vector<double>( mt->size(), wprof.base ).swap( weight );
 
-  for ( int i=0; i<mt->size(); ++i )
+  for ( size_t i=0; i<mt->size(); ++i )
     {
       row const r( mt->find( row_t::from_index(i) ) );
       
@@ -1005,7 +1006,7 @@ bool state::check() const
 {
   double realsc = 0;
   int linkage = 0;
-  for ( int i=0; i<leads.size(); ++i ) 
+  for ( size_t i=0; i<leads.size(); ++i ) 
     if ( is_present( leads[i] ) ) {
       realsc += weight[i];
       if ( qsets.size() && check_qsets( row_t::from_index(i) ) != size_t(-1) ||
@@ -1468,7 +1469,7 @@ void state::prune_unlinked()
       bool done_anything = false;
       perturbation p( *this );
       
-      for ( int i=0; i != leads.size(); ++i )
+      for ( size_t i=0; i != leads.size(); ++i )
 	// NB avoid short circuit
 	done_anything = p.prune_unlinked( row_t::from_index(i) ) 
 	  || done_anything;

@@ -75,7 +75,7 @@ namespace tok_types
     logic_or,
     regex_lit
   };
-};
+}
 
 class pn_impl : public tokeniser::basic_token
 {

@@ -165,7 +165,7 @@ bool searcher::try_with_limited_le( const change& ch )
   change orig( m.back() );
   m.pop_back();
 
-  int depth = m.length();
+  size_t depth = m.length();
   assert( depth == size_t(args.lead_len-1) );
 
   if ( !try_midlead_change(ch) )
@@ -662,7 +662,7 @@ void searcher::new_midlead_change()
 	  
 	  if ( args.hunt_bells % 2 == 1 && depth == 2*hl_len-1 ||
 	       args.hunt_bells && 
-	       args.hunt_bells % 2 == 0 && depth == args.treble_dodges )
+	       args.hunt_bells % 2 == 0 && depth == size_t(args.treble_dodges) )
 	    if ( ! try_leadend_sym_change( ch ) )
 	      continue;
 	  
@@ -881,7 +881,7 @@ void searcher::general_recurse()
   // Conventional symmetry when we have an even number of hunt bells 
   // treble dodging -- first division
   else if ( args.sym && args.hunt_bells % 2 == 0 && args.treble_dodges &&
-	    depth == args.treble_dodges + 1 )
+	    depth == size_t(args.treble_dodges + 1) )
     {
       copy( m.rbegin() + 1, m.rend(), back_inserter(m) );
 

@@ -133,7 +133,7 @@ public:
     M_UCROSS     =  04,  // Use an upper-case 'X' for the cross change
     M_LCROSS     = 010,  // Use a lower-case 'x' for the cross change
     M_DASH       = 020,  // Use a dash ('-') for the cross change
-    M_SYMMETRY   = 040,  // Separate palindromic methods into two components
+    M_SYMMETRY   = 040   // Separate palindromic methods into two components
   };
 
   string format( int flags = 0 ) const; // Format the place notation for output

@@ -39,7 +39,7 @@
 #if RINGING_USE_NAMESPACES
 # define RINGING_USING_NAMESPACE using namespace ringing;
 # define RINGING_START_NAMESPACE namespace ringing {
-# define RINGING_END_NAMESPACE };
+# define RINGING_END_NAMESPACE }
 # define RINGING_PREFIX ringing::
 #else
 # define RINGING_USING_NAMESPACE
@@ -52,7 +52,7 @@
 #if RINGING_USE_STD
 # define RINGING_USING_STD using namespace std;
 # define RINGING_START_NAMESPACE_STD namespace std {
-# define RINGING_END_NAMESPACE_STD };
+# define RINGING_END_NAMESPACE_STD }
 # define RINGING_PREFIX_STD ::std::
 #else
 # define RINGING_USING_STD
