@@ -1,5 +1,5 @@
 // -*- C++ -*- falseness.h - Class for falseness table
-// Copyright (C) 2001, 2002 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2001, 2002, 2003 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -98,6 +98,10 @@ public:
   typedef vector<row>::const_iterator const_iterator;
   const_iterator begin() const { return t.begin(); }
   const_iterator end() const   { return t.end(); }
+
+  // The FCH symbols.
+  string symbols() const;
+  static void optimise(int bells); // 0 to disable
 
   // Number of elements
   size_t size() const { return t.size(); }
