@@ -194,7 +194,7 @@ int printmethod::find_pnextra()
     k = (*i).count_places();
     if(k > result) result = k;
   }
-  return result/2;
+  return (result+3)/2;
 }
 
 void printmethod::scale_to_space(const dimension& width,
@@ -266,7 +266,7 @@ float printmethod::total_width() {
   int columns = divu(total_rows, rows_per_column);
   if(columns_per_set < columns) columns = columns_per_set;
   return (opt.xspace.in_points() * (m->bells() * columns + 
-				    (placebells >= 0 ? 2 : 0) +
+				    (placebells >= 0 ? 2.4f : 0) +
 				    ((pn_mode != pn_none) ? find_pnextra():0))
 	  + (hgap.in_points() * (columns - 1)));
 }
