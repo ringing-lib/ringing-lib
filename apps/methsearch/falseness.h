@@ -40,6 +40,7 @@ RINGING_USING_STD
 
 string falseness_group_codes( const method &m );
 
+bool might_support_positive_extent( const method &m );
 bool might_support_extent( const method &m );
 
 bool is_cps( const method &m );

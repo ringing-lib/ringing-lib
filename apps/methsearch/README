@@ -45,7 +45,6 @@ General options:
   -F, --falseness=TYPE   Check for falseness  (see below)
   -m, --mask=PATTERN     Require that the method matches the given mask
   -M, --music=PATTERN    Score the music in a plain course
-  --bob=CHANGE           Use CHANGE as the bob (used with some -F options)
   --start-at=PN          (Re-)start the search with the method PN.
   --cyclic-hle           Require cyclic half-lead ends
   --cyclic-hlh           Require cyclic half-lead heads
@@ -81,19 +80,20 @@ The -F option checks some property of the method's falseness.   The TYPE
 argument to the -F option specifies what property to check.  Each argument
 has a long form and a short form.  If no -F option is given, -Fl is assumed.
 
-  e, extent	    Require a extent to be potentially possible (see below)
-  CPS		    Require the method to be clear proof scale
-  U		    Require the method to be true to U falseness
-  c, course         Require the plain course to be true
-  l, lead           Require a lead to be true [default]
-  h, half-lead      Only require a half-lead to be true
-  n, none           No requirements on the truth of the method
-  x, really-none    As 'n' but even allowing 'trivial' falseness (see below)
+  e, extent	      Require a extent to be potentially possible (see below)
+  e+, positive-extent Require an in-course (half-)extent to be potentially 
+                      possible (see below)
+  CPS		      Require the method to be clear proof scale
+  c, course           Require the plain course to be true
+  l, lead             Require a lead to be true [default]
+  h, half-lead        Only require a half-lead to be true
+  n, none             No requirements on the truth of the method
+  x, really-none      As 'n' but even allowing 'trivial' falseness (see below)
 
 With the exception of -Fe each option implies all of the options below, and
-should not be used with any lower options.  -Fe and -Fc or -FU are orthogonal 
-and may both be specified (extents may be possible in methods that are false 
-in the plain course).  -Fe, -Fc and -FU all imply -Fl.
+should not be used with any lower options.  -Fe and -Fc are orthogonal and
+may both be specified (extents may be possible in methods that are false 
+in the plain course).  -Fe, -Fe+ and -Fc all imply -Fl.
 
 Note that even with -Fn certain 'trivial' falsenesses are excluded:  the 
 change where no bells cross (123456 on 6 bells) is still forbidden, and 
@@ -109,13 +109,10 @@ Note that -Fe does not search for an extent of the method, it merely checks
 to see whether there exists a set of mutually true leads including each row
 in the extent exactly once.  This is necessary (although not sufficient) for 
 an extent using single change, lead-end calls to exist.  The -Fe option is
-only currently implemented for single-hunt plain methods.
-
-For methods without regular (i.e. Plain Bob) lead heads, U falseness is
-generalised to be the falseness 'group' that includes the course head brought
-up by a bob at home.  Thus -FU means that three homes will be a true touch.
-To use -FU, the --bob option may be used to specify what call is being used.
-If the bob specified is the same as the lead end, -FU is the same as -Fc.
+only currently implemented for single-hunt plain methods.  The -Fe+ option
+does the same but only for the in-course lead-heads / -ends, thus for a 
+treble-dodging minor method it will check whether there are 30 true in-course
+leads.
 
 
 
@@ -274,6 +271,14 @@ using this notation, for example, -M'<CRUs>' on 8 bells is equivalent to
 
 (Again, careful quoting and/or escaping of * is needed to prevent the shell
 from interpretting it.)
+
+Prefixing any pattern with a number followed by a colon allows a weighting 
+to be specifed.  For example,
+
+  -M'<4-runs>' -M'4:*5678' -M'4:*6578' -M'4:*7568' -M'4:5678*'
+
+scores 96 particularly pleasing <4-runs> from the total 1200 with five times
+the weight (five not four as they were counted once by -M<4-runs> anyway).
 
 
 

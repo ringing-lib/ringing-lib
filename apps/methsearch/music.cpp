@@ -68,10 +68,10 @@ public:
   static analyser &instance( int bells ) 
   { static analyser tmp( bells ); return tmp; }
 
-  void init_crus();
-  void init_n_runs( int n );
-  void init_front_n_runs( int n );
-  void init_back_n_runs( int n );
+  void init_crus( int score );
+  void init_n_runs( int n, int score );
+  void init_front_n_runs( int n, int score );
+  void init_back_n_runs( int n, int score );
 
   friend class patterns;
     
@@ -97,7 +97,7 @@ void musical_analysis::analyser::check_n( int n )
 }
 
 
-void musical_analysis::analyser::init_front_n_runs( int n )
+void musical_analysis::analyser::init_front_n_runs( int n, int score )
 {
   check_n(n);
 
@@ -107,7 +107,7 @@ void musical_analysis::analyser::init_front_n_runs( int n )
 	make_string os;
 	for ( int j=0; j<n; ++j ) os << bell( i+j );
 	os << '*';
-	mu.push_back(music_details(os));
+	mu.push_back(music_details(os, score));
       }
   }
   {
@@ -116,12 +116,12 @@ void musical_analysis::analyser::init_front_n_runs( int n )
 	make_string os;
 	for ( int j=n-1; j>=0; --j ) os << bell( i+j );
 	os << '*';
-	mu.push_back(music_details(os));
+	mu.push_back(music_details(os, score));
       }
   }
 }
 
-void musical_analysis::analyser::init_back_n_runs( int n )
+void musical_analysis::analyser::init_back_n_runs( int n, int score )
 {
   check_n(n);
 
@@ -131,7 +131,7 @@ void musical_analysis::analyser::init_back_n_runs( int n )
 	make_string os;
 	os << '*';
 	for ( int j=0; j<n; ++j ) os << bell( i+j );
-	mu.push_back(music_details(os));
+	mu.push_back(music_details(os, score));
       }
   }
   {
@@ -140,12 +140,12 @@ void musical_analysis::analyser::init_back_n_runs( int n )
 	make_string os;
 	os << '*';
 	for ( int j=n-1; j>=0; --j ) os << bell( i+j );
-	mu.push_back(music_details(os));
+	mu.push_back(music_details(os, score));
       }
   }
 }
 
-void musical_analysis::analyser::init_n_runs( int n )
+void musical_analysis::analyser::init_n_runs( int n, int score )
 {
   check_n(n);
 
@@ -156,7 +156,7 @@ void musical_analysis::analyser::init_n_runs( int n )
 	os << '*';
 	for ( int j=0; j<n; ++j ) os << bell( i+j );
 	os << '*';
-	mu.push_back(music_details(os));
+	mu.push_back(music_details(os, score));
       }
   }
   {
@@ -166,12 +166,12 @@ void musical_analysis::analyser::init_n_runs( int n )
 	os << '*';
 	for ( int j=n-1; j>=0; --j ) os << bell( i+j );
 	os << '*';
-	mu.push_back(music_details(os));
+	mu.push_back(music_details(os, score));
       }
   }
 }
 
-void musical_analysis::analyser::init_crus()
+void musical_analysis::analyser::init_crus( int score )
 {
   for ( int i = 3; i < 6; ++i ) 
     for ( int j = 3; j < 6; ++j )
@@ -184,7 +184,7 @@ void musical_analysis::analyser::init_crus()
 	for ( int k = 6; k < bells; ++k )
 	  os << bell(k);
 	
-	mu.push_back(music_details(os));
+	mu.push_back(music_details(os, score));
       }
 }
 
@@ -194,35 +194,52 @@ musical_analysis::analyser::analyser( int bells )
   const vector<string> &p = patterns::instance().p;
 
   if ( p.empty() )
-    init_crus();   // By default we count the CRUs in the plain course.
+    init_crus(1);   // By default we count the CRUs in the plain course.
   else
     {
       for ( vector<string>::const_iterator i( p.begin() ), e( p.end() );
 	    i != e; ++i )
 	{
-	  if ( i->size() > 2 && (*i)[0] == '<' && (*i)[ i->size()-1 ] == '>' )
+	  int score( 1 );
+	  string pattern( *i );
+	  if ( pattern.size() > 2 && isdigit( pattern[0] ) )
 	    {
-	      string n( i->substr( 1, i->size()-2 ) );
+	      for ( int j = 0; j < pattern.size(); ++j )
+		if ( pattern[j] == ':' )
+		  {
+		    score = atoi( pattern.c_str() );
+		    pattern = pattern.substr(j+1);
+		    break;
+		  }
+		else if ( !isdigit( pattern[j] ) )
+		  break;
+	    }
+
+	  if ( pattern.size() > 2 
+	       && pattern[0] == '<' && pattern[ pattern.size()-1 ] == '>' )
+	    {
+	      string n( pattern.substr( 1, pattern.size()-2 ) );
 
 	      if ( n == "queens" )
 		mu.push_back
-		  ( music_details( row::queens( bells ).print() ) );
+		  ( music_details( row::queens( bells ).print(), score ) );
 
 	      else if ( n == "kings" )
 		mu.push_back
-		  ( music_details( row::kings( bells ).print() ) );
+		  ( music_details( row::kings( bells ).print(), score ) );
 
 	      else if ( n == "tittums" )
 		mu.push_back
-		  ( music_details( row::tittums( bells ).print() ) );
+		  ( music_details( row::tittums( bells ).print(), score ) );
 
 
 	      else if ( n == "reverse-rounds" )
 		mu.push_back
-		  ( music_details( row::reverse_rounds( bells ).print() ) );
+		  ( music_details( row::reverse_rounds( bells ).print(), 
+				   score ) );
 
 	      else if ( n == "CRUs" )
-		init_crus();
+		init_crus( score );
 	      
 	      else if ( n.length() > 11 && n.substr(0,6) == "front-" 
 			&& n.find("-runs") != string::npos )
@@ -235,7 +252,7 @@ musical_analysis::analyser::analyser( int bells )
 		      exit(1);
 		    }
 
-		  init_front_n_runs( l );
+		  init_front_n_runs( l, score );
 		}
 
 	      else if ( n.length() > 10 && n.substr(0,5) == "back-" 
@@ -249,7 +266,7 @@ musical_analysis::analyser::analyser( int bells )
 		      exit(1);
 		    }
 
-		  init_back_n_runs( l );
+		  init_back_n_runs( l, score );
 		}
 
 	      else if ( n.length() > 5 && n.find("-runs") != string::npos )
@@ -262,7 +279,7 @@ musical_analysis::analyser::analyser( int bells )
 		      exit(1);
 		    }
 
-		  init_n_runs( l );
+		  init_n_runs( l, score );
 		}
 
 	      else 
@@ -273,7 +290,7 @@ musical_analysis::analyser::analyser( int bells )
 	    }
 	  else
 	    {
-	      mu.push_back( music_details( *i ) );
+	      mu.push_back( music_details( pattern, score ) );
 	    }
 	}
     }

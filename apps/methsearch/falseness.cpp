@@ -67,11 +67,11 @@ class falseness_analysis
 {
 private:
   friend bool might_support_extent( const method &m );
+  friend bool might_support_positive_extent( const method &m );
 
-  falseness_analysis( const method &m )
-    : ft(m) 
+  falseness_analysis( const method &m, bool in_course_only )
+    : ft(m, in_course_only ? falseness_table::in_course_only : 0) 
   {    
-    assert( m.isplain() ); 
   }
   
   bool recurse( const row &r, int sign )
@@ -101,9 +101,15 @@ private:
   map< row, int > signs;
 };
 
+bool might_support_positive_extent( const method &m )
+{
+  return falseness_analysis(m, true).recurse( row( m.bells() ), +1 ); 
+}
+
 bool might_support_extent( const method &m )
 {
-  return falseness_analysis(m).recurse( row( m.bells() ), +1 ); 
+  assert( m.isplain() ); 
+  return falseness_analysis(m, false).recurse( row( m.bells() ), +1 ); 
 }
 
 bool is_cps( const method &m )

@@ -224,6 +224,9 @@ void searcher::maybe_found_method()
   if ( args.true_extent && !might_support_extent(m) )
     return;
 
+  if ( args.true_positive_extent && !might_support_positive_extent(m) )
+    return;
+
   if ( !args.require_expr.null() && !args.require_expr.b_evaluate(m) )
     return;
 

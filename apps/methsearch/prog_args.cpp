@@ -65,6 +65,11 @@ bool falseness_opt::process( const string &arg, const arg_parser & ) const
       args.true_trivial = args.true_half_lead 
 	= args.true_lead = args.true_extent = true;
     }
+  else if ( arg == "e+" || arg == "positive-extent" )
+    {
+      args.true_trivial = args.true_half_lead 
+	= args.true_lead = args.true_positive_extent = true;
+    }
   else if ( arg == "c" || arg == "course" )
     {
       args.true_trivial = args.true_half_lead 

@@ -85,6 +85,7 @@ struct arguments
   init_val<bool,true>  true_lead;
   init_val<bool,false> true_course;
   init_val<bool,false> true_extent;
+  init_val<bool,false> true_positive_extent;
 
   init_val<bool,false> require_CPS;
 
