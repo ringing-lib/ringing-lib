@@ -144,7 +144,6 @@ public:
 
     stack<place> trail;
     vector<change>::const_iterator ch;
-    touch_node dummy_node;
 
     touch_node& current_node() {
       return *((*(trail.top().curr)).second);
@@ -154,7 +153,7 @@ public:
 
   public:
     iterator() {}
-    iterator(const touch& t);
+    iterator(const touch_node& root);
     iterator& operator++();
     iterator operator++(int) {
       iterator i = *this; ++(*this); return i;
@@ -169,7 +168,7 @@ public:
     }
   };
 
-  iterator begin() { return iterator(*this); }
+  iterator begin() { return iterator(*root()); }
   iterator end() { return iterator(); }
 
 };

@@ -17,12 +17,18 @@
 
 // $Id$
 
+#if RINGING_OLD_INCLUDES
 #include <iostream.h>
+#else
+#include <iostream>
+#endif
 #include <ringing/method.h>
 #include <ringing/print.h>
 #include <ringing/print_ps.h>
 
+#if RINGING_USE_NAMESPACES
 using namespace ringing;
+#endif
 
 int main() {
   method m("&-5-4.5-5.36.4-4.5-4-1,1",8,"Bristol");
@@ -54,4 +60,6 @@ int main() {
       b[0] = b[b.size() - 1]; b.recalculate();
     }
   }
+
+  return 0;
 }

@@ -1,0 +1,440 @@
+#!/usr/bin/perl 
+#
+# mkdsp - makes a Visual Studio workspace from Makefile.am
+#
+# Copyright (C) 2001, Richard Smith <richard@ex-parrot.com>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+# $Id$
+#
+#
+# INSTRUCTIONS: 
+#
+#   cd into the root directory of the package and run this script.
+#                  
+
+
+
+# Enable msvc-6 specific extentions?
+# (Note: this will not prevent it compilation in msvc-5.)
+my $assume_msvc6 = 1;
+
+sub dsw_head()
+{
+    return <<EOF
+Microsoft Developer Studio Workspace File, Format Version 6.00
+# WARNING: DO NOT EDIT OR DELETE THIS WORKSPACE FILE!
+	    
+###############################################################################
+
+EOF
+}
+
+sub dsw_proj($@)
+{
+    my ($name, @deps) = @_;
+
+    my $out = <<EOF;
+Project: "$name"=".\\$name.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+EOF
+
+    if (scalar @deps) 
+    {
+	$out .= "    Begin Project Dependency\n";
+	for (@deps) { $out .= "    Project_Dep_Name $_\n" }
+	$out .= "    End Project Dependency\n";
+    }
+
+    $out .= <<EOF;
+}}}
+
+###############################################################################
+
+EOF
+
+    return $out;
+}
+
+sub dsw_global()
+{
+    return <<EOF;
+
+Global:
+
+Package=<5>
+{{{
+}}}
+
+Package=<3>
+{{{
+}}}
+
+###############################################################################
+EOF
+}
+
+sub dsp_not_a_makefile($)
+{
+    my ($name) = @_;
+
+    return <<EOF;
+EOF
+}
+
+sub dsp_head($$$)
+{
+    my ($name, $includes, $type) = @_;
+
+    my %proj_type = (
+        dll  => "Win32 (x86) Dynamic-Link Library",
+        prog => "Win32 (x86) Console Application",
+	lib  => "Win32 (x86) Static Library",
+    );
+
+    my %proj_num = (
+        dll  => "0x0102",
+        prog => "0x0103",
+	lib  => "0x0104",
+    );
+
+    my %cxx_flags = (
+        dll  => "/MT /D \"_USRDLL\" /D \"_WINDOWS\"",
+	prog => "/D \"_CONSOLE\"",
+        lib  => "/D \"_WINDOWS\"",
+    );
+
+    my %dbg_cxx_flags = (
+        dll  => "/MTd /D \"_USRDLL\" /D \"_WINDOWS\"",
+	prog => "/D \"_CONSOLE\"",
+	lib  => "/D \"_WINDOWS\"",
+    );
+
+    my $cxx_flags = "/W3 /GX /O2 /YX /FD";
+    my $dbg_cxx_flags = "/W3 /Gm /GX /Od /YX /FD";
+
+    $dbg_cxx_flags .= " /ZI /GZ" if $assume_msvc6;
+
+    my $libs = 
+	"kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib ".
+	"advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib ".
+	"odbc32.lib odbccp32.lib";
+
+    my %ld_flags = (
+	dll  => "$libs /subsystem:windows /dll",
+	prog => "$libs /subsystem:console",
+	lib  => "/subsystem:windows /lib",
+    );
+
+    my $dirs = <<EOF;
+# PROP BASE Use_MFC 0
+# PROP BASE Output_Dir "\@\@\@BUILDTYPE\@\@\@"
+# PROP BASE Intermediate_Dir "\@\@\@BUILDTYPE\@\@\@"
+# PROP BASE Target_Dir ""
+# PROP Use_MFC 0
+# PROP Output_Dir "\@\@\@BUILDTYPE\@\@\@"
+# PROP Intermediate_Dir "\@\@\@BUILDTYPE\@\@\@"
+# PROP Target_Dir ""
+EOF
+    
+    (my $debug_dirs = $dirs) =~ s/\@\@\@BUILDTYPE\@\@\@/Debug/g;
+    (my $release_dirs = $dirs) =~ s/\@\@\@BUILDTYPE\@\@\@/Release/g;
+    
+
+    return <<EOF;
+# Microsoft Developer Studio Project File - Name="$name" - Package Owner=<4>
+# Microsoft Developer Studio Generated Build File, Format Version 6.00
+# ** DO NOT EDIT **
+
+# TARGTYPE "$proj_type{$type}" $proj_num{$type}
+
+CFG=$name - Win32 Debug
+!MESSAGE This is not a valid makefile. To build this project using NMAKE,
+!MESSAGE use the Export Makefile command and run
+!MESSAGE
+!MESSAGE NMAKE /f "$name.mak".
+!MESSAGE
+!MESSAGE You can specify a configuration when running NMAKE
+!MESSAGE by defining the macro CFG on the command line. For example:
+!MESSAGE
+!MESSAGE NMAKE /f "$name.mak" CFG="$name - Win32 Debug"
+!MESSAGE
+!MESSAGE Possible choices for configuration are:
+!MESSAGE
+!MESSAGE "$name - Win32 Release" (based on "$proj_type{$type}")
+!MESSAGE "$name - Win32 Debug" (based on "$proj_type{$type}")
+!MESSAGE
+
+# Begin Project
+# PROP AllowPerConfigDependencies 0
+# PROP Scc_ProjName ""
+# PROP Scc_LocalPath ""
+CPP=cl.exe
+BSC32=bscmake.exe
+LINK32=link.exe
+
+!IF  "\$(CFG)" == "$name - Win32 Release"
+
+# PROP BASE Use_Debug_Libraries 0
+# PROP Use_Debug_Libraries 0
+$release_dirs
+# ADD BASE CPP /nologo $cxx_flags /D "WIN32" /D "NDEBUG" /D "_MBCS" /YX /FD /c $cxx_flags{$type} $includes
+# ADD CPP /nologo $cxx_flags /D "WIN32" /D "NDEBUG" /D "_MBCS" /c $cxx_flags{$type} $includes
+# ADD BASE BSC32 /nologo
+# ADD BSC32 /nologo 
+# ADD BASE LINK32 /nologo $ld_flags{$type} /machine:I386
+# ADD LINK32 /nologo $ld_flags{$type} /incremental:yes /machine:I386
+
+!ELSEIF  "\$(CFG)" == "$name - Win32 Debug"
+
+# PROP BASE Use_Debug_Libraries 1
+# PROP Use_Debug_Libraries 1
+$debug_dirs
+# ADD BASE CPP /nologo $dbg_cxx_flags /D "WIN32" /D "_DEBUG" /D "_MBCS" $dbg_cxx_flags{$type} /c $includes
+# ADD CPP /nologo $dbg_cxx_flags /D "WIN32" /D "_DEBUG" /D "_MBCS" $dbg_cxx_flags{$type} /c $includes
+# ADD BASE BSC32 /nologo
+# ADD BSC32 /nologo
+# ADD BASE LINK32 /nologo $ld_flags{$type} /debug /machine:I386 /pdbtype:sept
+# ADD LINK32 /nologo $ld_flags{$type} /debug /machine:I386 /pdbtype:sept
+
+!ENDIF
+
+# Begin Target
+
+# Name "$name - Win32 Release"
+# Name "$name - Win32 Debug"
+
+
+EOF
+}
+
+# @_ includes path (e.g .\foo\bar\baz.cpp
+sub dsp_files(@)
+{
+    my $out;
+
+    for (@_)
+    {
+	s!/!\\!g;
+	$out .=  <<EOF;
+# Begin Source File
+
+SOURCE =$_
+# End Source File
+EOF
+    }
+
+    return $out;
+}
+
+sub dsp_end()
+{
+    return <<EOF;
+# End Target
+# End Project
+EOF
+}
+
+
+my %progs;
+
+sub safe_push($$@)
+{
+    my ($vptr, $elem, @vals) = @_;
+    $vptr->{$elem} = [] if not defined $vptr->{$elem};
+    push @{$vptr->{$elem}}, @vals;
+}
+
+my %actions = (
+
+   SOURCES => sub
+   {
+       my ($vptr, $val, $path) = @_;
+       my @files = split /[ \t]+/, $val;
+       for (0..$#files) { $files[$_] = $path."/".$files[$_]; }
+       safe_push $vptr, SOURCES, @files;
+   },
+
+   INCLUDES => sub
+   {
+       my ($vptr, $val, $path) = @_;
+       
+       for (split /[ \t]_+/, $val) 
+       {
+	   if (/^\-I/) 
+	   {
+	       s!^-I(.*)$!/I "$1"!;
+	       s/\$\(top_srcdir\)/\./;
+	       safe_push $vptr, INCLUDES, $_;
+	   }
+       }
+   },
+
+   LDADD => sub
+   {
+       my ($vptr, $val, $path) = @_;
+
+       for (split /[ \t]_+/, $val)
+       {
+	   if (/\$\(top_builddir\)\/.*\/(?:lib)?(.*)\.a/)
+	   {
+	       safe_push $vptr, LIBDEPS, $1;
+	   }
+       }
+   },
+);
+
+
+sub filter_deps(@)
+{
+    my @deps;
+	
+    for my $d (@_)
+    {
+	push @deps, $d if defined $progs{$d};
+    }
+
+    return @deps;
+}
+
+sub process_makefile($)
+{
+    my ($path) = @_;
+
+    open FILE, "<$path/Makefile.am" or return;
+
+    my (%file_globals, @file_progs);
+
+    while (<FILE>)
+    {
+	chomp; while (/\\$/) { s/\\$//; $_ .= <FILE>; chomp;}
+
+	if (/^\s*([A-Za-z0-9_]+)\s*=\s*(.*)$/)
+	{
+	    my ($var, $val) = ($1, $2);
+
+	    if ($var eq "SUBDIRS")
+	    {
+		for my $dir (split /[ \t]+/, $val)
+		{
+		    process_makefile("$path/$dir");
+		}
+	    }
+	    elsif ($var =~ /PROGRAMS$/)
+	    {
+		for my $p (split /[ \t+]+/, $val)
+		{
+		    $p =~ s/\./_/g;
+		    push @file_progs, $progs{$p} = {type => 'prog'};
+		}
+	    }
+	    elsif ($var =~ /LIBRARIES$/)
+	    {
+		for my $p (split /[ \t+]+/, $val)
+		{
+		    $p =~ s/\./_/g;
+		    $p =~ s/^lib//;
+		    $p =~ s/_a$//;
+		    push @file_progs, $progs{$p} = {type => 'lib'};
+		}
+	    }
+	    else
+	    {
+		for $act (keys %actions)
+		{
+		    if ($var =~ /^(?:lib)?([a-zA-Z0-9_]+?)(?:_a)?_$act$/)
+		    {
+			(my $p = $1) =~ s/\./_/g;
+			$actions{$act}->($progs{$p}, $val, $path);
+			last;
+		    }
+		    elsif ($var eq $act)
+		    {
+			$file_globals{$var} = $val;
+			last;
+		    }
+		}
+	    }
+	}
+    }
+
+    close FILE;
+
+    for $p (@file_progs)
+    {
+	for $act (keys %actions)
+	{
+	    if (defined $file_globals{$act})
+	    {
+		$actions{$act}->($p, $file_globals{$act}, $path);
+	    }
+	}
+    }
+}
+
+sub make_dsps
+{
+    my $dsw;
+
+    $dsw .= dsw_head();
+
+    for my $p (keys %progs)
+    {
+	my $name = $p;
+	my $dsp;
+
+	$dsp .= dsp_head($name, join(' ',@{$progs{$p}->{INCLUDES}}),
+			 $progs{$p}->{type});
+
+	$dsw .= dsw_proj($name, filter_deps(@{$progs{$p}->{LIBDEPS}}));
+	$dsp .= dsp_files @{$progs{$p}->{SOURCES}};
+	$dsp .= dsp_end;
+
+	open DSP, ">$name.dsp"
+	    or die "Unable to open $name.dsp for writing";
+
+	$dsp =~ s/\n/\r\n/mg;
+
+	print DSP $dsp;
+
+	close DSP;
+    }
+
+    $dsw .= dsw_global();
+
+    my $dsw_name = `pwd`; 
+    chomp $dsw_name;
+    $dsw_name =~ s!^.*/([^/]+)$!$1!;
+    $dsw_name =~ s/-\d+(\.\d+)*$//;
+
+    open DSW, ">$dsw_name.dsw"
+	or die "Unable to open $name.dsw for writing";
+    
+    $dsw =~ s/\n/\r\n/mg;
+    
+    print DSW $dsw;
+    
+    close DSW;
+}
+
+process_makefile(".");
+make_dsps

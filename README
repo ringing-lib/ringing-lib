@@ -31,7 +31,9 @@ need to be customised.  After customisation, you should be able to compile
 all the files in the `ringing' directory into a library.  You should then
 install all the header files in that directory to somewhere where your C++
 compiler will find them (as #include <ringing/row.h> etc.)
-
+  If you are using Microsoft Visual Studio, a workspace file (ringing-lib.dsw)
+is provided.  This contains project files to build the ringing class library 
+itself as well as the example programs.  
 
 Using the library
 -----------------

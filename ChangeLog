@@ -1,3 +1,17 @@
+2001-11-08 02:03  ras52
+
+	* README, mkdsp, Makefile.am: Automatically generated msvc 
+	project / workspace files.
+
+	* examples/testbase.cpp, examples/testprint.cpp: msvc-5 compatibility
+	bug fixes.
+
+	* ringing/row.cpp, ringing/row.h: row::row(const char *) now checks 
+	row's validity and throws row::invalid; row::row(int) now defaults to 
+	rounds; minor bug fix in interpret_pn.
+
+	* ringing/touch.h, ringing/touch.cpp: minor bug fix in touch::iterator
+	
 2001-10-30 21:52  mjb47
 
 	* NEWS, config.h.in, configure.in, ringing/common.h.in: Prepare for

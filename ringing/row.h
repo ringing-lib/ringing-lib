@@ -31,12 +31,14 @@
 #include <iterator.h>
 #include <list.h>
 #include <algorithm.h>
+#include <stdexcept.h>
 #else
 #include <iostream>
 #include <vector>
 #include <iterator>
 #include <list>
 #include <algorithm>
+#include <stdexcept>
 #endif
 #if RINGING_OLD_C_INCLUDES
 #include <ctype.h>
@@ -162,7 +164,7 @@ void interpret_pn(int num, ForwardIterator i, ForwardIterator finish,
       }
       while(i != finish && *i == '.') ++i;
       // Skip any other rubbish
-      while(i != finish && !(isalnum(*i) || *i == '&' || *i == '-' || *i == '.')) ++i;
+      while(i != finish && !(isalnum(*i) || *i == '&' || *i == '-' || *i == '.' || *i == ',')) ++i;
     }
     // Now output the block
     copy(block.begin(), block.end(), out);
@@ -180,7 +182,7 @@ private:
 
 public:
   row() {}
-  explicit row(int num) : data(num) {}	// Construct an empty row
+  explicit row(int num);	// Construct rounds on n bells
   row(const char *s);			// Construct a row from a string
   // Use default copy constructor and copy assignment
 
@@ -202,7 +204,7 @@ public:
   string print() const;
   int bells(void) const { return data.size(); } // How many bells?
   row& rounds(void);		// Set it to rounds
-  static row rounds(int n);	// Return rounds on n bells
+  static row rounds(int n) { return row(n); }	// Return rounds on n bells
   static row pblh(int n, int h=1); // Return first plain bob lead head on 
                                 // n bells with h hunt bells
   int isrounds(void) const;	// Is it rounds?
@@ -212,6 +214,10 @@ public:
   int order(void) const;	    // Return the order
   friend ostream& operator<<(ostream&, const row&);
   void swap(row &other) { data.swap(other.data); }
+  
+  struct invalid : public invalid_argument {
+    invalid();
+  };
 
   // So that we can put rows in containers
   bool operator<(const row& r) const { return data < r.data; }

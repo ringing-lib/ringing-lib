@@ -28,11 +28,9 @@ RINGING_START_NAMESPACE
 
 RINGING_USING_STD
 
-touch::iterator::iterator(const touch& t)
+touch::iterator::iterator(const touch_node& root)
 {
-  dummy_node.children.push_back(pair<int, touch_node *>
-				(1, const_cast<touch&>(t).root()));
-  trail.push(place(dummy_node));
+  trail.push(place(root));
   ch = current_node().changes.begin();
   while(!trail.empty() && ch == current_node().changes.end())
     next_node();

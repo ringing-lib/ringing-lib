@@ -3,6 +3,7 @@
 SUBDIRS = ringing doc examples
 
 MAINTAINERCLEANFILES = Makefile.in configure aclocal.m4
+EXTRA_DIST = mkdsp
 
 auxdir			= @ac_aux_dir@
 AUX_DIST		= $(auxdir)/install-sh $(auxdir)/missing \
@@ -12,6 +13,7 @@ dist-hook:
 	for file in $(AUX_DIST); do \
 	  cp $$file $(distdir)/$$file; \
 	done
+	cd $(distdir) && ./mkdsp 
 
 docdir = $(top_builddir)/doc
 html:

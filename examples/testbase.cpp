@@ -17,15 +17,21 @@
 
 // $Id$
 
+#if RINGING_OLD_INCLUDES
 #include <iostream.h>
+#else
+#include <iostream>
+#endif
 #include <ringing/method.h>
 #include <ringing/mslib.h>
 
+#if RINGING_USE_NAMESPACES
 using namespace ringing;
+#endif
 
 libtype* library::libtypes[] = { &mslib::type };
 
-int print_row_block(const row_block& b)
+void print_row_block(const row_block& b)
 {
   cout << "\t" << b[0] << " " 
        << ((b[0].sign() < 0) ? '-' : '+') << " " << endl;

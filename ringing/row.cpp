@@ -223,19 +223,40 @@ bell& operator*=(bell& b, const change& c)
 // *                    Functions for class row                        *
 // *********************************************************************
 
+// Return rounds on n bells
+row::row(int num)
+  : data(num)
+{
+  rounds();
+}
+ 
 // Construct a row from a string
 row::row(const char *s)
+  : data(strlen(s))
 {
-  *this = s;
+  for(const char *t = s; *t != '\0'; t++)
+    data[t - s].from_char(*t);
+  vector<bell>::const_iterator b(data.begin()), e(data.end());
+#if RINGING_USE_EXCEPTIONS
+  vector<bool> found(bells());
+  int i;
+  for(i=0; i<bells(); ++i) found[i] = false;
+  for(i=0; i<bells(); ++i) 
+    if (found[data[i]])
+      throw invalid();
+    else
+      found[data[i]] = true;
+#endif
 }
+
+row::invalid::invalid()
+  : invalid_argument("The row supplied was invalid")
+{}
 
 // Assign a string value to a row
 row& row::operator=(const char *s)
 {
-  data = vector<bell>(strlen(s));
-  const char *t;
-  for(t = s; *t != '\0'; t++)
-    data[t - s].from_char(*t);
+  row(s).swap(*this);
   return *this;
 }
 
@@ -352,14 +373,6 @@ row& row::rounds(void)
   for(int i = 0; i < bells(); i++)
     data[i] = i;
   return *this;
-}
-
-// Return rounds on n bells
-row row::rounds(int n)
-{
-  row r(n);
-  r.rounds();
-  return r;
 }
 
 // Return 1st plain bob lead head on n bells
