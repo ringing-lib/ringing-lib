@@ -182,7 +182,9 @@ int main()
 	cout << "\nPlease enter a method name: ";
 	getline(cin, methname);
 
+#if RINGING_USE_EXCEPTIONS
 	try
+#endif
 	  {
 	    method m(l.load(trim_whitespace( methname ).c_str()));
 	    
@@ -197,15 +199,19 @@ int main()
 		 << ".\n";
 	    cout << "Lead head code: " << m.lhcode() << endl;
 	  }
+#if RINGING_USE_EXCEPTIONS
 	catch (exception &e)
 	  {
 	    cerr << "Error cannot load method: " << e.what() << endl;
 	  }
+#endif
 
 	cout << "Please enter another method name: ";
 	getline(cin, methname);
 
+#if RINGING_USE_EXCEPTIONS
 	try
+#endif
 	  {
 	    method m(l.load(trim_whitespace( methname ).c_str()));
 	    
@@ -220,10 +226,12 @@ int main()
 		 << ".\n";
 	    cout << "Lead head code: " << m.lhcode() << endl;
 	  }
+#if RINGING_USE_EXCEPTIONS
 	catch (exception &e)
 	  {
 	    cerr << "Error cannot load method: " << e.what() << endl;
 	  }
+#endif
       }
   }
     

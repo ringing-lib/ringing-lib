@@ -127,8 +127,11 @@ int main()
 
     touch.push_back(2, &whw);
     touch.push_back(1, &whwsh);
-    
-    try {
+
+#if RINGING_USE_EXCEPTIONS
+    try 
+#endif
+    {
       touch_node::const_iterator i;
       vector<row> pbminor;
       row r(6); r.rounds();
@@ -178,9 +181,11 @@ int main()
 
       cout << p << endl;
     }
+#if RINGING_USE_EXCEPTIONS
     catch(exception& e) {
       cout << "Exception caught: " << e.what() << endl;
     }
+#endif
 
   }
   return 0;

@@ -88,7 +88,10 @@ int main()
 
   cout << "This should be 2*WH of Plain Bob Minor:\n";
 
-  try {
+#if RINGING_USE_EXCEPTIONS
+  try 
+#endif
+  {
     touch_node::const_iterator i;
     row r(6); r.rounds(); cout << r << endl;
     for(i = t.begin(); i != t.end(); ++i) {
@@ -96,9 +99,11 @@ int main()
       cout << r << " " << *i << endl;
     }
   }
+#if RINGING_USE_EXCEPTIONS
   catch(exception& e) {
     cout << "Exception caught: " << e.what() << endl;
   }
+#endif
 
   {
     touch t2 = make_touch();

@@ -526,7 +526,10 @@ int main(int argc, char *argv[])
 
   method m;
 
-  try {
+#if RINGING_USE_EXCEPTIONS
+  try 
+#endif
+  {
     if(!args.method_name.empty()) {
       // Load the method
       mslib::registerlib();
@@ -671,9 +674,11 @@ int main(int argc, char *argv[])
     pm.print(*pp);
     delete pp;
   }
+#if RINGING_USE_EXCEPTIONS
   catch(exception& e) {
     cerr << argv[0] << ": " << e.what() << endl;
     return 1;
   }
+#endif
   return 0;
 }

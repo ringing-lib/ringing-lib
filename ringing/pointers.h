@@ -135,8 +135,12 @@ public:
   explicit shared_pointer( T *src = 0 ) 
     : ptr( src )
   { 
+# if RINGING_USE_EXCEPTIONS
     try { rc = new int(1); } 
     catch (...) { delete ptr; throw; } 
+# else
+    rc = new int(1);
+# endif
   }
  ~shared_pointer() { if ( !--*rc ) { delete ptr; delete rc; } }
   
@@ -154,8 +158,12 @@ public:
   { 
     if ( ptr == src ) return;
     else if ( !--*rc ) { delete ptr; }
-    else try { rc = new int; } 
+# if RINGING_USE_EXCEPTIONS
+    else try { rc = new int(0); } 
     catch (...) { ++*rc; delete src; throw; } 
+# else
+    else rc = new int(0); 
+# endif
     *rc = 1;
     ptr = src;
   }
