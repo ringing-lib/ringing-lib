@@ -26,61 +26,20 @@
 #pragma interface
 #endif
 
-#include <ringing/library.h>
-#include <ringing/pointers.h>
+#include <ringing/libout.h>
 #include <string>
 
 RINGING_START_NAMESPACE
 
 RINGING_USING_STD
 
-class xmlout {
+class RINGING_API xmlout : public libout {
 public:
-  xmlout( const string& filename );
-
-  class iterator;
-
-  iterator begin();
-  iterator end();
-  
-  void flush();
+  explicit xmlout( const string& filename );
 
 private:
-  xmlout( const xmlout& ); // Unimplemented
-  xmlout& operator=( const xmlout& ); // Unimplemented
-
-  friend class iterator;
-
-  // Data members
   class impl;
-  scoped_pointer<impl> pimpl;
 };
-
-class xmlout::iterator {
-public:
-  iterator() : pimpl(NULL) {}
-  
-  iterator& operator++() { return *this; }
-  iterator operator++(int) { return *this; }
-  iterator& operator*() { return *this; }
-
-  void operator=( library_entry const& entry );
-    
-private:
-  friend class xmlout;
-  iterator( xmlout::impl* p ) : pimpl(p) {}
-
-  // Data members
-  impl* pimpl;
-};
-
-inline xmlout::iterator xmlout::begin() {
-  return iterator( pimpl.get() );
-}
-
-inline xmlout::iterator xmlout::end() {
-  return iterator();
-}
 
 RINGING_END_NAMESPACE
 

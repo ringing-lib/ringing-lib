@@ -83,13 +83,13 @@ bool init_xerces() {
 RINGING_END_ANON_NAMESPACE
 
 
-class xmlout::impl {
+class xmlout::impl : public libout::interface {
 public:
   impl( const string& filename );
  ~impl();
   
-  void append( library_entry const& entry );
-  void flush();
+  virtual void append( library_entry const& entry );
+  virtual void flush();
 
 private:
   // XML helper functions
@@ -262,31 +262,18 @@ void xmlout::impl::append( library_entry const& entry )
 }
 
 xmlout::xmlout( const string& filename )
-  : pimpl( new impl(filename) )
+  : libout( new impl(filename) )
 {}
-
-void xmlout::iterator::operator=( library_entry const& entry ) {
-  pimpl->append( entry );
-}
-
-void xmlout::flush()
-{
-  pimpl->flush();
-}
 
 
 #else // Stub code if were not using xerces
 
-class xmlout::impl {};
+class xmlout::impl : public libout::interface {};
 
 xmlout::xmlout( const string& )
 {
   throw runtime_error( "XML libraries not supported in this build" );
 }
-
-void xmlout::iterator::operator=( library_entry const& entry ) {}
-
-void xmlout::impl::flush() {}
 
 #endif // RINGING_USE_XERCES
 

@@ -108,6 +108,7 @@ public:
     virtual string base_name() const = 0;
     virtual string pn() const = 0;
     virtual int bells() const = 0;
+    virtual method meth() const;
     
     virtual bool readentry( library_base &lb ) = 0;
 
@@ -123,7 +124,7 @@ public:
   string base_name() const { return pimpl->base_name(); }
   string pn() const        { return pimpl->pn(); }
   int bells() const        { return pimpl->bells(); }
-  method meth() const      { return method( pn(), bells(), base_name() ); }
+  method meth() const      { return pimpl->meth(); }
 
   // Get an extended property of the method 
   template <class Facet>
@@ -140,9 +141,19 @@ public:
     return pimpl->has_facet( Facet::id );
   }
 
+  library_entry( impl *pimpl ) : pimpl(pimpl) {}
+
+protected:
+  template <class ImplType> ImplType* get_impl( ImplType* = 0 ) {
+    return static_cast<ImplType*>(pimpl.get()); 
+  }
+
+  template <class ImplType> ImplType const* get_impl( ImplType* = 0 ) const { 
+    return static_cast<ImplType const*>(pimpl.get()); 
+  }
+
 private:
   friend class library_base::const_iterator;
-  library_entry( impl *pimpl ) : pimpl(pimpl) {}
 
   cow_pointer< impl > pimpl;
 };

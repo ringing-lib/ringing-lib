@@ -127,6 +127,11 @@ method library_base::load(const string& name, int stage) const
   return method( 0, 0, "Not Found" );
 }
 
+method library_entry::impl::meth() const
+{
+  return method( pn(), bells(), base_name() );
+}
+
 shared_pointer< library_facet_base > 
 library_entry::impl::get_facet( const library_facet_id& id ) const
 {
