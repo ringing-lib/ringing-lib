@@ -56,6 +56,35 @@ int cclib::extractNumber(const string &filename)
   return atoi(s);
 }
 
+string cclib::simple_name(const string &original)
+{
+  string newname(original);
+  string::size_type pos = 0;
+
+  // Erase sections of the string that contain a classname.
+  for (int i = 2; i < 11; i++)
+    {
+      if ((pos = newname.find(method::classname(i))) != string::npos)
+	{
+	  newname.erase(pos, strlen(method::classname(i)));
+	}
+    }
+  // Do the same for little - but only find the last
+  if ((pos = newname.rfind(method::txt_little)) != string::npos)
+    {
+      newname.erase(pos, strlen(method::txt_little));
+    }
+
+  // Now remove space on end of line.
+  string::const_iterator j = newname.end();
+  while ((j >= newname.begin()) && (isspace(*(j - 1))))
+    {
+      j--;
+    }
+
+  return newname.substr(0, j - newname.begin());
+}
+
 cclib::cclib(const string& name) : f(name.c_str()), wr(0), _good(0)
 {
   // Open file. Not going to bother to see if it's writeable as the
@@ -130,7 +159,14 @@ int cclib::dir(list<string>& result)
 
             if ((line.length() > meth_name_ends) && (atoi(startof.c_str()) != 0))
               {
-                result.push_back(line.substr(meth_name_starts, meth_name_ends - meth_name_starts));
+		// Remove spaces from end of line
+		string thename = line.substr(meth_name_starts, meth_name_ends - meth_name_starts);
+		string::const_iterator j = thename.end();
+		while ((j >= thename.begin()) && (isspace(*(j - 1))))
+		  {
+		    j--;
+		  }
+                result.push_back(thename.substr(0, j - thename.begin()));
               }
           }
       }
@@ -224,7 +260,7 @@ method cclib::load(const char *name)
 			pn.append(linebuf.substr(meth_hl, meth_le - meth_hl));
 
 			// Now create the method
-			method m(pn, b, methodname);
+			method m(pn, b, simple_name(methodname));
 			// Strip any whitespace
 			string ch(linebuf, meth_le, meth_lh - meth_le);
 			string::const_iterator i = ch.begin();
@@ -247,7 +283,7 @@ method cclib::load(const char *name)
 		        pn.append(linebuf.substr(meth_name_ends, meth_lh - meth_name_ends));
 
 			// Create the method
-			method m(pn, b, methodname);
+			method m(pn, b, simple_name(methodname));
 
 			// Now remove the last change
 			m.pop_back();
@@ -261,7 +297,7 @@ method cclib::load(const char *name)
 			pn.append(linebuf.substr(meth_name_ends, meth_lh - meth_name_ends));
 
 			// Create the method and return it.
-			method m(pn, b, methodname);
+			method m(pn, b, simple_name(methodname));
 			return m;
 		      }
 		  }

@@ -161,8 +161,7 @@ int main()
 	  {
 	    method m(l.load(methname.c_str()));
 	    
-	    char s[80];
-	    cout << m.fullname(s) << endl;
+	    cout << m.fullname() << endl;
 	    
 	    print_row_block((row_block)m);
 	    
@@ -185,8 +184,7 @@ int main()
 	  {
 	    method m(l.load(methname.c_str()));
 	    
-	    char s[80];
-	    cout << m.fullname(s) << endl;
+	    cout << m.fullname() << endl;
 	    
 	    print_row_block((row_block)m);
 	    

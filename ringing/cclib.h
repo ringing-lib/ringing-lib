@@ -56,6 +56,8 @@ private:
   // Extracts the number of bells from the filename.
   static int extractNumber(const string&);
 
+  string simple_name(const string&);
+
 public:
   static void registerlib(void) {
     library::addtype(&type);
