@@ -54,6 +54,8 @@ versions.
 * The STL::                     A word about the Standard Template Library
 * Rows and Changes::            Classes for manipulating rows and changes  
 * Methods::                     
+* Proof::                       Proving Methods and Touches True
+* Musical Analysis::            Performing Musical Analysis of Touches
 * Method classification::       
 * Index::                       
 
@@ -97,6 +99,22 @@ The @code{row_block} class
 * row_block Derivation::        
 * row_block Constructors::      
 * Other row_block Functions::   
+
+The @code{proof} class
+
+* proof Derivation::
+* proof Constructors::
+* proof Functions::
+* proof Operators::             
+* Falseness Storage::           
+* How Proof Works::             
+
+The @code{music} class
+
+* music Derivation::            
+* music Constructors::          
+* music Functions::             
+* music Operators::             
 
 @end detailmenu
 @end menu
@@ -702,7 +720,7 @@ This returns the @code{changes} object on which the row block is based.
 @end iftex
 
 
-@node Methods, Method classification, Rows and Changes, Top
+@node Methods, Proof, Rows and Changes, Top
 @chapter Method classes
 
 The Method Class Library provides many useful functions for dealing with
@@ -721,12 +739,304 @@ a large range of member functions.  Many of these are used for finding
 out things about the method, such as the number of leads in the plain course,
 the type of method, the full name and so on. 
 
-@node Method classification, Index, Methods, Top
+@node Proof, Musical Analysis, Methods, Top
+@chapter Method and Touch Proving
+@cindex proving rows
+@cindex proof class
+
+The proof class provides a simple way of checking that a block of rows are true. It provides functions for finding out where a particular block has failed. Additionally, it will can check blocks that are more than one extent long.
+
+It is a template class, defined as @code{template <class RowIterator> class proof;}. You can therefore decide on your own block of rows format, as long as you can provide an iterator (see the STL) for it.
+
+It will check ALL rows given, therefore if rounds are at the start and end, then one of them should be removed before passing to the object.
+
+The proof class only stores the results, it does not make a copy of the actual rows. However, pointers to false rows will be stored, so don't destroy your rows before getting all the proof results. This may be changed in a later release.
+
+@menu
+* proof Derivation::            
+* proof Constructors::          
+* proof Functions::             
+* proof Operators::             
+* Falseness Storage::           
+* How Proof Works::             
+@end menu
+
+@node proof Derivation, proof Constructors, Proof, Proof
+@subsection Derivation
+
+This class is not derived from any other classes.
+
+@example
+template <class RowIterator> class proof;
+@end example
+
+@node proof Constructors, proof Functions, proof Derivation, Proof
+@subsection Constructors
+
+@deftypefn Constructor {} proof::proof();
+Default Constructor. Sets trueness to false. Use the prove function to provide the rows to prove.
+@end deftypefn
+
+@deftypefn Constructor {} proof::proof(RowIterator @var{first}, RowIterator @var{last});
+This checks for repeated rows from first to last. Expects up to 1 extent only. Result is stored in class for later retrieval.
+@end deftypefn
+
+@deftypefn Constructor {} proof::proof(RowIterator @var{first}, RowIterator @var{last}, const int @var{max}, proof::hash_function @var{f});
+This checks for repeated rows from first to last. Expects up to @var{max} extents. Result is stored in class for later retrieval.
+@end deftypefn
+
+@node proof Functions, proof Operators, proof Constructors, Proof
+@subsection Functions
+
+@deftypefn Function bool proof::proof(RowIterator @var{first}, RowIterator @var{last});
+This checks for repeated rows from first to last. Expects up to 1 extent only. Full result is stored in class for later retrieval, but trueness of rows is returned.
+@end deftypefn
+
+@deftypefn Function bool proof::proof(RowIterator @var{first}, RowIterator @var{last}, const int @var{max}, proof::hash_function @var{f});
+This checks for repeated rows from first to last. Expects up to @var{max} extents. Full result is stored in class for later retrieval, but trueness of rows is returned.
+@end deftypefn
+
+@ifinfo
+@deftypefn Function const failinfo& proof::failed() const;
+This function simply returns the data detailing where the touch has failed. (*note Falseness Storage::).
+@end deftypefn
+@end ifinfo
+@iftex
+@deftypefn Function const failinfo@& proof::failed() const;
+This function simply returns the data detailing where the touch has failed.
+@end deftypefn
+@end iftex
+
+@node proof Operators, Falseness Storage, proof Functions, Proof
+@subsection Operators
+
+@deftypefn Operator operator proof::int() const;
+This returns true (or 1) if the touch is true.
+@end deftypefn
+
+@deftypefn Operator int proof::operator!() const;
+This returns true (or 1) if the touch is not true.
+@end deftypefn
+
+@ifinfo
+@deftypefn Operator friend ostream& operator<< <>(ostream& @var{o}, const proof<RowIterator>& @var{p});
+Outputs to the ostream, @var{o}, if @var{p} is true or false in a predefined format. If p is false, then additional information regarding where is also output.
+@end deftypefn
+@end ifinfo
+@iftex
+@deftypefn Operator friend ostream@& operator<< <>(ostream@& @var{o}, const proof<RowIterator>@& @var{p});
+Outputs to the ostream, @var{o}, if @var{p} is true or false in a predefined format. If p is false, then additional information regarding where is also output.
+@end deftypefn
+@end iftex
+
+@node Falseness Storage, How Proof Works, proof Operators, Proof
+@subsection How falseness is stored
+@cindex falseness storage
+
+When the proof class finds two or more rows that are the same, it stores the details in a private variable, @var{where}. This can be retrieved by the function @code{failed}. The variable is defined as:
+
+@example
+typedef list<linedetail> proof::failinfo;
+failinfo @var{where};
+@end example
+
+linedetail is a struct defined as:
+
+@example
+struct linedetail @{
+ row _row;
+ list<int> _lines;
+@};
+@end example
+
+When a row is repeated more than once, a new linedetail item is added to @var{where}. In the linedetail data is stored a pointer, @var{_row}, to the first of the matching rows, and the row numbers are put into @var{_lines}. If the first row given to the class matches the 11th row, then 0 and 10 will be placed into @var{_lines}. If there are three or more rows that all match, then the relevant numbers will be placed into the @var{_lines} list without repeating any.
+
+@node How Proof Works,  , Falseness Storage, Proof
+@subsection How it works
+@cindex How proof works
+
+There are two ways that the class can prove blocks of rows depending on if the number of rows is less or greater than an extent. In both methods, the procedures are carried through to the end to allow the user to see where the block of rows is false in all places, not just the first.
+
+@subsection Single Extent
+
+If the single extent version of the function @code{proof::prove} is called, then we follow this procedure.
+
+Here we look at the first row and compare it to the rest. Then we proceed to the second and compare that to the rest (starting from the third, and going to the end). We then continue this until we have completed all the rows. If two rows match the details are stored and the trueness is set to false.
+
+@subsection Multiple Extents
+
+If the multiple extent version of the function @code{proof::prove} is called, then we follow this procedure.
+
+Now we proceed through the list just once. Each row is put into a multimap, if at any time the amount of rows in this map exceed the maximum number of extents then the details are added into the failed information and the trueness is set to false.
+
+@node Musical Analysis, Method classification, Proof, Top
+@chapter Analysis of Music
+@cindex Music Analysis
+@cindex music class
+
+The music class provides analysis for music within a set of rows. Like the proof class, it is also a template class defined as @code{template <class RowIterator> class music;}. Hence, you can define your own format for the set of rows as long as you can provide an iterator for it.
+
+The music class processes each row just once, it does not store any rows. It assumes that the first row given is a handstroke row. The class should be able to handle any number of bells. If an odd number of bells is given, e.g. 5, then a tenor is assumed in looking for items like queens, e.g. 13524 essentially becomes 135246.
+
+Each time the analysis function is called, the results stored in the class are reset to zero, and then incremented based on the rows given.
+
+@menu
+* music Derivation::            
+* music Constructors::          
+* music Functions::             
+* music Operators::             
+@end menu
+
+@node music Derivation, music Constructors, Musical Analysis, Musical Analysis
+@subsection Derivation
+
+This class in not derived from any other classes.
+
+@example
+template <class RowIterator> class music;
+@end example
+
+@node music Constructors, music Functions, music Derivation, Musical Analysis
+@subsection Constructors
+
+@deftypefn Constructor {} music::music();
+Default Constructor. Resets all the music variables to zero.
+@end deftypefn
+
+@deftypefn Constructor {} music::music(RowIterator @var{first}, RowIterator @var{last});
+This constructor takes the rows and passes them to @code{music::change_rows} which resets the music variables and analyses all the rows. First and last should be an iterator to a container that stores rows. The first should also be a handstroke row.
+@end deftypefn
+
+@node music Functions, music Operators, music Constructors, Musical Analysis
+@subsection Functions
+
+@deftypefn Function inline void music::change_rows(RowIterator @var{first}, RowIterator @var{last});
+This function resets all the music variables and the analyses the rows. First and last should be an iterator to a container that stores rows. The first should also be a handstroke row.
+@end deftypefn
+
+The following functions all return values depending on the last block of rows analysed.
+
+@deftypefn Function bool music::queens(void) const;
+This function returns true if queens was present.
+@end deftypefn
+
+@deftypefn Function bool music::titums(void) const;
+This function returns true if titums was present.
+@end deftypefn
+
+@deftypefn Function bool music::kings(void) const;
+This function returns true if kings was present.
+@end deftypefn
+
+@deftypefn Function bool music::reverse_rounds(void) const;
+This function returns true if reverse_rounds was present.
+@end deftypefn
+
+@deftypefn Function int music::t_tminus1_at_back(void) const;
+This function returns the number of 65s, 87s, 09s etc present at backstroke
+@end deftypefn
+
+@deftypefn Function int music::tminus2_t_at_the_back_hs(void) const;
+This function returns the number of 46s, 68s, etc at the end of the change present at handstroke. Note, this also includes the number of 246s, 468s etc.
+@end deftypefn
+
+@deftypefn Function int music::tminus4_tminus2_t_at_the_back_hs(void) const;
+This function returns the number of 246s, 468s, etc at the end of the change present at handstroke.
+@end deftypefn
+
+@deftypefn Function int music::tminus2_t_at_the_back_bs(void) const;
+This function returns the number of 46s, 68s, etc at the end of the change present at backstroke. Note, this also includes the number of 246s, 468s etc.
+@end deftypefn
+
+@deftypefn Function int music::tminus4_tminus2_t_at_the_back_bs(void) const;
+This function returns the number of 246s, 468s, etc at the end of the change present at backstroke.
+@end deftypefn
+
+@deftypefn Function int music::rollup_3(void) const;
+This function returns the number of three bell rollups present on the back, this does not include other numbers of rollups.
+@end deftypefn
+
+@deftypefn Function int music::rollup_4(void) const;
+This function returns the number of four bell rollups present on the back, this does not include other numbers of rollups.
+@end deftypefn
+
+@deftypefn Function int music::reverse_rollup_3(void) const;
+This functoin returns the number of reverse three bell rollups present on the front (e.g. 876, 654), this does not include other number of rollups.
+@end deftypefn
+
+@deftypefn Function int music::reverse_rollup_4(void) const;
+This functoin returns the number of reverse four bell rollups present on the front (e.g. 8765, 6543), this does not include other number of rollups.
+@end deftypefn
+
+@node music Operators,  , music Functions, Musical Analysis
+@subsection Operators
+
+@ifinfo
+@deftypefn Operator friend ostream& operator<< <>(ostream& @var{o}, const music<RowIterator>& @var{m});
+Outputs to the ostream a string containing the following details:
+
+@example
+qktr,1,2,3,4,5,6,7,8,9
+@end example
+
+Letter are displayed only when the following music in the touch, otherwise there is just a space:
+@example
+q = queens
+k = kings
+t = titums
+r = reverse rounds
+@end example
+
+Otherwise numbers provide the following information
+@example
+1 = Number of 3 bell rollups in the touch (i.e.  678 on the back)
+2 = Number of 4 bell rollups in the touch (i.e. 5678 on the back)
+3 = Number of reverse 3 bell rollups off the front (i.e. 654 or 876)
+4 = Number of reverse 4 bell rollups off the front (i.e. 6543 or 8765)
+5 = Number of 46s or 68s etc at handstroke (note: this also adds in total for item 7).
+6 = Number of 46s or 68s etc at backstroke (note: this also adds in total for item 8).
+7 = Number of 246s or 468s etc at handstroke
+8 = Number of 246s or 468s etc at backstroke
+9 = Number of 65s or 87s at backstroke (will be zero for odd nos of bells)
+@end example
+@end deftypefn
+@end ifinfo
+@iftex
+@deftypefn Operator friend ostream@& operator<< <>(ostream@& @var{o}, const music<RowIterator>@& @var{m});
+Outputs to the ostream a string containing the following details:
+
+@example
+qktr,1,2,3,4,5,6,7,8,9
+@end example
+
+Letter are displayed only when the following music in the touch, otherwise there is just a space:
+@example
+q = queens
+k = kings
+t = titums
+r = reverse rounds
+@end example
+
+Otherwise numbers provide the following information
+@example
+1 = Number of 3 bell rollups in the touch (i.e.  678 on the back)
+2 = Number of 4 bell rollups in the touch (i.e. 5678 on the back)
+3 = Number of reverse 3 bell rollups off the front (i.e. 654 or 876)
+4 = Number of reverse 4 bell rollups off the front (i.e. 6543 or 8765)
+5 = Number of 46s or 68s etc at handstroke (note: this also adds in total for item 7).
+6 = Number of 46s or 68s etc at backstroke (note: this also adds in total for item 8).
+7 = Number of 246s or 468s etc at handstroke
+8 = Number of 246s or 468s etc at backstroke
+9 = Number of 65s or 87s at backstroke (will be zero for odd nos of bells)
+@end example
+@end deftypefn
+@end iftex
+
+@node Method classification, Index, Musical Analysis, Top
 @chapter Classification of methods
 
 Methods are classified according to section E, subsections B and C, of
 the Central Council's Decisions.
-
 
 @node Index,  , Method classification, Top
 @unnumbered Index
