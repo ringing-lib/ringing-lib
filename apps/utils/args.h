@@ -40,8 +40,8 @@ class option {
 public:
   char shortname;
   string longname;
-  string optionname;
   string desc;
+  string optionname;
   int flags;
   enum flag_t { takes_arg = 1, opt_arg = 2, info = 4 };
 
@@ -52,6 +52,7 @@ public:
     : shortname(c), longname(l), desc(d), optionname(n), 
       flags(opt ? (takes_arg | opt_arg) : takes_arg) {}
   option() : shortname(0), flags(0) {}
+  virtual ~option() {}
 
   virtual bool process(const string& a, const arg_parser& ap) const {
     cerr << "Unprocessed argument.  This is a bug in the program.\n";

@@ -268,7 +268,7 @@ bool parser::maybe_handle_bells_command( const string &cmd, ostream &out )
     {
       int n = string_to_int( cmd.substr( 0, cmd.size() - 5 ) );
 
-      if ( n > bell::MAX_BELLS )
+      if ( n > (int) bell::MAX_BELLS )
 	throw runtime_error( make_string() 
 			     << "Number of bells must be less than "
 			     << bell::MAX_BELLS + 1 );

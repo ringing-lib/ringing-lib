@@ -102,7 +102,7 @@ void printmethod::print(printpage& pp)
   int column, columnset, row_count;
   bool sym = m->issym();
   bool pn;
-  int pnextra;
+  int pnextra = 0;
 
   if(number_mode == miss_always) 
     opt.flags |= printrow::options::miss_numbers;
@@ -136,7 +136,7 @@ void printmethod::print(printpage& pp)
 	for(row_count = 0; row_count < rows_per_column 
 	      && total_row_count < total_rows; row_count++) {
 	  ++i;
-	  if(i == b.size()) { // We've got to the end of a lead
+	  if(i == (int) b.size()) { // We've got to the end of a lead
 	    b[0] = b[b.size() - 1]; b.recalculate();
 	    // Miss the first row of the lead - we've already printed it
 	    // at the end of the previous lead.
@@ -153,7 +153,7 @@ void printmethod::print(printpage& pp)
 	      pr.placebell(placebells);
 	    if(!(opt.flags & printrow::options::numbers))
 	      pr.dot(-1);
-	  } else if(i == b.size() - 1) {
+	  } else if(i == (int) (b.size() - 1)) {
 	    if(number_mode == miss_lead) {
 	      // Lead head - print the numbers
 	      opt.flags &= ~printrow::options::miss_numbers;

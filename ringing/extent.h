@@ -171,7 +171,7 @@ private:
   unsigned nw, nh;
   bool end;
   change c;
-  vector<int> stk;
+  vector<unsigned int> stk;
 };
 
 RINGING_END_NAMESPACE

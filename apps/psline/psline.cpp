@@ -643,10 +643,10 @@ int main(int argc, char *argv[])
     titley.set_float(pm.yoffset.in_points() + pm.opt.yspace.in_points()/2
 		     + args.title_style.size, 1);
     int i = args.title.find('$');
-    if(i != args.title.npos) args.title.replace(i, 1, m.fullname());
+    if(i != (int) args.title.npos) args.title.replace(i, 1, m.fullname());
 
     // Create a printpage object
-    printpage* pp;
+    printpage* pp = NULL;
     switch(args.format) {
       case eps :
 	pp = new printpage_ps(*os, 0, 0, int(pm.total_width()), 
