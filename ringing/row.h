@@ -200,8 +200,11 @@ void interpret_pn(int num, ForwardIterator i, ForwardIterator finish,
     list<change> block;
     // See whether it's a symmetrical block or not
     symblock = (*i == '&'); 
-    if(symblock) { 
+    // Allow MicroSIRIL style '+' prefix
+    if(*i == '&' || *i == '+') { 
       ++i; 
+      while(i != finish && isspace(*i)) ++i; // Skip whitespace
+      if(i != finish && *i == '.') ++i; // Skip a '.' separator
       while(i != finish && isspace(*i)) ++i; // Skip whitespace
     }
     while(i != finish && (isalnum(*i) || *i == '-')) {
