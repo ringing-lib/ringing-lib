@@ -218,15 +218,15 @@ bool change::swappair(bell which)
 // Does it contain internal places?
 bool change::internal(void) const
 {
-  if(n == 0) return false;
-  if(!swaps.empty() && swaps[0] > 1) return true;
+  if(n < 3) return false;
+  if(swaps.empty() || swaps[0] > 1) return true;
   vector<bell>::const_iterator s = swaps.begin();
   bell b = swaps[0];
   for(++s; s != swaps.end(); ++s) {
     if((*s - b) > 2) return true;
     b = *s;
   }
-  if((n - *s) > 2) return true;
+  if((n - swaps.back()) > 3) return true;
   return false;
 }
 
