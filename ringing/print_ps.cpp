@@ -158,7 +158,7 @@ void printpage_ps::landscape_mode()
 
 void printpage_ps::set_text_style(const text_style& s)
 {
-  os << '/' << s.font << ' ' << s.size << " F\n";
+  os << '/' << s.font << ' ' << s.size << " 10 div F\n";
   set_colour(s.col);
   add_font(s.font);
 }
@@ -334,7 +334,7 @@ void printrow_ps::placebell(int i)
   int j = 0;
   while(j < lastrow.bells() && lastrow[j] != i) j++;
   if(j < lastrow.bells()) {
-    pp.os << lastrow.bells() << ' ' << opt.style.size << " PB (" 
+    pp.os << lastrow.bells() << ' ' << opt.style.size << " 10 div PB (" 
        << j+1 << ((j < 9) ? ") C\n" : ") E\n");
   }
 }

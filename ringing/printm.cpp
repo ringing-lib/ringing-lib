@@ -195,50 +195,69 @@ int printmethod::find_pnextra()
   return result/2;
 }
 
+void printmethod::scale_to_space(const dimension& width,
+                                 const dimension& height,
+                                 float aspect,
+                                 int pnextra)
+{
+  float new_xspace, vlimit;
+
+  if(pn_mode != pn_none && pnextra == -1) pnextra = find_pnextra();
+  new_xspace = width.in_points() 
+    / (columns_per_set * (m->bells() + ((placebells >= 0) ? 3 : 1)
+		  + ((pn_mode == pn_all) ? pnextra : 0)) 
+       + ((pn_mode == pn_first) ? pnextra : 0) - 1);
+  vlimit = height.in_points() * aspect / 
+    ((rows_per_column + 3) * sets_per_page - 2);
+  if(vlimit < new_xspace) new_xspace = vlimit;
+  opt.xspace.set_float(new_xspace, 100);
+  opt.yspace.set_float(new_xspace / aspect, 100);
+  hgap = opt.xspace * (((placebells >= 0) ? 3 : 1) + 
+		       ((pn_mode == pn_all) ? pnextra : 0));
+  vgap = opt.yspace * 2;
+  opt.style.size = static_cast<int>(opt.yspace.in_points() * 9);
+}  
+
 void printmethod::fit_to_space(const dimension& width, 
 				const dimension& height, bool vgap_mode, 
 				float aspect)
 {
   if(!m) return;
 
-  float curr_xspace = -1, new_xspace = 0, vlimit;
-  int lead, leads_per_column, columns;
+  float curr_xspace = -1, new_xspace = 0;
+  int leads_per_column;
  
   // Work out how many bells' worth of space to leave for place notation
-  int pnextra = 0;
+  int pnextra = -1;
   if(pn_mode != pn_none) pnextra = find_pnextra();
 
-  lead = m->length();
+  int lead = m->length();
   // We try each possible number of leads per column until
   // the required size starts going down rather than up.
   for(leads_per_column = 1; new_xspace > curr_xspace; leads_per_column++) {
     curr_xspace = new_xspace;
-    rows_per_column = leads_per_column * lead;
-    columns = divu(total_rows, rows_per_column);
-    new_xspace = width.in_points() 
-      / (columns * (m->bells() + ((placebells >= 0) ? 3 : 1)
-                    + ((pn_mode == pn_all) ? pnextra : 0)) 
-         + ((pn_mode == pn_first) ? pnextra : 0) - 1);
-    vlimit = height.in_points() * aspect / 
-      (rows_per_column + (vgap_mode ? (leads_per_column * 3 - 2) : 1));
-    if(vlimit < new_xspace) new_xspace = vlimit;
+    if(vgap_mode) {
+      rows_per_column = lead;
+      sets_per_page = leads_per_column;
+    } else {
+      rows_per_column = leads_per_column * lead;
+      sets_per_page = 1;
+    }
+    columns_per_set = divu(total_rows, rows_per_column * sets_per_page);
+    scale_to_space(width, height, aspect, pnextra);
+    new_xspace = opt.xspace.in_points();
   }
 
   leads_per_column -= 2;
   if(vgap_mode) {
     rows_per_column = lead;
-    columns_per_set = divu(total_rows, leads_per_column * lead);
+    sets_per_page = leads_per_column;
   } else {
     rows_per_column = leads_per_column * lead;
-    columns_per_set = divu(total_rows, rows_per_column);
-  };
-
-  opt.xspace.set_float(curr_xspace, 100);
-  opt.yspace.set_float(curr_xspace / aspect, 100);
-  hgap = opt.xspace * (((placebells >= 0) ? 3 : 1) + 
-		       ((pn_mode == pn_all) ? pnextra : 0));
-  vgap = opt.yspace * 2;
-  opt.style.size = static_cast<int>(opt.yspace.in_points() * 0.9);
+    sets_per_page = 1;
+  }
+  columns_per_set = divu(total_rows, rows_per_column * sets_per_page);
+  scale_to_space(width, height, aspect, pnextra);
 }
 
 float printmethod::total_width() {

@@ -29,7 +29,7 @@ RINGING_START_NAMESPACE
 void printrow::options::defaults()
 {
   flags = numbers;
-  style.size = 10;
+  style.size = 100;
   style.font = "Helvetica";
   style.col.grey = true; style.col.red = 0;
   xspace.n = 12; xspace.d = 1; xspace.u = dimension::points; 

@@ -71,15 +71,29 @@ struct arguments {
   int sets_per_page;
   int total_leads;
   int total_rows;
+  int pages;
 };
 
 arguments args;
 string progname;
 
+inline int divu(int a, int b) { return (a - 1) / b + 1; }
+
 bool parse_int(const string& arg, int& i)
 {
   istrstream is(arg.data(), arg.length()); 
   is >> i;
+  if(!is || is.get() != EOF) {
+    cerr << "Invalid integer argument: \"" << arg << "\"\n";
+    return false;
+  }
+  return true;
+}
+
+bool parse_float(const string& arg, float& f)
+{
+  istrstream is(arg.data(), arg.length()); 
+  is >> f;
   if(!is || is.get() != EOF) {
     cerr << "Invalid integer argument: \"" << arg << "\"\n";
     return false;
@@ -221,6 +235,8 @@ void setup_args(arg_parser& p)
     " margin) if no argument is given", "DIMENSION,DIMENSION", true));
   p.add(new myopt('a', "across-first", "Print the second lead to the"
 		  " right of the first, instead of below the first."));
+  p.add(new myopt('g', "pages", "Fit the method onto NUMBER pages",
+		  "NUMBER"));
   p.add(new myopt('x', "xspace", "Set the horizontal distance between"
 		  " consecutive bells in a row to DIMENSION", "DIMENSION"));
   p.add(new myopt('y', "yspace", "Set the vertical distance between"
@@ -246,6 +262,7 @@ void setup_args(arg_parser& p)
 bool myopt::process(const string& arg, const arg_parser& ap) const
 {
   string::const_iterator s;
+  float f;
   switch(shortname) {
     case '\0' :
       if(args.library_name.empty())
@@ -283,7 +300,9 @@ bool myopt::process(const string& arg, const arg_parser& ap) const
       args.font = arg;
       break;
     case 's' :
-      return parse_int(arg, args.font_size);
+      if(!parse_float(arg, f)) return false;
+      args.font_size = static_cast<int>(f * 10);
+      break;
     case 'i' :
       args.rows_per_column = 0;
       return parse_int(arg, args.leads_per_column);
@@ -296,6 +315,8 @@ bool myopt::process(const string& arg, const arg_parser& ap) const
     case 'J' :
       args.total_leads = 0;
       return parse_int(arg, args.total_rows);
+    case 'g' :
+      return parse_int(arg, args.pages);
     case 'd' :
       return parse_int(arg, args.sets_per_page);
     case 'k' :
@@ -424,8 +445,9 @@ bool myopt::process(const string& arg, const arg_parser& ap) const
 	if(s != arg.end()) {
 	  args.title_style.font = next_bit(arg, s);
 	  if(s != arg.end()) {
-	    if(!parse_int(next_bit(arg, s), args.title_style.size))
+	    if(!parse_float(next_bit(arg, s), f))
 	      return false;
+	    args.title_style.size = static_cast<int>(f * 10);
 	    if(s != arg.end()) {
 	      if(!parse_colour(next_bit(arg, s), args.title_style.col))
 		return false;
@@ -443,7 +465,9 @@ bool myopt::process(const string& arg, const arg_parser& ap) const
       args.title_style.font = arg;
       break;
     case '\002' :
-      return parse_int(arg, args.title_style.size);
+      if(!parse_float(arg, f)) return false;
+      args.title_style.size = static_cast<int>(f * 10);
+      break;
     case '\003' :
       return parse_colour(arg, args.title_style.col);
     case 'm' :
@@ -512,7 +536,7 @@ int main(int argc, char *argv[])
   args.fit = true;
   args.vgap_mode = false;
   args.title_style.font = "Helvetica";
-  args.title_style.size = 18;
+  args.title_style.size = 180;
   args.title_style.col.grey = true;
   args.title_style.col.red = 0;
   args.number_mode = printmethod::miss_lead;
@@ -523,6 +547,7 @@ int main(int argc, char *argv[])
   args.sets_per_page = 0;
   args.total_leads = 0;
   args.total_rows = 0;
+  args.pages = 0;
   args.custom_lines = false;
   args.custom_rules = false;
 
@@ -652,7 +677,7 @@ int main(int argc, char *argv[])
     else
       pm.pn_mode = static_cast<printmethod::pn_mode_t>(args.pn_mode);
     
-    // Fit to the space given
+    // Set the space to fit to
     if(args.fit && args.fitwidth == 0) {
       args.fitwidth.set_float(args.width.in_points() - 72, 1);
       args.fitheight.set_float(args.height.in_points() - 72, 1);
@@ -663,9 +688,65 @@ int main(int argc, char *argv[])
     }
     if(!args.title.empty())
       args.fitheight.set_float(args.fitheight.in_points() 
-			       - args.title_style.size * 2, 1);
-    if(args.fit) pm.fit_to_space(args.fitwidth, args.fitheight, 
-				 args.vgap_mode, args.numbers ? 1 : 2);
+			       - args.title_style.size * 0.2, 1);
+    
+    // Now fit to the space
+    if(args.leads_per_column || args.rows_per_column) {
+      if(args.leads_per_column)
+	pm.rows_per_column = args.leads_per_column * m.length();
+      else if(args.rows_per_column)
+	pm.rows_per_column = args.rows_per_column;
+      if(args.columns_per_set) {
+	pm.columns_per_set = args.columns_per_set;
+	if(args.sets_per_page) {
+	  pm.sets_per_page = args.sets_per_page;
+	} else {
+	  if(!args.pages) args.pages = 1;
+	  pm.sets_per_page = divu(pm.total_rows, 
+				  args.pages * pm.columns_per_set 
+				  * pm.rows_per_column);
+	}
+      } else {
+	if(!args.sets_per_page) args.sets_per_page = 1;
+	pm.sets_per_page = args.sets_per_page;
+	if(!args.pages) args.pages = 1;
+	pm.columns_per_set = divu(pm.total_rows,
+				  args.pages * pm.sets_per_page
+				  * pm.rows_per_column);
+      }
+      pm.scale_to_space(args.fitwidth, args.fitheight, args.numbers ? 1 : 2);
+    } else {
+      if(args.columns_per_set) {
+	pm.columns_per_set = args.columns_per_set;
+	if(!args.sets_per_page) args.sets_per_page = 1;
+	pm.sets_per_page = args.sets_per_page;
+	if(!args.pages) args.pages = 1;
+	pm.rows_per_column = divu(pm.total_rows,
+				  args.pages * pm.columns_per_set
+				  * pm.sets_per_page * m.length())
+	  * m.length();
+	pm.scale_to_space(args.fitwidth, args.fitheight, 
+			  args.numbers ? 1 : 2);
+      } else {
+	if(args.sets_per_page) {
+	  pm.rows_per_column = m.length();
+	  pm.sets_per_page = args.sets_per_page;
+	  if(!args.pages) args.pages = 1;
+	  pm.columns_per_set = divu(pm.total_rows,
+				    args.pages * pm.sets_per_page
+				    * pm.rows_per_column);
+	  pm.scale_to_space(args.fitwidth, args.fitheight, 
+			    args.numbers ? 1 : 2);
+	} else {
+	  if(!args.pages) args.pages = 1;
+          int tr = pm.total_rows;
+	  pm.total_rows = divu(tr, args.pages * m.length()) * m.length();
+	  pm.fit_to_space(args.fitwidth, args.fitheight, 
+			  args.vgap_mode, args.numbers ? 1 : 2);
+	  pm.total_rows = tr;
+	}
+      }
+    }
 
     // Set up the things which override the fitting, and everything else
     if(!args.font.empty()) pm.opt.style.font = args.font;
@@ -675,14 +756,6 @@ int main(int argc, char *argv[])
     if(args.yspace != 0) pm.opt.yspace = args.yspace;
     if(args.hgap != 0) pm.hgap = args.hgap;
     if(args.vgap != 0) pm.vgap = args.vgap;
-    if(args.leads_per_column)
-      pm.rows_per_column = args.leads_per_column * m.length();
-    else if(args.rows_per_column)
-      pm.rows_per_column = args.rows_per_column;
-    if(args.columns_per_set)
-      pm.columns_per_set = args.columns_per_set;
-    if(args.sets_per_page)
-      pm.sets_per_page = args.sets_per_page;
     pm.number_mode = args.number_mode;
 
     // Position the output correctly
@@ -695,7 +768,7 @@ int main(int argc, char *argv[])
 			    + pm.opt.xspace.in_points())/2, 1);
       pm.yoffset.set_float((args.height.in_points() + pm.total_height() 
 			    - (args.title.empty() ? 0 
-			       : args.title_style.size * 2)
+			       : args.title_style.size * 0.2)
 			    - pm.opt.yspace.in_points())/2, 1);
     }
 
@@ -716,7 +789,7 @@ int main(int argc, char *argv[])
     titlex.set_float(pm.xoffset.in_points() 
 		     + (pm.total_width() - pm.opt.xspace.in_points())/2, 1);
     titley.set_float(pm.yoffset.in_points() + pm.opt.yspace.in_points()/2
-		     + args.title_style.size, 1);
+		     + args.title_style.size * 0.1, 1);
     int i = args.title.find('$');
     if(i != (int) args.title.npos) args.title.replace(i, 1, m.fullname());
 
@@ -727,7 +800,7 @@ int main(int argc, char *argv[])
 	pp = new printpage_ps(*os, 0, 0, int(pm.total_width()), 
 			      int(pm.total_height() 
 				   + (args.title.empty() ? 0 
-				      : args.title_style.size * 2)));
+				      : args.title_style.size * 0.2)));
 	break;
       case ps:
 	if(args.landscape)

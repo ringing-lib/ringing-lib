@@ -261,10 +261,10 @@ void printpage_pdf::text(const string t, const dimension& x,
   float x1 = x.in_points();
   switch(al) {
     case text_style::right :
-      x1 -= cw(t) * s.size / 1000.0f;
+      x1 -= cw(t) * s.size / 10000.0f;
       break;
     case text_style::centre :
-      x1 -= cw(t) * s.size / 2000.0f;
+      x1 -= cw(t) * s.size / 20000.0f;
       break;
   default:
     // I.e. left, assume we don't need to do
@@ -275,7 +275,7 @@ void printpage_pdf::text(const string t, const dimension& x,
   
   f << "q "; set_colour(s.col, true);
   f << "BT\n/"
-    << f.get_font(cw.font()) << ' ' << s.size << " Tf\n"
+    << f.get_font(cw.font()) << ' ' << (s.size / 10.0) << " Tf\n"
     << x1 << ' ' << y.in_points() << " Td\n";
   f.output_string(t);
   f << " Tj\n"
@@ -350,14 +350,14 @@ void printrow_pdf::start_column()
   count = gapcount = 0;
   pp.set_colour(opt.style.col, true);
   pp.set_colour(opt.style.col, false);
-  pp.f << opt.style.size / 20.0 << " w\n";
+  pp.f << opt.style.size / 200.0 << " w\n";
 }
 
 void printrow_pdf::end_column()
 {
   float tx = 0, ty = 0;
   pp.f << "BT\n/"
-       << pp.f.get_font(cw.font()) << ' ' << opt.style.size << " Tf\n";
+       << pp.f.get_font(cw.font()) << ' ' << (opt.style.size / 10.0) << " Tf\n";
   // Draw random bits of text
   if(!text_bits.empty()) {
     pp.f << "0 Tc 100 Tz\n";
@@ -375,10 +375,10 @@ void printrow_pdf::end_column()
       x = currx + (*i).x;
       switch((*i).al) {
 	case text_style::right :
-	  x -= cw((*i).s) * opt.style.size * sq / 1000.0f;
+	  x -= cw((*i).s) * opt.style.size * sq / 10000.0f;
 	  break;
 	case text_style::centre :
-	  x -= cw((*i).s) * opt.style.size * sq / 2000.0f;
+	  x -= cw((*i).s) * opt.style.size * sq / 20000.0f;
 	  break;
       default:
 	// I.e. left, assume we don't need to do
@@ -386,7 +386,7 @@ void printrow_pdf::end_column()
 	// stop warnings in build.
 	break;
       }
-      y = curry - opt.style.size * 0.3f - (*i).y;
+      y = curry - opt.style.size * 0.03f - (*i).y;
       pp.f << x - tx << ' ' << y - ty << " Td ";
       pp.f.output_string((*i).s);
       pp.f << " Tj\n";
@@ -403,7 +403,7 @@ void printrow_pdf::end_column()
     pp.f << opt.xspace.in_points() << " Tc " 
 	 << opt.yspace.in_points() << " TL\n"
 	 << currx - tx << ' ' 
-	 << curry - opt.style.size * 0.3 - ty << " Td\n";
+	 << curry - opt.style.size * 0.03 - ty << " Td\n";
     for(j = rows.begin(); j != rows.end(); j++) {
       w = 0;
       if((*j).second) 
@@ -461,7 +461,7 @@ void printrow_pdf::placebell(int i)
   if(j < lastrow.bells()) {
     pp.circle(currx + (lastrow.bells() + 1) * opt.xspace.in_points(),
 	      curry - (count - 1) * opt.yspace.in_points(),
-	      opt.style.size * 0.7f, 'S');
+	      opt.style.size * 0.07f, 'S');
     text_bit tb;
     tb.x = (lastrow.bells() + 1) * opt.xspace.in_points();
     tb.y = (count - 1) * opt.yspace.in_points();

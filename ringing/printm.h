@@ -62,6 +62,12 @@ public:
   float total_width();
   float total_height();
 
+  void scale_to_space(const dimension &width, const dimension& height,
+		      float aspect)
+  {
+    scale_to_space(width, height, aspect, -1);
+  }
+
   void fit_to_space(const dimension& width, const dimension& height, 
 		    bool vgap_mode, float aspect);
 
@@ -71,6 +77,8 @@ private:
   static int divd(int a, int b) { return (a - a % b) / b; }
   static int divu(int a, int b) 
     { return (a % b == 0) ? (a / b) : divd(a,b) + 1; }
+  void scale_to_space(const dimension &width, const dimension& height,
+		      float aspect, int pnextra);
 };
 
 RINGING_END_NAMESPACE
