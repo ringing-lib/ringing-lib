@@ -74,6 +74,7 @@ private:
   int currx, curry;
   bool in_column;
   row lastrow;
+  int gapcount;
   printrow::options opt;
   
   list<drawline_ps> drawlines;
@@ -83,7 +84,8 @@ private:
   void start();
   void start_column();
   void end_column();
-  
+  void fill_gap();
+
 public:
   printrow_ps(ostream& o, const printrow::options& op) 
     : os(o), in_column(false), lastrow(8), opt(op) { start(); }

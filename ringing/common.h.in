@@ -52,11 +52,11 @@
 
 // *** Define this to be the name of the package (i.e. ringing-lib)
 // #define RINGING_PACKAGE ringing-lib
-#define RINGING_PACKAGE @PACKAGE@
+#define RINGING_PACKAGE "@PACKAGE@"
 
 // *** Define this to be the version number of the package
 // #define RINGING_VERSION 0.2.3
-#define RINGING_VERSION @VERSION@
+#define RINGING_VERSION "@VERSION@"
 
 // *** Define this to be 1 to use old-style standard C++ header names
 // (<iostream.h>, <list.h> and so on) or 0 to use new-style ones

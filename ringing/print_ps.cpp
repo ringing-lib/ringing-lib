@@ -39,7 +39,7 @@ const string printpage_ps::def_string =
 "  3 -1 roll 2 mul 0 360 arc closepath fill\n"
 "} BD\n"
 "/D {0 offset neg rmoveto show} BD\n"
-"/DR {dup stringwidth pop 2 div neg offset neg rmoveto show} BD\n"
+"/DR {dup stringwidth pop neg offset neg rmoveto show} BD\n"
 "/E {currentpoint gsave translate 0.8 1 scale 0 0 M C grestore} BD\n"
 "/PB {\n"
 "  dup 20 div setlinewidth\n"
@@ -68,6 +68,7 @@ const string printpage_ps::def_string =
 "  xstart xspace 2 div sub ypos yspace 2 div add M\n"
 "  xspace mul 0 R S\n"
 "} BD\n"
+"/G {yspace mul ypos exch sub /ypos exch def} BD\n"
 "/X {/xstart exch def} BD\n"
 "/Y {/ypos exch def} BD\n"
 "/DL1 { 1 exch { dup 49 ge exch dup 57 le 3 -1 roll \n"
@@ -86,10 +87,11 @@ const string printpage_ps::def_string =
 
 printpage_ps::printpage_ps(ostream& o) : os(o), eps(false)
 {
-os << "%!PS-Adobe 2.0\n"
-<< "%%Creator: Method Class Library\n"
-<< "%%EndComments\n\n"
-<< def_string << "%%Page: 1\n";
+  os << "%!PS-Adobe 2.0\n"
+    "%%Creator: Ringing Class Library (" RINGING_PACKAGE " " 
+    RINGING_VERSION ") \n" 
+    "%%EndComments\n\n" 
+     << def_string << "%%Page: 1\n";
 }
 
 printpage_ps::printpage_ps(ostream& o, int x0, int y0, int x1, int y1)
@@ -98,10 +100,11 @@ printpage_ps::printpage_ps(ostream& o, int x0, int y0, int x1, int y1)
   os << "%!PS-Adobe 2.0 EPSF\n"
      << "%%BoundingBox: " << x0 << ' ' << y0 
      << ' ' << x1 << ' ' << y1
-     << "\n%%Creator: Method Class Library\n"
-     << "%%Pages: 0\n"
-     << "%%EndComments\n\n"
-     << "save\n" << def_string;
+     << "\n%%Creator: Ringing Class Library (" RINGING_PACKAGE " "
+    RINGING_VERSION ") \n"
+    "%%Pages: 0\n"
+    "%%EndComments\n\n"
+    "save\n" << def_string;
 }
 
 void printpage_ps::set_text_style(const text_style& s)
@@ -146,7 +149,9 @@ void printrow_ps::print(const row& r)
       else
 	os << r[j];
     os << ") W\n";
-  }
+    gapcount = 0;
+  } else
+    gapcount++;
   lastrow = r;
 
   // Add the various bits of lines to the end of the line
@@ -155,23 +160,32 @@ void printrow_ps::print(const row& r)
     (*i).add(r);
 }
 
+void printrow_ps::fill_gap()
+{
+  if(gapcount > 0) {
+    os << gapcount << " G\n";
+    gapcount = 0;
+  }
+}
+
 void printrow_ps::rule()
 {
   if(!in_column) return;
+  fill_gap();
   os << lastrow.bells() << " RO\n";
 }
 
 void printrow_ps::set_position(const dimension& x, const dimension& y)
 {
   if(in_column) end_column();
-  currx = (int)x.in_points();
-  curry = (int)y.in_points();
+  currx = static_cast<int>(x.in_points());
+  curry = static_cast<int>(y.in_points());
 }
 
 void printrow_ps::new_column(const dimension& d)
 {
   if(in_column) end_column();
-  currx += (int)d.in_points();
+  currx += static_cast<int>(d.in_points());
 }
 
 void printrow_ps::start()
@@ -193,6 +207,7 @@ void printrow_ps::start_column()
     drawlines.push_back(drawline_ps(*this, (*i).first, (*i).second));
   os << currx << " X " << curry << " Y\n";
   in_column = true;
+  gapcount = 0;
 }
 
 void printrow_ps::end_column()
@@ -206,6 +221,7 @@ void printrow_ps::end_column()
 
 void printrow_ps::dot(int i)
 {
+  fill_gap();
   if(i == -1) {
     map<int, printrow::options::line_style>::const_iterator j;
     for(j = opt.lines.begin(); j != opt.lines.end(); j++)
@@ -218,13 +234,14 @@ void printrow_ps::dot(int i)
       k = opt.lines.find(i);
       if(k != opt.lines.end())
 	os << "0 SL " << (*k).second.width.in_points() 
-	   << ' ' << i << " O\n";
+	   << ' ' << j << " O\n";
     }
   }
 }
 
 void printrow_ps::placebell(int i)
 {
+  fill_gap();
   int j = 0;
   while(j < lastrow.bells() && lastrow[j] != i) j++;
   if(j < lastrow.bells()) {
@@ -285,8 +302,8 @@ void drawline_ps::output(ostream& o, int x, int y)
     t = (*i);
     while(i != l.end() && ((t >= -1 && *i >= -1) || (t == *i))) 
 	{ t = *i; i++; count++; }
-    if(count > 1 && t <= -2) o << count;
     if(t <= -2 && !in_line) { o << '('; in_line = true; }
+    if(count > 1 && t <= -2) o << count;
     switch(t) {
       case -2: o << 'u'; break;
       case -4: o << 'd'; break;
