@@ -15,6 +15,13 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+// The getline function is taken from the GNU standard C++ library [see 
+// http://gcc.gnu.org/libstdc++/ for details], and is under the following 
+// copyright:
+
+//   Copyright (C) 1997, 1998, 1999, 2000, 2001, 2002
+//   Free Software Foundation, Inc.
+
 // $Id$
 
 #ifdef __GNUG__
