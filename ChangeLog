@@ -1,3 +1,557 @@
+2002-12-14 18:29  ras52
+
+	* ringing/common.h: Fixed include syntax to get a VPATH build to
+	work
+
+2002-12-14 18:29  ras52
+
+	* config/: depcomp, texinfo.tex: Two auxiliary files that some
+	versions of automake require
+
+2002-12-14 18:29  ras52
+
+	* apps/utils/Makefile.am, tests/Makefile.am: Added missing file to
+	source file list
+
+2002-12-14 18:29  ras52
+
+	* Makefile.am: Automake now automatically includes config/ in the
+	distribution
+
+2002-12-14 16:57  ras52
+
+	* configure.ac, ringing/common-msvc.h: Incremented version number
+
+2002-12-14 16:53  ras52
+
+	* apps/methsearch/: music.cpp, music.h: Fixed a compile error with
+	EGCS 1.1.2
+
+2002-12-14 16:53  ras52
+
+	* ringing/music.h: Fixed a compile error with MSVC 5.0
+
+2002-12-14 16:53  ras52
+
+	* ringing/music.cpp: Fixed a compile warning with MSVC 5.0 and 6.0
+
+2002-12-14 16:53  ras52
+
+	* apps/gsiril/console_stream.cpp: Added a missing copyright
+	statement
+
+2002-12-14 16:53  ras52
+
+	* mkdsp: Fixed a problem caused by multiple files of the same name
+
+2002-12-14 16:53  ras52
+
+	* README: Updated list of compilers that are regularly checked
+
+2002-12-14 16:53  ras52
+
+	* NEWS: Noted major changes in this release
+
+2002-12-13 21:03  standardeight
+
+	* ringing/music.h, ringing/music.cpp, doc/ringing-lib.texi,
+	examples/testmusic.cpp: Add [] option to the regular expressions in
+	music, also add possible_matchers() function to music_details
+
+2002-12-11 15:08  ras52
+
+	* apps/gsiril/: expression.cpp, expression.h: Fixed a compile error
+	in MSVC 5
+
+2002-12-11 15:08  ras52
+
+	* apps/gsiril/: console_stream.cpp, console_stream.h, parser.cpp: A
+	work-around for a bug in Microsoft's istream implementation
+
+2002-12-09 21:05  standardeight
+
+	* ringing/music.cpp, ringing/music.h, apps/methsearch/music.cpp,
+	examples/testmusic.cpp: Make music interface more consistent in use
+	of capitilisation
+
+2002-12-09 18:53  standardeight
+
+	* apps/methsearch/: falseness.h, falseness.cpp: Fix linking of
+	methsearch under gcc
+
+2002-12-09 18:46  ras52
+
+	* ringing/pointers.h: Added a release() method to cloning_pointer
+
+2002-12-09 18:46  ras52
+
+	* ringing/proof.h: Another dllexport
+
+2002-12-09 18:46  ras52
+
+	* ringing/: cclib.cpp, cclib.h, library.cpp, library.h, mslib.cpp,
+	mslib.h: Simplified the library auto-detection framework.  Several
+	other minor changes to the library code
+
+2002-12-09 18:46  ras52
+
+	* doc/ringing-lib.texi: Extensive rework of library documentation
+	to bring it up to date
+
+2002-12-08 19:49  standardeight
+
+	* apps/methsearch/music.cpp, doc/ringing-lib.texi,
+	examples/testmusic.cpp, ringing/music.cpp, ringing/music.h: Rework
+	music class to make music_details more easily accessible, and add
+	some more music documentation.
+
+2002-12-08 16:57  standardeight
+
+	* ringing/pointers.h: Fix warning about variables being re-ordered
+	to declaration order.
+
+2002-12-08 16:56  standardeight
+
+	* examples/testsearch.cpp: Fix complaint about unused variable.
+
+2002-12-03 21:53  ras52
+
+	* apps/utils/: args.cpp, args.h: Made the default argument parser
+	explicit.  Added a version_opt subclass of option.  Added default
+	constructors to version_opt and help_opt
+
+2002-12-03 21:52  ras52
+
+	* apps/methsearch/prog_args.cpp: Now uses version_opt from args.h.
+
+2002-12-03 21:52  ras52
+
+	* apps/methsearch/falseness.cpp: Added an explanatory comment.
+
+2002-12-03 21:52  ras52
+
+	* acinclude.m4, config.h.in, configure.ac, ringing/common-am.h.in:
+	Refactored configure.ac to put much more into acinclude.m4
+
+2002-11-29 19:21  standardeight
+
+	* ringing/: streamutils.cpp, streamutils.h: Make operator string()
+	non-const so that it compiles for those who don't have stringstream
+
+2002-11-29 19:19  standardeight
+
+	* apps/utils/args.cpp: Fix compilation for those who have strstream
+	and not stringstream
+
+2002-11-28 18:07  ras52
+
+	* ringing/touch.h: - Moved operator_arrow_proxy to pointers.h
+
+2002-11-28 18:06  ras52
+
+	* ringing/pointers.h: - Moved operator_arrow_proxy from touch.h -
+	Added a copy-on-write pointer class - Made scoped_pointer work in
+	MSVC-5 with incomplete types
+
+2002-11-28 18:06  ras52
+
+	* ringing/method.cpp: - Corrected logic in method::hasplaces
+
+2002-11-28 18:06  ras52
+
+	* ringing/: falseness.h, music.h, row.h, streamutils.h: - More DLL
+	exporting
+
+2002-11-28 18:06  ras52
+
+	* ringing/: cclib.cpp, mslib.cpp, library.h: - Given library_entry
+	value semantics (rather than reference semantics)
+
+2002-11-28 18:06  ras52
+
+	* apps/: psline/psline.cpp, utils/args.cpp, utils/args.h: -
+	Abstracted error reporting into a new function - Added some
+	convenient subclasses of option - Made the iostream usage more
+	portable - Separated the description and synopsis from the options
+
+2002-11-28 18:06  ras52
+
+	* apps/: psline/Makefile.am, utils/Makefile.am: - Minor change so
+	mkdsp handles this correctly
+
+2002-11-28 18:06  ras52
+
+	* configure.ac, apps/Makefile.am, apps/methsearch/Makefile.am,
+	apps/methsearch/README, apps/methsearch/bnw-init,
+	apps/methsearch/falseness.cpp, apps/methsearch/falseness.h,
+	apps/methsearch/format.cpp, apps/methsearch/format.h,
+	apps/methsearch/libraries.cpp, apps/methsearch/libraries.h,
+	apps/methsearch/main.cpp, apps/methsearch/mask.cpp,
+	apps/methsearch/mask.h, apps/methsearch/methodutils.cpp,
+	apps/methsearch/methodutils.h, apps/methsearch/music.cpp,
+	apps/methsearch/music.h, apps/methsearch/prog_args.cpp,
+	apps/methsearch/prog_args.h, apps/methsearch/reg-init,
+	apps/methsearch/search.cpp, apps/methsearch/search.h: - Initial
+	commit of methsearch
+
+2002-11-28 18:05  ras52
+
+	* mkdsp: - Better handling of non-trivial directory structures -
+	Added support for linking in multiple libraries
+
+2002-11-23 16:16  standardeight
+
+	* ringing/extent.h, ringing/printm.cpp, apps/gsiril/parser.cpp,
+	apps/psline/psline.cpp, apps/utils/args.h: Fix some warnings
+	generated by gnu compiler with -Wall switch.
+
+2002-11-06 22:22  standardeight
+
+	* ringing/: cclib.cpp, mslib.cpp, falseness.h, multtab.h,
+	print_pdf.cpp, print_pdf.h, proof.cpp, table_search.cpp: Fix code
+	to reduce warnings generated by -wall
+
+2002-11-06 11:41  ras52
+
+	* configure.ac: Use AC_CHECK_LIB to check for readline
+
+2002-11-05 23:29  mjb47
+
+	* AUTHORS, config.h.in, configure.ac, configure.in,
+	apps/Makefile.am, apps/gsiril/Makefile.am, apps/psline/Makefile.am,
+	apps/psline/psline.cpp, apps/utils/Makefile.am,
+	apps/utils/args.cpp, apps/utils/args.h, examples/Makefile.am,
+	examples/args.cpp, examples/args.h, examples/psline.cpp,
+	examples/testbase.cpp, examples/testprint.cpp,
+	examples/testtouch.cpp, ringing/afm2cpp.awk,
+	ringing/common-am.h.in, ringing/common-msvc.h, ringing/common.h,
+	ringing/dimension.cpp, ringing/dimension.h, ringing/library.cpp,
+	ringing/library.h, ringing/macros.h, ringing/method.cpp,
+	ringing/method.h, ringing/mslib.cpp, ringing/mslib.h,
+	ringing/pdf_fonts.cpp, ringing/pdf_fonts.h, ringing/print.cpp,
+	ringing/print.h, ringing/print_pdf.cpp, ringing/print_pdf.h,
+	ringing/print_ps.cpp, ringing/print_ps.h, ringing/printm.cpp,
+	ringing/printm.h, ringing/row.cpp, ringing/row.h,
+	ringing/touch.cpp, ringing/touch.h: * Renamed configure.in to
+	configure.ac * Don't link *everything* with readline * Changed my
+	email address * Moved psline and args
+
+2002-11-05 16:10  ras52
+
+	* apps/gsiril/Makefile.am: Hopefully this will now work in older
+	versions of Automake.
+
+2002-11-05 16:01  ras52
+
+	* apps/gsiril/: parser.cpp, parser.h: I really must learn to spell
+	definition.
+
+2002-11-05 10:38  ras52
+
+	* apps/gsiril/parser.cpp: Fixed typo in message.
+
+2002-11-04 12:25  ras52
+
+	* apps/gsiril/: console_stream.cpp, console_stream.h,
+	execution_context.cpp, execution_context.h, expression.cpp,
+	expression.h, main.cpp, parser.cpp, parser.h, rlstream.cpp,
+	rlstream.h, util.cpp, util.h: Added copyright notice and some
+	pragma interface / implementations.
+
+2002-11-01 15:45  ras52
+
+	* apps/gsiril/: expression.cpp, expression.h, parser.cpp: Fixed a
+	bug with redefining symbols (including built-ins, such as
+	'rounds').
+	
+	Allow repetition to written using the '*' operator, i.e. 5*p, as an
+	alternative to juxtaposition.
+
+2002-11-01 14:42  ras52
+
+	* config.h.in, ringing/macros.h, ringing/proof.cpp,
+	ringing/proof.h, tests/method-test.cpp: More MSVC 6 namespace
+	hackery.
+
+2002-11-01 14:42  ras52
+
+	* configure.in, ringing/common-am.h.in, ringing/common-msvc.h:
+	Macros to test for GNU readline and pre-standard IOStreams.
+
+2002-11-01 14:42  ras52
+
+	* doc/ringing-lib.texi: Documented the stage parameter to
+	library_base::load()
+
+2002-11-01 14:42  ras52
+
+	* apps/: Makefile.am, gsiril/Makefile.am,
+	gsiril/console_stream.cpp, gsiril/console_stream.h,
+	gsiril/execution_context.cpp, gsiril/execution_context.h,
+	gsiril/expression.cpp, gsiril/expression.h, gsiril/main.cpp,
+	gsiril/parser.cpp, gsiril/parser.h, gsiril/rlstream.cpp,
+	gsiril/rlstream.h, gsiril/util.cpp, gsiril/util.h: Added gsiril
+
+2002-11-01 14:41  ras52
+
+	* mkdsp: We now understand Automake variables and conditionals
+
+2002-11-01 14:41  ras52
+
+	* Makefile.am: Added apps directory
+
+2002-09-25 14:21  ras52
+
+	* ringing/falseness.cpp: Fixed a bug in the generation of false
+	courses
+
+2002-09-20 13:08  ras52
+
+	* ringing/table_search.cpp: Fixed a compile error in MSVC 5
+
+2002-09-20 13:08  ras52
+
+	* ringing/dimension.cpp, ringing/print_pdf.cpp,
+	tests/change-test.cpp, tests/row-test.cpp, tests/test-base.cpp:
+	Changed ostrstream usage to go via make_string
+
+2002-09-20 13:07  ras52
+
+	* ringing/multtab.h: Fixed a minor bug
+
+2002-09-20 13:07  ras52
+
+	* mkdsp: mkdsp now understands comments in Makefile.am
+
+2002-09-20 13:07  ras52
+
+	* ringing/: Makefile.am, streamutils.cpp, streamutils.h: Utilities
+	to abstract the use of ostr[ing]stream, and to provide a more
+	convenient syntax for constructing temporary strings
+
+2002-09-20 13:07  ras52
+
+	* configure.in, ringing/common-am.h.in, ringing/common-msvc.h:
+	Added a new autoconf macro, RINGING_USE_STRINGSTREAM, to switch
+	between ostringstream and ostrstream.
+
+2002-09-20 10:22  ras52
+
+	* ringing/multtab.h: Added an iterator to the multtab class
+
+2002-09-20 10:22  ras52
+
+	* ringing/: falseness.cpp, falseness.h: Split out false_courses
+	from falseness_table
+
+2002-09-20 10:21  ras52
+
+	* ringing/: cclib.cpp, cclib.h, library.cpp, library.h, mslib.cpp,
+	mslib.h: Rework of library interface to use a iterator-base
+	approach
+
+2002-09-19 16:56  ras52
+
+	* tests/: Makefile.am, method-test.cpp, test-main.cpp: Added start
+	of test suite for the method class
+
+2002-09-19 16:55  ras52
+
+	* ringing/table_search.cpp: Fix to allow principles to be used in a
+	table_search
+
+2002-09-19 16:55  ras52
+
+	* ringing/row.h: Allow MicroSIRIL-style '+' prefix to place
+	notation Also allow a superfluous '.' after a '&' or '+'.
+
+2002-09-19 16:55  ras52
+
+	* ringing/row.cpp: Call reserve on strings before use
+
+2002-09-19 16:55  ras52
+
+	* mkdsp: Allow file names with hyphens
+
+2002-09-19 16:55  ras52
+
+	* README: Minor documentation changes
+
+2002-07-16 12:48  mjb47
+
+	* ringing/print_pdf.cpp: Tiny bug fix in PDF printing
+
+2002-06-12 18:21  ras52
+
+	* ringing/proof.h: Removed compiler warning in gcc-3.1
+
+2002-06-12 18:20  ras52
+
+	* ringing/: row.h, row.cpp: - Refactored change constructors into a
+	single init() function - Fixed a number of minor bugs in row and
+	change - Improved error reporting capabilities of interpret_pn
+
+2002-06-12 18:18  ras52
+
+	* Makefile.am, configure.in, tests/Makefile.am,
+	tests/change-test.cpp, tests/row-test.cpp, tests/test-base.cpp,
+	tests/test-base.h, tests/test-main.cpp: The start of a test
+	framework
+
+2002-06-11 17:26  ras52
+
+	* ringing/table_search.cpp: Corrected an assumption that all
+	methods have the treble as a fixed bell
+
+2002-06-05 12:41  ras52
+
+	* ringing/row.cpp: - Fixed bug in change::internal.  change(8,
+	"18").internal() is now   false as expected.
+
+2002-05-22 17:47  ras52
+
+	* ringing/row.h: Allow whitespace after '&' in a place notation.
+
+2002-05-18 12:19  ras52
+
+	* ringing/falseness.cpp: - Fixed bug in falseness table
+	constructor.
+
+2002-05-15 19:46  ras52
+
+	* ringing/: basic_search.cpp, falseness.cpp, table_search.cpp: -
+	Fixed bug in *_search.cpp that prevented touches with just one type
+	of   lead-end (e.g. the plain course) from showing up.	- Fixed bug
+	in falseness.cpp that caused some (usually asymmetric) methods	 to
+	get the wrong falsenesses.
+
+2002-05-04 12:31  ras52
+
+	* doc/ringing-lib.texi, examples/testbase.cpp, ringing/cclib.cpp,
+	ringing/cclib.h, ringing/extent.cpp, ringing/extent.h,
+	ringing/falseness.h, ringing/library.cpp, ringing/library.h,
+	ringing/macros.h, ringing/method.cpp, ringing/method.h,
+	ringing/mslib.cpp, ringing/mslib.h, ringing/multtab.cpp,
+	ringing/multtab.h, ringing/print_pdf.h, ringing/print_ps.h,
+	ringing/proof.h, ringing/row.cpp, ringing/row.h,
+	ringing/search_base.h, ringing/table_search.cpp: - Updated
+	documentation to reflect current status of row, change and   method
+	classes.
+	
+	- Fixed formatting issues in library documentation.
+	
+	- Added documentation on implementing new types of library.
+	
+	- Corrected spelling of "tittums".
+	
+	- Fixed cclib::simple_name to only strip class names at the end of 
+	 the name (so, for example, Little Pond Place Minor is handled
+	correctly).
+	
+	- Removed newlib<T> mechanism for registering libraries, and
+	replaced   with a simpler function pointer mechanism.
+	
+	- Changed method constructor to return a method with name "Not
+	Found" in   the event of an error if exceptions are disabled (as
+	per documentation).
+	
+	- Changed various int return types to bools in the library classes.
+	
+	- Made the method, extent_iterator and changes_iterator constructor
+	explicit.
+	
+	- Added an incourse_extent_iterator.
+	
+	- Changed some <iostream> and <fstream> includes for <iosfwd> where
+	possible.
+	
+	- Added some RINGING_FAKE_* macros to hide the hacks needed to make
+	template   instantiation work in MSVC-5.
+	
+	- Changed method::fullname to handle Grandsire, Union and their
+	related   methods correctly.  (Note that Little Grandsire is not
+	called Grandsire   Little.)
+	
+	- Renamed multiplcation_table to multtab to save typing.
+	
+	- Added functionality to multtab to factor out part ends (although
+	currently   only cyclic part end groups).
+
+2002-04-17 20:29  ras52
+
+	* examples/psline.cpp, examples/testlibrary.cpp,
+	examples/testproof.cpp, examples/testtouch.cpp,
+	ringing/dimension.cpp, ringing/pointers.h: - Some fixes to get the
+	class library to compile using compilers without   exceptions
+	(including g++ -fno-exceptions).
+
+2002-04-17 12:52  mjb47
+
+	* examples/testbase.cpp, ringing/printm.cpp, ringing/row.cpp: * Bug
+	fixes.	In row::order(), don't use strtok() on the raw data of	 a
+	string:  it's shared and not necessarily terminated.  In printm,  
+	calculate total_height() correctly.
+
+2002-04-12 17:08  mjb47
+
+	* doc/ringing-lib.texi, examples/psline.cpp, ringing/printm.cpp,
+	ringing/printm.h: Multiple pages from printm and psline
+
+2002-04-05 04:03  ras52
+
+	* ringing/: extent.cpp, extent.h: - Minor alteration to get extents
+	and sets of changes on zero bells working   correctly.	(The size
+	of the set should be 0! and F_0 respectively and now   is;
+	previously they were zero.)
+
+2002-04-04 23:54  ras52
+
+	* ringing/: extent.cpp, extent.h: - New class to iterate through a
+	set of possible changes.
+	
+	- A function to calculate the Nth term in the Fibonacci series.
+
+2002-04-04 21:49  ras52
+
+	* config.h.in, mkdsp, examples/args.cpp, examples/args.h,
+	examples/psline.cpp, ringing/basic_search.h, ringing/cclib.h,
+	ringing/common-msvc.h, ringing/extent.h, ringing/library.h,
+	ringing/macros.h, ringing/method.cpp, ringing/method.h,
+	ringing/pointers.h, ringing/row.cpp, ringing/row.h,
+	ringing/search_base.h, ringing/stl.cpp, ringing/table_search.h,
+	ringing/touch.cpp, ringing/touch.h: - Changed order of printm.h and
+	print_pdf.h includes in psline.cpp to get   psline compiling in
+	MSVC-5.  (See comment in testprint.cpp for an	explanation.)
+	
+	- Changed style of <args.h> include to "args.h".  (It is in the
+	local	directory and not the include path.)
+	
+	- Fixed bug in iterator base class to extent_iterator.
+	
+	- Changed various integer return types to booleans in row.h,
+	row.cpp,   method.h and method.cpp.  Also added an extra exception
+	to the change class.
+	
+	- Ported touch.h, search_base.h, basic_search.h and table_search.h
+	to work   with Windows DLLs.  The testsearch, testtouch and
+	testproof programs now	 run with the library as a DLL.
+
+2002-04-03 23:07  mjb47
+
+	* doc/ringing-lib.texi, ringing/printm.cpp, ringing/printm.h:
+	Documented printmethod; made a couple of changes to it too.
+
+2002-04-01 22:11  standardeight
+
+	* doc/ringing-lib.texi, examples/testmusic.cpp, ringing/music.cpp:
+	Add *456* regular expression functionality to music classes and
+	tidy up example. Also initial documentation for the new music
+	class.
+
+2002-03-26 20:38  mjb47
+
+	* ChangeLog, NEWS, README: Stuff for 0.2.7
+
 2002-03-26 20:15  mjb47
 
 	* configure.in, ringing/common-msvc.h: Prepare for 0.2.7
