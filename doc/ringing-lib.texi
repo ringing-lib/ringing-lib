@@ -22,12 +22,12 @@
 This is the manual for the Ringing Class Library, version
 @value{VERSION}.  Last updated @value{UPDATED}.
 
-Copyright 2001--2 Martin Bright and Mark Banner
+Copyright 2001--4 Martin Bright, Mark Banner and Richard Smith
 
 Permission is granted to copy, distribute and/or modify this document
 under the terms of the GNU Free Documentation License, Version 1.1
 or any later version published by the Free Software Foundation;
-with no the Invariant Sections, with no Front-Cover Texts, 
+with no Invariant Sections, with no Front-Cover Texts, 
 and with no Back-Cover Texts.  A copy of the license is included in 
 the section entitled ``GNU Free Documentation License''.
 @end ifnottex
@@ -42,7 +42,7 @@ the section entitled ``GNU Free Documentation License''.
 @vskip 0pt plus 1filll
 Version @value{VERSION}.  Last updated @value{UPDATED}.
 
-Copyright @copyright{} 2001-2 Martin Bright, Mark Banner and Richard Smith
+Copyright @copyright{} 2001-4 Martin Bright, Mark Banner and Richard Smith
 
 Permission is granted to copy, distribute and/or modify this document
 under the terms of the GNU Free Documentation License, Version 1.1 or
@@ -82,9 +82,9 @@ versions.
 @menu
 * Introduction::                
 * Installing and using the library::  
-* Rows and Changes::            
+* Rows and changes::            
 * Methods::                     
-* Method Libraries::            
+* Method libraries::            
 * Proof::                       
 * Musical Analysis::            
 * Producing printed output::    
@@ -140,7 +140,7 @@ to report bugs, request features, use forums and access the CVS
 repository, visit the project web page at
 @uref{http://ringing-lib.sourceforge.net}.
 
-@node Installing and using the library, Rows and Changes, Introduction, Top
+@node Installing and using the library, Rows and changes, Introduction, Top
 @chapter Installing and using the library
 @cindex installation
 
@@ -224,9 +224,8 @@ in the top-level directory of the distribution.  Some more instructions
 for using the @command{configure} script are given in the file
 @file{INSTALL}.
 
-At the moment it is only possible to create a version of the library for
-static linking; in the near future we hope to use GNU Libtool to provide
-a portable mechanism for creating shared libraries.
+On most platforms, it should be possible to build and install either
+static or dynamic libraries, or both.
 
 @node Microsoft Windows, Testing the library, Unix-like systems, Installing and using the library
 @section Microsoft Windows
@@ -275,7 +274,7 @@ the authors would be please to hear of any success.
 @node Testing the library, Using the library in your programs, Microsoft Windows, Installing and using the library
 @section Testing the library
 
-The library is now being provided with basic test facilities that
+The library is provided with basic test facilities that
 exercise the main classes and provide confidence that they are working
 correctly.
 
@@ -309,8 +308,8 @@ To link to the installed library, simply add the appropriate option to
 the command line when linking your program.  On most Unix systems, you
 will have to add @code{-lringing} to link with the library.
 
-@node Rows and Changes, Methods, Installing and using the library, Top
-@chapter Row and Change classes
+@node Rows and changes, Methods, Installing and using the library, Top
+@chapter Row and change classes
 @cindex row
 @cindex change
 
@@ -335,7 +334,7 @@ example @samp{X} or @samp{1258}).
 * Other functions in row.h::    
 @end menu
 
-@node Row Operations, Row Properties, Rows and Changes, Rows and Changes
+@node Row Operations, Row Properties, Rows and changes, Rows and changes
 @section Row operations
 @cindex row algebra
 @cindex algebra of rows
@@ -382,7 +381,7 @@ we have a lead of Plain Bob Major and we know that the fourth row is
 @samp{57312846}, and we wish to find the lead head. Just divide by the
 fourth row of the plain course (@samp{42618375}) to get the answer.
 
-@node Row Properties, Changes, Row Operations, Rows and Changes
+@node Row Properties, Changes, Row Operations, Rows and changes
 @section Row properties
 @cindex row properties
 
@@ -413,7 +412,7 @@ repeated; for example, @samp{21345678} has only one cycle, which is
 @samp{(12)}; and @samp{12356478} has one cycle, which is
 @samp{(456)}. Combining these two cycles will give us the row @samp{213564678}.
 
-@node Changes, The bell Class, Row Properties, Rows and Changes
+@node Changes, The bell Class, Row Properties, Rows and changes
 @section Changes
 @cindex change
 
@@ -429,7 +428,7 @@ place being made; for example, @samp{12} means that all bells swap,
 apart from the 1 and the 2, which stay in the same place. If all the
 bells swap, the place notation is @samp{X}.
 
-@node The bell Class, The row Class, Changes, Rows and Changes
+@node The bell Class, The row Class, Changes, Rows and changes
 @section The @code{bell} class
 @cindex @code{bell} class
 
@@ -505,7 +504,7 @@ object.  The characters used are, in order:
 @end example
 @end deftypefun
 
-@node The row Class, The change Class, The bell Class, Rows and Changes
+@node The row Class, The change Class, The bell Class, Rows and changes
 @section The @code{row} class
 @cindex @code{row} class
 
@@ -716,7 +715,7 @@ This returns a cyclic row on @var{n} bells with @var{h} initial fixed
 from the front of the row to the end.  Thus, @code{cyclic(6,1,2) == "145623"}.
 @end deftypefun
 
-@node The change Class, The permute function, The row Class, Rows and Changes
+@node The change Class, The permute function, The row Class, Rows and changes
 @section The @code{change} class
 @cindex @code{change} class
 
@@ -873,7 +872,7 @@ setup, @code{swap} may need to be in namespace @code{std}; similarly,
 taken care of.
 @end deftypefun
 
-@node The permute function, The row_block class, The change Class, Rows and Changes
+@node The permute function, The row_block class, The change Class, Rows and changes
 @section The @code{permute} function
 @cindex @code{permute} function
 
@@ -910,7 +909,7 @@ These operators multiply the row which the @code{row_permuter} object refers
 to by the given row or change.  A reference to that row is returned.
 @end deftypefn
 
-@node The row_block class, Other functions in row.h, The permute function, Rows and Changes
+@node The row_block class, Other functions in row.h, The permute function, Rows and changes
 @section The @code{row_block} class
 @cindex @code{row_block} class
 
@@ -1004,7 +1003,7 @@ This returns the @code{vector<change>} object on which the row block is based.
 @end deftypefun
 @end iftex
 
-@node Other functions in row.h,  , The row_block class, Rows and Changes
+@node Other functions in row.h,  , The row_block class, Rows and changes
 @section Other functions in @file{row.h}
 
 @deftypefun {template<OutputIterator, ForwardIterator> void} interpret_pn (int @var{bells}, ForwardIterator @var{start}, ForwardIterator @var{finish}, OutputIterator @var{out});
@@ -1027,7 +1026,7 @@ For examples of this function in use, look at one of the @code{method}
 constructors in @file{ringing/method.h} or in the example code.
 @end deftypefun
 
-@node Methods, Method Libraries, Rows and Changes, Top
+@node Methods, Method libraries, Rows and changes, Top
 @chapter Method classes
 @cindex method
 
@@ -1198,7 +1197,7 @@ The @code{M_DIFFERENTIAL} and @code{M_LITTLE} bits are flags which will be
 either set or cleared accordingly.  (For the purpose of this function, 
 ``Differential'' is considered a method class.  Differential hunters will have
 the @code{M_DIFFERENTIAL} bit set, together with one of the other classes;
-differential methods will just have the @code{M_DIFFERENTIAL} bit set.)
+differential methods will return @code{M_DIFFERENTIAL | M_PRINCIPLE}.)
 @end deftypefun
 
 @deftypefun char* method::fullname (char* @var{buffer}) const;
@@ -1258,8 +1257,8 @@ This points to the string @code{"Double"}.
 This points to the string @code{"Little"}.
 @end deftypevar
 
-@node Method Libraries, Proof, Methods, Top
-@chapter Method Libraries
+@node Method libraries, Proof, Methods, Top
+@chapter Method libraries
 @cindex library
 @cindex method library
 
@@ -1293,22 +1292,22 @@ library it is:  usually this can be detected automatically.
 * Using libraries::             
 * Built-in library types::      
 * Library framework::           
-* Implementing New Library Classes::  
+* Implementing new library classes::  
 @end menu
 
-@node Using libraries, Built-in library types, Method Libraries, Method Libraries
+@node Using libraries, Built-in library types, Method libraries, Method libraries
 @section Using libraries
 
 This section describes how to open and read method libraries.
 
 @menu
-* Initialisation::              
+* Initialisation for libraries::  
 * Facets::                      
 * The library class::           
 * The library_entry class::     
 @end menu
 
-@node Initialisation, Facets, Using libraries, Using libraries
+@node Initialisation for libraries, Facets, Using libraries, Using libraries
 @subsection Initialisation
 
 Before the auto-detection of libraries will work, the @code{library}
@@ -1331,9 +1330,9 @@ cclib::registerlib();
 The order in which library types are registered is the order in which
 they will be tried when opening a library.
 
-@node Facets, The library class, Initialisation, Using libraries
+@node Facets, The library class, Initialisation for libraries, Using libraries
 @subsection Facets
-@cindex Library facets
+@cindex facets
 
 @node The library class, The library_entry class, Facets, Using libraries
 @subsection The @code{library} class
@@ -1356,6 +1355,298 @@ Functions for accessing methods by name.
 Note that the names of methods in libraries may not be what the user
 expects.  For example, in MicroSIRIL libraries, method names are run
 together into one word, say @samp{Doubledublin}.
+
+@menu
+* library constructors::        
+* library iteration functions::  
+* Other library functions::     
+@end menu
+
+@node library constructors, library iteration functions, The library class, The library class
+@subsubsection Constructors
+
+@deftypefn Constructor {} library::library (void);
+Constructs an empty (and useless) library object.
+@end deftypefn
+
+@deftypefn Constructor {} library::library (const string& @var{filename});
+This constructor attempts to automatically detect what type of library 
+@var{filename} is, and create an appropriate @code{library} object to 
+interpret it.   For a library type to be correctly auto-detected, that
+type must be registered @pxref{Initialisation for libraries}.
+
+After constructing a library, the @code{library::good} function can be
+used see if auto-detection succeeded.
+@end deftypefn
+
+In addition to this constructor, which auto-detects the type of library,
+it is also possible to open a library of a fixed type, by constructing
+an object for a specific library type.  @xref{Built-in library types}.
+
+@node library iteration functions, Other library functions, library constructors, The library class
+@subsubsection Iteration functions
+
+The @code{library} class has an associated iterator class.
+
+@deftp {Data type} library::const_iterator;
+In the language of the Standard Template Library, this is an @dfn{input
+iterator}.  This means that you may only use it to read methods from the
+library in order, starting at the beginning.  The value type of the
+iterator is @code{library_entry} @pxref{The library_entry class}.
+@end deftp
+
+@deftypefn Function {library::const_iterator} library::begin (void) const;
+@deftypefnx Function {library::const_iterator} library::end (void) const;
+These functions return iterators pointing to the beginning and end of
+the library, respectively.
+@end deftypefn
+
+This is how these functions may be used to iterate through the library:
+
+@example
+// Open a library
+library l("my_library.xml");
+library::const_iterator i;
+
+// Print the base name of each method in it
+for(i = l.begin(); i != l.end(); ++i)
+  cout << (*i).base_name() << endl;
+@end example
+
+@node Other library functions,  , library iteration functions, The library class
+@subsubsection Other functions
+
+@deftypefun {bool} library_base::good (void) const;
+This function returns true if the library is open and ready to read
+methods, and false otherwise.
+@end deftypefun
+
+@deftypefun {virtual method} library::load (const char* @var{name}, int @var{stage}) const;
+This function loads a method from the library by name.  Note that the
+names under which methods are stored in a library depend entirely on the
+type of library.
+
+If no such method is found, if exceptions are enabled, an exception of class 
+@code{library_base::invalid_name} will be thrown; otherwise, the method 
+returned will be an empty method with the name @samp{"Not Found"}.
+@end deftypefun
+
+@deftypefun {virtual int} library::dir (list<string>& @var{result}) const;
+This function returns a list of the names of the methods in the library.
+@end deftypefun
+
+@deftypefun {virtual int} library::mdir (list<method>& @var{result}) const;
+This function loads all the methods in the library and returns them as a
+list.
+@end deftypefun
+
+@node The library_entry class,  , The library class, Using libraries
+@subsection The @code{library_entry} class
+@cindex @code{library_entry} class
+
+The @code{library_entry} class is the value type of the iterator on a
+library.  It is used to get information about the method from the
+library without constructing a @code{method} object.
+
+@deftypefun string name (void) const;
+This returns the method's name in whatever form the library stores it 
+internally.  Thus it may or may not contain the class name(s) or stage name
+of the method.  In the case of MicroSIRIL libraries, it will not even have
+whitespace in the name.
+@end deftypefun
+
+@deftypefun string base_name (void) const;
+This returns the base name of the method (i.e. the name with the class name(s)
+and stage name removed).  The value returned is suitable for passing to 
+the @code{method} constructor.
+@end deftypefun
+
+@deftypefun string pn (void) const;
+This returns a string containing the method's place notation.
+@end deftypefun
+
+@deftypefun int bells (void) const;
+This returns the number of bells on which the method is defined.
+@end deftypefun
+
+@deftypefun method meth (void) const
+This constructs and return a @code{method} object.
+@end deftypefun
+
+@node Built-in library types, Library framework, Using libraries, Method libraries
+@section Built-in library types
+
+@menu
+* XML libraries::               
+@end menu
+
+@node XML libraries,  , Built-in library types, Built-in library types
+@subsection XML libraries
+@cindex XML libraries
+@cindex @code{xmllib} class
+
+A specification for method libraries in XML can be found at
+@uref{http://methods.ringing.org}.  This site is also home to a server
+which serves XML method data in response to HTTP queries.  The routines
+declared in @file{ringing/xmllib.h} can not only parse the XML data, but
+can also automatically download method data from the server.
+
+To use XML method libraries, you need to have the Xerces library
+from the Apache project, available at @uref{http://xml.apache.org/}.
+
+@node Library framework, Implementing new library classes, Built-in library types, Method libraries
+@section Library framework
+
+The basic library framework comprises five classes, all of which are 
+declared in @file{ringing/library.h}.
+
+@c Unfortunately it seems that the @code macro cannot be used in the 
+@c name argument of @deftp as makeinfo --html can't cope with it.  
+
+@deftp {Class} {class library_base}
+This is the basic interface that all implementations will need to implement.
+It describes how to iterate through a library, and provides hooks that 
+can be used to provide more efficient algorithms for searching through the
+library.
+@end deftp
+
+@deftp {Class} {class library}
+The @code{library} class serves two purposes: it acts as a shared pointer
+to a library_base, and it handles the auto-detection of libraries.  
+Implementations only need to derive from this if they want to provide an
+alternative to the standard auto-detection mechansim.
+@end deftp
+
+@deftp {Class} {class library_entry}
+This class represents an entry in a library.  It has value semantics; thus 
+it is safe to hold onto multiple entries from a single library.
+@end deftp
+
+@deftp {Class} {class library_base::const_iterator}
+This is an input iterator that iterates over the entries in a library.  
+Dereferencing the iterator returns a @code{library_entry}.
+@end deftp
+
+@deftp {Class} {class library_entry::impl}
+Each @code{library_entry} class holds onto a pointer to one of these.  It
+provides an interface to read library entries that all library 
+implementations must implement.
+@end deftp
+
+@menu
+* The library_base class::      
+* The library_base const_iterator class::  
+* library internals::           
+* library_entry internals::     
+* The library_entry impl class::  
+@end menu
+
+@node The library_base class, The library_base const_iterator class, Library framework, Library framework
+@subsection The @code{library_base} class
+@cindex @code{library_base} class
+
+The @code{library_base} class provides the interface that library 
+implementations must implement to create iterators on a library.  It also has
+virtual functions can be overriden to provide more efficient ways to search
+and list libraries.
+
+@deftypefn Destructor virtual library_base::~library_base (void);
+A virtual destructor.
+@end deftypefn
+
+@deftypefun {virtual library_base::const_iterator} library_base::begin (void) const = 0;
+This should be overriden to construct a @code{library_base::const_iterator}
+pointing to the start of the library.
+@end deftypefun 
+
+@deftypefun {library_base::const_iterator} library_base::end (void) const;
+This returns a default constructed @code{library_base::const_iterator}
+representing one past the end of the library.
+@end deftypefun
+
+@deftypefun {virtual bool} library_base::good (void) const = 0;
+This function should be overriden to return true if a valid library is 
+currently loaded and false otherwise.
+@end deftypefun
+
+@deftypefun {virtual method} library_base::load (const char* @var{name}, int @var{stage}) const;
+The default implementation of @code{load} iterates through the library
+searching for an entry with the correct name.  When comparing method names,
+it does so in a case-insensitive manner.  If @var{stage} is non-zero, 
+@code{load} requires that the method is on that number of bells.  
+
+If no such method is found, if exceptions are enabled, an exception of class 
+@code{library_base::invalid_name} will be thrown; otherwise, the method 
+returned will be an empty method with the name @samp{"Not Found"}.
+
+Library implementations may wish to override this if there is a more 
+efficient way to locate the method.
+@end deftypefun
+
+@deftypefun {virtual int} library_base::dir (list<string>& @var{result}) const;
+@deftypefunx {virtual int} library_base::mdir (list<method>& @var{result}) const;
+The default implementations of @code{dir} and @code{mdir} iterate through 
+the library, pushing each name (in the case of @code{dir}) or method 
+(in the case of @code{mdir}) onto @var{result}. The return value is
+the number of values pushed onto @code{result}.
+
+Library implementations may wish to override this if there is a more 
+efficient way to locate the method.
+@end deftypefun
+
+@deftypefun {virtual bool} library_base::writeable (void) const;
+@deftypefunx {virtual bool} library_base::save (const method& @var{m});
+@deftypefunx {virtual bool} library_base::rename_method (const string& @var{name1}, const string& @var{name2});
+@deftypefunx {virtual bool} library_base::remove (const string& @var{name});
+These functions are for writing to method libraries.  This functionality is 
+still experimental.
+@end deftypefun
+
+@node The library_base const_iterator class, library internals, The library_base class, Library framework
+@subsection The @code{library_base::const_iterator} class
+@cindex @code{library_base::const_iterator} class
+@cindex @code{library::const_iterator} class
+
+In the terminology of the STL, the @code{library_entry::const_iterator} class
+is an Input Iterator but not a Forward Iterator.  This means that multiple
+iterators on the same library will not work as expected.  
+
+@deftypefn Constructor {} library_base::const_iterator::const_iterator (void);
+This is the default constructor.  It is undefined behaviour to dereference 
+or increment the default constructed @code{library_base::const_iterator}.
+@end deftypefn
+
+@deftypefn Constructor {} library_base::const_iterator::const_iterator (library_base* @var{lb}, library_entry::impl* @var{val});
+This constructor creates an iterator on library @var{lb} and with a library
+entry implementation of @var{val}.  The constructor takes ownership of 
+@var{val}, which must have been allocated using @code{new}; it does not take
+ownership of @var{lb}.  Typically, this function should only be called
+by the @code{begin} function of classes derived from @code{library_base}.
+@end deftypefn
+
+@deftypefun bool library_base::const_iterator::operator== (const library_base::const_iterator& @var{other}) const;
+@deftypefunx bool library_base::const_iterator::operator!= (const library_base::const_iterator& @var{other}) const;
+Compare two iterators.  It is undefined behaviour to compare two iterators 
+from different libraries.  
+@end deftypefun
+
+@deftypefun library_entry library_base::const_iterator::operator* (void) const;
+@deftypefunx library_entry* library_base::const_iterator::operator-> (void) const;
+Dereferences an iterator to retrieve the current @code{library_entry}.  It
+is undefined behaviour to dereference an iterator that compares equal to 
+the end iterator of that library.
+@end deftypefun 
+
+@deftypefun library_base::const_iterator& library_base::const_iterator::operator++ (void) const;
+@deftypefunx library_base::const_iterator library_base::const_iterator::operator++ (int) const;
+The prefix and postfix increment operators move the iterator on to point to 
+the next entry in the library.  If there are no further entries in the library,
+the iterator will compare equal to the library's end iterator.
+@end deftypefun 
+
+@node library internals, library_entry internals, The library_base const_iterator class, Library framework
+@subsection @code{library} internals
+@cindex @code{library} internals
 
 @deftypefn Constructor {} library::library (void);
 Default constructs a library holding a @code{NULL} @code{library_base} 
@@ -1423,9 +1714,9 @@ These functions all call down to the corresponding functions on the
 They must not be called if @code{library::good()} is false.
 @end deftypefun
 
-@node The library_entry class,  , The library class, Using libraries
-@subsection The @code{library_entry} class
-@cindex @code{library_entry} class
+@node library_entry internals, The library_entry impl class, library internals, Library framework
+@subsection The @code{library_entry} internals
+@cindex @code{library_entry} internals
 
 The @code{library_entry} class holds a pointer to a class derived from
 @code{library_entry::impl} which reads data from a particular library entry.
@@ -1461,158 +1752,7 @@ This returns the number of bells on which the current method is defined.
 This returns the current method.
 @end deftypefun
 
-@node Built-in library types, Library framework, Using libraries, Method Libraries
-@section Built-in library types
-
-@node Library framework, Implementing New Library Classes, Built-in library types, Method Libraries
-@section Library framework
-
-The basic library framework comprises five classes, all of which are 
-declared in @file{ringing/library.h}.
-
-@c Unfortunately it seems that the @code macro cannot be used in the 
-@c name argument of @deftp as makeinfo --html can't cope with it.  
-
-@deftp {Class} {class library_base}
-This is the basic interface that all implementations will need to implement.
-It describes how to iterate through a library, and provides hooks that 
-can be used to provide more efficient algorithms for searching through the
-library.
-@end deftp
-
-@deftp {Class} {class library}
-The @code{library} class serves two purposes: it acts as a shared pointer
-to a library_base, and it handles the auto-detection of libraries.  
-Implementations only need to derive from this if they want to provide an
-alternative to the standard auto-detection mechansim.
-@end deftp
-
-@deftp {Class} {class library_entry}
-This class represents an entry in a library.  It has value semantics; thus 
-it is safe to hold onto multiple entries from a single library.
-@end deftp
-
-@deftp {Class} {class library_base::const_iterator}
-This is an input iterator that iterates over the entries in a library.  
-Dereferencing the iterator returns a @code{library_entry}.
-@end deftp
-
-@deftp {Class} {class library_entry::impl}
-Each @code{library_entry} class holds onto a pointer to one of these.  It
-provides an interface to read library entries that all library 
-implementations must implement.
-@end deftp
-
-@menu
-* The library_base class::      
-* The library_base const_iterator class::  
-* The library_entry impl class::  
-@end menu
-
-@node The library_base class, The library_base const_iterator class, Library framework, Library framework
-@subsection The @code{library_base} class
-@cindex @code{library_base} class
-
-The @code{library_base} class provides the interface that library 
-implementations must implement to create iterators on a library.  It also has
-virtual functions can be overriden to provide more efficient ways to search
-and list libraries.
-
-@deftypefn Destructor virtual library_base::~library_base (void);
-A virtual destructor.
-@end deftypefn
-
-@deftypefun {virtual library_base::const_iterator} library_base::begin (void) const = 0;
-This should be overriden to construct a @code{library_base::const_iterator}
-pointing to the start of the library.
-@end deftypefun 
-
-@deftypefun {library_base::const_iterator} library_base::end (void) const;
-This returns a default constructed @code{library_base::const_iterator}
-representing one past the end of the library.
-@end deftypefun
-
-@deftypefun {virtual bool} library_base::good (void) const = 0;
-This function should be overriden to return true if a valid library is 
-currently loaded and false otherwise.
-@end deftypefun
-
-@deftypefun {virtual method} library_base::load (const char* @var{name}, int @var{stage}) const;
-The default implementation of @code{load} iterates through the library
-searching for an entry with the correct name.  When comparing method names,
-it does so in a case-insensitive manner.  If @var{stage} is non-zero, 
-@code{load} requires that the method is on that number of bells.  
-
-If no such method is found, if exceptions are enabled, an exception of class 
-@code{library_base::invalid_name} will be thrown; otherwise, the method 
-returned will be an empty method with the name @samp{"Not Found"}.
-
-Library implementations may wish to override this if there is a more 
-efficient way to locate the method.
-@end deftypefun
-
-@deftypefun {virtual int} library_base::dir (list<string>& @var{result}) const;
-@deftypefunx {virtual int} library_base::mdir (list<method>& @var{result}) const;
-The default implementations of @code{dir} and @code{mdir} iterate through 
-the library, pushing each name (in the case of @code{dir}) or method 
-(in the case of @code{mdir}) onto @var{result}. The return value is
-the number of values pushed onto @code{result}.
-
-Library implementations may wish to override this if there is a more 
-efficient way to locate the method.
-@end deftypefun
-
-@deftypefun {virtual bool} library_base::writeable (void) const;
-@deftypefunx {virtual bool} library_base::save (const method& @var{m});
-@deftypefunx {virtual bool} library_base::rename_method (const string& @var{name1}, const string& @var{name2});
-@deftypefunx {virtual bool} library_base::remove (const string& @var{name});
-These functions are for writing to method libraries.  This functionality is 
-still experimental.
-@end deftypefun
-
-@node The library_base const_iterator class, The library_entry impl class, The library_base class, Library framework
-@subsection The @code{library_base::const_iterator} class
-@cindex @code{library_base::const_iterator} class
-@cindex @code{library::const_iterator} class
-
-In the terminology of the STL, the @code{library_entry::const_iterator} class
-is an Input Iterator but not a Forward Iterator.  This means that multiple
-iterators on the same library will not work as expected.  
-
-@deftypefn Constructor {} library_base::const_iterator::const_iterator (void);
-This is the default constructor.  It is undefined behaviour to dereference 
-or increment the default constructed @code{library_base::const_iterator}.
-@end deftypefn
-
-@deftypefn Constructor {} library_base::const_iterator::const_iterator (library_base* @var{lb}, library_entry::impl* @var{val});
-This constructor creates an iterator on library @var{lb} and with a library
-entry implementation of @var{val}.  The constructor takes ownership of 
-@var{val}, which must have been allocated using @code{new}; it does not take
-ownership of @var{lb}.  Typically, this function should only be called
-by the @code{begin} function of classes derived from @code{library_base}.
-@end deftypefn
-
-@deftypefun bool library_base::const_iterator::operator== (const library_base::const_iterator& @var{other}) const;
-@deftypefunx bool library_base::const_iterator::operator!= (const library_base::const_iterator& @var{other}) const;
-Compare two iterators.  It is undefined behaviour to compare two iterators 
-from different libraries.  
-@end deftypefun
-
-@deftypefun library_entry library_base::const_iterator::operator* (void) const;
-@deftypefunx library_entry* library_base::const_iterator::operator-> (void) const;
-Dereferences an iterator to retrieve the current @code{library_entry}.  It
-is undefined behaviour to dereference an iterator that compares equal to 
-the end iterator of that library.
-@end deftypefun 
-
-@deftypefun library_base::const_iterator& library_base::const_iterator::operator++ (void) const;
-@deftypefunx library_base::const_iterator library_base::const_iterator::operator++ (int) const;
-The prefix and postfix increment operators move the iterator on to point to 
-the next entry in the library.  If there are no further entries in the library,
-the iterator will compare equal to the library's end iterator.
-@end deftypefun 
-
-@node The library_entry impl class,  , The library_base const_iterator class, Library framework
+@node The library_entry impl class,  , library_entry internals, Library framework
 @subsection The @code{library_entry::impl} class
 @cindex @code{library_entry::impl} class
 
@@ -1680,8 +1820,8 @@ This should be overriden to return the number of bells that the current method
 is on.
 @end deftypefun
 
-@node Implementing New Library Classes,  , Library framework, Method Libraries
-@section Implementing New Library Classes
+@node Implementing new library classes,  , Library framework, Method libraries
+@section Implementing new library classes
 
 There are two ways to implement new library classes, depending on whether or 
 not the new library class can support the automatic detection of library type
@@ -1699,7 +1839,7 @@ auto-detection mechanism, and some alternative mechanism is often better.
 * Subclassing library_entry impl::  
 @end menu
 
-@node Supporting auto-detection, Alternative creation mechanisms, Implementing New Library Classes, Implementing New Library Classes
+@node Supporting auto-detection, Alternative creation mechanisms, Implementing new library classes, Implementing new library classes
 @subsection Supporting auto-detection
 
 The implementation of a new type of library that can be auto-detected needs to 
@@ -1732,7 +1872,7 @@ private:
 In addition, the implementation must override the @code{library_base::good} 
 and @code{library_base::begin} virtual functions.  This is discussed elsewhere.
 
-@node Alternative creation mechanisms, Subclassing library_base, Supporting auto-detection, Implementing New Library Classes
+@node Alternative creation mechanisms, Subclassing library_base, Supporting auto-detection, Implementing new library classes
 @subsection Alternative creation mechanisms
 
 In cases where it is inappropriate to use the auto-detection mechanism an 
@@ -1770,7 +1910,7 @@ Note that @code{library::~library} is @emph{not} virtual, and thus,
 if @code{mylibrary} is ever allocated on the heap, care is required to avoid
 deletion via a pointer to its base class.
 
-@node Subclassing library_base, Subclassing library_entry impl, Alternative creation mechanisms, Implementing New Library Classes
+@node Subclassing library_base, Subclassing library_entry impl, Alternative creation mechanisms, Implementing new library classes
 @subsection Subclassing library_base
 
 In addition to providing mechanism for opening libraries, implementations
@@ -1810,7 +1950,7 @@ does not change the visible state of the library---but it needs to rewind
 of the library because the @code{library::const_iterator} is only an 
 Input Iterator and so only one of them can ever be present at any time.
 
-@node Subclassing library_entry impl,  , Subclassing library_base, Implementing New Library Classes
+@node Subclassing library_entry impl,  , Subclassing library_base, Implementing new library classes
 @subsection Subclassing library_entry impl
 
 The last step of implementing a library is to provide a class that implements
@@ -1859,7 +1999,7 @@ the whole line in data member (i.e. make @var{entry} a data member), and
 then get @code{name} and @code{pn} to generate these on-the-fly from the 
 @var{entry} string.
 
-@node Proof, Musical Analysis, Method Libraries, Top
+@node Proof, Musical Analysis, Method libraries, Top
 @chapter Method and Touch Proving
 @cindex proving rows
 @cindex @code{proof} class
@@ -2848,7 +2988,7 @@ This function returns the current options.
 @deftypefun void printrow::set_options (const printrow::options& @var{o});
 This function sets the options to those given by @var{o}.  Note that
 only certain option changes will have any effect once the object has
-the object has been constructed.
+been constructed.
 @end deftypefun
 
 After setting the position, rows can be printed.
