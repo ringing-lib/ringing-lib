@@ -160,13 +160,13 @@ public:
  ~shared_pointer() { if ( !--*rc ) { delete ptr; delete rc; } }
   
   // Swapping, assignment and copying
-  void swap( shared_pointer &o )
+  void swap( shared_pointer<T> &o )
     { RINGING_PREFIX_STD swap( ptr, o.ptr ); 
       RINGING_PREFIX_STD swap( rc, o.rc ); }
-  shared_pointer( const shared_pointer &o )
+  shared_pointer( const shared_pointer<T> &o )
     : ptr( o.ptr ) { ++*( rc = o.rc ); }
-  shared_pointer &operator=( const shared_pointer &o )
-    { shared_pointer( o ).swap(*this); return *this; }
+  shared_pointer &operator=( const shared_pointer<T> &o )
+    { shared_pointer<T>( o ).swap(*this); return *this; }
 
   // Reset the pointer
   void reset( T *src = 0 ) 
@@ -267,8 +267,8 @@ public:
 
 private:
   // Assignment and copying disabled
-  scoped_pointer( const scoped_pointer &o );
-  void operator=( const scoped_pointer &o );
+  scoped_pointer( const scoped_pointer<T> &o );
+  void operator=( const scoped_pointer<T> &o );
 
 private:
   T *ptr;
@@ -318,13 +318,13 @@ public:
  ~cow_pointer() { if ( !--*rc ) { delete ptr; delete rc; } }
 
   // Swapping, assignment and copying
-  void swap( cow_pointer &o )
+  void swap( cow_pointer<T> &o )
     { std::swap( ptr, o.ptr ); 
       std::swap( rc, o.rc ); }
-  cow_pointer( const cow_pointer &o )
+  cow_pointer( const cow_pointer<T> &o )
     : ptr( o.ptr ) { ++*( rc = o.rc ); }
-  cow_pointer &operator=( const cow_pointer &o )
-    { cow_pointer( o ).swap(*this); return *this; }
+  cow_pointer &operator=( const cow_pointer<T> &o )
+    { cow_pointer<T>( o ).swap(*this); return *this; }
 
   // Reset the pointer
   void reset( T *src = 0 ) 
