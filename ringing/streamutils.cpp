@@ -30,7 +30,7 @@ RINGING_START_NAMESPACE
 
 RINGING_USING_STD
 
-make_string::operator string() const
+make_string::operator string()
 {
 #if RINGING_USE_STRINGSTREAM
   return os.str();

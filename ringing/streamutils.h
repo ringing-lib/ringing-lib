@@ -73,7 +73,7 @@ public:
     return *this;
   }
 
-  RINGING_API operator string() const;
+  RINGING_API operator string();
 
 private:
 #if RINGING_USE_STRINGSTREAM
