@@ -87,6 +87,14 @@ extent_iterator &extent_iterator::operator++()
   return *this;
 }
 
+incourse_extent_iterator &incourse_extent_iterator::operator++() 
+{
+  do { 
+    ++ei; 
+  } while (ei != ee && ei->sign() < 0);
+  return *this;
+}
+
 void changes_iterator::next()
 {
   if ( nw == 0 || stk.size() == nw && stk.back() == nw+nh-1 )

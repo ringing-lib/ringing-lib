@@ -284,8 +284,6 @@ string cclib::iterator::value_type::pn() const
 // ---------------------------------------------------------------------
 
 
-newlib<cclib> cclib::type;
-
 // This function is for creating lower case strings.
 void lowercase(char &c)
 {
@@ -312,16 +310,35 @@ string cclib::simple_name(const string &original)
   string newname(original);
   string::size_type pos = 0;
 
+  // Entries in CC Libs do not contain the stage name.
+
   // Erase sections of the string that contain a classname.
   for (int i = 2; i < 11; i++)
     {
-      if ((pos = newname.find(method::classname(i))) != string::npos)
+      const char *clname = method::classname(i);
+      size_t cllen = strlen(clname);
+
+      if ((pos = newname.find(clname)) != string::npos
+	  && pos + cllen == newname.size() )
 	{
-	  newname.erase(pos, strlen(method::classname(i)));
+	  newname.erase(pos, cllen);
+	  break; // There is only ever one class
 	}
     }
+
+  // Now remove space on end of line.
+  {
+    string::iterator j = newname.end();
+    while ((j >= newname.begin()) && (isspace(*(j - 1))))
+      {
+	j--;
+      }
+    newname.erase(j, newname.end());
+  }
+
   // Do the same for little - but only find the last
-  if ((pos = newname.rfind(method::txt_little)) != string::npos)
+  if ((pos = newname.rfind(method::txt_little)) != string::npos
+      && pos + strlen(method::txt_little) == newname.size() )
     {
       newname.erase(pos, strlen(method::txt_little));
     }
@@ -336,7 +353,8 @@ string cclib::simple_name(const string &original)
   return newname.substr(0, j - newname.begin());
 }
 
-cclib::cclib(const string& name) : f(name.c_str()), wr(0), _good(0)
+cclib::cclib(const string& name)
+  : f(name.c_str()), wr(0), _good(0)
 {
   // Open file. Not going to bother to see if it's writeable as the
   // save function is not currently planned to be implemented.
@@ -348,13 +366,12 @@ cclib::cclib(const string& name) : f(name.c_str()), wr(0), _good(0)
 }
 
 // Is this file in the right format?
-int cclib::canread(ifstream& ifs)
+library_base *cclib::canread(ifstream& ifs, const string& name)
 {
-  // Rewind the stream
-  ifs.clear();
-  ifs.seekg(0, ios::beg);
-
-  return iterator(ifs) != iterator();
+  if ( iterator(ifs) != iterator() )
+    return new cclib( name );
+  else
+    return NULL;
 }
 
 // Return a list of items
@@ -407,8 +424,7 @@ method cclib::load(const string& name)
   // Otherwise we have to return something to avoid warning and errors, so
   // make up something strange. Give it a name so it can always be checked
   // against.
-  method m;
-  return m;
+  return method( 0, 0, "Not Found" );
 }
 
 #if defined(SEPERATE_FILES)

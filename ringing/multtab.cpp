@@ -25,38 +25,95 @@
 #include <ringing/multtab.h>
 #if RINGING_OLD_INCLUDES
 #include <iostream.h>
+#include <iomanip.h>
 #else
 #include <iostream>
+#include <iomanip>
 #endif
 #if RINGING_OLD_C_INCLUDES
 #include <assert.h>
+#include <math.h>
 #else
 #include <cassert>
+#include <cmath>
 #endif
 
 RINGING_START_NAMESPACE
 
 RINGING_USING_STD
 
-void multiplication_table::dump( ostream &os ) const
+
+void multtab::swap( multtab &other )
 {
+  partend.swap( other.partend );
+  rows.swap( other.rows );
+  table.swap( other.table );
+  RINGING_PREFIX_STD swap( colcount, other.colcount );
+}
+
+multtab &multtab::operator=( const multtab &other ) 
+{ 
+  multtab(other).swap(*this);
+  return *this;
+}
+
+bool multtab::is_representative( const row &r )
+{
+  for ( row x( partend * r ); x != r; x = partend * x )
+    if ( x < r )
+      return false;
+
+  return true;
+}
+
+row multtab::make_representative( const row &r )
+{
+  row res(r);
+
+  for ( row x( partend * r ); x != r; x = partend * x )
+    if ( x < res )
+      res = x;
+
+  return res;
+}
+
+void multtab::init( const vector< row > &r )
+{
+  rows.reserve( r.size() / partend.order() );
+
+  for ( vector<row>::const_iterator i( r.begin() ), e( r.end() ); i != e; ++i )
+    if ( is_representative( *i ) )
+      rows.push_back( *i );
+
+  table.resize( rows.size() );
+}
+
+void multtab::dump( ostream &os ) const
+{
+  const int width( (int)ceil( log10( (float)table.size() ) ) );
   for ( row_t i; i.n != table.size(); ++i.n )
     {
-      os << i.n << ")  ";
-	for ( vector< row_t >::const_iterator j( table[i.n].begin() );
-	      j != table[i.n].end(); ++j )
-	  {
-	    os << j->n << " ";
-	  }
-	os << "\n";
+      os << setw(width) << i.n << ")  " << rows[i.n] << "  ";
+      for ( vector< row_t >::const_iterator j( table[i.n].begin() );
+	    j != table[i.n].end(); ++j )
+	{
+	  os << setw(width) << j->n << " ";
+	}
+      os << "\n";
     }
 
   os << endl;
 }
 
-multiplication_table::pre_col_t 
-multiplication_table::compute_pre_mult( const row &r )
+multtab::pre_col_t 
+multtab::compute_pre_mult( const row &r )
 {
+  // This only makes sense if r commutes with the partend
+  if ( r * partend != partend * r )
+    throw logic_error
+      ( "Attempted to add a precomputed premultiplication to the "
+	"multiplication table that does not commute with the part end." );
+
   size_t i(0);
   for ( vector< row >::const_iterator ri( rows.begin() );
 	ri != rows.end(); ++ri )
@@ -67,8 +124,8 @@ multiplication_table::compute_pre_mult( const row &r )
   return pre_col_t( colcount++, this );
 }
 
-multiplication_table::post_col_t 
-multiplication_table::compute_post_mult( const row &r )
+multtab::post_col_t 
+multtab::compute_post_mult( const row &r )
 {
   size_t i(0);
   for ( vector< row >::const_iterator ri( rows.begin() ); 
@@ -80,11 +137,13 @@ multiplication_table::compute_post_mult( const row &r )
   return post_col_t( colcount++, this );
 }
 
-multiplication_table::row_t 
-multiplication_table::find( const row &r )
+multtab::row_t 
+multtab::find( const row &r )
 {
+  row r2( make_representative( r ) );
+
   for ( row_t i; i.n != rows.size(); ++i.n )
-    if ( rows[i.n] == r ) 
+    if ( rows[i.n] == r2 ) 
       return i;
 
   assert( false );

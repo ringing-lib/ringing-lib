@@ -123,15 +123,9 @@ public:
   void add(const row& r);
   void output(pdf_file& f);
 
-#if RINGING_PREMATURE_MEMBER_INSTANTIATION
-  // These are to make templates work and don't really exist
-  drawline_pdf();
-  bool operator<(const drawline_pdf&) const;
-  bool operator==(const drawline_pdf&) const;
-  bool operator!=(const drawline_pdf&) const;
-  bool operator>(const drawline_pdf&) const;
-  drawline_pdf& operator=(const drawline_pdf&);
-#endif
+  RINGING_FAKE_DEFAULT_CONSTRUCTOR( drawline_pdf );
+  RINGING_FAKE_COMPARATORS( drawline_pdf );
+  RINGING_FAKE_ASSIGNMENT( drawline_pdf );
 };
 
 struct text_bit {
@@ -139,12 +133,8 @@ struct text_bit {
   text_style::alignment al;
   bool squash;
   string s;
-#if RINGING_PREMATURE_MEMBER_INSTANTIATION
-  bool operator==(const text_bit &) const;
-  bool operator!=(const text_bit &) const;
-  bool operator<(const text_bit &) const;
-  bool operator>(const text_bit &) const;
-#endif
+
+  RINGING_FAKE_COMPARATORS( text_bit );
 };
 
 class printrow_pdf : public printrow::base {

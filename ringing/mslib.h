@@ -48,29 +48,27 @@ private:
   int b;                        // Number of bells for files in this lib
   int wr;                       // Is it open for writing?
   int _good;
-  static newlib<mslib> type;    // Provide a handle to this library type
 
 public:
   static RINGING_API void registerlib(void) {
-    library::addtype(&type);
+    library::addtype(&canread);
   }
 
-  mslib(const string& name);
-  ~mslib() { if (_good == 1) f.close(); }
-
 private:
-  friend class newlib<mslib>;
-  
+  // Construction handled by library class
+  mslib(const string& name);
+ ~mslib() { if (_good == 1) f.close(); }
+
   // Is this file in the right format?
-  static int canread(ifstream& ifs);
+  static library_base *canread(ifstream& ifs, const string& name);
 
   // Return a list of items
   int dir(list<string>& result);
 
-  int good(void) const          // Is the library in a usable state?
+  bool good(void) const          // Is the library in a usable state?
     { return _good; }
 
-  int writeable(void) const     // Is this library writeable?
+  bool writeable(void) const     // Is this library writeable?
     { return wr; }
 
   method load(const string& name);     // Load a method

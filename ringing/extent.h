@@ -56,7 +56,7 @@ public:
   // E.g. The set of tenors together lead heads, "1xxxxx78", has 
   // nw = 5, nh = 1, nt = 8.
   extent_iterator( unsigned int nw, unsigned int nh, unsigned int nt );
-  extent_iterator( unsigned int nw, unsigned int nh = 0 );
+  explicit extent_iterator( unsigned int nw, unsigned int nh = 0u );
 
   // Trivial Iterator implementation
   const row *operator->() const { return &r; }
@@ -82,6 +82,50 @@ private:
   string s;
 };
 
+class RINGING_API incourse_extent_iterator
+  : public RINGING_STD_CONST_ITERATOR( forward_iterator_tag, row )
+{
+public:
+  // Standard iterator typedefs
+  typedef forward_iterator_tag iterator_category;
+  typedef row value_type;
+  typedef ptrdiff_t difference_type;
+  typedef const row *pointer;
+  typedef const row &reference;
+
+  // The end iterator
+  incourse_extent_iterator() {}
+ 
+  // The beginning iterator
+  //   nw == The number of working bells 
+  //   nh == The number of fixed (hunt) bells  [ default = 0 ]
+  //   nt == The total number of bells         [ default = nh + nw ]
+  // E.g. The set of tenors together lead heads, "1xxxxx78", has 
+  // nw = 5, nh = 1, nt = 8.
+  incourse_extent_iterator( unsigned int nw, unsigned int nh, unsigned int nt )
+    : ei( nw, nh, nt ) {}
+  explicit incourse_extent_iterator( unsigned int nw, unsigned int nh = 0u )
+    : ei( nw, nh ) {}
+
+  // Trivial Iterator implementation
+  const row *operator->() const { return &*ei; }
+  const row &operator*() const { return *ei; }
+  
+  // Equality Comparable implementation
+  bool operator==( const incourse_extent_iterator &i ) const
+    { return ei == i.ei; }
+  bool operator!=( const incourse_extent_iterator &i ) const
+    { return ei != i.ei; }
+
+  // Forward Iterator implementation
+  incourse_extent_iterator &operator++();
+  incourse_extent_iterator operator++(int)
+    { incourse_extent_iterator tmp(*this); ++*this; return tmp; }
+
+private:
+  extent_iterator ei, ee;
+};
+
 class RINGING_API changes_iterator
   : public RINGING_STD_CONST_ITERATOR( forward_iterator_tag, change )
 {
@@ -103,7 +147,7 @@ public:
   // E.g. The set of valid changes on eight bells leaving the 1, 7 and 8 still
   // has nw = 5, nh = 1, nt = 8.
   changes_iterator( unsigned int nw, unsigned int nh, unsigned int nt );
-  changes_iterator( unsigned int nw, unsigned int nh = 0u );
+  explicit changes_iterator( unsigned int nw, unsigned int nh = 0u );
 
   // Trivial Iterator implementation
   const change *operator->() const { return &c; }

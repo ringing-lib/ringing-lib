@@ -33,8 +33,6 @@
 
 RINGING_START_NAMESPACE
 
-newlib<mslib> mslib::type;
-
 mslib::mslib(const string& name) : wr(0),
 				   _good(0)
 {
@@ -62,12 +60,10 @@ mslib::mslib(const string& name) : wr(0),
 }
 
 // Is this file in the right format?
-int mslib::canread(ifstream& ifs)
+library_base *mslib::canread(ifstream& ifs, const string& name)
 {
   int valid = 0;
   int notvalid = 0;
-  ifs.clear();
-  ifs.seekg(0, ios::beg);
   while (ifs.good() && (notvalid != 1))
     {
       string linebuf;
@@ -84,7 +80,10 @@ int mslib::canread(ifstream& ifs)
 	    }
 	}
     }
-  return (notvalid == 1 ? 0 : valid);
+  if (notvalid == 1 ? 0 : valid)
+    return new mslib( name );
+  else
+    return NULL;
 }
 
 // Return a list of items
@@ -190,8 +189,7 @@ method mslib::load(const string& name)
   // Otherwise we have to return something to avoid warning and errors, so
   // make up something strange. Give it a name so it can always be checked
   // against.
-  method m;
-  return m;
+  return method( 0, 0, "Not Found" );
 }
 
 #if 0

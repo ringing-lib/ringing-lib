@@ -23,12 +23,17 @@
 
 #include <ringing/common.h>
 #include <ringing/library.h>
+#if RINGING_OLD_INCLUDES
+#include <fstream.h>
+#else
+#include <fstream>
+#endif
 
 RINGING_START_NAMESPACE
 
 RINGING_USING_STD
 
-list<libtype*> library::libtypes;
+list<library::init_function> library::libtypes;
 
 #if RINGING_USE_EXCEPTIONS
 library_base::invalid_name::invalid_name() 
@@ -42,10 +47,15 @@ library::library(const string& filename)
       ifstream ifs(filename.c_str(), ios::in);
       if (ifs.good())
 	{
-	  list<libtype*>::const_iterator i = libtypes.begin();
+	  list<init_function>::const_iterator i = libtypes.begin();
 	  while (!lb && (i != libtypes.end()))
 	    {
-	      lb.reset((*i)->open(ifs, filename));
+	      // Do the stream rewinding here as all libraries will
+	      // need to do it.
+	      ifs.clear();
+	      ifs.seekg(0, ios::beg);
+
+	      lb.reset( (**i)(ifs, filename) );
 	      i++;
 	    }
 	  ifs.close();

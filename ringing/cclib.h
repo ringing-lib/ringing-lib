@@ -54,8 +54,6 @@ private:
   int wr;                       // Is it open for writing?
   int _good;                    // If we have a good filename or not.
 
-  static newlib<cclib> type;    // Provide a handle to this library type
-
   // Extracts the number of bells from the filename.
   static int extractNumber(const string&);
 
@@ -67,28 +65,27 @@ private:
 
 public:
   static RINGING_API void registerlib(void) {
-    library::addtype(&type);
+    library::addtype(&canread);
   }
 #if defined(SEPERATE_FILES)
   static int seperatefiles(const string&);
 #endif
 
-  cclib::cclib(const string& name);
-  ~cclib() { if (_good == 1) f.close(); }
-
 private:
-  friend class newlib<cclib>;
+  // Construction handled by library class
+  cclib(const string& name);
+ ~cclib() { if (_good == 1) f.close(); }
 
   // Is this file in the right format?
-  static int canread(ifstream& ifs);
+  static library_base *canread(ifstream& ifs, const string& name);
 
   // Return a list of items
   int dir(list<string>& result);
 
-  int good(void) const          // Is the library in a usable state?
+  bool good(void) const          // Is the library in a usable state?
     { return _good; }
 
-  int writeable(void) const     // Is this library writeable?
+  bool writeable(void) const     // Is this library writeable?
     { return wr; }
 
   method load(const string& name);     // Load a method

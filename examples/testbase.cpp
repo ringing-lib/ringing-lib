@@ -106,9 +106,9 @@ int main()
     cout << "\nThis should be kings on 8 and then on 7\n";
     cout << row::kings(8) << endl;
     cout << row::kings(7) << endl;
-    cout << "\nThis should be titums on 8 and then on 7\n";
-    cout << row::titums(8) << endl;
-    cout << row::titums(7) << endl;
+    cout << "\nThis should be tittums on 8 and then on 7\n";
+    cout << row::tittums(8) << endl;
+    cout << row::tittums(7) << endl;
     cout << "\nThis should be reverse_rounds on 8 and then on 7\n";
     cout << row::reverse_rounds(8) << endl;
     cout << row::reverse_rounds(7) << endl;

@@ -62,15 +62,9 @@ public:
   void add(const row& r);
   void output(ostream& o, int x, int y);
 
-#if RINGING_PREMATURE_MEMBER_INSTANTIATION
-  // These are to make templates work and don't really exist
-  drawline_ps();
-  bool operator<(const drawline_ps&) const;
-  bool operator==(const drawline_ps&) const;
-  bool operator!=(const drawline_ps&) const;
-  bool operator>(const drawline_ps&) const;
-  drawline_ps& operator=(const drawline_ps&);
-#endif
+  RINGING_FAKE_DEFAULT_CONSTRUCTOR( drawline_ps );
+  RINGING_FAKE_COMPARATORS( drawline_ps );
+  RINGING_FAKE_ASSIGNMENT( drawline_ps );
 };
 
 class printrow_ps : public printrow::base {

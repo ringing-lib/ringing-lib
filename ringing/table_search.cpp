@@ -82,8 +82,8 @@ public:
   }
 
 private:
-  typedef multiplication_table::post_col_t post_col_t;
-  typedef multiplication_table::row_t row_t;
+  typedef multtab::post_col_t post_col_t;
+  typedef multtab::row_t row_t;
 
   void init_falseness( const method &meth )
   {
@@ -122,7 +122,7 @@ private:
   {
     for ( vector< post_col_t >::const_iterator i( falsenesses.begin() ); 
 	  i != falsenesses.end(); ++i )
-      if ( leads[ r * *i ] )
+      if ( leads[ (r * *i).index() ] )
 	return true;
 
     return false;
@@ -194,7 +194,7 @@ private:
       }
     else if ( depth < lenrange.second )
       {
-	leads[r] = true;
+	leads[r.index()] = true;
 	calls.push_back( 0 );
 	
 	for ( ; !force_halt && calls.back() < call_lhs.size(); ++calls.back() )
@@ -204,7 +204,7 @@ private:
 	  }
 	
 	calls.pop_back();
-	leads[r] = false;
+	leads[r.index()] = false;
       }
   }
   
@@ -220,7 +220,7 @@ private:
   vector< bool > leads;			// The leads had so far
   vector< post_col_t > call_lhs;	// The effect of each call (inc. Pl.)
   vector< post_col_t > falsenesses;	// The falsenesses of the method
-  multiplication_table table;		// A precomputed multiplication table
+  multtab table;			// A precomputed multiplication table
 };
 
 search_base::context_base *table_search::new_context() const 

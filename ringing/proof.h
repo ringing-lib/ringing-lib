@@ -88,12 +88,7 @@ struct linedetail {
   row _row;
   list<int> _lines;
 
-#if RINGING_PREMATURE_MEMBER_INSTANTIATION
-  bool operator==(const linedetail &) const;
-  bool operator!=(const linedetail &) const;
-  bool operator<(const linedetail &) const;
-  bool operator>(const linedetail &) const;
-#endif
+  RINGING_FAKE_COMPARATORS( linedetail );
 };
 
 template <class RowIterator>

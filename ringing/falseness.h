@@ -59,6 +59,7 @@ public:
   void swap( falseness_table &other ) { t.swap( other.t ); }
 
   // Iterators
+  typedef row value_type;
   typedef vector<row>::const_iterator const_iterator;
   const_iterator begin() const { return t.begin(); }
   const_iterator end() const   { return t.end(); }

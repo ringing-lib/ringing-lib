@@ -28,6 +28,8 @@
 
 RINGING_START_NAMESPACE
 
+// FIXME!!
+class search_common;
 class touch;
 
 class RINGING_API search_base
@@ -52,6 +54,7 @@ RINGING_PROTECTED_IMPL:
     virtual ~context_base() {}
   };
 
+  friend class search_common;
 private:
   virtual context_base *new_context() const = 0;
 };

@@ -152,6 +152,8 @@ public:
   bool operator>(const change& c) const {
     return (n > c.n) || (n == c.n && swaps > c.swaps);
   }
+  bool operator>=(const change& c) const { return !( *this < c ); }
+  bool operator<=(const change& c) const { return !( *this > c ); }
 
   // Thrown by swappair if the pair to swap is out of range
   struct out_of_range : public RINGING_PREFIX_STD out_of_range {
@@ -227,12 +229,15 @@ public:
   row() {}
   explicit row(int num);	// Construct rounds on n bells
   row(const char *s);			// Construct a row from a string
+  row(const string &s);			// Construct a row from a string
   // Use default copy constructor and copy assignment
 
   row& operator=(const char *s);	// Assign a string
-  int operator==(const row& r) const; // Compare
-  int operator!=(const row& r) const
-    { return !(*this == r); }
+  row& operator=(const string &s);	// Assign a string
+  bool operator==(const row& r) const  // Compare
+    { return data == r.data; }
+  bool operator!=(const row& r) const
+    { return data != r.data; }
   bell operator[](int i) const	// Return one particular bell (not an lvalue).
     { return data[i]; }
   row operator*(const row& r) const; // Transpose one row by another
@@ -252,7 +257,7 @@ public:
 
   static row queens(const int n); // Return queens on n bells
   static row kings(const int n); // Return kings on n bells
-  static row titums(const int n); // Return titums on n bells
+  static row tittums(const int n); // Return tittums on n bells
   static row reverse_rounds(const int n); // Return reverse rounds on n bells
 
   static row pblh(int n, int h=1); // Return first plain bob lead head on 
@@ -273,6 +278,8 @@ public:
   // So that we can put rows in containers
   bool operator<(const row& r) const { return data < r.data; }
   bool operator>(const row& r) const { return data > r.data; }
+  bool operator<=(const row& r) const { return data <= r.data; }
+  bool operator>=(const row& r) const { return data >= r.data; }
 };
 
 inline ostream& operator<<(ostream& o, const row& r) {

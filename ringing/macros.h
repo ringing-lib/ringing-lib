@@ -175,4 +175,24 @@ RINGING_END_NAMESPACE_STD
 
 #endif
 
+// Compilers that prematurely instantiate members of templates
+// frequently need comparison operators setting up.
+#if RINGING_PREMATURE_MEMBER_INSTANTIATION
+# define RINGING_FAKE_COMPARATORS(classname)		\
+  bool operator==(const classname &) const;		\
+  bool operator!=(const classname &) const;		\
+  bool operator< (const classname &) const;		\
+  bool operator> (const classname &) const;		\
+  bool operator<=(const classname &) const;		\
+  bool operator>=(const classname &) const;
+# define RINGING_FAKE_DEFAULT_CONSTRUCTOR(classname)	\
+  classname();
+# define RINGING_FAKE_ASSIGNMENT(classname)		\
+  classname &operator=( const classname & );
+#else
+# define RINGING_FAKE_COMPARATORS(classname)
+# define RINGING_FAKE_DEFAULT_CONSTRUCTOR(classname)
+# define RINGING_FAKE_ASSIGNMENT(classname)
+#endif
+
 #endif // RINGING_MACROS_H

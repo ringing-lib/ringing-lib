@@ -512,10 +512,12 @@ anything.
 @end deftypefn
 
 @deftypefn Constructor {} row::row (const char* @var{s});
+@deftypefnx Constructor {} row::row (const string& @var{s});
 This constructs a row from a string, which should be the textual
 representation of the row you wish to construct, for example
 @samp{"135246"} or @samp{"2143658709TE"}.  If the string does not
-contain a valid row, an exception of class @code{row::invalid} is
+contain a valid row, and if exceptions are enabled, an exception of 
+class @code{row::invalid} is
 thrown.
 @end deftypefn
 
@@ -531,13 +533,14 @@ This copies one row to another.
 @end deftypefn
 
 @deftypefn Operator row& row::operator= (const char* @var{s});
+@deftypefnx Operator row& row::operator= (const string& @var{s});
 This sets the value of a row, given a string. The string @var{s} should
 contain a textual representation of a row, such as @samp{21436587}.  If
 the string is not valid, a @code{row::invalid} exception is thrown.
 @end deftypefn
 
-@deftypefn Operator int row::operator== (const row& @var{r}) const;
-@deftypefnx Operator int row::operator!= (const row& @var{r}) const;
+@deftypefn Operator bool row::operator== (const row& @var{r}) const;
+@deftypefnx Operator bool row::operator!= (const row& @var{r}) const;
 These compare two rows.
 @end deftypefn
 
@@ -574,6 +577,8 @@ returned by @code{row::print()}.
 
 @deftypefn Operator bool row::operator< (const row& @var{other});
 @deftypefnx Operator bool row::operator> (const row& @var{other});
+@deftypefnx Operator bool row::operator<= (const row& @var{other});
+@deftypefnx Operator bool row::operator>= (const row& @var{other});
 These functions perform a lexicographical comparison of the two rows.
 They are necessary in order that rows may be put into certain containers.
 @end deftypefn
@@ -597,12 +602,12 @@ This sets the row to rounds.
 @end ifinfo
 @iftex
 @deftypefun row@& row::rounds (void);
-This sets the row to rounds.
+This sets the row to rounds, and returns @code{*this}.
 @end deftypefun
 @end iftex
 
-@deftypefun int row::isrounds (void) const;
-This returns 1 if the row is rounds, and 0 otherwise.
+@deftypefun bool row::isrounds (void) const;
+This returns true if the row is rounds, and false otherwise.
 @end deftypefun
 
 @deftypefun int row::ispblh (void) const;
@@ -648,7 +653,12 @@ taken care of.
 @subsection @code{static} functions
 
 @deftypefun {static row} row::rounds (int @var{n});
-This returns the row corresponding to rounds on @var{n} bells.
+@deftypefunx {static row} row::queens (int @var{n});
+@deftypefunx {static row} row::kings (int @var{n});
+@deftypefunx {static row} row::tittums (int @var{n});
+@deftypefunx {static row} row::reverse_rounds (int @var{n});
+These return the row corresponding to rounds, queens, kings, tittums and 
+reverse rounds respectively on @var{n} bells.
 @end deftypefun
 
 @deftypefun {static row} row::pblh (int @var{n}, int @var{h} = 1);
@@ -714,8 +724,8 @@ exception of class @code{change::invalid}.
 This assigns the value of one change to another.
 @end deftypefn
 
-@deftypefn Operator int change::operator== (const change& @var{c}) const;
-@deftypefnx Operator int change::operator!= (const change& @var{c}) const;
+@deftypefn Operator bool change::operator== (const change& @var{c}) const;
+@deftypefnx Operator bool change::operator!= (const change& @var{c}) const;
 These compare two changes.  Note that to be equal, the changes must be
 defined on the same number of bells; for example, @samp{"12"} on 4
 bells is different from @samp{"12"} on 6 bells.
@@ -731,6 +741,18 @@ tracing the path of one particular bell through a series of changes.
 @deftypefn Operator ostream& operator<< (ostream& @var{o}, const change& @var{c});
 This writes the place notation for the change @var{c} to the given
 output stream.
+@end deftypefn
+
+@deftypefn Operator bool change::operator< (const change& @var{c}) const;
+@deftypefnx Operator bool change::operator> (const change& @var{c}) const;
+@deftypefnx Operator bool change::operator<= (const change& @var{c}) const;
+@deftypefnx Operator bool change::operator>= (const change& @var{c}) const;
+If both changes have the same number of bells, these performs a 
+lexicographical comparison on the swaps present in each changes; for 
+example @code{change(6, "14")} compares less than @code{change(6, "1236")}.
+
+If the two changes have different numbers of bells the one with fewer 
+bells compares less than the one with more bells.
 @end deftypefn
 
 @node Other change Functions,  , change Operators, The change Class
@@ -750,25 +772,30 @@ This returns the sign of the change: -1 if an odd number of pairs are
 swapped, +1 if an even number of pairs are swapped.
 @end deftypefun
 
-@deftypefun int change::findswap (bell @var{i}) const;
-Returns 1 if the change swaps bells @var{i} and @var{i+1}, and 0
+@deftypefun bool change::findswap (bell @var{i}) const;
+Returns true if the change swaps bells @var{i} and @var{i+1}, and false
 otherwise.
 @end deftypefun
 
-@deftypefun int change::findplace (bell @var{i}) const;
-Returns 1 if the change doesn't move the bell in the @var{i}th place
-(i.e. if @var{i}ths place is made), and 0 otherwise.
+@deftypefun bool change::findplace (bell @var{i}) const;
+Returns true if the change doesn't move the bell in the @var{i}th place
+(i.e. if @var{i}ths place is made), and false otherwise.
 @end deftypefun
 
 @deftypefun int change::count_places (void) const;
 This function returns the number of places made in the change.
 @end deftypefun
 
-@deftypefun int change::swappair (int @var{i});
+@deftypefun bool change::swappair (int @var{i});
 If the change doesn't currently swap bells @var{i} and @var{i+1}, then
 this will add that swap.  If those bells are swapped, this will remove
 the swap.  If the bells @var{i-1} and @var{i}, or @var{i+1} and
 @var{i+2}, are currently swapped, those swaps are removed.
+
+This returns true if after the function call, the pair of bells @var{i} 
+and @var{i+1} are swapped, and false otherwise.  If exceptions are enabled and
+the bell @var{i+1} is greater the number of bells in the change, an 
+exception of class @code{change::out_of_range} will be thrown.
 
 This function makes it possible for the user to edit changes in such a
 way that they will always end up in a sensible state.
@@ -780,8 +807,8 @@ over so that on 8 bells for example, 2nds place becomes 7ths place and
 so on.
 @end deftypefun
 
-@deftypefun int change::internal (void) const;
-This returns 1 if the change contains internal places, and 0 otherwise.
+@deftypefun bool change::internal (void) const;
+This returns true if the change contains internal places, and false otherwise.
 @end deftypefun
 
 @deftypefun string change::print (void) const;
@@ -822,14 +849,14 @@ with a row or change as an argument, the row @var{r} will be multiplied
 by that row or change.
 @end deftypefun
 
-@deftypefn Operator {const row&} permuter::operator() (const row& @var{r});
-@deftypefnx Operator {const row&} permuter::operator() (const change& @var{c});
+@deftypefn Operator {const row&} {permuter::operator()} (const row& @var{r});
+@deftypefnx Operator {const row&} {permuter::operator()} (const change& @var{c});
 These operators multiply the permutation contained in the @code{permuter}
 object by the given row or change, and return the new permutation.
 @end deftypefn
 
-@deftypefn Operator {const row&} row_permuter::operator() (const row& @var{r});
-@deftypefnx Operator {const row&} row_permuter::operator() (const change& @var{c});
+@deftypefn Operator {const row&} {row_permuter::operator()} (const row& @var{r});
+@deftypefnx Operator {const row&} {row_permuter::operator()} (const change& @var{c});
 These operators multiply the row which the @code{row_permuter} object refers
 to by the given row or change.  A reference to that row is returned.
 @end deftypefn
@@ -1008,7 +1035,7 @@ class method : public vector<change>
 @node method Constructors, Other method Functions, method Derivation, The method Class
 @subsection Constructors
 
-@deftypefn Constructor {} method::method (int @var{length}, int @var{bells}, char* @var{name} = "Untitled");
+@deftypefn Constructor explicit method::method (int @var{length} = 0, int @var{bells} = 0, char* @var{name} = "Untitled");
 This constructor creates an empty method on @var{bells} bells, with
 @var{length} changes in the lead, and with name @var{name}.  All the
 bells stay in the same place for the entire lead.
@@ -1017,9 +1044,10 @@ bells stay in the same place for the entire lead.
 @deftypefn Constructor {} method::method (const char* @var{pn}, int @var{bells}, char* @var{name} = "Untitled");
 @deftypefnx Constructor {} method::method (const string& @var{pn}, int @var{bells}, const string& @var{name} = "Untitled");
 This constructor creates a method on @var{bells} bells from the given
-place notation, which should be an entire lead.  The method is given the name 
-@var{name}.  For information on how to specify the place notation, see the
-discussion of @code{interpret_pn} in @ref{Other functions in row.h}.
+place notation, which should be an entire lead.  The method is given the base 
+name @var{name}.  For information on how to specify
+the place notation, see the discussion of @code{interpret_pn} in 
+@ref{Other functions in row.h}.
 @end deftypefn
 
 @deftypefn Constructor {} method::method (const method& @var{m});
@@ -1030,7 +1058,8 @@ This is the copy constructor.
 @subsection Other functions
 
 @deftypefun {const char*} method::name (void) const;
-This returns the base name of the method.
+This returns the base name of the method.  Note that this may be an empty
+string, for example in Little Bob.
 @end deftypefun
 
 @deftypefun void method::name (const char* @var{name});
@@ -1057,19 +1086,19 @@ the first case, @var{c} is the change to be added; in the second case,
 This returns the first lead head of the method.
 @end deftypefun
 
-@deftypefun int method::issym (void) const;
-This returns 1 if the method is symmetrical about the half lead (and has
-an even number of changes in the lead), or 0 otherwise.
+@deftypefun bool method::issym (void) const;
+This returns true if the method is symmetrical about the half lead (and has
+an even number of changes in the lead), or false otherwise.
 @end deftypefun
 
-@deftypefun int method::isdouble (void) const;
-This returns 1 if the method is double, or 0 otherwise.  Note that double
-does not imply symmetrical.
+@deftypefun bool method::isdouble (void) const;
+This returns true if the method is double, or false otherwise.  Note that 
+double does not imply symmetrical.
 @end deftypefun
 
-@deftypefun int method::isregular (void) const;
-This returns 1 if the method is regular (that is, has Plain Bob lead 
-heads), or 0 otherwise.
+@deftypefun bool method::isregular (void) const;
+This returns true if the method is regular (that is, has Plain Bob lead 
+heads), or false otherwise.
 @end deftypefun
 
 @deftypefun int method::huntbells (void) const;
@@ -1085,23 +1114,23 @@ This returns the standard code for the lead end and lead head of the
 method.  The result is stored in a static internal buffer.
 @end deftypefun
 
-@deftypefun int method::issym (bell @var{b}) const;
-This returns 1 if the path of bell @var{b} in a lead of the method is
-symmetrical about the half lead, or 0 otherwise.
+@deftypefun bool method::issym (bell @var{b}) const;
+This returns true if the path of bell @var{b} in a lead of the method is
+symmetrical about the half lead, or false otherwise.
 @end deftypefun
 
-@deftypefun int method::isplain (bell @var{b} = 0) const;
-This returns 1 if bell @var{b} plain hunts for the whole lead of the
-method, or 0 otherwise.
+@deftypefun bool method::isplain (bell @var{b} = 0) const;
+This returns true if bell @var{b} plain hunts for the whole lead of the
+method, or false otherwise.
 @end deftypefun
 
-@deftypefun int method::hasdodges (bell @var{b}) const;
-This returns 1 if bell @var{b} dodges during the lead, or 0 otherwise.
+@deftypefun bool method::hasdodges (bell @var{b}) const;
+This returns true if bell @var{b} dodges during the lead, or false otherwise.
 @end deftypefun
 
-@deftypefun int method::hasplaces (bell @var{b}) const;
-This returns 1 if bell @var{b} makes any internal places during the lead,
-or 0 otherwise.
+@deftypefun bool method::hasplaces (bell @var{b}) const;
+This returns true if bell @var{b} makes any internal places during the lead,
+or false otherwise.
 @end deftypefun
 
 @deftypefun int method::methclass (void) const;
@@ -1135,6 +1164,10 @@ the class of the method, or none if it is a principle;
 @item
 the stage (number of bells) of the method.
 @end itemize
+
+Note that Grandsire, Union and their related methods are treated specially:
+the full name of these methods does not include their class, nor in the 
+case of Little Grandsire does it contain ``Little''.
 @end deftypefun
 
 @deftypefun string method::fullname (void) const;
@@ -1179,7 +1212,7 @@ This points to the string @code{"Little"}.
 * Introduction to libraries::   
 * General Use::                 
 * The Library Classes::         
-* Deriving Library Classes::    
+* Implementing New Library Classes::    
 @end menu
 
 @node Introduction to libraries, General Use, Method Libraries, Method Libraries
@@ -1208,7 +1241,7 @@ http://www.methods.clara.net/method-collections/zip-files/index.htm
 @menu
 * General Use::                 
 * The Library Classes::         
-* Deriving Library Classes::    
+* Implementing New Library Classes::    
 @end menu
 
 @node General Use, The Library Classes, Introduction to libraries, Method Libraries
@@ -1289,7 +1322,7 @@ Now we have a file loaded into a library, you will want to get a method definiti
 method m = l.load(methname);
 @end example
 
-Again, methname should be a pointer to a string of characters. If the load function is successful (method found in the file), all will be happy and continue nicely. If not, then one of two things will happen.
+Again, @var{methname} should be a pointer to a string of characters. If the load function is successful (method found in the file), all will be happy and continue nicely. If not, then one of two things will happen.
 
 If exceptions are enabled, an exception will be thrown which you should catch, otherwise the program will probably exit. Catch it like this:
 
@@ -1309,7 +1342,7 @@ If exceptions are not enabled, then you will need to check the method name. If i
 
 Note: It is worth examining the contents of the method libraries to note the
 different format of the method names. Both mslib and cclib are case-insensitive
-when specifying methname.
+when specifying @var{methname}.
 
 @node Listing Methods, Saving Methods, Loading Methods, General Use
 @subsection Listing Methods
@@ -1339,101 +1372,67 @@ are currently no available save commands. At some point in the future a better
 machine writeable format may be developed that will enable the saving of the
 methods.
 
-@node The Library Classes, Deriving Library Classes, General Use, Method Libraries
+@node The Library Classes, Implementing New Library Classes, General Use, Method Libraries
 @section The @code{Library} classes
 
-The library classes form the base of the library loading system. @code{Library.h} declares 4 classes, these are:
+The library classes form the base of the library loading system. @code{Library.h} declares 2 classes, these are:
 
-@deftypefn @code{class libtype}
-A type of library, the base for newlib
-@end deftypefn
-@deftypefn @code{template <class mylibrary> class newlib : public libtype}
-Each library must declare one of these. It's the handler by which the derived library class can be accessed.
-@end deftypefn
-@deftypefn @code{class library_base}
+@c Unfortunately it seems that the @code macro cannot be used in the 
+@c name argument of @deftp as makeinfo --html can't cope with it.  
+
+@deftp {Class} {class library_base}
 This is the base class for all method libraries.
-@end deftypefn
-@deftypefn @code{class library}
+@end deftp
+
+@deftp {Class} {class library} {}
 This is the interface class for accessing method libraries.
-@end deftypefn
+@end deftp
 
 @menu
-* The libtype class::           
-* The newlib class::            
 * The library_base class::      
 * The library class::           
 @end menu
 
-@node The libtype class, The newlib class, The Library Classes, The Library Classes
-@subsection The @code{libtype} class
-
-This class is a base class for the method library type. It is used with the method libraries but does not need to be accessed externally.
-
-It is a friend of the library class so that it's only function can be accessed.
-
-It contains just one function definition that is protected:
-
-@deftypefn @code{virtual library_base *open(ifstream& ifs, const string &n) const}
-This function is the prototype that the @code{library} class will use to attempt to open a library file. For this class it simply returns null.
-
-@code{ifs} should be an open file stream, that may or may not be a library file.
-@code{*n} should be the name of the open file.
-@end deftypefn
-
-@node The newlib class, The library_base class, The libtype class, The Library Classes
-@subsection The @code{newlib} class
-
-Each new method library must declare one of these. The user must then register it with the library class to allow the method library to be used. The library class calls the open method to see if the method library is able to load the library:
-
-@example
-  library_base *open(ifstream& ifs, const string &name) const @{
-    if(mylibrary::canread(name)) @{
-      return new mylibrary(name);
-    @} else
-      return NULL;
-  @}
-@end example
-
-@code{ifs} should be an open file stream, that may or may not be a library file. @code{*n} should be the name of the open file.
-
-The @code{mylibrary::canread} function is a static function that must be present in the derived class. The open function uses this to determine if the library can read the file that is given to it.
-
-@node The library_base class, The library class, The newlib class, The Library Classes
+@node The library_base class, The library class, The Library Classes, The Library Classes
 @subsection The @code{library_base} class
 
 The @code{library_base} class is the base class for any new method library classes that are developed. All functions are virtual, and @code{load()} is a pure virtual function. Therefore, it has to be defined in derived classes for them to be used. The functions described below indicate their intended use in a derived class.
 
-@deftypefn @code{virtual ~library_base()}
+@deftypefn Destructor virtual library_base::~library_base (void);
 As our class is virtual, we must also have a virtual destructor. This function does that and performs no activites.
 @end deftypefn
 
-@deftypefn @code{virtual method load(const char* name) = 0}
+@deftypefun {virtual method} library_base::load (const char* @var{name}) = 0;
 @code{load} is a pure virtual function and therefore must be defined before any derived class can be used.
 
 The function is intended to load a method called @var{name} from the current specified file. If the function cannot load the method given, then one of two things will happen.
 
-If exceptions are enabled, an @code{invalid_name} of type @code{exception} will be thrown. If exceptions are not enabled, the method returned will be an empty object.
-@end deftypefn
+If exceptions are enabled, an exception of class @code{library_base::invalid_name} will be thrown. If exceptions are not enabled, the method returned will be an empty object.
+@end deftypefun
 
-@deftypefn @code{virtual int save(const method& m)}
-This function is intended to save a method to the currently loaded method library, if it is possible to do so.
-@end deftypefn
+@deftypefun {virtual bool} library_base::save (const method& @var{m});
+This function is intended to save a method to the currently loaded method library, if it is possible to do so.  The function should return true if the the operation succeeded and false otherwise.  The implementation in @code{library_base} always returns false.
+@end deftypefun
 
-@deftypefn @code{virtual int rename_method(const string name1, const string name2)}
-This function is intended to rename a method from @var{name1} to @var{name2} within the currently loaded method library if it is possible to do so.
-@end deftypefn
+@deftypefun {virtual bool} library_base::rename_method (const string& @var{name1}, const string& @var{name2});
+This function is intended to rename a method from @var{name1} to @var{name2} within the currently loaded method library if it is possible to do so.  The function should return true if the the operation succeeded and false otherwise.  The implementation in @code{library_base} always returns false.
+@end deftypefun
 
-@deftypefn @code{virtual int dir(list<string> &result)}
-This function is intended to list the method names contained within the currently loaded method library.
-@end deftypefn
+@deftypefun {virtual bool} library_base::remove (const string& @var{name});
+This function is intended to remove the method with the name @var{name1} from the method library if it is possible to do so.  The function should return true if the the operation succeeded and false otherwise.  The implementation in @code{library_base} always returns false.
+@end deftypefun
 
-@deftypefn @code{virtual int good(void) const}
-This function is intended to indicate to the user of the library object if the object currently has a valid library loaded.
-@end deftypefn
+@deftypefun {virtual int} library_base::dir (list<string>& @var{result});
+This function is intended to list the method names contained within the currently loaded method library.  The function should return the number of methods in the library.  The implementation in @code{library_base} always returns 0.
+@end deftypefun
 
-@deftypefn @code{virtual int writeable(void) const}
-This function is intended to indicate to the user if the library is writeable, and hence if functions such as rename, and save can be used.
-@end deftypefn
+@deftypefun {virtual bool} library_base::good (void) const;
+This function is intended to indicate to the user of the library object if the object currently has a valid library loaded.  The function should return true if the the operation succeeded and false otherwise.  The implementation in @code{library_base} always returns false.
+@end deftypefun
+
+@deftypefun {virtual bool} library_base::writeable (void) const;
+This function is intended to indicate to the user if the library is writeable, and hence if functions such as rename, and save can be used.  The function should return true if the the operation succeeded and false otherwise.  The implementation in @code{library_base} always returns false.
+@end deftypefun
 
 @node The library class,  , The library_base class, The Library Classes
 @subsection The @code{library} class
@@ -1448,22 +1447,139 @@ The rest of the functions control the accessing of libraries and determining if 
 
 The functions are:
 
-@deftypefn @code{library(const string &filename = "")}
-The constructor attempts to find a specific library class (e.g. mslib or cclib) that is able to correctly read the file at location @var{filename}. If it can, it creates a new object of the relevant type and instructs the new object to open the file. The rest of the functions then provide the 
+@deftypefn Constructor {} library::library (const string& @var{filename} = "");
+The constructor attempts to automatically detect what type of library the file
+@var{filename} is, and if successful, opens the library.  To enable the 
+auto-detection of a particular type of library, that library must register
+a function of type @code{library::init_function} with @code{library::addtype}.
+After constructing a library, the @code{library::good} function can be
+used see if auto-detection succeeded.
 @end deftypefn
 
-@deftypefn @code{~library()}
+@deftypefn Constructor {} library::library (library_base* @var{lb});
+The constructor, which is protected, is provided to allow libraries the 
+flexibility not to use the auto-detection mechanism, and to provide an
+alternative.  @var{lb} must have allocated using @code{new} and is deleted
+by @code{library}'s destructor.  For more information on how to use this, see 
+@ref{Alternative creation mechanisms}.
+@end deftypefn
+
+@deftypefn Destructor {} library::~library (void);
 The destructor is, as expected, used to tidy up the class, deleting any specific library classes that had been created.
 @end deftypefn
 
-@deftypefn @code{static void addtype(libtype* lt)}
-This is used to add a specific (derived) library class to the list of classes that library knows about. This function is typically called by the static function @code{registerlib} in the derived functions.
+@c I've used deftypefn rather than deftp because (i) @deftp formats the 
+@c type incorrectly and (ii) the typedef is for a function-pointer.
+@deftypefn Typedef {typedef library_base* (*} library::init_function {)}(ifstream& @var{ifs}, const string& @var{filename});
+Functions with this signature are used by the @code{library} construtor to 
+attempt to load a library.  Each derived library class that supports 
+auto-detection of library type should register a function of this signature 
+with the @code{library} class by calling the @code{library::addtype} function.
+When these functions are called, @var{ifs} is a @code{ifstream} on the 
+library file that is being opened, and @var{filename} is the name of the
+library file.  If a library can read the file it should return a pointer to
+a class derived from @code{library_base} allocated with @code{new}; otherwise
+the function should return NULL.
 @end deftypefn
 
-@node Deriving Library Classes,  , The Library Classes, Method Libraries
-@section Deriving Library Classes
+@deftypefun {static void} library::addtype (library::init_function @var{lt})
+This is used to register a specific (derived) library class to the list of 
+classes that can be auto-detected.  This function is typically called by the 
+static function @code{registerlib} in the derived functions.
+@end deftypefun
 
-This section is still to be witten
+@node Implementing New Library Classes,  , The Library Classes, Method Libraries
+@section Implementing New Library Classes
+
+There are two ways to implement new library classes, depending on whether or 
+not the new library class can support the automatic detection of library type
+done in the @code{library(const string& @var{filename})} constructor.  In 
+general, if the library is based on a single text file, the auto-detection
+mechanism adequately provides a simple way for users of to transparently use 
+various types of library.  More complicated types of library, such as those
+based on a database, or on multiple files, do not readily fit with the
+auto-detection mechanism, and an alternative is required. 
+
+@menu
+* Supporting auto-detection::
+* Alternative creation mechanisms::
+@end menu
+
+@node Supporting auto-detection, Alternative creation mechanisms, Implementing New Library Classes, Implementing New Library Classes
+@subsection Supporting auto-detection
+
+An implementation of a new type of library that can be auto-detected needs to 
+register a function with the signature @code{library::init_function} with
+@code{library::addtype}.  This gets used by the library class when it attempts 
+to read an @code{ifstream} on the file.  It is often convenient to provide
+the library user with a @code{registerlib} function that handles this
+registration.  For example, for a type of library file that always starts 
+with the line ``My Library File'', the following might be used.
+
+@example
+class mylibrary : public library_base @{
+public:
+  // Allow the user to initialise the library
+  static void registerlib(void) @{
+    library::addtype(&canread);
+  @}
+
+private:
+  static library_base *canread(ifstream& ifs, const string& name) @{
+    string first_line;  getline(ifs, first_line);
+    if (first_line == "My Library File") return new mylibrary(name);
+    return NULL;
+  @}
+
+  mylibrary(const string &name);
+@};
+@end example
+
+Note that the @code{canread} function should not pass @var{ifs} 
+to the @code{mylibrary} constructor, as @var{ifs} is closed immediately
+after @code{canread} is called.
+
+In addition, the implementation must override the virtual functions
+@code{library_base::load}, @code{library_base::good} and, if possible, 
+@code{library_base::dir}. 
+
+@node Alternative creation mechanisms,  , Supporting auto-detection, Implementing New Library Classes
+@subsection Alternative creation mechanisms
+
+In cases where it is inappropriate to use the auto-detection mechanism an 
+alternative way of initialising @code{library} with a pointer to a subclass of
+@code{library_base} must be provided.  To do this, the implementation must
+provide subclasses of both @code{library} and @code{library_base}.  The
+constructor of the subclass of @code{library} should call down to 
+protected @code{library::library (library_base* @var{lb})} constrctor with 
+a newly allocated subclass of @code{library_base}.  For example,
+
+@example
+class mylibrary : public library @{
+private:
+  class impl : public library_base @{
+    // override virtual functions
+  @};
+
+  impl *init_library() @{
+    // Do any necessary initialisation
+    return new impl;
+  @}
+
+public:
+  mylibrary() : library( init_library() ) @{@}
+@};
+@end example
+
+Typically it is sensible to avoid putting any data members in @code{mylibrary},
+and to put them into @code{mylibrary::impl} instead.  This means that if a 
+@code{mylibrary} class is sliced to a @code{library} during a copy (for
+example when passing to a function taking a @code{library} by value) the
+class will still work correctly.
+
+Note that @code{library::~library} is @emph{not} virtual, and thus,
+if @code{mylibrary} is ever allocated on the heap, care is required to avoid
+deletion via a pointer to its base class.
 
 @node Proof, Musical Analysis, Method Libraries, Top
 @chapter Method and Touch Proving

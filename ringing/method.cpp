@@ -296,9 +296,20 @@ string method::fullname() const
   string result = myname;
   int cl = methclass();
   if (!myname.empty()) result += ' ';
-  if(cl & M_LITTLE) { result += txt_little; result += ' '; }
-  result += classname(cl);
-  if (strlen(classname(cl))) result += ' ';
+
+  if (myname == "Grandsire" || myname == "Reverse Grandsire"
+      || myname == "Double Grandsire" || myname == "Little Grandsire" )
+    ; // Grandsire and it's related methods do not contain either a class
+      // or a Little modifier.
+  else if ( bells()%2 && ( myname == "Union" || myname == "Double Union" 
+			   || myname == "Reverse Union" ) )
+    ; // Nor does Union ...
+  else
+    {
+      if(cl & M_LITTLE) { result += txt_little; result += ' '; }
+      result += classname(cl);
+      if (strlen(classname(cl))) result += ' ';
+    }
   result += stagename(bells());
   return result;
 }

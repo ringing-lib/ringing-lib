@@ -42,106 +42,107 @@ RINGING_START_NAMESPACE
 
 RINGING_USING_STD
 
-class multiplication_table;
+class multtab;
 
-// These would all be member classes of multiplication_table,
+RINGING_START_DETAILS_NAMESPACE 
+
+// These would all be member classes of multtab,
 // but that causes compiler problems in MSVC-5.
-class multiplication_table_row_t
+class multtab_row_t
 {
 public:
-  multiplication_table_row_t() : n(0u) {}
+  explicit multtab_row_t( int number_of_bells = 0 ) : n(0u) {}
   bool isrounds() const { return n == 0; }
-  operator size_t() const { return n; }
+  size_t index() const { return n; }
   
-  friend class multiplication_table;
-  
-#if RINGING_PREMATURE_MEMBER_INSTANTIATION
-  // These are to make templates work and don't really exist
-  bool operator< (const multiplication_table_row_t &) const;
-  bool operator==(const multiplication_table_row_t &) const;
-  bool operator!=(const multiplication_table_row_t &) const;
-  bool operator> (const multiplication_table_row_t &) const;
-#endif
-  
+  friend class multtab;
+  RINGING_FAKE_COMPARATORS( multtab_row_t );
+
 private:
   size_t n; 
 };
 
-class multiplication_table_post_col_t
+class multtab_post_col_t
 {
-public:
-  multiplication_table_post_col_t( size_t n, multiplication_table *t )
+private:
+  multtab_post_col_t( size_t n, multtab *t )
     : n(n), t(t) 
   {}
   
-  friend multiplication_table_row_t 
-  operator*( multiplication_table_row_t r, multiplication_table_post_col_t c );
+  friend multtab_row_t 
+  operator*( multtab_row_t r, multtab_post_col_t c );
 
-#if RINGING_PREMATURE_MEMBER_INSTANTIATION
-  // These are to make templates work and don't really exist
-  multiplication_table_post_col_t();
-  bool operator< (const multiplication_table_post_col_t &) const;
-  bool operator==(const multiplication_table_post_col_t &) const;
-  bool operator!=(const multiplication_table_post_col_t &) const;
-  bool operator> (const multiplication_table_post_col_t &) const;
-#endif
-  
+  friend class multtab;
+
+public:
+  RINGING_FAKE_DEFAULT_CONSTRUCTOR( multtab_post_col_t );
+  RINGING_FAKE_COMPARATORS( multtab_post_col_t );
+
 private:
   size_t n; 
-  multiplication_table *t;
+  multtab *t;
 };
 
-class multiplication_table_pre_col_t
+class multtab_pre_col_t
 {
-public:
-  multiplication_table_pre_col_t( size_t n, multiplication_table *t ) 
+private:
+  multtab_pre_col_t( size_t n, multtab *t ) 
     : n(n), t(t) 
   {}
   
-  friend multiplication_table_row_t 
-  operator*( multiplication_table_pre_col_t c, multiplication_table_row_t r );
-  
-#if RINGING_PREMATURE_MEMBER_INSTANTIATION
-  // These are to make templates work and don't really exist
-  multiplication_table_pre_col_t();
-  bool operator< (const multiplication_table_pre_col_t &) const;
-  bool operator==(const multiplication_table_pre_col_t &) const;
-  bool operator!=(const multiplication_table_pre_col_t &) const;
-  bool operator> (const multiplication_table_pre_col_t &) const;
-#endif
-  
+  friend multtab_row_t 
+  operator*( multtab_pre_col_t c, multtab_row_t r );
+
+  friend class multtab;
+
+public:
+  RINGING_FAKE_DEFAULT_CONSTRUCTOR( multtab_pre_col_t );  
+  RINGING_FAKE_COMPARATORS( multtab_pre_col_t );  
+
 private:
   size_t n; 
-  multiplication_table *t;
+  multtab *t;
 };
 
+RINGING_END_DETAILS_NAMESPACE
 
+// --------------------------------------------------------------
+// 
 // The main class
-class multiplication_table
+class multtab
 {
 public:
-  multiplication_table() {}
+  multtab() {}
 
+  // A swap function and assignment operator
+  void swap( multtab &other );
+  multtab &operator=( const multtab &other );
+
+  // Initialises a multiplication table with the rows in the 
+  // range [first, last).
   template < class InputIterator >
-  multiplication_table( InputIterator first, InputIterator last )
-    : colcount( 0u )
-  {
-    // Cannot use the templated constructor because MSVC's STL 
-    // doesn't have it.
-    copy( first, last, back_inserter( rows ) );
-    table.resize( rows.size() );
-  }
+  multtab( InputIterator first, InputIterator last )
+    : partend( first->bells() ), colcount( 0u ), 
+      rows( make_vector( first, last ) ), table( rows.size() )
+  {}
 
-  typedef multiplication_table_row_t      row_t;
-  typedef multiplication_table_post_col_t post_col_t;
-  typedef multiplication_table_pre_col_t  pre_col_t;
+  // As above but use factor out some part-end.
+  template < class InputIterator >
+  multtab( InputIterator first, InputIterator last,
+			const row &partend )
+    : partend( partend ), colcount( 0u )
+  { init( make_vector( first, last ) ); }
+
+  typedef RINGING_DETAILS_PREFIX multtab_row_t      row_t;
+  typedef RINGING_DETAILS_PREFIX multtab_post_col_t post_col_t;
+  typedef RINGING_DETAILS_PREFIX multtab_pre_col_t  pre_col_t;
 
   // Primarily for debugging.  Prints out the multiplication table
   void dump( ostream &os ) const;
   
   // Precompute the products of the set with the given row.
-  pre_col_t compute_pre_mult( const row &r );   // r * x  for all x
-  post_col_t compute_post_mult( const row &r ); // x * r  for all x
+  pre_col_t compute_pre_mult( const row &x );   // (x * r) for all rows r
+  post_col_t compute_post_mult( const row &x ); // (r * x) for all rows r
   
   // Convert a row into a precomputed table offset.
   row_t find( const row &r );
@@ -150,12 +151,30 @@ public:
   size_t size() const { return table.size(); }
 
   // Operators to do optimised multiplication of rows:
-  friend row_t operator*( row_t r, post_col_t c )
-    { return c.t->table[ r ][ c.n ]; }
-  friend row_t operator*( pre_col_t c, row_t r )
-    { return c.t->table[ r ][ c.n ]; }
+  friend row_t RINGING_DETAILS_PREFIX operator*( row_t r, post_col_t c )
+    { return c.t->table[ r.index() ][ c.n ]; }
+  friend row_t RINGING_DETAILS_PREFIX operator*( pre_col_t c, row_t r )
+    { return c.t->table[ r.index() ][ c.n ]; }
 
 private:
+  // A helper to do what the templated constructor of vector does
+  // (we can't use that directly because MSVC doesn't have it).
+  template < class InputIterator >
+  static vector< row > make_vector( InputIterator first, InputIterator last )
+  {
+    vector< row > r;
+    copy( first, last, back_inserter( r ) );
+    return r;
+  }
+
+  // Each coset of the group generated by the part end has one member
+  // which is used to represent the whole coset. 
+  bool is_representative( const row &r );
+  row make_representative( const row &r );
+
+  void init( const vector< row > &r );
+
+  row partend;
   vector< row > rows;
   vector< vector< row_t > > table;
   size_t colcount;
@@ -163,4 +182,7 @@ private:
 
 RINGING_END_NAMESPACE
 
+RINGING_DELEGATE_STD_SWAP( multtab )
+
 #endif // RINGING_MULTTAB_H
+

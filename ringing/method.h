@@ -43,7 +43,7 @@ private:
   string myname;		// The name of the method, without Major etc. 
 
   static const char *txt_classes[12]; // Bob, Place etc.
-  static const char *txt_stages[20];  // Minimum, Doubles etc.
+  static const char *txt_stages[20];  // Minimus, Doubles etc.
 
 public: 
 
@@ -81,7 +81,7 @@ public:
   static const char *classname(int cl) // Get the name of the class
     { return txt_classes[cl & M_MASK]; }
 
-  method(int l = 0, int b = 0, const char *n = "Untitled") 
+  explicit method(int l = 0, int b = 0, const char *n = "Untitled") 
     : vector<change>(l, change(b)), myname(n) {}
 
   // Make a method from place notation

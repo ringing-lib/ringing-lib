@@ -295,6 +295,12 @@ row::row(const char *s)
 #endif
 }
 
+row::row(const string &s)
+{
+  row(s.c_str()).swap(*this);
+}
+
+
 row::invalid::invalid()
   : invalid_argument("The row supplied was invalid")
 {}
@@ -306,10 +312,10 @@ row& row::operator=(const char *s)
   return *this;
 }
 
-// Compare two rows
-int row::operator==(const row& r) const
+row& row::operator=(const string &s)
 {
-  return data == r.data;
+  row(s).swap(*this);
+  return *this;
 }
 
 // Transpose one row by another
@@ -474,8 +480,8 @@ row row::kings(const int n)
   return r;
 }
 
-// Return titums on n bells
-row row::titums(const int n)
+// Return tittums on n bells
+row row::tittums(const int n)
 {
   row r(n);
   int i;

@@ -26,13 +26,11 @@
 
 #include <ringing/common.h>
 #if RINGING_OLD_INCLUDES
-#include <iostream.h>
-#include <fstream.h>
+#include <iosfwd.h>
 #include <list.h>
 #include <stdexcept.h>
 #else
-#include <iostream>
-#include <fstream>
+#include <iosfwd>
 #include <list>
 #include <stdexcept>
 #endif
@@ -47,45 +45,23 @@ RINGING_USING_STD
 class library;
 class library_base;
 
-// libtype : A type of library
-class libtype {
-protected:
-  virtual library_base *open(ifstream& ifs, const string &n) const  // Try to open this file.
-  { return NULL; }			  // Return NULL if it's not the
-					  // right sort of library.
-  friend class library;
-  };
-
-// newlib : Each new type of library should declare one of these
-template <class mylibrary>
-class newlib : public libtype {
-protected:
-  library_base *open(ifstream& ifs, const string &name) const {
-    if(mylibrary::canread(ifs)) {
-      return new mylibrary(name);
-    } else
-      return NULL;
-  }
-  friend class library;
-};
-
 // library_base : A base class for method libraries
 class RINGING_API library_base {
 public:
   virtual ~library_base() {}		// Got to have a virtual destructor
   virtual method load(const string& s) = 0; // Load a method
-  virtual int save(const method& m)	// Save a method
-    { return 0; }
-  virtual int rename_method(const string& name1, const string& name2)
-    { return 0; }
-  virtual int remove(const string& name)
-    { return 0; }
+  virtual bool save(const method& m)	// Save a method
+    { return false; }
+  virtual bool rename_method(const string& name1, const string& name2)
+    { return false; }
+  virtual bool remove(const string& name)
+    { return false; }
   virtual int dir(list<string>& result) // Return a list of items
     { return 0; }
-  virtual int good (void) const	// Is it in a usable state?
-    { return 0; }
-  virtual int writeable(void) const // Is it writeable?
-    { return 0; }
+  virtual bool good (void) const	// Is it in a usable state?
+    { return false; }
+  virtual bool writeable(void) const // Is it writeable?
+    { return false; }
 
 #if RINGING_USE_EXCEPTIONS
   struct invalid_name : public invalid_argument {
@@ -95,14 +71,18 @@ public:
 };
 
 #if RINGING_AS_DLL
-RINGING_EXPLICIT_STL_TEMPLATE     list<libtype*>;
+RINGING_EXPLICIT_STL_TEMPLATE list< library_base *(*)( ifstream &, 
+						       const string & ) >;
 RINGING_EXPLICIT_RINGING_TEMPLATE shared_pointer<library_base>;
 #endif
 
 class RINGING_API library {
+public:
+  typedef library_base *(*init_function)( ifstream &, const string & );
+
 private:
   shared_pointer<library_base> lb;
-  static list<libtype*> libtypes;
+  static list<init_function> libtypes;
 
 protected:
   library(library_base* lb) : lb(lb) {}
@@ -110,15 +90,15 @@ public:
   library(const string& filename = "");
   method load(const string& name) { return lb->load(name); }
   method load(const char* name) { return lb->load(string(name)); }
-  int save(const method& m) { return lb->save(m); }
-  int rename_method(const string name1, const string name2) 
+  bool save(const method& m) { return lb->save(m); }
+  bool rename_method(const string& name1, const string& name2) 
     { return lb->rename_method(name1, name2); }
-  int remove(const string name) { return lb->remove(name); }
+  bool remove(const string name) { return lb->remove(name); }
   int dir(list<string>& result) { return lb->dir(result); }
   bool good() { return bool(lb) && lb->good(); }
-  int writeable() { return bool(lb) && lb->writeable(); }
+  bool writeable() { return bool(lb) && lb->writeable(); }
 
-  static void addtype(libtype* lt) { libtypes.push_back(lt); }
+  static void addtype(init_function lt) { libtypes.push_back(lt); }
 };
 
 RINGING_END_NAMESPACE
