@@ -162,8 +162,12 @@ xmlout::impl::impl( const string& filename )
 
 void xmlout::impl::flush()
 {
-  if ( writer && target && doc )
+  if ( writer && target && doc ) {
     writer->writeNode(target.get(), *doc);
+
+    // Safe against multiple flushes
+    doc->release(); doc = NULL;
+  }
 }
 
 xmlout::impl::~impl()
