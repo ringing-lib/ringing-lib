@@ -15,7 +15,6 @@ dnl
 dnl If the C++ compiler supports exceptions handling (try,
 dnl throw and catch), define HAVE_EXCEPTIONS.
 dnl
-dnl @version $Id$
 dnl @author Luc Maisonobe
 dnl
 AC_DEFUN([AC_CXX_EXCEPTIONS],
@@ -35,7 +34,6 @@ dnl @synopsis AC_CXX_HAVE_STL
 dnl
 dnl If the compiler supports the Standard Template Library, define HAVE_STL.
 dnl
-dnl @version $Id$
 dnl @author Luc Maisonobe
 dnl
 AC_DEFUN([AC_CXX_HAVE_STL],
@@ -62,7 +60,6 @@ dnl
 dnl If the compiler can prevent names clashes using namespaces, define
 dnl HAVE_NAMESPACES.
 dnl
-dnl @version $Id$
 dnl @author Luc Maisonobe
 dnl
 AC_DEFUN([AC_CXX_NAMESPACES],
