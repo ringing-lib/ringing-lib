@@ -1460,6 +1460,11 @@ void output_status( const method &m )
   cerr << "Trying " << s << flush;
 }
 
+void output_raw_count( unsigned long c )
+{
+  cout << c << "\n";
+}
+
 void output_count( unsigned long c )
 {
   cout << "Found " << c << " methods\n";

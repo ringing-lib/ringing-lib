@@ -251,6 +251,12 @@ void arguments::bind( arg_parser &p )
 	   count ) );
 
   p.add( new boolean_opt
+	 ( '\0', "raw-count",
+	   "Count the number of methods found and print it without "
+	   "surrounding text",
+	   raw_count ) );
+
+  p.add( new boolean_opt
 	 ( 'P', "parity-hack",
 	   "Require an equal number of rows of each parity for each place "
 	   "in the treble's path",

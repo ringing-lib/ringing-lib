@@ -70,6 +70,7 @@ struct arguments
   init_val<bool,false> histogram;
   init_val<bool,false> status;
   init_val<bool,false> count;
+  init_val<bool,false> raw_count;
 
   init_val<bool,false> no_78_pns;
 

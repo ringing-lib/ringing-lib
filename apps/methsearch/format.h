@@ -154,6 +154,7 @@ private:
 void clear_status();
 void output_status( const method &m );
 void output_count( unsigned long );
+void output_raw_count( unsigned long );
 
 
 #endif // METHSEARCH_FORMAT_INCLUDED

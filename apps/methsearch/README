@@ -48,6 +48,8 @@ General Options
   -u, --status           Display the current search status
   --limit=NUM            Limit the search to the first NUM methods
   --count                Count the number of methods found
+  --raw-count            Count the number of methods found and print it
+                         without surrounding text
   -P, --parity-hack      Require an equal number of rows of each parity for
                          each place in the treble's path
   -L, --library=LIB      Look up method names in the library LIB

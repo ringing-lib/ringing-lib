@@ -114,11 +114,15 @@ void run_search( const arguments &args, const method &initm )
   searcher s( args, initm );
   s.general_recurse();
   assert( s.m.length() == 0 );
-  if ( args.count )
+  if ( args.count || args.raw_count )
     {
       if ( args.status ) clear_status();
-      if ( !args.quiet ) cout << "\n";
-      output_count( s.search_count );
+      if ( args.count ) {
+	if ( !args.quiet ) cout << "\n";
+	output_count( s.search_count );
+      }
+      else if ( args.raw_count )
+	output_raw_count( s.search_count );
     }
 }
 
