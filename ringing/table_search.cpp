@@ -60,9 +60,7 @@ class table_search::context : public search_base::context_base
 public:
   context( const table_search *s ) 
     : lenrange( s->lenrange ), 
-      table( s->meth.lh()[0] ? extent_iterator( s->meth.bells() )
-	                     : extent_iterator( s->meth.bells() - 1, 1 ),
-	     extent_iterator() ),
+      table( make_table( s ) ),
       ignore_rotations( s->ignore_rotations )
   {
     row le; 
@@ -85,6 +83,16 @@ public:
 private:
   typedef multtab::post_col_t post_col_t;
   typedef multtab::row_t row_t;
+
+  static multtab make_table( const table_search *s )
+  {
+    if ( s->meth.lh()[0] )
+      return multtab( extent_iterator( s->meth.bells() ),
+		      extent_iterator() );
+    else
+      return multtab( extent_iterator( s->meth.bells() - 1, 1),
+		      extent_iterator() );
+  }
 
   void init_falseness( const method &meth )
   {
