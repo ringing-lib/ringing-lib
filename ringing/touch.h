@@ -36,30 +36,11 @@
 #endif
 
 #include <ringing/row.h>
+#include <ringing/pointers.h>
 
 RINGING_START_NAMESPACE
 
 RINGING_USING_STD
-
-template<class T>
-class cloning_pointer {
-private:
-  T* p;
-public:
-  cloning_pointer() : p(0) {}
-  cloning_pointer(T* q) : p(q) {}
-  cloning_pointer(const cloning_pointer<T>& cp) { p = (cp.p)->clone(); }
-  ~cloning_pointer() { delete p; }
-  cloning_pointer& operator=(const cloning_pointer<T>& cp) {
-    if(p) delete p;
-    p = (cp.p)->clone();
-    return *this;
-  }
-  T& operator*() { return *p; }
-  const T& operator*() const { return *p; }
-  operator bool() const { return p; }
-  bool operator!() const { return !p; }
-};
 
 class touch_node {
 public:
@@ -73,10 +54,26 @@ public:
     virtual iterator_base* clone() = 0; 
   };
 
-  class iterator {
+  class iterator
+#if defined(_MSC_VER) && _MSC_VER < 1200
+    // The base class is needed to get some of msvc-5's stl's algorithms
+    // working.  But we can't unconditionally derive from it because 
+    // glibc++-2 does not have an iterator class if it doesn't think the
+    // compiler supports iterators.
+    : public RINGING_PREFIX_STD iterator< forward_iterator_tag, change > 
+#endif
+  {
   private:
     cloning_pointer<iterator_base> bp;
   public:
+    // These typedefs are needed to compile get the code to 
+    // compile in gcc-2.95.x.
+    typedef forward_iterator_tag iterator_category;
+    typedef change value_type;
+    typedef ptrdiff_t difference_type;
+    typedef change *pointer;
+    typedef change &reference;
+
     // Default copy constructor and copy assignment should work
     iterator(iterator_base* b) : bp(b) {}
     iterator() : bp(0) {}
@@ -87,6 +84,9 @@ public:
       { return (!bp && !(i.bp)) || (*bp == *(i.bp)); }
     bool operator!=(const iterator& i) const
       { return !operator==(i); }
+
+    // I give in.  Why does msvc-6's default assignment operator not work?
+    iterator &operator=( const iterator &o ) { bp = o.bp; return *this; }
   };
 
   virtual iterator begin() = 0;
@@ -128,6 +128,8 @@ public:
 		 back_insert_iterator<vector<change> >(c));
   }
   ~touch_changes() {}
+
+  void push_back( const change &ch ) { c.push_back(ch); }
 
   touch_node::iterator begin()
     { return touch_node::iterator(new iterator(c.begin())); }
@@ -177,9 +179,44 @@ public:
   }
 
   list<entry>& children() { return ch; }
+  const list<entry>& children() const { return ch; }
+
   void push_back(int i, touch_node* tn) {
     ch.push_back(pair<int, touch_node*>(i, tn));
   }
+  void pop_back() { ch.pop_back(); }
+};
+
+// A wrapper around a list of touch_nodes to manage their memory
+class touch
+{
+public:
+  typedef change value_type;
+  typedef touch_node::iterator iterator;
+
+  iterator begin() { return head ? head->begin() : iterator(); }
+  iterator end() { return head ? head->end() : iterator(); }
+
+  void push_back( touch_node *node );
+  void set_head( touch_node *node ) { head = node; }
+
+  touch_node *get_node( size_t idx ) { return (*nodes)[idx]; }
+  const touch_node *get_head() const { return head; }
+  touch_node *get_head() { return head; }
+
+  touch() : head(0) {}
+
+private:
+  class touch_node_list : private vector< touch_node * >
+  {
+  public:
+    using vector< touch_node * >::push_back;
+    using vector< touch_node * >::operator[];
+   ~touch_node_list();
+  };
+
+  touch_node *head;
+  shared_pointer< touch_node_list > nodes;
 };
 
 RINGING_END_NAMESPACE

@@ -469,6 +469,9 @@ int row::ispblh(void) const
 // Express it as a product of disjoint cycles
 char *row::cycles(char *result) const
 {
+  // Note: If you change the format of the output of this function,
+  // make sure you verify that row::sign() still works.
+
   if(data.empty()) {
     *result = '\0';
     return result;
@@ -520,7 +523,7 @@ int row::sign(void) const
   if(data.empty()) return 1;
   buffer c(bells() * 2);
   cycles(c);                    // Express it in cycles
-  int sgn = (strlen(c) + 1) & 1; // Just take the length of the string
+  int sgn = strlen(c) & 1; // Just take the length of the string
   return sgn ? 1 : -1;
 }
 

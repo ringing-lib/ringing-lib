@@ -67,13 +67,14 @@
 #include <list.h>
 #include <map.h>
 #include <algorithm.h>
+#include <set.h>
 #else
 #include <iostream>
 #include <list>
 #include <map>
 #include <algorithm>
+#include <set>
 #endif
-#include <multiset.h>
 #include <ringing/row.h>
 
 RINGING_START_NAMESPACE

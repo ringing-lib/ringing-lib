@@ -39,7 +39,28 @@
 # define RINGING_USING_STD
 # define RINGING_START_NAMESPACE_STD
 # define RINGING_END_NAMESPACE_STD
-# define RINGING_PREFIX_STD
+# define RINGING_PREFIX_STD ::
+#endif
+
+// The ringing::details namespace: a namespace to enclose implementation 
+// details that need to be in header files.
+#if RINGING_USE_NAMESPACES
+# define RINGING_DETAILS_PREFIX details::
+# define RINGING_START_DETAILS_NAMESPACE namespace details {
+# define RINGING_END_DETAILS_NAMESPACE }
+#else
+# define RINGING_DETAILS_PREFIX 
+# define RINGING_START_DETAILS_NAMESPACE
+# define RINGING_END_DETAILS_NAMESPACE
+#endif
+
+// And for anonymous namespace
+#if RINGING_USE_NAMESPACES
+# define RINGING_START_ANON_NAMESPACE namespace {
+# define RINGING_END_ANON_NAMESPACE }
+#else
+# define RINGING_START_ANON_NAMESPACE 
+# define RINGING_END_ANON_NAMESPACE 
 #endif
 
 #if _MSC_VER == 1200 && RINGING_USE_STD && RINGING_USE_NAMESPACES
@@ -91,7 +112,6 @@ RINGING_END_NAMESPACE_STD
 #else
 #define RINGING_DELEGATE_STD_SWAP(type)
 #endif
-
 
 #endif
 

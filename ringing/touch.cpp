@@ -22,6 +22,11 @@
 #endif
 
 #include <ringing/common.h>
+#if RINGING_OLD_INCLUDES
+#include <algorithm.h>
+#else 
+#include <algorithm>
+#endif
 #include <ringing/touch.h>
 
 RINGING_START_NAMESPACE
@@ -43,5 +48,17 @@ touch_node::iterator_base& touch_child_list::iterator::operator++()
   }
   return *this;
 }
+
+void touch::push_back( touch_node *node )
+{
+  if ( !nodes.get() ) nodes.reset( new touch_node_list );
+  nodes->push_back( node ); 
+}
+
+touch::touch_node_list::~touch_node_list()
+{
+  for_each( begin(), end(), delete_pointers() );
+}
+
 
 RINGING_END_NAMESPACE

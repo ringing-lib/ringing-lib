@@ -49,6 +49,16 @@ int main()
     r = "15263748";
     cout << "This should be Tittums: " << r << endl;
   }
+  
+  {
+    cout << "\nTesting parity...\n";
+    cout << "(null) has parity: " << row().sign() 
+	 << "  (should be +1)" << endl;
+    cout << "123456 has parity: " << row("123456").sign() 
+	 << "  (should be +1)" << endl;
+    cout << "12436758 has parity: " << row("12436758").sign() 
+	 << "  (should be -1)" << endl;
+  }
 
   {
     cout << "\nTesting change constructor, operators & printing...\n";
