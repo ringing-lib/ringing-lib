@@ -1,3 +1,7 @@
+Version 0.2.2 (27 September 2001):
+  Fixed lots of Windows compilation problems.
+  Renamed all .cc files to .cpp files.
+
 Version 0.2.1 (26 September 2001):
   Created NEWS file!
   More and better-organised documentation, though still not complete.
