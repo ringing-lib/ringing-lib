@@ -68,14 +68,14 @@ public:
   class const_iterator;
   const_iterator begin() const;
   const_iterator end() const;
-  
+
+  enum { first_token = 256 };
+
 RINGING_PROTECTED_IMPL:
   class basic_token;
   class string_token;
 
 protected:
-  enum { first_token = 256 };
-
   enum new_line_policy { keep_new_lines, discard_new_lines };
 
   tokeniser( istream& in, 
@@ -147,6 +147,9 @@ inline tokeniser::const_iterator tokeniser::end() const
 }
 
 
+// Looks for a particular string.  
+// Useful for a sequence of characters (e.g. *=) or keywords (e.g. exit).
+// Subclass this to provide more advanced behaviour.
 class tokeniser::basic_token
 { 
 public:
@@ -166,9 +169,12 @@ private:
   size_t len;
 };
 
+// Parses quoted strings
 class tokeniser::string_token : public tokeniser::basic_token
 {
 public:
+  // q is the quote character; it must be one character long only.
+  // e.g. q == "'"
   string_token(const char* q, int type);
   
 private:

@@ -63,13 +63,4 @@ private:
 };
 
 
-
-// This exists because Visual Studio's default STL (an old version of the
-// Dinkumware STL) has a bug in it's implementation of istream<>::getline.
-// If we're using that STL, this provides a work around.  This overload gets
-// chosen in preference to std::getline because it is non-templated.
-#if defined(_MSC_VER) && _MSC_VER <= 1200 && defined(_YVALS) && (!defined(_CPPLIB_VER) || _CPPLIB_VER < 306)
-istream& getline( istream& in, string &str, char c = '\n' );
-#endif
-
 #endif // GSIRIL_CONSOLE_STREAM_INCLUDED

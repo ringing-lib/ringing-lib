@@ -22,8 +22,8 @@
 #endif
 
 #include <ringing/common.h>
+#include <ringing/streamutils.h> // To get around bug in MSVC getline
 #include "tokeniser.h"
-#include "console_stream.h" // To fix getline bug in MSVC.
 #if RINGING_OLD_INCLUDES
 #include <iterator.h>
 #include <vector.h>
@@ -65,7 +65,7 @@ tokeniser::basic_token::basic_token( const char* initial_sequence, int type )
 }
 
 bool tokeniser::basic_token::matches( string::const_iterator i,
-				     string::const_iterator e ) const
+				      string::const_iterator e ) const
 {
   return e-i >= len && strncmp( &*i, init_seq, len ) == 0;
 }

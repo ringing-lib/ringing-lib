@@ -24,9 +24,10 @@ MAINTAINERCLEANFILES = Makefile.in
 
 bin_PROGRAMS = gsiril
 
-INCLUDES = -I$(top_srcdir)
+INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/apps/utils
 
-gsiril_LDADD = $(top_builddir)/ringing/libringing.a @READLINE_LIBS@
+gsiril_LDADD = $(top_builddir)/apps/utils/libstuff.a \
+$(top_builddir)/ringing/libringing.a @READLINE_LIBS@
 
 if HAVE_READLINE
 additional =  rlstream.cpp rlstream.h
@@ -35,6 +36,6 @@ endif
 gsiril_SOURCES = main.cpp console_stream.cpp console_stream.h \
 execution_context.cpp execution_context.h expression.cpp expression.h \
 common_expr.h parser.cpp parser.h util.cpp util.h $(additional) \
-tokeniser.cpp tokeniser.h
+msparser.cpp
 
 EXTRA_gsiril_SOURCES = rlstream.cpp rlstream.h
