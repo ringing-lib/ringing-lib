@@ -1,5 +1,6 @@
 // mslib.cpp - Read and write MicroSIRIL libraries
-// Copyright (C) 2001 Martin Bright <M.Bright@dpmms.cam.ac.uk>
+// Copyright (C) 2001-2 Martin Bright <M.Bright@dpmms.cam.ac.uk>
+// and Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -30,166 +31,181 @@
 #include <cctype>
 #endif
 #include <ringing/mslib.h>
+#include <ringing/pointers.h>
 
 RINGING_START_NAMESPACE
 
-mslib::mslib(const string& name) : wr(0),
-				   _good(0)
+class mslib::entry_type : public library_entry
 {
-  f.open(name.c_str(), ios::in | ios::out);
-  if(f.good())
+  // The public interface
+  virtual string name() const;
+  virtual string base_name() const;
+  virtual string pn() const;
+  virtual int bells() const { return b; }
+
+  // Helper functions
+  friend class mslib;
+  entry_type();
+  virtual bool readentry( ifstream &ifs );
+  virtual library_entry *clone() const { return new entry_type(*this); }
+
+  // The current line
+  string linebuf;
+
+  // The number of bells
+  int b;
+};
+
+
+mslib::const_iterator mslib::begin() const
+{
+  ifstream *ifs = const_cast< ifstream * >( &f );
+  ifs->clear();
+  ifs->seekg(0, ios::beg);
+  return const_iterator(ifs, new mslib::entry_type);
+}
+
+mslib::const_iterator mslib::end() const
+{
+  return const_iterator();
+}
+
+mslib::entry_type::entry_type()
+  : b(0)
+{}
+
+bool mslib::entry_type::readentry( ifstream &ifs )
+{
+  while ( ifs )
     {
-      wr = 1;
-      _good = 1;
-    }
-  else
-    {
-      f.open(name.c_str(), ios::in);
-      if (f.good())
+      getline( ifs, linebuf );
+
+      if ( linebuf.length() > 0 && linebuf[0] == '*' )
 	{
-	  _good = 1;
+	  // The header 
+	  string::size_type p = linebuf.find(' ');
+	  if ( p != string::npos )
+	    {
+	      ++p;
+
+	      // Skip the class code
+	      while ( p < linebuf.size() && isalpha( linebuf[p] ) ) ++p;
+
+	      // Extract number of bells
+	      if ( p < linebuf.size() )
+		b = atoi( linebuf.c_str() + p );
+	    }
+	}
+      // An added check.  If this returns true we're looking at a 
+      // CC library, not a MicroSIRIL one.
+      else if ( linebuf.find("Name") != string::npos && 
+		linebuf.find("No.") != string::npos )
+	{
+	  return false;
+	}
+      else if ( linebuf.length() > 0 )
+	{
+	  // Entries have exactly two spaces.
+	  if ( count(linebuf.begin(), linebuf.end(), ' ') != 2 )
+	    return false;
+
+	  break;
 	}
     }
-  if (_good)
+
+  return ifs;
+}
+
+string mslib::entry_type::name() const
+{
+  return string( linebuf, 0, linebuf.find(' ') );
+}
+
+string mslib::entry_type::base_name() const
+{
+  // TODO  Strip trailing 'place' or 'bob' off plain methods
+  return name();
+}
+
+string mslib::entry_type::pn() const
+{
+  string::size_type s1( linebuf.find(' ') );
+  string::size_type s2( linebuf.find(' ', s1+1) );
+
+  // Get the lead head code
+  string lh( linebuf, s1+1, s2-s1-1 );
+
+  string placenotation( linebuf, s2+1, string::npos );
+
+  // Now remove space on end of line.
+  {
+    string::iterator j = placenotation.end();
+    while ( j > placenotation.begin() && isspace(*(j - 1)) ) --j;
+    placenotation.erase(j, placenotation.end());
+  }
+
+
+  // if we have a + on the front it is not a reflection method,
+  // hence don't add the last change.
+  if (placenotation[0] != '+')
     {
-      string::const_iterator s;
-      // Get the number off the end of the file name
-      for(s = name.begin() + name.length() - 1; s > name.begin() && isdigit(s[-1]); s--);
-      b = atoi(&*s);
+      if ( lh.size() && lh[ lh.size()-1 ] == 'z' )
+	{
+	  placenotation.append(",");
+	  placenotation.append(lh, 0, lh.size()-1);
+	}
+      else if ( lh[0] >= 'a' && lh[0] <= 'f' ||
+		lh[0] == 'p' || lh[0] == 'q' )
+	{
+	  placenotation.append(",2");
+	}
+      else
+	{
+	  placenotation.append(",1");
+	}
+    }
+
+  return placenotation;
+}
+
+// ---------------------------------------------------------------------
+
+
+static int extractNumber(const string &filename)
+{
+  string::const_iterator s;
+
+  // Get the number off the end of the file name
+  // Is there a '.'? e.g. '.txt', if so account for it
+  // We want the last one so that a filename like
+  // ../libraries/surprise8.txt works.
+  string subname(filename, 0, filename.find_last_of('.'));
+
+  // now start to reverse from last.
+  for(s = subname.end(); s > subname.begin() && isdigit(s[-1]); s--);
+  return atoi(&*s);
+}
+
+
+mslib::mslib(const string& name) 
+  : f(name.c_str()), wr(0), _good(0)
+{
+  // Open file. Not going to bother to see if it's writeable as the
+  // save function is not currently planned to be implemented.
+  if(f.good())
+    {
+      _good = 1;
+      b = extractNumber(name);
     }
 }
 
 // Is this file in the right format?
 library_base *mslib::canread(ifstream& ifs, const string& name)
 {
-  int valid = 0;
-  int notvalid = 0;
-  while (ifs.good() && (notvalid != 1))
-    {
-      string linebuf;
-      getline(ifs, linebuf);
-      if (linebuf.length() > 1)
-	{
-	  if ((linebuf.find("Name") != string::npos) && (linebuf.find("No.") != string::npos))
-	    {
-	      notvalid = 1;
-	    }
-	  else if (linebuf[0] != '*')
-	    {
-	      valid = (count(linebuf.begin(), linebuf.end(), ' ') == 2 ? 1 : 0);
-	    }
-	}
-    }
-  if (notvalid == 1 ? 0 : valid)
+  if ( const_iterator(&ifs, new entry_type) != const_iterator() )
     return new mslib( name );
   else
     return NULL;
-}
-
-// Return a list of items
-int mslib::dir(list<string>& result)
-{
-  if (_good != 1)
-    return 0;
-
-  // return file to the start.
-  f.clear();
-  f.seekg(0, ios::beg);
-
-  string line;
-
-  while(f.good()) {
-    getline(f, line);
-    
-    if ((line.length() > 0) && (line[0] != '*'))
-      {
-	// find the first space
-	string::size_type pos = line.find(' ', 0);
-	
-	// Add the name onto the list
-	result.push_back(line.substr(0, pos));
-      }
-  }
-
-  return result.size();
-}
-
-// Load a method from a MicroSIRIL library
-method mslib::load(const string& name)
-{
-  string::const_iterator s;
-
-  f.clear();
-  f.seekg(0, ios::beg);
-  
-  while(f.good()) {
-    s = name.begin();
-    // See whether the name matches
-    while(s != name.end() && tolower(f.get()) == tolower(*s++));
-    if(s == name.end() && isspace(f.get())) { // Found it
-      char lh[16];		       // Get the lead head code
-      f.get(lh,16,' ');
-
-      // Now extract the rest of the line for the place notation
-      string linebuf = "";
-      getline(f, linebuf);
-      string::iterator x = linebuf.begin();
-
-      string placenotation = "";
-
-      // Remove whitespace from the place notation by copying it
-      // into another string.
-      while (x != linebuf.end())
-	{
-	  if (!isspace(*x) && (*x != '\n'))
-	    {
-	      placenotation += *x;
-	    }
-	  x++;
-	}
-
-      // if we have a + on the front it is not a reflection method,
-      // hence don't add the last change.
-      bool final_change = (placenotation[0] != '+');
-
-      method m(placenotation,b,name);
-      if(*lh) {
-	char *y;
-	y = lh + strlen(lh) - 1;
-	if (final_change)
-	  {
-	    if(*y == 'z') {
-	      *y = '\0';
-	      m.push_back(change(b, lh));
-	    } else {
-	      if((lh[0] >= 'a' && lh[0] <= 'f')
-		 || (lh[0] >= 'p' && lh[0] <= 'q'))
-		{
-		  m.push_back(change(b, "12"));
-		}
-	      else
-		{
-		  m.push_back(change(b, "1"));
-		}
-	    }
-	  }
-      }
-      return m;
-    }
-
-    while(!f.eof() && f.get() != '\n');	// Skip to the next line
-  }
-  // If we are here we couldn't find the method.
-#if RINGING_USE_EXCEPTIONS
-  // If we are using exceptions, throw one to notify it couldn't be found.
-  throw invalid_name();
-#endif
-  // Visual Studio 5 requires a return statement even after a throw.
-
-  // Otherwise we have to return something to avoid warning and errors, so
-  // make up something strange. Give it a name so it can always be checked
-  // against.
-  return method( 0, 0, "Not Found" );
 }
 
 #if 0

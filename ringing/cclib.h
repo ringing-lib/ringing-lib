@@ -57,12 +57,6 @@ private:
   // Extracts the number of bells from the filename.
   static int extractNumber(const string&);
 
-  string simple_name(const string&);
-
-  class iterator;
-  iterator begin();
-  iterator end();
-
 public:
   static RINGING_API void registerlib(void) {
     library::addtype(&canread);
@@ -79,16 +73,18 @@ private:
   // Is this file in the right format?
   static library_base *canread(ifstream& ifs, const string& name);
 
-  // Return a list of items
-  int dir(list<string>& result);
+  // Iterators into the library
+  class entry_type;
+  virtual const_iterator begin() const;
+  virtual const_iterator end() const;
 
+  // Return a list of items
   bool good(void) const          // Is the library in a usable state?
     { return _good; }
 
   bool writeable(void) const     // Is this library writeable?
     { return wr; }
 
-  method load(const string& name);     // Load a method
 //int save(method& name);       // Save a method - not defined for cclib
 };
 

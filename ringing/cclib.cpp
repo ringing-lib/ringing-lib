@@ -1,5 +1,6 @@
 // cclib.cpp - Read and write the Central Council Method libraries
-// Copyright (C) 2001 Mark Banner <mark@standard8.co.uk>
+// Copyright (C) 2001-2 Mark Banner <mark@standard8.co.uk>
+// and Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -31,106 +32,75 @@
 #include <cstdio>
 #endif
 #include <ringing/method.h>
+#include <ringing/pointers.h>
 #include <string>
 #if defined(SEPERATE_FILES)
 // Be warned that dirent.h is not in the either the C99 or C++98 standards.
-// Also indentifiers containing two adjacent underscores or one leading one
-// followed by an uppercaes letter are prohibited.
 #include <dirent.h>
 #endif
+
 RINGING_START_NAMESPACE
 
-
-class cclib::iterator
+// A class representing an entry in the collection
+class cclib::entry_type : public library_entry
 {
-public:
-  // Standard iterator typedefs
-  class value_type;
-  typedef input_iterator_tag iterator_category;
-  typedef ptrdiff_t difference_type;
-  typedef value_type &reference;
-  typedef value_type *pointer;
+  // The public interface
+  virtual string name() const;
+  virtual string base_name() const;
+  virtual string pn() const;
+  virtual int bells() const { return b; }
 
-  // Construction
-  iterator( ifstream &f ) : ifs(&f) { ok = val.readentry( *ifs ); }
-  iterator() : ifs(0), ok(false) {}
+  // Helper functions
+  friend class cclib;
+  entry_type();
+  void parse_header();
+  void parse_title();
+  virtual bool readentry( ifstream &ifs );
+  virtual library_entry *clone() const { return new entry_type(*this); }
 
-  // Equality Comparable requirements
-  bool operator==( const iterator &i ) const
-    { return ok ? (i.ok && ifs == i.ifs) : !i.ok; }
-  bool operator!=( const iterator &i ) const
-    { return !operator==( i ); }
+  // The current line
+  string linebuf;
 
-  // Trivial Iterator requirements
-  reference operator*() { return val; }
-  pointer operator->() { return &val; }
+  // The previous line sometimes contains just the name
+  // when it is too long (e.g. "A Fishmonger and Judith's Hat
+  // Surprise Minor").
+  string wrapped_name;
 
-  // Input Iterator requirements
-  iterator &operator++() { ok = val.readentry( *ifs ); return *this; }
-  iterator operator++(int) { iterator tmp(*this); ++*this; return tmp; }
+  // Offsets for the start/end of various columns
+  string::size_type meth_name_starts;
+  string::size_type meth_name_ends;
+  string::size_type meth_hl;
+  string::size_type meth_le;
+  string::size_type meth_lh;
 
-  // A class representing an entry in the collection
-  class value_type
-  {
-  public:
-    // The name of the method
-    string name() const;
-
-    // The place notation of the method
-    string pn() const;
-
-  private:
-    // Helper functions
-    friend class cclib::iterator;
-    value_type();
-    void parse_header();
-    bool readentry( ifstream &ifs );
-
-    // The current line
-    string linebuf;
-
-    // The previous line sometimes contains just the name
-    // when it is too long (e.g. "A Fishmonger and Judith's Hat
-    // Surprise Minor").
-    string wrapped_name;
-
-    // Offsets for the start/end of various columns
-    string::size_type meth_name_starts;
-    string::size_type meth_name_ends;
-    string::size_type meth_hl;
-    string::size_type meth_le;
-    string::size_type meth_lh;
-  };
-
-private:
-  // Data members
-  ifstream *ifs;
-  value_type val;
-  bool ok;
+  // Method class information
+  int b;
 };
 
-cclib::iterator cclib::begin() 
+
+cclib::const_iterator cclib::begin() const
 {
-  // return file to the start.
-  f.clear();
-  f.seekg(0, ios::beg);
-  return iterator(f);
+  ifstream *ifs = const_cast< ifstream * >( &f );
+  ifs->clear();
+  ifs->seekg(0, ios::beg);
+  return const_iterator(ifs, new cclib::entry_type);
+}
+  
+cclib::const_iterator cclib::end() const
+{
+  return const_iterator();
 }
 
-cclib::iterator cclib::end()
-{
-  return iterator();
-}
-
-cclib::iterator::value_type::value_type()
+cclib::entry_type::entry_type()
   : meth_name_starts( string::npos ),
     meth_name_ends  ( string::npos ),
     meth_hl         ( string::npos ),
     meth_le         ( string::npos ),
-    meth_lh         ( string::npos )
+    meth_lh         ( string::npos ),
+    b               ( 0            )
 {}
 
-bool cclib::iterator::value_type::readentry( ifstream &ifs )
+bool cclib::entry_type::readentry( ifstream &ifs )
 {
   // Go through a line at a time.
   while ( ifs )
@@ -144,50 +114,69 @@ bool cclib::iterator::value_type::readentry( ifstream &ifs )
 	{
 	  parse_header();
 	}
-      else if (meth_name_starts != meth_name_ends)
-	{
-	  // Even wrapped lines are always longer than meth_name_ends-3
-	  if ( linebuf.length() > meth_name_ends-3
+      else if (meth_name_starts != meth_name_ends
+	       // Even wrapped lines are always longer than meth_name_ends-3
+	       && linebuf.length() > meth_name_ends-3
 	       // Check first bit equates to a number...
 	       && atoi( string(linebuf, 0, meth_name_starts).c_str() ) )
-	    {
-	      bool is_wrapped(true);
-
-	      // Unfortunately, I can't see a non-heuristical way
-	      // of doing this.  
+	{
+	  bool is_wrapped(true);
+	  
+	  // Unfortunately, I can't see a non-heuristical way
+	  // of doing this.  
+	  {
+	    string wrap( linebuf, meth_name_ends - 4, string::npos );
+	    
+	    for ( string::const_iterator i(wrap.begin()), e(wrap.end()-1); 
+		  i < e; ++i )
 	      {
-		string wrap( linebuf, meth_name_ends - 4, string::npos );
-		
-		for ( string::const_iterator i(wrap.begin()), e(wrap.end()-1); 
-		      i < e; ++i )
-		  {
-		    if ( // Does it have multiple consecutive spaces?
-			 *i == ' ' && i[1] == ' ' 
-			 // Or does it contain characters that are not
-			 // from [A-Za-z\']?
-			 || *i != ' ' && !isalnum(*i) && *i != '\'' )
-		      { 
-			is_wrapped = false; 
-			break; 
-		      }
+		if ( // Does it have multiple consecutive spaces?
+		    *i == ' ' && i[1] == ' ' 
+		    // Or does it contain characters that are not
+		    // from [A-Za-z\']?
+		    || *i != ' ' && !isalnum(*i) && *i != '\'' )
+		  { 
+		    is_wrapped = false; 
+		    break; 
 		  }
 	      }
 
-	      if ( is_wrapped )
-		{
-		  wrapped_name = linebuf;
-		  getline( ifs, linebuf );
-		}
-
-	      if ( linebuf.length() > meth_lh )
-		break;
-	    }
+	    
+	    if ( is_wrapped )
+	      {
+		wrapped_name = linebuf;
+		getline( ifs, linebuf );
+	      }
+	    
+	    if ( linebuf.length() > meth_lh )
+	      break;
+	  }
+	}
+      else if ( linebuf.find( "methods" ) != string::npos ||
+		linebuf.find( "principles" ) != string::npos )
+	{
+	  parse_title();
 	}
     }
   return ifs;
 }
 
-void cclib::iterator::value_type::parse_header()
+void cclib::entry_type::parse_title()
+{
+  // True if it's a method, false if it's a principle
+  bool meth( linebuf.find( "methods" ) != string::npos );
+
+  for ( int i=3; i<=22; ++i )
+    if ( linebuf.find( string( method::stagename(i) ) + 
+		       string( meth ? " methods" : " principles" ) )
+	 != string::npos )
+      {
+	b = i;
+	break;
+      }
+}
+
+void cclib::entry_type::parse_header()
 {
   meth_name_starts = linebuf.find("Name");
   meth_name_ends = linebuf.find("Notation");
@@ -207,7 +196,7 @@ void cclib::iterator::value_type::parse_header()
     }
 }
 
-string cclib::iterator::value_type::name() const
+string cclib::entry_type::name() const
 {
   string n( linebuf, meth_name_starts, 
 	    meth_name_ends - meth_name_starts ); 
@@ -223,91 +212,9 @@ string cclib::iterator::value_type::name() const
   return n.substr( 0, i - n.begin() );
 }
 
-string cclib::iterator::value_type::pn() const
+string cclib::entry_type::base_name() const
 {
-  string pn;
-
-  // Get place notation
-  if ( meth_hl != string::npos && meth_le != string::npos )
-    {
-      // We have a reflection
-      pn.append("&");
-      // Add place notation
-      pn.append(linebuf.substr(meth_name_ends, meth_hl - meth_name_ends));
-      // Add half lead notation
-      pn.append(linebuf.substr(meth_hl, meth_le - meth_hl));
-      // And the lead head change
-      pn.append(",");
-      pn.append(linebuf.substr(meth_le, meth_lh - meth_le));
-    }
-
-  else if (meth_hl != string::npos)
-    {
-      // This is for methods like Grandsire which the CC
-      // have entered in an awkward way.
-
-      // As an example, for Grandsire Doubles we return "3,&1.5.1.5.1".
-      // This is not a very standard form, but it works fine in our place 
-      // notation handling code.
-      switch ( linebuf[meth_name_ends] )
-	{
-	case 'X': case 'x': case '-':
-	  pn.append( "-,&" );
-	  pn.append( linebuf.substr( meth_name_ends+1, 
-				     meth_lh - meth_name_ends ) );
-	  break;
-
-	default:
-	  {
-	    string::const_iterator i( linebuf.begin() + meth_name_ends );
-	    string::const_iterator j(i), e( linebuf.begin() + meth_lh );
-
-	    while ( j < e && isalnum(*j) && *j != 'X' && *j != 'x') 
-	      ++j;
-
-	    pn.append( i, j );
-	    pn.append( ",&" );
-	    pn.append( j, e );
-	  }
-	}
-    }
-
-  else
-    {
-      // This is for the non-reflecting irregular methods.
-      pn.append( linebuf.substr(meth_name_ends, meth_lh - meth_name_ends) );
-    }
-
-  return pn;
-}
-
-// ---------------------------------------------------------------------
-
-
-// This function is for creating lower case strings.
-void lowercase(char &c)
-{
-  c = tolower(c);
-}
-
-int cclib::extractNumber(const string &filename)
-{
-  string::const_iterator s;
-
-  // Get the number off the end of the file name
-  // Is there a '.'? e.g. '.txt', if so account for it
-  // We want the last one so that a filename like
-  // ../libraries/surprise8.txt works.
-  string subname(filename, 0, filename.find_last_of('.'));
-
-  // now start to reverse from last.
-  for(s = subname.end(); s > subname.begin() && isdigit(s[-1]); s--);
-  return atoi(&*s);
-}
-
-string cclib::simple_name(const string &original)
-{
-  string newname(original);
+  string newname(name());
   string::size_type pos = 0;
 
   // Entries in CC Libs do not contain the stage name.
@@ -353,6 +260,82 @@ string cclib::simple_name(const string &original)
   return newname.substr(0, j - newname.begin());
 }
 
+string cclib::entry_type::pn() const
+{
+  string pn;
+
+  // Get place notation
+  if ( meth_hl != string::npos && meth_le != string::npos )
+    {
+      // We have a reflection
+      pn.append("&");
+      // Add place notation
+      pn.append(linebuf.substr(meth_name_ends, meth_hl - meth_name_ends));
+      // Add half lead notation
+      pn.append(linebuf.substr(meth_hl, meth_le - meth_hl));
+      // And the lead head change
+      pn.append(",");
+      pn.append(linebuf.substr(meth_le, meth_lh - meth_le));
+    }
+
+  else if (meth_hl != string::npos)
+    {
+      // This is for methods like Grandsire which the CC
+      // have entered in an awkward way.
+
+      // As an example, for Grandsire Doubles we return "3,&1.5.1.5.1".
+      // This is not a very standard form, but it works fine in our place 
+      // notation handling code.
+      switch ( linebuf[meth_name_ends] )
+	{
+	case 'X': case 'x': case '-':
+	  pn.append( "-,&" );
+	  pn.append( linebuf.substr( meth_name_ends+1, 
+				     meth_lh - meth_name_ends - 1 ) );
+	  break;
+
+	default:
+	  {
+	    string::const_iterator i( linebuf.begin() + meth_name_ends );
+	    string::const_iterator j(i), e( linebuf.begin() + meth_lh );
+
+	    while ( j < e && isalnum(*j) && *j != 'X' && *j != 'x') 
+	      ++j;
+
+	    pn.append( i, j );
+	    pn.append( ",&" );
+	    pn.append( j, e );
+	  }
+	}
+    }
+
+  else
+    {
+      // This is for the non-reflecting irregular methods.
+      pn.append( linebuf.substr(meth_name_ends, meth_lh - meth_name_ends) );
+    }
+
+  return pn;
+}
+
+// ---------------------------------------------------------------------
+
+
+int cclib::extractNumber(const string &filename)
+{
+  string::const_iterator s;
+
+  // Get the number off the end of the file name
+  // Is there a '.'? e.g. '.txt', if so account for it
+  // We want the last one so that a filename like
+  // ../libraries/surprise8.txt works.
+  string subname(filename, 0, filename.find_last_of('.'));
+
+  // now start to reverse from last.
+  for(s = subname.end(); s > subname.begin() && isdigit(s[-1]); s--);
+  return atoi(&*s);
+}
+
 cclib::cclib(const string& name)
   : f(name.c_str()), wr(0), _good(0)
 {
@@ -368,63 +351,10 @@ cclib::cclib(const string& name)
 // Is this file in the right format?
 library_base *cclib::canread(ifstream& ifs, const string& name)
 {
-  if ( iterator(ifs) != iterator() )
+  if ( const_iterator(&ifs, new entry_type) != const_iterator() )
     return new cclib( name );
   else
     return NULL;
-}
-
-// Return a list of items
-int cclib::dir(list<string>& result)
-{
-  if (_good != 1)
-    return 0;
-
-  for ( iterator i(begin()); i != end(); ++i )
-    result.push_back( i->name() );
-
-  return result.size();
-}
-
-// Load a method from a Central Council Method library
-method cclib::load(const string& name)
-{
-  string methname(name);
-
-  for ( iterator i(begin()); i != end(); ++i )
-    {
-      // Extract the method name section
-      string wordbuf( i->name() );
-      
-      // Copy wordbuf to preserve for later
-      string methodname(wordbuf);
-      
-      // Make all letters lower case
-      for_each(wordbuf.begin(), wordbuf.end(), lowercase);
-      for_each(methname.begin(), methname.end(), lowercase);
-	    
-      // Do we have the correct line for the method?
-      if ((wordbuf.length() == methname.length()) &&
-	  (wordbuf.compare(methname) == 0))
-	{
-	  // we have found the method.
-	  return method( i->pn(), b,
-			 simple_name( methodname ) );
-	}
-    }
-
-  // If we are here we couldn't find the method.
-
-#if RINGING_USE_EXCEPTIONS
-  // If we are using exceptions, throw one to notify it couldn't be found.
-  throw invalid_name();
-#endif 
-  // Visual Studio 5 requires a return statement even after a throw.
-
-  // Otherwise we have to return something to avoid warning and errors, so
-  // make up something strange. Give it a name so it can always be checked
-  // against.
-  return method( 0, 0, "Not Found" );
 }
 
 #if defined(SEPERATE_FILES)

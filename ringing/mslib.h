@@ -44,7 +44,7 @@ RINGING_USING_STD
 // mslib : Implement MicroSIRIL libraries
 class mslib : public library_base {
 private:
-  fstream f;                    // The file stream we're using
+  ifstream f;                   // The file stream we're using
   int b;                        // Number of bells for files in this lib
   int wr;                       // Is it open for writing?
   int _good;
@@ -62,17 +62,16 @@ private:
   // Is this file in the right format?
   static library_base *canread(ifstream& ifs, const string& name);
 
-  // Return a list of items
-  int dir(list<string>& result);
+  // Iterators into the library
+  class entry_type;
+  virtual const_iterator begin() const;
+  virtual const_iterator end() const;
 
   bool good(void) const          // Is the library in a usable state?
     { return _good; }
 
   bool writeable(void) const     // Is this library writeable?
     { return wr; }
-
-  method load(const string& name);     // Load a method
-//int save(method& name);       // Save a method
 };
 
 RINGING_END_NAMESPACE
