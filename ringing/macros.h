@@ -51,7 +51,7 @@
 # define RINGING_USING_STD using namespace std;
 # define RINGING_START_NAMESPACE_STD namespace std {
 # define RINGING_END_NAMESPACE_STD };
-# define RINGING_PREFIX_STD std::
+# define RINGING_PREFIX_STD ::std::
 #else
 # define RINGING_USING_STD
 # define RINGING_START_NAMESPACE_STD
@@ -62,10 +62,12 @@
 // The ringing::details namespace: a namespace to enclose implementation 
 // details that need to be in header files.
 #if RINGING_USE_NAMESPACES
+# define RINGING_USING_DETAILS using namespace details;
 # define RINGING_DETAILS_PREFIX details::
 # define RINGING_START_DETAILS_NAMESPACE namespace details {
 # define RINGING_END_DETAILS_NAMESPACE }
 #else
+# define RINGING_USING_DETAILS 
 # define RINGING_DETAILS_PREFIX 
 # define RINGING_START_DETAILS_NAMESPACE
 # define RINGING_END_DETAILS_NAMESPACE
@@ -128,6 +130,23 @@ RINGING_START_NAMESPACE_STD						\
 RINGING_END_NAMESPACE_STD
 #else
 #define RINGING_DELEGATE_STD_SWAP(type)
+#endif
+
+// The following construct does work in all compilers:
+//   class base {
+//   protected:
+//     class impl_base {};
+//   };
+//
+//   class derived : public base { 
+//     class impl;
+//   };
+//
+//   class derived::impl : public base::impl_base {};
+#if RINGING_PROTECTED_MEMBER_BASES
+# define RINGING_PROTECTED_IMPL protected
+#else 
+# define RINGING_PROTECTED_IMPL public
 #endif
 
 #endif // RINGING_MACROS_H

@@ -129,6 +129,37 @@ else
 fi
 AC_SUBST(RINGING_PREMATURE_MEMBER_INSTANTIATION)
 
+dnl Check to see whether a member class can be derived from a protected
+dnl member class of the outer class.
+dnl
+AC_CACHE_CHECK(
+  [whether member classes' base classes may be protected],
+  [ac_cv_cxx_protected_member_bases],
+  [AC_TRY_COMPILE(
+    [
+      class A {
+      protected:
+	class B {};
+      };
+
+      class C : public A {
+        class D;
+      };
+
+      class C::D : public A::B {};
+    ],
+    [ return 0; ],
+    ac_cv_cxx_protected_member_bases=yes,
+    ac_cv_cxx_protected_member_bases=no
+  )]
+)
+if test "$ac_cv_cxx_protected_member_bases" = yes ; then
+  RINGING_PROTECTED_MEMBER_BASES=1
+else
+  RINGING_PROTECTED_MEMBER_BASES=0
+fi
+AC_SUBST(RINGING_PROTECTED_MEMBER_BASES)
+
 dnl Check to see whether the standard includes put their things in
 dnl the std namespace
 AC_CACHE_CHECK(whether standard includes use namespace std,

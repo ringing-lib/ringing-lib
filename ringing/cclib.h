@@ -27,10 +27,13 @@
 #include <ringing/common.h>
 #if RINGING_OLD_C_INCLUDES
 #include <ctype.h>
-#include <algorithm.h>
-#include <fstream.h>
 #else
 #include <cctype>
+#endif
+#if RINGING_OLD_INCLUDES
+#include <algo.h>
+#include <fstream.h>
+#else
 #include <algorithm>
 #include <fstream>
 #endif

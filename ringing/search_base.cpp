@@ -1,5 +1,5 @@
-// -*- C++ -*- touch.cpp - Classes for touches
-// Copyright (C) 2001 Martin Bright <M.Bright@dpmms.cam.ac.uk>
+// -*- C++ -*- search_base.cpp - Base class for searching
+// Copyright (C) 2001, 2002 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -22,43 +22,17 @@
 #endif
 
 #include <ringing/common.h>
-#if RINGING_OLD_INCLUDES
-#include <algo.h>
-#else 
-#include <algorithm>
-#endif
-#include <ringing/touch.h>
+#include <ringing/search_base.h>
+#include <ringing/pointers.h>
 
 RINGING_START_NAMESPACE
 
-touch_node::iterator_base& touch_child_list::iterator::operator++()
-{
-  ++ci;
-  if(ci == (*i).second->end()) {
-    ++count;
-    if(count != (*i).first) {
-      ci = (*i).second->begin();
-    } else {
-      ++i;
-      if(i != last) {
-	count = 0;
-	ci = (*i).second->begin();
-      }
-    }
-  }
-  return *this;
-}
+RINGING_USING_STD
 
-void touch::push_back( touch_node *node )
+void search_base::run( search_base::outputer &o ) const
 {
-  if ( !nodes.get() ) nodes.reset( new touch_node_list );
-  nodes->push_back( node ); 
+  scoped_pointer< context_base > ctx( new_context() );
+  ctx->run( o );
 }
-
-touch::touch_node_list::~touch_node_list()
-{
-  for_each( begin(), end(), delete_pointers() );
-}
-
 
 RINGING_END_NAMESPACE

@@ -31,7 +31,7 @@
 #include <vector.h>
 #include <iterator.h>
 #include <list.h>
-#include <algorithm.h>
+#include <algo.h>
 #include <stdexcept.h>
 #else
 #include <iostream>

@@ -59,6 +59,10 @@
 // template functions, or 0 if it does not.
 #define RINGING_USE_TEMPLATE_FUNCTION_SPECIALISATION @RINGING_USE_TEMPLATE_FUNCTION_SPECIALISATION@
 
+// *** Define this to be 1 if your compiler allows bases classes of 
+// member classes to be protected member classes of a base of the outer class.
+#define RINGING_PROTECTED_MEMBER_BASES @RINGING_PROTECTED_MEMBER_BASES@
+
 // *** Define this to be 1 if your compiler prematurely instantiates the 
 // definitions of member functions (as well as their declarations) when
 // it implicitly instantiates a class, or 0 otherwise.

@@ -4,7 +4,7 @@ MAINTAINERCLEANFILES = Makefile.in
 INCLUDES = -I$(top_srcdir)
 
 noinst_PROGRAMS = testbase testprint testtouch testlibrary psline \
-testproof testmusic
+testproof testmusic testsearch
 LDADD = $(top_builddir)/ringing/libringing.a
 
 testbase_SOURCES = testbase.cpp
@@ -14,3 +14,4 @@ testlibrary_SOURCES = testlibrary.cpp
 psline_SOURCES = psline.cpp
 testproof_SOURCES = testproof.cpp
 testmusic_SOURCES = testmusic.cpp
+testsearch_SOURCES = testsearch.cpp

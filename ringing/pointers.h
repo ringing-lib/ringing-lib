@@ -30,6 +30,11 @@
 #define RINGING_POINTERS_H
 
 #include <ringing/common.h>
+#if RINGING_OLD_INCLUDES
+#include <algo.h>
+#else
+#include <algorithm>
+#endif
 
 RINGING_START_NAMESPACE
 
@@ -81,7 +86,7 @@ public:
   element_type *get() const { return ptr; }
     
   // Construction and destruction
-  cloning_pointer( T *src = 0 ) : ptr(src) {}
+  explicit cloning_pointer( T *src = 0 ) : ptr(src) {}
  ~cloning_pointer() { delete ptr; }
 
   // Swapping, assignment and copying
@@ -118,7 +123,7 @@ public:
   element_type *get() const { return ptr; }
 
   // Construction and destruction
-  shared_pointer( T *src = 0 ) 
+  explicit shared_pointer( T *src = 0 ) 
     : ptr( src )
   { 
     try { rc = new int(1); } 
@@ -155,13 +160,46 @@ private:
   mutable int *rc;
 };
 
+// A smart pointer that prohibits copying, but ensures the destructor
+// is correctly called.  Based on boost's scoped_ptr.
+template <class T>
+class scoped_pointer : private RINGING_DETAILS_PREFIX safe_bool
+{
+public:
+  // Standard auto pointer typedefs
+  typedef T element_type;
+
+  // Accessors
+  element_type *operator->() const { return ptr; }
+  element_type &operator*() const { return *ptr; }
+  element_type *get() const { return ptr; }
+
+  // Construction and descruction
+  explicit scoped_pointer( T *src = 0 ) : ptr( src ) {}
+ ~scoped_pointer() { delete ptr; }
+
+  // Reset the pointer
+  void reset( T *x = 0 ) { delete ptr; ptr = x; }
+
+  // Safe boolean conversions
+  operator safe_bool_t() const { return make_safe_bool( ptr ); }
+  bool operator!() const { return !bool( *this ); }
+
+private:
+  // Assignment and copying disabled
+  scoped_pointer( const scoped_pointer &o );
+  void operator=( const scoped_pointer &o );
+
+private:
+  T *ptr;
+};
+
 // An STL functor to delete pointers
 struct delete_pointers
 {
   template <class T>
   void operator()( T *&ptr ) const { delete ptr; ptr = NULL; }
 };
-
 
 RINGING_END_NAMESPACE
 

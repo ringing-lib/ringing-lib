@@ -24,7 +24,7 @@
 #include <ringing/common.h>
 #include <ringing/extent.h>
 #if RINGING_OLD_INCLUDES
-#include <algorithm.h>
+#include <algo.h>
 #else
 #include <algorithm>
 #endif

@@ -65,15 +65,13 @@
 #if RINGING_OLD_INCLUDES
 #include <iostream.h>
 #include <list.h>
-#include <map.h>
-#include <algorithm.h>
-#include <set.h>
+#include <multimap.h>
+#include <algo.h>
 #else
 #include <iostream>
 #include <list>
 #include <map>
 #include <algorithm>
-#include <set>
 #endif
 #include <ringing/row.h>
 

@@ -27,7 +27,7 @@
 #include <ringing/common.h>
 #if RINGING_OLD_C_INCLUDES
 #include <ctype.h>
-#include <algorithm.h>
+#include <algo.h>
 #include <fstream.h>
 #else
 #include <cctype>

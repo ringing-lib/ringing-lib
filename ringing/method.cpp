@@ -27,6 +27,9 @@
 #else
 #include <cstdio>
 #endif
+#if RINGING_OLD_INCLUDES
+#include <bvector.h>
+#endif
 #include <ringing/method.h>
 
 RINGING_USING_STD

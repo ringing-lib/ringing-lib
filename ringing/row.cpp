@@ -29,6 +29,9 @@
 #include <cctype>
 #include <cstdlib>
 #endif
+#if RINGING_OLD_INCLUDES
+#include <bvector.h>
+#endif
 #include <ringing/row.h>
 
 RINGING_USING_STD
