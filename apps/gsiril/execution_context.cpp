@@ -190,8 +190,10 @@ string proof_context::substitute_string( const string &str, bool &do_exit )
 	  ++i, os << '\n';
 	else if (i[1] == 't') 
 	  ++i, os << '\t';
+	else if (i[1] == '\'' )
+	  ++i, os << '"';
 	else
-	  os << '\\';
+	  os << *++i;
 	break;
       default:
 	os << *i;
