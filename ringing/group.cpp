@@ -93,7 +93,8 @@ group::group( const row& g1, const row& g2 )
   : b( g1.bells() > g2.bells() ? g1.bells() : g2.bells() )
 {
   vector<row> gens; gens.reserve(2); 
-  gens.push_back(g1); gens.push_back(g2);
+  gens.push_back(g1); 
+  if (g2 != g1) gens.push_back(g2);
 
   set< row > s;
 
@@ -107,13 +108,18 @@ group::group( const vector<row>& gens )
 {
   set< row > s;
 
+  vector<row> uniq_gens(gens);
+  sort( uniq_gens.begin(), uniq_gens.end() );
+  uniq_gens.erase( unique( uniq_gens.begin(), uniq_gens.end() ), 
+		   uniq_gens.end() );
+
   // Find the maximum number of bells in any of the gens
-  for ( vector<row>::const_iterator i( gens.begin() ), e( gens.end() );
-	i != e;  ++i )
+  for ( vector<row>::const_iterator 
+	  i( uniq_gens.begin() ), e( uniq_gens.end() );  i != e;  ++i )
     if ( size_t(i->bells()) > b ) 
       b = i->bells();
 
-  generate_group_recursive( s, row(b), gens );
+  generate_group_recursive( s, row(b), uniq_gens );
   copy( s.begin(), s.end(), back_inserter(v) );
 }
 
