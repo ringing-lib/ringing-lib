@@ -30,7 +30,7 @@ gsiril_LDADD = $(top_builddir)/ringing/libringing.a
 
 if HAVE_READLINE
 additional =  rlstream.cpp rlstream.h
-endif HAVE_READLINE
+endif
 
 gsiril_SOURCES = main.cpp console_stream.cpp console_stream.h \
 execution_context.cpp execution_context.h expression.cpp expression.h \
