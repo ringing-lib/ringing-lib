@@ -299,7 +299,7 @@ bool parser::maybe_handle_defintion( const string &cmd, ostream &out )
     {
       i->second = defn.second;
       if ( interactive )
-	cout << "Refinition of '" << defn.first << "'." << endl;
+	cout << "Redefinition of '" << defn.first << "'." << endl;
     }
   else
     {
