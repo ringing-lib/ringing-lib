@@ -34,7 +34,7 @@ RINGING_START_NAMESPACE
 newlib<mslib> mslib::type;
 
 // Load a method from a MicroSIRIL library
-method *mslib::load(const char *name)
+method mslib::load(const char *name)
 {
   const char *s;
   char *x;
@@ -50,32 +50,49 @@ method *mslib::load(const char *name)
       buffer linebuf(256);
       f.get(linebuf, linebuf.size()); // Read in the rest of the line
       x = strtok(linebuf," \t"); // Strip blanks
-      method *m = NULL;
-      m = new method(x,b,name);
+
+      // if we have a + on the front it is not a reflection method,
+      // hence don't add the last change.
+      bool final_change = (*x != '+');
+
+      method m(x,b,name);
       if(*lh) {
 	x = lh + strlen(lh) - 1;
-	if(*x == 'z') {
-	  *x = '\0';
-	  m->push_back(change(b, lh));
-	} else {
-	  if((lh[0] >= 'a' && lh[0] <= 'f')
-	     || (lh[0] >= 'p' && lh[0] <= 'q'))
-	    {
-	    m->push_back(change(b, "12"));
+	if (final_change)
+	  {
+	    if(*x == 'z') {
+	      *x = '\0';
+	      m.push_back(change(b, lh));
+	    } else {
+	      if((lh[0] >= 'a' && lh[0] <= 'f')
+		 || (lh[0] >= 'p' && lh[0] <= 'q'))
+		{
+		  m.push_back(change(b, "12"));
+		}
+	      else
+		{
+		  m.push_back(change(b, "1"));
+		}
 	    }
-	  else
-	    {
-	    m->push_back(change(b, "1"));
-	    }
-	}
+	  }
       }
-
       return m;
     }
+
     while(!f.eof() && f.get() != '\n');	// Skip to the next line
   }
-  return NULL;			// Couldn't find it
+#if RINGING_USE_EXCEPTIONS
+  throw invalid_name();
+#else
+  method m(1,2);                // We have to return something...
+  return m;			// Couldn't find it
+#endif
 }
+
+#if RINGING_USE_EXCEPTIONS
+mslib::invalid_name::invalid_name() 
+  : invalid_argument("The method name supplied could not be found in the library file") {}
+#endif
 
 #if 0
 // Write a method to a MicroSIRIL library

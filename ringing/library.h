@@ -41,41 +41,40 @@ RINGING_START_NAMESPACE
 RINGING_USING_STD
 
 class library;
+class library_base;
 
 // libtype : A type of library
 class libtype {
-public:
-  virtual library *open(ifstream& f, const char *n) const  // Try to open this file.
-    { return NULL; }			  // Return NULL if it's not the
+protected:
+  virtual library_base *open(const char *n) const  // Try to open this file.
+  { return NULL; }			  // Return NULL if it's not the
 					  // right sort of library.
+  friend class library;
 };
 
 // newlib : Each new type of library should declare one of these
 template <class mylibrary>
 class newlib : public libtype {
-public:
-  library *open(ifstream& f, const char *name) const {
-    if(mylibrary::canread(f)) {
-      f.close();
+protected:
+  library_base *open(const char *name) const {
+    if(mylibrary::canread(name)) {
       return new mylibrary(name);
     } else
       return NULL;
   }
+  friend class library;
 };
 
-// library : A base class for method libraries
-class library {
-private:
-  static libtype *libtypes[];	// List of all library types
+// library_base : A base class for method libraries
+class library_base {
 public:
-  virtual ~library() {}		// Got to have a virtual destructor
-  virtual method *load(const char *name) // Load a method
-    { return NULL; }
-  virtual int save(method& m)	// Save a method
+  virtual ~library_base() {}		// Got to have a virtual destructor
+  virtual method load(const char* name) = 0; // Load a method
+  virtual int save(const method& m)	// Save a method
     { return 0; }
-  virtual int rename(const char *name1, const char *name2)
+  virtual int rename(const string name1, const string name2)
     { return 0; }
-  virtual int remove(const char *name)
+  virtual int remove(const string name)
     { return 0; }
   virtual int dir(list<string>& result)
     { return 0; }
@@ -83,17 +82,26 @@ public:
     { return 0; }
   virtual int writeable(void) const // Is it writeable?
     { return 0; }
-  static library *open(const char *name) // Open a library
-  {
-    ifstream f(name);
-    if(!f) return NULL;
-    int i;
-    library *l;
-    for(i = 0; libtypes[i] != NULL; i++) {
-      if((l = libtypes[i]->open(f, name)) != NULL) return l;
-    }
-    return NULL;
-  }
+};
+
+class library {
+private:
+  library_base* lb;
+  static list<libtype*> libtypes;
+
+public:
+  library(const char* filename);
+  ~library() { if(lb) delete lb; }
+  method load(const char* name) { return lb->load(name); }
+  int save(const method& m) { return lb->save(m); }
+  int rename(const string name1, const string name2) 
+    { return lb->rename(name1, name2); }
+  int remove(const string name) { return lb->remove(name); }
+  int dir(list<string>& result) { return lb->dir(result); }
+  bool good() { return lb && lb->good(); }
+  int writeable() { return lb && lb->writeable(); }
+
+  static void addtype(libtype* lt) { libtypes.push_back(lt); }
 };
 
 RINGING_END_NAMESPACE

@@ -41,7 +41,7 @@ void lowercase(char &c)
 }
 
 // Load a method from a Central Council Method library
-method *cclib::load(const char *name)
+method cclib::load(const char *name)
 {
   string methname(name);
 
@@ -53,11 +53,9 @@ method *cclib::load(const char *name)
   int meth_lh = -1;
   f.seekg(0,ios::beg);		// Go to the beginning of the file
   while(f.good()) {
-    
     // first, read in a line
     string linebuf;
     getline(f, linebuf);
-
     if (linebuf.length() > 1)
       {
 	// The second check for No. is used as an extra insurance check...
@@ -84,7 +82,6 @@ method *cclib::load(const char *name)
 	      {
 		string wordbuf(linebuf, meth_name_starts, meth_name_ends - meth_name_starts);
 		// Copy wordbuf to preserve for later
-		// FIXME: Take whitespace off the end
 		string methodname(wordbuf);
 
 		string::const_iterator i = methodname.end();
@@ -103,7 +100,6 @@ method *cclib::load(const char *name)
 		  {
 		    // we have found the method.
 		    // now get the rest of the details
-		    method *m = NULL;
 		    string pn;
 		    // Get place notation
 		    if ((meth_hl != -1) && (meth_le != -1))
@@ -114,25 +110,37 @@ method *cclib::load(const char *name)
 			pn.append(linebuf.substr(meth_name_ends, meth_hl - meth_name_ends));
 			// Add half lead notation
 			pn.append(linebuf.substr(meth_hl, meth_le - meth_hl));
-			m = new method(pn, b, methodname);
-			m->push_back(change(b, linebuf.substr(meth_le, meth_lh - meth_le)));
+			method m(pn, b, methodname);
+
+			// Strip any whitespace
+			string ch(linebuf, meth_le, meth_lh - meth_le);
+			string::const_iterator i = ch.begin();
+			while(!isspace(*i)) i++;
+			
+			// Create the change
+			ch = ch.substr(0, i - ch.begin());
+			change c(b, ch);
+			m.push_back(c);
+
+			return m;
 		      }
 		    else if (meth_hl != -1)
 		      {
 			// Make this a reflection temporarily
 			pn.append("&");
 		        pn.append(linebuf.substr(meth_name_ends, meth_lh - meth_name_ends));
-			m = new method(pn, b, methodname);
+			method m(pn, b, methodname);
 			// Now remove the last change
-			m->pop_back();
+			m.pop_back();
+			return m;
 		      }
 		    else
 		      {
 			// Add place notation
 			pn.append(linebuf.substr(meth_name_ends, meth_lh - meth_name_ends));
-			m = new method(pn, b, methodname);
+			method m(pn, b, methodname);
+			return m;
 		      }
-		    return m;
 		  }
 	      }
 	  }
@@ -140,7 +148,17 @@ method *cclib::load(const char *name)
       }
     // else ignore  
   }
-  return NULL;			// Couldn't find it
+#if RINGING_USE_EXCEPTIONS
+  throw invalid_name();
+#else
+  method m(1,2);
+  return m;			// Couldn't find it
+#endif
 }
+
+#if RINGING_USE_EXCEPTIONS
+cclib::invalid_name::invalid_name() 
+  : invalid_argument("The method name supplied could not be found in the library file") {}
+#endif
 
 RINGING_END_NAMESPACE

@@ -27,8 +27,14 @@
 #include <ringing/common.h>
 #if RINGING_OLD_C_INCLUDES
 #include <ctype.h>
+#include <algorithm.h>
+#include <fstream.h>
+#include <stdexcept.h>
 #else
 #include <cctype>
+#include <algorithm>
+#include <fstream>
+#include <stdexcept>
 #endif
 #include <ringing/library.h>
 #include <string>
@@ -38,7 +44,7 @@ RINGING_START_NAMESPACE
 RINGING_USING_STD
 
 // mslib : Implement MicroSIRIL libraries
-class mslib : public library {
+class mslib : public library_base {
 private:
   fstream f;                    // The iostream we're using
   int b;                        // Number of bells for files in this lib
@@ -56,29 +62,39 @@ public:
     b = atoi(s);
     if(b == 0) f.close();
   }
-  ~mslib() {}
+  ~mslib() {
+    f.close();
+  }
 
-  static int canread(ifstream& ifs) // Is this file in the right format?
+  // Is this file in the right format?
+  static int canread(const char* const name)
     {
-      int valid = 0;
-      int notvalid = 0;
-      while (ifs.good() && (notvalid != 1))
+      ifstream ifs(name);
+      if (ifs.good())
 	{
-	  string linebuf;
-	  getline(ifs, linebuf);
-	  if (linebuf.length() > 1)
+	  int valid = 0;
+	  int notvalid = 0;
+	  ifs.seekg(0, ios::beg);
+	  while (ifs.good() && (notvalid != 1))
 	    {
-	      if ((linebuf.find("Name") != -1) && (linebuf.find("No.") != -1))
+	      string linebuf;
+	      getline(ifs, linebuf);
+	      if (linebuf.length() > 1)
 		{
-		  notvalid = 1;
-		}
-	      else if (linebuf[0] != '*')
-		{
-		  valid = (count(linebuf.begin(), linebuf.end(), ' ') == 2 ? 1 : 0);
+		  if ((linebuf.find("Name") != -1) && (linebuf.find("No.") != -1))
+		    {
+		      notvalid = 1;
+		    }
+		  else if (linebuf[0] != '*')
+		    {
+		      valid = (count(linebuf.begin(), linebuf.end(), ' ') == 2 ? 1 : 0);
+		    }
 		}
 	    }
+	  ifs.close();
+	  return (notvalid == 1 ? 0 : valid);
 	}
-      return (notvalid == 1 ? 0 : valid);
+      return 0;
     }
 
   int good(void) const          // Is the library in a usable state?
@@ -87,8 +103,15 @@ public:
   int writeable(void) const     // Is this library writeable?
     { return wr; }
 
-  method *load(const char *name);     // Load a method
+  method load(const char *name);     // Load a method
 //int save(method& name);       // Save a method
+
+#if RINGING_USE_EXCEPTIONS
+  struct invalid_name : public invalid_argument {
+    invalid_name();
+  };
+#endif
+
 };
 
 RINGING_END_NAMESPACE

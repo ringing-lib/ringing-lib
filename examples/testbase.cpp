@@ -19,8 +19,10 @@
 
 #if RINGING_OLD_INCLUDES
 #include <iostream.h>
+#include <stdexcept.h>
 #else
 #include <iostream>
+#include <stdexcept>
 #endif
 #include <ringing/method.h>
 #include <ringing/cclib.h>
@@ -30,8 +32,6 @@
 #if RINGING_USE_NAMESPACES
 using namespace ringing;
 #endif
-
-libtype* library::libtypes[] = { &mslib::type, &cclib::type };
 
 void print_row_block(const row_block& b)
 {
@@ -114,28 +114,36 @@ int main()
     cout << "Method name: ";
     getline(cin, methname);
 
-    library *l = library::open(filename.c_str());
-    if(l == NULL)
-      cout << "Couldn't open file.\n";
-    else {
-      method *m = l->load(methname.c_str());
-      if(m == NULL)
-	cout << "Couldn't open method.\n";
-      else {
+    library::addtype(&mslib::type);
+    library::addtype(&cclib::type);
+
+    library l(filename.c_str());
+    if (!l.good())
+      {
+	cerr << "Could not load method file\n";
+	return 1;
+      }
+    try
+      {
+	method m(l.load(methname.c_str()));
 
 	char s[80];
-	cout << m->fullname(s) << endl;
-	
-	print_row_block((row_block)*m);
-
+	cout << m.fullname(s) << endl;
+      
+	print_row_block((row_block)m);
+      
 	cout << "This method is "
-	     << ((m->isregular()) ? "" : "ir")
+	     << ((m.isregular()) ? "" : "ir")
 	     << "regular"
-	     << ((m->isdouble()) ? " and double" : "")
+	     << ((m.isdouble()) ? " and double" : "")
 	     << ".\n";
-	cout << "Lead head code: " << m->lhcode() << endl;
+	cout << "Lead head code: " << m.lhcode() << endl;
       }
-    }
+    catch (exception &e)
+      {
+	cerr << "Error: " << e.what() << endl;
+	return 1;
+      }
   }
     
   return 0;

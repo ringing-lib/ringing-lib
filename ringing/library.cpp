@@ -24,5 +24,21 @@
 #include <ringing/common.h>
 #include <ringing/library.h>
 
+RINGING_START_NAMESPACE
 
+RINGING_USING_STD
 
+list<libtype*> library::libtypes;
+
+library::library(const char* filename)
+{
+  lb = NULL;
+  list<libtype*>::const_iterator i = libtypes.begin();
+  while ((lb == NULL) && (i != libtypes.end()))
+    {
+      lb = (*i)->open(filename);
+      i++;
+    }
+}
+
+RINGING_END_NAMESPACE

@@ -29,10 +29,12 @@
 #include <ctype.h>
 #include <algorithm.h>
 #include <fstream.h>
+#include <stdexcept.h>
 #else
 #include <cctype>
 #include <algorithm>
 #include <fstream>
+#include <stdexcept>
 #endif
 #include <ringing/library.h>
 #include <string>
@@ -42,7 +44,7 @@ RINGING_START_NAMESPACE
 RINGING_USING_STD
 
 // cclib : Implement Central Council Method libraries
-class cclib : public library {
+class cclib : public library_base {
 private:
   ifstream f;                   // The iostream we're using
   int b;                        // Number of bells for files in this lib
@@ -67,31 +69,37 @@ public:
     f.close();
   }
 
-  static int canread(ifstream& ifs) // Is this file in the right format?
+  static int canread(const char* const name) // Is this file in the right format?
   {
-    int valid = 0;
-    int temp = -1;
-    ifs.seekg(0, ios::beg);
-    while ((ifs.good()) && (valid < 2))
+    ifstream ifs(name);
+    if (ifs.good())
       {
-	string linebuf;
-	getline(ifs, linebuf);
-	if (linebuf.length() > 1)
+	int valid = 0;
+	int temp = -1;
+	ifs.seekg(0, ios::beg);
+	while ((ifs.good()) && (valid < 2))
 	  {
-	    // The second check for No. is used as an extra insurance check...
-	    if ((linebuf.find("Name") != -1) && (linebuf.find("No.") != -1))
+	    string linebuf;
+	    getline(ifs, linebuf);
+	    if (linebuf.length() > 1)
 	      {
-		temp = linebuf.find("Name") - 1;
-		valid++;
-	      }
-	    else if ((temp != -1) && (atoi(linebuf.substr(0, temp).c_str()) != 0))
-	      {
-		valid++;
+		// The second check for No. is used as an extra insurance check...
+		if ((linebuf.find("Name") != -1) && (linebuf.find("No.") != -1))
+		  {
+		    temp = linebuf.find("Name") - 1;
+		    valid++;
+		  }
+		else if ((temp != -1) && (atoi(linebuf.substr(0, temp).c_str()) != 0))
+		  {
+		    valid++;
+		  }
 	      }
 	  }
+	ifs.close();
+	// if valid is 2 both the checks have been successful
+	return (valid == 2 ? 1 : 0);
       }
-    // if valid is 2 both the checks have been successful
-    return (valid == 2 ? 1 : 0);
+    return 0;
   }
 
   int good(void) const          // Is the library in a usable state?
@@ -100,8 +108,14 @@ public:
   int writeable(void) const     // Is this library writeable?
     { return wr; }
 
-  method *load(const char *name);     // Load a method
+  method load(const char *name);     // Load a method
 //int save(method& name);       // Save a method - not defined for cclib
+
+#if RINGING_USE_EXCEPTIONS
+  struct invalid_name : public invalid_argument {
+    invalid_name();
+  };
+#endif
 };
 
 RINGING_END_NAMESPACE
