@@ -146,6 +146,9 @@ xmllib::impl::impl( xmllib::file_arg_type type, const string& url )
       
       doc.reset( parser.adoptDocument() );
 
+      if ( !doc->getDocumentElement() )
+	throw runtime_error( "No document element" );
+
       if ( transcode( doc->getDocumentElement()->getTagName() )
 	   .to_string() != "results" )
 	throw runtime_error
