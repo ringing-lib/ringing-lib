@@ -1,3 +1,93 @@
+2001-09-26 22:44  mjb47
+
+	* NEWS, configure.in, ringing/common.h.in: Prepare for 0.2.1
+
+2001-09-26 22:29  mjb47
+
+	* examples/: Makefile.am, testprint.cc: Added example for printing
+	classes
+
+2001-09-26 22:27  mjb47
+
+	* ringing/: print_ps.cc, print_ps.h: Took drawline outside
+	printrow_ps
+
+2001-09-26 21:29  mjb47
+
+	* doc/Makefile.am: Add rule for packaging documentation
+
+2001-09-26 21:28  mjb47
+
+	* ringing/print_ps.cc: Remove newlines in string constant
+
+2001-09-17 22:09  standardeight
+
+	* doc/ringing-lib.texi, ringing/proof.h: Prove functions now reset
+	the falseness storage in proof class when they are run.
+	Documentation also updated.
+
+2001-08-31 18:22  mjb47
+
+	* doc/ringing-lib.texi, examples/testbase.cc, ringing/method.cc,
+	ringing/method.h, ringing/mslib.cc, ringing/mslib.h,
+	ringing/row.cc, ringing/row.h: New function for expanding place
+	notation
+
+2001-08-30 12:55  mjb47
+
+	* examples/Makefile.am: Don't install examples in /usr/bin
+
+2001-08-30 12:51  mjb47
+
+	* Makefile.am, Makefile.in, aclocal.m4, configure, configure.in,
+	doc/Makefile.am, doc/Makefile.in, examples/Makefile.am,
+	examples/testbase.cc, ringing/Makefile.am, ringing/Makefile.in:
+	Added examples directory and removed a few automatically generated
+	files
+
+2001-08-30 11:46  mjb47
+
+	* Makefile.in, configure, configure.in, doc/Makefile.in,
+	ringing/Makefile.in, ringing/common.h.in, ringing/dimension.cc,
+	ringing/dimension.h, ringing/library.cc, ringing/library.h,
+	ringing/method.cc, ringing/method.h, ringing/mslib.cc,
+	ringing/mslib.h, ringing/music.h, ringing/print.cc,
+	ringing/print.h, ringing/print_ps.cc, ringing/print_ps.h,
+	ringing/proof.cc, ringing/proof.h, ringing/row.cc, ringing/row.h,
+	ringing/stuff.h: Changed common.h mechanism again
+
+2001-08-28 21:54  standardeight
+
+	* doc/ringing-lib.texi: 
+	Correct Documentation of Proof class to reflect function prototypes
+	that are actually there.
+
+2001-08-16 11:47  mjb47
+
+	* doc/ringing-lib.texi: Sorted out braces problem
+
+2001-08-16 11:46  mjb47
+
+	* config/mdate-sh: Added config/mdate-sh
+
+2001-07-25 21:50  mjb47
+
+	* doc/ringing-lib.texi: Documented method class
+
+2001-07-25 00:22  mjb47
+
+	* doc/ringing-lib.texi: Updated manual for new row and change
+	classes
+
+2001-06-27 13:04  mjb47
+
+	* Makefile.am, Makefile.in, doc/Makefile.am, doc/Makefile.in,
+	doc/methlib.texi, doc/ringing-lib.texi: Reorganised documentation
+
+2001-06-11 13:37  mjb47
+
+	* ChangeLog: ChangeLog for 0.2.0
+
 2001-06-11 13:35  mjb47
 
 	* configure, configure.in, ringing/Makefile.in,
