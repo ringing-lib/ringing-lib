@@ -322,7 +322,6 @@ bool music_details::check_expression()
   bell b;
   bool valid = true;
   int sqbrackets = 0;
-  int specifier = 0; // incrementing or decrementing run
   for (i = this->begin(); i != this->end(); i++)
     {
       if (!is_bell(*i, b))

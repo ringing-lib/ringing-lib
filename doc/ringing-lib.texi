@@ -2313,13 +2313,280 @@ This produces three columns, the first is the music expression that was searched
 @section Music Class definition
 @cindex music class
 
-To be written
+The @code{music} class is the main control of the music classes; it stores @code{music_details} objects to match music against and controls the construction of the @code{music_node} tree (see @ref{music node class definition}.
+
+The class must know the number of bells in the rows that are to be examined before the @code{music_class} objects are passed to it; this allows it to create trees of the correct depth and structure to store the regular expressions in search format.
+
+The @code{music_detail} objects are stored in a @code{vector<music_details>} structure, this is accessible via the functions provided (detailed below).
+
+@menu
+* Music Derivation::            
+* Music Constructors::          
+* Music Type Definitions::      
+* Music Functions::             
+@end menu
+
+@node Music Derivation, Music Constructors, music class definition, music class definition
+@subsection Derivation
+
+This class is not derived from any other classes.
+
+@example
+class music;
+@end example
+
+@node Music Constructors, Music Type Definitions, Music Derivation, music class definition
+@subsection Constructors
+
+@deftypefn Constructor {} music::music (const unsigned int &b = 0);
+This constructor initialises the number of bells to zero. If you don't specify bells here, you should specify the number of bells by the @code{set_bells()} function before adding expressions to be matched.
+@end deftypefn
+
+@node Music Type Definitions, Music Functions, Music Constructors, music class definition
+@subsection Type Definitions
+
+This section details the type definitions that the music class creates for the user to use.
+
+@deftypefn typedef vector<music_details> music::mdvector;
+This type defines the storage vector that records the expressions to be matched and is also used to obtain the results.
+@end deftypefn
+
+@deftypefn typedef vector<music_details>::iterator music::iterator;
+@deftypefnx typedef vector<music_details>::const_iterator music::const_iterator;
+This type defines a general iterator that can be used to iterate through the stored expressions.
+@end deftypefn
+
+@deftypefn typedef vector<music_details>::size_type music::size_type;
+This type defines the type of variable returned from the @code{size()} function.
+@end deftypefn
+
+@node Music Functions,  , Music Type Definitions, music class definition
+@subsection Functions
+
+@deftypefun void push_back(const music_details &);
+This function adds a @code{music_details} expression onto the vector of expressions to be matched. It will also add it to the tree ready for processing against rows.
+@end deftypefun
+
+@deftypefun music::iterator begin();
+@deftypefunx music::const_iterator begin() const;
+These functions return an iterator that points at the beginning of the expression list.
+@end deftypefun
+
+@deftypefun music::iterator end();
+@deftypefunx music::const_iterator end() const;
+These functions return an iterator that points past the end of the expression list.
+@end deftypefun
+
+@deftypefun music::size_type size();
+This function returns the number of expressions currently stored.
+@end deftypefun
+
+@deftypefun void set_bells(const unsigned int &b);
+This function sets the number of bells that will be in the matched rows to @code{b}.
+@end deftypefun
+
+@deftypefun template <class RowIterator> void process_rows(RowIterator first, RowIterator last, bool backstroke = false);
+This function first resets the all of the music counts, and then processes the supplied rows. If backstroke is true, then a backstroke is assumed to be the first row, otherwise it will be noted as a handstroke. The stroke will be toggled for every row processed.
+@end deftypefun
+
+@deftypefun int get_score(const EStroke& = eBoth);
+Returns the score for music matched at the specified stroke. If eBoth is specified as the stroke, then scores for both strokes are added together and returned.
+@end deftypefun
+
+@deftypefun unsigned int get_count(const EStroke& = eBoth);
+Returns the total number of matches for all music expressions at the specified stroke. If eBoth is specified, then the counts for both strokes are added and returned.
+@end deftypefun
+
+@deftypefun int get_possible_score();
+This function returns the maximum possible score that could be obtained matching the expressions currently stored against a true extent on the number of bells previously specified.
+@end deftypefun
 
 @node music node class definition,  , music class definition, Musical Analysis
 @section Music Node Class definition
 @cindex music_node
 
-To be written
+The @code{music_node} class provides the main expression matching routines for the @code{music} class. A @code{music} object stores one @code{TopNode} object, (of type @code{music_node}), when expressions are added to the @code{music} object, via a @code{music_details} class, a tree is formed under the @code{TopNode} object.
+
+The @code{music_node} class is normally hidden from the user by the @code{music} class, however, it's functionality is described here to aid maintainance and understanding.
+
+@menu
+* Music_Node Full Description::  
+* Music_Node Derivation::       
+* Music_Node Constructors and Destructors::  
+* Music_Node Type Definitions::  
+* Music_Node Functions::        
+* Music_Node Exceptions::       
+@end menu
+
+@node Music_Node Full Description, Music_Node Derivation, music node class definition, music node class definition
+@subsection Full Description
+
+Each node in the tree stores the expressions that finish at the node, and pointers to nodes below them, if any have been created. Note, for any node there are a maximum of n pointers, where n is the number of bells, plus one; The extra case in this instance is for a ? or * expression to match any bell.
+
+When a row is to be matched against the expressions stored, each bell in the row is examined individually. If a pointer to a node for the same number as the current bell exists, the matching passes onto the node pointed at. For all cases, if an 'any' pointer exists, then the matching will be passes onto the any node.
+
+When the expression matching comes up against a node where an expression is specified to finish at that node, then the counter for matches against the node is incremented. If there are no matches to the current bell, and the any pointer does not exist, then the matching simply finishes and returns back up the tree.
+
+This is probably better explained by means of an example. Suppose the expression @samp{321654} is added to the TopNode. If @samp{+} is a node, and @samp{|n} is a pointer between the nodes, where n is the number of bell pointed to, then the following tree is formed:
+
+@example
+TopNode
+|3
++
+|2
++
+|1
++
+|6
++
+|5
++
+|4
++ @samp{321654} finishes here.
+@end example
+
+When the row @samp{326154} is attempted to be matched, the following happens:
+
+@example
+TopNode -> Pointer to 3 exists, so go to the next node.
+|3
++       -> Pointer to 2 exists, so go to the next node.
+|2
++       -> Pointer to 6 (or to any node) does not exist, so terminate.
+|1
+@end example
+
+Now suppose @samp{321*} and @samp{?2*} is added to the list, the following tree is formed:
+
+@example
+            TopNode
+               |
+-------------------------------
+|3                            |any
++                             +
+|2                            |2
++                             + @samp{?2*} finishes here.
+|1
++ @samp{321*} finishes here.
+|6
++
+|5
++
+|4
++ @samp{321654} finishes here.
+@end example
+
+Now, when the row @samp{321654} is put through the matching process, the following happens. Taking first the pointer to bell '3' option of TopNode:
+
+@example
+TopNode -> Pointer to 3 exists, so go to the next node.
+|3
++       -> Pointer to 2 exists, so go to the next node.
+|2
++       -> Pointer to 1 exists, so go to the next node.
+|1
++       -> @samp{321*} finishes here so increment, and then as pointer to 6
+           exists, carry on to the next node.
+|6
++       -> Pointer to 5 exists, so go on.
+|5
++       -> Pointer to 4 exists, so go on.
+|4
++       -> @samp{321654} finishes here so increment matches. No further
+           pointers, so go back up the tree checking for @samp{any} pointers
+@end example
+
+When the matching gets back to the top of the tree and finds the any pointer in the top node, it will follow it as below:
+
+@example
+TopNode -> Any pointer exists, so follow it
+|any
++       -> Note, we are now on the second bell of the row, which in our case
+           is @samp{2}, pointer exists, so follow it.
+|2
++       -> @samp{?2*} finishes here so increment matches.
+@end example
+
+From these examples it can be seen that an optimisation is performed when there is a single @samp{*} left, which saves the matching algorithm going through exvery any node.
+
+@node Music_Node Derivation, Music_Node Constructors and Destructors, Music_Node Full Description, music node class definition
+@subsection Derivation
+
+This class is not derived from any other classes.
+
+@example
+class music_node;
+@end example
+
+@node Music_Node Constructors and Destructors, Music_Node Type Definitions, Music_Node Derivation, music node class definition
+@subsection Constructors and Destructors
+
+@deftypefn Constructor {} music_node::music_node();
+@deftypefnx Constructor {} music_node::music_node(const unsigned int &b);
+The constructor initialises the object and sets the number of bells in the rows that will be matched. If the default constructor is used, then the @code{set_bells()} function should be used to perform this action.
+@end deftypefn
+
+@deftypefn Destructor {} music_node::~music_node ();
+The destructor will go through the tree structure, deleting the sub-nodes of the current node.
+@end deftypefn
+
+@node Music_Node Type Definitions, Music_Node Functions, Music_Node Constructors and Destructors, music node class definition
+@subsection Type Definitions
+
+@deftypefn typedef map<unsigned int, music_node*> BellNodeMap;
+This map is used to form the structure of the tree. The branches are stored in the structure, with the unsigned int being an index by bell number. Index 0 is for matching any bell. Note, where a node of the tree has no branches coming off of it (because it is the end, or there is nothing else to match against) the map will be empty.
+@end deftypefn
+
+@deftypefn typedef BellNodeMap::iterator BellNodeMapIterator;
+This type definition is used to provide a shorter type name to iterate the map described above.
+@end deftypefn
+
+@deftypefn typedef vector<unsigned int> DetailsVector;
+This type definition defines the vector that is used to store the id of the music_details expressions that end at this node.
+@end deftypefn
+
+@deftypefn typedef DetailsVector::iterator DetailsVectorIterator;
+This type definition is used to provide a shorter type name to iterate the details vector defined above.
+@end deftypefn
+
+@node Music_Node Functions, Music_Node Exceptions, Music_Node Type Definitions, music node class definition
+@subsection Functions
+
+@deftypefun void set_bells(const unsigned int &b);
+This function is used to set the number of bells that will be in the rows to be matched against. This provides a way for the algorithms to know when they are finished processing the expressions or row.
+@end deftypefun
+
+@deftypefun void add(const music_details &md, const unsigned int &i, const unsigned int &key, const unsigned int &pos);
+This function is used to add the supplied expression (@code{md}), to the tree. The location in the expression to look at is supplied by @code{i}, the @code{key} is the reference number that the @code{music} class stores the @code{md} expression against, and the @code{pos} is the number of bells deep we are in the tree.
+
+Depending on the item in the expression at index @code{i}, the algorithm will do different things, normally, it will call the @code{add_to_subtree(...)} function which in turn will usually call this function again; sometimes it will call itself (in the case of a @samp{'*'}) to move along the current expression without necessarily adding it to a subtree. Hence, the @code{add(...)} function is an iterative one.
+@end deftypefun
+
+@deftypefun void add_to_subtree(const unsigned int &place, const music_details &md, const unsigned int &i, const unsigned int &key, const unsigned int &pos, const bool &process_star);
+This private function is used to create a branch (if required) and add an expression to a branch of a node. If it cannot allocate memory for the new node, it will either throw a @code{memory_error} exception (if enabled), or it will simply return without going any further.
+
+The @code{place} parameter provides the branch number (= bell) to create and add to, the @code{process_star} parameter is used to indicate if the number of @samp{*}s remaining should be processed or ignored. The rest of the parameters are as for the @code{add(...)} function.
+@end deftypefun
+
+@deftypefun void match(const row &r, const unsigned int &pos, vector<music_details> &results, const EStroke &stroke);
+This function is iterative and is used to match the expressions stored to a row, @code{r}. If a node is found to have an expression ending there, the number of counts for that expression are incremented according to the specified @code{stroke}. The @code{pos} parameter is used to specify the current position in the row @code{r}, and the @code{results} parameter is the expressions for which the indexes have previously been stored, and against which the count should be incremented as appropriate.
+@end deftypefun
+
+@node Music_Node Exceptions,  , Music_Node Functions, music node class definition
+@subsection Exceptions
+
+There is one exception defined for this class:
+
+@example
+struct memory_error : public overflow_error() @{
+  memory_error()
+@};
+
+music_node::memory_error::memory_error() 
+  : overflow_error("Not enough memory to allocate to music_node item") @{@}
+@end example
+
+This is used to indicate that there is not enough memory to add a music_node item.
 
 @node Producing printed output, Copying this manual, Musical Analysis, Top
 @chapter Producing printed output

@@ -196,6 +196,7 @@ public:
   int get_possible_score();
 
 private:
+  music(const music&) {}
   // The music specification details
   mdvector MusicInfo;
   // The tree containing the structure for matching rows
