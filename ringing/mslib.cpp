@@ -34,9 +34,10 @@ RINGING_START_NAMESPACE
 newlib<mslib> mslib::type;
 
 // Load a method from a MicroSIRIL library
-method *mslib::load(char *name)
+method *mslib::load(const char *name)
 {
-  char *s;
+  const char *s;
+  char *x;
 
   f.seekg(0,ios::beg);		// Go to the beginning of the file
   while(f.good()) {
@@ -48,20 +49,24 @@ method *mslib::load(char *name)
       f.get(lh,16,' ');
       buffer linebuf(256);
       f.get(linebuf, linebuf.size()); // Read in the rest of the line
-      s = strtok(linebuf," \t"); // Strip blanks
+      x = strtok(linebuf," \t"); // Strip blanks
       method *m = NULL;
-      m = new method(s,b,name);
+      m = new method(x,b,name);
       if(*lh) {
-	s = lh + strlen(lh) - 1;
-	if(*s == 'z') {
-	  *s = '\0';
+	x = lh + strlen(lh) - 1;
+	if(*x == 'z') {
+	  *x = '\0';
 	  m->push_back(change(b, lh));
 	} else {
 	  if((lh[0] >= 'a' && lh[0] <= 'f')
 	     || (lh[0] >= 'p' && lh[0] <= 'q'))
+	    {
 	    m->push_back(change(b, "12"));
+	    }
 	  else
+	    {
 	    m->push_back(change(b, "1"));
+	    }
 	}
       }
 

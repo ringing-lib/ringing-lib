@@ -23,13 +23,15 @@
 #include <iostream>
 #endif
 #include <ringing/method.h>
+#include <ringing/cclib.h>
 #include <ringing/mslib.h>
+#include <string>
 
 #if RINGING_USE_NAMESPACES
 using namespace ringing;
 #endif
 
-libtype* library::libtypes[] = { &mslib::type };
+libtype* library::libtypes[] = { &mslib::type, &cclib::type };
 
 void print_row_block(const row_block& b)
 {
@@ -103,19 +105,20 @@ int main()
   {
     cout << "\nTesting method libraries...\n";
 
-    char filename[40], methname[40];
+    string filename;
+    string methname;
 
     cout << "File name: ";
-    cin >> filename;
-    cout << "Method name: ";
-    cin >> methname;
-    cout << endl;
+    getline(cin, filename);
 
-    library *l = library::open(filename);
+    cout << "Method name: ";
+    getline(cin, methname);
+
+    library *l = library::open(filename.c_str());
     if(l == NULL)
       cout << "Couldn't open file.\n";
     else {
-      method *m = l->load(methname);
+      method *m = l->load(methname.c_str());
       if(m == NULL)
 	cout << "Couldn't open method.\n";
       else {

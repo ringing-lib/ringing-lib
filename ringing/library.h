@@ -46,7 +46,7 @@ class library;
 // libtype : A type of library
 class libtype {
 public:
-  virtual library *open(ifstream& f, char *n) const  // Try to open this file.
+  virtual library *open(ifstream& f, const char *n) const  // Try to open this file.
     { return NULL; }			  // Return NULL if it's not the
 					  // right sort of library.
 };
@@ -55,7 +55,7 @@ public:
 template <class mylibrary>
 class newlib : public libtype {
 public:
-  library *open(ifstream& f, char *name) const {
+  library *open(ifstream& f, const char *name) const {
     if(mylibrary::canread(f)) {
       f.close();
       return new mylibrary(name);
@@ -70,13 +70,13 @@ private:
   static libtype *libtypes[];	// List of all library types
 public:
   virtual ~library() {}		// Got to have a virtual destructor
-  virtual method *load(char *name) // Load a method
+  virtual method *load(const char *name) // Load a method
     { return NULL; }
   virtual int save(method& m)	// Save a method
     { return 0; }
-  virtual int rename(char *name1, char *name2)
+  virtual int rename(const char *name1, const char *name2)
     { return 0; }
-  virtual int remove(char *name)
+  virtual int remove(const char *name)
     { return 0; }
   virtual int dir(list<string>& result)
     { return 0; }
@@ -84,7 +84,7 @@ public:
     { return 0; }
   virtual int writeable(void) const // Is it writeable?
     { return 0; }
-  static library *open(char *name) // Open a library
+  static library *open(const char *name) // Open a library
   {
     ifstream f(name);
     if(!f) return NULL;
