@@ -844,13 +844,13 @@ or 0 otherwise.
 This function returns an integer which depends on the class of the
 method.  The following values are defined:
 @example
-enum method::m_class {
+enum method::m_class @{
   M_UNKNOWN, M_PRINCIPLE, M_BOB, M_PLACE, M_TREBLE_BOB, M_SURPRISE, 
   M_DELIGHT, M_TREBLE_PLACE, M_ALLIANCE, M_HYBRID, M_SLOW_COURSE,
   M_MASK = 0x0f,
   M_DOUBLE = 0x40,
   M_LITTLE = 0x80
-};
+@};
 @end example
 The @code{M_DOUBLE} and @code{M_LITTLE} bits are flags which will be either
 set or cleared accordingly.
