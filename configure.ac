@@ -395,23 +395,19 @@ dnl See whether we've got GNU readline installed
 dnl
 AC_ARG_WITH(
   readline,
-  AC_HELP_STRING([--with-readline], [support fancy command line editing])
-  ac_cv_use_readline=$withval, ac_cv_use_readline=no
+  AC_HELP_STRING([--with-readline], [support fancy command line editing]),
+  ac_cv_use_readline=$withval, 
+  ac_cv_use_readline=no
 )
 
-AC_CACHE_CHECK(
-  [for GNU readline],
-  [ac_cv_use_readline],
-  [ OLD_LIBS=$LIBS
-    LIBS="$LIBS -lreadline" 
-    AC_TRY_LINK(
-    [#include <readline/readline.h>
-    ],
-    [readline( ">> " );],
+if test "$ac_cv_use_readline" = "" ; then
+  AC_CHECK_LIB( 
+    readline, readline, 
     ac_cv_use_readline=yes,
-    ac_cv_use_readline=no)
-    LIBS=$OLD_LIBS]
-)
+    ac_cv_use_readline=no
+  )
+fi
+
 if test "$ac_cv_use_readline" = yes ; then
   READLINE_LIBS=[-lreadline]
   RINGING_USE_READLINE=1
