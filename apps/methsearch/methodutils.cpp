@@ -74,15 +74,6 @@ bool have_same_places( const change &a, const change &b )
   return false;
 }
 
-bool is_pble( const row &lh, int hunts )
-{
-  int actual_hunts(0);
-  for(int i = 0; i < lh.bells(); i++)
-    if(lh[i] == i) actual_hunts++;
-
-  return actual_hunts == hunts && lh.ispblh();
-}
-
 bool is_cyclic_le( const row &lh, int hunts )
 {
   const int n( lh.bells() - hunts );
@@ -246,70 +237,6 @@ string get_short_compressed_pn( const method &m )
     }
 
   return os;
-}
-
-string get_compressed_pn( const method &m )
-{
-  make_string os;
-
-  bool might_need_dot(false);
-
-  if ( m.issym() )
-    {
-      os << '&';
-      for ( int i=0; i < m.length() / 2; ++i)
-	do_single_compressed_pn( os, m[i], might_need_dot );
-
-      os << ','; might_need_dot = false;
-    }
-  else
-    {
-      for ( int i=0; i < m.length() - 1; ++i)
-	do_single_compressed_pn( os, m[i], might_need_dot );
-    }
-
-  do_single_compressed_pn( os, m.back(), might_need_dot, true );
-
-  return os;
-}
-
-unsigned int max_blows_per_place( const method &m )
-{
-  int maxn = 0;
-
-  for ( method::const_iterator b(m.begin()), i(b), e(m.end()); i != e; ++i )
-    for ( int p(0); p < m.bells(); ++p )
-      if ( i->findplace(p) )
-	{
-	  // It's part of a longer run.
-	  if ( i != b && (i-1)->findplace(p) )
-	    continue;
-
-	  // Find the size of this run of blows
-	  int n=2;
-	  {
-	    for ( method::const_iterator j(i); j != e; ++j )
-	      if ( j->findplace(p) )
-		++n;
-	      else
-		goto end_run;
-	  }
-
-	  {
-	    // And handle runs that continue across the lead-end
-	    for ( method::const_iterator j(b); j != i; ++j )
-	      if ( j->findplace(p) )
-		++n;
-	      else
-		goto end_run;
-	  }
-
-	end_run:
-	  if ( n > maxn )
-	    maxn = n;
-	}
-
-  return maxn - 1;
 }
 
 

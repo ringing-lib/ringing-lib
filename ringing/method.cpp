@@ -500,4 +500,44 @@ string method::format( int flags ) const
   return out;
 }
 
+// Counts the maximum number of consecutive blows in one place
+int method::maxblows(void) const
+{
+  int maxn = 0;
+
+  for ( const_iterator b(begin()), i(b), e(end()); i != e; ++i )
+    for ( int p(0); p < bells(); ++p )
+      if ( i->findplace(p) )
+	{
+	  // It's part of a longer run.
+	  if ( i != b && (i-1)->findplace(p) )
+	    continue;
+
+	  // Find the size of this run of blows
+	  int n=2;
+	  {
+	    for ( const_iterator j(i); j != e; ++j )
+	      if ( j->findplace(p) )
+		++n;
+	      else
+		goto end_run;
+	  }
+
+	  {
+	    // And handle runs that continue across the lead-end
+	    for ( const_iterator j(b); j != i; ++j )
+	      if ( j->findplace(p) )
+		++n;
+	      else
+		goto end_run;
+	  }
+
+	end_run:
+	  if ( n > maxn )
+	    maxn = n;
+	}
+
+  return maxn - 1;
+}
+
 RINGING_END_NAMESPACE

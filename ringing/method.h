@@ -122,9 +122,10 @@ public:
   bool isplain(bell b=0) const;	// Does this bell plain hunt?
   bool hasdodges(bell b) const;	// Does this bell ever dodge?
   bool hasplaces(bell b) const;	// Does this bell make internal places?
-  int methclass(void) const; // What sort of method is it?
-  char *lhcode(void) const;	 // Return the lead head code
+  int methclass(void) const;    // What sort of method is it?
+  char *lhcode(void) const;	// Return the lead head code
   int symmetry_point() const;   // Point of palindromic symmetry (or -1)
+  int maxblows(void) const;     // Counts the maximum blows in one place
 
   enum m_format {
     M_DOTS       =  01,  // Include all dots

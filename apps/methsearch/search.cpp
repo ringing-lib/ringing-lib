@@ -755,7 +755,7 @@ bool searcher::is_acceptable_leadhead( const row &lh )
     {
       if ( args.require_pbles ) 
 	{
-	  if ( is_pble(lh, args.hunt_bells) )
+	  if ( lh.ispblh(args.hunt_bells) )
 	    return true;
 	}
       else if ( args.require_cyclic_les )

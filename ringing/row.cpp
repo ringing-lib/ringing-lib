@@ -565,18 +565,24 @@ bool row::isrounds(void) const
 }
 
 // Return which plain bob lead head it is
-int row::ispblh(void) const
+int row::ispblh(int h) const
 {
-  if(data.empty()) return 1;
-  int h;
-  for(h = 0; h < bells() && data[h] == h; h++);
-  if(h == 0) return 0;
   row l = pblh(bells(), h), r = l;
   for(int i = 1; i < (bells() - h); i++) {
     if(*this == r) return i;
     r *= l;
   }
   return 0;
+}
+
+// Return which plain bob lead head it is
+int row::ispblh(void) const
+{
+  if(data.empty()) return 1;
+  int h;
+  for(h = 0; h < bells() && data[h] == h; h++);
+  if(h == 0) return 0;
+  return ispblh(h);
 }
 
 // Express it as a product of disjoint cycles
@@ -649,6 +655,18 @@ int row::sign(void) const
   if ( bells() == 0 ) return 1;
   return ( cycles().length() & 1 ) ? 1 : -1;
 }
+
+int row::find(bell const& b) const
+{
+  for ( int i=0, n=bells(); i != n; ++i )
+    if ( data[i] == b ) 
+      return i;
+
+  // Assuming the row is not malformed, we must be on 
+  // insufficient bells, so just return b.
+  return b;
+}
+
 
 
 // *********************************************************************

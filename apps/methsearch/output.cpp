@@ -142,17 +142,17 @@ string method_properties::impl2::get_property( int num_opt,
 	  os << m.lh();
 	  break;
 
-	  // TODO: 'p', 'q' and 'Q' should use m.format()
 	case 'p': 
-	  for ( method::const_iterator i(m.begin()), e(m.end()); i!=e; ++i )
-	    os << *i << ".";
+	  os << m.format( method::M_UCROSS | method::M_DOTS | 
+			  method::M_EXTERNAL );
 	  break;
 
 	case 'q': 
-	  os << get_compressed_pn(m);
+	  os << m.format( method::M_DASH | method::M_SYMMETRY );
 	  break;
 
 	case 'Q': 
+	  // TODO: 'Q' should use m.format()
 	  os << get_short_compressed_pn(m);
 	  break;
 
@@ -174,7 +174,7 @@ string method_properties::impl2::get_property( int num_opt,
 	  break;
 
 	case 'b': 
-	  os << setw(num_opt) << max_blows_per_place(m); 
+	  os << setw(num_opt) << m.maxblows();
 	  break;
 
 	case 'o': 

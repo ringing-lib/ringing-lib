@@ -488,13 +488,13 @@ output stream @var{o}.
 @node Other bell Functions,  , bell Operators, The bell Class
 @subsection Other functions
 
-@deftypefun void bell::from_char (char @var{c});
+@deftypefun bell& bell::from_char (char @var{c});
 This function interprets the character @var{c} as a bell, and assigns
 that value to the bell object.  See the next function for the mapping
 between characters and bells.  If the character does not represent a
 valid bell, then an exception of the class @code{bell::invalid} is
 thrown; if you have disabled exceptions, the bell is set to the value
-@code{bell::MAX_BELLS}.
+@code{bell::MAX_BELLS}.  The function returns @code{*this}.
 @end deftypefun
 
 @deftypefun char bell::to_char (void) const;
@@ -625,6 +625,11 @@ This returns the number of bells which the row contains.
 This function swaps this row with @var{other} in an efficient manner.
 @end deftypefun
 
+@deftypefun int row::find (bell const& @var{b});
+This function locates the bell, @var{b}, in this row and returns its
+place.
+@end deftypefun
+
 @c Silly bit to get round a bug
 @ifinfo
 @deftypefun row& row::rounds (void);
@@ -644,6 +649,13 @@ This returns true if the row is rounds, and false otherwise.
 @deftypefun int row::ispblh (void) const;
 If the row is a lead head of Plain Bob, Grandsire or, more generally, of
 the Plain Bob type method with any number of hunt bells, then this
+function returns an integer indicating which lead head it is.
+Otherwise, it returns 0.
+@end deftypefun
+
+@deftypefun int row::ispblh (int @var{h}) const;
+If the row is a lead head of Plain Bob, Grandsire or, more generally, of
+the Plain Bob type method with @var{h} hunt bells, then this
 function returns an integer indicating which lead head it is.
 Otherwise, it returns 0.
 @end deftypefun
@@ -1211,6 +1223,12 @@ case of Little Grandsire does it contain ``Little''.
 
 @deftypefun string method::fullname (void) const;
 This function returns the full name of the method as a string.
+@end deftypefun
+
+@deftypefun int method::maxblows (void) const;
+This function returns the maximum consecutive blows made in any place in 
+this method.  (If the method has one bell fixed throughout, the lead length
+is returned.)
 @end deftypefun
 
 @node method static Functions, method static Variables, Other method Functions, The method Class

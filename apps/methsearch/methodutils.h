@@ -43,18 +43,16 @@ RINGING_USING_STD
 
 change merge_changes( const change &a, const change &b );
 bool have_same_places( const change &a, const change &b );
-bool is_pble( const row &lh, int hunts );
 bool is_cyclic_le( const row &lh, int hunts );
 bool is_division_false( const method &m, const change &c, size_t divlen );
 bool is_too_many_places( const method &m, const change &c, size_t max );
 
 bool has_rotational_symmetry( const method &m );
 
-size_t max_blows_per_place( const method &m );
 bool has_consec_places( const change &c, size_t max_count = 1u );
 bool division_bad_parity_hack( const method &m, const change &c, 
 			       size_t divlen );
-string get_compressed_pn( const method &m );
+
 string get_short_compressed_pn( const method &m );
 
 
