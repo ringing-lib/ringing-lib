@@ -143,7 +143,7 @@ void printpage_ps::printrow_ps::print(const row& r)
       if((opt.flags & printrow::options::miss_numbers) && has_line(r[j]))
 	os << ' ';
       else
-	os << row::b_to_c(r[j]);
+	os << r[j];
     os << ") W\n";
   }
   lastrow = r;

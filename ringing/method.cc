@@ -73,7 +73,7 @@ method::method(char *pn, int b, char *n)
 /*  int a, b = 0;
   for(c = pn; *c != '\0'; c++)
     if(b < (a = row::c_to_b(*c) + 1)) b = a;
-*/
+
   // Work out how long it is
   int l = 0;
   c = pn;
@@ -82,15 +82,11 @@ method::method(char *pn, int b, char *n)
     if(*c == '.') l++;
     if(*c == 'X' || *c == 'x' || *c == '-') l += 2;
   }
-
-  // Get a temporary block of changes
-  changes ch(l, b);
-
+*/
   // Set up the place notation
   char t[32];
-  int i;
   c = pn;
-  for(i = 0; i < l; i++) {
+  while(*c != '\0') {
     if(*c == 'X' || *c == '-') {
       t[0] = 'X'; t[1] = '\0';
       c++;
@@ -101,11 +97,8 @@ method::method(char *pn, int b, char *n)
       *s = '\0';
       if(*c == '.') c++;
     }
-    ch[i] = t;
+    push_back(change(b, t));
   }
-
-  // Copy the changes into this method
-  *(changes *)this = ch;
 }
 
 // issym : Find out whether the method is symmetrical
@@ -133,14 +126,14 @@ int method::isdouble(void) const
 int method::huntbells(void) const
 {
   int n = 0;
-  row r = asrow();
+  row r = lh();
   for(int i = 0; i < bells(); i++)
     if(r[i] == i) n++;
   return n;
 }
 
 // issym : Is this bell's path symmetrical?
-int method::issym(int b) const
+int method::issym(bell b) const
 {
   if(length() & 1) return 0;	// Must have even length
   for(int i = 0; i < length() / 2 - 1; i++) {
@@ -156,7 +149,7 @@ int method::issym(int b) const
 }
 
 // isplain : Does this bell plain hunt?
-int method::isplain(int b) const
+int method::isplain(bell b) const
 {
   int j = b;
   int dir = j & 1;		// Odd bells out, even bells in
@@ -174,9 +167,10 @@ int method::isplain(int b) const
 }
 
 // hasdodges : Does this bell do any dodges?
-int method::hasdodges(int b) const
+int method::hasdodges(bell b) const
 {
-  int i, j = b, j1 = -1, j2 = -1;
+  int i;
+  bell j = b, j1 = -1, j2 = -1;
   for(i = 0; i < length(); i++) {
     j2 = j1; j1 = j;
     j *= (*this)[i];
@@ -186,9 +180,10 @@ int method::hasdodges(int b) const
 }
 
 // hasplaces : Does this bell make any internal places?
-int method::hasplaces(int b) const
+int method::hasplaces(bell b) const
 {
-  int i, j = b, j1;
+  int i;
+  bell j = b, j1;
   for(i = 0; i < length(); i++) {
     j1 = j;
     j *= (*this)[i];
@@ -202,19 +197,19 @@ int method::hasplaces(int b) const
 int method::methclass(void) const
 {
   int cl = 0;
-  int i, j;
-  int hb;
+  int i;
+  bell j, hb;
 
   // Is it double?
   if(isdouble()) cl = M_DOUBLE;
 
   // Find the first hunt bell
-  row lh = asrow();
-  for(hb = 0; lh[hb] != hb && hb < bells(); hb++);
+  row lhr = lh();
+  for(hb = 0; lhr[hb] != hb && hb < bells(); hb = hb + 1);
   if(hb == bells()) return cl | M_PRINCIPLE;
 
   // Find how far the treble ever gets
-  int tmin = hb, tmax = hb;
+  bell tmin = hb, tmax = hb;
   j = hb;
   for(i = 0; i < length(); i++) {
     j *= (*this)[i];
@@ -229,7 +224,7 @@ int method::methclass(void) const
   // Is it plain hunting?
   if(isplain(hb)) {
     // Check for Slow Course methods
-    if(hb == 0 && lh[1] == 1 && issym(1))
+    if(hb == 0 && lhr[1] == 1 && issym(1))
       return cl | M_SLOW_COURSE;
     // Now see whether any of the working bells make any dodges
     for(i = 1; i < bells(); i++)
@@ -239,10 +234,10 @@ int method::methclass(void) const
   
   // Now count the number of blows in each position in the half lead,
   // and also note whether the treble makes any places.
-  int k, place = 0;
+  int place = 0;
+  bell k;
   j = hb;
-  buffer count(tmax-tmin+1);
-  for(i = tmin;i < tmax;i++) count[i] = 0;
+  vector<char> count(tmax-tmin+1);
   for(i = 0;i < (length()/2 - 1);i++) {
     count[j-tmin]++;
     k = j;
@@ -318,14 +313,14 @@ char *method::lhcode(void) const
 
   // For a normal lead head code to be used, the method must be regular,
   // and have either one or two hunt bells, treble and 2.
-  row lh = asrow();
-  if(lh[0] != 0 || lh[2] == 2)	// Treble not a hunt bell
+  row lhr = lh();
+  if(lhr[0] != 0 || lhr[2] == 2)	// Treble not a hunt bell
     return buff;		// or more than 2 hunt bells
-  int n = lh.ispblh();
+  int n = lhr.ispblh();
   if(n == 0) return buff;	// Not regular
   int o;
 
-  if(lh[1] == 1) {		// Two hunt bells
+  if(lhr[1] == 1) {		// Two hunt bells
     if((*this)[0] == change(bells(), "X"))
       lhplace = 1;
     else if((*this)[0] == change(bells(), "3"))
