@@ -30,7 +30,7 @@
 
 #include <ringing/common.h>
 
-#ifdef RINGING_HAS_PRAGMA_INTERFACE
+#if RINGING_HAS_PRAGMA_INTERFACE
 #pragma implementation
 #endif
 
@@ -1027,7 +1027,9 @@ void histogram_entry::print( ostream &os2, size_t count ) const
       // State
       bool in_expr(false);   // Are we inside a $[ ... ]?
       size_t parens(0u);     // Depth of ()s within a $[ ... ].
-      string::const_iterator expr_start;  // Start of the $[ ... ] expression.
+
+      // Start of the $[ ... ] expression.
+      string::const_iterator expr_start = f.fmt.begin(); 
 
       for ( string::const_iterator iter( f.fmt.begin() ),
 	      end( f.fmt.end() ); iter != end; ++iter )
@@ -1173,7 +1175,9 @@ format_string::format_string( const string &fmt,
   // State
   bool in_expr(false);   // Are we inside a $[ ... ]?
   size_t parens(0u);     // Depth of ()s within a $[ ... ].
-  string::const_iterator expr_start;  // Start of the $[ ... ] expression.
+
+  // Start of the $[ ... ] expression.
+  string::const_iterator expr_start = fmt.begin();
 
   for ( string::const_iterator iter( fmt.begin() ), end( fmt.end() ); 
 	iter != end; ++iter )
@@ -1287,20 +1291,20 @@ format_string::format_string( const string &fmt,
 	      break;
 
 	    case 'r':
-	      if ( find( has_rows.begin(), has_rows.end(), num_opt ) 
-		     == has_rows.end() )
+	      if ( find( has_rows.begin(), has_rows.end(), 
+			 size_t(num_opt) ) == has_rows.end() )
 		has_rows.push_back( num_opt );
 	      break;
 
 	    case 'h':
-	      if ( find( has_changes.begin(), has_changes.end(), num_opt ) 
-		   == has_changes.end() )
+	      if ( find( has_changes.begin(), has_changes.end(), 
+			 size_t(num_opt) ) == has_changes.end() )
 		has_changes.push_back( num_opt );
 	      break;
 
 	    case 'P':
-	      if ( find( has_path.begin(), has_path.end(), num_opt ) 
-		   == has_path.end() )
+	      if ( find( has_path.begin(), has_path.end(), 
+			 size_t(num_opt) ) == has_path.end() )
 		has_path.push_back( num_opt );
 	      break;
 

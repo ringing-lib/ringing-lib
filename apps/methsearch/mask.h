@@ -21,11 +21,11 @@
 #ifndef METHSEARCH_MASK_INCLUDED
 #define METHSEARCH_MASK_INCLUDED
 
-#ifdef RINGING_HAS_PRAGMA_INTERFACE
+#include <ringing/common.h>
+
+#if RINGING_HAS_PRAGMA_INTERFACE
 #pragma interface
 #endif
-
-#include <ringing/common.h>
 
 class arg_parser;
 struct arguments;

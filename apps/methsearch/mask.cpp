@@ -20,7 +20,7 @@
 
 #include <ringing/common.h>
 
-#ifdef RINGING_HAS_PRAGMA_INTERFACE
+#if RINGING_HAS_PRAGMA_INTERFACE
 #pragma implementation
 #endif
 
@@ -199,7 +199,7 @@ shared_pointer<block> read_block( const int num,
 }
 
 void expand_block( vector< vector< change > >& block1, 
-		   bool star_sym, int star_index, int expand_by )
+		   bool star_sym, size_t star_index, size_t expand_by )
 {
   if ( star_sym ) 
     assert( block1.size() % 2 );
@@ -396,8 +396,8 @@ bool parse_mask( arguments &args, const arg_parser &ap )
   vector< vector<change> > block1a, block1b;
   vector< vector<change> > block2a, block2b;
 
-  size_t star_index_a, star_index_b;
-  bool   star_sym_a,   star_sym_b;
+  size_t star_index_a(0u), star_index_b(0u);
+  bool   star_sym_a(false),   star_sym_b(false);
 
   // ----------------------------------
   // Parse the mask
@@ -508,7 +508,7 @@ bool parse_mask( arguments &args, const arg_parser &ap )
 		    block0a.size() - block1a.size() - block2a.size() );
 
       assert( block0a.size() + block1a.size() + block2a.size()
-	      == args.lead_len );
+	      == size_t(args.lead_len) );
     }
 
   if ( block1b.size() )
@@ -517,7 +517,7 @@ bool parse_mask( arguments &args, const arg_parser &ap )
 		    block0b.size() - block1b.size() - block2b.size() );
 
       assert( block0b.size() + block1b.size() + block2b.size()
-	      == args.lead_len );
+	      == size_t(args.lead_len) );
     }
 
   args.allowed_changes.clear();
@@ -525,8 +525,8 @@ bool parse_mask( arguments &args, const arg_parser &ap )
   copy( block1b.begin(), block1b.end(), back_inserter( block0b ) );
   copy( block2a.begin(), block2a.end(), back_inserter( block0a ) );
   copy( block2b.begin(), block2b.end(), back_inserter( block0b ) );
-  assert( block0a.size() == args.lead_len );
-  assert( block0b.size() == args.lead_len );
+  assert( block0a.size() == size_t(args.lead_len) );
+  assert( block0b.size() == size_t(args.lead_len) );
 
   if (!is_mask_consistent(args, block0a, block0b))
     throw mask_error

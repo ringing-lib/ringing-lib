@@ -20,12 +20,14 @@
 #ifndef METHSEARCH_ARGS_INCLUDED
 #define METHSEARCH_ARGS_INCLUDED
 
-#ifdef RINGING_HAS_PRAGMA_INTERFACE
+#include <ringing/common.h>
+
+#if RINGING_HAS_PRAGMA_INTERFACE
 #pragma interface
 #endif
 
-#include <ringing/common.h>
 #include "format.h"
+#include "init_val.h"
 #include <string>
 #if RINGING_OLD_INCLUDES
 #include <vector.h>
@@ -38,23 +40,6 @@ class arg_parser;
 
 RINGING_USING_NAMESPACE
 RINGING_USING_STD
-
-template <class Type, Type Init>
-class init_val
-{
-public:
-  init_val() : val( Init ) {}
-  init_val( const Type &val ) : val( val ) {}
-
-  operator Type() const { return val; }
-  init_val &operator=( const Type &x ) { val = x; return *this; }
-  
-  const Type &get() const { return val; }
-  Type &get() { return val; }
-
-private:
-  Type val;
-};
 
 struct arguments
 {

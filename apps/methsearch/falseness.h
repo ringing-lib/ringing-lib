@@ -20,11 +20,12 @@
 #ifndef METHSEARCH_FALSENESS_INCLUDED
 #define METHSEARCH_FALSENESS_INCLUDED
 
-#ifdef RINGING_HAS_PRAGMA_INTERFACE
+#include <ringing/common.h>
+
+#if RINGING_HAS_PRAGMA_INTERFACE
 #pragma interface "methsearch/falseness"
 #endif
 
-#include <ringing/common.h>
 #include <ringing/pointers.h>
 #include <string>
 

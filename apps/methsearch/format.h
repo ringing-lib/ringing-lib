@@ -21,11 +21,12 @@
 #ifndef METHSEARCH_FORMAT_INCLUDED
 #define METHSEARCH_FORMAT_INCLUDED
 
-#ifdef RINGING_HAS_PRAGMA_INTERFACE
+#include <ringing/common.h>
+
+#if RINGING_HAS_PRAGMA_INTERFACE
 #pragma interface
 #endif
 
-#include <ringing/common.h>
 #if RINGING_OLD_INCLUDES
 #include <stdexcept.h>
 #include <vector.h>
@@ -73,6 +74,7 @@ public:
   class node {
   public:
     node() {} // Keep gcc-2.95.3 happy
+    virtual ~node() {}
     virtual string s_evaluate( const method& m ) const = 0;
     virtual long   i_evaluate( const method& m ) const = 0;
     

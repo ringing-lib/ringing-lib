@@ -20,11 +20,12 @@
 #ifndef METHSEARCH_MUSIC_INCLUDED
 #define METHSEARCH_MUSIC_INCLUDED
 
-#ifdef RINGING_HAS_PRAGMA_INTERFACE
+#include <ringing/common.h>
+
+#if RINGING_HAS_PRAGMA_INTERFACE
 #pragma interface "methsearch/music"
 #endif
 
-#include <ringing/common.h>
 #include <string>
 
 // Forward declare ringing::method

@@ -21,11 +21,12 @@
 #ifndef METHSEARCH_METHODUTILS_INCLUDED
 #define METHSEARCH_METHODUTILS_INCLUDED
 
-#ifdef RINGING_HAS_PRAGMA_INTERFACE
+#include <ringing/common.h>
+
+#if RINGING_HAS_PRAGMA_INTERFACE
 #pragma interface
 #endif
 
-#include <ringing/common.h>
 #include <string>
 #include <cstddef>
 

@@ -19,7 +19,7 @@
 
 #include <ringing/common.h>
 
-#ifdef RINGING_HAS_PRAGMA_INTERFACE
+#if RINGING_HAS_PRAGMA_INTERFACE
 #pragma implementation
 #endif
 
@@ -55,7 +55,7 @@ change merge_changes( const change &a, const change &b )
   
   change c( a.bells() );
 
-  for ( unsigned int i=0; i<a.bells()-1; ++i )
+  for ( int i=0; i<a.bells()-1; ++i )
     if ( a.findswap(i) || b.findswap(i) )
       c.swappair(i);
 
@@ -67,7 +67,7 @@ bool have_same_places( const change &a, const change &b )
   if ( a.bells() != b.bells() ) 
     throw logic_error("Mismatched numbers of bells");
 
-  for ( unsigned int i=0; i<a.bells(); ++i )
+  for ( int i=0; i<a.bells(); ++i )
     if ( a.findplace(i) && b.findplace(i) )
       return true;
   
@@ -116,7 +116,7 @@ bool is_division_false( const method &m, const change &c, unsigned int divlen )
   vector< row > rows( 1, r );
   rows.reserve( divlen );
 
-  for ( unsigned int i = (m.length() / divlen) * divlen; i < m.length(); ++i )
+  for ( int i = (m.length() / divlen) * divlen; i < m.length(); ++i )
     {
       r *= m[i];
       rows.push_back( r );
@@ -130,12 +130,12 @@ bool is_division_false( const method &m, const change &c, unsigned int divlen )
 
 bool is_too_many_places( const method &m, const change &c, size_t max )
 {
-  for ( size_t i=0; i<c.bells(); ++i )
+  for ( int i=0; i<c.bells(); ++i )
     if ( c.findplace(i) )
       {
 	size_t count(2u);
 
-	for ( ; count <= m.length()+1; ++count )
+	for ( ; count <= size_t(m.length())+1; ++count )
 	  if ( !m[m.length()-count+1].findplace(i) )
 	    break;
 
@@ -148,12 +148,12 @@ bool is_too_many_places( const method &m, const change &c, size_t max )
 
 bool has_consec_places( const change &c, size_t max_count )
 {
-  size_t count(0u);
-  for ( size_t i=0u; i<c.bells() && count <= max_count ; ++i )
+  size_t count(0);
+  for ( int i=0; i<c.bells() && count <= max_count ; ++i )
     if ( c.findplace(i) )
       ++count;
     else
-      count = 0u;
+      count = 0;
 
   return count > max_count;
 }
@@ -169,7 +169,7 @@ bool division_bad_parity_hack( const method &m, const change &c,
   rows.reserve( divlen );
 
   {
-    for ( unsigned int i = (m.length() / divlen) * divlen; 
+    for ( int i = (m.length() / divlen) * divlen; 
 	  i < m.length(); ++i )
       {
 	r *= m[i];
@@ -257,7 +257,7 @@ unsigned int max_blows_per_place( const method &m )
   int maxn = 0;
 
   for ( method::const_iterator b(m.begin()), i(b), e(m.end()); i != e; ++i )
-    for ( unsigned int p(0); p < m.bells(); ++p )
+    for ( int p(0); p < m.bells(); ++p )
       if ( i->findplace(p) )
 	{
 	  // It's part of a longer run.

@@ -18,11 +18,12 @@
 // $Id$
 
 
-#ifdef RINGING_HAS_PRAGMA_INTERFACE
+#include <ringing/common.h>
+
+#if RINGING_HAS_PRAGMA_INTERFACE
 #pragma implementation
 #endif
 
-#include <ringing/common.h>
 #include "methodutils.h"
 #include "search.h"
 #include "falseness.h"
@@ -98,8 +99,8 @@ private:
 private:
   const arguments &args; 
   const int bells;
-  const int div_len;
-  const int hl_len;
+  const size_t div_len;
+  const size_t hl_len;
 
   unsigned long search_count;
 
@@ -157,7 +158,7 @@ void searcher::maybe_found_method()
   if ( args.require_offset_cyclic )
     {
       row r(bells);
-      for (int i=0; i< div_len-2; ++i) r *= m[i];
+      for (size_t i=0; i< div_len-2; ++i) r *= m[i];
 
       // Generate the row 13456782 (or similar)
       string s; s.reserve(bells);
@@ -240,9 +241,9 @@ inline int searcher::get_posn()
 {
   assert( args.hunt_bells );
 
-  const int depth = m.length();
+  const size_t depth = m.length();
 
-  int posn = depth >= hl_len ? 2*hl_len - depth - 2 : depth;
+  size_t posn = depth >= hl_len ? 2*hl_len - depth - 2 : depth;
   
   if ( posn % div_len == div_len - 1 )
     return posn / div_len * 2 + 1;
@@ -402,10 +403,10 @@ bool searcher::try_offset_start_change( const change &ch)
 bool searcher::try_leadend_change( const change &ch )
 {
   if ( args.max_consec_blows )
-    for ( unsigned int i=0; i<bells; ++i )
+    for ( int i=0; i<bells; ++i )
       if ( ch.findplace(i) )
 	{
-	  unsigned int count(2);
+	  int count(2);
 	  
 	  {
 	    for ( int offset = m.length() - 1; 
@@ -466,13 +467,13 @@ bool searcher::try_leadend_sym_change( const change &ch )
 
 bool searcher::try_midlead_change( const change &ch )
 {
-  int depth = m.size();
+  size_t depth = m.size();
 
   if ( args.true_trivial && (args.treble_dodges || !args.hunt_bells) 
        && m.size() && m.back() == ch )
     return false;
 
-  int posn = args.hunt_bells ? get_posn() : 0;
+  size_t posn = args.hunt_bells ? get_posn() : 0;
 
   // The treble is moving between dodging positions
   if ( args.surprise && posn % 2 && depth % hl_len != hl_len-1
@@ -531,13 +532,13 @@ bool searcher::try_quarterlead_change( const change &ch )
     return false;
 
   if ( args.max_consec_blows )
-    for ( unsigned int i=0; i<bells; ++i )
+    for ( int i=0; i<bells; ++i )
       if ( ch.findplace(i) )
 	{
-	  unsigned int count(2);
+	  int count(2);
 	  
 	  {
-	    for ( int offset = m.length()-1;
+	    for ( size_t offset = m.length()-1;
 		  offset >= (m.length()/hl_len)*hl_len 
 		    && count <= args.max_consec_blows + 1;
 		  --offset, ++count )
@@ -546,7 +547,7 @@ bool searcher::try_quarterlead_change( const change &ch )
 	  }
 	  
 	  {
-	    for ( int offset = m.length()-1;
+	    for ( size_t offset = m.length()-1;
 		  offset >= (m.length()/hl_len)*hl_len 
 		    && count <= args.max_consec_blows + 1;
 		  --offset, ++count )
@@ -571,7 +572,7 @@ inline void searcher::swap_overlap( change &ch, const pair< int, int > &posn )
 
 void searcher::new_midlead_change()
 {
-  const int depth( m.length() );
+  const size_t depth( m.length() );
 
   const vector< change >& changes_to_try = args.allowed_changes[depth];
   assert( changes_to_try.size() );
@@ -608,7 +609,7 @@ void searcher::new_midlead_change()
 	    if ( ! try_halflead_sym_change( ch ) )
 	      continue;
 	  
-	  if ( depth == args.lead_len-1 )
+	  if ( depth == size_t(args.lead_len-1) )
 	    if ( ! try_leadend_change( ch ) )
 	      continue;
 	  
@@ -646,7 +647,7 @@ void searcher::new_principle_change()
     }
   else
     {
-      int depth( m.length() );
+      size_t depth( m.length() );
 
       vector< change > changes_to_try;
       changes_to_try.reserve( fibonacci( bells ) );
@@ -670,7 +671,7 @@ void searcher::new_principle_change()
 	  if ( ! try_midlead_change( ch ) )
 	    continue;
 
-	  if ( depth == args.lead_len-1 )
+	  if ( depth == size_t(args.lead_len-1) )
 	    if ( ! try_leadend_change( ch ) )
 	      continue;
 
@@ -699,10 +700,10 @@ void searcher::new_principle_change()
 void searcher::double_existing()
 {
   if ( args.max_consec_blows )
-    for ( unsigned int i=0; i<bells; ++i )
+    for ( int i=0; i<bells; ++i )
       if ( m.back().findplace(i) )
 	{
-	  unsigned int count(2);
+	  int count(2);
 	  
 	  {
 	    for ( int offset = m.length()-2; 
@@ -724,19 +725,19 @@ void searcher::double_existing()
 	    return;
 	}
   
-  assert( m.length() == hl_len );
+  assert( size_t(m.length()) == hl_len );
 
-  for ( int depth = m.length(); depth < 2*hl_len-1; ++depth )
+  for ( size_t depth = m.length(); depth < 2*hl_len-1; ++depth )
     m.push_back( m[ depth-hl_len ].reverse() );
 
   change ch( m[ hl_len-1 ].reverse() );
   
   // Not sure if this is still necessary ...
   if ( args.max_consec_blows )
-    for ( unsigned int i=0; i<bells; ++i )
+    for ( int i=0; i<bells; ++i )
       if ( ch.findplace(i) )
 	{
-	  unsigned int count(2);
+	  int count(2);
 	  
 	  {
 	    for ( int offset = m.length()-1;
@@ -763,7 +764,7 @@ void searcher::double_existing()
   general_recurse();
 
  end_of_function:
-  while ( m.length() > hl_len )
+  while ( size_t(m.length()) > hl_len )
     m.pop_back();
 }
 
@@ -798,9 +799,9 @@ bool searcher::is_acceptable_leadhead( const row &lh )
 
 void searcher::general_recurse()
 {
-  const int depth = m.length();
+  const size_t depth = m.length();
 
-  if ( args.search_limit && search_count == args.search_limit )
+  if ( args.search_limit && search_count == (unsigned long)args.search_limit )
     return;
 
   // Status message
@@ -814,7 +815,7 @@ void searcher::general_recurse()
 
 
   // Found something
-  if ( depth == args.lead_len )
+  if ( depth == size_t(args.lead_len) )
     {
       if ( is_acceptable_leadhead( m.lh() ) )
 	maybe_found_method();
@@ -842,7 +843,7 @@ void searcher::general_recurse()
   else if ( args.skewsym && args.doubsym && args.sym 
 	    && depth == hl_len/2 + 1 - args.hunt_bells % 2 )
     {
-      while ( m.length() <= hl_len - 1 - args.hunt_bells % 2 )
+      while ( size_t(m.length()) <= hl_len - 1 - args.hunt_bells % 2 )
 	{
 	  m.push_back( m[ hl_len - args.hunt_bells % 2 * 2 
 			  - m.length() ].reverse() );
@@ -850,7 +851,7 @@ void searcher::general_recurse()
 
       general_recurse();
 
-      while ( m.length() > depth )
+      while ( size_t(m.length()) > depth )
 	m.pop_back();
     }
 
@@ -860,7 +861,7 @@ void searcher::general_recurse()
     {
       assert( !args.doubsym && !args.sym );
 
-      while ( m.length() <= hl_len - args.hunt_bells % 2 * 2 )
+      while ( size_t(m.length()) <= hl_len - args.hunt_bells % 2 * 2 )
 	{
 	  m.push_back( m[ hl_len - args.hunt_bells % 2 * 2 
 			  - m.length() ].reverse() );
@@ -868,7 +869,7 @@ void searcher::general_recurse()
 
       general_recurse();
 
-      while ( m.length() > depth )
+      while ( size_t(m.length()) > depth )
 	m.pop_back();
     }
 
@@ -890,7 +891,7 @@ void searcher::general_recurse()
 
       general_recurse();
 
-      while ( m.length() > depth )
+      while ( size_t(m.length()) > depth )
 	m.pop_back();
     }
 
@@ -900,7 +901,7 @@ void searcher::general_recurse()
     {
       assert( !args.doubsym && !args.sym );
 
-      while ( m.length() < 2*hl_len )
+      while ( size_t(m.length()) < 2*hl_len )
 	{
 	  m.push_back( m[ 3*hl_len - args.hunt_bells % 2 * 2
 			  - m.length() ].reverse() );
@@ -908,7 +909,7 @@ void searcher::general_recurse()
 
       general_recurse();
 
-      while ( m.length() > depth )
+      while ( size_t(m.length()) > depth )
 	m.pop_back();
     }
 

@@ -19,7 +19,7 @@
 
 #include <ringing/common.h>
 
-#ifdef RINGING_HAS_PRAGMA_INTERFACE
+#if RINGING_HAS_PRAGMA_INTERFACE
 #pragma implementation
 #endif
 
@@ -116,42 +116,42 @@ void arguments::bind( arg_parser &p )
   p.add( new integer_opt
 	 ( 'b', "bells",  
 	   "The number of bells.  This option is required", "BELLS",
-	   bells.get() ) );
+	   bells ) );
 
   p.add( new boolean_opt
 	 ( 'c', "cyclic", 
 	   "Require cyclic lead ends",
-	   require_cyclic_les.get() ) );
+	   require_cyclic_les ) );
 
   p.add( new boolean_opt
 	 ( 'r', "regular",
 	   "Require regular (P.B.) lead ends",
-	   require_pbles.get() ) );
+	   require_pbles ) );
 
   p.add( new boolean_opt
 	 ( 'A', "all-methods",    
 	   "Include differentials or differential hunters",
-	   show_all_meths.get() ) );
+	   show_all_meths ) );
 
   p.add( new integer_opt
 	 ( 'p', "blows-per-place", 
 	   "At most NUM consecutive blows in one place (0 = unlimited)", "NUM",
-	   max_consec_blows.get() ) );
+	   max_consec_blows ) );
 
   p.add( new integer_opt
 	 ( 'l', "places-per-change", 
 	   "At most NUM places in any change (0 = unlimited)", "NUM",
-	   max_places_per_change.get() ) );
+	   max_places_per_change ) );
 
   p.add( new integer_opt
 	 ( 'n', "changes-per-lead", 
 	   "Require NUM changes per lead (0 = automatic)", "NUM",
-	   lead_len.get() ) );
+	   lead_len ) );
 
   p.add( new boolean_opt
 	 ( 'q', "quiet",  
 	   "Do not display methods when found",
-	   quiet.get() ) );
+	   quiet ) );
 
   p.add( new string_opt
 	 ( 'H', "frequencies", 
@@ -171,85 +171,85 @@ void arguments::bind( arg_parser &p )
   p.add( new boolean_opt
 	 ( 'h', "any-hl-le",
 	   "Allow any change at the half-lead and lead-end",
-	   require_single_place_lh_le.get(), false ) );
+	   require_single_place_lh_le, false ) );
 
   p.add( new boolean_opt
 	 ( 'e', "restricted-le",
 	   "Only allow 12 and 1N (or 1 and 12N lead ends)",
-	   require_limited_le.get() ) );
+	   require_limited_le ) );
 
   p.add( new boolean_opt
 	 ( 'w', "right-place", 
 	   "Require right place methods",
-	   right_place.get() ) );
+	   right_place ) );
 
   p.add( new boolean_opt
 	 ( 'f', "no-78s", 
 	   "Prohibit 78s (on 8 bells) in the place notation",
-	   no_78_pns.get() ) );
+	   no_78_pns ) );
 
   p.add( new integer_opt
 	 ( 'j', "max-adj-places",
 	   "Forbid methods with more than NUM adjacent places", "NUM",
-	   max_consec_places.get(), /* default = */ 1 ) );
+	   max_consec_places, /* default = */ 1 ) );
 
   p.add( new boolean_opt
 	 ( 's', "symmetric", 
 	   "Look for (normally) symmetric methods (default)",
-	   sym.get() ) );
+	   sym ) );
 
   p.add( new boolean_opt
 	 ( 'k', "rotational", 
 	   "Look for rotationally symmteric methods 'Brave New Worlds' "
 	   "symmetry",
-	   skewsym.get() ) );
+	   skewsym ) );
 
   p.add( new boolean_opt
 	 ( 'd', "double", 
 	   "Look for double methods - 'Double Eastern' symmetry",
-	   doubsym.get() ) );
+	   doubsym ) );
 
   p.add( new boolean_opt
 	 ( 'S', "surprise", 
 	   "Require an internal place between dodging positions",
-	   surprise.get() ) );
+	   surprise ) );
 
   p.add( new boolean_opt
 	 ( 'T', "treble-bob", 
 	   "Forbid an internal place between dodging positions",
-	   treble_bob.get() ) );
+	   treble_bob ) );
 
   p.add( new integer_opt
 	 ( 'G', "treble-dodges", 
 	   "Look for methods where the treble dodges NUM times in each "
 	   "position", "NUM",
-	   treble_dodges.get() ) );
+	   treble_dodges ) );
 
   p.add( new integer_opt
 	 ( 'U', "hunts", 
 	   "Look for methods with NUM hunt bells", "NUM",
-	   hunt_bells.get() ) );
+	   hunt_bells ) );
 
   p.add( new boolean_opt
 	 ( 'u', "status",
 	   "Display the current status",
-	   status.get() ) );
+	   status ) );
 
   p.add( new integer_opt
 	 ( '\0', "limit",
 	   "Limit the search to the first NUM methods", "NUM",
-	   search_limit.get() ) );
+	   search_limit ) );
 
   p.add( new boolean_opt
 	 ( '\0', "count",
 	   "Count the number of methods found",
-	   count.get() ) );
+	   count ) );
 
   p.add( new boolean_opt
 	 ( 'P', "parity-hack",
 	   "Require an equal number of rows of each parity for each place "
 	   "in the treble's path",
-	   same_place_parity.get() ) );
+	   same_place_parity ) );
 
   p.add( new delegate_opt
 	 ( 'L', "library",
@@ -279,32 +279,32 @@ void arguments::bind( arg_parser &p )
   p.add( new boolean_opt
 	 ( '\0', "cyclic-hle", 
 	   "Require cyclic half-lead ends",
-	   require_cyclic_hle.get() ) );
+	   require_cyclic_hle ) );
 
   p.add( new boolean_opt
 	 ( '\0', "cyclic-hlh", 
 	   "Require cyclic half-lead heads",
-	   require_cyclic_hlh.get() ) );
+	   require_cyclic_hlh ) );
 
   p.add( new boolean_opt
 	 ( '\0', "rev-cyclic-hle", 
 	   "Require reverse cyclic half-lead ends",
-	   require_rev_cyclic_hle.get() ) );
+	   require_rev_cyclic_hle ) );
 
   p.add( new boolean_opt
 	 ( '\0', "rev-cyclic-hlh", 
 	   "Require reverse cyclic half-lead heads",
-	   require_rev_cyclic_hlh.get() ) );
+	   require_rev_cyclic_hlh ) );
 
   p.add( new boolean_opt
 	 ( '\0', "regular-hls", 
 	   "Require regular half-leads",
-	   require_reg_hls.get() ) );
+	   require_reg_hls ) );
 
   p.add( new boolean_opt
 	 ( '\0', "offset-cyclic", 
 	   "Require offset cyclicity",
-	   require_offset_cyclic.get() ) );
+	   require_offset_cyclic ) );
 }
 
 bool arguments::validate( arg_parser &ap )
@@ -315,7 +315,7 @@ bool arguments::validate( arg_parser &ap )
       return false;
     }
 
-  if ( bells < 3 || bells >= bell::MAX_BELLS ) 
+  if ( bells < 3 || bells >= int(bell::MAX_BELLS) ) 
     {
       ap.error( make_string() << "The number of bells must be between 3 and " 
 		<< bell::MAX_BELLS-1 << " (inclusive)" );
@@ -448,7 +448,7 @@ bool arguments::validate( arg_parser &ap )
     for ( vector<size_t>::const_iterator i( R_fmt.has_rows.begin() ), 
 	    e( R_fmt.has_rows.end() ); i != e; ++i )
       {
-	if ( *i > bells * (1 + treble_dodges) * 2 )
+	if ( int(*i) > bells * (1 + treble_dodges) * 2 )
 	  {
 	    ap.error( "Format specifies row after end of method" );
 	    return false;
@@ -460,7 +460,7 @@ bool arguments::validate( arg_parser &ap )
     for ( vector<size_t>::const_iterator i( H_fmt.has_rows.begin() ), 
 	    e( H_fmt.has_rows.end() ); i != e; ++i )
       {
-	if ( *i > bells * (1 + treble_dodges) * 2 )
+	if ( int(*i) > bells * (1 + treble_dodges) * 2 )
 	  {
 	    ap.error( "Format specifies row after end of method" );
 	    return false;
@@ -504,7 +504,7 @@ bool arguments::validate( arg_parser &ap )
       return false;
     }
   
-  if ( allowed_changes.size() != lead_len )
+  if ( int(allowed_changes.size()) != lead_len )
     {
       ap.error( "The specified mask was an incorrect length" );
       return false;
