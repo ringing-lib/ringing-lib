@@ -169,7 +169,7 @@ bool method::hasplaces(bell b) const
   for(i = 0; i < length(); i++) {
     j1 = j;
     j *= (*this)[i];
-    if(j == j1 && j > 0 && j < bells())
+    if(j == j1 && j > 0 && j < bells()-1)
       return true;
   }
   return false;
