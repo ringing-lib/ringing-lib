@@ -41,7 +41,6 @@ RINGING_END_NAMESPACE
 RINGING_USING_NAMESPACE
 RINGING_USING_STD
 
-change merge_changes( const change &a, const change &b );
 bool have_same_places( const change &a, const change &b );
 bool is_cyclic_le( const row &lh, int hunts );
 bool is_division_false( const method &m, const change &c, size_t divlen );

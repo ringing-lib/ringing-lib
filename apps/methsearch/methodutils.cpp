@@ -45,23 +45,6 @@
 RINGING_USING_NAMESPACE
 RINGING_USING_STD
 
-change merge_changes( const change &a, const change &b )
-{
-  if ( a.bells() != b.bells() ) 
-    throw logic_error("Mismatched numbers of bells");
-
-  if ( (row() * a * b).order() > 2 )
-    throw range_error("Result of change::operator& not a change");
-  
-  change c( a.bells() );
-
-  for ( int i=0; i<a.bells()-1; ++i )
-    if ( a.findswap(i) || b.findswap(i) )
-      c.swappair(i);
-
-  return c;
-}
-
 bool have_same_places( const change &a, const change &b )
 {
   if ( a.bells() != b.bells() ) 
