@@ -34,6 +34,8 @@
 
 RINGING_START_NAMESPACE
 
+RINGING_USING_STD
+  
 class charwidths {
 private:
   static map<string, const int*> widths;

@@ -39,7 +39,7 @@ RINGING_START_NAMESPACE
 
 // A few static strings
 
-const char *method::txt_classes[11] = {
+const char *method::txt_classes[12] = {
   "",
   "",
   "Bob",
@@ -50,7 +50,8 @@ const char *method::txt_classes[11] = {
   "Treble Place",
   "Alliance",
   "Hybrid",
-  "Slow Course"
+  "Slow Course",
+  "Differential"
   };
 
 const char *method::txt_stages[20] = {
@@ -184,7 +185,23 @@ int method::methclass(void) const
   // Find the first hunt bell
   row lhr = lh();
   for(hb = 0; lhr[hb] != hb && hb < bells(); hb = hb + 1);
-  if(hb == bells()) return cl | M_PRINCIPLE;
+  if(hb == bells()) {
+    // It's a non-hunter.  Is it a principle?
+    vector<bool> v(bells());
+
+    // Find the size of the first set of working bells    
+    int wb=0;
+    i=0;
+    do {
+      i = lhr[i];
+      ++wb;
+    } while (i);
+
+    if (wb == bells())
+      return cl | M_PRINCIPLE;
+    else      
+      return cl | M_DIFFERENTIAL;
+  }
 
   // Find how far the treble ever gets
   bell tmin = hb, tmax = hb;
@@ -267,16 +284,7 @@ const char *method::stagename(int n)
 char *method::fullname(char *c) const
 {
   *c = 0;
-  int cl = methclass();
-  strcat(c,myname.c_str());
-  strcat(c," ");
-  if(cl & M_LITTLE) {
-    strcat(c,txt_little);
-    strcat(c," ");
-  }
-  strcat(c,classname(cl));
-  if(c[strlen(c)-1] != ' ') strcat(c," ");
-  strcat(c,stagename(bells()));
+  strcat(c, fullname().c_str());
   return c;
 }
 
@@ -284,10 +292,10 @@ string method::fullname() const
 {
   string result = myname;
   int cl = methclass();
-  result += ' ';
+  if (!myname.empty()) result += ' ';
   if(cl & M_LITTLE) { result += txt_little; result += ' '; }
   result += classname(cl);
-  result += ' ';
+  if (strlen(classname(cl))) result += ' ';
   result += stagename(bells());
   return result;
 }
@@ -350,15 +358,8 @@ char *method::lhcode(void) const
     buff[0] = 'p';
 
   // Do we need a number too?
-  if(m > p) {			// Yes
-    // Now this is the way I _think_ it works:  we count upwards,
-    // but miss out all those which don't give a proper method, i.e.
-    // which aren't coprime to o.
-    int i, j=0;
-    for(i = p+1; i <= m; i++)
-      if(hcf(i,o) == 1) j++;
-    sprintf(buff+1, "%d", j);
-  }
+  if(m > p)
+    sprintf(buff+1, "%d", m-p);
 
   // Turn a-c into d-f, p into q if we need to
   if(m != n) {

@@ -23,8 +23,14 @@
 #include <iostream>
 #endif
 #include <ringing/method.h>
-#include <ringing/print_pdf.h>
+// NOTE:  Visual Studio 5 a bug where if the types map<X, Y> and 
+// list< pair<X, Y> > for any X and Y are used in the same translation 
+// unit the instantiation of the list must occur before the instantiation
+// of the map.  This means that any translation units that are to compile
+// on this compiler must include printm.h before print_pdf.h.  I'm not sure
+// that I can think of a sufficiently sarcastic comment to make about this.
 #include <ringing/printm.h>
+#include <ringing/print_pdf.h>
 
 #if RINGING_USE_NAMESPACES
 using namespace ringing;

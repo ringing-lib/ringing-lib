@@ -32,7 +32,12 @@
 #endif
 #include <ringing/method.h>
 #include <string>
+#if defined(SEPERATE_FILES)
+// Be warned that dirent.h is not in the either the C99 or C++98 standards.
+// Also indentifiers containing two adjacent underscores or one leading one
+// are prohibited.
 #include <dirent.h>
+#endif
 RINGING_START_NAMESPACE
 
 newlib<cclib> cclib::type;
@@ -49,11 +54,13 @@ int cclib::extractNumber(const string &filename)
 
   // Get the number off the end of the file name
   // Is there a '.'? e.g. '.txt', if so account for it
-  string subname(filename, 0, filename.find('.'));
+  // We want the last one so that a filename like
+  // ../libraries/surprise8.txt works.
+  string subname(filename, 0, filename.find_last_of('.'));
 
   // now start to reverse from last.
   for(s = subname.end(); s > subname.begin() && isdigit(s[-1]); s--);
-  return atoi(s);
+  return atoi(&*s);
 }
 
 string cclib::simple_name(const string &original)
@@ -321,7 +328,7 @@ method cclib::load(const char *name)
   return m;
 }
 
-#if defined(__SEPERATE_FILES__)
+#if defined(SEPERATE_FILES_)
 // This function is designed to seperate the cc method collection files into
 // seperate ones - they have a nasty habit of bundling them together which
 // makes them impossible to search through easily. Especially if you are only

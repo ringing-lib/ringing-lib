@@ -44,7 +44,7 @@ class method : public vector<change> {
 private:
   string myname;		// The name of the method, without Major etc. 
 
-  static const char *txt_classes[11]; // Bob, Place etc.
+  static const char *txt_classes[12]; // Bob, Place etc.
   static const char *txt_stages[20];  // Minimum, Doubles etc.
 
 public: 
@@ -61,6 +61,7 @@ public:
     M_ALLIANCE,
     M_HYBRID,
     M_SLOW_COURSE,
+    M_DIFFERENTIAL,
     M_MASK = 0x0f,
     M_DOUBLE = 0x40,
     M_LITTLE = 0x80

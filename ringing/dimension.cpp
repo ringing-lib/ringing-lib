@@ -39,7 +39,7 @@ RINGING_USING_STD
 RINGING_START_NAMESPACE
 
 const string dimension::unit_strings[] = {"pt", "in", "cm", "mm"};
-const float dimension::to_points[] = {1, 72, 72/2.54, 72/25.4};
+const float dimension::to_points[] = {1, 72, 72/2.54f, 72/25.4f};
 const dimension::unit_names_map dimension::unit_names;
 
 dimension::unit_names_map::unit_names_map()

@@ -90,6 +90,13 @@ int our_hash(const row& r);           // Default hash function
 struct linedetail {
   row _row;
   list<int> _lines;
+
+#if RINGING_PREMATURE_MEMBER_INSTANTIATION
+  bool operator==(const linedetail &) const;
+  bool operator!=(const linedetail &) const;
+  bool operator<(const linedetail &) const;
+  bool operator>(const linedetail &) const;
+#endif
 };
 
 template <class RowIterator>

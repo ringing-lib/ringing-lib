@@ -85,7 +85,7 @@ public:
     return 0;
   }
   int get_count() { if(pptr() != pbase()) sync(); return c; }
-  int reset_count() { c = 0; }
+  void reset_count() { c = 0; }
 };
 
 // This represents a PDF file.
@@ -156,6 +156,12 @@ struct text_bit {
   text_style::alignment al;
   bool squash;
   string s;
+#if RINGING_PREMATURE_MEMBER_INSTANTIATION
+  bool operator==(const text_bit &) const;
+  bool operator!=(const text_bit &) const;
+  bool operator<(const text_bit &) const;
+  bool operator>(const text_bit &) const;
+#endif
 };
 
 class printrow_pdf : public printrow::base {

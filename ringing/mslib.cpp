@@ -57,7 +57,7 @@ mslib::mslib(const string& name) : wr(0),
       string::const_iterator s;
       // Get the number off the end of the file name
       for(s = name.begin() + name.length() - 1; s > name.begin() && isdigit(s[-1]); s--);
-      b = atoi(s);
+      b = atoi(&*s);
     }
 }
 

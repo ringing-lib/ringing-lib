@@ -109,9 +109,9 @@ public:
     { change(num, pn).swap(*this); return *this; }
   change& set(int num, const string& pn)
     { change(num, pn).swap(*this); return *this; }
-  int operator==(const change& c) const
+  bool operator==(const change& c) const
   { return (n == c.n) && (n == 0 || swaps == c.swaps); }
-  int operator!=(const change& c) const
+  bool operator!=(const change& c) const
     { return !(*this == c); }
   change reverse(void) const;		 // Return the reverse
   void swap(change& other) {  // Swap this with another change 
@@ -304,20 +304,8 @@ public:
 RINGING_END_NAMESPACE
 
 // specialise std::swap
-#if RINGING_USE_TEMPLATE_FUNCTION_SPECIALISATION
-RINGING_START_NAMESPACE_STD
-
-template <> inline 
-void swap<RINGING_PREFIX row>(RINGING_PREFIX row &a, RINGING_PREFIX row &b)
-  { a.swap(b); }
-
-template <> inline 
-void swap<RINGING_PREFIX change>(RINGING_PREFIX change &a, 
-				 RINGING_PREFIX change &b)
-  { a.swap(b); }
-
-RINGING_END_NAMESPACE_STD
-#endif
+RINGING_DELEGATE_STD_SWAP( row )
+RINGING_DELEGATE_STD_SWAP( change )
 
 
 #endif

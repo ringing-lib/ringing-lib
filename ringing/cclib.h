@@ -39,7 +39,7 @@
 
 RINGING_START_NAMESPACE
 
-#undef __SEPERATE_FILES__
+#undef SEPERATE_FILES
 
 RINGING_USING_STD
 
@@ -62,7 +62,7 @@ public:
   static void registerlib(void) {
     library::addtype(&type);
   }
-#if defined(__SEPERATE_FILES__)
+#if defined(SEPERATE_FILES)
   static int seperatefiles(const string&);
 #endif
   cclib::cclib(const string& name);

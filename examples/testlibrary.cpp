@@ -17,6 +17,16 @@
 
 // $Id$
 
+
+// Note:  If you have compiled this with Microsoft Visual C++ and are unable to
+// get it to read file names and/or if you find that you have to press return
+// twice after each line of input, this may be a symptom of a bug in <istream>
+// in the version of the Dinkumware STL that is supplied with versions of MSVC
+// between versions 4.2 and 6 of Visual Studio.   A fix is avaliable 
+// from the Dinkumware website ( http://www.dinkumware.com/vc_fixes.html ) 
+// which supposedly solves the problem.  
+
+
 #if RINGING_OLD_INCLUDES
 #include <iostream.h>
 #include <stdexcept.h>
@@ -42,6 +52,21 @@ void print_row_block(const row_block& b)
 	 << ((b[i].sign() < 0) ? '-' : '+') << " " << endl;
 }
 
+string trim_whitespace( const string &str )
+{
+  const char *whitespace = " \t\r\n";
+
+  size_t first( str.find_first_not_of( whitespace ) );
+  if ( first == string::npos ) 
+    return string();
+  
+  size_t last( str.find_last_not_of( whitespace ) );
+  if ( last == string::npos ) 
+    return string( str, first, string::npos );
+  
+  return string( str, first, last - first + 1 );
+}
+
 int main()
 {
   cout << "\nTesting method libraries...\n";
@@ -49,7 +74,7 @@ int main()
   mslib::registerlib();
   cclib::registerlib();
 
-#if defined(__SEPERATE_FILES__)
+#if defined(SEPERATE_FILES)
   {
     // First run the seperation routine
     string dirname;
@@ -82,7 +107,7 @@ int main()
     cout << "\nFirst enter a file that does not exist: ";
     getline(cin, filename);
 
-    library l(filename.c_str());
+    library l(trim_whitespace( filename ).c_str());
     if (!l.good())
       {
 	cout << "Good, you entered a file that does not exist\n";
@@ -99,7 +124,7 @@ int main()
     cout << "\nNow enter a file that is not a method library: ";
     getline(cin, filename);
 
-    library l(filename.c_str());
+    library l(trim_whitespace( filename ).c_str());
     if (!l.good())
       {
 	cout << "Good, I have no valid libraries registered for that file\n";
@@ -116,7 +141,7 @@ int main()
     cout << "\nNow enter a valid method library file name: ";
     getline(cin, filename);
 
-    library l(filename.c_str());
+    library l(trim_whitespace( filename ).c_str());
     if (!l.good())
       {
 	cerr << "I cannot read that file.\n";
@@ -159,7 +184,7 @@ int main()
 
 	try
 	  {
-	    method m(l.load(methname.c_str()));
+	    method m(l.load(trim_whitespace( methname ).c_str()));
 	    
 	    cout << m.fullname() << endl;
 	    
@@ -182,7 +207,7 @@ int main()
 
 	try
 	  {
-	    method m(l.load(methname.c_str()));
+	    method m(l.load(trim_whitespace( methname ).c_str()));
 	    
 	    cout << m.fullname() << endl;
 	    

@@ -33,7 +33,7 @@
 #endif
 
 #include <ringing/common.h>
-#ifdef RINGING_OLD_INCLUDES
+#if RINGING_OLD_INCLUDES
 #include <iomanip.h>
 #else
 #include <iomanip>
@@ -131,8 +131,10 @@ void pdf_file::output_pages()
 {
   start_object(3);
   os << "  << /Type /Pages\n     /Count " << pages << "\n     /Kids [ ";
-  for(int i = 0; i < pages; i++)
-    os << (6 + i * 3) << " 0 R ";
+  { // for scope is broken in MSVC5
+    for(int i = 0; i < pages; i++)
+      os << (6 + i * 3) << " 0 R ";
+  }
   os << "]\n     /MediaBox [0 0 590 835]\n"
         "     /Resources << /Procset [/PDF /Text]\n"
         "                   /Font << \n";
@@ -340,9 +342,9 @@ void printrow_pdf::end_column()
       if((*i).squash != squashed) {
 	squashed = (*i).squash;
 	if(squashed) { 
-	  pp.f << "80 Tz "; sq = 0.8;
+	  pp.f << "80 Tz "; sq = 0.8f;
 	} else {
-	  pp.f << "100 Tz "; sq = 1.0; 
+	  pp.f << "100 Tz "; sq = 1.0f; 
 	}
       }
       x = currx + (*i).x;

@@ -545,7 +545,7 @@ int main(int argc, char *argv[])
     ostream* os = &cout;
     ofstream ofs;
     if(args.output_file) { // Open the output file
-      ofs.open(args.output_file, ios::bin);
+      ofs.open(args.output_file, ios::binary);
       if(!ofs.good()) {
 	cerr << argv[0] << ": Can't open output file " << args.output_file
 	     << endl;
