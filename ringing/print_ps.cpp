@@ -171,25 +171,43 @@ void printpage_ps::set_colour(const colour& c)
     os << c.red << ' ' << c.green << ' ' << c.blue << " SC\n";
 }
 
-// NOTE: At the moment this is quite likely to break when printing
-// unusual types of characters.  Putting more left brackets than right
-// brackets in the string will _really_ confuse it.  This should be
-// put right by somebody who has a PostScript manual.
+void printpage_ps::write_string(const string& s)
+{
+  string::const_iterator i;
+  os << '(' << oct;
+  for(i = s.begin(); i != s.end(); ++i) {
+    switch(*i) {
+      case '\n' : os << "\\n"; break;
+      case '\r' : os << "\\r"; break;
+      case '\t' : os << "\\t"; break;
+      case '\b' : os << "\\b"; break;
+      case '\f' : os << "\\f"; break;
+      case '(' : os << "\\("; break;
+      case ')' : os << "\\)"; break;
+      case '\\': os << "\\\\"; break;
+      default:
+	if(isprint(*i))
+	  os << *i;
+	else
+	  os << '\\' << setw(3) << static_cast<int>(*i);
+	break;
+    }
+  }
+  os << dec << ')';
+}
+
 void printpage_ps::text(const string t, const dimension& x, 
 			const dimension& y, text_style::alignment al, 
 			const text_style& s)
 {
   os << "GS\n";
   set_text_style(s);
-  os << x.in_points() << ' ' << y.in_points() << " (";
-  string::const_iterator i;
-  for(i = t.begin(); i != t.end(); i++)
-    if(isprint(*i)) os << *i;
-  os << ") ";
+  os << x.in_points() << ' ' << y.in_points() << ' ';
+  write_string(t);
   switch(al) {
-    case text_style::left: os << "TL GR\n"; break;
-    case text_style::right: os << "TR GR\n"; break;
-    case text_style::centre: os << "TC GR\n"; break;
+    case text_style::left: os << " TL GR\n"; break;
+    case text_style::right: os << " TR GR\n"; break;
+    case text_style::centre: os << " TC GR\n"; break;
   }
 }
 
@@ -293,7 +311,7 @@ void printrow_ps::dot(int i)
   if(i == -1) {
     map<bell, printrow::options::line_style>::const_iterator j;
     for(j = opt.lines.begin(); j != opt.lines.end(); j++)
-      if((*j).first >= 0) dot((*j).first);
+      if(!(*j).second.crossing) dot((*j).first);
   } else {
     int j = 0;
     while(j < lastrow.bells() && lastrow[j] != i) j++;
@@ -328,15 +346,12 @@ void printrow_ps::text(const string& t, const dimension& x,
   pp.os << " MR ";
   if(right) pp.os << x.in_points(); else pp.os << -(x.in_points());
   if(between) pp.os << " Q "; else pp.os << " 0 ";
-  pp.os << " R (";
-  string::const_iterator i;
-  for(i = t.begin(); i != t.end(); i++)
-    if(isprint(*i)) pp.os << *i;
-  pp.os << ") ";
+  pp.os << " R ";
+  pp.write_string(t);
   switch(al) {
-    case text_style::left: pp.os << "D\n"; break;
-    case text_style::right: pp.os << "DR\n"; break;
-    case text_style::centre: pp.os << "C\n"; break;
+    case text_style::left: pp.os << " D\n"; break;
+    case text_style::right: pp.os << " DR\n"; break;
+    case text_style::centre: pp.os << " C\n"; break;
   }
 }
 
@@ -371,7 +386,7 @@ void drawline_ps::output(ostream& o, int x, int y)
   o << s.width.in_points() << " SL N " << x << ' ' << y << " M\n";
   while(i != l.end()) {
     t = (*i);
-    while(i != l.end() && ((t >= -1 && *i >= -1) || (t == *i))) 
+    while(i != l.end() && count < 9 && ((t >= -1 && *i >= -1) || (t == *i))) 
 	{ t = *i; i++; count++; }
     if(t <= -2 && !in_line) { o << '('; in_line = true; }
     if(count > 1 && t <= -2) o << count;

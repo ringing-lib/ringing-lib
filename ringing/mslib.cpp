@@ -116,19 +116,18 @@ int mslib::dir(list<string>& result)
 }
 
 // Load a method from a MicroSIRIL library
-method mslib::load(const char *name)
+method mslib::load(const string& name)
 {
-  const char *s;
-  string x;
+  string::const_iterator s;
 
   f.clear();
   f.seekg(0, ios::beg);
   
   while(f.good()) {
-    s = name;
+    s = name.begin();
     // See whether the name matches
-    while(*s && tolower(f.get()) == tolower(*s++));
-    if(*s == '\0' && isspace(f.get())) { // Found it
+    while(s != name.end() && tolower(f.get()) == tolower(*s++));
+    if(s == name.end() && isspace(f.get())) { // Found it
       char lh[16];		       // Get the lead head code
       f.get(lh,16,' ');
 

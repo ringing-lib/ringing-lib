@@ -30,13 +30,11 @@
 #include <map.h>
 #include <set.h>
 #include <iostream.h>
-#include <strstream.h>
 #else
 #include <list>
 #include <map>
 #include <set>
 #include <iostream>
-#include <strstream>
 #endif
 #include <ringing/print.h>
 #include <ringing/pdf_fonts.h>
@@ -44,28 +42,6 @@
 RINGING_START_NAMESPACE
 
 RINGING_USING_STD
-
-class counting_ostream {
-private:
-  ostream& os;
-  int c;
-
-public:
-  counting_ostream(ostream& o) : os(o), c(0) {}
-  counting_ostream& operator<<(const char* s) 
-    { c += strlen(s); os << s; return *this; }
-  counting_ostream& operator<<(char* s) 
-    { c += strlen(s); os << s; return *this; }
-  counting_ostream& operator<<(char ch)
-    { ++c; os << ch; return *this; }
-  template<class T> counting_ostream& operator<<(const T& t) { 
-    ostrstream oss; oss.flags(os.flags()); 
-    oss << t; c += oss.pcount();
-    os << t; return *this;
-  }
-  ostream& get_ostream() { return os; }
-  int count() { return c; }
-};
 
 class counting_streambuf : public streambuf {
 private:
@@ -95,13 +71,17 @@ private:
   counting_streambuf csb;
   int obj_count;
   map<int, int> offsets;
+  int width, height;
+  bool landscape;
   int pages;
   int stream_start;
   map<string, string> fonts;
   int font_counter;
 
 public:
-  pdf_file(ostream& o) : csb(o.rdbuf()), os(&csb) { start(); }
+  pdf_file(ostream& o, bool l = false, int w = 590, int h = 835) 
+    : csb(o.rdbuf()), os(&csb) , width(w), height(h), landscape(l) 
+    { start(); }
   ~pdf_file() { end(); }
 
   void start();
@@ -116,7 +96,10 @@ public:
   void output_info();
   void output_pages();
   const string& get_font(const string& f);
+  bool get_landscape() { return landscape; }
   void output_string(const string& s);
+  int get_width() { return width; }
+  int get_height() { return height; }
 
   template<class T> pdf_file& operator<<(const T& t)
     { os << t; return *this; }
@@ -206,7 +189,9 @@ protected:
   pdf_file f;
 
 public:
-  printpage_pdf(ostream& o);
+  printpage_pdf(ostream& o, const dimension& w, const dimension& y, 
+		bool ls = false);
+  printpage_pdf(ostream& o, bool ls = false);
   ~printpage_pdf();
   void text(const string t, const dimension& x, const dimension& y,
        text_style::alignment al, const text_style& s);
@@ -220,7 +205,7 @@ private:
     { return new printrow_pdf(*this, o); }
 
 protected:
-  void set_colour(const colour& c);
+  void set_colour(const colour& c, bool nonstroke = false);
   void landscape_mode();
   void circle(float x, float y, float r, char op);
 };

@@ -36,7 +36,9 @@
 #include <list>
 #include <stdexcept>
 #endif
+#include <string>
 #include <ringing/method.h>
+#include <ringing/pointers.h>
 
 RINGING_START_NAMESPACE
 
@@ -71,12 +73,12 @@ protected:
 class RINGING_API library_base {
 public:
   virtual ~library_base() {}		// Got to have a virtual destructor
-  virtual method load(const char* name) = 0; // Load a method
+  virtual method load(const string& s) = 0; // Load a method
   virtual int save(const method& m)	// Save a method
     { return 0; }
-  virtual int rename_method(const string name1, const string name2)
+  virtual int rename_method(const string& name1, const string& name2)
     { return 0; }
-  virtual int remove(const string name)
+  virtual int remove(const string& name)
     { return 0; }
   virtual int dir(list<string>& result) // Return a list of items
     { return 0; }
@@ -98,13 +100,13 @@ RINGING_EXPLICIT_STL_TEMPLATE list<libtype*>;
 
 class RINGING_API library {
 private:
-  library_base* lb;
+  shared_pointer<library_base> lb;
   static list<libtype*> libtypes;
 
 public:
   library(const string& filename = "");
-  ~library() { if(lb) delete lb; }
-  method load(const char* name) { return lb->load(name); }
+  method load(const string& name) { return lb->load(name); }
+  method load(const char* name) { return lb->load(string(name)); }
   int save(const method& m) { return lb->save(m); }
   int rename_method(const string name1, const string name2) 
     { return lb->rename_method(name1, name2); }

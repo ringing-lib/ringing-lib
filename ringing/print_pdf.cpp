@@ -35,8 +35,10 @@
 #include <ringing/common.h>
 #if RINGING_OLD_INCLUDES
 #include <iomanip.h>
+#include <strstream.h>
 #else
 #include <iomanip>
+#include <strstream>
 #endif
 #include <ringing/print_pdf.h>
 
@@ -131,12 +133,13 @@ void pdf_file::output_pages()
 {
   start_object(3);
   os << "  << /Type /Pages\n     /Count " << pages << "\n     /Kids [ ";
-  { // for scope is broken in MSVC5
+  {
     for(int i = 0; i < pages; i++)
       os << (6 + i * 3) << " 0 R ";
   }
-  os << "]\n     /MediaBox [0 0 590 835]\n"
-        "     /Resources << /Procset [/PDF /Text]\n"
+  os << "]\n     /MediaBox [0 0 " << width << ' ' << height << "]\n";
+  if(landscape) os << "     /Rotate 90\n";
+  os << "     /Resources << /Procset [/PDF /Text]\n"
         "                   /Font << \n";
   map<string, string>::const_iterator i;
   for(i = fonts.begin(); i != fonts.end(); ++i)
@@ -188,9 +191,18 @@ void pdf_file::output_string(const string& s)
   os << dec << ')';
 }
 
-printpage_pdf::printpage_pdf(ostream& o) : f(o)
+printpage_pdf::printpage_pdf(ostream& o, const dimension& w, 
+			     const dimension& h, bool l) 
+  : f(o, l, static_cast<int>(w.in_points()), static_cast<int>(h.in_points()))
 {
   f.start_page();
+  if(l) landscape_mode();
+}
+
+printpage_pdf::printpage_pdf(ostream& o, bool l) : f(o, l)
+{
+  f.start_page();
+  if(l) landscape_mode();
 }
 
 printpage_pdf::~printpage_pdf()
@@ -202,18 +214,21 @@ void printpage_pdf::new_page()
 {
   f.end_page();
   f.start_page();
+  if(f.get_landscape()) landscape_mode();
 }
 
 void printpage_pdf::landscape_mode()
 {
+  f << "0 1 -1 0 " << f.get_width() << " 0 cm\n";
 }
 
-void printpage_pdf::set_colour(const colour& c)
+void printpage_pdf::set_colour(const colour& c, bool nonstroke)
 {
   if(c.grey) 
-    f << c.red << " G\n";
+    f << c.red << ' ' << (nonstroke ? 'g' : 'G') << '\n';
   else
-    f << c.red << ' ' << c.green << ' ' << c.blue << " RG\n";
+    f << c.red << ' ' << c.green << ' ' << c.blue << ' '
+      << (nonstroke ? "rg\n" : "RG\n");
 }
 
 void printpage_pdf::circle(float x, float y, float r, char op)
@@ -277,10 +292,11 @@ void printrow_pdf::print(const row& r)
 	 || ((*i).second.crossing))
 	s[j] = r[j].to_char();
     rows.push_back(pair<string, int>(s, gapcount));
-    lastrow = r;
     gapcount = 0;
   } else
     gapcount++;
+  
+  lastrow = r;
 
   // Add the various bits of lines to the end of the line
   list<drawline_pdf>::iterator j;
@@ -405,7 +421,7 @@ void printrow_pdf::dot(int i)
   if(i == -1) {
     map<bell, printrow::options::line_style>::const_iterator j;
     for(j = opt.lines.begin(); j != opt.lines.end(); j++)
-      if((*j).first >= 0) dot((*j).first);
+      if(!(*j).second.crossing) dot((*j).first);
   } else {
     int j = 0;
     while(j < lastrow.bells() && lastrow[j] != i) j++;
@@ -413,9 +429,12 @@ void printrow_pdf::dot(int i)
       map<bell, printrow::options::line_style>::const_iterator k;
       k = opt.lines.find(i);
       if(k != opt.lines.end()) {
+	pp.f << "q ";
+	pp.set_colour((*k).second.col, true);
 	pp.circle(currx + j * opt.xspace.in_points(),
 		  curry - (count - 1) * opt.yspace.in_points(),
 		  (*k).second.width.in_points() * 2, 'f');
+	pp.f << "Q\n";
       }
     }
   }

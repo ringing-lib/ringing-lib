@@ -311,10 +311,6 @@ class RINGING_API row_block : public vector<row> {
 private:
   const vector<change>& ch;	  // The changes which these rows are based on
 
-  // These are here to stop anybody calling them
-  row_block(row_block &b);
-  row_block& operator=(row_block &b);
-
 public:
   row_block(const vector<change> &c);	         // Starting from rounds
   row_block(const vector<change> &c, const row &r); // Starting from the given row

@@ -37,16 +37,15 @@ library_base::invalid_name::invalid_name()
 
 library::library(const string& filename)
 {
-  lb = NULL;
   if (filename.length() > 0)
     {
       ifstream ifs(filename.c_str(), ios::in);
       if (ifs.good())
 	{
 	  list<libtype*>::const_iterator i = libtypes.begin();
-	  while ((lb == NULL) && (i != libtypes.end()))
+	  while (!lb && (i != libtypes.end()))
 	    {
-	      lb = (*i)->open(ifs, filename);
+	      lb.reset((*i)->open(ifs, filename));
 	      i++;
 	    }
 	  ifs.close();

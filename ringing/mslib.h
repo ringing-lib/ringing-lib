@@ -70,7 +70,7 @@ public:
   int writeable(void) const     // Is this library writeable?
     { return wr; }
 
-  method load(const char *name);     // Load a method
+  method load(const string& name);     // Load a method
 //int save(method& name);       // Save a method
 };
 

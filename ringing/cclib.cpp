@@ -370,7 +370,7 @@ int cclib::dir(list<string>& result)
 }
 
 // Load a method from a Central Council Method library
-method cclib::load(const char *name)
+method cclib::load(const string& name)
 {
   string methname(name);
 

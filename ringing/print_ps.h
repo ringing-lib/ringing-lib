@@ -30,11 +30,13 @@
 #include <map.h>
 #include <set.h>
 #include <iostream.h>
+#include <iomanip.h>
 #else
 #include <list>
 #include <map>
 #include <set>
 #include <iostream>
+#include <iomanip>
 #endif
 #include <ringing/print.h>
 
@@ -137,6 +139,7 @@ private:
 protected:
   void set_text_style(const text_style& s);
   void set_colour(const colour& c);
+  void write_string(const string& s);
   void landscape_mode();
 };
 
