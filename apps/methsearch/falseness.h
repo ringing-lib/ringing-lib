@@ -37,29 +37,9 @@ RINGING_END_NAMESPACE
 RINGING_USING_NAMESPACE
 RINGING_USING_STD
 
-class falseness_group_table
-{
-public:
-  enum type { none, regular, bnw };
-  static void init( type t );
-  static string codes( const method &m );
-
-  // Public to avoid MSVC compilation errors
- ~falseness_group_table();
-
-private:
-  struct impl;
-  scoped_pointer< impl > pimpl;
-
-  static falseness_group_table &instance();
-
-  falseness_group_table();
-};
-
+string falseness_group_codes( const method &m );
 
 bool might_support_extent( const method &m );
-
-bool has_particular_fch( const row &fch, const method &m );
 
 bool is_cps( const method &m );
 

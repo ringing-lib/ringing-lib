@@ -1,5 +1,5 @@
 // -*- C++ -*- falseness.cpp - things to analyse falseness
-// Copyright (C) 2002 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -43,93 +43,10 @@
 RINGING_USING_NAMESPACE
 RINGING_USING_STD
 
-struct falseness_group_table::impl
+string falseness_group_codes( const method &m )
 {
-  static const struct init_data
-  {
-    const char *r;
-    const char *s;
-
-  } reg_init[], bnw_init[];
-
-  impl( const init_data *i )
-  {
-    for ( ; i->r; ++i )
-      table[i->r] = *i->s;
-  }
-
-  map< row, char > table;
-};
-
-const falseness_group_table::impl::init_data 
-falseness_group_table::impl::reg_init[] = {
-# include "reg-init"
-  { NULL, NULL }
-}, 
-falseness_group_table::impl::bnw_init[] = {
-# include "bnw-init"
-  { NULL, NULL }
-};
-
-falseness_group_table::falseness_group_table()
-{
+  return false_courses( m, false_courses::tenors_together ).symbols();
 }
-
-falseness_group_table::~falseness_group_table()
-{
-}
-
-falseness_group_table &falseness_group_table::instance()
-{
-  static falseness_group_table tmp;
-  return tmp;
-}
-
-void falseness_group_table::init( type t )
-{
-  switch (t)
-    {
-    case regular:
-      instance().pimpl.reset( new impl( impl::reg_init ) );
-      break;
-
-    case bnw:
-      instance().pimpl.reset( new impl( impl::bnw_init ) );
-      break;
-
-    default:
-      assert(false);
-      break;
-    }
-}
-
-string falseness_group_table::codes( const method &m )
-{
-  assert( instance().pimpl.get() );
-  
-  false_courses ft(m, false_courses::in_course_only 
-		   | false_courses::tenors_together );
-  string rv;
-
-  for( falseness_table::const_iterator i( ft.begin() ), e( ft.end() );
-       i != e; ++i )
-    {
-      if ( !i->isrounds() )
-	{
-	  char c( instance().pimpl->table[*i] );
-	  if ( rv.find(c) == string::npos )
-	    rv.append( 1u, c );
-	}
-      }
-  
-  if (rv.empty())
-    rv = "[CPS]";
-  else
-    sort( rv.begin(), rv.end() );
-  
-  return rv;
-}
-
 
 
 // ---------------------------------------------------------------------
@@ -188,35 +105,19 @@ bool might_support_extent( const method &m )
   return falseness_analysis(m).recurse( row( m.bells() ), +1 ); 
 }
 
-// TODO  Use the new false_courses class 
-bool has_particular_fch( const row &fch, const method &m )
-{
-  const falseness_table ft( m );
-  const row lh( m.lh() );
-  
-  row r1; 
-  do 
-    {
-      r1 *= lh;
-      row r2;
-      do
-	{
-	  r2 *= lh;
-	  if ( find( ft.begin(), ft.end(), r1 * fch * r2 ) != ft.end() )
-	    return true;
-	}
-      while ( !r2.isrounds() );
-    }
-  while ( !r1.isrounds() );
-  
-  return false;
-}
-
 bool is_cps( const method &m )
 {
-  const false_courses fchs( m, false_courses::in_course_only 
-			    |  false_courses::tenors_together );
+  if ( m.bells() >= 8 ) {
+    const false_courses fchs( m, false_courses::in_course_only 
+			      |  false_courses::tenors_together );
   
-  return fchs.size() == 1;
+    return fchs.size() == 1;
+  } else { 
+    const false_courses fchs( m, false_courses::in_course_only );
+    if ( m.back().sign() == +1 )
+      return fchs.size() == 2;
+    else      
+      return fchs.size() == 1;
+  }
 }
 

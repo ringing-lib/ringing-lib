@@ -31,6 +31,6 @@ class arg_parser;
 struct arguments;
 
 bool parse_mask( arguments &args, const arg_parser &ap );
-bool is_mask_consistent( arguments &args, const arg_parser &ap );
+
 
 #endif // METHSEARCH_MASK_INCLUDED

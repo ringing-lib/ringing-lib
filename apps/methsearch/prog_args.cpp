@@ -31,6 +31,11 @@
 #include "mask.h"
 #include "format.h"
 #include "music.h"
+#if RINGING_OLD_C_INCLUDES
+#include <assert.h>
+#else
+#include <cassert>
+#endif
 
 RINGING_USING_NAMESPACE
 RINGING_USING_STD
@@ -54,11 +59,6 @@ bool falseness_opt::process( const string &arg, const arg_parser & ) const
     {
       args.true_trivial = args.true_half_lead 
 	= args.true_lead = args.true_course = args.require_CPS = true;
-    }
-  else if ( arg == "U" )
-    {
-      args.true_trivial = args.true_half_lead 
-	= args.true_lead = args.true_course = args.no_U_falseness = true;
     }
   else if ( arg == "e" || arg == "extent" )
     {
@@ -102,7 +102,8 @@ bool falseness_opt::process( const string &arg, const arg_parser & ) const
 
 
 arguments::arguments()
-  : H_fmt( "",       format_string::stat_type   ),
+  : mask("*"),
+    H_fmt( "",       format_string::stat_type   ),
     R_fmt( "%p\t%l", format_string::normal_type )
 {
 }
@@ -161,6 +162,11 @@ void arguments::bind( arg_parser &p )
 	 ( 'R', "format", 
 	   "Use FMT to format methods as found", "FMT",
 	   R_fmt.fmt ) );
+
+  p.add( new string_opt
+	 ( '\0', "require", 
+	   "Require EXPR to be true", "EXPR",
+	   require_str ) );
 
   p.add( new boolean_opt
 	 ( 'h', "any-hl-le",
@@ -266,24 +272,9 @@ void arguments::bind( arg_parser &p )
 	   &musical_analysis::add_pattern ) );
 
   p.add( new string_opt
-	 ( '\0', "bob",
-	   "Use CHANGE as the bob", "CHANGE",
-	   bob ) );
-
-  p.add( new string_opt
 	 ( '\0', "start-at",
 	   "Start the search with the method PN", "PN",
 	   startmeth ) );
-
-  p.add( new string_opt
-	 ( '\0', "le-change",
-	   "Require CHANGE as the lead-end change", "CHANGE",
-	   required_le_change ) );
-
-  p.add( new string_opt
-	 ( '\0', "hl-change",
-	   "Require CHANGE as the half-lead change", "CHANGE",
-	   required_hl_change ) );
 
   p.add( new boolean_opt
 	 ( '\0', "cyclic-hle", 
@@ -304,6 +295,11 @@ void arguments::bind( arg_parser &p )
 	 ( '\0', "rev-cyclic-hlh", 
 	   "Require reverse cyclic half-lead heads",
 	   require_rev_cyclic_hlh.get() ) );
+
+  p.add( new boolean_opt
+	 ( '\0', "regular-hls", 
+	   "Require regular half-leads",
+	   require_reg_hls.get() ) );
 
   p.add( new boolean_opt
 	 ( '\0', "offset-cyclic", 
@@ -375,18 +371,12 @@ bool arguments::validate( arg_parser &ap )
       return false;
     }
 
-  if ( require_cyclic_hlh && require_cyclic_hle )
-    {
-      ap.error( "You cannot require cyclic half-lead ends and "
-		"half-lead heads" );
-      return false;
-    }
-
-  if ( (require_cyclic_hlh || require_cyclic_hle) 
+  if ( (require_cyclic_hlh || require_cyclic_hle || 
+	require_rev_cyclic_hlh || require_rev_cyclic_hle)
        && hunt_bells != 1 )
     {
-      ap.error( "Cyclic half-leads are only implemented for "
-		"single hunt methods" );
+      ap.error( "Cyclic and reverse-cyclic half-leads are only "
+		"implemented for single hunt methods" );
       return false;
     }
 
@@ -411,6 +401,13 @@ bool arguments::validate( arg_parser &ap )
       return false;
     }
 
+  if ( require_reg_hls && (!require_pbles || !hunt_bells == 1))
+    {
+      ap.error( "The `regular-hls' option requires a single-hunt regular "
+		"lead head" );
+      return false;
+    }
+
   try
     {
       R_fmt = format_string( R_fmt.fmt, format_string::normal_type );
@@ -430,6 +427,21 @@ bool arguments::validate( arg_parser &ap )
     {
       ap.error( make_string() << "Error parsing -H format: " << error.what() );
       return false;
+    }
+
+
+  if ( require_str.size() ) 
+    {
+      try
+	{
+	  require_expr = expression(require_str);
+	}
+      catch ( const argument_error &error )
+	{
+	  ap.error( make_string() << "Error parsing --require argument: "
+		    << error.what() );
+	  return false;
+	}
     }
 
   {
@@ -456,89 +468,16 @@ bool arguments::validate( arg_parser &ap )
       }
   }
 
-  if ( no_U_falseness )
-    {
-      if ( bob.empty() )
-	{
-	  ap.error( "Must specify a bob to use -FU" );
-	  return false;
-	}
-    }
-
-  if ( !bob.empty() )
-    {
-      try 
-	{
-	  // Check it can be created
-	  change( bells, bob );
-	} 
-      catch ( const invalid_argument &e ) 
-	{
-	  ap.error( make_string() << "Unable to parse bob: " 
-		    << e.what() );
-	  return false;
-	}
-    }
-
   if ( skewsym + sym + doubsym >= 2 )
     skewsym = sym = doubsym = true;
 
   if ( R_fmt.has_falseness_group || H_fmt.has_falseness_group )
     {
-      if ( bells != 8 )
+      if ( bells % 2 || hunt_bells > 1 || !require_pbles
+	   || !sym || show_all_meths )
 	{
-	  ap.error( "Falseness groups are only supported on 8 bells" );
-	  return false;
-	}
-
-      if ( require_pbles && sym )
-	;
-      
-      else if ( require_cyclic_les && skewsym )
-	;
-
-      else
-	{
-	  ap.error( "Falseness groups are only supported in "
-		    "-kc or -sr searches" );
-	  return false;
-	}
-    }
-
-  if ( !required_hl_change.empty() )
-    {
-      if ( required_changes.empty() )
-	required_changes.resize( 2*bells * (1+treble_dodges) );
-
-      try 
-	{
-	  required_changes[ bells * (1 + treble_dodges) - 1 ]
-	    = change( bells, required_hl_change );
-	} 
-      catch ( const invalid_argument &e ) 
-	{
-	  ap.error( make_string() 
-		    << "Unable to parse required half-lead change: "
-		    << e.what() );
-	  return false;
-	}
-    }
-
-  if ( !required_le_change.empty() )
-    {
-      if ( required_changes.empty() )
-	required_changes.resize( 2*bells * (1+treble_dodges) );
-
-      try 
-	{
-	  required_changes[ 2*bells * (1 + treble_dodges) - 1 ]
-	    = change( bells, required_le_change );
-	} 
-      catch ( const invalid_argument &e ) 
-	{
-	  ap.error( make_string() 
-		    << "Unable to parse required lead-end change: "
-		    << e.what() );
+	  ap.error( "Falseness groups are only supported for regular "
+		    "symmetric single-hunt even-bell methods" );
 	  return false;
 	}
     }
@@ -552,42 +491,23 @@ bool arguments::validate( arg_parser &ap )
 	}
     }
 
-  if ( !mask.empty() )
-    {
-      if ( !required_changes.empty() )
-	{
-	  ap.error( "Cannot specify a mask and a required half-lead"
-		    " or lead-end" );
-	  return false;
-	}
+  assert( !mask.empty() );
       
-      try
-	{
-	  if ( ! parse_mask( *this, ap ) )
-	    return false;
-	}
-      catch ( const exception &e )
-	{
-	  ap.error( make_string() << "Unable to process mask: " << e.what() );
-	  return false;
-	}
-
-      if ( required_changes.size() != lead_len )
-	{
-	  ap.error( "The specified mask was an incorrect length" );
-	  return false;
-	}
-    }
-
-
-  if ( required_changes.size() )
+  try
     {
-      if ( ! is_mask_consistent( *this, ap ) )
-	{
-	  ap.error( "Some of the required changes specified are inconsistent "
-		    "with the specified symmetries" );
-	  return false;
-	}
+      if ( ! parse_mask( *this, ap ) )
+	return false;
+    }
+  catch ( const exception &e )
+    {
+      ap.error( make_string() << "Unable to process mask: " << e.what() );
+      return false;
+    }
+  
+  if ( allowed_changes.size() != lead_len )
+    {
+      ap.error( "The specified mask was an incorrect length" );
+      return false;
     }
 
   return true;

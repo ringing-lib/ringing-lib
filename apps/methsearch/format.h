@@ -29,9 +29,11 @@
 #if RINGING_OLD_INCLUDES
 #include <stdexcept.h>
 #include <vector.h>
+#include <map.h>
 #else
 #include <stdexcept>
 #include <vector>
+#include <map>
 #endif
 #include <string>
 #if RINGING_HAVE_OLD_IOSTREAMS
@@ -49,12 +51,43 @@ RINGING_END_NAMESPACE
 RINGING_USING_NAMESPACE
 RINGING_USING_STD
 
+// Exception to do exit(0) but calling destructors
+class exit_exception
+{
+};
+
 class argument_error : public std::runtime_error
 {
 public:
   argument_error( const string &str )
     : runtime_error( str )
   {}
+};
+
+class expression
+{
+public:
+  expression() {}
+  expression( const string& str );
+
+  class node {
+  public:
+    node() {} // Keep gcc-2.95.3 happy
+    virtual string s_evaluate( const method& m ) const = 0;
+    virtual long   i_evaluate( const method& m ) const = 0;
+    
+  private:
+    node(const node&); // Unimplemented
+    node& operator=(const node&); // Unimplemented
+  };
+
+  bool null() const { return !pimpl; }
+  string evaluate( const method& m ) const;
+  bool   b_evaluate( const method& m ) const;
+
+private:
+  class parser;
+  shared_pointer<node> pimpl;
 };
 
 struct format_string
@@ -71,6 +104,7 @@ struct format_string
   bool has_compressed_pn;
   bool has_blow_count;
   bool has_lh_order;
+  bool has_lh_code;
   
   bool has_name;
   bool has_full_name;
@@ -82,9 +116,13 @@ struct format_string
   
   bool line_break;
 
+  bool has_expression;
+
   vector<size_t> has_rows;
   vector<size_t> has_changes;
   vector<size_t> has_path;
+  
+  map<string, expression> exprs;
 
   string fmt;
 };

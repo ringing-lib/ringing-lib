@@ -20,6 +20,7 @@
 #include <ringing/common.h>
 #include <ringing/row.h>
 #include <ringing/method.h>
+#include <ringing/falseness.h>
 #if RINGING_HAVE_OLD_IOSTREAMS
 #include <iostream.h>
 #else
@@ -29,7 +30,6 @@
 #include "prog_args.h"
 #include "libraries.h"
 #include "music.h"
-#include "falseness.h"
 #include "format.h"
 #include "search.h"
 
@@ -64,13 +64,7 @@ int main( int argc, char *argv[] )
   musical_analysis::force_init( args.bells );
 
   if ( args.R_fmt.has_falseness_group || args.H_fmt.has_falseness_group )
-    {
-      if ( args.require_pbles && args.sym )
-	falseness_group_table::init( falseness_group_table::regular );
-      
-      else if ( args.require_cyclic_les && args.skewsym )
-	falseness_group_table::init( falseness_group_table::bnw );
-    }
+    false_courses::optimise( args.bells );
 
   {
     method startmeth;
@@ -86,7 +80,12 @@ int main( int argc, char *argv[] )
 	return 1;
       }
 
-    run_search( args, startmeth );
+    try 
+      {
+	run_search( args, startmeth );
+      }
+    catch ( const exit_exception& ) 
+      {}
   }
 
   if ( args.status )

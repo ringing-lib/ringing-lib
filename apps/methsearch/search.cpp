@@ -70,13 +70,14 @@ private:
 
   inline void call_recurse( const change &ch );
   inline int get_posn();
-  inline pair< int, int > get_posn2();
 
+  inline bool is_cyclic_hl( const row& hl );
+  inline bool is_rev_cyclic_hl( const row& hl );
+  inline bool is_regular_hl( const row& hl );
   inline void swap_overlap( change &ch, const pair< int, int > &posn );
 
   void new_midlead_change();
   void new_principle_change();
-  void new_quarterlead_change();
   void double_existing();
 
   bool try_halflead_change( const change &ch );
@@ -102,7 +103,7 @@ private:
 
   unsigned long search_count;
 
-  vector< change > first_meth;
+  vector< change > first_meth;  // To allow searches to be resumed
   method m;
 };
 
@@ -216,18 +217,13 @@ void searcher::maybe_found_method()
 	return;
     }
 
-  if ( args.no_U_falseness )
-    {
-      const row u( row() * m.back() * change( args.bells, args.bob ) );
-
-      if ( !u.isrounds() && has_particular_fch( u, m ) ) 
-	return;
-    }
-
   if ( args.require_CPS && !is_cps( m ) )
     return;
 
   if ( args.true_extent && !might_support_extent(m) )
+    return;
+
+  if ( !args.require_expr.null() && !args.require_expr.b_evaluate(m) )
     return;
 
   found_method();
@@ -238,39 +234,6 @@ inline void searcher::call_recurse( const change &ch )
   m.push_back( ch );
   general_recurse();
   m.pop_back();
-}
-
-pair< int, int > searcher::get_posn2()
-{
-  const int depth = m.length();
-
-  bool first_hl( depth < hl_len );
-
-  int posn = first_hl ? depth : 2*hl_len - depth - 2;
-  
-  if ( posn == -1 )
-    ; // lead-end change
-  else if ( posn % div_len == div_len - 1 )
-    posn = posn / div_len * 2 + 1;
-  else
-    posn = posn / div_len * 2;
-
-  if ( args.hunt_bells == 1 )
-    return make_pair( posn, posn );
-
-  int a = posn + ( args.hunt_bells - (first_hl ? 1 : 0) ) / 2 * 2;
-  int b = posn - ( args.hunt_bells - (first_hl ? 0 : 1) ) / 2 * 2;
-
-
-  if ( a > bells-1 ) a = -2 + 2 * bells - a;
-  if ( b < -1 ) b = -2 - b;
-
-  // Can this happen?
-  if ( b > a ) swap( a, b );
-  if ( a < posn ) a = posn;
-  if ( b > posn ) b = posn;
-
-  return make_pair( b, a );
 }
 
 inline int searcher::get_posn()
@@ -285,6 +248,55 @@ inline int searcher::get_posn()
     return posn / div_len * 2 + 1;
   else
     return posn / div_len * 2;
+}
+
+inline bool searcher::is_cyclic_hl( const row& hl )
+{
+  assert( hl[ bells-1 ] == 0 );
+  
+  for (int i=0; i<bells-2; ++i)
+    if ( hl[i-1] % (bells-1) + 1 != hl[i] )
+      return false;
+  
+  return true;
+}
+
+inline bool searcher::is_rev_cyclic_hl( const row& hl )
+{
+  assert( hl[ bells-1 ] == 0 );
+  
+  for (int i=0; i<bells-2; ++i)
+    if ( hl[i+1] % (bells-1) + 1 != hl[i] )
+      return false;
+  
+  return true;
+}
+
+bool searcher::is_regular_hl( const row& hl )
+{
+  static row pblh( row::pblh(bells) );
+  row rr( row::reverse_rounds(bells) );
+  
+  row rhl(rr);
+  do {
+    if (rhl == hl)
+      return true;
+    rhl = pblh * rhl;;
+  } while (rhl != rr);
+  
+  {
+    char str[] = "U"; str[0] = bell(bells-1).to_char();
+    change ch( bells, str );  
+    rhl *= ch;  rr *= ch;
+  }
+
+  do {
+    if (rhl == hl)
+      return true;
+    rhl = pblh * rhl;;
+  } while (rhl != rr);
+  
+  return false;
 }
 
 bool searcher::try_halflead_change( const change &ch )
@@ -302,30 +314,32 @@ bool searcher::try_halflead_change( const change &ch )
 	  return false;
     }
 
-  if ( args.require_rev_cyclic_hlh || args.require_rev_cyclic_hle )
+  if ( args.require_rev_cyclic_hlh || args.require_rev_cyclic_hle ||
+       args.require_cyclic_hlh     || args.require_cyclic_hle     ||
+       args.require_reg_hls  )
     {
-      row hl;
-      for_each( m.begin(), m.end(), permute(hl) );
-      if (args.require_rev_cyclic_hlh) hl *= ch;
+      // Get half lead rows
+      row hle; for_each( m.begin(), m.end(), permute(hle) );
+      row hlh(hle); hlh *= ch;
 
-      assert( hl[ bells-1 ] == 0 );
+      if      ( args.require_rev_cyclic_hlh && is_rev_cyclic_hl(hlh) )
+	; // OK
 
-      for (int i=0; i<bells-2; ++i)
-	if ( hl[i+1] % (bells-1) + 1 != hl[i] )
-	  return false;
-    }
+      else if ( args.require_rev_cyclic_hle && is_rev_cyclic_hl(hle) )
+	; // OK
 
-  if ( args.require_cyclic_hlh || args.require_cyclic_hle )
-    {
-      row hl;
-      for_each( m.begin(), m.end(), permute(hl) );
-      if (args.require_cyclic_hlh) hl *= ch;
+      else if ( args.require_cyclic_hlh && is_cyclic_hl(hlh) )
+	; // OK
 
-      assert( hl[ bells-1 ] == 0 );
+      else if ( args.require_cyclic_hle && is_cyclic_hl(hle) )
+	; // OK
 
-      for (int i=0; i<bells-2; ++i)
-	if ( hl[i-1] % (bells-1) + 1 != hl[i] )
-	  return false;
+      else if ( args.require_reg_hls && 
+		is_regular_hl(hlh) && is_regular_hl(hle) )
+	; // OK
+
+      else
+	return false;
     }
 
   return true;
@@ -501,16 +515,21 @@ bool searcher::try_midlead_change( const change &ch )
        && division_bad_parity_hack( m, ch, div_len ) )
     return false;
 
-  if ( args.required_changes.size() > depth 
-       && args.required_changes[depth].bells()
-       && args.required_changes[depth] != ch )
-    return false;
+  if ( args.allowed_changes.size() > depth )
+    {
+      const vector<change>& a = args.allowed_changes[depth];
+      if ( a.size() && find( a.begin(), a.end(), ch ) == a.end() )
+	return false;
+    }
 
   return true;
 }
 
 bool searcher::try_quarterlead_change( const change &ch )
 {
+  if ( ch != ch.reverse() )
+    return false;
+
   if ( args.max_consec_blows )
     for ( unsigned int i=0; i<bells; ++i )
       if ( ch.findplace(i) )
@@ -538,7 +557,7 @@ bool searcher::try_quarterlead_change( const change &ch )
 	  if ( count > args.max_consec_blows )
 	    return false;
 	}
-  
+
   return true;
 }
 
@@ -552,122 +571,59 @@ inline void searcher::swap_overlap( change &ch, const pair< int, int > &posn )
 
 void searcher::new_midlead_change()
 {
-  if ( args.right_place && bells % 2 == 0 && m.length() % 2 == 0 )
+  const int depth( m.length() );
+
+  const vector< change >& changes_to_try = args.allowed_changes[depth];
+  assert( changes_to_try.size() );
+
+  // Code to start at a particular point       
+  change first;
+  if ( ! first_meth.empty() ) {
+    first = change( first_meth.back() ); 
+    first_meth.pop_back();
+  }
+
+  for ( vector<change>::const_iterator 
+	  i( changes_to_try.begin() ), e( changes_to_try.end() ); 
+	i != e; ++i )
     {
-      change ch( bells, "-" );
-
-      if ( first_meth.empty() )
+      if ( first.bells() == 0 || *i >= first )
 	{
-	  call_recurse( ch );
-	}
-      // Code to start at a particular point
-      else if ( first_meth.back() <= ch )
-	{
-	  first_meth.pop_back();
-	  call_recurse( ch );
-	}
-    }
-  else
-    {
-      int depth( m.length() );
+	  const change& ch = *i;
 
-      // The lowest hunt bell is moving between (zero-based) position 
-      // POSN.FIRST and POSN.FIRST+1.  The highest hunt bell is moving 
-      // between (zero-based) position POSN.SECOND and POSN.SECOND+1.
-      //
-      // If POSN.FIRST is -1, then the lowest hunt bell is leading
-      // If POSN.SECOND is bells-1, then the highest hunt bell is lying
-      const pair< int, int > posn( get_posn2() );
-
-      assert(          -1 <= posn.first  && 
-	      posn.first  <= posn.second && 
-	      posn.second <= bells-1        );
-
-      int active_above = posn.second == bells-1 ? 0 : bells-2 - posn.second;
-      int active_below = posn.first == -1 ? 0 : posn.first;
-
-      vector< change > changes_to_try;
-      changes_to_try.reserve( fibonacci( active_above ) * 
-			      fibonacci( active_below ) );
-
-      // Choose the work above the treble
-      for ( changes_iterator i(active_above, bells-active_above, bells), e; 
-	    i != e; ++i )
-	{
-	  if ( args.right_place && bells % 2 == 1 && posn.second % 2 == 1
-	       && bells - i->count_places() != active_above )
+	  if ( ! try_midlead_change( ch ) )
 	    continue;
 
-	  change above(*i); 
-	  swap_overlap( above, posn );
-
-	  if ( args.no_78_pns && posn.second != bells-1 && 
-	       above.findplace(bells-2) )
+	  if ( args.skewsym && hl_len % 2 == 0 
+	       && depth % hl_len == hl_len / 2 - args.hunt_bells % 2 &&
+	       ! try_quarterlead_change( ch ) )
 	    continue;
 
-	  // Choose the work below the treble
-	  for ( changes_iterator j(active_below, 0, bells); j != e; ++j )
-	    {
-	      if ( args.right_place && bells % 2 == 1 && posn.second % 2 == 0
-		   && bells - j->count_places() != active_below )
-		continue;
+	  if ( depth == hl_len-1 )
+	    if ( ! try_halflead_change( ch ) )
+	      continue;
 
-	      change below(*j); 
-	      
-	      swap_overlap( below, posn );
+	  if ( args.hunt_bells % 2 == 1 && depth == hl_len-1 ||
+	       args.hunt_bells % 2 == 0 && depth == hl_len )
+	    if ( ! try_halflead_sym_change( ch ) )
+	      continue;
+	  
+	  if ( depth == args.lead_len-1 )
+	    if ( ! try_leadend_change( ch ) )
+	      continue;
+	  
+	  if ( args.hunt_bells % 2 == 1 && depth == 2*hl_len-1 ||
+	       args.hunt_bells % 2 == 0 && depth == 0 )
+	    if ( ! try_leadend_sym_change( ch ) )
+	      continue;
+	  
+	  if ( args.require_offset_cyclic && div_len > 3
+	       && depth == div_len-3 )
+	    if ( ! try_offset_start_change( ch ) )
+	      continue;
 
-	      if ( (args.skewsym || args.doubsym) && args.no_78_pns 
-		   && posn.first != -1 && below.findplace(1) )
-		continue;
-
-	      change ch( merge_changes( above, below ) );
-
-	      if ( ! try_midlead_change( ch ) )
-		continue;
-
-	      if ( depth == hl_len-1 )
-		if ( ! try_halflead_change( ch ) )
-		  continue;
-
-	      if ( args.hunt_bells % 2 == 1 && depth == hl_len-1 ||
-		   args.hunt_bells % 2 == 0 && depth == hl_len )
-		if ( ! try_halflead_sym_change( ch ) )
-		  continue;
-
-	      if ( depth == args.lead_len-1 )
-		if ( ! try_leadend_change( ch ) )
-		  continue;
-
-	      if ( args.hunt_bells % 2 == 1 && depth == 2*hl_len-1 ||
-		   args.hunt_bells % 2 == 0 && depth == 0 )
-		if ( ! try_leadend_sym_change( ch ) )
-		  continue;
-
-	      if ( args.require_offset_cyclic && div_len > 3
-		   && depth == div_len-3 )
-		if ( ! try_offset_start_change( ch ) )
-		  continue;
-
-	      changes_to_try.push_back( ch );
-	    }
+	  call_recurse( ch );
 	}
-
-      sort( changes_to_try.begin(), changes_to_try.end() );
-
-      // Code to start at a particular point       
-      if ( ! first_meth.empty() )
-	{
-	  change first( first_meth.back() ); 
-	  first_meth.pop_back();
-
-	  for ( vector< change >::const_iterator i( changes_to_try.begin() ),
-		  e( changes_to_try.end() ); i != e; ++i )
-	    if ( *i >= first )
-	      call_recurse( *i );
-	}
-      else for ( vector< change >::const_iterator i( changes_to_try.begin() ),
-		   e( changes_to_try.end() ); i != e; ++i )
-	call_recurse( *i );
     }
 }
 
@@ -728,79 +684,6 @@ void searcher::new_principle_change()
 	{
 	  change first( first_meth.back() ); 
 	  first_meth.pop_back();
-
-	  for ( vector< change >::const_iterator i( changes_to_try.begin() ),
-		  e( changes_to_try.end() ); i != e; ++i )
-	    if ( *i >= first )
-	      call_recurse( *i );
-	}
-      else for ( vector< change >::const_iterator i( changes_to_try.begin() ),
-		   e( changes_to_try.end() ); i != e; ++i )
-	call_recurse( *i );
-    }
-}
-
-void searcher::new_quarterlead_change()
-{
-  assert( bells % 2 == 0 );
-
-  if ( args.right_place && m.length() % 2 == 0 )
-    {
-      change ch( bells, "-" );
-
-      if ( first_meth.empty() )
-	{
-	  call_recurse( ch );
-	}
-      // Code to start at a particular point
-      else if ( first_meth.back() <= ch )
-	{
-	  first_meth.pop_back();
-	  call_recurse( ch );
-	}
-    }
-  else
-    {
-      // The lowest hunt bell is moving between (zero-based) position 
-      // POSN.FIRST and POSN.FIRST+1.  The highest hunt bell is moving 
-      // between (zero-based) position POSN.SECOND and POSN.SECOND+1.
-      //
-      // If POSN.FIRST is -1, then the lowest hunt bell is leading
-      // If POSN.SECOND is bells-1, then the highest hunt bell is lying
-      const pair< int, int > posn( get_posn2() );
-
-      assert(          -1 <= posn.first  && 
-	      posn.first  <= posn.second && 
-	      posn.second <= bells-1        );
-
-      // Choose a self-reverse (three-) quarter lead change
-      int active = posn.second == bells-1 ? 0 : bells-2 - posn.second;
-
-      vector< change > changes_to_try;
-      changes_to_try.reserve( fibonacci( active ) );
-
-      for ( changes_iterator i(active, bells-active, bells), e; i != e; ++i )
-	{
-	  change ch(*i);  // above
-	  swap_overlap( ch, posn );
-
-	  if ( args.no_78_pns && ch.findplace(bells-2) )
-	    continue;
-
-	  ch = merge_changes( ch, ch.reverse() );
-
-	  if ( try_midlead_change( ch ) )
-	    if ( try_quarterlead_change( ch ) )
-	      changes_to_try.push_back( ch );
-	}
-
-            // Code to start at a particular point       
-      if ( ! first_meth.empty() )
-	{
-	  change first( first_meth.back() ); 
-	  first_meth.pop_back();
-
-	  sort( changes_to_try.begin(), changes_to_try.end() );
 
 	  for ( vector< change >::const_iterator i( changes_to_try.begin() ),
 		  e( changes_to_try.end() ); i != e; ++i )
@@ -951,7 +834,7 @@ void searcher::general_recurse()
   else if ( args.skewsym && hl_len % 2 == 0 
 	    && depth % hl_len == hl_len / 2 - args.hunt_bells % 2 )
     {
-      new_quarterlead_change();
+      new_midlead_change();
     }
 
 

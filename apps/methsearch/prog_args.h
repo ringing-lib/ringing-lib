@@ -77,6 +77,7 @@ struct arguments
   init_val<bool,false> require_rev_cyclic_hlh;
   init_val<bool,false> require_rev_cyclic_hle;
   init_val<bool,false> require_offset_cyclic;
+  init_val<bool,false> require_reg_hls;
   init_val<bool,false> right_place;
   init_val<bool,false> show_all_meths;
 
@@ -101,21 +102,20 @@ struct arguments
   init_val<bool,false> true_extent;
 
   init_val<bool,false> require_CPS;
-  init_val<bool,false> no_U_falseness;
-  string bob;
 
   string startmeth;
 
   string pn;
 
   string mask;
-  string required_hl_change;
-  string required_le_change;
 
-  vector<change> required_changes;
+  vector< vector<change> > allowed_changes;
   vector<row>    required_rows;
 
   format_string H_fmt, R_fmt;
+
+  string require_str;
+  expression require_expr;
 
   arguments();
 

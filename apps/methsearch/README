@@ -18,6 +18,7 @@ General options:
   -H, --frequencies[=FMT] 
                          Count frequencies of different method properties
   -R, --format=FMT       Use FMT to format methods as found
+  --require=EXPR         Require EXPR to be true (see below)
   -h, --any-hl-le        Allow any change at the half-lead and lead-end
   -e, --restricted-le    Only allow 12 and 1N (or 1 and 12N lead ends)
   -w, --right-place      Require right place methods
@@ -41,17 +42,17 @@ General options:
   -P, --parity-hack      Require an equal number of rows of each parity for
                          each place in the treble's path
   -L, --library=LIB      Look up method names in the library LIB
-  -F, --falseness=TYPE   Check for falseness
+  -F, --falseness=TYPE   Check for falseness  (see below)
   -m, --mask=PATTERN     Require that the method matches the given mask
   -M, --music=PATTERN    Score the music in a plain course
   --bob=CHANGE           Use CHANGE as the bob (used with some -F options)
   --start-at=PN          (Re-)start the search with the method PN.
-  --le-change=CHANGE     Require CHANGE as the lead-end change
-  --hl-change=CHANGE     Require CHANGE as the half-lead change
   --cyclic-hle           Require cyclic half-lead ends
   --cyclic-hlh           Require cyclic half-lead heads
   --rev-cyclic-hle       Require reverse cyclic half-lead ends
   --rev-cyclic-hlh       Require reverse cyclic half-lead heads
+  --regular-hls          Require regular half-leads
+  --offset-cyclic        Require offset cyclicity
 
 
 -L libraries should be either Central Council method libraries or MicroSIRIL
@@ -61,10 +62,16 @@ from
 
    http://www.methods.clara.net/method-collections/zip-files/index.htm
 
-
 It is often a good idea to use -u with long searches so that you have some
 idea how far the search is progressing.  This also means that, if necessary,
 you can restart the search using --start-at.
+
+The --rev-cyclic-hle, --rev-cyclic-hlh, --cyclic-hle, --cyclic-hlh and
+--regular-hls options may be used in combination to mean that one of them
+must match.  The --regular-hls option requires that the half lead-heads and 
+ends are the same as the half-lead heads and ends of Plain Bob (although 
+it is permitted for the methods half-lead head to be the half-lead end of 
+Plain Bob and vice versa).
 
 
 Falseness Options
@@ -117,26 +124,29 @@ Format Specifiers
 
 The -H and -R formats accept the following format specifiers:
 
-  %[N]c  The number of matching methods ( -H only ).  If a number, N, is 
-         specified, it is the minimum width of the field.
-  %l     The lead head
-  %p     The place notation
-  %q     The place notation, but in a slightly more compressed format
-  %Nr    The Nth row in the lead -- N should be an integer starting at 0
-  %Nh    The Nth change in the lead -- N should be an integer starting at 1
-  %[N]b  The maximum number of consecutive blows in one place;  if a number,
+  $[N]c  The number of matching methods ( -H only );  if a number, N, is 
+         specified, it is the minimum width of the field
+  $l     The lead head
+  $d     The lead head code
+  $p     The place notation (-R only).
+  $q     The place notation (-R only), but in a slightly more compressed 
+         format
+  $Nr    The Nth row in the lead -- N should be an integer starting at 0
+  $Nh    The Nth change in the lead -- N should be an integer starting at 1
+  $[N]b  The maximum number of consecutive blows in one place;  if a number,
          N, is specified, it is the minimum width of the field
-  %[N]o  The number of leads in the method;  if a number, N, is specified,
+  $[N]o  The number of leads in the method;  if a number, N, is specified,
          it is the minimum width of the field
-  %NP    The path of the bell N -- N should be an integer not a bell symbol
-  %n     The method's name (minus class and stage); requires a -L option
-  %N     The method's full name (including class and stage); requires -L
-  %C     The class of the method
-  %S     The stage name of the method (e.g. 'Major')
-  %[N]M  The musical score for the course;  if a number, N, is specified, 
+  $NP    The path of the bell N -- N should be an integer not a bell symbol
+  $n     The method's name (minus class and stage); requires a -L option
+  $N     The method's full name (including class and stage); requires -L
+  $C     The class of the method
+  $S     The stage name of the method (e.g. 'Major')
+  $[N]M  The musical score for the course;  if a number, N, is specified, 
          it is the minimum width of the field
-  %F     The in-course, tenors together falseness groups
-  %%     A literal %
+  $F     The in-course, tenors together falseness groups
+  $$     A literal $
+  $[...] An expression (-R only); see below
 
 \t and \n are interpreted as a tab and a line break respectively,
 although in some situations these are interpreted by the shell and so will
@@ -147,13 +157,61 @@ between entries.  In this case, it is important to ensure that the shell
 does not interpret this and so it will probably need escaping from the shell
 with an extra back-slash.
 
-Some versions of the Windows command shell apparently have dificulty 
-coping with a % on the command line.  For this reason $ is provided as an
-alternative to % in the above format specifiers.
+For backwards compatibility, % is allowed as an alternative to $ in 
+format specifiers.
 
-The %F option is only currently supported for -sr or -kc searches.  For 
-regular, symmetric searches, these have the obvious names; for the names
-of rotationally symmetric cyclic falseness groups see table supplied.
+The $F option is only currently supported for -sr or -kc searches and only
+on 8 bells.  For regular, symmetric searches, these have the obvious names; 
+for the names of rotationally symmetric cyclic falseness groups see table 
+supplied.
+
+
+
+Expressions
+-----------
+
+A -R format may include an expression delimitted by $[ ... ], this allows
+more complicated expressions to be built up.  The argument to --require is 
+an expression in the same format, except it is not delimited by $[ ... ].
+The operators provided is modeled loosely on those in Perl's; they are 
+listed below from highest to lowest precedence.
+
+  Associativity   Operators
+  left            *  /  %
+  left            +  -
+  left            <  >  <=  >=  lt  gt  le  ge
+  left            ==  !=  eq  ne
+  left            &&
+  left            ||
+  right           ?:
+  
+The arithmetic operators (+, -, *, /, %) operate on integers with rounding
+done towards zero -- thus 3/2 is 1 (rounding is towards zero).  The modulo
+operator, a % b, computes the value of a modulo b, thus 5 % 2 is 1.
+Parentheses can be used to override the natural precedence and associativity 
+of operators in the usual way.  
+
+The numerical comparison operators (<, >, <=, >=, ==, !=) convert their 
+arguments to integers before doing the comparison.  If their arguments were
+not integers (e.g. they are string literals), a run-time error will be issued.
+(Runtime errors are errors that happen when the expression is actually
+evaluated; to avoid aborting the entire search when such an error occurs,
+an expression that issues a run-time error will produce the string <ERROR>.)
+The string comparison operators (lt, gt, le, ge, eq, ne) are like the
+corresponding numerical ones, but convert their arguments to strings (which
+can never fail).
+
+Like the numeric comparison operators, the logical operators (&&, ||) 
+first convert their arguments to integers.  They then treat 0 as false and
+anything else as true.  The ternary operator (?:) evaluates its first 
+argument as a boolean (like the logical operators) and then, if it was true, 
+evaluates and returns its second argument, or, it was false, evaluates and
+returns its third argument.
+
+Integer literals may be included in the expression, as may string literals
+(which must be double quoted).  Variables may be accessed as $p, etc.  
+Currently the avaliable variables are the same as those listed under format
+specifiers, above.
 
 
 
@@ -237,25 +295,44 @@ written '3,&1-1-1-1-' (note the comma before the ampersand).
 As well as just containing place-notation, a mask may also use the '?' and '*'
 metacharacters, which respectively represent exactly one and zero or more 
 unspecified changes.  So, for a plain minor method the mask '-?-?-?-?-?-?' 
-is equivalent to the -w (right-place) option.  The '*' symbol may be used at
+is equivalent to the -w (right-place) option.
+
+  The '*' symbol may be used at
 most once in a mask (because otherwise the notation between the two '*'s 
 would be moveable), and methsearch uses the -b and -G (where present) options
 to work out how many '?'s to expand this to.  
 
-Note that the --le-change and --hl-change options are alternatives to using 
-the -m option, and may not be used in conjuction with it.
+The -m option can also be used to specify the above or below work.  This
+is done by separating the above and below work using a '/'.  Thus to search 
+for plain doubles methods with Reverse Canterbury above the treble, one 
+would use the mask '&345.1.5.1.5/*,2'.   Within masks, the slash "operator" 
+has higher precedence than the comma, thus each separate comma-separated 
+section can have its own above/below works specified.  Alternatives may be
+included within an above or below work, e.g. -m'&(5|345).1.5.1.5/*,2'.
+
+It is perfectly legal to put arbitrary places below the treble (provided the 
+change formed is a legal change) in the above work, and similarly, arbitrary 
+places above the treble in the below work -- they are simply ignored.  Thus
+the Reverse Canterbury above work mask could equally have been written 
+'&345.1.5.123.5/*,2'.  
+
+The symbol '*' may be used at most once in any above or below work section.
+If both the above and below work section both contain a '*', or if a combined
+above - below work section (i.e. one without a '/') contains a '*', 
+methsearch will use the -b and -G options to work out how many '?'s the '&'
+expands to.  This means that only one such '*' is permitted.  
 
 
 
 Examples
 --------
 
-  methsearch -b6 -p2 -sre -L PLAIN6.TXT -R"%p [%N]"
+  methsearch -b6 -p2 -sre -L PLAIN6.TXT -R"$p [$N]"
 
 This prints all Plain Minor (-b6) methods with conventional symmetry (-s), 
 regular lead heads (-r), 12 or 16 lead end changes (-e), no more that two 
 consecutive blows in any one place (-p2).  It prints out the place notation 
-(%p) and the full method name (%N), using the library PLAIN6.TXT in the current
+($p) and the full method name ($N), using the library PLAIN6.TXT in the current
 directory to find the names.  The output begins
 
 X.16.X.36.X.36.X.36.X.16.X.16. [College Bob Minor]
@@ -264,7 +341,7 @@ etc...
 
 
 
-  methsearch -b6 -p2 -srfS -p2 -LPLAIN6.TXT -R '%n  [%q]'
+  methsearch -b6 -p2 -srfS -p2 -LPLAIN6.TXT -R '$n  [$q]'
 
 
 This lists the twelve minor methods from the above list that have Court places
@@ -286,7 +363,7 @@ Helvellyn  [&3.4-23-5,2]
 
 
 
-  methsearch -b6 -kc -qH"%3c\t%5r"
+  methsearch -b6 -kc -qH"$3c\t$5r"
 
 This finds all methods with 'Brave New Worlds' symmetry and cyclic lead ends, 
 and finds out what their hand-stroke half-lead changes are (the 5th row of 
@@ -300,7 +377,7 @@ Total: 168
 
 
 
-  methsearch -b6 -PSG1 -fsr -p2 -l2 -L SURP6.TXT -R"%n"
+  methsearch -b6 -PSG1 -fsr -p2 -l2 -L SURP6.TXT -R"$n"
 
 This lists the names of the 'Standard' 41 Surprise Minor methods.  Note 
 however that because of the issues mentioned below, the program is probably 
@@ -339,13 +416,8 @@ The following functionality does not exist in the methsearch program.
   * Falseness.  There are some serious opportunities for optimization in 
     the handling of -Fc, -Fl and -Fe options.
 
-  * Masks.  I would like some way of saying that a change at some point 
-    must contain, say, places in 14, but needn't be the change 14.  For 
-    example, a Surprise Minor method could then be described with the mask
-    &???.14+.???.36+.????,? (where + denotes that the previous change merely
-    needs to contain 14 but not actually be 14).  I might also get around
-    to adding a short-hand for repeated symbols, e.g. ?{5} for ?????, and
-    possibly even alternation:  -(4|45).
+  * Masks.  I might also get around to adding a short-hand for repeated 
+    symbols, e.g. ?{5} for ?????.
 
 
 Comments & suggestions welcome.
