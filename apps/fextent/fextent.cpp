@@ -493,7 +493,7 @@ private:
 
 public:
   class const_iterator
-	: public RINGING_STD_CONST_ITERATOR( forward_iterator_tag, row )
+    : public RINGING_STD_CONST_ITERATOR( forward_iterator_tag, row )
   {
   public:
     const_iterator& operator++() {
