@@ -534,3 +534,4 @@ AC_DEFUN([AC_IS_MSVC],
     IS_MSVC=0
   fi
 ])
+

@@ -102,7 +102,7 @@ dnl --------------------------------------------------------------------------
 # mkdsp automatically sets this Automake conditional to true.  We don't just 
 # set it to false in case anyone is using Visual Studio with Autoconf.
 AC_IS_MSVC
-AM_CONDITIONAL(USING_MSVC, test "IS_MSVC" = 1)
+AM_CONDITIONAL(USING_MSVC, test "$IS_MSVC" = 1)
 
 dnl --------------------------------------------------------------------------
 
