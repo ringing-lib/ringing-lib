@@ -25,9 +25,11 @@
 
 #include <ringing/xmllib.h>
 #include <ringing/pointers.h>
-#include <ringing/streamutils.h>
 #include <ringing/library.h>
 #include <ringing/xmllib.h>
+
+// Important note:  DO NOT include <ringing/streamutils.h> from here.  That
+// file includes GPL'd content and this file is only LGPL'd.
 
 #if RINGING_USE_XERCES
 #include <xercesc/parsers/XercesDOMParser.hpp>
@@ -87,12 +89,8 @@ DOMElement* next_sibling_element( DOMNode* start, const string& name )
   return static_cast<DOMElement*>(start);
 }  
 
-const char default_url_base[] 
-  = "http://methods.ringing.org/cgi-bin/simple.pl";
-
 
 RINGING_END_ANON_NAMESPACE
-
 
 
 class xmllib::impl : public library_base
@@ -138,7 +136,8 @@ xmllib::impl::impl( xmllib::file_arg_type type, const string& url )
 
 	case xmllib::default_url:
 	  {
-	    string full_url = make_string() << default_url_base << '?' << url;
+	    string full_url( "http://methods.ringing.org/cgi-bin/simple.pl?" );
+	    full_url.append( url );
 	    parser.parse( URLInputSource( XMLURL( full_url.c_str() ) ) );
 	  }
 	  break;
@@ -156,9 +155,10 @@ xmllib::impl::impl( xmllib::file_arg_type type, const string& url )
     } 
   catch ( const XMLException& e ) 
     {
-      throw runtime_error
-	( make_string() << "An error occured parsing the XML: "
-	                << transcode( e.getMessage() ).to_string() );
+      string err( "An error occured parsing the XML: " );
+      err.append( transcode( e.getMessage() ).to_string() );
+
+      throw runtime_error( err );
     }
 }
 
@@ -193,11 +193,12 @@ class xmllib::impl::entry_type : public library_entry::impl
 string xmllib::impl::entry_type::get_field( const string& name ) const
 {
   DOMElement *e = next_sibling_element( meth->getFirstChild(), name );
-  if (!e)
-    throw runtime_error( make_string() << "XML method element has no "
-			 << name << " sub-element" );
-  
-
+  if (!e) {
+    string err( "XML <method> element has no <" );
+    err.append( name );
+    err.append( "> sub-element" );
+    throw runtime_error( err );
+  }
   return extract_text( e );
 }
 
