@@ -165,6 +165,7 @@ The -H and -R formats accept the following format specifiers:
   $F     The in-course, tenors together falseness groups
   $$     A literal $
   $[...] An expression (-R only); see below
+  $O     The tenors-together coursing order
 
 \t and \n are interpreted as a tab and a line break respectively,
 although in some situations these are interpreted by the shell and so will

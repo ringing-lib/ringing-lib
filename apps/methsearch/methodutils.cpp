@@ -311,7 +311,7 @@ unsigned int max_blows_per_place( const method &m )
 	    maxn = n;
 	}
 
-  return maxn;
+  return maxn - 1;
 }
 
 
@@ -400,3 +400,38 @@ string method_symmetry_string( const method& m )
   return rv;
 }
 
+namespace {
+inline bell operator*( bell const& b, row const& r ) { return r[b]; }
+inline bell& operator*=( bell& b, row const& r ) { return b = r[b]; }
+}
+
+string tenors_together_coursing_order( const method& m )
+{
+  const row lh( m.lh() );
+
+  int i(0);
+  bell b( m.bells() - 1 );
+  do {
+    b *= lh, ++i;
+    assert( i <= m.bells() );
+  } while ( b < m.bells() - 2 );
+
+
+
+  if ( b == m.bells() - 1 ) // 7 and 8 are in different orbits
+    throw runtime_error( "Unable to get a tenors together coursing order" );
+  
+  assert( b == m.bells() - 2 );
+
+  row cg(lh);
+  for ( int j=1; j<i; ++j ) cg *= lh;
+
+  make_string ms;  
+  ms << b;
+
+  do {
+    ms << (b *= cg);
+  } while ( b != m.bells() - 1 );
+
+  return ms;
+}

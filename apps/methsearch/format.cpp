@@ -210,6 +210,10 @@ string method_properties::get_property( int num_opt, const string& name ) const
 		i != e; ++i ) os << (b *= *i);
 	} break;
 
+	case 'O': 
+	  os << tenors_together_coursing_order(m);
+	  break;
+
 	default:
 	  throw logic_error( "Unknown variable requested" );
 	}
@@ -286,9 +290,8 @@ bool histogram_entry::cmp::operator()( const histogram_entry &x,
   return false;
 }
 
-histogram_entry::histogram_entry
-  ( const format_string &f, 
-    const method_properties &props )
+histogram_entry::histogram_entry( const format_string &f, 
+				  const method_properties &props )
   : f( f ), props( props )
 {
 }
@@ -452,7 +455,8 @@ format_string::format_string( const string &infmt,
 	      break;
 
 	    case 'p': case 'q': case 'Q': case 'n': case 'N': case 'P': 
-	      if ( type != normal_type && type != require_type )
+	      if ( type != normal_type && type != require_type 
+		   && parens.empty() )
 		throw argument_error( make_string() << "The `$" << *iter << "'"
 				      " can only be used in output formats" );
 	      break;
@@ -460,7 +464,7 @@ format_string::format_string( const string &infmt,
 	    case '%': case '$': case 'l': case 'r': case 'b': 
 	    case 'C': case 'S': case 'M': case 'h': case 'F':
 	    case 'o': case 'd': case 'u': case '[': case '(':
-	    case 'y':
+	    case 'y': case 'O':
 	      // Can be used in either
 	      break;
 
@@ -480,7 +484,7 @@ format_string::format_string( const string &infmt,
 
 	    case 'n': case 'N': case 'p': case 'q': case 'Q': case 'l': 
 	    case 'C': case 'S': case 'F': case 'd': case '[': case '(':
-	    case 'y':
+	    case 'y': case 'O':
 	      if ( got_num_opt )
 		throw argument_error
 		  ( make_string() << "The `$" << *iter << "' "
@@ -671,6 +675,9 @@ size_t statistics::output( ostream &os )
 
 void statistics::add_entry( const histogram_entry &entry )
 {
+  // Grrr... This is needed because I've got a bug in the code somewhere
+  { make_string ms; entry.print( ms.out_stream(), 0 ); }
+
   ++instance().histogram[entry];
 }
 

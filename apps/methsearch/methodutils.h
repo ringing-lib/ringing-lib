@@ -65,4 +65,6 @@ string get_short_compressed_pn( const method &m );
 // R -- invariant under rotation
 string method_symmetry_string( const method& m );
 
+string tenors_together_coursing_order( const method& m );
+
 #endif // METHSEARCH_METHODUTILS_INCLUDED
