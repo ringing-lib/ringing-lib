@@ -23,7 +23,7 @@
 #include <iostream>
 #endif
 #include <ringing/method.h>
-#include <ringing/print_ps.h>
+#include <ringing/print_pdf.h>
 #include <ringing/printm.h>
 
 #if RINGING_USE_NAMESPACES
@@ -33,7 +33,7 @@ using namespace ringing;
 int main() {
   method m("&-5-4.5-5.36.4-4.5-4-1,1",8,"Bristol");
 
-  printpage_ps pp(cout);
+  printpage_pdf pp(cout);
   printmethod pm(m);
 
   pm.defaults();

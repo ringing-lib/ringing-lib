@@ -33,6 +33,7 @@
 #include <ringing/row.h>
 #include <ringing/method.h>
 #include <ringing/print_ps.h>
+#include <ringing/print_pdf.h>
 #include <ringing/printm.h>
 #include <ringing/mslib.h>
 #include <ringing/cclib.h>
@@ -46,12 +47,14 @@
 using namespace ringing;
 #endif
 
+enum format_t { ps, eps, pdf };
+
 struct arguments {
   const char* output_file;
   const char* library_name;
   const char* method_name;
   int bells;
-  bool eps;
+  format_t format;
   string title; text_style title_style;
   char *font; int font_size; colour col;
   bool custom_lines;
@@ -145,6 +148,7 @@ static struct argp_option options[] = {
   { "output-file", 'o', "FILE", 0, 
     "Output to FILE instead of standard output" },
   { "eps", 'e', 0, 0, "Generate an Encapsulated PostScript (EPS) file" },
+  { "pdf", 'P', 0, 0, "Generate a Portable Document Format (PDF) file" },
   { "title", 't', "TITLE[,FONT[,SIZE[,COLOUR]]]", OPTION_ARG_OPTIONAL,
     "Print TITLE above the method, using the font, size and colour"
     " specified.  In the string TITLE, the character `$' stands for the"
@@ -181,7 +185,7 @@ static struct argp_option options[] = {
   { 0, 0, 0, 0, "Layout options:" },
   { "landscape", 'L', 0, 0, 
     "Print in landscape orientation instead of portrait (not for EPS files)" },
-  { "paper-size", 'P', "DIMENSION,DIMENSION", 0, "Set the paper size to the"
+  { "paper-size", 'S', "DIMENSION,DIMENSION", 0, "Set the paper size to the"
     " width and height given (not for EPS files).  The default is A4." },
   { "fit", 'F', "DIMENSION,DIMENSION", OPTION_ARG_OPTIONAL, "Fit the image"
     " to the width and height specified, or to the page (less a half-inch"
@@ -229,7 +233,10 @@ static error_t parser (int key, char *arg, struct argp_state *state)
       };
       break;
     case 'e' :
-      args->eps = true;
+      args->format = eps;
+      break;
+    case 'P' :
+      args->format = pdf;
       break;
     case 'n' :
       args->numbers = false;
@@ -294,7 +301,7 @@ static error_t parser (int key, char *arg, struct argp_state *state)
 	  argp_error(state, "Too many arguments: \"%s\"", arg);
       }
       break;
-    case 'P' :
+    case 'S' :
       s = arg;
       parse_dimension(state, next_bit(s), args->width);
       if(s == 0)
@@ -427,6 +434,7 @@ int main(int argc, char *argv[])
   args.col.grey = true; args.col.red = 0;
   args.placebells = -2;
   args.numbers = true;
+  args.format = ps;
   args.fit = true;
   args.title_style.font = "Helvetica";
   args.title_style.size = 18;
@@ -520,7 +528,7 @@ int main(int argc, char *argv[])
     pm.number_mode = args.number_mode;
 
     // Position the output correctly
-    if(args.eps) {
+    if(args.format == eps) {
       pm.xoffset.set_float(pm.opt.xspace.in_points()/2, 1); 
       pm.yoffset.set_float(pm.total_height() - pm.opt.yspace.in_points()/2, 1);
     } else {
@@ -537,7 +545,7 @@ int main(int argc, char *argv[])
     ostream* os = &cout;
     ofstream ofs;
     if(args.output_file) { // Open the output file
-      ofs.open(args.output_file);
+      ofs.open(args.output_file, ios::bin);
       if(!ofs.good()) {
 	cerr << argv[0] << ": Can't open output file " << args.output_file
 	     << endl;
@@ -558,15 +566,23 @@ int main(int argc, char *argv[])
     printpage* pp;
 
     // Print the method!
-    if(args.eps) {
-      pp = new printpage_ps(*os, 0, 0, pm.total_width(), pm.total_height() 
-			    + (args.title.empty() ? 0 
-			       : args.title_style.size * 2));
-    } else if(args.landscape) {
-      pp = new printpage_ps(*os, args.height);
-    } else {
-      pp = new printpage_ps(*os);
-    } 
+    switch(args.format) {
+      case eps :
+	pp = new printpage_ps(*os, 0, 0, pm.total_width(), pm.total_height() 
+			      + (args.title.empty() ? 0 
+				 : args.title_style.size * 2));
+	break;
+      case ps:
+	if(args.landscape) {
+	  pp = new printpage_ps(*os, args.height);
+	} else {
+	  pp = new printpage_ps(*os);
+	} 
+	break;
+      case pdf:
+	pp = new printpage_pdf(*os);
+	break;
+    }
 
     // Print the method!
     pp->text(args.title, titlex, titley, 
