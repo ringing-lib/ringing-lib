@@ -17,12 +17,35 @@
 
 // $Id$
 
+#include <ringing/common.h>
 #include "args.h"
+
+#include <ringing/streamutils.h>
+
 #if RINGING_OLD_C_INCLUDES
 #include <ctype.h>
 #else
 #include <cctype>
 #endif
+#if RINGING_OLD_INCLUDES
+#include <iostream.h>
+#else
+#include <iostream>
+#endif
+
+RINGING_USING_NAMESPACE
+RINGING_USING_STD
+
+bool option::process(const string& a, const arg_parser& ap) const {
+  ap.error( "Unprocessed argument.  This is a bug in the program." );
+  return false;
+}
+
+arg_parser::arg_parser(const string& n, const string& d,
+		       const string& s) 
+  : progname(n), description(d), synopsis(s) 
+{
+}
 
 void arg_parser::add(const option* o) {
   args_t::iterator i = args.insert(args.end(), o);
@@ -45,19 +68,21 @@ bool arg_parser::parse(int argc, char** argv) const
 	string s(argv[i] + 2, t); 
 	longindex_t::const_iterator b = longindex.find(s);
        	if(b == longindex.end()) {
-	  cerr << "Unrecognised option: --" << s << endl;
+	  error( make_string() << "Unrecognised option: --" << s );
 	  return false;
 	}
 	const option* a = *((*b).second);
 	if(*t == '=') {
 	  if(!(a->flags & option::takes_arg)) {
-	    cerr << "Option --" << s << " does not take an argument.\n";
+	    error( make_string() << "Option --" << s 
+		   << " does not take an argument." );
 	    return false;
 	  }
 	  if(!a->process(t + 1, *this)) return false;
 	} else {
 	  if((a->flags & option::takes_arg) && !(a->flags & option::opt_arg)) {
-	    cerr << "Option --" << s << " requires an argument.\n";
+	    error( make_string() << "Option --" << s 
+		   << " requires an argument." );
 	    return false;
 	  }
 	  if(!a->process(string(), *this)) return false;
@@ -68,7 +93,7 @@ bool arg_parser::parse(int argc, char** argv) const
 	do {
 	  shortindex_t::const_iterator b = shortindex.find(*t);
 	  if(b == shortindex.end()) {
-	    cerr << "Unrecognised option: -" << *t << endl;
+	    error( make_string() << "Unrecognised option: -" << *t );
 	    return false;
 	  }
 	  a = *((*b).second);
@@ -79,7 +104,8 @@ bool arg_parser::parse(int argc, char** argv) const
 	      if(t[1] == '\0') {
 		++i;
 		if(i >= argc || (argv[i][0] == '-' && argv[i][1] != '\0')) {
-		  cerr << "Option -" << *t << " requires an argument.\n";
+		  error( make_string() << "Option -" << *t 
+			 << " requires an argument." );
 		  return false;
 		} else
 		  if(!a->process(argv[i], *this)) return false;
@@ -126,16 +152,15 @@ void arg_parser::help() const
   string::const_iterator vtab;
   bool had_opt = false, had_arg = false;
 
-  vtab = args.front()->desc.begin(); 
-  while(vtab != args.front()->desc.end() && *vtab != '\v') ++vtab;
-  if(vtab != args.front()->desc.begin()) {
-    wrap(string(args.front()->desc.begin(), vtab), 0, 78, 0);
+  vtab = description.begin(); 
+  while(vtab != description.end() && *vtab != '\v') ++vtab;
+  if(vtab != description.begin()) {
+    wrap(string(description.begin(), vtab), 0, 78, 0);
     cout << "\n\n";
   }
 
   cout << "Usage: " << progname << ' ';
-  for(string::const_iterator l = args.front()->optionname.begin();
-      l != args.front()->optionname.end(); ++l)
+  for(string::const_iterator l = synopsis.begin(); l != synopsis.end(); ++l)
     if(*l == '\n') cout << "\n  or:  " << progname << ' '; else cout << *l;
   cout << "\n\n";
      
@@ -185,8 +210,8 @@ void arg_parser::help() const
     "optional arguments to the corresponding short options.\n";
   if(had_opt) cout << '\n';
   
-  if(vtab != args.front()->desc.end()) {
-    wrap(string(vtab, args.front()->desc.end()), 0, 78, 0);
+  if(vtab != description.end()) {
+    wrap(string(vtab, description.end()), 0, 78, 0);
     cout << '\n';
   }
      
@@ -195,8 +220,56 @@ void arg_parser::help() const
 void arg_parser::usage() const
 {
   cerr << "Usage: " << progname << ' ';
-  for(string::const_iterator i = args.front()->optionname.begin();
-      i != args.front()->optionname.end(); ++i)
+  for(string::const_iterator i = synopsis.begin(); i != synopsis.end(); ++i)
     if(*i == '\n') cerr << "\n  or:  " << progname << ' '; else cerr << *i;
   cerr << "\nType `" << progname << " --help' for more information.\n"; 
+}
+
+void arg_parser::error(const string &msg) const
+{
+  cerr << progname << ": " << msg << "\n";
+}
+
+
+bool string_opt::process( const string &arg, const arg_parser & ) const
+{
+  opt = arg;
+  return true;
+}
+
+bool boolean_opt::process( const string &, const arg_parser & ) const
+{
+  opt = val;
+  return true;
+}
+
+bool integer_opt::process( const string &arg, const arg_parser &ap ) const
+{
+  if ( (flags & opt_arg) && arg.empty() )
+    opt = default_val;
+  else {
+    istringstream is(arg); 
+    is >> opt;
+    if(!is || is.get() != EOF) {
+      ap.error( make_string() << "Invalid integer argument: \"" << arg << "\"" );
+      return false;
+    }
+  }
+  return true;
+}
+
+bool delegate_opt::process( const string &arg, const arg_parser &ap ) const
+{
+  if (!fn_has_ap)
+    (*fn1)( arg );
+  else
+    (*fn2)( arg, ap );
+  return true;
+}
+
+bool help_opt::process( const string &, const arg_parser &ap ) const
+{
+  ap.help();
+  exit(0);
+  return true; // To keep MSVC 5 happy
 }

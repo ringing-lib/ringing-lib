@@ -496,7 +496,7 @@ int main(int argc, char *argv[])
 
   // Parse the arguments
   {
-    arg_parser p(argv[0], new myopt(0, "", 
+    arg_parser p(argv[0], 
       "psline -- print out lines for methods in PostScript or PDF.\v"
 "Most options have sensible defaults.  In particular, unless you specify"
 " otherwise, the image will be fitted to the page; and lines will be drawn"
@@ -506,7 +506,7 @@ int main(int argc, char *argv[])
 " a COLOUR may be specified as either an integer between 0 and 100,"
 " signifying a grey level; or as three integers between 0 and 100, separated"
 " by minus signs (`-'), specifying red, green and blue levels.",
-			   "LIBRARY METHOD\nBELLS:PLACE-NOTATION"));
+			   "LIBRARY METHOD\nBELLS:PLACE-NOTATION");
     setup_args(p);
 
     if(!p.parse(argc, argv)) {
