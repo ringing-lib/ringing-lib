@@ -957,11 +957,11 @@ This checks for repeated rows from first to last. Expects up to @var{max} extent
 @node proof Functions, proof Operators, proof Constructors, Proof
 @subsection Functions
 
-@deftypefn Function bool proof::proof (RowIterator @var{first}, RowIterator @var{last});
+@deftypefn Function bool proof::prove (RowIterator @var{first}, RowIterator @var{last});
 This checks for repeated rows from first to last. Expects up to 1 extent only. Full result is stored in class for later retrieval, but trueness of rows is returned.
 @end deftypefn
 
-@deftypefn Function bool proof::proof (RowIterator @var{first}, RowIterator @var{last}, const int @var{max}, proof::hash_function @var{f});
+@deftypefn Function bool proof::prove (RowIterator @var{first}, RowIterator @var{last}, const int @var{max}, proof::hash_function @var{f});
 This checks for repeated rows from first to last. Expects up to @var{max} extents. Full result is stored in class for later retrieval, but trueness of rows is returned.
 @end deftypefn
 
