@@ -1,0 +1,692 @@
+\input texinfo @c -*-texinfo-*-
+@c %**start of header
+@setfilename methlib.info
+@settitle A Method Class Library
+@iftex
+@afourpaper
+@end iftex
+@c %**end of header
+
+@ifinfo
+This is the manual for the Method Class Library.
+
+Copyright 1997 Martin Bright
+
+Permission is granted to copy and distribute this manual, provided that
+the copyright notice and this permission notice appear on all copies.
+@end ifinfo
+
+@titlepage
+@title A Method Class Library
+@author Martin Bright
+@author mjb47@@cam.ac.uk
+
+@page
+@vskip 0pt plus 1filll
+Copyright @copyright{} 1997 Martin Bright
+
+Permission is granted to make and distribute copies of this manual,
+provided that the copyright notice and this permission notice appear on
+all copies.
+
+This document was produced using Texinfo 2.145. On-line (info) and
+plain text versions are also available.
+@end titlepage
+@ifinfo
+
+@node Top, Introduction, (dir), (dir)
+@top
+@ifclear PLAINTEXT
+The Method Class Library (methlib) is a library of C++ classes designed
+for writing change ringing application programs.
+
+This menu lists the available topics in the documentation. This
+documentation is also available in text and PostScript versions.
+@end ifclear
+@ifset PLAINTEXT
+This documentation is also available in on-line (info) and PostScript
+versions.
+@end ifset
+@end ifinfo
+
+@menu
+* Introduction::                About the Method Class Library                
+* The STL::                     A word about the Standard Template Library
+* Rows and Changes::            Classes for manipulating rows and changes  
+* Index::                       
+@end menu
+
+@node Introduction, The STL, Top, Top
+@chapter Introduction
+@cindex introduction
+
+The Method Class Library is a collection of C++ classes which implement
+various concepts found in change ringing, and make it possible to
+implement programs which use these concepts without having to write the
+basic algorithms over and over again.
+
+The library is split into several sections:
+@itemize @bullet
+@item
+Classes for dealing with individual rows and changes, and how the
+interact with each other
+
+@item
+Classes for building and manipulating methods
+
+@item
+Classes for accessing method libraries
+@end itemize
+
+Thus it is possible to use whatever part of the library is necessary for
+your program; for example, a method editing program would use the method
+classes, whereas a program to simulate call changes would just use the
+row and change classes.
+
+@node The STL, Rows and Changes, Introduction, Top
+@chapter The Standard Template Library
+@cindex Standard Template Library
+@cindex STL
+
+Before you can use the Method Class Library, you will need to have a
+copy of the Standard Template Library (STL) which works with your
+compiler. The STL is a set of templates which define containers such as
+lists and sets, iterators to move through them, and various other useful
+things.  If your compiler complains about not being able to find files
+such as @file{vector.h} and @file{list.h} then this probably means that
+you don't have the STL and need to get hold of it.
+
+You can get the latest version of the STL, with documentation, by
+anonymous FTP from @code{butler.hpl.hp.com} is the directory
+@code{/stl}. An FAQ about the STL is also available here. If you are
+using the GNU compiler (@code{g++}), a version of the STL is included in
+the latest @code{libg++} library, available with the other GNU tools
+from @code{prep.ai.mit.edu} in directory @code{/pub/gnu}.
+
+@node Rows and Changes, Index, The STL, Top
+@chapter Row and Change classes
+@cindex row
+@cindex change
+
+For ease of notation, I am using the idea that a @dfn{row} is an
+individual permutation of bells (such as @samp{13572468}), and a
+@dfn{change} is a means of getting from one row to another, by swapping
+pairs of bells; the most convenient way to write a change is a place
+notation (for example @samp{X} or @samp{1258}).
+
+@menu
+* Row Operations::              Explanation of algebra on rows
+* Row Properties::              Explanation of other properties of rows
+* Changes::                     Explanation of how methlib deals with changes
+* The row Class::               
+* The change Class::            
+* The rows and changes Classes::  
+* The row_block class::         
+@end menu
+
+@node Row Operations, Row Properties, Rows and Changes, Rows and Changes
+@section Row operations
+@cindex row algebra
+@cindex algebra of rows
+@cindex row operations
+@cindex transposition
+
+Rows have a set of operations which we can use on them; in mathematical
+terms, they form a group. The most important operation is that of row
+multiplication or transposition - in this operation, the bells in one
+row are rearranged according to another row.
+
+For example,
+@example
+21345678 * 13572468 = 23571468
+@end example
+@noindent and
+@example
+13572468 * 21345678 = 31572468
+@end example
+
+Note that the two above examples do @emph{not} give the same result;
+that is, the order in which two things are multiplied does matter.
+
+As an example of how row multiplication is used, suppose that we want to
+know the 4th row of the lead of Plain Bob Major with lead head
+@samp{17856342}. The 4th row of the first lead (which has a lead head of
+rounds) is @samp{42618375}. Multiplying these together gives us the
+answer we are looking for, namely @samp{57312846}.
+
+The identity for this operation is rounds; in other words, any row
+multiplied by rounds gives itself, and rounds multiplied by any row
+gives that row.
+
+It is possible to define the inverse of a row as the row which, when
+multiplied by that row, will give rounds. For example, the inverse of
+@samp{13572468} is @samp{15263748}, as 
+@example
+13572468 * 15263748 = 12345678
+@end example
+
+The opposite of row multiplication is row division. If @samp{a * b = c},
+we can define @samp{c / b = a}. Using the same example as above, suppose
+we have a lead of Plain Bob Major and we know that the fourth row is
+@samp{57312846}, and we wish to find the lead head. Just divide by the
+fourth row of the plain course (@samp{42618375}) to get the answer.
+
+@node Row Properties, Changes, Row Operations, Rows and Changes
+@section Row properties
+@cindex row properties
+
+There are several properties of rows which arise from group theory and
+can be useful in looking at properties of methods.
+
+@cindex order
+The @dfn{order} of a row is the number of times which that row has to be
+multiplied by itself before it gets back to rounds. For example, the row
+@samp{21436587} has order 2, because if it is multiplied by itself
+twice, you get back to rounds. Similarly the row @samp{23145678} has
+order 3, and the row @samp{23456781} has order 8. This can be useful,
+for example, in seeing how many leads of a method are needed in a plain
+course before it comes round.
+
+@cindex sign
+@cindex parity
+Another useful concept is the @dfn{sign} or @dfn{parity} of a row. A row
+is considered @dfn{even} if it takes an even number of swaps of pairs of
+bells to get from rounds to that row, and @dfn{odd} if it takes an odd
+number of swaps. (It can be shown that whether the number is odd or even
+doesn't depend on exactly what the sequence of swaps is).
+
+@cindex cycles
+Finally, every row can be expressed as a set of @dfn{cycles}. A cycle is
+a set of bells which move round in a sequential way as the row is
+repeated; for example, @samp{21345678} has only one cycle, which is
+@samp{(12)}; and @samp{12356478} has one cycle, which is
+@samp{(456)}. Combining these two cycles will give us the row @samp{213564678}.
+
+@node Changes, The row Class, Row Properties, Rows and Changes
+@section Changes
+@cindex change
+
+A @dfn{change} is a means for getting from one row to another. It works
+by swapping over pairs of bells, and no bell may move more than one
+place.
+
+@cindex place notation
+The normal way of representing a change is by place notation; a single
+change is represented by a series of numbers which each correspond to a
+place being made; for example, @samp{12} means that all bells swap,
+apart from the 1 and the 2, which stay in the same place. If all the
+bells swap, the place notation is @samp{X}.
+
+@cindex swap
+However, place notation is not the best way to store a change for the
+purposes of calculation. Internally, the Method Class Library stores a
+change as a series of swaps; each swap refers to a pair of bells which
+are swapped over. This makes it particularly quick to apply a change to
+a row; just go through the list of swaps, and swap each pair of bells
+which appear.
+
+@node The row Class, The change Class, Changes, Rows and Changes
+@section The @code{row} class
+@cindex @code{row} class
+
+The @code{row} class stores a single row. It provides extensive
+functions to manipulate rows and perform operations on them.
+
+@menu
+* row Derivation::              
+* row Constructors::            
+* row Operators::               
+* Other row Functions::         
+* row static Functions::        
+@end menu
+
+@node row Derivation, row Constructors, The row Class, The row Class
+@subsection Derivation
+
+This class is not derived from any other classes.
+
+@example
+class row;
+@end example
+
+@node row Constructors, row Operators, row Derivation, The row Class
+@subsection Constructors
+
+@deftypefn Constructor {} row::row (int @var{bells});
+This constructs an empty row, where @var{bells} is the number of bells
+which the row is to contain. Note that it is not initialised to
+anything.
+@end deftypefn
+
+@deftypefn Constructor {} row::row (char *@var{s});
+This constructs a row from a string, which should be the textual
+representation of the row you wish to construct, for example
+@samp{135246} or @samp{2143658709TE}.
+@end deftypefn
+
+@deftypefn Constructor {} row::row (const row& @var{r});
+This is the copy constructor; it creates a copy of the given row.
+@end deftypefn
+
+@node row Operators, Other row Functions, row Constructors, The row Class
+@subsection Operators
+
+@deftypefn Operator row& row::operator= (const row& @var{r});
+This copies one row to another.
+@end deftypefn
+
+@deftypefn Operator row& row::operator= (char *@var{s});
+This sets the value of a row, given a string. The string @var{s} should
+contain a textual representation of a row, such as @samp{21436587}. It
+should also have the same number of bells as this row.
+@end deftypefn
+
+@deftypefn Operator int row::operator== (const row& @var{r}) const;
+@deftypefnx Operator int row::operator!= (const row& @var{r}) const;
+These compare two rows.
+@end deftypefn
+
+@deftypefn Operator int row::operator[] (int @var{i}) const;
+This returns the @var{i}th bell in the row, with 0 being the treble,
+and so on. Note that this is not an lvalue, so you cannot assign a value
+to an individual bell in a row.
+@end deftypefn
+
+@deftypefn Operator row row::operator* (const row& @var{r}) const;
+@deftypefnx Operator row& row::operator*= (const row& @var{r});
+These functions multiply two rows together as explained above.
+@end deftypefn
+
+@deftypefn Operator row row::operator/ (const row& @var{r}) const;
+@deftypefnx Operator row& row::operator/= (const row& @var{r});
+These functions divide two rows, as explained above.
+@end deftypefn
+
+@deftypefn Operator row& operator*= (row& @var{r}, const change& @var{c});
+@deftypefnx Operator row row::operator* (const change& @var{c}) const;
+These functions apply a change to a row, by swapping over all the pairs
+of bells which are specified in the change.
+@end deftypefn
+
+@deftypefn Operator ostream& operator<< (ostream& @var{o}, const row& @var{r});
+This writes the row to the given output stream, in the same format as
+returned by @code{row::print()}.
+@end deftypefn
+
+@node Other row Functions, row static Functions, row Operators, The row Class
+@subsection Other functions
+
+@deftypefun int row::bells (void) const;
+This returns the number of bells which the row contains.
+@end deftypefun
+
+@c Silly bit to get round a bug
+@ifinfo
+@deftypefun row& row::rounds (void);
+This sets the row to rounds.
+@end deftypefun
+@end ifinfo
+@iftex
+@deftypefun row@& row::rounds (void);
+This sets the row to rounds.
+@end deftypefun
+@end iftex
+
+@deftypefun int row::isrounds (void) const;
+This returns 1 if the row is rounds, and 0 otherwise.
+@end deftypefun
+
+@deftypefun {char *} row::print (char *@var{s}) const;
+This prints the row to the string @var{s}. Note that @var{s} must be
+long enough.
+@end deftypefun
+
+@deftypefun row row::inverse (void) const;
+This returns the inverse or a row, as explained above.
+@end deftypefun
+
+@deftypefun int row::sign (void) const;
+This returns the sign or parity of a row; 1 for even, -1 for odd.
+@end deftypefun
+
+@deftypefun int row::order (void) const;
+This returns the order of the row.
+@end deftypefun
+
+@deftypefun {char *} row::cycles (char *@var{result}) const;
+This expresses the row as separate cycles. The string @var{result} will
+afterwards contain a list of all the cycles in the row, separated by
+commas; for example @code{row("21453678").cycles(s)} will return the
+string @code{"12,345,6,7,8"}. Note that the string must be long enough.
+@end deftypefun
+
+@node row static Functions,  , Other row Functions, The row Class
+@subsection @code{static} functions
+
+@deftypefun {static char} row::b_to_c (char @var{b});
+This returns the character representation of the given bell, specified
+with 0 for the treble, and so on. Thus @code{row::b_to_c(2) == '3'} and
+@code{row::b_to_c(10) = 'E'}.
+@end deftypefun
+
+@deftypefun {static int} row::c_to_b (char @var{c});
+This returns the bell number which corresponds to the given character,
+or -1 if the character doesn't represent a bell.
+@end deftypefun
+
+@deftypefun {static row} row::rounds (int @var{n});
+This returns the row corresponding to rounds on @var{n} bells.
+@end deftypefun
+
+@node The change Class, The rows and changes Classes, The row Class, Rows and Changes
+@section The @code{change} class
+@cindex @code{change} class
+
+The @code{change} class stores a single change, i.e. a means of getting
+from one row to another.
+
+@menu
+* change Derivation::           
+* change Constructors::         
+* change Operators::            
+* Other change Functions::      
+@end menu
+
+@node change Derivation, change Constructors, The change Class, The change Class
+@subsection Derivation
+
+This class is not derived from any other classes.
+
+@example
+class change;
+@end example
+
+@node change Constructors, change Operators, change Derivation, The change Class
+@subsection Constructors
+
+@deftypefn Constructor {} change::change (int @var{n});
+This constructs an empty change for @var{n} bells, which will initially
+contain no swaps, i.e. all bells will remain in the same place.
+@end deftypefn
+
+@deftypefn Constructor {} change::change (const change& @var{c});
+This is the copy constructor; it makes a new copy of @var{c}.
+@end deftypefn
+
+@deftypefn Constructor {} change::change (int @var{n}, char *@var{pn});
+This constructs a change on @var{n} bells, with place notation as given
+in @var{pn}. This should consist of a sequence of numbers which signify
+the places to be made, arranged in ascending order. If no places are to
+be made, the string @code{"X"} should be used. Note that you
+can miss out external places, unless no internal places are made at all.
+@end deftypefn
+
+@node change Operators, Other change Functions, change Constructors, The change Class
+@subsection Operators
+
+@deftypefn Operator change& change::operator= (const change& @var{c});
+This assigns the value of one change to another.
+@end deftypefn
+
+@deftypefn Operator change& change::operator= (char *@var{pn});
+This sets the change to the value indicated by the place notation in
+string @var{pn}.
+@end deftypefn
+
+@deftypefn Operator int change::operator== (const change& @var{c}) const;
+@deftypefnx Operator int change::operator!= (const change& @var{c}) const;
+These compare two changes.
+@end deftypefn
+
+@deftypefn Operator int& operator*= (int& @var{i}, const change& @var{c});
+@deftypefnx Operator int operator* (int @var{i}, const change& @var{c});
+These return the effect of applying the change @var{c} to the bell
+@var{i}. For example, @code{3 * "34" == 4}. This is useful in tracing
+the path of one particular bell through a series of changes.
+@end deftypefn
+
+@deftypefn Operator ostream& operator<< (ostream& @var{o}, const change& @var{c});
+This writes the place notation for the change @var{c} to the given
+output stream.
+@end deftypefn
+
+@node Other change Functions,  , change Operators, The change Class
+@subsection Other functions
+
+@deftypefun int change::bells (void) const;
+This returns the number of bells on which the change is defined.
+@end deftypefun
+
+@deftypefun int change::findswap (int @var{i}) const;
+Returns 1 if the change swaps bells @var{i} and @var{i+1}, and 0
+otherwise.
+@end deftypefun
+
+@deftypefun int change::findplace (int @var{i}) const;
+Returns 1 if the change doesn't move the bell in the @var{i}th place
+(i.e. if @var{i}ths place is made), and 0 otherwise.
+@end deftypefun
+
+@deftypefun int change::swap (int @var{i});
+If the change doesn't currently swap bells @var{i} and @var{i+1}, then
+this will add that swap. If those bells are swapped, this will remove
+the swap. If the bells @var{i-1} and @var{i}, or @var{i+1} and
+@var{i+2}, are currently swapped, those swaps are removed.
+
+This function makes it possible for the user to edit changes in such a
+way that they will always end up in a sensible state.
+@end deftypefun
+
+@deftypefun change change::reverse (void) const;
+This returns the reverse of a change; that is, the change is flipped
+over so that on 8 bells for example, 2nds place becomes 7ths place and
+so on.
+@end deftypefun
+
+@deftypefun int change::internal (void) const;
+This returns 1 if the change contains internal places, and 0 otherwise.
+@end deftypefun
+
+@node The rows and changes Classes, The row_block class, The change Class, Rows and Changes
+@section The @code{rows} and @code{changes} classes
+@cindex @code{rows} class, @code{changes} class
+
+The @code{rows} and @code{changes} classes hold an array of rows or
+changes, respectively.  For example, @code{changes} could hold a lead of
+a method or a bob or single; @code{rows} could hold the rows for a particular
+lead of a method, or course ends for a composition.
+
+@menu
+* rows and changes Derivation::  
+* rows and changes Constructors::  
+* rows and changes Operators::  
+* Other rows and changes Functions::  
+@end menu
+
+@node rows and changes Derivation, rows and changes Constructors, The rows and changes Classes, The rows and changes Classes
+@subsection Derivation
+
+These classes are derived from @code{vector<row>} and @code{vector<change>}
+classes respectively, but with the @code{protected} attribute.
+
+@example
+class rows : protected vector<row>;
+class changes : protected vector<change>;
+@end example
+
+@node rows and changes Constructors, rows and changes Operators, rows and changes Derivation, The rows and changes Classes
+@subsection Constructors
+
+@deftypefn Constructor {} rows::rows (void);
+@deftypefnx Constructor {} changes::changes (void);
+These create empty arrays.
+@end deftypefn
+
+@deftypefn Constructor {} rows::rows (int @var{l}, int @var{b});
+@deftypefnx Constructor {} changes::changes (int @var{l}, int @var{b});
+These create an array of rows or changes containing @var{l} members,
+each on @var{b} bells.
+@end deftypefn
+
+@deftypefn Constructor {} rows::rows (rows& @var{r});
+@deftypefnx Constructor {} changes::changes (changes& @var{c});
+Copy constructors.
+@end deftypefn
+
+@node rows and changes Operators, Other rows and changes Functions, rows and changes Constructors, The rows and changes Classes
+@subsection Operators
+
+@deftypefn Operator rows& rows::operator= (rows& @var{r});
+@deftypefnx Operator changes& changes::operator= (changes& @var{c});
+Copy assignment operators.
+@end deftypefn
+
+@deftypefn Operator row& rows::operator[] (int @var{i});
+@deftypefnx Operator {const row&} rows::operator[] (int @var{i}) const;
+@deftypefnx Operator changes& changes::operator[] (int @var{i});
+@deftypefnx Operator {const changes&} changes::operator[] (int @var{i}) const;
+These operators return the @var{i}th member of the array.
+@end deftypefn
+
+@node Other rows and changes Functions,  , rows and changes Operators, The rows and changes Classes
+@subsection Other functions
+
+@deftypefun int rows::length (void);
+@deftypefunx int changes::length (void);
+These return the number of elements in the array.
+@end deftypefun
+
+@deftypefun int rows::bells (void);
+@deftypefunx int changes::bells (void);
+These return the number of bells used by the rows or changes in the array.
+@end deftypefun
+
+@deftypefun row changes::asrow (void) const;
+This returns a row which is the cumulative effect of all the changes in
+the array, found by starting with rounds and applying all of the changes
+to it one after the other.  For example, if the @code{changes} object
+contains one lead of a method, then @code{asrow} will return the lead end
+of the method.
+@end deftypefun
+
+@node The row_block class,  , The rows and changes Classes, Rows and Changes
+@section The @code{row_block} class
+@cindex @code{row_block} class
+
+The @code{row_block} class is an array of rows which has associated with
+it a pointer to an array of changes, and can recalculate itself from those
+changes.  For example, suppose that the variable @code{c} of type
+@code{changes} holds one lead of a method; then it is possible to define a
+variable of type @code{row_class} which, once it is told what the lead head
+is, will calculate the rows for one lead of the method.
+
+@menu
+* row_block Derivation::        
+* row_block Constructors::      
+* Other row_block Functions::   
+@end menu
+
+@node row_block Derivation, row_block Constructors, The row_block class, The row_block class
+@subsection Derivation
+
+The @code{row_block} class is derived from @code{rows}.
+
+@example
+class row_block : public rows;
+@end example
+
+@node row_block Constructors, Other row_block Functions, row_block Derivation, The row_block class
+@subsection Constructors
+
+@deftypefn Constructor {} row_block::row_block (changes& @var{c});
+This creates a block of rows using the changes in @var{c}, starting
+from rounds.
+@end deftypefn
+
+@deftypefn Constructor {} row_block::row_block (changes& @var{c}, row& @var{r});
+This creates a block of rows using the changes in @var{c}, starting from
+the row given in @var{r}.
+@end deftypefn
+
+@node  Other row_block Functions,  , row_block Constructors, The row_block class
+@subsection Other functions
+
+@ifinfo
+@deftypefun row& row_block::set_start (row& @var{r});
+This sets the first row to @var{r}.  Note that this function does @emph{not}
+recalculate the rest of the rows afterwards; you must do this by calling
+@code{recalculate()}.
+@end deftypefun
+@end ifinfo
+@iftex
+@deftypefun row@& row_block::set_start (row& @var{r});
+This sets the first row to @var{r}.  Note that this function does @emph{not}
+recalculate the rest of the rows afterwards; you must do this by calling
+@code{recalculate()}.
+@end deftypefun
+@end iftex
+
+@ifinfo
+@deftypefun row_block& row_block::recalculate (int @var{start} = 0);
+This recalculates all the rows in the array, starting from the element
+numbered @var{start}; if this is not specified, all the rows are recalculated.
+If, for example, you know that the @code{changes} object which the row block
+is based on has been changes halfway through, you don't have to recalculate
+all the rows, just the ones after that point.
+@end deftypefun
+@end ifinfo
+@iftex
+@deftypefun row_block@& row_block::recalculate (int @var{start} = 0);
+This recalculates all the rows in the array, starting from the element
+numbered @var{start}; if this is not specified, all the rows are recalculated.
+If, for example, you know that the @code{changes} object which the row block
+is based on has been changes halfway through, you don't have to recalculate
+all the rows, just the ones after that point.
+@end deftypefun
+@end iftex
+
+@ifinfo
+@deftypefun changes& row_block::get_changes (void) const;
+This returns the @code{changes} object on which the row block is based.
+@end deftypefun
+@end ifinfo
+@iftex
+@deftypefun changes@& row_block::get_changes (void) const;
+This returns the @code{changes} object on which the row block is based.
+@end deftypefun
+@end iftex
+
+
+@node Methods
+@chapter Method classes
+
+The Method Class Library provides many useful functions for dealing with
+methods, findinf information about them and classifying them.
+
+A @dfn{method} is a set of changes.  Every method consists of one block
+which is repeated over and over again; this is called a @dfn{lead}.  If,
+at the end of one lead, every bell is in a different position, then the
+method is called a @dfn{principle} and the leads are called @dfn{divisions}.
+Any bells is a method which end up in the same place at the end of a lead
+are called @dfn{hunt bells}.
+
+The Method Class Library defines an object @code{method} which is simply
+a block of changes (it is derived from @code{changes}) and which provides
+a large range of member functions.  Many of these are used for finding
+out things about the method, such as the number of leads in the plain course,
+the type of method, the full name and so on. 
+
+@node Method classification
+@chapter Classification of methods
+
+Methods are classified according to section E, subsections B and C, of
+the Central Council's Decisions.
+
+
+@node Index,  , Rows and Changes, Top
+@unnumbered Index
+
+@printindex cp
+
+@contents
+@bye
