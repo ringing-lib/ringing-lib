@@ -82,7 +82,7 @@ int main()
 
   {
     cout << "\nTesting row operations...\n";
-    row r1("13572468"), r2("21436587"), r3("13245678");
+    row r1("13572468"), r2("21436587"), r3("6347251");
     cout << r1 << " * " << r2 << " = " << (r1 * r2) << endl;
     cout << (r1 * r2) << " / " << r2 << " = " << ((r1 * r2) / r2) << endl;
     cout << r1 << "^-1 = " << r1.inverse() << endl;
@@ -92,7 +92,7 @@ int main()
     cout << r1 << " has order " << r1.order() << endl;
     cout << r2 << " contains the cycles " << r2.cycles(s) << endl;
     cout << r2 << " has order " << r2.order() << endl;
-    cout << r3 << " contains the cycles " << r3.cycles(s) << endl;
+    cout << r3 << " contains the cycles " << r3.cycles() << endl;
     cout << r3 << " has order " << r3.order() << endl;
     cout << "Plain Bob lead head = " << row::pblh(8) << endl;
     cout << "Grandsire lead head = " << row::pblh(8,2) << endl;

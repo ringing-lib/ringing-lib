@@ -35,9 +35,11 @@ void printmethod::defaults()
 
   if(!m) return;
 
-  total_rows = m->length() * m->leads();
+  row r = m->lh();
+  int l = r.order();
+  total_rows = m->length() * l;
   rows_per_column = m->length();
-  columns_per_set = m->leads();
+  columns_per_set = l;
   sets_per_page = 0;
   xoffset = opt.xspace / 2;
   yoffset = (opt.yspace * (m->length() * 2 + 3)) / 2;
@@ -46,7 +48,6 @@ void printmethod::defaults()
 
   // Set up the lines
   change c = (*m)[m->length() - 1];
-  row r = m->lh();
   printrow::options::line_style huntstyle, workstyle;
   workstyle.width.n = 1; workstyle.width.d = 2; 
   workstyle.width.u = dimension::points;
@@ -251,7 +252,8 @@ float printmethod::total_height() {
   int columns = divu(total_rows, rows_per_column);
   if(columns_per_set < columns) columns = columns_per_set;
   int columnsets = divu(total_rows, rows_per_column * columns);
-  if(sets_per_page < columnsets) columnsets = sets_per_page;
+  if(sets_per_page && (sets_per_page < columnsets)) 
+    columnsets = sets_per_page;
   return (opt.yspace.in_points() * (rows_per_column + 1) * columnsets)
     + (vgap.in_points() * (columnsets - 1));
 }

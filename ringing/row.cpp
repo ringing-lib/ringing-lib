@@ -593,8 +593,13 @@ int row::order(void) const
   string cyc( cycles() );              // Get the cycles representation
   
   // For each cycle in the string
-  for(char *s = strtok(&*cyc.begin(),","); s != NULL; s = strtok(NULL,","))
-    o = lcm(o, strlen(s));
+  string::const_iterator i, j;
+  i = j = cyc.begin(); 
+  while(j != cyc.end()) {
+    while(j != cyc.end() && *j != ',') ++j;
+    o = lcm(o, j - i);
+    if(j != cyc.end()) i = ++j;
+  }
 
   return o;
 }
