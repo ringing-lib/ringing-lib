@@ -42,7 +42,7 @@ RINGING_USING_STD
 table_search::table_search( const method &meth, const vector<change> &calls,
 			    bool ignore_rotations )
   : meth( meth ), calls( calls ), 
-    lenrange( make_pair( 0, -1 ) ),
+    lenrange( make_pair( size_t(0), size_t(-1) ) ),
     ignore_rotations( ignore_rotations )
 {}
 

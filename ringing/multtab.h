@@ -42,6 +42,81 @@ RINGING_START_NAMESPACE
 
 RINGING_USING_STD
 
+class multiplication_table;
+
+// These would all be member classes of multiplication_table,
+// but that causes compiler problems in MSVC-5.
+class multiplication_table_row_t
+{
+public:
+  multiplication_table_row_t() : n(0u) {}
+  bool isrounds() const { return n == 0; }
+  operator size_t() const { return n; }
+  
+  friend class multiplication_table;
+  
+#if RINGING_PREMATURE_MEMBER_INSTANTIATION
+  // These are to make templates work and don't really exist
+  bool operator< (const multiplication_table_row_t &) const;
+  bool operator==(const multiplication_table_row_t &) const;
+  bool operator!=(const multiplication_table_row_t &) const;
+  bool operator> (const multiplication_table_row_t &) const;
+#endif
+  
+private:
+  size_t n; 
+};
+
+class multiplication_table_post_col_t
+{
+public:
+  multiplication_table_post_col_t( size_t n, multiplication_table *t )
+    : n(n), t(t) 
+  {}
+  
+  friend multiplication_table_row_t 
+  operator*( multiplication_table_row_t r, multiplication_table_post_col_t c );
+
+#if RINGING_PREMATURE_MEMBER_INSTANTIATION
+  // These are to make templates work and don't really exist
+  multiplication_table_post_col_t();
+  bool operator< (const multiplication_table_post_col_t &) const;
+  bool operator==(const multiplication_table_post_col_t &) const;
+  bool operator!=(const multiplication_table_post_col_t &) const;
+  bool operator> (const multiplication_table_post_col_t &) const;
+#endif
+  
+private:
+  size_t n; 
+  multiplication_table *t;
+};
+
+class multiplication_table_pre_col_t
+{
+public:
+  multiplication_table_pre_col_t( size_t n, multiplication_table *t ) 
+    : n(n), t(t) 
+  {}
+  
+  friend multiplication_table_row_t 
+  operator*( multiplication_table_pre_col_t c, multiplication_table_row_t r );
+  
+#if RINGING_PREMATURE_MEMBER_INSTANTIATION
+  // These are to make templates work and don't really exist
+  multiplication_table_pre_col_t();
+  bool operator< (const multiplication_table_pre_col_t &) const;
+  bool operator==(const multiplication_table_pre_col_t &) const;
+  bool operator!=(const multiplication_table_pre_col_t &) const;
+  bool operator> (const multiplication_table_pre_col_t &) const;
+#endif
+  
+private:
+  size_t n; 
+  multiplication_table *t;
+};
+
+
+// The main class
 class multiplication_table
 {
 public:
@@ -53,55 +128,13 @@ public:
   {
     // Cannot use the templated constructor because MSVC's STL 
     // doesn't have it.
-    copy( first, last, back_inserter( table ) );
+    copy( first, last, back_inserter( rows ) );
+    table.resize( rows.size() );
   }
 
-  struct post_col_t;
-  struct pre_col_t;
-  struct row_t;
-
-  struct row_t 
-  {
-  public:
-    row_t() : n(0u) {}
-    bool isrounds() const { return n == 0; }
-    operator size_t() const { return n; }
-
-    friend class multiplication_table;
-
-  private:
-    size_t n; 
-  };
-
-  struct post_col_t 
-  {
-  public:
-    post_col_t( size_t n, multiplication_table *t ) : n(n), t(t) {}
-
-    friend row_t operator*( row_t r, post_col_t c )
-    {
-      return c.t->table[ r ].x[ c.n ]; 
-    }
-
-  private:
-    size_t n; 
-    multiplication_table *t;
-  };
-
-  struct pre_col_t
-  {
-  public:
-    pre_col_t( size_t n, multiplication_table *t ) : n(n), t(t) {}
-
-    friend row_t operator*( pre_col_t c, row_t r )
-    {
-      return c.t->table[ r ].x[ c.n ]; 
-    }
-
-  private:
-    size_t n; 
-    multiplication_table *t;
-  };
+  typedef multiplication_table_row_t      row_t;
+  typedef multiplication_table_post_col_t post_col_t;
+  typedef multiplication_table_pre_col_t  pre_col_t;
 
   // Primarily for debugging.  Prints out the multiplication table
   void dump( ostream &os ) const;
@@ -116,20 +149,15 @@ public:
   // The number of rows in the table
   size_t size() const { return table.size(); }
 
+  // Operators to do optimised multiplication of rows:
+  friend row_t operator*( row_t r, post_col_t c )
+    { return c.t->table[ r ][ c.n ]; }
+  friend row_t operator*( pre_col_t c, row_t r )
+    { return c.t->table[ r ][ c.n ]; }
+
 private:
-
-  friend row_t operator*( row_t r, post_col_t c );
-  friend row_t operator*( pre_col_t c, row_t r );
-
-  struct table_row
-  {
-    table_row( const row &r ) : r(r) {}
-    
-    row r;
-    vector< row_t > x;
-  };
-
-  vector< table_row > table;
+  vector< row > rows;
+  vector< vector< row_t > > table;
   size_t colcount;
 };
 

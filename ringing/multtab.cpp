@@ -28,6 +28,11 @@
 #else
 #include <iostream>
 #endif
+#if RINGING_OLD_C_INCLUDES
+#include <assert.h>
+#else
+#include <cassert>
+#endif
 
 RINGING_START_NAMESPACE
 
@@ -38,8 +43,8 @@ void multiplication_table::dump( ostream &os ) const
   for ( row_t i; i.n != table.size(); ++i.n )
     {
       os << i.n << ")  ";
-	for ( vector< row_t >::const_iterator j( table[i.n].x.begin() );
-	      j != table[i.n].x.end(); ++j )
+	for ( vector< row_t >::const_iterator j( table[i.n].begin() );
+	      j != table[i.n].end(); ++j )
 	  {
 	    os << j->n << " ";
 	  }
@@ -52,10 +57,11 @@ void multiplication_table::dump( ostream &os ) const
 multiplication_table::pre_col_t 
 multiplication_table::compute_pre_mult( const row &r )
 {
-  for ( vector< table_row >::iterator i( table.begin() ); 
-	i != table.end(); ++i )
+  size_t i(0);
+  for ( vector< row >::const_iterator ri( rows.begin() );
+	ri != rows.end(); ++ri )
     {
-      i->x.push_back( find( r * i->r ) );
+      table[ i++ ].push_back( find( r * *ri ) );
     }
   
   return pre_col_t( colcount++, this );
@@ -64,10 +70,11 @@ multiplication_table::compute_pre_mult( const row &r )
 multiplication_table::post_col_t 
 multiplication_table::compute_post_mult( const row &r )
 {
-  for ( vector< table_row >::iterator i( table.begin() ); 
-	i != table.end(); ++i )
+  size_t i(0);
+  for ( vector< row >::const_iterator ri( rows.begin() ); 
+	ri != rows.end(); ++ri )
     {
-      i->x.push_back( find( i->r * r ) );
+      table[ i++ ].push_back( find( *ri * r ) );
     }
   
   return post_col_t( colcount++, this );
@@ -76,9 +83,12 @@ multiplication_table::compute_post_mult( const row &r )
 multiplication_table::row_t 
 multiplication_table::find( const row &r )
 {
-  for ( row_t i; i.n != table.size(); ++i.n )
-    if ( table[i.n].r == r ) 
+  for ( row_t i; i.n != rows.size(); ++i.n )
+    if ( rows[i.n] == r ) 
       return i;
+
+  assert( false );
+  return row_t();
 }
 
 RINGING_END_NAMESPACE

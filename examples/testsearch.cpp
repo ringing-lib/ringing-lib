@@ -100,7 +100,8 @@ int main()
 
   cout << "An exhaustive list of bobs-only 360s of Bob Minor "
           "(modulo rotation)" << endl;
-  touch_search( table_search( m, calls, make_pair( 30, 30 ), true ),
+  touch_search( table_search( m, calls, make_pair( size_t(30), size_t(30) ), 
+			      true ),
 		iter_from_fun( print_touch() ) );
 
   return 0;
