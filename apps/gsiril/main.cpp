@@ -16,6 +16,7 @@
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 // $Id$
+
 #include <ringing/common.h>
 #include <ringing/pointers.h>
 #include "console_stream.h"
@@ -31,7 +32,19 @@
 #else
 #include <iostream>
 #endif
+#if RINGING_USE_STRINGSTREAM
+#if RINGING_OLD_INCLUDES
+#include <sstream.h>
+#else
 #include <sstream>
+#endif
+#else // RINGING_USE_STRINGSTREAM
+#if RINGING_OLD_INCLUDES
+#include <strstream.h>
+#else
+#include <strstream>
+#endif
+#endif // RINGING_USE_STRINGSTREAM
 
 RINGING_USING_NAMESPACE
 
@@ -72,7 +85,11 @@ int main( int argc, const char *argv[] )
 
       // Prepopulate symbol table
       {
+#if RINGING_USE_STRINGSTREAM
 	istringstream in(init_string);
+#else
+	istrstream in(init_string);
+#endif
 	shared_pointer<parser> p( make_default_parser(in) );
 	while (true)
 	  {
