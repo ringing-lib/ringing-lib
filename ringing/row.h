@@ -103,6 +103,7 @@ public:
   friend bell& operator*=(bell& i, const change& c);
 
   char *print(char *pn) const;	// Print place notation to a string
+  string print() const;
   int bells(void) const { return n; } // Return number of bells
   int sign(void) const;		// Return whether it's odd or even
   int findswap(bell which) const; // Check whether a particular swap is done
@@ -110,11 +111,18 @@ public:
   int swap(bell which);		// Swap or unswap a pair
   int internal(void) const;	// Does it contain internal places?
 
-  // This isn't defined, but it keeps the Microsoft templates happy
-  bool operator<(const change&) const;
+  // So that we can put changes into containers
+  bool operator<(const change& c) const {
+    return (n < c.n) || (n == c.n && swaps < c.swaps);
+  }
+  bool operator>(const change& c) const {
+    return (n > c.n) || (n == c.n && swaps > c.swaps);
+  }
 };
 
-ostream& operator<<(ostream& o, const change& c); // Write a change to a stream
+inline ostream& operator<<(ostream& o, const change& c) {
+  return o << c.print();
+}
 bell& operator*=(bell& i, const change& c); // Apply a change to a position
 inline bell operator*(bell i, const change& c)
 {
@@ -187,6 +195,7 @@ public:
   row inverse(void) const;	// Find the inverse
 
   char *print(char *s) const;	// Print the row into a string
+  string print() const;
   int bells(void) const { return data.size(); } // How many bells?
   row& rounds(void);		// Set it to rounds
   static row rounds(int n);	// Return rounds on n bells
@@ -200,11 +209,14 @@ public:
   friend ostream& operator<<(ostream&, const row&);
   void swap(row &other) { data.swap(other.data); }
 
-  // Keep MS happy
-  bool operator<(const row&) const;
+  // So that we can put rows in containers
+  bool operator<(const row& r) const { return data < r.data; }
+  bool operator>(const row& r) const { return data > r.data; }
 };
 
-ostream& operator<<(ostream& o, const row& r); // Write a row to a stream
+inline ostream& operator<<(ostream& o, const row& r) {
+  return o << r.print();
+}
 
 // An operator which has to be here
 row& operator*=(row& r, const change& c);

@@ -113,6 +113,24 @@ char *change::print(char *pn) const
   return pn;
 }
 
+string change::print() const
+{
+  string p;
+
+  if(n != 0) {
+    bell i = 0;
+    vector<bell>::const_iterator s;
+    for(s = swaps.begin(); s != swaps.end(); s++) { // Find the next swap
+      while(i < *s) { p += i.to_char(); i = i + 1; } // Write all the places
+      i = i + 2;
+    }
+    // Write the remaining places
+    while(i < n) { p += i.to_char(); i = i + 1; } 
+    if(p.empty()) p = "X";
+  }
+  return p;
+}
+
 // Check whether a particular swap is done
 int change::findswap(bell which) const
 {
@@ -179,15 +197,6 @@ int change::internal(void) const
   }
   if((n - *s) > 2) return 1;
   return 0;
-}
-
-// Write it to a stream
-ostream& operator<<(ostream& o, const change& c)
-{
-  buffer s(c.bells() + 1);
-  c.print(s);
-  o << s;
-  return o;
 }
 
 // Return whether it's odd or even
@@ -326,14 +335,15 @@ char *row::print(char *s) const
   return s;
 }
 
-// Write it to a stream
-ostream& operator<<(ostream &o, const row& r)
+string row::print() const
 {
-  if(!r.data.empty())
-    for(vector<bell>::const_iterator i = r.data.begin(); 
-	i != r.data.end(); ++i)
-      o << *i;
-  return o;
+  string s;
+
+  if(!data.empty())
+    for(vector<bell>::const_iterator i = data.begin(); 
+	i != data.end(); ++i)
+      s += i->to_char();
+  return s;
 }
 
 // Set it to rounds
