@@ -35,24 +35,6 @@
 RINGING_USING_NAMESPACE
 RINGING_USING_STD
 
-class version_opt : public option
-{
-public:
-  version_opt( char c, const string &l, const string &d )
-    : option(c, l, d)
-  {}
-
-private:
-  virtual bool process( const string &, const arg_parser & ) const;
-};
-
-bool version_opt::process( const string &, const arg_parser & ) const
-{
-  cout << "methsearch is from the Ringing Class Library version " RINGING_VERSION ".\n";
-  exit(0);
-  return true; // To keep MSVC 5 happy
-}
-
 class falseness_opt : public option
 {
 public:
@@ -127,13 +109,8 @@ arguments::arguments()
 
 void arguments::bind( arg_parser &p )
 {
-  p.add( new help_opt
-	 ( '?', "help",   
-	   "Print this help message" ) );
-
-  p.add( new version_opt
-	 ( 'V', "version",
-	   "Print the program version" ) );
+  p.add( new help_opt );
+  p.add( new version_opt );
 
   p.add( new integer_opt
 	 ( 'b', "bells",  
