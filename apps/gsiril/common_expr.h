@@ -78,6 +78,19 @@ private:
   expression expr;
 };
 
+// Set the number of extents
+class extents_stmt : public statement::impl
+{
+public:
+  explicit extents_stmt( int n )
+    : n(n) {}
+
+private:
+  virtual void execute( execution_context& ) const;
+
+  int n;
+};
+
 // Set the default number of bells
 class bells_stmt : public statement::impl
 {

@@ -62,6 +62,7 @@ public:
     times       = '*',
     assignment  = '=',
     new_line    = '\n',
+    semicolon   = ';',
     comment     = first_token,
     string_lit,
     transp_lit,
@@ -84,8 +85,8 @@ public:
   {
     switch ( t.type() )
       case name: case num_lit: case open_paren: case close_paren:
-      case comma: case times: case assignment: case new_line: case comment:
-      case string_lit: case transp_lit: case pn_lit:
+      case comma: case times: case assignment: case new_line: case semicolon:
+      case comment: case string_lit: case transp_lit: case pn_lit: 
 	return;
     
     throw runtime_error( make_string() << "Unknown token in input: " << t );
@@ -166,13 +167,16 @@ vector< token > msparser::tokenise_command()
 
   do 
     {
-      // Skip lines which are purely whitespace or comments
+      // Skip empty commands
       while ( tokiter != tokend && 
 	      ( tokiter->type() == mstokeniser::new_line ||
+		tokiter->type() == mstokeniser::semicolon ||
 		tokiter->type() == mstokeniser::comment ) )
 	++tokiter;
 
-      while ( tokiter != tokend && tokiter->type() != mstokeniser::new_line )
+      while ( tokiter != tokend && 
+	      ( tokiter->type() != mstokeniser::new_line && 
+		tokiter->type() != mstokeniser::semicolon ) )
 	{
 	  // TODO:  Get the tokeniser to discard comments these automatically
 	  if ( tokiter->type() != mstokeniser::comment )
@@ -217,7 +221,14 @@ statement msparser::parse()
       bells( string_to_int( cmd[0] ) );
       return statement( new bells_stmt(args.bells) );
     }
-  
+
+  // Extents directive
+  if ( cmd.size() == 2 && cmd[0].type() == mstokeniser::num_lit
+       && cmd[1].type() == mstokeniser::name && cmd[1] == "extents" )
+    {
+      return statement( new extents_stmt( string_to_int(cmd[0]) ) );
+    }
+
   // Import directive
   if ( cmd.size() == 2 && cmd[0].type() == mstokeniser::name
        && cmd[0] == "import" && ( cmd[1].type() == mstokeniser::name ||

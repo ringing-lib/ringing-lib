@@ -38,3 +38,12 @@ execution_context.cpp execution_context.h expression.cpp expression.h \
 common_expr.h parser.cpp parser.h util.cpp util.h prog_args.h $(additional)
 
 EXTRA_gsiril_SOURCES = rlstream.cpp rlstream.h
+
+# When gsiril is run under the name msiril, it automatically
+# runs in MicroSiril compatibility mode.  Create a symlink to 
+# assist in this.
+install-exec-hook:
+	cd $(DESTDIR)$(bindir) && $(LN_S) gsiril msiril
+
+uninstall-hook:
+	cd $(DESTDIR)$(bindir) && $(RM) gsiril msiril

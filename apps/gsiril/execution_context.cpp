@@ -90,7 +90,7 @@ bool execution_context::define_symbol( const pair< const string, expression > &d
   if ( sym_table.define(defn) )
     return true;  // redefinition can't be first
 
-  if ( sym_table.lookup( "__first" ).isnull() )
+  if ( sym_table.lookup( "__first__" ).isnull() )
     sym_table.define
       ( pair<const string, expression>( "__first__", defn.second ) );
   return false;

@@ -77,12 +77,16 @@ public:
   expression lookup_symbol( const string &sym ) const;
   void prove_symbol( const string& str ); 
  
+  void extents( int n ) { args.num_extents = n; }
 
   int bells( int b ) { swap(b, args.bells.get()); return b; }
   int bells() const  { return args.bells; }
 
   bool interactive( bool i ) { swap(i, args.interactive.get()); return i; }
   bool interactive() const   { return args.interactive; }
+
+  bool verbose( bool v ) { swap(v, args.verbose.get()); return v; }
+  bool verbose() const   { return args.verbose; }
 
   const arguments& get_args() const { return args; }
 

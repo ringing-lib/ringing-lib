@@ -41,11 +41,14 @@ struct arguments
   init_val<int,1>      num_extents;
   
   init_val<bool,false> interactive;
+  init_val<bool,false> verbose;
   init_val<bool,false> case_insensitive;
 
   string               prove_symbol;
 
   arguments( int argc, char** argv );
+
+  void set_msiril_compatible();
 
 private:
   void bind( arg_parser& p );

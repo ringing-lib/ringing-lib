@@ -20,7 +20,7 @@
 #include <ringing/common.h>
 
 #if RINGING_HAS_PRAGMA_INTERFACE
-#pragma interface "gsiril/prog_args.h"
+#pragma implementation "gsiril/prog_args.h"
 #endif
 
 #include <ringing/pointers.h>
@@ -29,6 +29,7 @@
 #include "parser.h"
 #include "execution_context.h"
 #include "args.h"
+#include "util.h"
 #include "expression.h"
 #include "prog_args.h"
 #if RINGING_OLD_INCLUDES
@@ -60,9 +61,13 @@ RINGING_USING_NAMESPACE
 
 arguments::arguments( int argc, char** argv ) 
 {
-  arg_parser ap( argv[0], "gsiril -- proves touches.\v"
-  "To use gsiril in a microsiril compatible way, use the -IP options",
+  arg_parser ap( argv[0], "gsiril -- proves touches.",
 		 "OPTIONS" );
+
+  // If the program is called msiril or microsiril, go into microsiril
+  // compatibility mode.
+  if ( ap.program_name() == "msiril" || ap.program_name() == "microsiril" )
+    set_msiril_compatible();
   
   bind(ap);
   if ( !ap.parse(argc, argv) ) {
@@ -73,6 +78,27 @@ arguments::arguments( int argc, char** argv )
   if ( !validate(ap) )
     exit(1);
 }
+
+void arguments::set_msiril_compatible()
+{
+  case_insensitive = true;
+  prove_symbol = "__first__";
+}
+
+class msiril_opt : public option {
+public:
+  msiril_opt( char c, const string &l, const string &d,
+	      arguments& args ) 
+    : option(c, l, d), args(args)
+  {}
+  
+  virtual bool process( const string&, const arg_parser& ) const {
+    args.set_msiril_compatible();
+  }
+
+private:
+  arguments& args;
+};
 
 void arguments::bind( arg_parser& p )
 {
@@ -95,17 +121,26 @@ void arguments::bind( arg_parser& p )
 	   interactive ) );
 
   p.add( new boolean_opt
+	 ( 'v', "verbose",
+	   "Run in verbose mode", 
+	   verbose ) );
+
+  p.add( new boolean_opt
 	 ( 'I', "case-insensitive",
 	   "Run case insensitively ", 
 	   case_insensitive ) );
 
+  // NB __first__ is an alias for the first symbol
   p.add( new string_opt
 	 ( 'P', "prove",
 	   "Proves a particular symbol (or the first if none specified)",
 	   "SYMBOL",
 	   prove_symbol, "__first__" ) );
-
-  // NB __first__ is an alias for the first symbol
+ 
+  p.add( new msiril_opt
+	 ( '\0', "msiril",
+	   "Run in microsiril compatibile mode",
+	   *this ) );
 }
 
 bool arguments::validate( arg_parser& ap )
@@ -174,6 +209,7 @@ void initialse( execution_context& e, const arguments& args )
 
   // Turn off interactivity whilst it prepopulates the symbol table
   bool interactive = e.interactive(false);
+  bool verbose     = e.verbose(false);
 
 #if RINGING_USE_STRINGSTREAM
   istringstream in(init_string);
@@ -186,23 +222,24 @@ void initialse( execution_context& e, const arguments& args )
 	    "Error initialising", true);
 
   e.interactive(interactive);
+  e.verbose(verbose);
 
   // Don't allow any of the predefined symbols to polute 'first'.
   e.undefine_symbol( "__first__" );
 }
 
-void prove_final_symbol( execution_context& e, const arguments& args )
+bool prove_final_symbol( execution_context& e, const arguments& args )
 {
   try 
     {
       e.prove_symbol( args.prove_symbol );
+      return true;
     } 
   catch (const exception& ex ) 
     {
       cerr << "Error proving " << args.prove_symbol << ": "
 	   << ex.what() << endl;
-      if (!args.interactive) 
-	exit(1);
+      return false;
     }
 }
 
@@ -211,6 +248,9 @@ int main( int argc, char *argv[] )
   try
     {
       arguments args( argc, argv );
+
+      if ( args.case_insensitive ) 
+	args.prove_symbol = lower_case( args.prove_symbol );
 
       execution_context e( cout, args );
       initialse(e, args);
@@ -225,7 +265,8 @@ int main( int argc, char *argv[] )
 		    "Error", !args.interactive);
 
       if ( read_anything && args.prove_symbol.size() )  
-	prove_final_symbol( e, args );
+	if ( !prove_final_symbol( e, args ) )
+	  exit(1);
     }
   catch ( const exception &ex )
     {

@@ -42,19 +42,19 @@ void definition_stmt::execute( execution_context& e ) const
 {
   if ( e.define_symbol( defn ) )
     {
-      if ( e.interactive() )
+      if ( e.verbose() )
 	e.output() << "Redefinition of '" << defn.first << "'." << endl;
     }
   else
     {
-      if ( e.interactive() )
+      if ( e.verbose() )
 	e.output() << "Definition of '" << defn.first << "' added." << endl;
     }
 }
 
 void null_stmt::execute( execution_context& e ) const
 {
-  if ( e.interactive() )
+  if ( e.verbose() )
     e.output() << diagnostic;
 }
 
@@ -66,6 +66,8 @@ void prove_stmt::execute( execution_context& e ) const
       p.execute_symbol( "start" );
       expr.execute(p);
       p.execute_symbol( "finish" );
+      p.maybe_print_pdf();
+
       switch ( p.state() )
 	{
 	case proof_context::rounds: 
@@ -83,17 +85,26 @@ void prove_stmt::execute( execution_context& e ) const
     {}
 }
 
+void extents_stmt::execute( execution_context& e ) const
+{
+  e.extents( n );
+
+  if ( e.verbose() )
+    e.output() << "Set extents to " << n << endl;
+}
+
 void bells_stmt::execute( execution_context& e ) const
 {
   e.bells( bells );
 
-  if ( e.interactive() )
+  if ( e.verbose() )
     e.output() << "Set bells to " << bells << endl;
 }
 
 void import_stmt::execute( execution_context& e ) const
 {
   bool i( e.interactive() );
+  bool v( e.verbose() );
   int b( e.bells() );
 
   try
@@ -105,6 +116,7 @@ void import_stmt::execute( execution_context& e ) const
       
       shared_pointer<parser> p( make_default_parser(ifs, e.get_args() ) );
       e.interactive(false);
+      e.verbose(false);
       while (true)
 	{
 	  statement s( p->parse() );
@@ -114,17 +126,19 @@ void import_stmt::execute( execution_context& e ) const
     }
   catch (...)
     {
-      // Restore bells, interactive flags
+      // Restore bells, verbose, interactive flags
       if (b > 0) e.bells(b);
       e.interactive(i);
+      e.verbose(v);
       throw;
     }
 
-  // Restore bells, interactive flags
+  // Restore bells, verbose, interactive flags
   if (b > 0) e.bells(b);
   e.interactive(i);
+  e.verbose(v);
 
-  if ( e.interactive() )
+  if ( e.verbose() )
     e.output() << "Resource \"" << name << "\" loaded" << endl;
 }
 
