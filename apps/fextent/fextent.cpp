@@ -417,6 +417,9 @@ bool arguments::validate( arg_parser& ap )
   if ( !generate_calls( ap ) )
     return false;
 
+  if ( linkage )
+    ap.error( "Warning:  Linkage handling is experimental." );
+
   return true;
 }
 
