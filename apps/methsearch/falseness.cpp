@@ -136,7 +136,15 @@ string falseness_group_table::codes( const method &m )
 //
 // Extent possibility
 //
-
+// This algorithm only works for methods with calls that have effect for a 
+// single change at the lead end (so neither the bobs nor the singles in 
+// Grandsire count).
+// 
+// The idea is to look at the graph whose vertices are the set of possible 
+// lead heads and whose edges are mutually false lead heads.  For an extent
+// to be possible using an arbitrary number of single-change lead end calls,
+// the graph must be bipartite.
+// 
 class falseness_analysis
 {
 private:
