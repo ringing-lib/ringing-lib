@@ -26,6 +26,11 @@
 
 #include <ringing/common.h>
 #include <string>
+#if RINGING_OLD_INCLUDES
+#include <vector.h>
+#else
+#include <vector>
+#endif
 #include <ringing/row.h>
 
 RINGING_START_NAMESPACE
