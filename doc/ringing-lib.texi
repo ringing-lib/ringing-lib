@@ -1141,6 +1141,8 @@ This function returns the full name of the method as a string.
 
 @node method static Functions, method static Variables, Other method Functions, The method Class
 @subsection @code{static} functions
+@cindex method::stagename()
+@cindex method::classname()
 
 @deftypefun {static const char*} method::stagename (int @var{bells});
 This function returns a pointer to a string describing the stage of 
@@ -1407,7 +1409,7 @@ If exceptions are enabled, an @code{invalid_name} of type @code{exception} will 
 This function is intended to save a method to the currently loaded method library, if it is possible to do so.
 @end deftypefn
 
-@deftypefn @code{virtual int rename(const string name1, const string name2)}
+@deftypefn @code{virtual int rename_method(const string name1, const string name2)}
 This function is intended to rename a method from @var{name1} to @var{name2} within the currently loaded method library if it is possible to do so.
 @end deftypefn
 
@@ -1430,7 +1432,7 @@ The @code{library} class is the main interface to the individual method librarie
 
 For the following functions, see the definitions under * The library_base_class:: . The definitions are the same, except that these are not virtual functions.
 
-@code{load, save, rename, remove, dir, good, writeable}
+@code{load, save, rename_method, remove, dir, good, writeable}
 
 The rest of the functions control the accessing of libraries and determining if those libraries can correctly access files given to them.
 

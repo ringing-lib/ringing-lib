@@ -53,7 +53,7 @@ const char *method::txt_classes[11] = {
   "Slow Course"
   };
 
-const char *method::txt_stages[14] = {
+const char *method::txt_stages[20] = {
   "Singles",
   "Minimus",
   "Doubles",
@@ -67,7 +67,13 @@ const char *method::txt_stages[14] = {
   "Sextuples",
   "Fourteen",
   "Septuples",
-  "Sixteen"
+  "Sixteen",
+  "Octuples",
+  "Eighteen",
+  "Nonuples",
+  "Twenty",
+  "Decuples",
+  "Twenty-Two"
   };
 
 const char *method::txt_double = "Double";
@@ -249,7 +255,7 @@ int method::methclass(void) const
 const char *method::stagename(int n)
 {
   static char buff[4];
-  if(n >= 3 && n <= 16)
+  if ((n >= 3) && (n <= 22))
     return txt_stages[n-3];
   else {
     sprintf(buff,"%d",n);

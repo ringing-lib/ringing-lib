@@ -39,6 +39,8 @@
 
 RINGING_START_NAMESPACE
 
+#undef __SEPERATE_FILES__
+
 RINGING_USING_STD
 
 // cclib : Implement Central Council Method libraries
@@ -51,11 +53,16 @@ private:
 
   static newlib<cclib> type;    // Provide a handle to this library type
 
+  // Extracts the number of bells from the filename.
+  static int extractNumber(const string&);
+
 public:
   static void registerlib(void) {
     library::addtype(&type);
   }
-
+#if defined(__SEPERATE_FILES__)
+  static int seperatefiles(const string&);
+#endif
   cclib::cclib(const string& name);
   ~cclib() { if (_good == 1) f.close(); }
 

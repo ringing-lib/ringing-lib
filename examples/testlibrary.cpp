@@ -49,6 +49,33 @@ int main()
   mslib::registerlib();
   cclib::registerlib();
 
+#if defined(__SEPERATE_FILES__)
+  {
+    // First run the seperation routine
+    string dirname;
+
+    cout << "Attempt to seperate cc library files - WARNING: backup first!\n";
+    cout << "\nFirst enter the directory of the cc method collection\n"
+	 << "or just press enter\n";
+    getline(cin, dirname);
+
+    switch (cclib::seperatefiles(dirname))
+      {
+      case 0:
+	cout << "Files were successfully modified\n";
+	break;
+      case -1:
+	cerr << "Unsuccessful in opening directory\n";
+	break;
+      case 1:
+	cout << "No modifications required\n";
+	break;
+      default:
+	cerr << "ERROR: This shouldn't have occured\n";
+      }
+  }
+#endif
+
   {
     string filename;
 

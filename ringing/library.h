@@ -74,7 +74,7 @@ public:
   virtual method load(const char* name) = 0; // Load a method
   virtual int save(const method& m)	// Save a method
     { return 0; }
-  virtual int rename(const string name1, const string name2)
+  virtual int rename_method(const string name1, const string name2)
     { return 0; }
   virtual int remove(const string name)
     { return 0; }
@@ -102,8 +102,8 @@ public:
   ~library() { if(lb) delete lb; }
   method load(const char* name) { return lb->load(name); }
   int save(const method& m) { return lb->save(m); }
-  int rename(const string name1, const string name2) 
-    { return lb->rename(name1, name2); }
+  int rename_method(const string name1, const string name2) 
+    { return lb->rename_method(name1, name2); }
   int remove(const string name) { return lb->remove(name); }
   int dir(list<string>& result) { return lb->dir(result); }
   bool good() { return lb && lb->good(); }

@@ -22,14 +22,17 @@
 #endif
 
 #include <ringing/common.h>
+#include <ringing/cclib.h>
 #if RINGING_OLD_C_INCLUDES
 #include <string.h>
+#include <stdio.h>
 #else
 #include <cstring>
+#include <cstdio>
 #endif
-#include <ringing/cclib.h>
 #include <ringing/method.h>
 #include <string>
+#include <dirent.h>
 RINGING_START_NAMESPACE
 
 newlib<cclib> cclib::type;
@@ -40,6 +43,19 @@ void lowercase(char &c)
   c = tolower(c);
 }
 
+int cclib::extractNumber(const string &filename)
+{
+  string::const_iterator s;
+
+  // Get the number off the end of the file name
+  // Is there a '.'? e.g. '.txt', if so account for it
+  string subname(filename, 0, filename.find('.'));
+
+  // now start to reverse from last.
+  for(s = subname.end(); s > subname.begin() && isdigit(s[-1]); s--);
+  return atoi(s);
+}
+
 cclib::cclib(const string& name) : f(name.c_str()), wr(0), _good(0)
 {
   // Open file. Not going to bother to see if it's writeable as the
@@ -47,15 +63,7 @@ cclib::cclib(const string& name) : f(name.c_str()), wr(0), _good(0)
   if(f.good())
     {
       _good = 1;
-      string::const_iterator s;
-      // Get the number off the end of the file name
-      // Is there a '.'? e.g. '.txt', if so account for it
-
-      string subname(name, 0, name.find('.'));
-
-      // now start to reverse from last.
-      for(s = subname.end(); s > subname.begin() && isdigit(s[-1]); s--);
-      b = atoi(s);
+      b = extractNumber(name);
     }
 }
 
@@ -276,5 +284,147 @@ method cclib::load(const char *name)
   method m;
   return m;
 }
+
+#if defined(__SEPERATE_FILES__)
+// This function is designed to seperate the cc method collection files into
+// seperate ones - they have a nasty habit of bundling them together which
+// makes them impossible to search through easily. Especially if you are only
+// specifying a name not a number of bells.
+// Returns 0 = successful, 1 = no modifications required, -1 = unsuccessful
+int cclib::seperatefiles(const string &dirname)
+{
+  // We shall assume an extension of *.txt for ccfiles
+  // First find all *.txt files in the directory
+  DIR *LibDir = opendir(dirname.c_str());
+  struct dirent *direntry;
+  if (LibDir != NULL)
+    {
+      int result = -1;
+
+      while ((direntry = readdir (LibDir)) != NULL)
+	{
+	  string direntryname = direntry->d_name;
+	  // Is it a valid cclib file?
+	  ifstream ifs((dirname + direntryname).c_str(), ios::in);
+	  if (ifs.good())
+	    {
+	      if (canread(ifs))
+		{
+		  if (result != 0)
+		    result = 1;
+		  // This is a valid cclib file - Now check to see if it needs
+		  // seperating.
+		  int bells = extractNumber(direntryname);
+		  if (bells != 0)
+		    {
+		      // Look through file for modifications to be made.
+		      ifs.clear();
+		      ifs.seekg(0, ios::beg);
+		      bool changerequired = false;
+		      while ((ifs.good()) && (!changerequired))
+			{
+			  string l;
+			  getline(ifs, l);
+			  int i;
+			  for (i = 3; i < 23; i++)
+			    {
+			      if (l.find(method::stagename(i)) != string::npos)
+				{
+				  if (i != bells)
+				    {
+				      changerequired = true;
+				    }
+				}
+			    }
+			} // end while
+		      
+		      if (changerequired)
+			{
+			  result = 0;
+			  // Need to extract the file data
+			  // Reset the file pointers
+			  ifs.clear();
+			  ifs.seekg(0, ios::beg);
+
+			  ofstream *f_PTR;
+
+			  // Now open a tmp file for the original data
+			  ofstream ofstemp((dirname + direntryname + ".tmp").c_str(), ios::out);
+			  ofstream ofsnew;
+
+			  f_PTR = &ofstemp;
+			  bool firstl = true;
+			  string firstline;
+			  while (ifs.good())
+			    {
+			      string l;
+			      getline(ifs, l);
+			      if (firstl)
+				{
+				  // Store the first line for new files.
+				  firstline = l;
+				  firstl = false;
+				}
+
+			      int i;
+			      bool isstagedetails = false;
+			      // Don't need to do 4 - assume this is the min
+			      // file the CC will put together
+			      for (i = 5; i < 23; i++)
+				{
+				  if ((l.size() < firstline.size()) && (l.find(method::stagename(i)) != string::npos))
+				    {
+				      isstagedetails = true;
+				      if (i != bells)
+					{
+					  // change file
+					  (*f_PTR).close();
+
+					  //					  cout << bells << endl;
+					  //					  cout << i << endl;
+					  char bstr[3];
+					  char istr[3];
+					  sprintf(&bstr[0], "%d", bells);
+					  sprintf(&istr[0], "%d", i);
+					  // cout << bstr << "a" << endl;
+					  // cout << istr << "A" << endl;
+					  // new file name
+					  string fnewname = direntryname;
+					  int nopos = fnewname.find((string) bstr, 0);
+					  fnewname.replace(nopos, ((string) bstr).size(), istr);
+					  ofsnew.open((dirname + fnewname).c_str(), ios::out);
+					  //cout << direntryname << endl;
+					  //cout << fnewname << endl;
+					  f_PTR = &ofsnew;
+					  *f_PTR << firstline;
+					}
+				      *f_PTR << l << endl;
+				    }
+				}
+			      if (!isstagedetails)
+				*f_PTR << l << endl;
+			    } // end while
+
+			  // Now move the temp file over the old one.
+			  rename((char*) (dirname + direntryname + ".tmp").c_str(), (char*) (dirname + direntryname).c_str());			  
+			  (*f_PTR).close();
+			}
+		    }
+		} // Matches if canread()
+	      else
+		{
+		  ifs.close();
+		}
+	    }
+	}
+      closedir(LibDir);
+      return result;
+    }
+  else
+    {
+      return -1;
+    }
+}
+#endif
 
 RINGING_END_NAMESPACE

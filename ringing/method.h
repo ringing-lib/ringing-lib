@@ -45,7 +45,7 @@ private:
   string myname;		// The name of the method, without Major etc. 
 
   static const char *txt_classes[11]; // Bob, Place etc.
-  static const char *txt_stages[14];  // Minimum, Doubles etc.
+  static const char *txt_stages[20];  // Minimum, Doubles etc.
 
 public: 
 
