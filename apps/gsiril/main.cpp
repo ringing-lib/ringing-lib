@@ -205,7 +205,8 @@ void initialse( execution_context& e, const arguments& args )
 "rounds   = \n"
 "everyrow = \n"
 "start    = \n"
-"finish   = \n";
+"finish   = \n"
+"abort    = \n";
 
   // Turn off interactivity whilst it prepopulates the symbol table
   bool interactive = e.interactive(false);

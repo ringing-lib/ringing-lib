@@ -60,14 +60,22 @@ void null_stmt::execute( execution_context& e ) const
 
 void prove_stmt::execute( execution_context& e ) const
 {
-  try 
+  try
     {
       proof_context p(e);
-      p.execute_symbol( "start" );
-      expr.execute(p);
-      p.execute_symbol( "finish" );
-      p.maybe_print_pdf();
 
+      try
+	{
+	  p.execute_symbol( "start" );
+	  expr.execute(p);
+	  p.execute_symbol( "finish" );
+      	} 
+      catch( const script_exception& ) 
+	{
+	  p.execute_symbol( "abort" );
+	  return;
+	}
+    
       switch ( p.state() )
 	{
 	case proof_context::rounds: 
@@ -80,9 +88,10 @@ void prove_stmt::execute( execution_context& e ) const
 	  p.execute_symbol( "false" ); 
 	  break;
 	}
+    } 
+  catch ( const script_exception& ) 
+    {
     }
-  catch( const script_exception& ) 
-    {}
 }
 
 void extents_stmt::execute( execution_context& e ) const
