@@ -17,6 +17,9 @@
 
 // $Id$
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
 #include <ringing/common.h>
 
 #if RINGING_OLD_INCLUDES
@@ -34,6 +37,9 @@
 #include <ringing/mslib.h>
 #include <ringing/cclib.h>
 
+#if !HAVE_ARGP_PARSE
+#error Sorry, at the moment you need the argp library to build this program.
+#endif
 #include <argp.h>
 
 #if RINGING_USE_NAMESPACES
@@ -220,6 +226,7 @@ static error_t parser (int key, char *arg, struct argp_state *state)
       break;
     case 'a':
       args->vgap_mode = true;
+      break;
     case 'o' :
       args->output_file = arg;
       break;
@@ -374,6 +381,7 @@ static error_t parser (int key, char *arg, struct argp_state *state)
 	  args->pn_mode = printmethod::pn_all;
       } else
 	args->pn_mode = printmethod::pn_all;
+      break;
     case 'r' :
       args->custom_rules = true;
       if(arg) {

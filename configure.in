@@ -16,6 +16,7 @@ dnl Checks for libraries.
 
 dnl Checks for header files.
 AC_HEADER_STDC
+AC_REPLACE_FUNCS([argp_parse])
 
 dnl Now we check to see what the C++ headers are called
 AC_LANG_CPLUSPLUS

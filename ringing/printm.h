@@ -64,6 +64,7 @@ public:
 
 private:
   bool needrule(int i);
+  int find_pnextra();
   static int divd(int a, int b) { return (a - a % b) / b; }
   static int divu(int a, int b) 
     { return (a % b == 0) ? (a / b) : divd(a,b) + 1; }

@@ -91,17 +91,20 @@ void printmethod::print(printpage& pp)
   int column, columnset, row_count;
   bool sym = m->issym();
   bool pn;
+  int pnextra;
 
   if(number_mode == miss_always) 
     opt.flags |= printrow::options::miss_numbers;
   else
     opt.flags &= ~printrow::options::miss_numbers;
   pn = (pn_mode != pn_none);
+  if(pn) pnextra = find_pnextra();
   printrow pr(pp, opt);
 
   for(columnset = 0; total_row_count < total_rows; columnset++) {
     // Move to the beginning of this set of columns
     pr.set_position(xoffset, yoffset);
+    if(pn_mode != pn_none) pr.move_position(opt.xspace * pnextra, 0);
     pr.move_position(0, -opt.yspace * columnset * (rows_per_column + 1));
     pr.move_position(0, -vgap * columnset);
     for(column = 0; column < columns_per_set 
@@ -161,6 +164,17 @@ void printmethod::print(printpage& pp)
   }
 }
 
+int printmethod::find_pnextra()
+{
+  int result = 0;
+  method::const_iterator i; int k;
+  for(i = m->begin(); i != m->end(); i++) {
+    k = (*i).count_places();
+    if(k > result) result = k;
+  }
+  return result/2;
+}
+
 void printmethod::fit_to_space(const dimension& width, 
 				const dimension& height, bool vgap_mode, 
 				float aspect)
@@ -169,6 +183,10 @@ void printmethod::fit_to_space(const dimension& width,
 
   float curr_xspace = -1, new_xspace = 0, vlimit;
   int lead, leads_per_column, columns;
+ 
+  // Work out how many bells' worth of space to leave for place notation
+  int pnextra = 0;
+  if(pn_mode != pn_none) pnextra = find_pnextra();
 
   lead = m->length();
   // We try each possible number of leads per column until
@@ -178,7 +196,9 @@ void printmethod::fit_to_space(const dimension& width,
     rows_per_column = leads_per_column * lead;
     columns = divu(total_rows, rows_per_column);
     new_xspace = width.in_points() 
-      / (columns * (m->bells() + ((placebells >= 0) ? 3 : 1)) - 1);
+      / (columns * (m->bells() + ((placebells >= 0) ? 3 : 1)
+                    + ((pn_mode == pn_all) ? pnextra : 0)) 
+         + ((pn_mode == pn_first) ? pnextra : 0) - 1);
     vlimit = height.in_points() * aspect / 
       (rows_per_column + (vgap_mode ? (leads_per_column * 3 - 2) : 1));
     if(vlimit < new_xspace) new_xspace = vlimit;
@@ -195,7 +215,8 @@ void printmethod::fit_to_space(const dimension& width,
 
   opt.xspace.set_float(curr_xspace, 100);
   opt.yspace.set_float(curr_xspace / aspect, 100);
-  hgap = (placebells >= 0) ? opt.xspace * 3 : opt.xspace;
+  hgap = opt.xspace * (((placebells >= 0) ? 3 : 0) + 
+		       ((pn_mode == pn_all) ? pnextra : 0));
   vgap = opt.yspace * 2;
   opt.style.size = static_cast<int>(opt.xspace.in_points() * 0.9);
 }
@@ -204,7 +225,8 @@ float printmethod::total_width() {
   int columns = divu(total_rows, rows_per_column);
   if(columns_per_set < columns) columns = columns_per_set;
   return (opt.xspace.in_points() * (m->bells() * columns + 
-				    (placebells >= 0 ? 2 : 0))
+				    (placebells >= 0 ? 2 : 0) +
+				    ((pn_mode != pn_none) ? find_pnextra():0))
 	  + (hgap.in_points() * (columns - 1)));
 }
   
