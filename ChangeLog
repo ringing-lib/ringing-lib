@@ -1,0 +1,65 @@
+2001-06-07 18:03  mjb47
+
+	* Makefile.am, Makefile.in, configure, configure.in,
+	doc/Makefile.in, ringing/Makefile.in: Include config directory in
+	distribution
+
+2001-06-06 17:45  mjb47
+
+	* ringing/: method.cc, method.h, print_ps.cc, row.cc, row.h:
+	Altered row and change; removed rows and changes
+
+2001-05-08 14:25  mjb47
+
+	* README: Created README
+
+2001-05-08 12:25  mjb47
+
+	* Makefile.in, config.h.in, configure, configure.in,
+	doc/Makefile.in, doc/methlib.texi, ringing/Makefile.am,
+	ringing/Makefile.in, ringing/common.h.in, ringing/dimension.cc,
+	ringing/dimension.h, ringing/library.cc, ringing/library.h,
+	ringing/method.cc, ringing/method.h, ringing/mslib.cc,
+	ringing/mslib.h, ringing/print.cc, ringing/print.h,
+	ringing/print_ps.cc, ringing/print_ps.h, ringing/row.cc,
+	ringing/row.h, ringing/stuff.h: Added common.h for portability
+
+2001-05-01 20:16  standardeight
+
+	* ringing/: proof.h, proof.cc: Initial version for project
+
+2001-05-01 20:14  standardeight
+
+	* ringing/music.h: Initial Version for project
+
+2001-04-29 01:11  mjb47
+
+	* acinclude.m4, aclocal.m4, COPYING, INSTALL, config/install-sh,
+	config/missing, config/mkinstalldirs: Checked in extra files
+	created by automake
+
+2001-04-28 17:59  mjb47
+
+	* AUTHORS, configure, configure.in, stamp-h.in, Makefile.am,
+	Makefile.in, aclocal.m4, config.h.in, ChangeLog, NEWS, README,
+	acinclude.m4, doc/Makefile.am, doc/methlib.texi, doc/Makefile.in,
+	ringing/dimension.cc, ringing/library.cc, ringing/method.cc,
+	ringing/mslib.cc, ringing/print.cc, ringing/print_ps.cc,
+	ringing/dimension.h, ringing/library.h, ringing/method.h,
+	ringing/row.cc, ringing/mslib.h, ringing/print.h,
+	ringing/print_ps.h, ringing/Makefile.am, ringing/row.h,
+	ringing/stuff.h, ringing/Makefile.in: Imported initial version of
+	project
+
+2001-04-28 17:59  mjb47
+
+	* AUTHORS, configure, configure.in, stamp-h.in, Makefile.am,
+	Makefile.in, aclocal.m4, config.h.in, ChangeLog, NEWS, README,
+	acinclude.m4, doc/Makefile.am, doc/methlib.texi, doc/Makefile.in,
+	ringing/dimension.cc, ringing/library.cc, ringing/method.cc,
+	ringing/mslib.cc, ringing/print.cc, ringing/print_ps.cc,
+	ringing/dimension.h, ringing/library.h, ringing/method.h,
+	ringing/row.cc, ringing/mslib.h, ringing/print.h,
+	ringing/print_ps.h, ringing/Makefile.am, ringing/row.h,
+	ringing/stuff.h, ringing/Makefile.in: Initial revision
+
