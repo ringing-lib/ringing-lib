@@ -76,11 +76,13 @@ Package=<4>
 {{{
 EOF
 
-    if (scalar @deps) 
+    for (@deps) 
     {
-	$out .= "    Begin Project Dependency\n";
-	for (@deps) { $out .= "    Project_Dep_Name $_\n" }
-	$out .= "    End Project Dependency\n";
+	$out .= <<EOF;
+    Begin Project Dependency
+    Project_Dep_Name $_
+    End Project Dependency
+EOF
     }
 
     $out .= <<EOF;
@@ -311,7 +313,7 @@ my %actions = (
    {
        my ($vptr, $val, $path) = @_;
        
-       for (split /[ \t]_+/, $val) 
+       for (split /[ \t]+/, $val) 
        {
 	   if (/^\-I/) 
 	   {
@@ -325,9 +327,9 @@ my %actions = (
    {
        my ($vptr, $val, $path) = @_;
 
-       for (split /[ \t]_+/, $val)
+       for (split /[ \t]+/, $val)
        {
-	   if (/\.\/.*\/(?:lib)?(.*)\.(l?)a/)
+	   if (/\.(?:\/.*)*\/(?:lib)?(.*)\.(l?)a/)
 	   {
 	       safe_push $vptr, LIBDEPS, $1;
 	       # As soon as we dynamically link against anything, it is 
