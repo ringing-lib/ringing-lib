@@ -63,7 +63,7 @@ int main( int argc, char *argv[] )
   // So that errors with -M options are presented now rather than later.
   musical_analysis::force_init( args.bells );
 
-  if ( args.R_fmt.has_falseness_group || args.H_fmt.has_falseness_group )
+  if ( formats_have_falseness_groups() )
     false_courses::optimise( args.bells );
 
   {
@@ -90,18 +90,7 @@ int main( int argc, char *argv[] )
 
   if ( args.status ) clear_status();
 
-//   if ( !args.R_fmt.line_break )
-    cout << "\n";
-
-  if ( args.histogram ) 
-    {
-      if ( args.status ) clear_status();
-      if ( args.count || !args.quiet ) cout << "\n";
-
-      size_t count = statistics::output( cout );
-      if ( count ) cout << "\n";
-//       if ( !args.H_fmt.line_break && count ) cout << "\n";
-    }
+  args.outputs.flush(); // Causes stats to be emitted.
 
   return 0;
 }

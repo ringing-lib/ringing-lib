@@ -1,5 +1,5 @@
 // -*- C++ -*- prog_args.h - program arguments
-// Copyright (C) 2002, 2003 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003, 2004 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -26,7 +26,6 @@
 #pragma interface
 #endif
 
-#include "format.h"
 #include "init_val.h"
 #include <string>
 #if RINGING_OLD_INCLUDES
@@ -34,7 +33,14 @@
 #else
 #include <vector>
 #endif
+#if RINGING_OLD_INCLUDES
+#include <iosfwd.h>
+#else
+#include <iosfwd>
+#endif
 #include <ringing/row.h>
+#include <ringing/pointers.h>
+#include <ringing/libout.h>
 
 class arg_parser;
 
@@ -100,7 +106,11 @@ struct arguments
   vector<row>    required_rows;
 
   string H_fmt_str, R_fmt_str;
-  format_string H_fmt, R_fmt;
+  string outfile;
+  string outfmt;
+
+  // TODO:  Isn't really part of this struct
+  mutable multilibout outputs;
 
   string require_str;
   size_t require_expr_idx;

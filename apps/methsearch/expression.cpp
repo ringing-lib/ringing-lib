@@ -35,7 +35,8 @@
 #endif
 
 #include "expression.h"
-#include "format.h"
+#include "output.h"
+#include "format.h" // for argument_error
 #include "tokeniser.h"
 #if RINGING_OLD_INCLUDES
 #include <vector.h>

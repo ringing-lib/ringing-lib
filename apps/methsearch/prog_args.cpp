@@ -1,5 +1,5 @@
 // -*- C++ -*- prog_args.cpp - handle program arguments
-// Copyright (C) 2002, 2003 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003, 2004 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -25,6 +25,7 @@
 
 #include <ringing/row.h>
 #include <ringing/streamutils.h>
+#include <ringing/xmlout.h>
 #include "args.h"
 #include "prog_args.h"
 #include "libraries.h"
@@ -108,7 +109,6 @@ bool falseness_opt::process( const string &arg, const arg_parser & ) const
 
 arguments::arguments()
   : mask("*"),
-    R_fmt_str( "$p\t$l" ),
     require_expr_idx( static_cast<size_t>(-1) )
 {
 }
@@ -316,6 +316,16 @@ void arguments::bind( arg_parser &p )
 	 ( '\0', "offset-cyclic", 
 	   "Require offset cyclicity",
 	   require_offset_cyclic ) );
+
+  p.add( new string_opt
+	 ( 'o', "out-file",
+	   "Output to file FILENAME", "FILENAME",
+	   outfile ) );
+
+  p.add( new string_opt
+	 ( 'O', "out-format",
+	   "Create as a FMTTYPE library ", "FMTTYPE",
+	   outfmt ) );
 }
 
 bool arguments::validate( arg_parser &ap )
@@ -432,20 +442,39 @@ bool arguments::validate( arg_parser &ap )
       return false;
     }
 
-  try
+  if ( outfmt.size() && R_fmt_str.size() )
     {
-      R_fmt = format_string( R_fmt_str, format_string::normal_type );
-    }
-  catch ( const argument_error &error )
-    {
-      ap.error( make_string() << "Error parsing -R format: " << error.what() );
+      ap.error( "The -O option cannot be used with the -R option" );
       return false;
     }
 
+  if (!quiet) {
+    if ( outfile == "-" ) outfile.clear();
+
+    try {
+      if ( outfmt.empty() || outfmt == "fmt" ) {
+	outfmt.clear();
+	if ( R_fmt_str.empty() ) R_fmt_str = "$p\t$l";
+	outputs.add( new fmtout( R_fmt_str, outfile ) );
+      } 
+      else if ( outfmt == "xml" ) 
+	outputs.add( new xmlout( outfile ) );
+
+      else {
+	ap.error( "Unknown -O format: must be either `xml' or `fmt'" );
+	return false;
+      }
+    }
+    catch ( const argument_error &error ) {
+      ap.error( make_string() << "Error parsing -R format: " << error.what() );
+      return false;
+    }
+  }
+
   try
     {
-      H_fmt = format_string( H_fmt_str, format_string::stat_type );
-      histogram = !H_fmt_str.empty();
+      if ( (histogram = !H_fmt_str.empty()) )
+	outputs.add( new statsout( H_fmt_str ) );
     }
   catch ( const argument_error &error )
     {
@@ -471,7 +500,7 @@ bool arguments::validate( arg_parser &ap )
   if ( skewsym + sym + doubsym >= 2 )
     skewsym = sym = doubsym = true;
 
-  if ( R_fmt.has_falseness_group || H_fmt.has_falseness_group )
+  if ( formats_have_falseness_groups() )
     {
       if ( bells % 2 || hunt_bells > 1 || !require_pbles
 	   || !sym || show_all_meths )
@@ -482,13 +511,10 @@ bool arguments::validate( arg_parser &ap )
 	}
     }
 
-  if ( R_fmt.has_name || H_fmt.has_name )
+  if ( formats_have_names() && ! method_libraries::has_libraries() )
     {
-      if ( ! method_libraries::has_libraries() )
-	{
-	  ap.error( "The -L option must be used if either $n or $N is used" );
-	  return false;
-	}
+      ap.error( "The -L option must be used if either $n or $N is used" );
+      return false;
     }
 
   assert( !mask.empty() );

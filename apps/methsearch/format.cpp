@@ -1,5 +1,5 @@
 // -*- C++ -*- format.cpp - classes to handle format specifiers
-// Copyright (C) 2002, 2003 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003, 2004 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -23,12 +23,9 @@
 
 #include "format.h"
 #include "expression.h"
-#include "libraries.h"
-#include "methodutils.h"
-#include "falseness.h"
-#include "music.h"
 #include "tokeniser.h"
 #include "exec.h"
+#include "output.h"
 #if RINGING_OLD_INCLUDES
 #include <iterator.h>
 #include <algo.h>
@@ -47,9 +44,11 @@
 #if RINGING_HAVE_OLD_IOSTREAMS
 #include <iostream.h>
 #include <iomanip.h>
+#include <fstream.h>
 #else
 #include <ostream>
 #include <iomanip>
+#include <fstream>
 #endif
 #if RINGING_OLD_C_INCLUDES
 #include <ctype.h>
@@ -62,170 +61,92 @@
 #include <ringing/row.h>
 #include <ringing/method.h>
 #include <ringing/pointers.h>
+#include <ringing/library.h>
 
 RINGING_USING_NAMESPACE
 RINGING_USING_STD
 
-struct method_properties::impl
+class statistics
 {
-  explicit impl( const method& m ) : m(m) {}
-  const method& m;
-  mutable map< pair< int, string >, string > cache;
+public:
+  static size_t output( ostream &os );
+  static void add_entry( const histogram_entry &entry );
+
+  // Public to avoid MSVC compilation errors
+ ~statistics();
+
+private:
+  struct impl;
+  scoped_pointer< impl > pimpl;
+
+  static impl &instance();
+
+  statistics();
 };
 
+// -------------------------------------------------------------
 
-method_properties::method_properties( const method& m )
-  : pimpl( new impl( m ) )
-{  
-}
-
-method_properties::method_properties()
-{
-  // Out-of-line so impl is a complete type
-}
-
-method_properties::~method_properties()
-{
-  // Out-of-line so impl is a complete type
-}
-
-method_properties& 
-method_properties::operator=( const method_properties& other )
-{
-  // Out-of-line so impl is a complete type
-  pimpl = other.pimpl;
-}
-
-
-method_properties::method_properties( const method_properties& other )
-  : pimpl( other.pimpl )
-{
-  // Out-of-line so impl is a complete type
-}
-
-
-string method_properties::get_property( int num_opt, const string& name ) const
-{
-  pair< int, string > cache_key( num_opt, name );
-
-  {
-    // Is it in the cache?
-    map< pair< int, string >, string >::const_iterator cacheval
-      = pimpl->cache.find( cache_key );
-    if ( cacheval != pimpl->cache.end() )
-      return cacheval->second;
+class fmtout::impl : public libout::interface {
+public:
+  impl( string const& fmt, string const& filename ) 
+    : fs( fmt, format_string::normal_type ) {
+    if ( filename.size() && filename != "-" ) 
+      os.reset( new ofstream( filename.c_str() ) );
   }
 
-  make_string os;
-  const method& m = pimpl->m;
+private:
+  virtual void append( library_entry const& entry ) {
+    method_properties props( entry );
+    fs.print_method( props, (os ? *os : cout) );
+  }
 
-  // Generate the value
-  if ( name.size() == 1 )
-    {
-      switch ( name[0] ) 
-	{
-	case 'l': 
-	  os << m.lh();
-	  break;
+  virtual void flush() {}
 
-	case 'p': 
-	  for ( method::const_iterator i(m.begin()), e(m.end()); i!=e; ++i )
-	    os << *i << ".";
-	  break;
+  format_string fs;
+  scoped_pointer< ostream > os;
+};
 
-	case 'q': 
-	  os << get_compressed_pn(m);
-	  break;
+fmtout::fmtout( string const& fmt, string const& filename ) 
+  : libout( new impl( fmt, filename ) ) 
+{}
 
-	case 'Q': 
-	  os << get_short_compressed_pn(m);
-	  break;
+class statsout::impl : public libout::interface {
+public:
+  explicit impl( string const& fmt )
+    : fs( fmt, format_string::stat_type ),
+      os( cout )
+  {}
 
-	case 'r': {
-	  // TODO:  Should we cache all rows at same time?
-	  row r( m.bells() );
-	  int n( num_opt );
-	  for ( method::const_iterator 
-		  i( m.begin() ), e( m.begin() + num_opt );
-		n && i != e; ++i, --n ) 
-	    r *= *i;
-	  if ( n )
-	    throw runtime_error( "Format specifies row after end of method" );
-	  os << r;
-	} break;
+private:
+  virtual void append( library_entry const& entry ) {
+    method_properties props( entry );
+    fs.add_method_to_stats( props );
+  }
 
-	case 'h': 
-	  os << m.at( num_opt-1 ); 
-	  break;
+  virtual void flush() {
+    size_t c = statistics::output( os );
+    if ( c ) os << endl;
+  }
 
-	case 'b': 
-	  os << setw(num_opt) << max_blows_per_place(m); 
-	  break;
+  format_string fs;
+  ostream& os;
+};
 
-	case 'o': 
-	  os << setw(num_opt) << m.leads();
-	  break;
+statsout::statsout( string const& fmt )
+  : libout( new impl(fmt) )
+{}
 
-	case 'u': 
-	  os << setw(num_opt) << m.huntbells(); 
-	  break;
+// -------------------------------------------------------------
 
-	case 'd': 
-	  os << m.lhcode(); 
-	  break;
+RINGING_START_ANON_NAMESPACE
+static bool have_falseness_groups = false;
+static bool have_names = false;
+RINGING_END_ANON_NAMESPACE
 
-	case 'y':
-	  os << method_symmetry_string( m );
-	  break;
+bool formats_have_falseness_groups() { return have_falseness_groups; }
+bool formats_have_names() { return have_names; }
 
-	case 'n':
-	  // TODO: Should we cache fullname at same time?
-	  os << method_libraries::lookup_method( m ).name();
-	  break;
-
-	case 'N':
-	  // TODO: Should we cache fullname at same time?
-	  os << method_libraries::lookup_method( m ).fullname();
-	  break;
-
-	case 'C': 
-	  os << method::classname( m.methclass() ); 
-	  break;
-
-	case 'S': 
-	  os << method::stagename( m.bells() );
-	  break;
-
-	case 'M': 
-	  os << setw(num_opt) << musical_analysis::analyse(m);
-	  break;
-
-	case 'F': 
-	  os << falseness_group_codes(m);
-	  break;
-
-	case 'P': {
-	  bell b(num_opt-1); os << b;
-	  for ( method::const_iterator i( m.begin() ), e( m.end() ); 
-		i != e; ++i ) os << (b *= *i);
-	} break;
-
-	case 'O': 
-	  os << tenors_together_coursing_order(m);
-	  break;
-
-	default:
-	  throw logic_error( "Unknown variable requested" );
-	}
-    }
-  else
-    {
-      throw logic_error( "Unknown variable requested" );
-    }
-
-  return pimpl->cache[ cache_key ] = os;
-}
-
+// -------------------------------------------------------------
 
 class histogram_entry
 {
@@ -375,8 +296,6 @@ void format_string::print_method( const method_properties &props,
 
 format_string::format_string( const string &infmt, 
 			      format_string::format_type type )
-  : has_name(false),
-    has_falseness_group(false)
 {
   if ( type == preparsed_type ) {
     fmt = infmt; 
@@ -503,11 +422,11 @@ format_string::format_string( const string &infmt,
 	  switch ( *iter )
 	    {
 	    case 'n': case 'N':
-	      has_name = true;
+	      have_names = true;
 	      break;
 
 	    case 'F':
-	      has_falseness_group = true;
+	      have_falseness_groups = true;
 	      break;
 	    }
 
@@ -700,12 +619,12 @@ void output_status( const method &m )
   cerr << "Trying " << s << flush;
 }
 
-void output_raw_count( unsigned long c )
+void output_raw_count( ostream& out, unsigned long c )
 {
-  cout << c << "\n";
+  out << c << "\n";
 }
 
-void output_count( unsigned long c )
+void output_count( ostream& out, unsigned long c )
 {
-  cout << "Found " << c << " methods\n";
+  out << "Found " << c << " methods\n";
 }

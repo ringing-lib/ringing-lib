@@ -1,5 +1,5 @@
 // -*- C++ -*- search.cpp - the actual search algorithm
-// Copyright (C) 2002, 2003 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003, 2004 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -27,9 +27,10 @@
 #include "methodutils.h"
 #include "search.h"
 #include "falseness.h"
-#include "format.h"
 #include "expression.h"
 #include "prog_args.h"
+#include "format.h" // for clear_status
+#include "output.h"
 #if RINGING_OLD_INCLUDES
 #include <vector.h>
 #include <algo.h>
@@ -117,32 +118,23 @@ void run_search( const arguments &args, const method &initm )
   assert( s.m.length() == 0 );
   if ( args.count || args.raw_count )
     {
-      if ( args.status ) clear_status();
+      if ( args.status && args.outfile.empty() ) clear_status();
       if ( !args.quiet ) cout << "\n";
-      if ( args.raw_count ) output_raw_count( s.search_count );
-      else if ( args.count ) output_count( s.search_count );
+      if ( args.raw_count ) output_raw_count( cout, s.search_count );
+      else if ( args.count ) output_count( cout, s.search_count );
     }
 }
 
 void searcher::found_method()
 {
-  method_properties props;
-  if ( args.histogram || !args.quiet )
-    props = method_properties( m );
+  if ( !args.outputs.empty() ) {
+    method_properties props(m);
 
-  // Add it to the histogram
-  if ( args.histogram )
-    {
-      args.H_fmt.add_method_to_stats( props );
-    }
+    if ( !args.quiet && args.status && args.outfile.empty() )
+      clear_status();
 
-  if ( !args.quiet )
-    {
-      if ( args.status )
-	clear_status();
-
-      args.R_fmt.print_method( props, cout ); 
-    }
+    args.outputs.append( props );
+  }
 
   ++search_count;
 }

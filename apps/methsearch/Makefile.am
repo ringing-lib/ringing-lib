@@ -2,7 +2,7 @@
 
 # Process this file with automake to produce Makefile.in
 
-# Copyright (C) 2002, 2003 Richard Smith <richard@ex-parrot.com>
+# Copyright (C) 2002, 2003, 2004 Richard Smith <richard@ex-parrot.com>
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -27,9 +27,11 @@ bin_PROGRAMS = methsearch
 INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/apps/utils
 
 methsearch_LDADD = $(top_builddir)/apps/utils/libstuff.a \
-$(top_builddir)/ringing/libringing.a
+$(top_builddir)/ringing/libringing.a @XERCES_LIBS@
 
 methsearch_SOURCES = prog_args.cpp falseness.cpp format.cpp expression.cpp \
 libraries.cpp main.cpp mask.cpp methodutils.cpp music.cpp search.cpp exec.cpp \
+output.cpp \
 prog_args.h falseness.h format.h expression.h libraries.h mask.h exec.h \
-methodutils.h music.h search.h bnw-init reg-init
+methodutils.h music.h search.h output.h \
+bnw-init reg-init

@@ -1,5 +1,5 @@
 // -*- C++ -*- format.h - classes to handle format specifiers
-// Copyright (C) 2002, 2003 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003, 2004 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -43,33 +43,31 @@
 #include <iosfwd>
 #endif
 #include <ringing/pointers.h>
-
-// Forward declare ringing::method
-RINGING_START_NAMESPACE
-class method;
-RINGING_END_NAMESPACE
+#include <ringing/library.h>
+#include <ringing/libout.h>
 
 RINGING_USING_NAMESPACE
 RINGING_USING_STD
 
-class method_properties 
-{
+class fmtout : public libout {
 public:
-  explicit method_properties( const method& m );
-
-  // All out-of-line so impl is complete
-  method_properties();
- ~method_properties();
-  method_properties( const method_properties& );
-  method_properties& operator=( const method_properties& );
-
-  string get_property( int num_opt, const string& name ) const;
+  explicit fmtout( string const &fmt, string const& filename );
 
 private:
-
   class impl;
-  shared_pointer<impl> pimpl;
 };
+
+class statsout : public libout {
+public:
+  explicit statsout( string const& fmt );
+
+private:
+  class impl;
+};
+
+
+bool formats_have_falseness_groups();
+bool formats_have_names();
 
 
 // Exception to do exit(0) but calling destructors
@@ -86,6 +84,7 @@ public:
 };
 
 class histogram_entry;
+class method_properties;
 
 struct format_string
 {
@@ -111,30 +110,12 @@ private:
   string fmt;
 };
 
-class statistics
-{
-public:
-  static size_t output( ostream &os );
-  static void add_entry( const histogram_entry &entry );
-
-  // Public to avoid MSVC compilation errors
- ~statistics();
-
-private:
-  struct impl;
-  scoped_pointer< impl > pimpl;
-
-  static impl &instance();
-
-  statistics();
-};
-
 size_t parse_requirement( const string& str );
 
 void clear_status();
 void output_status( const method &m );
-void output_count( unsigned long );
-void output_raw_count( unsigned long );
 
+void output_count( ostream& out, unsigned long count );
+void output_raw_count( ostream& out, unsigned long count );
 
 #endif // METHSEARCH_FORMAT_INCLUDED
