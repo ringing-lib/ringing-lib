@@ -213,7 +213,7 @@ int musical_analysis::analyse( const method &m )
   music &mu = analyser::instance( m.bells() ).mu;
 
   mu.process_rows( course.begin(), course.end() );  
-  return mu.Get_Score();
+  return mu.get_score();
 }
 
 void musical_analysis::force_init( int bells )

@@ -50,7 +50,7 @@ music_details::~music_details()
 {
 }
 
-void music_details::Set(const string &e, const int &s)
+void music_details::set(const string &e, const int &s)
 {
   *this = e;
   _score = s;
@@ -59,7 +59,7 @@ void music_details::Set(const string &e, const int &s)
   _count_backstroke = 0;
 }
 
-void music_details::Set(const char *e, const int &s)
+void music_details::set(const char *e, const int &s)
 {
   *this = (string) e;
   _score = s;
@@ -68,7 +68,7 @@ void music_details::Set(const char *e, const int &s)
   _count_backstroke = 0;
 }
 
-string music_details::Get() const
+string music_details::get() const
 {
   return *this;
 }
@@ -371,7 +371,7 @@ void music::process_row(const row &r, const bool &back)
 }
 
 // Return the total score for all items
-int music::Get_Score(const EStroke &stroke)
+int music::get_score(const EStroke &stroke)
 {
   int total = 0;
   music::const_iterator i;
@@ -381,7 +381,7 @@ int music::Get_Score(const EStroke &stroke)
 }
 
 // Return the total matches for all items
-unsigned int music::Get_Count(const EStroke &stroke)
+unsigned int music::get_count(const EStroke &stroke)
 {
   unsigned int count = 0;
   music::const_iterator i;

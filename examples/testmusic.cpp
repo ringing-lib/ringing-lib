@@ -77,19 +77,19 @@ int main()
 	music_details md("*45");
 	mu.push_back(md);
 
-	md.Set("*345*");
+	md.set("*345*");
 	mu.push_back(md);
 
-	md.Set("54*", 2);
+	md.set("54*", 2);
 	mu.push_back(md);
 
-	md.Set("12??5", 4);
+	md.set("12??5", 4);
 	mu.push_back(md);
 	
-	md.Set("??345", 6);
+	md.set("??345", 6);
 	mu.push_back(md);
 
-	md.Set("13524", 6);
+	md.set("13524", 6);
 	mu.push_back(md);
 
 #if RINGING_USE_EXCEPTIONS
@@ -104,23 +104,23 @@ int main()
     cout << "Results for both strokes:\n";
 
     for (k = mu.begin(); k != mu.end(); k++)
-      cout << "Total " << k->Get() << "\t: " << k->count() << " : " << k->total() << endl;
+      cout << "Total " << k->get() << "\t: " << k->count() << " : " << k->total() << endl;
 
-    cout << "Total Score: " << mu.Get_Score() << endl;
+    cout << "Total Score: " << mu.get_score() << endl;
 
     cout << "Results for handstrokes:\n";
 
     for (k = mu.begin(); k != mu.end(); k++)
-      cout << "Total " << k->Get() << "\t: " << k->count(eHandstroke) << " : " << k->total(eHandstroke) << endl;
+      cout << "Total " << k->get() << "\t: " << k->count(eHandstroke) << " : " << k->total(eHandstroke) << endl;
 
-    cout << "Total Score: " << mu.Get_Score(eHandstroke) << endl;
+    cout << "Total Score: " << mu.get_score(eHandstroke) << endl;
 
     cout << "Results for backstrokes:\n";
 
     for (k = mu.begin(); k != mu.end(); k++)
-      cout << "Total " << k->Get() << "\t: " << k->count(eBackstroke) << " : " << k->total(eBackstroke) << endl;
+      cout << "Total " << k->get() << "\t: " << k->count(eBackstroke) << " : " << k->total(eBackstroke) << endl;
 
-    cout << "Total Score: " << mu.Get_Score(eBackstroke) << endl;
+    cout << "Total Score: " << mu.get_score(eBackstroke) << endl;
   }
   return 0;
 }

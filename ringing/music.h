@@ -70,12 +70,12 @@ public:
   
   // Set the expression and score
   // From String
-  void Set(const string&, const int& = 1);
+  void set(const string&, const int& = 1);
   // From Character String
-  void Set(const char *, const int& = 1);
+  void set(const char *, const int& = 1);
 
   // Return the expression
-  string Get() const;
+  string get() const;
 
   // Return the count
   unsigned int count(const EStroke& = eBoth) const;
@@ -173,9 +173,9 @@ public:
 
   // Get the total score - individual scores now obtained from accessing
   // the items within the music_details vector.
-  int Get_Score(const EStroke& = eBoth);
+  int get_score(const EStroke& = eBoth);
   // Get the total matches.
-  unsigned int Get_Count(const EStroke& = eBoth);
+  unsigned int get_count(const EStroke& = eBoth);
 
 private:
   // The music specification details
