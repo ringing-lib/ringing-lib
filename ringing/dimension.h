@@ -28,8 +28,10 @@
 #include <string>
 #if RINGING_OLD_INCLUDES
 #include <iostream.h>
+#include <map.h>
 #else
 #include <iostream>
+#include <map>
 #endif
 
 RINGING_USING_STD
@@ -64,9 +66,11 @@ public:
   dimension operator*(int i) { dimension d = *this; d *= i; return d; }
 
 private:
-  struct unit_names_entry { string s; units u; };
-  static const unit_names_entry unit_names[];
-  static const int unit_names_size;
+  class unit_names_map : public map<string, units> {
+  public:
+    unit_names_map();
+  };
+  static const unit_names_map unit_names;
   static const string unit_strings[];
   static const float to_points[];
 

@@ -38,20 +38,22 @@ RINGING_USING_STD
 
 RINGING_START_NAMESPACE
 
-const dimension::unit_names_entry dimension::unit_names[] = {
-  {"pt", points},
-  {"points", points},
-  {"point", points},
-  {"in", inches},
-  {"\"", inches},
-  {"inches", inches},
-  {"inch", inches},
-  {"cm", cm},
-  {"mm", mm}
-};
-const int dimension::unit_names_size = 9;
 const string dimension::unit_strings[] = {"pt", "in", "cm", "mm"};
 const float dimension::to_points[] = {1, 72, 72/2.54, 72/25.4};
+const dimension::unit_names_map dimension::unit_names;
+
+dimension::unit_names_map::unit_names_map()
+{
+  (*this)["pt"] = points;
+  (*this)["points"] = points;
+  (*this)["point"] = points;
+  (*this)["in"] = inches;
+  (*this)["\""] = inches;
+  (*this)["inches"] = inches;
+  (*this)["inch"] = inches;
+  (*this)["cm"] = cm;
+  (*this)["mm"] = mm;
+}
 
 void dimension::reduce()
 {
@@ -135,14 +137,12 @@ void dimension::read(const char *s)
 void dimension::read_units(const char *s)
 {
   while(isspace(*s)) s++;
-  string::const_iterator t; int i;
-  for(i = 0; i < unit_names_size; i++) {
-    for(t = unit_names[i].s.begin(); 
-	t != unit_names[i].s.end() && *s != '\0' && *t == tolower(*s);
-	s++, t++);
-    if(t == unit_names[i].s.end()) { u = unit_names[i].u; return; }
-  }
-  throw bad_format();
+  const char *t = s; while(!isspace(*t)) t++;
+  map<string, units>::const_iterator i = unit_names.find(string(s,t));
+  if(i != unit_names.end())
+    u = (*i).second;
+  else
+    throw bad_format();
 }
 
 RINGING_END_NAMESPACE

@@ -56,6 +56,11 @@ public:
     p(pr), bell(b), s(st), curr(-1) {}
   void add(const row& r);
   void output(ostream& o, int x, int y);
+
+  // These are to make templates work and don't really exist
+  drawline_ps();
+  bool operator<(const drawline_ps&) const;
+  bool operator==(const drawline_ps&) const;
 };
 
 class printrow_ps : public printrow::base {

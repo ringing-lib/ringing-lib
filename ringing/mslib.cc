@@ -39,7 +39,7 @@ method *mslib::load(char *name)
   char *s;
 
   f.seekg(0,ios::beg);		// Go to the beginning of the file
-  while(f) {
+  while(f.good()) {
     s = name;
     // See whether the name matches
     while(*s && tolower(f.get()) == tolower(*s++));
@@ -63,7 +63,7 @@ method *mslib::load(char *name)
 	  else
 	    m->push_back(change(b, "1"));
 	}
-    }
+      }
 
       return m;
     }

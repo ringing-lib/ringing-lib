@@ -47,7 +47,7 @@ public:
 
   mslib(char *name) : wr(0) {
     f.open(name, ios::in | ios::out);
-    if(f) wr = 1; else f.open(name, ios::in);
+    if(f.good()) wr = 1; else f.open(name, ios::in);
     char *s;
     // Get the number off the end of the file name
     for(s = name + strlen(name) - 1; s > name && isdigit(s[-1]); s--);

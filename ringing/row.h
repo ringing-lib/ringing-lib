@@ -109,6 +109,9 @@ public:
   int findplace(bell which) const; // Check whether a particular place is made
   int swap(bell which);		// Swap or unswap a pair
   int internal(void) const;	// Does it contain internal places?
+
+  // This isn't defined, but it keeps the Microsoft templates happy
+  bool operator<(const change&) const;
 };
 
 ostream& operator<<(ostream& o, const change& c); // Write a change to a stream
@@ -195,6 +198,9 @@ public:
   char *cycles(char *result) const; // Express it as a product of disjoint cycles
   int order(void) const;	    // Return the order
   friend ostream& operator<<(ostream&, const row&);
+
+  // Keep MS happy
+  bool operator<(const row&) const;
 };
 
 ostream& operator<<(ostream& o, const row& r); // Write a row to a stream
