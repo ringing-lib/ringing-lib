@@ -59,9 +59,10 @@ Supported compilers
 with any recent STL.  The library is regularly tested on the following 
 compilers:
 
+    gcc 3.1
     gcc 3.0.1
     gcc 2.95.3
-    egcs 1.1.2 (aka 2.91.66)
+    egcs 1.1.2 (aka gcc 2.91.66)
     msvc 7 (aka .NET)
     msvc 6
     msvc 5
