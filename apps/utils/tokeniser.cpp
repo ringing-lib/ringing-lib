@@ -83,8 +83,9 @@ tokeniser::basic_token::parse( string::const_iterator& i,
   return done;
 }
 
-tokeniser::string_token::string_token(const char* qstr, int type) 
-  : basic_token(qstr, type)
+tokeniser::string_token::string_token(const char* qstr, int type,
+				      multi_line_policy mlp ) 
+  : basic_token(qstr, type), mlp(mlp)
 {
   assert( strlen(qstr) == 1 );
   q = qstr[0];
@@ -99,12 +100,15 @@ tokeniser::string_token::parse( string::const_iterator& i,
     return failed;
   
   string::const_iterator j = i; ++j;
-  while ( j < e && *j != q )
+  while ( j < e && *j != q && ( mlp == multi_line || *j != '\n' ) )
     ++j;
   
   if (j == e)
     return more;
   
+  if (*j != q) 
+    return failed; // due to mlp
+
   tok = string(++i, j); tok.type( type() ); i = ++j;
   return done;
 }

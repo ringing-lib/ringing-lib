@@ -176,15 +176,19 @@ private:
 class tokeniser::string_token : public tokeniser::basic_token
 {
 public:
+  enum multi_line_policy { multi_line, one_line };
+
   // q is the quote character; it must be one character long only.
   // e.g. q == "'"
-  string_token(const char* q, int type);
+  string_token(const char* q, int type,
+	       multi_line_policy mlp = multi_line);
   
 private:
   virtual parse_result parse( string::const_iterator& i, 
 			      string::const_iterator e, 
 			      token& tok ) const;
   char q;
+  multi_line_policy mlp;
 };
 
 #endif // GSIRIL_TOKENISER_INCLUDED
