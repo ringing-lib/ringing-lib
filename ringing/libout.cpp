@@ -68,11 +68,13 @@ multilibout::multilibout()
 {}
 
 void multilibout::add( libout* outputer ) {
-  get_impl< impl >()->add( shared_pointer<libout>( outputer ) );
+  // Note: do not use get_impl<impl>() syntax as this confuses MSVC 6.0
+  get_impl( (impl*)NULL )->add( shared_pointer<libout>( outputer ) );
 }
 
 bool multilibout::empty() const {
-  return get_impl< impl >()->empty();
+  // Note: do not use get_impl<impl>() syntax as this confuses MSVC 6.0
+  return get_impl( (impl*)NULL )->empty();
 }
 
 RINGING_END_NAMESPACE

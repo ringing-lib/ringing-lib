@@ -530,7 +530,7 @@ cclib::impl::impl(const string& filename)
 // Is this file in the right format?
 library_base *cclib::impl::canread(const string& filename)
 {
-  scoped_pointer<library_base> ptr( new cclib::impl(filename) );
+  scoped_pointer<library_base> ptr( new impl(filename) );
   if ( ptr->begin() != ptr->end() )
     return ptr.release();
   else

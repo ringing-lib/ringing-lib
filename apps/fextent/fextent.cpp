@@ -561,6 +561,8 @@ private:
   void init_lhs( method const& m, vector<change> const& calls );
 
   class perturbation;
+  friend class perturbation;
+  friend class const_iterator;
   
   inline bool should_keep( double delta ) {
     return delta > 0 || random_bool( exp(delta * beta) );

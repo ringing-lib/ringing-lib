@@ -53,8 +53,10 @@
 #endif // RINGING_USE_STRINGSTREAM
 #if RINGING_OLD_INCLUDES
 #include <typeinfo.h>
+#include <ostream.h>
 #else
 #include <typeinfo> // for bad_cast
+#include <ostream>
 #endif
 #include <string>
 

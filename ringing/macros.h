@@ -112,6 +112,9 @@ RINGING_START_NAMESPACE RINGING_USING_STD RINGING_END_NAMESPACE
 // understand what's going on here.
 RINGING_START_NAMESPACE RINGING_USING_STD RINGING_END_NAMESPACE
 RINGING_START_NAMESPACE RINGING_USING_STD RINGING_END_NAMESPACE
+
+//  And now for something completely different.   It's...
+RINGING_START_NAMESPACE RINGING_USING_STD RINGING_END_NAMESPACE
 #endif
 
 // Are we running on Windows?
@@ -230,6 +233,19 @@ RINGING_END_NAMESPACE_STD
 # define RINGING_HAS_PRAGMA_INTERFACE 1
 #else
 # define RINGING_HAS_PRAGMA_INTERFACE 0
+#endif
+
+// MSVC <= 6.0 doesn't scope variables in for loops properly.
+// It treats
+//   for (int i=0; i<n; ++i)  
+// as 
+//   int i;
+//   for (i=0; i<n; ++i)
+// which has obvious issues with scoping.  To get around this
+// without scattering dozens of extra braces around the code,
+// we use this heinous macro hack:
+#if defined(_MSC_VER) && _MSC_VER <= 1200 
+# define for if (false) {} else for
 #endif
 
 #endif // RINGING_MACROS_H

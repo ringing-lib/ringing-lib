@@ -259,12 +259,14 @@ method_properties::method_properties( const library_entry& le )
   // and we don't try dynamic casting the handle (le itself) because that
   // might have been sliced.
 
-  if ( ! dynamic_cast<impl2*>( get_impl<impl>() ) ) 
+  // MSVC 6.0 has issues with the get_impl<impl>() syntax  
+  if ( ! dynamic_cast<impl2*>( get_impl( (impl*)NULL ) ) ) 
     library_entry::operator=( library_entry( new impl2( le.meth() ) ) );
 }
 
 string method_properties::get_property( int num_opt, const string& name ) const
 {
-  return get_impl<impl2>()->get_property( num_opt, name );
+  // MSVC 6.0 has issues with the get_impl<impl>() syntax  
+  return get_impl( (impl2*)NULL )->get_property( num_opt, name );
 }
 

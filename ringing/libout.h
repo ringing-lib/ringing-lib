@@ -39,15 +39,15 @@ class libout {
 public:
   libout() {}
 
-  void flush() { return pimpl->flush(); }
-  void append( library_entry const& entry ) { return pimpl->append(entry); }
+  void flush() { pimpl->flush(); }
+  void append( library_entry const& entry ) { pimpl->append(entry); }
 
   class iterator;
 
   iterator begin();
   iterator end();
 
-protected:
+RINGING_PROTECTED_IMPL:
   class interface {
   public:
     virtual ~interface() {}

@@ -66,6 +66,7 @@ public:
 
   // Needs to be public because of a compiler bug in MSVC 6.0
   class entry_type;
+  friend class entry_type;
 
 private:
   // Iterators into the library
@@ -252,7 +253,7 @@ mslib::impl::impl(const string& filename)
 // Is this file in the right format?
 library_base *mslib::impl::canread(const string& filename)
 {
-  scoped_pointer<library_base> ptr( new mslib::impl(filename) );
+  scoped_pointer<library_base> ptr( new impl(filename) );
   if ( ptr->begin() != ptr->end() )
     return ptr.release();
   else

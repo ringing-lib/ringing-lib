@@ -464,11 +464,11 @@ bool arguments::validate( arg_parser &ap )
     }
 
   if (!quiet) {
-    if ( outfile == "-" ) outfile.clear();
+    if ( outfile == "-" ) outfile.erase();
 
     try {
       if ( outfmt.empty() || outfmt == "fmt" ) {
-	outfmt.clear();
+	outfmt.erase();
 	if ( R_fmt_str.empty() ) R_fmt_str = "$p\t$l";
 	outputs.add( new fmtout( R_fmt_str, outfile ) );
       } 
