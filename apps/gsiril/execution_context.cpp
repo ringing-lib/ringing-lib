@@ -23,8 +23,9 @@
 
 #include <ringing/common.h>
 #include <ringing/streamutils.h>
+#include "expression.h" // Must be before execution_context.h because 
+                        // of bug in MSVC 6.0
 #include "execution_context.h"
-#include "expression.h"
 
 RINGING_USING_NAMESPACE
 

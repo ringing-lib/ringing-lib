@@ -69,6 +69,10 @@ public:
   const_iterator begin() const;
   const_iterator end() const;
   
+RINGING_PROTECTED_IMPL:
+  class basic_token;
+  class string_token;
+
 protected:
   enum { first_token = 256 };
 
@@ -76,9 +80,6 @@ protected:
 
   tokeniser( istream& in, 
 	     new_line_policy nlp = discard_new_lines );
-
-  class basic_token;
-  class string_token;
 
   void add_qtype( const basic_token* qtype );
   void set_id_chars( const char *idfchs, const char *idochs );

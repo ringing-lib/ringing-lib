@@ -88,7 +88,7 @@ public:
   }
 
 private:
-  class pn_impl : public basic_token
+  class pn_impl : public tokeniser::basic_token
   {
   public:
     pn_impl(const char *init) : basic_token(init, pn_lit) {}
@@ -106,7 +106,7 @@ private:
     }
   };
 
-  class comment_impl : public basic_token
+  class comment_impl : public tokeniser::basic_token
   {
   public:
     comment_impl() : basic_token("/", comment) {}
