@@ -1,0 +1,13 @@
+Version 0.2.1 (26 September 2001):
+  Created NEWS file!
+  More and better-organised documentation, though still not complete.
+  New mechanism for expanding place notation.
+  Added examples.
+  Changed common.h mechanism and did a few other things to make it a
+    bit easier to compile on Windows, though more needs to be done.
+
+Version 0.2.0 (11 June 2001):
+  Include Mark Banner's proof and music classes.
+
+Version 0.1.0 (7 June 2001):
+  Initial release.
