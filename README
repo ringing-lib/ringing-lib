@@ -12,6 +12,27 @@ where there is also information about how you can contribute, report bugs,
 and get at discussion forums.
 
 
+Dependencies
+------------
+
+  The Ringing Class Library can optionally be built to use the Xerces XML
+library to support XML method libraries.  This can be controlled by the
+--with-xerces (or --without-xerces) options to ./configure.  The gsiril 
+program that is supplied with the library can be compiled with GNU readline
+to support better command line editing.  The --with-readline option controls
+this.  When no explicit option is given to ./configure, it attempts to 
+locate the libraries and will use them if they can be found.
+
+  To use Xerces from Microsoft Visual Studio, edit the ringing/common-msvc.h
+header to define RINGING_USE_XERCES to 1, and manually add xerces to the 
+list of libraries and headers required.  (This is done via Settings on the 
+Project menu.  In the C/C++ tab, choose "Preprocessor" in the Category 
+selector and add the include directory to "Additional include directories".
+Then in the Link tab, add Xerces's .lib file to "Object/library modules".  
+
+  Use of readline from Microsoft Visual Studio is untested.
+
+
 Installation
 ------------
 
