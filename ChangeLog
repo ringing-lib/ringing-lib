@@ -1,3 +1,36 @@
+2001-09-27 22:15  mjb47
+
+	* NEWS, configure.in, ringing/common.h.in: Prepare for 0.2.2
+
+2001-09-27 22:13  mjb47
+
+	* ringing/proof.h: Another Windows problem fixed
+
+2001-09-27 21:52  mjb47
+
+	* configure.in, examples/Makefile.am, examples/testbase.cc,
+	examples/testbase.cpp, examples/testprint.cc,
+	examples/testprint.cpp, ringing/Makefile.am, ringing/dimension.cc,
+	ringing/dimension.cpp, ringing/library.cc, ringing/library.cpp,
+	ringing/method.cc, ringing/method.cpp, ringing/mslib.cc,
+	ringing/mslib.cpp, ringing/print.cc, ringing/print.cpp,
+	ringing/print_ps.cc, ringing/print_ps.cpp, ringing/print_ps.h,
+	ringing/proof.cc, ringing/proof.cpp, ringing/row.cc,
+	ringing/row.cpp: Renamed all .cc files to .cpp. Phew!
+
+2001-09-27 20:58  mjb47
+
+	* ringing/: dimension.cc, dimension.h, mslib.cc, mslib.h,
+	print_ps.h, row.h: Fix some Windows compilation problems
+
+2001-09-27 20:27  mjb47
+
+	* examples/Makefile.am, ringing/Makefile.am: Little Makefile.am fix
+
+2001-09-26 22:46  mjb47
+
+	* ChangeLog: ChangeLog for 0.2.1
+
 2001-09-26 22:44  mjb47
 
 	* NEWS, configure.in, ringing/common.h.in: Prepare for 0.2.1
