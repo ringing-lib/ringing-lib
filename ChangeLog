@@ -1,3 +1,11 @@
+2001-10-16 14:00  ras52
+
+	* configure.in, ringing/common.h.in, print_ps.h:  New macros 
+	to simplify template specialisation, and to correctly test for 
+	MSVC-5's strange ideas about templates.
+	* row.h:  Extra functionality in permute function.
+	* touch.cpp, touch.h:  Now compile on Windows.
+
 2001-10-09 20:43  mjb47
 
 	* AUTHORS, configure.in, ringing/common.h.in: Prepare for 0.2.3
