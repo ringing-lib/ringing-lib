@@ -21,9 +21,11 @@
 
 #if RINGING_OLD_INCLUDES
 #include <iostream.h>
+#include <fstream.h>
 #include <strstream.h>
 #else
 #include <iostream>
+#include <fstream>
 #include <strstream>
 #endif
 #include <string>
