@@ -3,9 +3,6 @@
 /* Define if you have the ANSI C header files.  */
 #undef STDC_HEADERS
 
-/* Define if you have the argp_parse function.  */
-#undef HAVE_ARGP_PARSE
-
 /* Name of package */
 #undef PACKAGE
 
