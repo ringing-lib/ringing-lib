@@ -69,21 +69,24 @@ private:
   char* data;
 };
 
-bool init_xerces()
-{
-  static bool done = false;
-  if ( !done )
-    XMLPlatformUtils::Initialize();
-  done = true;
-  return done;
+#define TRANSCODE(str) transcode(str).to_string()
+
+struct init_xerces_t {
+  init_xerces_t() { XMLPlatformUtils::Initialize(); }
+ ~init_xerces_t() { XMLPlatformUtils::Terminate(); }
+};
+
+bool init_xerces() {
+  static struct init_xerces_t tmp;
+  return true;
 }
 
 DOMElement* next_sibling_element( DOMNode* start, const string& name )
 {
   while ( start 
 	  && ( start->getNodeType() != DOMNode::ELEMENT_NODE ||
-	       transcode( static_cast<DOMElement*>(start)->getTagName() )
-	       .to_string() != name ) ) 
+	       TRANSCODE( static_cast<DOMElement*>(start)->getTagName() )
+	         != name ) ) 
     start = start->getNextSibling();
 
   return static_cast<DOMElement*>(start);
@@ -150,15 +153,14 @@ xmllib::impl::impl( xmllib::file_arg_type type, const string& url )
       if ( !doc->getDocumentElement() )
 	throw runtime_error( "No document element" );
 
-      if ( transcode( doc->getDocumentElement()->getTagName() )
-	   .to_string() != "methods" ) 
+      if ( TRANSCODE( doc->getDocumentElement()->getTagName() ) != "methods" ) 
 	throw runtime_error
 	  ( "Document root should be a <methods/> element" );
     } 
   catch ( const XMLException& e ) 
     {
       string err( "An error occured parsing the XML: " );
-      err.append( transcode( e.getMessage() ).to_string() );
+      err.append( TRANSCODE( e.getMessage() ) );
 
       throw runtime_error( err );
     }
@@ -213,7 +215,7 @@ string xmllib::impl::entry_type::extract_text( const DOMElement* e ) const
       {
 	DOMCharacterData *cd = static_cast<DOMCharacterData*>(t);
 	if (cd)
-	  value.append( transcode( cd->getData() ).to_string() );
+	  value.append( TRANSCODE( cd->getData() ) );
       }
 
   return value;
