@@ -66,16 +66,6 @@ public:
   private:
     cloning_pointer<iterator_base> bp;
 
-    class operator_arrow_proxy 
-    {
-    public:
-      operator_arrow_proxy( const change &c ) : c(c) {}
-      const change *operator->() const { return &c; }
-      operator const change *() const { return &c; }
-    private:
-      change c;
-    };
-
   public:
     // These typedefs are needed to compile get the code to 
     // compile in gcc-2.95.x.
@@ -89,7 +79,8 @@ public:
     const_iterator(iterator_base* b) : bp(b) {}
     const_iterator() : bp(0) {}
     change operator*() const { return **bp; }
-    operator_arrow_proxy operator->() const { return **bp; }
+    RINGING_DETAILS_PREFIX operator_arrow_proxy<change> operator->() const 
+      { return **bp; }
     const_iterator& operator++() { if(bp) ++*bp; return *this; }
     const_iterator operator++(int) 
       { const_iterator tmp(*this); ++*this; return tmp; }
