@@ -154,7 +154,7 @@ multtab::compute_post_mult( const row &r )
   for ( size_t i(0); i < table.size(); ++i )
     table[i].push_back( find( rows[i] * r ) );
 
-  cols.push_back( make_pair( r, pre_mult ) );
+  cols.push_back( make_pair( r, post_mult ) );
   return post_col_t( cols.size() - 1, this );
 }
 
