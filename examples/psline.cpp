@@ -47,9 +47,10 @@ using namespace ringing;
 #endif
 
 struct arguments {
-  char* output_file;
-  char* library_name;
-  char* method_name;
+  const char* output_file;
+  const char* library_name;
+  const char* method_name;
+  int bells;
   bool eps;
   string title; text_style title_style;
   char *font; int font_size; colour col;
@@ -137,7 +138,7 @@ static char doc[] = "psline -- print out lines for methods in PostScript.\v"
 " a COLOUR may be specified as either an integer between 0 and 100,"
 " signifying a grey level; or as three integers between 0 and 100, separated"
 " by minus signs (`-'), specifying red, green and blue levels.";
-static char args_doc[] = "LIBRARY METHOD";
+static char args_doc[] = "LIBRARY METHOD\nBELLS:PLACE-NOTATION";
 static struct argp_option options[] = {
   { 0, 0, 0, 0, "General options:" },
   { "output-file", 'o', "FILE", 0, 
@@ -216,7 +217,15 @@ static error_t parser (int key, char *arg, struct argp_state *state)
       else argp_usage(state);
       break;
     case ARGP_KEY_END :
-      if(state->arg_num < 2) argp_usage(state);
+      if(state->arg_num == 0)
+	argp_usage(state);
+      else if(state->arg_num == 1) { // Place notation
+	s = args->library_name;
+	while(*s != '\0' && *s != ':') ++s;
+	if(*s == '\0') argp_usage(state);
+	parse_int(state, string(args->library_name, s), args->bells);
+	args->library_name = s + 1;
+      };
       break;
     case 'e' :
       args->eps = true;
@@ -428,17 +437,23 @@ int main(int argc, char *argv[])
   // Parse the arguments
   argp_parse(&our_argp, argc, argv, 0, 0, &args);
 
-  // Load the method
-  mslib::registerlib();
-  cclib::registerlib();
-  library l(args.library_name);
-  if(!l.good()) {
-    cerr << argv[0] << ": Can't open library " << args.library_name << endl;
-    return 1;
-  }
+  method m;
 
   try {
-    method m(l.load(args.method_name));
+    if(args.method_name) {
+      // Load the method
+      mslib::registerlib();
+      cclib::registerlib();
+      library l(args.library_name);
+      if(!l.good()) {
+	cerr << argv[0] << ": Can't open library " 
+	     << args.library_name << endl;
+	return 1;
+      }
+      m = l.load(args.method_name);
+    } else {
+      m = method(args.library_name, args.bells);
+    }
 
     // Set up our options
     printmethod pm(m);
