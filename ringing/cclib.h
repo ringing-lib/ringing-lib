@@ -34,11 +34,12 @@ RINGING_START_NAMESPACE
 RINGING_USING_STD
 
 // cclib : Implement Central Council Method libraries
-class RINGING_API cclib {
+class RINGING_API cclib : public library {
 public:
   RINGING_DECLARE_LIBRARY_FACET( ref, int );
 
-  static void registerlib();
+  static void registerlib(void);
+  cclib(const string& filename);
 
 private:
   class impl;
