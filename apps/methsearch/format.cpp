@@ -185,9 +185,10 @@ bool histogram_entry::cmp::operator()( const histogram_entry &x,
 	  i( x.f.vars.begin() ), e( x.f.vars.end() );  i != e;  ++i )
     {
       // These are not taken into account when comparing strings
-      // for stats.  For '%' and '$' this is because they are constant,
+      // for stats.  For '%', '$' and ')' this is because they are constant,
       // and for 'c' it's because it's still unknown.
-      if ( i->second == "%" || i->second == "$" || i->second == "c" )
+      if ( i->second == "%" || i->second == "$" || i->second == ")" 
+	   || i->second == "c" )
 	continue;  
 
       string xval, yval;
@@ -241,7 +242,7 @@ void histogram_entry::print( ostream &os2, size_t count ) const
 	      
 	      switch ( *iter )
 		{
-		case '%': case '$': 
+		case '%': case '$': case ')':
 		  os << *iter;
 		  break;
 
@@ -383,7 +384,7 @@ format_string::format_string( const string &infmt,
 	    case '%': case '$': case 'l': case 'r': case 'b': 
 	    case 'C': case 'S': case 'M': case 'h': case 'F':
 	    case 'o': case 'd': case 'u': case '[': case '(':
-	    case 'y': case 'O':
+	    case 'y': case 'O': case ')':
 	      // Can be used in either
 	      break;
 
@@ -397,7 +398,7 @@ format_string::format_string( const string &infmt,
 	  switch ( *iter )
 	    {
 	    case '%': case '$': case 'c': case 'b': case 'M': 
-	    case 'o': case 'u':
+	    case 'o': case 'u': case ')':
 	      // Option may but needn't have a number
 	      break;
 

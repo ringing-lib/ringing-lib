@@ -45,6 +45,7 @@
 #endif
 #include <ringing/row.h>
 #include <ringing/extent.h>
+#include <ringing/streamutils.h>
 
 
 RINGING_USING_NAMESPACE
@@ -98,7 +99,7 @@ struct block
   
 class mask_error : public invalid_argument {
 public:
-  mask_error( const char* s ) : invalid_argument(s) {}
+  mask_error( const string& s ) : invalid_argument(s) {}
 };
   
 shared_pointer<block> read_block( const int num,
@@ -220,7 +221,7 @@ void expand_block( vector< vector< change > >& block1,
 	block1.insert( block1.begin() + star_index, 
 		       expand_by - 1, vector<change>() );
     }
-  // A block like &*.5.1.5
+  // A block like &3.*.5.1.5
   else if ( star_sym )
     {
       expand_by += 2;
@@ -419,6 +420,10 @@ bool parse_mask( arguments &args, const arg_parser &ap )
 	// Is block an above section?
 	if ( i != e && *i == '/' )
 	  {
+	    if ( !args.hunt_bells )
+	      throw mask_error( "Masks for principles may not contain "
+				"above and below sections" );
+
 	    ++i; // skip '/'
 	    blkb = read_block(args.bells, i, e);
 	    
@@ -502,31 +507,36 @@ bool parse_mask( arguments &args, const arg_parser &ap )
   assert( block1a.empty() == block1b.empty() );
   assert( block2a.size()  == block2b.size()  );
 
-  if ( block1a.size() )
+  if ( block1a.size() && block1b.size() )
     {
+      // We have a section of unknown length
+
       expand_block( block1a, star_sym_a, star_index_a, args.lead_len -
 		    block0a.size() - block1a.size() - block2a.size() );
 
-      assert( block0a.size() + block1a.size() + block2a.size()
-	      == size_t(args.lead_len) );
-    }
-
-  if ( block1b.size() )
-    {
       expand_block( block1b, star_sym_b, star_index_b, args.lead_len -
 		    block0b.size() - block1b.size() - block2b.size() );
+
+      assert( block0a.size() + block1a.size() + block2a.size()
+	      == size_t(args.lead_len) );
 
       assert( block0b.size() + block1b.size() + block2b.size()
 	      == size_t(args.lead_len) );
     }
+  else 
+    {
+      if ( block0a.size() + block2a.size() != size_t(args.lead_len) )
+	throw mask_error( make_string() << "The mask was of the wrong "
+			  "length: found " << (block0a.size() + block2a.size())
+			  << " changes; expected " << args.lead_len );
+    }
+  
 
   args.allowed_changes.clear();
   copy( block1a.begin(), block1a.end(), back_inserter( block0a ) );
   copy( block1b.begin(), block1b.end(), back_inserter( block0b ) );
   copy( block2a.begin(), block2a.end(), back_inserter( block0a ) );
   copy( block2b.begin(), block2b.end(), back_inserter( block0b ) );
-  assert( block0a.size() == size_t(args.lead_len) );
-  assert( block0b.size() == size_t(args.lead_len) );
 
   if (!is_mask_consistent(args, block0a, block0b))
     throw mask_error
@@ -536,87 +546,149 @@ bool parse_mask( arguments &args, const arg_parser &ap )
   // ----------------------------------
   // Expand ? to appropriate alternative lists
 
+  assert( block0a.size() == size_t(args.lead_len) );
+  assert( block0b.size() == size_t(args.lead_len) );
+
 
   for ( int i=0, n=args.lead_len; i<n; ++i )
     {
       args.allowed_changes.push_back( vector<change>() );
       vector<change>& changes_to_try = args.allowed_changes.back();
 
-      // TODO  Errors if not compatible with this:
-      if ( args.right_place && args.bells % 2 == 0 && i % 2 == 0 )
+      if ( args.hunt_bells )
 	{
-	  changes_to_try.push_back( change( args.bells, "-" ) );
-	  continue;
-	}
-
-      const pair< int, int > posn( get_posn2(args, i) );
+	  const pair< int, int > posn( get_posn2(args, i) );
       
-      vector<change>& changesa = block0a[i];
-      vector<change>& changesb = block0b[i];
+	  vector<change>& changesa = block0a[i];
+	  vector<change>& changesb = block0b[i];
 
-      if ( changesa.empty() ) 
-	{
-	  int active_above( posn.second == args.bells-1 
-			    ? 0 : args.bells-2 - posn.second );
-
-	  changesa.reserve( fibonacci(active_above) );
-
-	  // Choose the work above the treble
-	  for ( changes_iterator 
-		  j(active_above, args.bells-active_above, args.bells), e; 
-		j != e; ++j )
+	  // A ? above the treble
+	  if ( changesa.empty() ) 
 	    {
-	      if ( args.right_place && args.bells % 2 == 1 
-		   && posn.second % 2 == 1
-		   && args.bells - j->count_places() != active_above )
-		continue;
+	      int active_above( posn.second == args.bells-1 
+				? 0 : args.bells-2 - posn.second );
 	      
-	      change above(*j); 
+	      changesa.reserve( fibonacci(active_above) );
+	      
 
-	      if ( args.no_78_pns && posn.second < args.bells-3 && 
-		   above.findplace(args.bells-2) )
-		continue;
+	      if ( args.right_place && args.bells % 2 == 0 && i % 2 == 0 )
+		{
+		  changesa.push_back( change( args.bells, "-" ) );
+		}
 
-	      changesa.push_back(above);
+	      // Choose the work above the treble
+	      else for ( changes_iterator 
+		      j(active_above, args.bells-active_above, args.bells), e; 
+		    j != e; ++j )
+		{
+		  // Handle -w
+		  if ( args.right_place && 
+		       ( args.bells % 2 == 1 && posn.second % 2 == 1
+			 || args.bells % 2 == 0 && i % 2 == 0 )
+		       && args.bells - j->count_places() != active_above )
+		    continue;
+		  
+		  change above(*j); 
+		  
+		  // Handle -f
+		  if ( args.no_78_pns && posn.second < args.bells-3 && 
+		       above.findplace(args.bells-2) )
+		    continue;
+		  
+		  changesa.push_back(above);
+		}
 	    }
-	}
 
-      if ( changesb.empty() )
-	{
-	  int active_below( posn.first == -1 ? 0 : posn.first );
-
-	  for ( changes_iterator j(active_below, 0, args.bells), e; 
-		j != e; ++j )
+	  // A ? below the treble
+	  if ( changesb.empty() )
 	    {
-	      if ( args.right_place && args.bells % 2 == 1 
-		   && posn.second % 2 == 0
-		   && args.bells - j->count_places() != active_below )
-		continue;
-
-	      change below(*j); 
+	      int active_below( posn.first == -1 ? 0 : posn.first );
 	      
-	      if ( (args.skewsym || args.doubsym) && args.no_78_pns 
-		   && posn.first > 1 && below.findplace(1) )
-		continue;
-
-	      changesb.push_back(below);
+	      changesb.reserve( fibonacci(active_below) );
+		
+              for ( changes_iterator j(active_below, 0, args.bells), e; 
+		    j != e; ++j )
+		{
+		  // Handle -w
+		  if ( args.right_place && 
+		       ( args.bells % 2 == 1 && posn.second % 2 == 0 
+			 || args.bells % 2 == 0 && i % 2 == 0 )
+		       && args.bells - j->count_places() != active_below )
+		    continue;
+		  
+		  change below(*j); 
+		  
+		  // Handle -kf or -df
+		  if ( (args.skewsym || args.doubsym) && args.no_78_pns 
+		       && posn.first > 1 && below.findplace(1) )
+		    continue;
+		  
+		  changesb.push_back(below);
+		}
 	    }
+
+	  // Merge changes, and push onto args.allowed_changes
+  
+	  changes_to_try.reserve( changesa.size() * changesb.size() );
+
+	  for ( int ia=0, na=changesa.size(); ia < na; ++ia )
+	    for ( int ib=0, nb=changesb.size(); ib < nb; ++ib )
+	      {
+		const change ch( merge_changes( changesa[ia], 
+						changesb[ib], posn ) );
+		
+		// Handle -l
+		if ( args.max_places_per_change 
+		     && ch.count_places() > args.max_places_per_change )
+		  continue;
+
+		// Handle -j
+		if ( args.max_consec_places
+		     && has_consec_places( ch, args.max_consec_places ) )
+		  continue;
+		
+		changes_to_try.push_back(ch);
+	      }
 	}
-
-      // Merge changes, and push onto args.allowed_changes
-
-      changes_to_try.reserve( changesa.size() * changesb.size() );
-
-      for ( int ia=0, na=changesa.size(); ia < na; ++ia )
-      for ( int ib=0, nb=changesb.size(); ib < nb; ++ib )
+      else // principles
 	{
-	  const change ch( merge_changes( changesa[ia], changesb[ib], posn ) );
+	  vector<change>& changes = block0a[i];
 
-	  if ( args.max_places_per_change 
-	       && ch.count_places() > args.max_places_per_change )
-	    continue;
+	  if ( changes.empty() )
+	    {
+	      changes.reserve( fibonacci( args.bells ) );
 
-	  changes_to_try.push_back(ch);
+	      for ( changes_iterator j(args.bells), e; j != e; ++j )
+		{
+		  change ch(*j);;
+
+		  // Handle -f
+		  if ( args.no_78_pns && ch.findplace(args.bells-2) )
+		    continue;
+
+		  // Handle -kf or -df
+		  if ( (args.skewsym || args.doubsym) && args.no_78_pns 
+		       && ch.findplace(1) )
+		    continue;
+
+		  // Handle -l
+		  if ( args.max_places_per_change 
+		       && ch.count_places() > args.max_places_per_change )
+		    continue;
+
+		  // Handle -j
+		  if ( args.max_consec_places
+		       && has_consec_places( ch, args.max_consec_places ) )
+		    continue;
+
+		  changes_to_try.push_back(ch);
+		}
+	    }
+	  else
+	    {
+	      copy( changes.begin(), changes.end(), 
+		    back_inserter( changes_to_try ) ); 
+	    }
 	}
 
       sort( changes_to_try.begin(), changes_to_try.end() );
@@ -624,10 +696,9 @@ bool parse_mask( arguments &args, const arg_parser &ap )
 	( unique( changes_to_try.begin(), changes_to_try.end() ),
 	  changes_to_try.end() );
 
-      if ( changes_to_try.empty() ) {
-	cout << "Error: " << i << endl;
-	throw mask_error( "No such method can possibly exist" );
-      }
+      if ( changes_to_try.empty() )
+	throw mask_error( make_string() << "No such method can exist: "
+			  "There no possible changes as position " << i );
     }
 
   return true;

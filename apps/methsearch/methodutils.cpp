@@ -238,8 +238,6 @@ string get_short_compressed_pn( const method &m )
       os << '&';
       for ( int i=0; i < m.length() / 2; ++i)
 	do_single_compressed_pn( os, m[i], might_need_dot );
-
-      os << ','; might_need_dot = false;
     }
   else
     {
@@ -393,7 +391,7 @@ string method_symmetry_string( const method& m )
   assert( m.size() % 2 == 0 );
 
   string rv;
-  if ( has_conventional_symmetry(m) ) rv += 'S';
+  if ( has_conventional_symmetry(m) ) rv += 'P';
   if ( has_mirror_symmetry(m) )       rv += 'M';
   if ( has_glide_symmetry(m) )        rv += 'G';
   if ( has_rotational_symmetry(m) )   rv += 'R';

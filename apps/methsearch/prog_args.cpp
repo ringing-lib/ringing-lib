@@ -141,12 +141,12 @@ void arguments::bind( arg_parser &p )
   p.add( new integer_opt
 	 ( 'p', "blows-per-place", 
 	   "At most NUM consecutive blows in one place (0 = unlimited)", "NUM",
-	   max_consec_blows ) );
+	   max_consec_blows, /* default = */ 2 ) );
 
   p.add( new integer_opt
 	 ( 'l', "places-per-change", 
 	   "At most NUM places in any change (0 = unlimited)", "NUM",
-	   max_places_per_change ) );
+	   max_places_per_change, /* default = */ 2 ) );
 
   p.add( new integer_opt
 	 ( 'n', "changes-per-lead", 
@@ -356,11 +356,19 @@ bool arguments::validate( arg_parser &ap )
       return false;
     }
 
-  if ( ! hunt_bells && ! lead_len )
+  if ( !hunt_bells && !lead_len )
     {
       ap.error( "Must specify the lead length when searching for principles" );
       return false;
     }
+
+  if ( hunt_bells && lead_len )
+    {
+      ap.error( "Must not specify the lead length when searching for methods "
+		"with a hunt bell" );
+      return false;
+    }
+
 
   if ( ! lead_len )
     lead_len = (1 + treble_dodges) * bells * 2;
@@ -398,10 +406,17 @@ bool arguments::validate( arg_parser &ap )
       return false;
     }
 
-  if ( ! hunt_bells && bells % 2 && right_place )
+  if ( !hunt_bells && bells % 2 && right_place )
     {
       ap.error( "Odd bell methods need at least one hunt bell to be "
 		"right place" );
+      return false;
+    }
+  
+  if ( !hunt_bells && require_pbles )
+    {
+      ap.error( "Methods with no hunt bells cannot have plain bob "
+		"lead heads" );
       return false;
     }
 

@@ -48,6 +48,7 @@
 #include <ringing/library.h>
 #include <ringing/cclib.h>
 #include <ringing/mslib.h>
+#include <ringing/xmllib.h>
 
 
 RINGING_USING_NAMESPACE
@@ -133,6 +134,7 @@ void method_libraries::init()
     {
       cclib::registerlib();
       mslib::registerlib();
+      xmllib::registerlib();
       
       instance().named_methods.clear();
 

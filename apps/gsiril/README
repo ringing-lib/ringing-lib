@@ -53,6 +53,8 @@ Several gsiril statements in gsiril may be placed on one line, in which case
 they are separated by semicolons (';').  Line breaks are also used to mark
 the end of a statement.  A semicolon at the end of the line is optional.
 Comments start with a single slash ('/') and continue to the end of the line.
+(In the future, comments may be required to start with two slashes ('//'),
+with the single slash form only allowed in MicroSiril compatibility mode.) 
 Unless the -I option has been used, keywords and identifiers are all case 
 sensitive.
 
@@ -261,7 +263,7 @@ For example, in the following it is used to switch the meaning of the symbol
   prove 3(Cm,b,Cm,p,Pr,p,Pr,p,Cm,p,Cm,b,Cm,p,Pr,p,Pr,p,Cm,b);
 
 Dynamic variables can also be used (in conjuction with the 'final' symbol, 
-describe above) to make the 'p' symbol option in the previous example. 
+describe above) to make the 'p' symbol optional in the previous example. 
 This is demonstrated in the final example, which also includes code to 
 format the touch in a convenient manner.
 
@@ -279,8 +281,8 @@ format the touch in a convenient manner.
   lh2 = (p = lh=p2lh), (b = lh=blh), (lh=p2lh);
   lh6 = (p = lh=p6lh), (b = lh=blh), (lh=p6lh);
 
-  Cm = lh, &-3-4-2-3-4-5, lh2, "Cm";
-  Pr = lh, &-3-4-2-3-4-5, lh6, "Pr";
+  Cm = lh, &-3-4-2-3-4-5, lh2, "Cm"; // Cambridge
+  Pr = lh, &-3-4-2-3-4-5, lh6, "Pr"; // Primrose
 
   prove 3( Cm,b,Cm,Pr,Pr,Cm,Cm,b,Cm,Pr,Pr,Cm,b );
 

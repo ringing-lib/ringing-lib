@@ -81,7 +81,6 @@ private:
   bool is_limited_le( const change& ch );
 
   void new_midlead_change();
-  void new_principle_change();
   void double_existing();
 
   bool try_halflead_change( const change &ch );
@@ -141,9 +140,19 @@ void searcher::found_method()
 
 bool searcher::try_principle_symmetry()
 {
-  if ( args.skewsym )
-    if ( ! has_rotational_symmetry(m) )
-      return false;
+  if ( args.skewsym || args.doubsym || args.sym )
+    {
+      string const sym( method_symmetry_string(m) );
+
+      if ( args.skewsym && sym.find('R') == string::npos )
+	return false;
+
+      if ( args.sym && sym.find('P') == string::npos )
+	return false;
+
+      if ( args.doubsym && sym.find('G') == string::npos )
+	return false;
+    }
 
   return true;
 }
@@ -475,8 +484,9 @@ bool searcher::try_leadend_change( const change &ch )
 	    return false;
 	}
 
-  if ( !args.hunt_bells )
-    if ( ch == m.front() )
+  if ( !args.hunt_bells ) 
+    // Need m.size() to handle the (admitedly rather silly) -n1 option
+    if ( args.true_trivial && m.size() && ch == m.front() )
       return false;
 
   return true;
@@ -520,19 +530,11 @@ bool searcher::try_midlead_change( const change &ch )
        && ch.internal() )
     return false;
   
-  if ( args.max_places_per_change 
-       && ch.count_places() > args.max_places_per_change )
-    return false;
-  
   if ( args.same_place_parity && args.treble_dodges == 1
        && m.length() % div_len && depth % div_len != div_len - 1 
        && ch.sign() == m.back().sign() )
     return false;
   
-  if ( args.max_consec_places && depth % hl_len != hl_len-1
-       && has_consec_places( ch, args.max_consec_places ) )
-    return false;
-
   if ( args.max_consec_blows )
     {
       if ( args.sym && args.hunt_bells % 2 == 0 && depth < hl_len 
@@ -551,13 +553,6 @@ bool searcher::try_midlead_change( const change &ch )
        && m.length() % div_len == div_len - 2 
        && division_bad_parity_hack( m, ch, div_len ) )
     return false;
-
-  if ( args.allowed_changes.size() > depth )
-    {
-      const vector<change>& a = args.allowed_changes[depth];
-      if ( a.size() && find( a.begin(), a.end(), ch ) == a.end() )
-	return false;
-    }
 
   return true;
 }
@@ -631,7 +626,7 @@ void searcher::new_midlead_change()
 	  if ( ! try_midlead_change( ch ) )
 	    continue;
 
-	  if ( args.skewsym && hl_len % 2 == 0 
+	  if ( args.hunt_bells && args.skewsym && hl_len % 2 == 0 
 	       && depth % hl_len == hl_len / 2 - args.hunt_bells % 2 &&
 	       ! try_quarterlead_change( ch ) )
 	    continue;
@@ -641,6 +636,7 @@ void searcher::new_midlead_change()
 	      continue;
 
 	  if ( args.hunt_bells % 2 == 1 && depth == hl_len-1 ||
+	       args.hunt_bells && 
 	       args.hunt_bells % 2 == 0 && depth == hl_len+args.treble_dodges )
 	    if ( ! try_halflead_sym_change( ch ) )
 	      continue;
@@ -650,6 +646,7 @@ void searcher::new_midlead_change()
 	      continue;
 	  
 	  if ( args.hunt_bells % 2 == 1 && depth == 2*hl_len-1 ||
+	       args.hunt_bells && 
 	       args.hunt_bells % 2 == 0 && depth == args.treble_dodges )
 	    if ( ! try_leadend_sym_change( ch ) )
 	      continue;
@@ -664,74 +661,6 @@ void searcher::new_midlead_change()
     }
 }
 
-void searcher::new_principle_change()
-{
-  if ( args.right_place && bells % 2 == 0 && m.length() % 2 == 0 )
-    {
-      change ch( bells, "-" );
-
-      if ( first_meth.empty() )
-	{
-	  call_recurse( ch );
-	}
-      // Code to start at a particular point
-      else if ( first_meth.back() <= ch )
-	{
-	  first_meth.pop_back();
-	  call_recurse( ch );
-	}
-    }
-  else
-    {
-      size_t depth( m.length() );
-
-      vector< change > changes_to_try;
-      changes_to_try.reserve( fibonacci( bells ) );
-
-      // Choose a change
-      for ( changes_iterator i(bells), e; i != e; ++i )
-	{
-	  change ch(*i); 
-
-	  if ( args.no_78_pns && ch.findplace(bells-2) )
-	    continue;
-
-	  if ( args.true_trivial 
-	       && ch.count_places() == bells )
-	    continue;
-
-	  if ( (args.skewsym || args.doubsym) && args.no_78_pns 
-	       && ch.findplace(1) )
-	    continue;
-
-	  if ( ! try_midlead_change( ch ) )
-	    continue;
-
-	  if ( depth == size_t(args.lead_len-1) )
-	    if ( ! try_leadend_change( ch ) )
-	      continue;
-
-	  changes_to_try.push_back( ch );
-	}
-
-      sort( changes_to_try.begin(), changes_to_try.end() );
-
-      // Code to start at a particular point       
-      if ( ! first_meth.empty() )
-	{
-	  change first( first_meth.back() ); 
-	  first_meth.pop_back();
-
-	  for ( vector< change >::const_iterator i( changes_to_try.begin() ),
-		  e( changes_to_try.end() ); i != e; ++i )
-	    if ( *i >= first )
-	      call_recurse( *i );
-	}
-      else for ( vector< change >::const_iterator i( changes_to_try.begin() ),
-		   e( changes_to_try.end() ); i != e; ++i )
-	call_recurse( *i );
-    }
-}
 
 void searcher::double_existing()
 {
@@ -862,7 +791,7 @@ void searcher::general_recurse()
   // be sure where the symmetry points will be.
   else if ( ! args.hunt_bells )
     {
-      new_principle_change();
+      new_midlead_change();
     }
 
 

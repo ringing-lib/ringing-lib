@@ -16,10 +16,12 @@ General Options
   -c, --cyclic           Require cyclic lead ends
   -r, --regular          Require regular (P.B.) lead ends
   -A, --all-methods      Include differentials or differential hunters
-  -p, --blows-per-place=NUM 
-                         At most NUM blows in one place (0 = unlimited)
-  -l, --places-per-change=NUM 
-                         At most NUM places in one change (0 = unlimited)
+  -p, --blows-per-place[=NUM] 
+                         At most NUM blows in one place (0 = unlimited,
+                         default = 2)
+  -l, --places-per-change[=NUM]
+                         At most NUM places in one change (0 = unlimited,
+                         default = 2)
   -n, --changes-per-lead=NUM 
 			 Require NUM changes per lead (0 = automatic)
   -q, --quiet            Do not display methods when found
@@ -35,9 +37,10 @@ General Options
 			 (except at the half-lead).
   -j, --max-adj-places[=NUM]
 			 Forbid methods with more than NUM adjacent places
+                         (0 = unlimited, default = 1)
   -s, --symmetric        Look for (normally) symmetric methods (default)
   -k, --rotational       Look for rotationally symmteric methods 'Brave New
-                          Worlds' symmetry
+                         Worlds' symmetry
   -d, --double           Look for double methods - 'Double Eastern' symmetry
   -S, --surprise         Require an internal place between dodging positions
   -T, --treble-bob       Forbid an internal place between dodging positions
@@ -63,12 +66,15 @@ General Options
   --rev-cyclic-hlh       Require reverse cyclic half-lead heads
   --regular-hls          Require regular half-leads
   --offset-cyclic        Require offset cyclicity
+  -o, --out-file=FILENAME 
+                         Output to file FILENAME
+  -O, --out-format=FMTTYPE 
+                         Create output as a FMTTYPE library 
 
-
--L libraries should be either Central Council method libraries or MicroSIRIL
-method libraries.  (CC libraries are recommended as they allow spaces in 
-method names and are updated more frequently.)  CC libraries are obtainable 
-from
+-L libraries should be either Central Council method libraries, MicroSIRIL
+method libraries or XML libraries (see below).  (CC libraries are recommended 
+as they allow spaces in method names and are updated more frequently.)  CC 
+libraries are obtainable from
 
    http://www.methods.clara.net/method-collections/zip-files/index.htm
 
@@ -87,6 +93,22 @@ The -E (--prefer-restricted-le) option will only include methods with lead
 end changes other than 12 or 1N if neither the 12 nor the 1N version conforms
 to the required criteria.  This is the same restriction that the CC applies
 in, say, the Plain Minor Collection.
+
+When outputting to a file using -o, only the list of methods is sent to the
+file.   Output resulting from --status, -H or --count is still sent to the
+console as usual.  The currently supported output formats are "fmt" and "xml".
+The -Ofmt option is the default and means apply the formatting given in
+the -R option.  The -Oxml option can be used to generate an XML method 
+library.  The format of this XML is documented as part of the "Methods
+database" project hosted at methods.ringing.org.  In particular the following
+pages are of use
+
+  http://methods.ringing.org/xml.html
+  http://methods.ringing.org/method.xsd.txt
+
+The generated XML will contain method names if the method is listed in a 
+library referenced by a -L option.  Libraries generated with -Oxml can be
+read with -L.
 
 
 
@@ -163,9 +185,13 @@ The -H and -R formats accept the following format specifiers:
   $[N]M  The musical score for the course;  if a number, N, is specified, 
          it is the minimum width of the field
   $F     The in-course, tenors together falseness groups
-  $$     A literal $
-  $[...] An expression (-R only); see below
   $O     The tenors-together coursing order
+  $y     The symmetry string: 'P' for palindromic, 'M' for mirror, 'G' for
+         glide, 'R' for rotational
+  $$     A literal $
+  $)     A literal )
+  $[...] An expression; see below
+  $(...) A command invocation; see below
 
 \t and \n are interpreted as a tab and a line break respectively,
 although in some situations these are interpreted by the shell and so will
@@ -189,11 +215,11 @@ supplied.
 Expressions
 -----------
 
-A -R format may include an expression delimitted by $[ ... ], this allows
-more complicated expressions to be built up.  The argument to --require is 
-an expression in the same format, except it is not delimited by $[ ... ].
-The operators provided is modeled loosely on those in Perl's; they are 
-listed below from highest to lowest precedence.
+A format, command invocation or expression may include an expression 
+delimitted by $[ ... ]; this allows more complicated expressions to be built
+up.  The argument to --require is an expression in the same format, except it 
+is not delimited by $[ ... ].  The operators provided is modeled loosely on 
+those in Perl; they are listed below from highest to lowest precedence.
 
   Associativity   Operators
   left            *  /  %
@@ -229,9 +255,46 @@ evaluates and returns its second argument, or, it was false, evaluates and
 returns its third argument.
 
 Integer literals may be included in the expression, as may string literals
-(which must be double quoted).  Variables may be accessed as $p, etc.  
-Currently the avaliable variables are the same as those listed under format
-specifiers, above.
+(which must be double quoted, "like this").  Variables may be accessed as 
+$p, etc.  Currently the avaliable variables are the same as those listed 
+under format specifiers, above.
+
+
+
+Command Invocations
+-------------------
+
+A format, command invocation or expression may include a command invocation 
+delimitted by $( ... ); this allows external programs to be invoked to
+process a method in some way.  The body of the command invocation may
+contain variables accessed as $p (see format specifiers, above); it may
+also contain expressions delimited $[...].  
+
+Other than inside sub-expressions within command invocations, quotes and
+brackets are treated no differently from any other character.  This means
+that a command terminates at the first ) character.  If the command itself
+needs to contain a ) character, this must be escaped as $) even if it is
+within a double quoted string.  For example
+
+  $(echo "(Place notation: $p$)")
+
+The command is passed through to the system's shell which will interpret it.
+The shell to use can be overridden using the SHELL environment variable; the
+default values are "/bin/sh" (on a Unix-like system) or "cmd.exe" (on 
+Windows).  Note that on Windows 95, 98 and ME it may be necessary to set
+SHELL=command.com.
+
+The value of the command invocation is simply the output of the command.
+Thus, if a command invocation is in an expression, it can be treated as a
+string (or an integer if appropriate). For example, if
+
+  testsearch --count-extents "&-6-6-6,2"
+
+prints the number of extents of Plain Bob, then
+
+  --require='$(testsearch --count-extents "$q") > 0'
+
+can be used to require that an extent of the method exists.
 
 
 
@@ -323,9 +386,7 @@ written '3,&1-1-1-1-' (note the comma before the ampersand).
 As well as just containing place notation, a mask may also use the '?' and '*'
 metacharacters, which respectively represent exactly one and zero or more 
 unspecified changes.  So, for a plain minor method the mask '-?-?-?-?-?-?' 
-is equivalent to the -w (right-place) option.
-
-  The '*' symbol may be used at
+is equivalent to the -w (right-place) option.  The '*' symbol may be used at
 most once in a mask (because otherwise the notation between the two '*'s 
 would be moveable), and methsearch uses the -b and -G (where present) options
 to work out how many '?'s to expand this to.  

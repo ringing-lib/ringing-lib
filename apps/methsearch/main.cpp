@@ -1,4 +1,4 @@
-// -*- C++ -*- main.cpp - the entry point for meth-search 
+// -*- C++ -*- main.cpp - the entry point for methsearch 
 // Copyright (C) 2002 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
