@@ -157,11 +157,12 @@ false_courses::false_courses( const method &m, int flags )
 {
   initialiser init( *this );
 
+  method::const_iterator const e( m.end() );
   row r1( m.bells() );
-  for ( method::const_iterator i1( m.begin() ); i1 != m.end(); r1 *= *i1++ )
+  for ( method::const_iterator i1( m.begin() ); i1 != e; r1 *= *i1++ )
     {
       row r2( m.bells() );
-      for ( method::const_iterator i2( m.begin() ); i2 != m.end(); r2 *= *i2++)
+      for ( method::const_iterator i2( m.begin() ); i2 != e; r2 *= *i2++)
 	{
 	  init.process( r1 / r2 );
 	}
