@@ -18,7 +18,7 @@
 // $Id$
 
 #ifdef __GNUG__
-#pragma implementation
+#pragma implementation "methsearch/falseness"
 #endif
 
 #include <ringing/common.h>

@@ -21,7 +21,7 @@
 #define METHSEARCH_FALSENESS_INCLUDED
 
 #ifdef __GNUG__
-#pragma interface
+#pragma interface "methsearch/falseness"
 #endif
 
 #include <ringing/common.h>
