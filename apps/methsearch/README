@@ -137,6 +137,8 @@ The -H and -R formats accept the following format specifiers:
          N, is specified, it is the minimum width of the field
   $[N]o  The number of leads in the method;  if a number, N, is specified,
          it is the minimum width of the field
+  $[N]u  The number of hunt bells in the method;  if a number, N, is specified,
+         it is the minimum width of the field
   $NP    The path of the bell N -- N should be an integer not a bell symbol
   $n     The method's name (minus class and stage); requires a -L option
   $N     The method's full name (including class and stage); requires -L

@@ -105,6 +105,7 @@ struct format_string
   bool has_blow_count;
   bool has_lh_order;
   bool has_lh_code;
+  bool has_hunt_bells;
   
   bool has_name;
   bool has_full_name;

@@ -778,7 +778,7 @@ private:
   map< size_t, row > rows;
   map< size_t, string > paths;
   method changes;
-  unsigned int blow_count, lh_order;
+  unsigned int blow_count, lh_order, hunt_bells;
   string lh_code;
   string name, full_name;
   string class_name, stage_name;
@@ -877,6 +877,14 @@ bool histogram_entry::cmp::operator()( const histogram_entry &x,
       if ( x.lh_code < y.lh_code )
 	return true;
       else if ( x.lh_code > y.lh_code )
+	return false;
+    }
+
+  if ( x.f.has_hunt_bells )
+    {
+      if ( x.hunt_bells < y.hunt_bells )
+	return true;
+      else if ( x.hunt_bells > y.hunt_bells )
 	return false;
     }
 
@@ -982,6 +990,9 @@ histogram_entry::histogram_entry( const format_string &f, const method &m )
   if ( f.has_lh_order )
     lh_order = m.leads();
 
+  if ( f.has_hunt_bells )
+    hunt_bells = m.huntbells();
+
   if ( f.has_lh_code )
     lh_code = m.lhcode();
 
@@ -1049,6 +1060,7 @@ void histogram_entry::print( ostream &os2, size_t count ) const
 		case 'h': os << changes[ num_opt-1 ]; break;
 		case 'b': os << setw(num_opt) << blow_count; break;
 		case 'o': os << setw(num_opt) << lh_order; break;
+		case 'u': os << setw(num_opt) << hunt_bells; break;
 		case 'd': os << lh_code; break;
 		case 'n': os << name; break;
 		case 'N': os << full_name; break;
@@ -1140,6 +1152,7 @@ format_string::format_string( const string &fmt,
     has_blow_count(false),
     has_lh_order(false),
     has_lh_code(false),
+    has_hunt_bells(false),
 
     has_name(false),
     has_full_name(false),
@@ -1205,7 +1218,7 @@ format_string::format_string( const string &fmt,
 
 	    case '%': case '$': case 'l': case 'r': case 'b': 
 	    case 'C': case 'S': case 'M': case 'h': case 'F':
-	    case 'o': case 'd':
+	    case 'o': case 'd': case 'u':
 	      // Can be used in either
 	      break;
 
@@ -1221,7 +1234,7 @@ format_string::format_string( const string &fmt,
 	  switch ( *iter )
 	    {
 	    case '%': case '$': case 'c': case 'b': case 'M': 
-	    case 'o': case '[':
+	    case 'o': case '[': case 'u':
 	      // Option may but needn't have a number
 	      break;
 
@@ -1263,6 +1276,10 @@ format_string::format_string( const string &fmt,
 
 	    case 'o':
 	      has_lh_order = true;
+	      break;
+
+	    case 'u':
+	      has_hunt_bells = true;
 	      break;
 
 	    case 'd':
