@@ -43,8 +43,15 @@ bool option::process(const string& a, const arg_parser& ap) const {
 
 arg_parser::arg_parser(const string& n, const string& d,
 		       const string& s) 
-  : progname(n), description(d), synopsis(s) 
+  : default_opt(0), progname(n), description(d), synopsis(s) 
 {
+}
+
+arg_parser::~arg_parser()
+{
+  for (args_t::iterator i=args.begin(), e=args.end(); i!=e; ++i) {
+    delete *i; *i = NULL;
+  }
 }
 
 void arg_parser::add(const option* o) {
@@ -53,6 +60,11 @@ void arg_parser::add(const option* o) {
     shortindex.insert(pair<char, args_t::const_iterator>(o->shortname, i));
   if(!o->longname.empty()) 
     longindex.insert(pair<string, args_t::const_iterator>(o->longname, i));
+}
+
+void arg_parser::set_default(const option* o) {
+  if (default_opt) delete default_opt;
+  default_opt = o;
 }
 
 bool arg_parser::parse(int argc, char** argv) const
@@ -118,11 +130,10 @@ bool arg_parser::parse(int argc, char** argv) const
 	  }
 	} while(*t != '\0' && !(a->flags & option::takes_arg));
       } else {
-        if(args.front() && !args.front()->process("-", *this)) return false;
+        if(!default_opt || !default_opt->process("-", *this)) return false;
       }
     } else {
-      const option* a = *(args.begin());
-      if(a && !a->process(argv[i], *this)) return false;
+      if(!default_opt || !default_opt->process(argv[i], *this)) return false;
     }
   }
   return true;
@@ -142,6 +153,13 @@ void arg_parser::wrap(const string& s, int l, int r, int c) const
     while(j != k) { cout << *j++; ++c; }
     ++k;
   }
+}
+
+void arg_parser::version() const
+{
+  cout << progname << " is from the Ringing Class Library "
+                      "version " RINGING_VERSION ".\n";
+  exit(0);
 }
 
 void arg_parser::help() const
@@ -271,7 +289,24 @@ bool delegate_opt::process( const string &arg, const arg_parser &ap ) const
   return true;
 }
 
+help_opt::help_opt()
+  : option( '?', "help", "Print this help message" )
+{
+}
+
 bool help_opt::process( const string &, const arg_parser &ap ) const
+{
+  ap.help();
+  exit(0);
+  return true; // To keep MSVC 5 happy
+}
+
+version_opt::version_opt()
+  : option('V', "version", "Print the program version" )
+{
+}
+
+bool version_opt::process( const string &, const arg_parser &ap ) const
 {
   ap.help();
   exit(0);

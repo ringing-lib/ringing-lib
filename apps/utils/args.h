@@ -59,6 +59,7 @@ class arg_parser {
 protected:
   typedef list<const option*> args_t;
   args_t args;
+  const option* default_opt;
   typedef map<char, args_t::const_iterator> shortindex_t;
   shortindex_t shortindex;
   typedef map<string, args_t::const_iterator> longindex_t;
@@ -68,14 +69,26 @@ protected:
 public:
   arg_parser(const string& progname, const string& description, 
 	     const string& synoposis);
+ ~arg_parser();
+
   void add(const option* o);
+
+  // The default option is used for text on the command line 
+  // that is not an option (i.e. not prefixed with a dash).
+  void set_default(const option* o);
+
   bool parse(int argc, char** argv) const;
   void help() const;
   void usage() const;
+  void version() const;
   void error(const string &s) const;
 
 private:
   void wrap(const string& s, int l, int r, int c) const;
+
+  // Unimplemented copy constructor & assignment operator
+  arg_parser(const arg_parser&);
+  arg_parser& operator=(const arg_parser&);
 };
 
 //
@@ -97,8 +110,7 @@ private:
 };
 
 
-class integer_opt : public option
-{
+class integer_opt : public option {
 public:
   // Use this constructor if the argument is not optional
   integer_opt( char c, const string &l, const string &d, const string &a,
@@ -120,8 +132,7 @@ private:
   int &opt, default_val;
 };
 
-class string_opt : public option
-{
+class string_opt : public option {
 public:
   string_opt( char c, const string& l, const string& d, const string& a,
 	      string& opt ) 
@@ -134,8 +145,7 @@ private:
   string &opt;
 };
 
-class delegate_opt : public option
-{
+class delegate_opt : public option {
 public:
   delegate_opt( char c, const string& l, const string& d, const string& a,
 		void (*fn)(const string&) )
@@ -159,17 +169,26 @@ private:
   bool fn_has_ap;
 };
 
-class help_opt : public option
-{
+class help_opt : public option {
 public:
-  help_opt( char c, const string& l, const string& d )
-    : option(c, l, d)
-  {}
+  // Default uses  -?, --help   'Print this help message'
+  help_opt();
+  help_opt( char c, const string& l, const string& d ) : option(c, l, d) {}
 
 private:
   // Just calls ap.help() and exits successfully
   virtual bool process( const string&, const arg_parser& ap ) const;
 };
 
+class version_opt : public option {
+public:
+  // Default uses  -V, --version   'Print the program version'
+  version_opt();
+  version_opt( char c, const string &l, const string &d ) : option(c, l, d) {}
+
+private:
+  // Just calls ap.version() and exits successfully
+  virtual bool process( const string &, const arg_parser & ) const;
+};
 
 #endif
