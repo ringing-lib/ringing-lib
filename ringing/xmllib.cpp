@@ -293,7 +293,7 @@ string xmllib::impl::entry_type::pn() const
       value.append( extract_text( sym_elt ) );
       value.append( 1u, ',');
       
-      sym_elt = next_sibling_element( pn_elt->getFirstChild(), "symblock" );
+      sym_elt = next_sibling_element( sym_elt->getNextSibling(), "symblock" );
 
       if ( !sym_elt )
 	throw runtime_error
