@@ -21,7 +21,7 @@
 #define METHSEARCH_MUSIC_INCLUDED
 
 #ifdef __GNUG__
-#pragma interface
+#pragma interface "methsearch/music"
 #endif
 
 #include <ringing/common.h>

@@ -18,7 +18,7 @@
 // $Id$
 
 #ifdef __GNUG__
-#pragma implementation
+#pragma implementation "methsearch/music"
 #endif
 
 #include <ringing/common.h>
