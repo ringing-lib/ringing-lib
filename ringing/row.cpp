@@ -534,6 +534,17 @@ row row::pblh(int n, int h)
   return r;
 }
 
+row row::cyclic(int n, int h, int c)
+{
+  row r(n);
+  if ( h < n ) {
+    c %= n-h;
+    if (c < 0) c += n-h;
+    rotate( r.data.begin() + h, r.data.begin() + h + c, r.data.end() );
+  }
+  return r;
+}
+
 // Check whether it is rounds
 bool row::isrounds(void) const
 {

@@ -124,7 +124,7 @@ public:
   change& set(int num, const string& pn)
     { change(num, pn).swap(*this); return *this; }
   bool operator==(const change& c) const
-  { return (n == c.n) && (n == 0 || swaps == c.swaps); }
+    { return (n == c.n) && (n == 0 || swaps == c.swaps); }
   bool operator!=(const change& c) const
     { return !(*this == c); }
   change reverse(void) const;		 // Return the reverse
@@ -279,15 +279,17 @@ public:
   int bells(void) const { return data.size(); } // How many bells?
   row& rounds(void);		// Set it to rounds
 
-  static row rounds(const int n) { return row(n); }	// Return rounds on n bells
+  static row rounds(const int n) { return row(n); } // Return rounds on n bells
 
-  static row queens(const int n); // Return queens on n bells
-  static row kings(const int n); // Return kings on n bells
+  static row queens(const int n);  // Return queens on n bells
+  static row kings(const int n);   // Return kings on n bells
   static row tittums(const int n); // Return tittums on n bells
   static row reverse_rounds(const int n); // Return reverse rounds on n bells
 
+  static row cyclic(int n, int h=1, int c=1); // Return cyclic lead head 
+                                   // (13456..2)^c on n bells with h hunt bells
   static row pblh(int n, int h=1); // Return first plain bob lead head on 
-                                // n bells with h hunt bells
+                                   // n bells with h hunt bells
   bool isrounds(void) const;	// Is it rounds?
   int ispblh(void) const;	// Which plain bob lead head is it?
   int sign(void) const;         // Return whether it's odd or even

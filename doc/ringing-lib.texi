@@ -673,6 +673,12 @@ This returns the first lead head of Plain Bob (@var{h} = 1), Grandsire
 bells with @var{h} hunt bells.
 @end deftypefun
 
+@deftypefun {static row} row::cyclic (int @var{n}, int @var{h} = 1, int @var{c} = 1);
+This returns a cyclic row on @var{n} bells with @var{h} initial fixed 
+(hunt) bells.  The variable @var{c} controls the number of bells moved 
+from the front of the row to the end.  Thus, @code{cyclic(6,1,2) == "145623"}.
+@end deftypefun
+
 @node The change Class, The permute function, The row Class, Rows and Changes
 @section The @code{change} class
 @cindex @code{change} class
