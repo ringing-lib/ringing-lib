@@ -17,17 +17,16 @@
 
 // $Id$
 
-#if 0
-
 #include <ringing/common.h>
 #if RINGING_OLD_INCLUDES
 #include <iostream.h>
+#include <stdexcept.h>
 #else
 #include <iostream>
+#include <stdexcept>
 #endif
+#include <ringing/method.h>
 #include <ringing/touch.h>
-#include <ringing/proof.h>
-#include <ringing/music.h>
 
 #if RINGING_USE_NAMESPACES
 using namespace ringing;
@@ -35,45 +34,31 @@ using namespace ringing;
 
 int main()
 {
-  // We will construct WHWH of Plain Bob Minor
-  touch t;
+  cout << "Constructing leaves...\n";
+  touch_changes lead("-1-1-1-1-1-", 6);
+  touch_changes lhplain("2", 6);
+  touch_changes lhbob("4", 6);
 
-  touch::pointer lead = t.new_node(6, "X1X1X1X1X1X");
+  cout << "Constructing nodes...\n";
+  touch_child_list p, b, wh, touch;
 
-  touch::pointer plainlh = t.new_node(6, "12");
+  cout << "Building tree...\n";
+  p.push_back(1, &lead); p.push_back(1, &lhplain);
+  b.push_back(1, &lead); b.push_back(1, &lhbob);
+  wh.push_back(1, &b); wh.push_back(3, &p); wh.push_back(1, &b);
+  touch.push_back(2, &wh);
 
-  touch::pointer boblh = t.new_node(6, "14");
-
-  touch::pointer plain = t.new_node();
-  (*plain).push_back(lead);
-  (*plain).push_back(plainlh);
-
-  touch::pointer bob = t.new_node();
-  (*bob).push_back(lead);
-  (*bob).push_back(boblh);
-
-  touch::pointer wh = t.new_node();
-  (*wh).push_back(bob);
-  (*wh).push_back(plain, 3);
-  (*wh).push_back(bob); 
-
-  (*(t.root())).push_back(wh, 2);
-
-  list<row> l;
-  row r(6); r.rounds();
-  transform(t.begin(), t.end(), back_insert_iterator<list<row> >(l),
-	    permute(r));
-
-  copy(l.begin(), l.end(), ostream_iterator<row>(cout, "\n"));
-
-  cout << endl << "Music: " << music(l.begin(), l.end()) << endl;
-
+  cout << "This should be 2*WH of Plain Bob Minor:\n";
+  try {
+    touch_node::iterator i;
+    row r(6); r.rounds(); cout << r << endl;
+    for(i = touch.begin(); i != touch.end(); ++i) {
+      r *= *i;
+      cout << r << " " << *i << endl;
+    }
+  }
+  catch(exception& e) {
+    cout << "Exception caught: " << e.what() << endl;
+  }
   return 0;
 }
-
-#else
-
-int main() { return 1; }
-
-#endif
-

@@ -26,51 +26,22 @@
 
 RINGING_START_NAMESPACE
 
-RINGING_USING_STD
-
-touch::iterator::iterator(const touch_node& root)
+touch_node::iterator_base& touch_child_list::iterator::operator++()
 {
-  trail.push(place(root));
-  ch = current_node().changes.begin();
-  while(!trail.empty() && ch == current_node().changes.end())
-    next_node();
-}
-
-void touch::iterator::next_node()
-{
-  // Move to the next node
-  if(!current_node().children.empty()) {
-    // Move down
-    trail.push(place(current_node()));
-    ch = current_node().changes.begin();
-  } else {
-    for(;;) {
-      // Repeat this node
-      ++(trail.top().count);
-      if(trail.top().count < (*(trail.top().curr)).first) {
-	ch = current_node().changes.begin(); break;
-      } else {
-	// Move across
-	trail.top().count = 0;
-	++(trail.top().curr);
-	if(trail.top().curr != trail.top().end) {
-	  ch = current_node().changes.begin(); break;
-	} else {
-	  // Move up
-	  trail.pop();
-	  if(trail.empty()) break;
-	}
+  ++ci;
+  if(ci == (*i).second->end()) {
+    ++count;
+    if(count != (*i).first) {
+      ci = (*i).second->begin();
+    } else {
+      ++i;
+      if(i != last) {
+	count = 0;
+	ci = (*i).second->begin();
       }
     }
   }
-}
-
-touch::iterator& touch::iterator::operator++()
-{
-  if(!trail.empty()) ++ch;
-  while(!trail.empty() && ch == current_node().changes.end())
-    next_node();
   return *this;
-} 
+}
 
 RINGING_END_NAMESPACE
