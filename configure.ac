@@ -33,8 +33,11 @@ can_build=yes
 dnl --------------------------------------------------------------------------
 dnl Checks for programs.
 AC_PROG_CXX
-AC_PROG_RANLIB
 AC_PROG_LN_S
+
+dnl Libtool support
+AC_LIBTOOL_WIN32_DLL
+AC_PROG_LIBTOOL
 
 dnl --------------------------------------------------------------------------
 dnl Checks for libraries.

@@ -5,11 +5,11 @@ DISTCLEANFILES = common-am.h
 MAINTAINERCLEANFILES = Makefile.in
 INCLUDES = -I$(top_srcdir)
 
-lib_LIBRARIES = libringing.a
+lib_LTLIBRARIES = libringing.la
 
 LIBS += @XERCES_LIBS@
 
-libringing_a_SOURCES = row.cpp method.cpp library.cpp mslib.cpp cclib.cpp \
+libringing_la_SOURCES = row.cpp method.cpp library.cpp mslib.cpp cclib.cpp \
 proof.cpp music.cpp print.cpp print_ps.cpp dimension.cpp touch.cpp \
 printm.cpp print_pdf.cpp pdf_fonts.cpp stl.cpp extent.cpp falseness.cpp \
 search_base.cpp basic_search.cpp multtab.cpp table_search.cpp streamutils.cpp \

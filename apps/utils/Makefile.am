@@ -22,6 +22,7 @@
 
 MAINTAINERCLEANFILES = Makefile.in
 
+# This should always be a static library, as we don't want to install it
 noinst_LIBRARIES = libstuff.a
 INCLUDES = -I$(top_srcdir)
 

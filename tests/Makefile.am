@@ -7,7 +7,7 @@ noinst_PROGRAMS = test
 
 TESTS = test
 
-LDADD = $(top_builddir)/ringing/libringing.a
+LDADD = $(top_builddir)/ringing/libringing.la
 
 test_SOURCES = test-main.cpp test-base.cpp test-base.h \
 	change-test.cpp row-test.cpp method-test.cpp music-test.cpp
