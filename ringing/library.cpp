@@ -1,5 +1,5 @@
 // library.cpp : Libraryish things
-// Copyright (C) 2001-2 Martin Bright <martin@boojum.org.uk>
+// Copyright (C) 2001, 2002, 2004 Martin Bright <martin@boojum.org.uk>
 // and Richard Smith <richard@ex-parrot.com>
 
 // This library is free software; you can redistribute it and/or
@@ -127,5 +127,17 @@ method library_base::load(const string& name, int stage) const
   return method( 0, 0, "Not Found" );
 }
 
+shared_pointer< library_facet_base > 
+library_entry::impl::get_facet( const library_facet_id& id ) const
+{
+  return shared_pointer< library_facet_base >();
+}
+
+
+bool library_entry::impl::has_facet( const library_facet_id& id ) const
+{
+  // Quite inefficient: subclasses are encouraged to override this.
+  return bool( get_facet(id) );
+}
 
 RINGING_END_NAMESPACE

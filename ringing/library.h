@@ -1,5 +1,5 @@
 // -*- C++ -*- library.h - Things for method libraries
-// Copyright (C) 2001, 2002 Martin Bright <martin@boojum.org.uk>
+// Copyright (C) 2001, 2002, 2004 Martin Bright <martin@boojum.org.uk>
 // and Richard Smith <richard@ex-parrot.com>.
 
 // This library is free software; you can redistribute it and/or
@@ -41,6 +41,7 @@
 #include <string>
 #include <ringing/method.h>
 #include <ringing/pointers.h>
+#include <ringing/libfacet.h>
 
 RINGING_START_NAMESPACE
 
@@ -98,8 +99,7 @@ public:
   library_entry() {}
 
   // Library implementations should subclass this
-  class RINGING_API impl
-  {
+  class RINGING_API impl {
   public:
     virtual ~impl() {}
     virtual impl *clone() const = 0;
@@ -110,6 +110,12 @@ public:
     virtual int bells() const = 0;
     
     virtual bool readentry( library_base &lb ) = 0;
+
+    virtual bool has_facet( const library_facet_id& id ) const;
+
+    virtual shared_pointer< library_facet_base > 
+      get_facet( const library_facet_id& id ) const;
+
   };
 
   // Public accessor functions
@@ -119,6 +125,21 @@ public:
   int bells() const        { return pimpl->bells(); }
   method meth() const      { return method( pn(), bells(), base_name() ); }
 
+  // Get an extended property of the method 
+  template <class Facet>
+  typename Facet::type get_facet( Facet const* = NULL ) const 
+  {
+    shared_pointer< library_facet_base > f( pimpl->get_facet( Facet::id ) );
+    if ( !f.get() ) throw runtime_error( "No such facet" );
+    return typename Facet::type( static_cast< const Facet& >( *f ) );
+  }
+
+  template <class Facet>
+  bool has_facet( Facet const* = NULL ) const 
+  {
+    return pimpl->has_facet( Facet::id );
+  }
+
 private:
   friend class library_base::const_iterator;
   library_entry( impl *pimpl ) : pimpl(pimpl) {}
@@ -126,8 +147,8 @@ private:
   cow_pointer< impl > pimpl;
 };
 
-class RINGING_API library_base::const_iterator
-{
+
+class RINGING_API library_base::const_iterator {
 public:
   // Standard iterator typedefs
   typedef library_entry value_type;
@@ -203,6 +224,7 @@ private:
   shared_pointer<library_base> lb;
   static list<init_function> libtypes;
 };
+
 
 RINGING_END_NAMESPACE
 

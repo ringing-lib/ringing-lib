@@ -1,5 +1,6 @@
 // -*- C++ -*- mslib.h - MicroSIRIL libraries
-// Copyright (C) 2001 Martin Bright <martin@boojum.org.uk>
+// Copyright (C) 2001, 2004 Martin Bright <martin@boojum.org.uk> and
+// Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -26,53 +27,19 @@
 #pragma interface
 #endif
 
-#if RINGING_OLD_C_INCLUDES
-#include <ctype.h>
-#include <algo.h>
-#include <fstream.h>
-#else
-#include <cctype>
-#include <algorithm>
-#include <fstream>
-#endif
 #include <ringing/library.h>
-#include <string>
 
 RINGING_START_NAMESPACE
 
 RINGING_USING_STD
 
 // mslib : Implement MicroSIRIL libraries
-class mslib : public library_base {
-private:
-  ifstream f;                   // The file stream we're using
-  int b;                        // Number of bells for files in this lib
-  int wr;                       // Is it open for writing?
-  int _good;
-
+class RINGING_API mslib {
 public:
-  static RINGING_API void registerlib(void) {
-    library::addtype(&canread);
-  }
+  static void registerlib();
 
 private:
-  // Construction handled by library class
-  mslib(const string& filename);
- ~mslib() { if (_good == 1) f.close(); }
-
-  // Is this file in the right format?
-  static library_base *canread(const string& filename);
-
-  // Iterators into the library
-  class entry_type;
-  friend class entry_type;
-  virtual const_iterator begin() const;
-
-  // Is the library in a usable state?
-  virtual bool good(void) const { return _good; }
-
-  // Is this library writeable?
-  virtual bool writeable(void) const { return wr; }
+  class impl;
 };
 
 RINGING_END_NAMESPACE

@@ -24,6 +24,7 @@
 #pragma implementation
 #endif
 
+#include <ringing/mslib.h>
 #if RINGING_OLD_C_INCLUDES
 #include <string.h>
 #include <ctype.h>
@@ -31,12 +32,56 @@
 #include <cstring>
 #include <cctype>
 #endif
-#include <ringing/mslib.h>
+#if RINGING_OLD_INCLUDES
+#include <algo.h>
+#include <fstream.h>
+#else
+#include <algorithm>
+#include <fstream>
+#endif
+#include <string>
 #include <ringing/pointers.h>
 
 RINGING_START_NAMESPACE
 
-class mslib::entry_type : public library_entry::impl
+RINGING_USING_STD
+
+// mslib : Implement MicroSIRIL libraries
+class mslib::impl : public library_base {
+private:
+  ifstream f;                   // The file stream we're using
+  int b;                        // Number of bells for files in this lib
+  int wr;                       // Is it open for writing?
+  int _good;
+
+private:
+  // Construction handled by library class
+  impl(const string& filename);
+ ~impl() { if (_good == 1) f.close(); }
+
+public:
+  // Is this file in the right format?
+  static library_base *canread(const string& filename);
+
+private:
+  // Iterators into the library
+  class entry_type;
+  friend class entry_type;
+  virtual const_iterator begin() const;
+
+  // Is the library in a usable state?
+  virtual bool good(void) const { return _good; }
+
+  // Is this library writeable?
+  virtual bool writeable(void) const { return wr; }
+};
+
+void mslib::registerlib()
+{
+  library::addtype(&impl::canread);
+}
+
+class mslib::impl::entry_type : public library_entry::impl
 {
   // The public interface
   virtual string name() const;
@@ -45,7 +90,7 @@ class mslib::entry_type : public library_entry::impl
   virtual int bells() const { return b; }
 
   // Helper functions
-  friend class mslib;
+  friend class mslib::impl;
   entry_type();
   virtual ~entry_type() { };
   virtual bool readentry( library_base &lb );
@@ -59,21 +104,22 @@ class mslib::entry_type : public library_entry::impl
 };
 
 
-mslib::const_iterator mslib::begin() const
+library::const_iterator mslib::impl::begin() const
 {
   ifstream *ifs = const_cast< ifstream * >( &f );
   ifs->clear();
   ifs->seekg(0, ios::beg);
-  return const_iterator(const_cast< mslib * >(this), new mslib::entry_type);
+  return const_iterator( const_cast< mslib::impl * >(this), 
+			 new mslib::impl::entry_type );
 }
 
-mslib::entry_type::entry_type()
+mslib::impl::entry_type::entry_type()
   : b(0)
 {}
 
-bool mslib::entry_type::readentry( library_base &lb )
+bool mslib::impl::entry_type::readentry( library_base &lb )
 {
-  ifstream &ifs = dynamic_cast<mslib&>(lb).f;
+  ifstream &ifs = dynamic_cast<mslib::impl&>(lb).f;
 
   while ( ifs )
     {
@@ -115,18 +161,18 @@ bool mslib::entry_type::readentry( library_base &lb )
   return ifs;
 }
 
-string mslib::entry_type::name() const
+string mslib::impl::entry_type::name() const
 {
   return string( linebuf, 0, linebuf.find(' ') );
 }
 
-string mslib::entry_type::base_name() const
+string mslib::impl::entry_type::base_name() const
 {
   // TODO  Strip trailing 'place' or 'bob' off plain methods
   return name();
 }
 
-string mslib::entry_type::pn() const
+string mslib::impl::entry_type::pn() const
 {
   string::size_type s1( linebuf.find(' ') );
   string::size_type s2( linebuf.find(' ', s1+1) );
@@ -186,7 +232,7 @@ static int extractNumber(const string &filename)
 }
 
 
-mslib::mslib(const string& filename) 
+mslib::impl::impl(const string& filename) 
   : f(filename.c_str()), wr(0), _good(0)
 {
   // Open file. Not going to bother to see if it's writeable as the
@@ -199,9 +245,9 @@ mslib::mslib(const string& filename)
 }
 
 // Is this file in the right format?
-library_base *mslib::canread(const string& filename)
+library_base *mslib::impl::canread(const string& filename)
 {
-  scoped_pointer<library_base> ptr( new mslib(filename) );
+  scoped_pointer<library_base> ptr( new mslib::impl(filename) );
   if ( ptr->begin() != ptr->end() )
     return ptr.release();
   else
@@ -216,7 +262,7 @@ library_base *mslib::canread(const string& filename)
 // all together and make sure the first letter is upper case, and
 // the rest lower case.  If the method isn't already in the library,
 // put it in so that everything stays in alphabetical order.
-int mslib::save(method& m)
+int mslib::impl::save(method& m)
 {
   char *buffer = new char[160];
   char *buffer2 = new char[160];
