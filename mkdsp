@@ -2,7 +2,7 @@
 #
 # mkdsp - makes a Visual Studio workspace from Makefile.am
 #
-# Copyright (C) 2001-2, Richard Smith <richard@ex-parrot.com>
+# Copyright (C) 2001, 2002, 2003 Richard Smith <richard@ex-parrot.com>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -128,14 +128,12 @@ sub dsp_head($$$)
     my %proj_type = (
         dll  => "Win32 (x86) Dynamic-Link Library",
         prog => "Win32 (x86) Console Application",
-        dprog=> "Win32 (x86) Console Application",
 	lib  => "Win32 (x86) Static Library",
     );
 
     my %proj_num = (
         dll  => "0x0102",
         prog => "0x0103",
-        dprog=> "0x0103",
 	lib  => "0x0104",
     );
 
@@ -147,17 +145,15 @@ sub dsp_head($$$)
     my %cxx_flags = (
         dll  => "/MD /D \"_USRDLL\" /D \"_WINDOWS\" "
 	       ."/D \"".(uc$name)."_EXPORTS\"",
-	prog => "/D \"_CONSOLE\"",
-	dprog=> "/MD /D \"_CONSOLE\"",
-        lib  => "/D \"_WINDOWS\"",
+	prog => "/MD /D \"_CONSOLE\"",
+        lib  => "/MD /D \"_WINDOWS\"",
     );
 
     my %dbg_cxx_flags = (
         dll  => "/MDd /D \"_USRDLL\" /D \"_WINDOWS\" "
 	       ."/D \"".(uc$name)."_EXPORTS\"",
-	prog => "/D \"_CONSOLE\"",
-	dprog=> "/MDd /D \"_CONSOLE\"",
-	lib  => "/D \"_WINDOWS\"",
+	prog => "/MDd /D \"_CONSOLE\"",
+	lib  => "/MDd /D \"_WINDOWS\"",
     );
 
     # /GX enables exception handling, /GR enables RTTI.
@@ -175,7 +171,6 @@ sub dsp_head($$$)
     my %ld_flags = (
 	dll  => "$libs /subsystem:windows /dll",
 	prog => "$libs /subsystem:console",
-	dprog=> "$libs /subsystem:console",
 	lib  => "/subsystem:windows /lib",
     );
 
@@ -332,10 +327,6 @@ my %actions = (
 	   if (/\.(?:\/.*)*\/(?:lib)?(.*)\.(l?)a/)
 	   {
 	       safe_push $vptr, LIBDEPS, $1;
-	       # As soon as we dynamically link against anything, it is 
-	       # probably safe to assume we need the dynamic runtime.
-	       $vptr->{type} = 'dprog' 
-		   if ( $2 eq 'l' or $force_dll) && $vptr->{type} == 'prog';
 	   }
        }
    },
