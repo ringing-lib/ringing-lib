@@ -74,6 +74,8 @@ struct arguments {
   int total_leads;
   int total_rows;
   int pages;
+  printrow::options::line_style grid_style;
+  bool grid;
 };
 
 arguments args;
@@ -207,6 +209,10 @@ void setup_args(arg_parser& p)
     " has a line drawn.  If no arguments are given, don't draw any lines."
     "  This option may be used multiple times.",
 		  "BELL[x][,COLOUR[,DIMENSION]]", true));
+  p.add(new myopt('G', "grid",
+    "Draw vertical grid lines in each bell position, with colour COLOUR"
+    " and thickness DIMENSION.",
+		  "COLOUR[,DIMENSION]]", true));
   p.add(new myopt('n', "no-numbers", "Don't print numbers: print only lines"));
   p.add(new myopt('b', "place-bells", "Print place bells for"
     " BELL.  If BELL is not specified, print place bells for the first"
@@ -364,6 +370,20 @@ bool myopt::process(const string& arg, const arg_parser& ap) const
       break;
     case 'c' :
       return parse_colour(arg, args.col);
+    case 'G' :
+      if(!arg.empty()) {
+	s = arg.begin();
+	if(!parse_colour(next_bit(arg, s), args.grid_style.col)) return false;
+	if(s != arg.end() && !parse_dimension(next_bit(arg, s), 
+					      args.grid_style.width))
+	  return false;
+	if(s != arg.end()) {
+	  cerr << "Too many arguments: \"" << arg << "\"\n";
+	  return false;
+	}
+      }
+      args.grid = true;
+      return true;
     case 'l' :
       args.custom_lines = true;
       if(!arg.empty()) {
@@ -552,6 +572,10 @@ int main(int argc, char *argv[])
   args.pages = 0;
   args.custom_lines = false;
   args.custom_rules = false;
+  args.grid = false;
+  args.grid_style.width.n = 1; args.grid_style.width.d = 4; 
+  args.grid_style.width.u = dimension::points;
+  args.grid_style.col.grey = true; args.grid_style.col.red = 0.7;
 
   // Parse the arguments
   {
@@ -763,6 +787,10 @@ int main(int argc, char *argv[])
     if(args.hgap != 0) pm.hgap = args.hgap;
     if(args.vgap != 0) pm.vgap = args.vgap;
     pm.number_mode = args.number_mode;
+    if(args.grid) { 
+      pm.opt.flags |= printrow::options::grid;
+      pm.opt.grid_style = args.grid_style;
+    }
 
     // Position the output correctly
     if(args.format == eps) {

@@ -84,6 +84,7 @@ private:
   void start();
   void start_column();
   void end_column();
+  void grid();
   void fill_gap();
 
 public:

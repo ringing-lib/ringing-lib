@@ -158,6 +158,7 @@ private:
   void start();
   void start_column();
   void end_column();
+  void grid();
 
 public:
   printrow_pdf(printpage_pdf& p, const printrow::options& op) 

@@ -356,6 +356,10 @@ void printrow_pdf::start_column()
 
 void printrow_pdf::end_column()
 {
+  // Draw the grid if desired
+  if(opt.flags & printrow::options::grid)
+    grid();
+
   float tx = 0, ty = 0;
   pp.f << "BT\n/"
        << pp.f.get_font(cw.font()) << ' ' << (opt.style.size / 10.0) << " Tf\n";
@@ -428,7 +432,24 @@ void printrow_pdf::end_column()
       (*i).output(pp.f);
     drawlines.erase(drawlines.begin(), drawlines.end());
   }
+
   in_column = false;
+}
+
+void printrow_pdf::grid()
+{
+  pp.f << "q " << opt.grid_style.width.in_points() << " w ";
+  pp.set_colour(opt.grid_style.col);
+  float y1 = curry - opt.yspace.in_points() * (count - 0.5f);
+  float y2 = curry + opt.yspace.in_points() * 0.5f;
+  int i;
+  for(i = 0; i < lastrow.bells(); ++i) {
+    pp.f << (currx + opt.xspace.in_points() * i) << ' '
+	 << y1 << " m "
+	 << (currx + opt.xspace.in_points() * i) << ' '
+	 << y2 << " l\n";
+  }
+  pp.f << "S Q\n";
 }
 
 void printrow_pdf::dot(int i)

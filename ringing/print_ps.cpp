@@ -31,26 +31,54 @@ const string printpage_ps::def_string =
 "%%BeginProlog\n"
 "%%BeginResource: procset " RINGING_PACKAGE " " RINGING_VERSION " 0\n"
 "/BD {bind def} bind def\n"
+
+// (string) C - centre a string about current point, offset below.
+// For showing bell numbers in rows.
 "/C {dup stringwidth pop 2 div neg offset neg rmoveto show} BD\n"
+
+// x y (string) TR - show string right-aligned at (x,y)
 "/TR {dup stringwidth pop neg 4 -1 roll add 3 -1 roll moveto show} BD\n"
+
+// x y (string) TC - show string centred at (x,y)
 "/TC {dup stringwidth pop 2 div neg 4 -1 roll add 3 -1 roll moveto show} BD\n"
+
+// x y (string) TL - show string left-aligned at (x,y)
 "/TL {3 1 roll moveto show} BD\n"
+
+// (font) size F - set font to given fint & size
 "/F {exch findfont exch scalefont setfont} BD\n"
+
+// linewidth bell O - draw dot of radius 2*linewidth at position bell
+// in current row
 "/O {\n"
 "  newpath \n"
 "  xspace mul xstart add ypos yspace add \n"
 "  3 -1 roll 2 mul 0 360 arc closepath fill\n"
 "} BD\n"
+
+// (string) D - show string at appropriate offset below current point
+// (for text at side of row, aligned with row)
 "/D {0 offset neg rmoveto show} BD\n"
+
+// (string) DR - right-aligned version of D
 "/DR {dup stringwidth pop neg offset neg rmoveto show} BD\n"
+
+// (string) E - like C, but squash horizontally.  For place bells
+// which are two digits.
 "/E {currentpoint gsave translate 0.8 1 scale 0 0 M C grestore} BD\n"
+
+// bells pointsize PB - draw circle around place bell, of width
+// (pointsize / 20).
 "/PB {\n"
 "  dup 20 div setlinewidth\n"
 "  exch 1 add xspace mul xstart add ypos yspace add \n"
 "  newpath 2 copy 5 -1 roll 2 mul 3 div 0 360 arc stroke\n"
 "  moveto\n"
 "} BD \n"
+
+// bell MR - move to where that bell is in the current row
 "/MR {xspace mul xstart add ypos yspace add moveto} BD\n"
+
 "/M {moveto} BD\n"
 "/L {lineto} BD\n"
 "/R {rlineto} BD\n"
@@ -61,8 +89,10 @@ const string printpage_ps::def_string =
 "/SG {setgray} BD\n"
 "/GS {gsave} BD\n"
 "/GR {grestore} BD\n"
+
+// (row) W - show the numbers for the current row
 "/buf 1 string def\n"
-"/W { \n"
+"/W {\n"
 "   /xpos xstart def\n"
 "   {\n"
 "      buf dup 0 4 -1 roll put\n"
@@ -70,15 +100,32 @@ const string printpage_ps::def_string =
 "   } forall\n"
 "   /ypos ypos yspace sub def\n"
 "} BD\n"
+
+// RO - draw rule-off under last row
 "/RO {\n"
 "  0 SL N\n"
 "  xstart xspace 2 div sub ypos yspace 2 div add M\n"
 "  xspace mul 0 R S\n"
 "} BD\n"
+
+// n G - leave n blank rows
 "/G {yspace mul ypos exch sub /ypos exch def} BD\n"
+
+// ystart n GD - draw vertical grid lines for n bells up to ystart
+"/GD {\n"
+"  N\n"
+"  exch ypos sub\n"
+"  xstart ypos yspace 2 div add M\n"
+"  1 1 4 -1 roll\n"
+"  { pop dup 0 exch R dup neg xspace exch rmoveto } for\n"
+"  S pop\n"
+"} BD\n" 
+
 "/X {/xstart exch def} BD\n"
 "/Y {/ypos exch def} BD\n"
 "/Q {yspace 2 div neg} BD\n"
+
+// Line-drawing code courtesy of John Sturdy
 "/DL1 { 1 exch { dup 49 ge exch dup 57 le 3 -1 roll \n"
 "and { 48 sub exch pop }\n"
 "{ 2 index exch get exch { dup dup type /stringtype eq\n"
@@ -92,6 +139,7 @@ const string printpage_ps::def_string =
 "(p) { 0 yspace neg R } defline\n"
 "/J { yspace mul neg exch xspace mul xstart add \n"
 "currentpoint pop neg add exch rmoveto } BD\n"
+
 "%%EndResource\n"
 "%%EndProlog\n\n";
 
@@ -107,7 +155,7 @@ printpage_ps::printpage_ps(ostream& o) : os(o), eps(false), landscape(false)
 {
   pages = 1;
   os << "%!PS-Adobe-3.0\n" << "%%Pages: (atend)\n%%Orientation: Portrait\n"
-     << header_string << def_string << "%%Page: 1\nsave\n";
+     << header_string << def_string << "%%Page: 1 1\nsave\n";
 }
 
 printpage_ps::printpage_ps(ostream& o, const dimension& page_height) 
@@ -148,7 +196,7 @@ printpage_ps::~printpage_ps()
 void printpage_ps::new_page()
 {
   pages++;
-  os << "restore showpage\n\n%%Page: " << pages << "\nsave\n";
+  os << "restore showpage\n\n%%Page: " << pages << ' ' << pages << "\nsave\n";
   if(landscape) landscape_mode();
 }
 
@@ -295,6 +343,9 @@ void printrow_ps::start_column()
 
 void printrow_ps::end_column()
 {
+  fill_gap();
+  if(opt.flags & printrow::options::grid)
+    grid();
   if(!drawlines.empty()) {
     list<drawline_ps>::iterator i;
     pp.os << "GS\n";
@@ -356,6 +407,14 @@ void printrow_ps::text(const string& t, const dimension& x,
     case text_style::right: pp.os << " DR\n"; break;
     case text_style::centre: pp.os << " C\n"; break;
   }
+}
+
+void printrow_ps::grid()
+{
+  pp.os << "GS ";
+  pp.set_colour(opt.grid_style.col);
+  pp.os << opt.grid_style.width.in_points() << " SL "
+	<< curry << ' ' << lastrow.bells() << " GD GR\n";
 }
 
 void drawline_ps::add(const row& r)
