@@ -129,6 +129,16 @@ void multtab::init( const vector< row >& r )
 void multtab::dump( ostream &os ) const
 {
   const int width( (int)ceil( log10( (float)table.size() ) ) );
+
+  // Column headings
+  if ( table.size() )
+    {
+      os << string( width + 5 + rows[0].bells(), ' ' );
+      for ( size_t j = 0; j < table[0].size(); ++j )
+	os << setw(width) << j << " ";
+      os << "\n";
+    }
+
   for ( row_t i; i.n != table.size(); ++i.n )
     {
       os << setw(width) << i.n << ")  " << rows[i.n] << "  ";
