@@ -270,7 +270,30 @@ void if_match_node::debug_print( ostream &os ) const
 void if_match_node::execute( proof_context& ctx )
 {
   proof_context ctx2( ctx.silent_clone() );
-  if ( test.evaluate( ctx2 ) )
+  bool result = false;
+
+  // We don't want exceptions from the test to terminate
+  // the search. 
+  // 
+  // TODO  What about falseness?  Should we ignore
+  // falseness during the test expresion?  
+  //
+  // For example, if I have
+  //
+  //   W = repeat { b, /1*8?/: b, break; p }
+  //   H = repeat { b, /1*8/:  b, break; p }
+  //   prove W,4H  // false: 3H comes round
+  //
+  // does this mean that the fourth H should be suppressed?
+  //
+  // Currently it does, and I think this is wrong.
+
+  try {
+    result = test.evaluate( ctx2 );
+  } 
+  catch ( script_exception const& ex ) {}
+
+  if ( result )
     iftrue.execute( ctx );
   else if ( !iffalse.isnull() )
     iffalse.execute( ctx );
