@@ -1,10 +1,60 @@
-2001-10-16 14:00  ras52
+2001-10-30 21:52  mjb47
 
-	* configure.in, ringing/common.h.in, print_ps.h:  New macros 
-	to simplify template specialisation, and to correctly test for 
-	MSVC-5's strange ideas about templates.
-	* row.h:  Extra functionality in permute function.
-	* touch.cpp, touch.h:  Now compile on Windows.
+	* NEWS, config.h.in, configure.in, ringing/common.h.in: Prepare for
+	0.2.4
+
+2001-10-17 22:31  mjb47
+
+	* doc/ringing-lib.texi: Started documention the printing system
+
+2001-10-16 22:50  mjb47
+
+	* examples/testprint.cpp, ringing/common.h.in,
+	ringing/print_ps.cpp, ringing/print_ps.h: Fixed some printing bugs
+
+2001-10-16 20:03  standardeight
+
+	* doc/ringing-lib.texi: Added Directory entry for ringing-lib in
+	Libraries section of dir file for use by info command
+
+2001-10-16 14:15  ras52
+
+	* ChangeLog: Various fixes to get Windows to compile.
+
+2001-10-16 13:51  ras52
+
+	* configure.in, examples/testtouch.cpp, ringing/common.h.in,
+	ringing/print_ps.h, ringing/row.h, ringing/touch.cpp,
+	ringing/touch.h: Various fixes to get Windows to compile.
+
+2001-10-11 21:41  standardeight
+
+	* ringing/proof.h: Fixed bug #469993: proof doesn't work with list
+	iterators. It now works with ForwardIterators, and hence this
+	includes vector and list iterators. Removed redundant private
+	member _length. Fixed minor bug to show all occurances of a false
+	row in multiple extents - not just the first and the last.
+
+2001-10-11 20:52  standardeight
+
+	* doc/ringing-lib.texi, ringing/music.h: Changed music.h to allow
+	user to specify if first row is backstroke or handstroke. Default
+	is handstroke.
+
+2001-10-10 21:53  mjb47
+
+	* NEWS, examples/Makefile.am, examples/testtouch.cpp,
+	ringing/Makefile.am, ringing/print_ps.h, ringing/row.h,
+	ringing/touch.cpp, ringing/touch.h: Add prototype touch classes;
+	fix drawline_ps
+
+2001-10-10 20:15  mjb47
+
+	* doc/ringing-lib.texi: Updated documentation
+
+2001-10-09 20:45  mjb47
+
+	* ChangeLog: ChangeLog 0.2.3
 
 2001-10-09 20:43  mjb47
 
