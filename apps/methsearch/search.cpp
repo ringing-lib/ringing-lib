@@ -1,5 +1,5 @@
 // -*- C++ -*- search.cpp - the actual search algorithm
-// Copyright (C) 2002, 2003, 2004 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003, 2004, 2005 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -40,12 +40,15 @@
 #endif
 #if RINGING_OLD_C_INCLUDES
 #include <assert.h>
+#include <math.h>
 #else
 #include <cassert>
+#include <cmath>
 #endif
 #include <ringing/row.h>
 #include <ringing/method.h>
 #include <ringing/extent.h>
+#include <ringing/proof.h>
 
 
 RINGING_USING_NAMESPACE
@@ -252,28 +255,30 @@ bool searcher::is_acceptable_method()
 
   if ( args.true_course )
     {
-      vector< row > rows( 1, row(bells) );
-  
-      do for ( method::const_iterator i(m.begin()), e(m.end()); i != e; ++i )
-	rows.push_back( rows.back() * *i );
-      while ( !rows.back().isrounds() );
+      prover p( (int) ceil( (double) (bells - args.hunt_bells) * args.lead_len
+			    / (double) factorial(bells) ) );
 
-      rows.pop_back();
+      row r(bells);  
+      do for ( method::const_iterator i(m.begin()), e(m.end()); 
+	       p.truth() && i != e; ++i )
+	p.add_row( r *= *i );
+      while ( !r.isrounds() && p.truth() );
 
-      sort( rows.begin(), rows.end() );
-      if ( adjacent_find( rows.begin(), rows.end() ) != rows.end() )
+      if ( !p.truth() ) 
 	return false;
     }
 
   else if ( args.true_lead )
     {
-      vector< row > rows( 1, row(bells) );
-  
-      for ( method::const_iterator i(m.begin()), e(m.end()-1); i != e; ++i )
-	rows.push_back( rows.back() * *i );
+      prover p( (int) ceil( (double) (bells - args.hunt_bells) * args.lead_len
+			    / (double) factorial(bells) ) );
+      
+      row r(bells);  
+      for ( method::const_iterator i(m.begin()), e(m.end()); 
+	    p.truth() && i != e; ++i )
+	p.add_row( r *= *i );
 
-      sort( rows.begin(), rows.end() );
-      if ( adjacent_find( rows.begin(), rows.end() ) != rows.end() )
+      if ( !p.truth() ) 
 	return false;
     }
 
