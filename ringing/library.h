@@ -35,7 +35,6 @@
 #include <list>
 #endif
 #include <ringing/method.h>
-#include <ringing/stuff.h>
 
 RINGING_START_NAMESPACE
 
