@@ -129,7 +129,7 @@ int main()
     touch.push_back(1, &whwsh);
     
     try {
-      touch_node::iterator i;
+      touch_node::const_iterator i;
       vector<row> pbminor;
       row r(6); r.rounds();
       // Don't put the first row on, as otherwise we have rounds twice

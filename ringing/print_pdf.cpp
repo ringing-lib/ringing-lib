@@ -258,10 +258,10 @@ void printpage_pdf::text(const string t, const dimension& x,
   float x1 = x.in_points();
   switch(al) {
     case text_style::right :
-      x1 -= cw(t) * s.size / 1000.0;
+      x1 -= cw(t) * s.size / 1000.0f;
       break;
     case text_style::centre :
-      x1 -= cw(t) * s.size / 2000.0;
+      x1 -= cw(t) * s.size / 2000.0f;
       break;
   }
   
@@ -307,7 +307,7 @@ void printrow_pdf::print(const row& r)
 void printrow_pdf::rule()
 {
   if(!in_column) return;
-  float y = curry - opt.yspace.in_points() * (count - 0.5);
+  float y = curry - opt.yspace.in_points() * (count - 0.5f);
   pp.f << currx - opt.xspace.in_points()/2 << ' ' << y << " m "
        << currx + opt.xspace.in_points() * (lastrow.bells() - 0.5)
        << ' ' << y << " l S\n";
@@ -366,13 +366,13 @@ void printrow_pdf::end_column()
       x = currx + (*i).x;
       switch((*i).al) {
 	case text_style::right :
-	  x -= cw((*i).s) * opt.style.size * sq / 1000.0;
+	  x -= cw((*i).s) * opt.style.size * sq / 1000.0f;
 	  break;
 	case text_style::centre :
-	  x -= cw((*i).s) * opt.style.size * sq / 2000.0;
+	  x -= cw((*i).s) * opt.style.size * sq / 2000.0f;
 	  break;
       }
-      y = curry - opt.style.size * 0.3 - (*i).y;
+      y = curry - opt.style.size * 0.3f - (*i).y;
       pp.f << x - tx << ' ' << y - ty << " Td ";
       pp.f.output_string((*i).s);
       pp.f << " Tj\n";
@@ -447,7 +447,7 @@ void printrow_pdf::placebell(int i)
   if(j < lastrow.bells()) {
     pp.circle(currx + (lastrow.bells() + 1) * opt.xspace.in_points(),
 	      curry - (count - 1) * opt.yspace.in_points(),
-	      opt.style.size * 0.7, 'S');
+	      opt.style.size * 0.7f, 'S');
     text_bit tb;
     tb.x = (lastrow.bells() + 1) * opt.xspace.in_points();
     tb.y = (count - 1) * opt.yspace.in_points();
@@ -466,7 +466,7 @@ void printrow_pdf::text(const string& t, const dimension& x,
   tb.x = right ? 
     (x.in_points() + (lastrow.bells() - 1) * opt.xspace.in_points())
     : -x.in_points();
-  tb.y = (between ? (count - 1) : (count - 0.5)) * opt.yspace.in_points();
+  tb.y = (between ? (count - 1) : (count - 0.5f)) * opt.yspace.in_points();
   tb.al = al;
   tb.squash = false;
   tb.s = t;

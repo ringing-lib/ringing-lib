@@ -46,51 +46,58 @@ class touch_node {
 public:
   class iterator_base {
   public:
-    virtual change operator*() = 0;
-    virtual const change operator*() const = 0;
+    virtual change operator*() const = 0;
     virtual iterator_base& operator++() = 0;
     virtual bool operator==(const iterator_base& i) const = 0;
     virtual ~iterator_base() {}
     virtual iterator_base* clone() = 0; 
   };
 
-  class iterator
-#if defined(_MSC_VER) && _MSC_VER <= 1200
-    // The base class is needed to get some of msvc-5's stl's algorithms
-    // working.  But we can't unconditionally derive from it because 
-    // glibc++-2 does not have an iterator class if it doesn't think the
-    // compiler supports iterators.
-    : public RINGING_PREFIX_STD iterator< forward_iterator_tag, change > 
-#endif
+  class const_iterator
+    : public RINGING_STD_CONST_ITERATOR( forward_iterator_tag, change )
   {
   private:
     cloning_pointer<iterator_base> bp;
+
+    class operator_arrow_proxy 
+    {
+    public:
+      operator_arrow_proxy( const change &c ) : c(c) {}
+      const change *operator->() const { return &c; }
+      operator const change *() const { return &c; }
+    private:
+      change c;
+    };
+
   public:
     // These typedefs are needed to compile get the code to 
     // compile in gcc-2.95.x.
     typedef forward_iterator_tag iterator_category;
     typedef change value_type;
     typedef ptrdiff_t difference_type;
-    typedef change *pointer;
-    typedef change &reference;
+    typedef const change *pointer;
+    typedef const change &reference;
 
     // Default copy constructor and copy assignment should work
-    iterator(iterator_base* b) : bp(b) {}
-    iterator() : bp(0) {}
-    change operator*() { return **bp; }
-    const change operator*() const { return **bp; }
-    iterator& operator++() { if(bp) ++*bp; return *this; }
-    bool operator==(const iterator& i) const 
+    const_iterator(iterator_base* b) : bp(b) {}
+    const_iterator() : bp(0) {}
+    change operator*() const { return **bp; }
+    operator_arrow_proxy operator->() const { return **bp; }
+    const_iterator& operator++() { if(bp) ++*bp; return *this; }
+    const_iterator operator++(int) 
+      { const_iterator tmp(*this); ++*this; return tmp; }
+    bool operator==(const const_iterator& i) const 
       { return (!bp && !(i.bp)) || (*bp == *(i.bp)); }
-    bool operator!=(const iterator& i) const
+    bool operator!=(const const_iterator& i) const
       { return !operator==(i); }
 
     // I give in.  Why does msvc-6's default assignment operator not work?
-    iterator &operator=( const iterator &o ) { bp = o.bp; return *this; }
+    const_iterator &operator=( const const_iterator &o ) 
+      { bp = o.bp; return *this; }
   };
 
-  virtual iterator begin() = 0;
-  virtual iterator end() = 0;
+  virtual const_iterator begin() const = 0;
+  virtual const_iterator end() const = 0;
   virtual ~touch_node() {}
 };
 
@@ -106,8 +113,7 @@ public:
   public:
     iterator() {}
     ~iterator() {}
-    change operator*() { return *i; }
-    const change operator*() const { return *i; }
+    change operator*() const { return *i; }
     touch_node::iterator_base& operator++() { ++i; return *this; }
     bool operator==(const touch_node::iterator_base& ib) const {
       const iterator* j = dynamic_cast<const iterator*>(&ib);
@@ -131,10 +137,10 @@ public:
 
   void push_back( const change &ch ) { c.push_back(ch); }
 
-  touch_node::iterator begin()
-    { return touch_node::iterator(new iterator(c.begin())); }
-  touch_node::iterator end() 
-    { return touch_node::iterator(new iterator(c.end())); }
+  touch_node::const_iterator begin() const
+    { return touch_node::const_iterator(new iterator(c.begin())); }
+  touch_node::const_iterator end() const
+    { return touch_node::const_iterator(new iterator(c.end())); }
 };
 
 class touch_child_list : public touch_node {
@@ -148,13 +154,12 @@ public:
   class iterator : public touch_node::iterator_base {
   private:
     list<entry>::const_iterator i, last;
-    touch_node::iterator ci;
+    touch_node::const_iterator ci;
     int count;
   public:
     iterator() {}
     ~iterator() {}
-    change operator*() { return *ci; }
-    const change operator*() const { return *ci; }
+    change operator*() const { return *ci; }
     touch_node::iterator_base& operator++();
     bool operator==(const touch_node::iterator_base& ib) const {
       const iterator* j = dynamic_cast<const iterator*>(&ib);
@@ -171,11 +176,11 @@ public:
   touch_child_list() {}
   ~touch_child_list() {}
 
-  touch_node::iterator begin() {
-    return touch_node::iterator(new iterator(ch.begin(), ch.end()));
+  touch_node::const_iterator begin() const {
+    return touch_node::const_iterator(new iterator(ch.begin(), ch.end()));
   }
-  touch_node::iterator end() {
-    return touch_node::iterator(new iterator(ch.end(), ch.end())); 
+  touch_node::const_iterator end() const {
+    return touch_node::const_iterator(new iterator(ch.end(), ch.end())); 
   }
 
   list<entry>& children() { return ch; }
@@ -192,10 +197,12 @@ class touch
 {
 public:
   typedef change value_type;
-  typedef touch_node::iterator iterator;
+  typedef touch_node::const_iterator const_iterator;
 
-  iterator begin() { return head ? head->begin() : iterator(); }
-  iterator end() { return head ? head->end() : iterator(); }
+  const_iterator begin() const 
+    { return head ? head->begin() : const_iterator(); }
+  const_iterator end() const 
+    { return head ? head->end() : const_iterator(); }
 
   void push_back( touch_node *node );
   void set_head( touch_node *node ) { head = node; }

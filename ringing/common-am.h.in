@@ -68,5 +68,8 @@
 // it implicitly instantiates a class, or 0 otherwise.
 #define RINGING_PREMATURE_MEMBER_INSTANTIATION @RINGING_PREMATURE_MEMBER_INSTANTIATION@
 
+// *** Define this to be 1 if your STL has a compliant std::iterator class
+#define RINGING_HAVE_STD_ITERATOR @RINGING_HAVE_STD_ITERATOR@
+
 #endif
 

@@ -1,5 +1,27 @@
+dnl -*- M4 -*- configure.in - Autoconf script for the Ringing Class Library
+
 dnl Process this file with autoconf to produce a configure script.
+
+dnl Copyright (C) 2001, 2002 Martin Bright <M.Bright@dpmms.cam.ac.uk>
+dnl and Richard Smith <richard@ex-parrot.com>
+
+dnl This program is free software; you can redistribute it and/or modify
+dnl it under the terms of the GNU General Public License as published by
+dnl the Free Software Foundation; either version 2 of the License, or
+dnl (at your option) any later version.
+
+dnl This program is distributed in the hope that it will be useful,
+dnl but WITHOUT ANY WARRANTY; without even the implied warranty of
+dnl MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+dnl GNU General Public License for more details.
+
+dnl You should have received a copy of the GNU General Public License
+dnl along with this program; if not, write to the Free Software
+dnl Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
 dnl $Id$
+
+
 AC_INIT(ringing/method.cpp)
 AC_CONFIG_AUX_DIR(config)
 AM_INIT_AUTOMAKE(ringing-lib, 0.2.6)
@@ -18,7 +40,11 @@ dnl Checks for header files.
 AC_HEADER_STDC
 AC_REPLACE_FUNCS([argp_parse])
 
+
+dnl --------------------------------------------------------------------------
+dnl
 dnl Now we check to see what the C++ headers are called
+dnl
 AC_LANG_CPLUSPLUS
 AC_CHECK_HEADER([iostream], RINGING_OLD_INCLUDES=0
   iostream_name="<iostream>"
@@ -34,8 +60,11 @@ AC_SUBST(RINGING_OLD_INCLUDES)
 AC_CHECK_HEADER([cstdio], RINGING_OLD_C_INCLUDES=0, RINGING_OLD_C_INCLUDES=1)
 AC_SUBST(RINGING_OLD_C_INCLUDES)
 
-dnl Checks for typedefs, structures, and compiler characteristics.
 
+dnl --------------------------------------------------------------------------
+dnl
+dnl Checks for typedefs, structures, and compiler characteristics.
+dnl
 AC_CXX_EXCEPTIONS
 if test "$ac_cv_cxx_exceptions" = yes; then
   RINGING_USE_EXCEPTIONS=1;
@@ -44,12 +73,16 @@ else
 fi
 AC_SUBST(RINGING_USE_EXCEPTIONS)
 
+
+dnl --------------------------------------------------------------------------
+dnl
 dnl Check if compile supports namespaces
 dnl
 dnl The use of the template class is important because it causes msvc-5
 dnl to fail this test by trying to find A in namespace bar during the
 dnl instantiation of the default argument of B::baz (or something equally 
 dnl silly).  This is important because the STL frequently does this.
+dnl
 AC_CACHE_CHECK(
   [whether the compiler implements namespaces],
   [ac_cv_cxx_namespaces],
@@ -81,6 +114,9 @@ else
 fi
 AC_SUBST(RINGING_USE_NAMESPACES)
 
+
+dnl --------------------------------------------------------------------------
+dnl
 dnl Check if platform supports template function specialisation
 dnl
 AC_CACHE_CHECK(
@@ -103,6 +139,9 @@ else
 fi
 AC_SUBST(RINGING_USE_TEMPLATE_FUNCTION_SPECIALISATION)
 
+
+dnl --------------------------------------------------------------------------
+dnl
 dnl Check to see whether instantiating a class instantiates its 
 dnl members' definitions or just declarations
 dnl
@@ -129,6 +168,9 @@ else
 fi
 AC_SUBST(RINGING_PREMATURE_MEMBER_INSTANTIATION)
 
+
+dnl --------------------------------------------------------------------------
+dnl
 dnl Check to see whether a member class can be derived from a protected
 dnl member class of the outer class.
 dnl
@@ -160,8 +202,12 @@ else
 fi
 AC_SUBST(RINGING_PROTECTED_MEMBER_BASES)
 
+
+dnl --------------------------------------------------------------------------
+dnl
 dnl Check to see whether the standard includes put their things in
 dnl the std namespace
+dnl
 AC_CACHE_CHECK(whether standard includes use namespace std,
 ac_cv_cxx_std,
 [AC_TRY_COMPILE([#include] $iostream_name, [std::cout << 'x'; return 0;],
@@ -174,7 +220,47 @@ else
 fi
 AC_SUBST(RINGING_USE_STD)
 
+
+dnl --------------------------------------------------------------------------
+dnl
+dnl Check to see whether the STL has a compliant std::iterator
+dnl
+AC_CACHE_CHECK(
+  [whether the STL has a compilant std::iterator],
+  [ac_cv_std_iterator],
+  [AC_TRY_COMPILE(
+    [
+      #if ] $RINGING_OLD_INCLUDES [
+      #  include <iterator.h>
+      #else
+      #  include <iterator>
+      #endif
+
+      #if ] $RINGING_USE_STD [ 
+      using namespace std;
+      #endif
+
+      class iter
+        : public iterator< input_iterator_tag, int, ptrdiff_t, int *, int & >
+      {};
+    ],
+    [ return 0; ],
+    ac_cv_cxx_std_iterator=yes,
+    ac_cv_cxx_std_iterator=no
+  )]
+)
+if test "$ac_cv_cxx_std_iterator" = yes ; then
+  RINGING_HAVE_STD_ITERATOR=1
+else
+  RINGING_HAVE_STD_ITERATOR=0
+fi
+AC_SUBST(RINGING_HAVE_STD_ITERATOR)
+
+
+dnl --------------------------------------------------------------------------
+dnl
 dnl Now check whether the STL seems to work
+dnl
 AC_CACHE_CHECK(whether the Standard Template Library works,
 ac_cv_cxx_stl,
 [AC_TRY_COMPILE([#include] $list_name [

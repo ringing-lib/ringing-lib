@@ -51,7 +51,7 @@ int main()
   pppb.push_back(1, &b);
   touch.push_back(3, &pppb);
 
-  touch_node::iterator i;
+  touch_node::const_iterator i;
   vector<row> pbdoubles;
   row r(5); r.rounds();
   // Don't put the first row on, as otherwise we have rounds twice

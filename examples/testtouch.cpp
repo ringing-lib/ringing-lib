@@ -82,10 +82,14 @@ int main()
   wh.push_back(1, &b); wh.push_back(3, &p); wh.push_back(1, &b);
   t.push_back(2, &wh);
 
+  // Check that operator-> is working correctly on the touch node iterator.
+  cout << "The first change of Plain Bob Minor is " 
+       << t.begin()->print() << "\n";
+
   cout << "This should be 2*WH of Plain Bob Minor:\n";
 
   try {
-    touch_node::iterator i;
+    touch_node::const_iterator i;
     row r(6); r.rounds(); cout << r << endl;
     for(i = t.begin(); i != t.end(); ++i) {
       r *= *i;

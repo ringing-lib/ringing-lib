@@ -44,8 +44,7 @@ public:
   {
     row r;
     int n=0, l=0;
-    for ( touch::iterator i( const_cast<touch &>(t).begin() );
-	  i != const_cast<touch &>(t).end(); ++i )
+    for ( touch::const_iterator i( t.begin() ); i != t.end(); ++i )
       {
 	if ( ++n % leadlen == 0 )
 	  cout << ( *i == change( bells, "12" ) ? '.' : 'B' );

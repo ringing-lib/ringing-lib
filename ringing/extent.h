@@ -40,13 +40,7 @@ inline unsigned factorial(unsigned n)
 }
 
 class RINGING_API extent_iterator
-#if defined(_MSC_VER) && _MSC_VER <= 1200
-    // The base class is needed to get some of msvc-5's stl's algorithms
-    // working.  But we can't unconditionally derive from it because 
-    // glibc++-2 does not have an iterator class if it doesn't think the
-    // compiler supports iterators.
-    : public iterator< forward_iterator_tag, change > 
-#endif
+  : public RINGING_STD_ITERATOR( forward_iterator_tag, change )
 {
 public:
   // Standard iterator typedefs
