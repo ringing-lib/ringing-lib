@@ -512,8 +512,8 @@ ostream& operator<<(ostream &o, const proof<RowIterator> &p)
       o << "False\n";
       
       // go through the list outputting details in turn.
-      proof<RowIterator>::failinfo faili = p.failed();
-      proof<RowIterator>::failinfo::iterator fi;
+      typename proof<RowIterator>::failinfo faili = p.failed();
+      typename proof<RowIterator>::failinfo::iterator fi;
       for (fi = faili.begin(); fi != faili.end(); fi++)
 	{
 	  o << "Row " << (*fi)._row << " is repeated on lines";
