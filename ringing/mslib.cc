@@ -1,13 +1,29 @@
 // mslib.cc - Read and write MicroSIRIL libraries
+// Copyright (C) 2001 Martin Bright <M.Bright@dpmms.cam.ac.uk>
+
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
+
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #ifdef __GNUG__
 #pragma implementation
 #endif
 
-#include <fstream.h>
-#include <string.h>
-#include "stuff.h"
-#include "mslib.h"
+#include <ringing/common.h>
+#include RINGING_C_HEADER(string)
+#include RINGING_LOCAL_HEADER(mslib)
+
+RINGING_START_NAMESPACE
 
 newlib<mslib> mslib::type;
 
@@ -98,8 +114,7 @@ int mslib::save(method& m)
   if(*s == '\0') return -1;
   *t++ = toupper(*s++);
   while(*s != '\0') {
-    if(isspace(*s))
-      s++;
+    if(isspace(*s))      s++;
     else
       *t++ = tolower(*s++);
   }
@@ -153,5 +168,8 @@ int mslib::save(method& m)
   // anyway?  They're designed to be written by humans
   // and read by computers.
 }
+
 #endif
+
+RINGING_END_NAMESPACE
 

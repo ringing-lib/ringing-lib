@@ -4,6 +4,8 @@ AC_CONFIG_AUX_DIR(config)
 AM_INIT_AUTOMAKE(ringing-lib, 0.1.0)
 AM_CONFIG_HEADER(config.h)
 
+can_build=yes
+
 dnl Checks for programs.
 AC_PROG_CXX
 AC_PROG_RANLIB
@@ -13,10 +15,81 @@ dnl Checks for libraries.
 dnl Checks for header files.
 AC_HEADER_STDC
 
+dnl Now we check to see what the C++ headers are called
+AC_LANG_CPLUSPLUS
+AC_CHECK_HEADER([iostream], RINGING_HEADER_EXT=[]
+  iostream_name="<iostream>"
+  list_name="<list>",
+  [AC_CHECK_HEADER([iostream.h], RINGING_HEADER_EXT=[.h]
+    iostream_name="<iostream.h>"
+    list_name="<list.h>",
+    [AC_MSG_WARN([Can't find either <iostream> or <iostream.h>.  This means
+that you don't appear to have the standard C++ libraries installed, which is 
+necessary if you wish to compile or use the Ringing Class Library.])
+    can_build=no])])
+AC_SUBST(RINGING_HEADER_EXT)
+AC_CHECK_HEADER([cstdio], RINGING_CHEADER_PREFIX=[c]
+  RINGING_CHEADER_EXT=[], 
+  RINGING_CHEADER_PREFIX=[]
+  RINGING_CHEADER_EXT=[.h])
+AC_SUBST(RINGING_CHEADER_PREFIX)
+AC_SUBST(RINGING_CHEADER_EXT)
+
 dnl Checks for typedefs, structures, and compiler characteristics.
+
 AC_CXX_EXCEPTIONS
-AC_CXX_HAVE_STL
+if test "$ac_cv_cxx_exceptions" = yes; then
+  RINGING_USE_EXCEPTIONS=1;
+else
+  RINGING_USE_EXCEPTIONS=0;
+fi
+AC_SUBST(RINGING_USE_EXCEPTIONS)
 
-dnl Checks for library functions.
+AC_CXX_NAMESPACES
+if test "$ac_cv_cxx_namespaces" = yes; then
+  RINGING_USE_NAMESPACES=1;
+else
+  RINGING_USE_NAMESPACES=0;
+fi
+AC_SUBST(RINGING_USE_NAMESPACES)
 
-AC_OUTPUT(Makefile ringing/Makefile doc/Makefile)
+dnl Check to see whether the standard includes put their things in
+dnl the std namespace
+AC_CACHE_CHECK(whether standard includes use namespace std,
+ac_cv_cxx_std,
+[AC_TRY_COMPILE([#include] $iostream_name, [std::cout << 'x'; return 0;],
+  ac_cv_cxx_std=yes, ac_cv_cxx_std=no)]
+)
+if test "$ac_cv_cxx_std" = yes; then
+  RINGING_USE_STD=1;
+else
+  RINGING_USE_STD=0;
+fi
+AC_SUBST(RINGING_USE_STD)
+
+dnl Now check whether the STL seems to work
+AC_CACHE_CHECK(whether the Standard Template Library works,
+ac_cv_cxx_stl,
+[AC_TRY_COMPILE([#include] $list_name [
+#if] $RINGING_USE_STD [
+using namespace std;
+#endif],[list<int> l; l.push_back(3);
+list<int>::iterator i = l.begin(); ++i; return 0;],
+  ac_cv_cxx_stl=yes, ac_cv_cxx_stl=no)]
+)
+if test "$ac_cv_cxx_stl" = no; then
+  AC_MSG_WARN([You do not appear to have a working version of the Standard
+Template Library (STL), which is necessary for compiling and using the
+Ringing Class Library.]);
+  can_build=no;
+fi
+
+if test "$can_build" = no; then
+  AC_MSG_WARN([Some problems were encountered which mean that you will not
+be able to build the Ringing Class Library.  You will still be able to install
+and read the documentation.  If you edit the file ringing/common.h to reflect
+what environment will be present when using the library, then you will also 
+be able to install the header files.]);
+fi
+
+AC_OUTPUT(Makefile ringing/Makefile doc/Makefile ringing/common.h)

@@ -1,17 +1,33 @@
-// dimension.h
-//
-// This class represents a length with a dimension.
-// The length is a rational number.
+// -*- C++ -*- dimension.h - a class representing a length
+// Copyright (C) 2001 Martin Bright <M.Bright@dpmms.cam.ac.uk>
 
-#ifndef METHLIB_DIMENSION_H
-#define METHLIB_DIMENSION_H
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
+
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+#ifndef RINGING_DIMENSION_H
+#define RINGING_DIMENSION_H
 
 #ifdef __GNUG__
 #pragma interface
 #endif
 
+#include <ringing/common.h>
 #include <string>
-#include <iostream.h>
+#include RINGING_STD_HEADER(iostream)
+RINGING_USING_STD
+
+RINGING_START_NAMESPACE
 
 class dimension {
 public:
@@ -41,10 +57,10 @@ public:
   dimension operator*(int i) { dimension d = *this; d *= i; return d; }
 
 private:
-  struct unit_names_entry { char *s; units u; };
+  struct unit_names_entry { string s; units u; };
   static const unit_names_entry unit_names[];
   static const int unit_names_size;
-  static const char *unit_strings[];
+  static const string unit_strings[];
   static const float to_points[];
 
   void read_units(const char *s);
@@ -53,5 +69,7 @@ private:
 };
 
 ostream& operator<<(ostream& o, const dimension& d);
+
+RINGING_END_NAMESPACE
 
 #endif

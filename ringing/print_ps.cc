@@ -1,12 +1,30 @@
 // print_ps.cc - PostScript printing stuff
+// Copyright (C) 2001 Martin Bright <M.Bright@dpmms.cam.ac.uk>
+
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
+
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #ifdef __GNUG__
 #pragma implementation
 #endif
 
-#include "print_ps.h"
+#include <ringing/common.h>
+#include RINGING_LOCAL_HEADER(print_ps)
 
-const char *printpage_ps::def_string =
+RINGING_START_NAMESPACE
+
+const string printpage_ps::def_string =
 "/BD {bind def} bind def
 /C {dup stringwidth pop 2 div neg offset neg rmoveto show} BD
 /TR {dup stringwidth pop neg 4 -1 roll add 3 -1 roll moveto show} BD
@@ -283,3 +301,5 @@ void printpage_ps::printrow_ps::drawline::output(ostream& o, int x, int y)
   if(in_line) o << ") DL ";
   o << "S\n";
 }
+
+RINGING_END_NAMESPACE

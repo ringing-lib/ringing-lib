@@ -1,15 +1,34 @@
-// mslib.h - MicroSIRIL libraries
+// -*- C++ -*- mslib.h - MicroSIRIL libraries
+// Copyright (C) 2001 Martin Bright <M.Bright@dpmms.cam.ac.uk>
 
-#ifndef METHLIB_MSLIB_H
-#define METHLIB_MSLIB_H
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
+
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+#ifndef RINGING_MSLIB_H
+#define RINGING_MSLIB_H
 
 #ifdef __GNUG__
 #pragma interface
 #endif
 
-#include <fstream.h>
-#include <ctype.h>
-#include "library.h"
+#include <ringing/common.h>
+#include RINGING_STD_HEADER(fstream)
+#include RINGING_C_HEADER(ctype)
+#include RINGING_LOCAL_HEADER(library)
+RINGING_USING_STD
+
+RINGING_START_NAMESPACE
 
 // mslib : Implement MicroSIRIL libraries
 class mslib : public library {
@@ -46,5 +65,7 @@ public:
 
   static int expand_pn(char *in, char *out, char *lh); // Expand place notation
 };
+
+RINGING_END_NAMESPACE
 
 #endif

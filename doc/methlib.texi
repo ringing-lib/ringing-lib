@@ -53,7 +53,52 @@ versions.
 * Introduction::                About the Method Class Library                
 * The STL::                     A word about the Standard Template Library
 * Rows and Changes::            Classes for manipulating rows and changes  
+* Methods::                     
+* Method classification::       
 * Index::                       
+
+@detailmenu
+ --- The Detailed Node Listing ---
+
+Row and Change classes
+
+* Row Operations::              Explanation of algebra on rows
+* Row Properties::              Explanation of other properties of rows
+* Changes::                     Explanation of how methlib deals with changes
+* The row Class::               
+* The change Class::            
+* The rows and changes Classes::  
+* The row_block class::         
+
+The @code{row} class
+
+* row Derivation::              
+* row Constructors::            
+* row Operators::               
+* Other row Functions::         
+* row static Functions::        
+
+The @code{change} class
+
+* change Derivation::           
+* change Constructors::         
+* change Operators::            
+* Other change Functions::      
+
+The @code{rows} and @code{changes} classes
+
+* rows and changes Derivation::  
+* rows and changes Constructors::  
+* rows and changes Operators::  
+* Other rows and changes Functions::  
+
+The @code{row_block} class
+
+* row_block Derivation::        
+* row_block Constructors::      
+* Other row_block Functions::   
+
+@end detailmenu
 @end menu
 
 @node Introduction, The STL, Top, Top
@@ -103,7 +148,7 @@ using the GNU compiler (@code{g++}), a version of the STL is included in
 the latest @code{libg++} library, available with the other GNU tools
 from @code{prep.ai.mit.edu} in directory @code{/pub/gnu}.
 
-@node Rows and Changes, Index, The STL, Top
+@node Rows and Changes, Methods, The STL, Top
 @chapter Row and Change classes
 @cindex row
 @cindex change
@@ -657,7 +702,7 @@ This returns the @code{changes} object on which the row block is based.
 @end iftex
 
 
-@node Methods
+@node Methods, Method classification, Rows and Changes, Top
 @chapter Method classes
 
 The Method Class Library provides many useful functions for dealing with
@@ -676,14 +721,14 @@ a large range of member functions.  Many of these are used for finding
 out things about the method, such as the number of leads in the plain course,
 the type of method, the full name and so on. 
 
-@node Method classification
+@node Method classification, Index, Methods, Top
 @chapter Classification of methods
 
 Methods are classified according to section E, subsections B and C, of
 the Central Council's Decisions.
 
 
-@node Index,  , Rows and Changes, Top
+@node Index,  , Method classification, Top
 @unnumbered Index
 
 @printindex cp

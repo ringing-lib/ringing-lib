@@ -1,12 +1,31 @@
 // dimension.cc
+// Copyright (C) 2001 Martin Bright <M.Bright@dpmms.cam.ac.uk>
+
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
+
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #ifdef __GNUG__
 #pragma implementation
 #endif
 
-#include <strstream.h>
-#include "dimension.h"
-#include <ctype.h>
+#include <ringing/common.h>
+#include RINGING_STD_HEADER(strstream)
+#include RINGING_LOCAL_HEADER(dimension)
+#include RINGING_C_HEADER(ctype)
+RINGING_USING_STD
+
+RINGING_START_NAMESPACE
 
 const dimension::unit_names_entry dimension::unit_names[] = {
   {"pt", points},
@@ -20,7 +39,7 @@ const dimension::unit_names_entry dimension::unit_names[] = {
   {"mm", mm}
 };
 const int dimension::unit_names_size = 9;
-const char *dimension::unit_strings[] = {"pt", "in", "cm", "mm"};
+const string dimension::unit_strings[] = {"pt", "in", "cm", "mm"};
 const float dimension::to_points[] = {1, 72, 72/2.54, 72/25.4};
 
 void dimension::reduce()
@@ -105,12 +124,14 @@ void dimension::read(const char *s)
 void dimension::read_units(const char *s)
 {
   while(isspace(*s)) s++;
-  char *t; int i;
+  string::const_iterator t; int i;
   for(i = 0; i < unit_names_size; i++) {
-    for(t = unit_names[i].s; 
-	*t != '\0' && *s != '\0' && *t == tolower(*s);
+    for(t = unit_names[i].s.begin(); 
+	t != unit_names[i].s.end() && *s != '\0' && *t == tolower(*s);
 	s++, t++);
-    if(*t == '\0') { u = unit_names[i].u; return; }
+    if(t == unit_names[i].s.end()) { u = unit_names[i].u; return; }
   }
   throw bad_format();
 }
+
+RINGING_END_NAMESPACE

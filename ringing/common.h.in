@@ -1,0 +1,77 @@
+// -*- C++ -*- common.h.in - Common macros and so on.
+// Copyright (C) 2001 Martin Bright <M.Bright@dpmms.cam.ac.uk>
+
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
+
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+// ******** INSTRUCTIONS
+// This file is turned into common.h by the configure script.
+// If you are editing this file by hand, you should change everything
+// indicated by ***.  The expression @VARIABLE@ should be replaced by
+// the value appropriate for your system.
+
+#ifndef RINGING_COMMON_H
+#define RINGING_COMMON_H
+
+// *** Define this to be the name of the package (i.e. ringing-lib)
+// #define RINGING_PACKAGE ringing-lib
+#define RINGING_PACKAGE @PACKAGE@
+
+// *** Define this to be the version number of the package
+// #define RINGING_VERSION 0.1.0
+#define RINGING_VERSION @VERSION@
+
+// *** Define RINGING_HEADER_EXT to be either .h or empty, depending
+// on what your standard C++ header files are called (e.g. <iostream> 
+// or <iostream.h>)
+#define RINGING_STD_HEADER(b) < ## b ## @RINGING_HEADER_EXT@ ## >
+
+// *** Define RINGING_CHEADER_PREFIX to be either c or empty, and define
+// RINGING_CHEADER_EXT to be either .h or empty, depending on what your C
+// header files are called (e.g. <cstdlib> or <stdlib.h>)
+#define RINGING_C_HEADER(b) < ## @RINGING_CHEADER_PREFIX@ ## \
+b ## @RINGING_CHEADER_EXT@ ## >
+
+// *** Define this to be 1 if you want the Ringing Class Library to use
+// exceptions, or 0 otherwise.
+#define RINGING_USE_EXCEPTIONS @RINGING_USE_EXCEPTIONS@
+
+// *** Define this to be 1 if you want the Ringing Class Library to put
+// its definitions in a namespace called `ringing', or 0 otherwise.
+#define RINGING_USE_NAMESPACES @RINGING_USE_NAMESPACES@
+
+// *** Define this to be 1 if your standard include files (as indicated above
+// by RINGING_HEADER_EXT) place their definitions in namespace `std', or 0
+// if the definitions are in the global namespace.
+#define RINGING_USE_STD @RINGING_USE_STD@
+
+// You may want to change this if the Ringing Class Library header files
+// aren't going to be available as <ringing/row.h> etc.
+#define RINGING_LOCAL_HEADER(b) <ringing/ ## b ## .h>
+
+#if RINGING_USE_NAMESPACES
+#define RINGING_START_NAMESPACE namespace ringing {
+#define RINGING_END_NAMESPACE };
+#else
+#define RINGING_START_NAMESPACE
+#define RINGING_END_NAMESPACE
+#endif
+
+#if RINGING_USE_STD
+#define RINGING_USING_STD using namespace std;
+#else
+#define RINGING_USING_STD
+#endif
+
+#endif

@@ -15,6 +15,3 @@
 /* define if the compiler implements namespaces */
 #undef HAVE_NAMESPACES
 
-/* define if the compiler supports Standard Template Library */
-#undef HAVE_STL
-

@@ -61,18 +61,27 @@ CXX = @CXX@
 MAKEINFO = @MAKEINFO@
 PACKAGE = @PACKAGE@
 RANLIB = @RANLIB@
+RINGING_CHEADER_EXT = @RINGING_CHEADER_EXT@
+RINGING_CHEADER_PREFIX = @RINGING_CHEADER_PREFIX@
+RINGING_HEADER_EXT = @RINGING_HEADER_EXT@
+RINGING_USE_EXCEPTIONS = @RINGING_USE_EXCEPTIONS@
+RINGING_USE_NAMESPACES = @RINGING_USE_NAMESPACES@
+RINGING_USE_STD = @RINGING_USE_STD@
 VERSION = @VERSION@
+
+EXTRA_DIST = common.h.in
+DISTCLEANFILES = common.h
 
 lib_LIBRARIES = libringing.a
 libringing_a_SOURCES = row.cc row.h method.cc method.h library.cc library.h mslib.cc mslib.h print.cc print.h print_ps.cc print_ps.h dimension.cc dimension.h stuff.h
 
 
 myincludedir = $(includedir)/ringing
-myinclude_HEADERS = row.h method.h library.h mslib.h print.h print_ps.h dimension.h stuff.h
+myinclude_HEADERS = row.h method.h library.h mslib.h print.h print_ps.h dimension.h stuff.h common.h
 
 mkinstalldirs = $(SHELL) $(top_srcdir)/config/mkinstalldirs
 CONFIG_HEADER = ../config.h
-CONFIG_CLEAN_FILES = 
+CONFIG_CLEAN_FILES =  common.h
 LIBRARIES =  $(lib_LIBRARIES)
 
 
@@ -94,7 +103,7 @@ CCLD = $(CC)
 LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(LDFLAGS) -o $@
 HEADERS =  $(myinclude_HEADERS)
 
-DIST_COMMON =  Makefile.am Makefile.in
+DIST_COMMON =  Makefile.am Makefile.in common.h.in
 
 
 DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
@@ -116,6 +125,8 @@ Makefile: $(srcdir)/Makefile.in  $(top_builddir)/config.status $(BUILT_SOURCES)
 	cd $(top_builddir) \
 	  && CONFIG_FILES=$(subdir)/$@ CONFIG_HEADERS= $(SHELL) ./config.status
 
+common.h: $(top_builddir)/config.status common.h.in
+	cd $(top_builddir) && CONFIG_FILES=$(subdir)/$@ CONFIG_HEADERS= $(SHELL) ./config.status
 
 mostlyclean-libLIBRARIES:
 
@@ -236,6 +247,7 @@ distdir: $(DISTFILES)
 	    || cp -p $$d/$$file $(distdir)/$$file || :; \
 	  fi; \
 	done
+	$(MAKE) $(AM_MAKEFLAGS) top_distdir="$(top_distdir)" distdir="$(distdir)" dist-hook
 
 DEPS_MAGIC := $(shell mkdir .deps > /dev/null 2>&1 || :)
 
@@ -321,6 +333,7 @@ clean-generic:
 distclean-generic:
 	-rm -f Makefile $(CONFIG_CLEAN_FILES)
 	-rm -f config.cache config.log stamp-h stamp-h[0-9]*
+	-test -z "$(DISTCLEANFILES)" || rm -f $(DISTCLEANFILES)
 
 maintainer-clean-generic:
 mostlyclean-am:  mostlyclean-libLIBRARIES mostlyclean-compile \
@@ -360,6 +373,10 @@ uninstall-am uninstall all-redirect all-am all installdirs \
 mostlyclean-generic distclean-generic clean-generic \
 maintainer-clean-generic clean mostlyclean distclean maintainer-clean
 
+
+# Delete common.h before packaging up the distribution
+dist-hook:
+	rm -f $(distdir)/common.h
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
