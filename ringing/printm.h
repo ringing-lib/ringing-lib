@@ -31,9 +31,10 @@
 RINGING_START_NAMESPACE
 
 class printmethod {
-public:
+private:
   const method* m;
 
+public:
   printrow::options opt;
   dimension hgap, vgap;
   int total_rows;
@@ -53,6 +54,7 @@ public:
   printmethod() : m(0) {}
   printmethod(const method& mm) : m(&mm) {}
   void set_method(const method& mm) { m = &mm; }
+  const method& get_method() { return *m; }
 
   void print(printpage& pp);
 

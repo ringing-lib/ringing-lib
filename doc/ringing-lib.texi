@@ -22,7 +22,7 @@
 This is the manual for the Ringing Class Library, version
 @value{VERSION}.  Last updated @value{UPDATED}.
 
-Copyright 2001 Martin Bright and Mark Banner
+Copyright 2001--2 Martin Bright and Mark Banner
 
 Permission is granted to copy, distribute and/or modify this document
 under the terms of the GNU Free Documentation License, Version 1.1
@@ -86,7 +86,6 @@ versions.
 * Method Libraries::            
 * Proof::                       
 * Musical Analysis::            
-* Method classification::       
 * Producing printed output::    
 * Copying this manual::         
 * Index::                       
@@ -226,8 +225,8 @@ provide a genuinely portable infrastructure to the package.  However, the
 task of compiling and installing the library is not complicated, and easy
 to achieve by hand.  The following steps are necessary:
 @itemize @bullet
-@item Create the file @file{ringing/common.h} by editing @file{common.h.in}
-to reflect the characteristics of your C++ compiler;
+@item Create the file @file{ringing/common-ac.h} by editing 
+@file{common-ac.h.in} to reflect the characteristics of your C++ compiler;
 
 @item Compile all the @file{.cpp} source files in the @file{ringing}
 subdirectory into a library, which you will probably want to call
@@ -245,7 +244,10 @@ header files.
 
 If you are using Microsoft Developer Studio, then you can use the
 supplied workspace file @file{ringing-lib.dsw} to accomplish the
-compiling and linking of the library without any effort.
+compiling and linking of the library without any effort.  In addition,
+with the Microsoft Visual Studio compiler you do not need to edit
+@file{ringing/common-ac.h} by hand: there is a ready-customised version,
+called @file{common-msvc.h}, which will be found and used automatically.
 
 Currently the class library should normally be compiled into a static
 library (@file{.lib} file).  It is not yet straightforward to make the
@@ -403,7 +405,9 @@ bells swap, the place notation is @samp{X}.
 The @code{bell} class represents a single bell.  An object of type
 @code{bell} is essentially an integer, and bells are numbered starting
 with the treble as 0.  Member functions are provided to convert between
-this numerical representation and a printable character.
+this numerical representation and a printable character.  The class
+library can cope with up to 256 bells, though only bells numbered from 0
+to 32 may be described by a printable character.
 
 @menu
 * bell Derivation::             
@@ -445,8 +449,7 @@ are numbered starting from 0.
 This casts a bell object to the corresponding integer.
 @end deftypefn
 
-@deftypefn Operator ostream& operator<< (ostream& @var{o}, const bell
-@var{b});
+@deftypefn Operator ostream& operator<< (ostream& @var{o}, const bell @var{b});
 This operator writes the character representing the bell @var{b} to the
 output stream @var{o}.
 @end deftypefn
@@ -457,7 +460,10 @@ output stream @var{o}.
 @deftypefun void bell::from_char (char @var{c});
 This function interprets the character @var{c} as a bell, and assigns
 that value to the bell object.  See the next function for the mapping
-between characters and bells.
+between characters and bells.  If the character does not represent a
+valid bell, then an exception of the class @code{bell::invalid} is
+thrown; if you have disabled exceptions, the bell is set to the value
+@code{bell::MAX_BELLS}.
 @end deftypefun
 
 @deftypefun char bell::to_char (void) const;
@@ -508,7 +514,9 @@ anything.
 @deftypefn Constructor {} row::row (const char* @var{s});
 This constructs a row from a string, which should be the textual
 representation of the row you wish to construct, for example
-@samp{"135246"} or @samp{"2143658709TE"}.
+@samp{"135246"} or @samp{"2143658709TE"}.  If the string does not
+contain a valid row, an exception of class @code{row::invalid} is
+thrown.
 @end deftypefn
 
 @deftypefn Constructor {} row::row (const row& @var{r});
@@ -524,7 +532,8 @@ This copies one row to another.
 
 @deftypefn Operator row& row::operator= (const char* @var{s});
 This sets the value of a row, given a string. The string @var{s} should
-contain a textual representation of a row, such as @samp{21436587}.
+contain a textual representation of a row, such as @samp{21436587}.  If
+the string is not valid, a @code{row::invalid} exception is thrown.
 @end deftypefn
 
 @deftypefn Operator int row::operator== (const row& @var{r}) const;
@@ -603,12 +612,7 @@ function returns an integer indicating which lead head it is.
 Otherwise, it returns 0.
 @end deftypefun
 
-@deftypefun {char*} row::print (char* @var{s}) const;
-This prints the row to the string @var{s}. Note that @var{s} must be
-long enough.
-@end deftypefun
-
-@deftypefun string row::print () const;
+@deftypefun string row::print (void) const;
 This prints the row to a string object.
 @end deftypefun
 
@@ -624,11 +628,11 @@ This returns the sign or parity of a row:  1 for even, -1 for odd.
 This returns the order of the row.
 @end deftypefun
 
-@deftypefun char* row::cycles (char* @var{result}) const;
-This expresses the row as separate cycles. The string @var{result} will
+@deftypefun string row::cycles (void) const;
+This expresses the row as separate cycles. The returned string will
 afterwards contain a list of all the cycles in the row, separated by
-commas; for example @code{row("21453678").cycles(s)} will return the
-string @code{"12,345,6,7,8"}. Note that @var{result} must be long enough.
+commas; for example @code{row("21453678").cycles()} will return the
+string @code{"12,345,6,7,8"}.
 @end deftypefun
 
 @deftypefun {template <> void} swap<row> (row& @var{a}, row& @var{b});
@@ -685,7 +689,7 @@ This constructs an empty change.
 
 @deftypefn Constructor explicit change::change (int @var{n});
 This constructs an empty change for @var{n} bells, which will initially
-contain no swaps, i.e. all bells will remain in the same place.
+contain no swaps, that is, all bells will remain in the same place.
 @end deftypefn
 
 @deftypefn Constructor {} change::change (const change& @var{c});
@@ -698,7 +702,9 @@ This constructs a change on @var{n} bells, with place notation as given
 in @var{pn}. This should consist of a sequence of characters which signify
 the places to be made, arranged in ascending order. If no places are to
 be made, the string @code{"X"} should be used. Note that you
-can miss out external places, unless no internal places are made at all.
+can miss out external places, unless no internal places are made at
+all.  If the place notation is not valid, this constructor will throw an
+exception of class @code{change::invalid}.
 @end deftypefn
 
 @node change Operators, Other change Functions, change Constructors, The change Class
@@ -718,8 +724,8 @@ bells is different from @samp{"12"} on 6 bells.
 @deftypefn Operator bell& operator*= (bell& @var{b}, const change& @var{c});
 @deftypefnx Operator bell operator* (bell @var{b}, const change& @var{c});
 These return the effect of applying the change @var{c} to the bell
-@var{b}. For example, @code{3 * "34" == 4}. This is useful in tracing
-the path of one particular bell through a series of changes.
+@var{b}. For example, @code{3 * change(4,"34") == 4}. This is useful in 
+tracing the path of one particular bell through a series of changes.
 @end deftypefn
 
 @deftypefn Operator ostream& operator<< (ostream& @var{o}, const change& @var{c});
@@ -776,11 +782,6 @@ so on.
 
 @deftypefun int change::internal (void) const;
 This returns 1 if the change contains internal places, and 0 otherwise.
-@end deftypefun
-
-@deftypefun char* change::print (char* @var{s}) const;
-This function prints the place notation for the change to the string
-@var{s}, which should be long enough to contain it.
 @end deftypefun
 
 @deftypefun string change::print (void) const;
@@ -1110,6 +1111,7 @@ method.  The following values are defined:
 enum method::m_class @{
   M_UNKNOWN, M_PRINCIPLE, M_BOB, M_PLACE, M_TREBLE_BOB, M_SURPRISE, 
   M_DELIGHT, M_TREBLE_PLACE, M_ALLIANCE, M_HYBRID, M_SLOW_COURSE,
+  M_DIFFERENTIAL,
   M_MASK = 0x0f,
   M_DOUBLE = 0x40,
   M_LITTLE = 0x80
@@ -1141,8 +1143,6 @@ This function returns the full name of the method as a string.
 
 @node method static Functions, method static Variables, Other method Functions, The method Class
 @subsection @code{static} functions
-@cindex method::stagename()
-@cindex method::classname()
 
 @deftypefun {static const char*} method::stagename (int @var{bells});
 This function returns a pointer to a string describing the stage of 
@@ -1175,6 +1175,16 @@ This points to the string @code{"Little"}.
 @cindex @code{cclib} class
 @cindex @code{mslib} class
 
+@menu
+* Introduction to libraries::   
+* General Use::                 
+* The Library Classes::         
+* Deriving Library Classes::    
+@end menu
+
+@node Introduction to libraries, General Use, Method Libraries, Method Libraries
+@section Introduction
+
 The @code{library} class and it's associated classes and derived classes
 allow loading of method libraries. Currently, two method libraries are
 supported, these are:
@@ -1201,7 +1211,7 @@ http://www.methods.clara.net/method-collections/zip-files/index.htm
 * Deriving Library Classes::    
 @end menu
 
-@node General Use, The Library Classes, Method Libraries, Method Libraries
+@node General Use, The Library Classes, Introduction to libraries, Method Libraries
 @section General Use
 
 An introduction into how to use the classes should help the user to understand
@@ -1460,6 +1470,13 @@ This section is still to be witten
 @cindex proving rows
 @cindex @code{proof} class
 
+@menu
+* The proof class::             
+@end menu
+
+@node The proof class,  , Proof, Proof
+@section The @code{proof} class
+
 The proof class provides a simple way of checking that a block of rows
 are true.  It provides functions for finding out where a particular block
 has failed.  Additionally, it will can check blocks that are more than
@@ -1491,7 +1508,7 @@ of bells in them, otherwise 12345 will not 123456.
 * How Proof Works::             
 @end menu
 
-@node proof Derivation, proof Constructors, Proof, Proof
+@node proof Derivation, proof Constructors, The proof class, The proof class
 @subsection Derivation
 
 This class is not derived from any other classes.
@@ -1500,7 +1517,7 @@ This class is not derived from any other classes.
 template <class RowIterator> class proof;
 @end example
 
-@node proof Constructors, proof Functions, proof Derivation, Proof
+@node proof Constructors, proof Functions, proof Derivation, The proof class
 @subsection Constructors
 
 Where the variable @var{qp} is passed into a function, if this is set to true, the proof class will only check until the row blocks are found to be false, as soon as this is the case, the function will end and store the true/false result. No details will be stored about what lines the row block failed on.
@@ -1527,7 +1544,7 @@ The failure information is reset before the analysis takes place, hence any fals
 This constructor acts like the previous, except it will expect up to @var{max} extents (and hence repititions).
 @end deftypefn
 
-@node proof Functions, proof Operators, proof Constructors, Proof
+@node proof Functions, proof Operators, proof Constructors, The proof class
 @subsection Functions
 
 Where the variable @var{qp} is passed into a function, if this is set to true, the proof class will only check until the row blocks are found to be false, as soon as this is the case, the function will end and store the true/false result. No details will be stored about what lines the row block failed on.
@@ -1561,7 +1578,7 @@ This function simply returns the data detailing where the touch has failed.
 @end deftypefn
 @end iftex
 
-@node proof Operators, proof Output, proof Functions, Proof
+@node proof Operators, proof Output, proof Functions, The proof class
 @subsection Operators
 
 @deftypefn Operator operator proof::int (void) const;
@@ -1572,7 +1589,7 @@ This returns true (or 1) if the touch is true.
 This returns true (or 1) if the touch is not true.
 @end deftypefn
 
-@node proof Output, Falseness Storage, proof Operators, Proof
+@node proof Output, Falseness Storage, proof Operators, The proof class
 @subsection Output
 
 Output of the proof class is achieved in one of two ways. Either, the functions proof::int and failed() are used, or an overloaded ostream operator for a fixed format.
@@ -1588,7 +1605,7 @@ Outputs to the ostream, @var{o}, if @var{p} is true or false in a predefined for
 @end deftypefn
 @end iftex
 
-@node Falseness Storage, How Proof Works, proof Output, Proof
+@node Falseness Storage, How Proof Works, proof Output, The proof class
 @subsection How falseness is stored
 @cindex falseness storage
 
@@ -1610,7 +1627,7 @@ struct linedetail @{
 
 When a row is repeated more than once, a new linedetail item is added to @var{where}. In the linedetail data is stored a pointer, @var{_row}, to the first of the matching rows, and the row numbers are put into @var{_lines}. If the first row given to the class matches the 11th row, then 0 and 10 will be placed into @var{_lines}. If there are three or more rows that all match, then the relevant numbers will be placed into the @var{_lines} list without repeating any.
 
-@node How Proof Works,  , Falseness Storage, Proof
+@node How Proof Works,  , Falseness Storage, The proof class
 @subsection How it works
 @cindex How proof works
 
@@ -1628,16 +1645,27 @@ If the multiple extent version of the function @code{proof::prove} is called, th
 
 Now we proceed through the list just once. Each row is put into a multimap, if at any time the amount of rows in this map exceed the maximum number of extents then the details are added into the failed information and the trueness is set to false.
 
-@node Musical Analysis, Method classification, Proof, Top
+@node Musical Analysis, Producing printed output, Proof, Top
 @chapter Analysis of Music
 @cindex Music Analysis
 @cindex music class
 
-The music class provides analysis for music within a set of rows. The class has been designed around providing a regular-expression style matching algorithm. This provides flexibility in the way the user can enter their own music. Additionally, for each 'regular-expression' a score can be allocated. For a full description of the regular expressions the ringing library currently provides see Music Regular Expressions.
+The music class provides analysis for music within a set of rows. The
+class has been designed around providing a regular-expression style
+matching algorithm. This provides flexibility in the way the user can
+enter their own music. Additionally, for each 'regular-expression' a
+score can be allocated. For a full description of the regular
+expressions the ringing library currently provides see Music Regular
+Expressions.
 
-The music class processes each row just once, it does not store any rows. It assumes that the first row given is a handstroke row. The class should be able to handle any number of bells. If an odd number of bells is given, e.g. 5, then a tenor is assumed in looking for items like queens, e.g. 13524 essentially becomes 135246.
+The music class processes each row just once, it does not store any
+rows. It assumes that the first row given is a handstroke row. The class
+should be able to handle any number of bells. If an odd number of bells
+is given, e.g. 5, then a tenor is assumed in looking for items like
+queens, e.g. 13524 essentially becomes 135246.
 
-Each time the analysis function is called, the results stored in the class are reset to zero, and then incremented based on the rows given.
+Each time the analysis function is called, the results stored in the
+class are reset to zero, and then incremented based on the rows given.
 
 @menu
 * Stroke Enumeration::          
@@ -1654,7 +1682,9 @@ Each time the analysis function is called, the results stored in the class are r
 @cindex eBackstroke
 @cindex eBoth
 
-Part of the music class functionality is to allow handstrokes and backstrokes to be specified independently, or together. An enumeration, @code{EStroke} is provided to enable this to take place.
+Part of the music class functionality is to allow handstrokes and
+backstrokes to be specified independently, or together. An enumeration,
+@code{EStroke} is provided to enable this to take place.
 
 It is defined as follows:
 
@@ -1674,11 +1704,18 @@ enum EStroke
 @cindex Musical Rows
 @cindex Music Expressions
 
-The @code{music_details} class provides the means to describe musical rows to the @code{music} class. The @code{music_details} class stores details of the expression to be matched (as a string) and an associated rating, if the user so desires.
+The @code{music_details} class provides the means to describe musical
+rows to the @code{music} class. The @code{music_details} class stores
+details of the expression to be matched (as a string) and an associated
+rating, if the user so desires.
 
-Ratings may be positive or negative, this allows a total weighted score to be calculated from the sum of the result scores. For example, 678s may be rated at a +2, but 87s at backstroke rated as -10. 
+Ratings may be positive or negative, this allows a total weighted score
+to be calculated from the sum of the result scores. For example, 678s
+may be rated at a +2, but 87s at backstroke rated as -10.
 
-When a match sequence is run via the music class, if a row matches that described by the details provided to a @code{music_details} object, then the count will be incremented.
+When a match sequence is run via the music class, if a row matches that
+described by the details provided to a @code{music_details} object, then
+the count will be incremented.
 
 The result can either be returned as a raw count, or as a score calculated from the multiplication of the count and the given rating.
 
@@ -1714,7 +1751,8 @@ Representing any bells in any order:
 *
 @end example
 
-These constructs can be formed into the following (in all these cases we are matching with a 6 bell method):
+These constructs can be formed into the following (in all these cases we
+are matching with a 6 bell method):
 
 @example
 "12??56" In this case we are wishing to know how many rows occur that are 124356 or 123456.
@@ -1759,29 +1797,28 @@ To be written
 
 To be written
 
-@node Method classification, Producing printed output, Musical Analysis, Top
-@chapter Classification of methods
-
-Methods are classified according to section E, subsections B and C, of
-the Central Council's Decisions.
-
-@node Producing printed output, Copying this manual, Method classification, Top
+@node Producing printed output, Copying this manual, Musical Analysis, Top
 @chapter Producing printed output
 @cindex printing
 
 The Ringing Class Library provides a flexible mechanism for producing
 printed output of rows, methods and lines.  The way this mechanism is
 designed means that the low-level details of printing are hidden from
-the programmer.  Currently the classes in the library only support
-output in PostScript format, but the modularity of the printing system
+the programmer.  Currently the classes in the library support output in
+PostScript and PDF formats, and the modularity of the printing system
 makes it easy to extend the library to provide other output formats.
 
-Printing is provided in two classes:  the @code{printpage} class and the
-@code{printrow} class.  The first of these deals with placing text and
-other objects directly on the page; the second allows for formatted
-output of rows and lines.  These classes are both pure virtual classes,
-which are specialised by subclasses to allow for different output
-formats.
+Basic printing is provided in two classes: the @code{printpage} class
+and the @code{printrow} class.  The first of these deals with placing
+text and other objects directly on the page; the second allows for
+formatted output of rows and lines.  These classes are both pure virtual
+classes, which are specialised by subclasses to allow for different
+output formats.
+
+Printing of whole methods is accomplished by the @code{printmethod}
+object.  This is not as flexible as the more generic functions of the
+lower-level printing objects, but exists to provide a quick and easy way
+to print out methods in a moderately variable format.
 
 There are certain rules which should be followed when using the printing
 classes.  For a single @code{printpage} object, only one @code{printrow} 
@@ -1794,7 +1831,9 @@ these rules may result in unusable output.
 * Auxiliary classes::           
 * The printpage class::         
 * The printrow class::          
+* Printing whole methods::      
 * Printing in PostScript::      
+* Printing to PDF files::       
 @end menu
 
 @node Auxiliary classes, The printpage class, Producing printed output, Producing printed output
@@ -1984,7 +2023,7 @@ about this point is given by @var{a}, and the text style is given by
 @var{s}.
 @end deftypefun
 
-@node The printrow class, Printing in PostScript, The printpage class, Producing printed output
+@node The printrow class, Printing whole methods, The printpage class, Producing printed output
 @section The @code{printrow} class
 
 Printing of rows and lines is handled by the @code{printrow} class and its
@@ -2110,7 +2149,7 @@ struct options @{
   @};
   map<int, line_style> lines;
 
-  void defaults();
+  void defaults(void);
 @};
 @end example
 
@@ -2174,7 +2213,223 @@ This function sets up the @code{printrow::options} object to the defaults
 as given in the example above.
 @end deftypefun
 
-@node Printing in PostScript,  , The printrow class, Producing printed output
+@node Printing whole methods, Printing in PostScript, The printrow class, Producing printed output
+@section Printing whole methods
+
+It should be reasonably clear how the @code{printrow} object might be
+used to print out numbers and lines for a method.  This simple but
+tedious task is automated by the @code{printmethod} object.  The
+@code{printmethod} object is not designed to be as flexible as the rest
+of the printing mechanism, but rather to accomplish its one aim, that of
+printing out methods, in as simple a way as possible.
+
+The appearance of the printed method is controlled by setting the public
+data members of the @code{printmethod} object.  When all the parameters
+have been set up, the function @code{printmethod::print()} is used to
+print the method to a given @code{printpage} object.
+
+The output consists of a series of @dfn{columns}, each of which contains
+the same number of rows.  When one column is full, a new column is
+started to the right of the last one.  A number of columns, side by
+side, are called a @dfn{column set}.  When one column set is complete, a
+new column set is started below the last.  Whenever a new column is
+started, the last row of the previous column is duplicated at the top of
+the new column.
+
+@menu
+* Method printing parameters::  
+* Using the printmethod object::  
+@end menu
+
+@node Method printing parameters, Using the printmethod object, Printing whole methods, Printing whole methods
+@subsection Method printing parameters
+
+The @code{printmethod} object has many public data members, which
+control the format of the printed method.  These public data members are
+described here.
+
+@deftypevar printrow::options printmethod::opt
+This member contains the options which are used to print each separate
+row of the method.  For more information on this object, see @ref{Row
+printing options}.  Note that the @code{miss_numbers} flag is overridden
+by the setting of the @code{number_mode} member of the
+@code{printmethod} object (see below).
+@end deftypevar
+
+@deftypevar dimension printmethod::hgap
+@deftypevarx dimension printmethod::vgap
+These two members control the horizontal gap between columns, and the
+vertical gap between column sets, respectively.  For more information on
+the @code{dimension} class, see @ref{The dimension class}.
+@end deftypevar
+
+@deftypevar int printmethod::total_rows
+This integer sets the total number of rows which will be printed.  This
+total does not count those rows which are duplicated because they appear
+at the end of a column.
+@end deftypevar
+
+@deftypevar int printmethod::rows_per_column
+This integer controls the number of rows printed in each column.  In
+fact each column will contain one more than this number of rows, because
+the last row of each column is duplicated at the top of the next column.
+@end deftypevar
+
+@deftypevar int printmethod::columns_per_set
+This integer controls the number of columns which appear in each
+horizontal column set, that is, the number of columns across the printed
+output.
+@end deftypevar
+
+@deftypevar dimension printmethod::xoffset
+@deftypevarx dimension printmethod::yoffset
+These two members position the output on the page.  Together, they
+contain the position of the top left bell of the top left column of the
+output. measured from the bottom left hand corner of the page.  For more
+information on the @code{dimension} class, see @ref{The dimension class}.
+@end deftypevar
+
+@deftypevar {list<pair<int, int> >} printmethod::rules
+This member controls the printing of horizontal rules in the output.
+Each entry in the list is a pair (@var{a}, @var{b}) of integers; this
+entry means that a rule will be drawn after the @var{a}th row in each
+lead, and every @var{b} rows after that.  For example, the usual setting
+for a treble dodging method would be the pair (4,4), indicating that
+rules should be drawn every four rows, starting with a rule after the
+fourth row.  Similarly the usual setting for Stedman would be the pair
+(3,6).
+@end deftypevar
+
+@deftypevar printmethod::number_mode_t printmethod::number_mode
+This member sets the behaviour with regard to missing numbers underneath
+lines.  There are four possible settings, described by an enumerated
+type:
+@example
+enum number_mode_t @{ miss_never, miss_always, 
+                      miss_column, miss_lead @};
+@end example
+The meaning of these options is as follows:
+
+@itemize @bullet
+@item @code{miss_never}: numbers are always drawn;
+@item @code{miss_always}: numbers are never drawn when they appear
+underneath a line;
+@item @code{miss_column}: numbers are only drawn underneath lines in the
+first and last rows of a column;
+@item @code{miss_lead}: numbers are only drawn underneath lines at lead
+heads.
+@end itemize
+@end deftypevar
+
+@deftypevar printmethod::pn_mode_t printmethod::pn_mode
+This member controls the printing of place notation next to the method.
+There are three possible settings, described by an enumerated type:
+@example
+enum pn_mode_t @{ pn_none, pn_first, pn_all @};
+@end example
+These options are interpreted as follows:
+
+@itemize @bullet
+@item @code{pn_none}: place notation is never printed;
+@item @code{pn_first}: place notation is printed to the left of the
+first lead of the method and, if the method is symmetrical about the
+half lead, only the first half of the place notation and the lead end
+are printed;
+@item @code{pn_all}: full place notation is printed to the left of every
+lead.
+@end itemize
+@end deftypevar
+
+@deftypevar int printmethod::placebells
+This integer controls whether place bells are printed, and for which
+bell.  If this member contains an integer greater than or equal to zero,
+then place bells are printed for the corresponding bell.  To suppress
+the printing of place bells, set this member to @code{-1}.
+@end deftypevar
+
+@node Using the printmethod object,  , Method printing parameters, Printing whole methods
+@subsection Using the @code{printmethod} object
+
+Before printing a method using a @code{printmethod} object, two things
+must be set up:  the object must be given a method to print, and the
+parameters for printing described in the previous section must be
+initialised.
+
+The class has two constructors:
+
+@deftypefn Constructor {} printmethod::printmethod (void);
+@deftypefnx Constructor {} printmethod::printmethod (const method& @var{m});
+These two constructors create a @code{printmethod} object.  In the first
+case, no method is specified; a method will have to be given later,
+before anything can be printed.  In the second case, a reference to the
+method @var{m} is stored for printing after the parameters have been set
+up.
+@end deftypefn
+
+After the object has been created, the method can be queried and changed
+with these functions:
+
+@deftypefun {const method&} printmethod::get_method (void);
+This returns the method referred to by this @code{printmethod} object.
+@end deftypefun
+
+@deftypefun void printmethod::set_method (const method& @var{m});
+This function stored a reference to the method @var{m} in the
+@code{printmethod} object, for subsequence printing.
+@end deftypefun
+
+The parameters for printing, described in the previous section, may be
+manipulated with several member functions.
+
+@deftypefun void printmethod::defaults (void);
+This function sets the parameters to default values, which relate to the
+method to be printed; so it should not be called before a method has
+been given to the @code{printmethod} object.  Specifically, the
+parameters are set as follows:
+
+@itemize @bullet
+@item Numbers are to be printed in 10-point Helvetica, and the spacing
+between bells is 12 points both horizontally and vertically;
+@item Each column contains a single lead; an entire plain course of the
+method will be printed, with leads side by side;
+@item The output is positioned at the bottom left of the page;
+@item Numbers will be missed underneath lines, except for lead heads;
+@item Place notation will be printed to the left of the first lead only;
+@item Each hunt bell is shown with a red line, a quarter of a point
+thick;
+@item The smallest working bell which makes a place over the lead end is
+shown with a blue line, half a point thick, and place bells are shown
+for this bell.  If no working bell makes a place over the lead end, the
+smallest working bell is chosen instead.
+@end itemize
+@end deftypefun
+
+@deftypefun void printmethod::fit_to_space (const dimension& @var{width}, const dimension& @var{height}, bool @var{vgap_mode}, float @var{aspect});
+This function scales and arranges the method to fit in the given space,
+as specified by @var{width} and @var{height}.  The parameters which are
+calculated by this function are @code{rows_per_column},
+@code{columns_per_set}, @code{hgap}, @code{vgap}, @code{opt.style.size},
+@code{opt.xspace} and @code{opt.yspace}.  Two possible layouts are
+possible: if @var{vgap_mode} is @code{false}, then only one column set
+is used, with each column containing a whole number of leads; if
+@var{vgap_mode} is @code{true}, then each column contains precisely one
+lead, and as many column sets as necessary are used.  The effect of this
+is that, in the first case, the second lead appears below the first one;
+in the second case, the second lead appears to the right of the first
+one.  The last argument @var{aspect} sets the ratio of @code{opt.xspace}
+to @code{opt.yspace}.
+
+The chosen layout is that which, given the constraints specified, allows
+the largest of output.
+@end deftypefun
+
+@deftypefun float printmethod::total_width (void);
+@deftypefunx float printmethod::total_height (void);
+These functions give the total width and height, respectively, in points
+of the printed output using the current parameters.
+@end deftypefun
+
+@node Printing in PostScript, Printing to PDF files, Printing whole methods, Producing printed output
 @section Printing in PostScript
 
 The Ringing Class Library provides subclasses of the @code{printpage} and
@@ -2212,6 +2467,62 @@ The @code{printrow_ps} class is for printing rows to a @code{printpage_ps}
 object.  You will probably never have to deal with this class directly, as
 it should be created and dealt with by the interface for the @code{printrow}
 class.
+
+@node Printing to PDF files,  , Printing in PostScript, Producing printed output
+@section Printing to @acronym{PDF} files
+
+Subclasses of the @code{printpage} and @code{printrow} classes are also
+provided for providing output in Adobe Portable Document Format
+(@acronym{PDF}).  These classes are declared in the @code{print_pdf.h}
+header file.
+
+Some specific issues must be considered when creating @acronym{PDF}
+files.  Firstly, although the classes support output to an arbitrary
+stream, some care must be taken.  This is because @acronym{PDF} files
+contain tables which cross-reference different parts of the file; and
+these tables therefore contain byte offsets into the file.  If you use
+the @acronym{PDF} printing classes to write to a text-mode file on some
+system, such as Microsoft Windows, which convert single line feeds to
+carriage-return and line-feed pairs, then this byte count will be
+incorrect.  The safe way round this is to @strong{always open
+@acronym{PDF} output streams in binary mode}.
+
+The second specific issue which arises when creating a @acronym{PDF}
+file is that of fonts.  In order to position text correctly on the page,
+the class library needs to know the metrics of every character in each
+font used.  As a result, it is only possible to use the standard 14
+@acronym{PDF} fonts when printing from the Ringing Class Library.  These
+standard fonts are:
+@itemize @bullet
+@item Courier, Courier-Bold, Courier-Oblique, Courier-BoldOblique
+
+@item Helvetica, Helvetica-Bold, Helvetica-Oblique, Helvetica-BoldOblique
+
+@item Times-Roman, Times-Bold, Times-Italic, Times-BoldItalic
+
+@item Symbol
+
+@item ZapfDingbats
+@end itemize
+
+The @code{printpage_pdf} class is derived from @code{printpage}.  The only
+new functions defined in this class are its two constructors:
+
+@deftypefn Constructor {} printpage_pdf::printpage_pdf (ostream& @var{o}, const dimension& @var{width}, const dimension& @var{height}, bool @var{l}=false);
+This constructor creates an object for writing a @acronym{PDF} file to the
+output stream @var{o}.  The page width and height are set to @var{width} and 
+@var{height} respectively.  If the Boolean parameter @var{l} is set,
+the page will be printed in landscape format.
+@end deftypefn
+
+@deftypefn Constructor {} printpage_pdf::printpage_pdf (ostream& @var{o}, bool @var{l}=false);
+This constructor works as the previous one, but the page size is set to A4.
+@end deftypefn
+
+The subclass of @code{printrow} for printing to a @acronym{PDF} file is called
+@code{printrow_pdf}; but as an object of this class will always be created
+through the parent @code{printpage} object, the programmer should never
+need to deal with the @code{printrow_pdf} class.
 
 @node Copying this manual, Index, Producing printed output, Top
 @appendix Copying this manual

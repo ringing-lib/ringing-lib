@@ -33,6 +33,8 @@ void printmethod::defaults()
   hgap = opt.xspace * 3;
   vgap = opt.yspace;
 
+  if(!m) return;
+
   total_rows = m->length() * m->leads();
   rows_per_column = m->length();
   columns_per_set = m->leads();
@@ -67,6 +69,13 @@ void printmethod::defaults()
       found_working_bell = true;
     }
   }
+  if(!found_working_bell)
+    for(b = 0; b < m->bells(); b = b + 1)
+      if(r[b] != b) {
+	opt.lines[b] = workstyle;
+	placebells = b;
+	break;
+      }
 }
 
 bool printmethod::needrule(int i)
@@ -149,7 +158,8 @@ void printmethod::print(printpage& pp)
 	  opt.flags &= ~printrow::options::miss_numbers;
 	  pr.set_options(opt);
 	}
-	if(pn && (!sym || (i <= (m->length()+1)/2) || i == m->length())) 
+	if(pn && (pn_mode == pn_all 
+		  || (!sym || (i <= (m->length()+1)/2) || i == m->length()))) 
 	  pr.text((*m)[i-1].print(), opt.xspace,text_style::right, 
 		  true, false);
 	pr << b[i];
