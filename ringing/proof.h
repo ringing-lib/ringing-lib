@@ -97,29 +97,59 @@ class proof {
 public:
   typedef list<linedetail> failinfo;
   typedef multimap<int, row> mmap;
+  typedef map<int, int> nomap;
   typedef int (*hash_function)(const row& r);
 
   proof();   // Default constructor. Use prove to provide rows to prove.
 
   // In these and the prove functions we assume we are given only the rows
   // to prove. i.e. check all rows from first to last.
-  proof(RowIterator first, RowIterator last);
-  proof(RowIterator first, RowIterator last, 
-	const int max, hash_function f = &our_hash);
+  proof(RowIterator first, RowIterator last, bool qp = false);
+  proof(RowIterator first, RowIterator last, const int max, 
+	bool qp = false, hash_function f = &our_hash);
+  proof(RowIterator true_first,
+	RowIterator true_last,
+	RowIterator unknown_first,
+	RowIterator unknown_last,
+	bool qp = false);
+  proof(RowIterator true_first,
+	RowIterator true_last,
+	RowIterator unknown_first,
+	RowIterator unknown_last,
+	const int max,
+	bool qp = false,
+	hash_function f = &our_hash);
 
-  inline bool prove(RowIterator first, RowIterator last);
-  inline bool prove(RowIterator first, RowIterator last,
-		    const int max, hash_function f = &our_hash);
+  inline bool prove(RowIterator first, RowIterator last, bool qp = false);
+  inline bool prove(RowIterator first, RowIterator last, const int max, 
+		    bool qp = false, hash_function f = &our_hash);
+
+  inline bool prove(RowIterator true_first,
+		    RowIterator true_last,
+		    RowIterator unknown_first,
+		    RowIterator unknown_last,
+		    bool qp = false);
+  inline bool prove(RowIterator true_first,
+		    RowIterator true_last,
+		    RowIterator unknown_first,
+		    RowIterator unknown_last,
+		    const int max,
+		    bool qp = false,
+		    hash_function f = &our_hash);
 
   const failinfo& failed() const // Return rows where it failed.
-    { return where; } 
+    { return where; }
   operator int() const;          // Is touch true or false?
   int operator!() const;
 
 private:
+  inline void add_to_failmap(RowIterator r,
+			     const int &i,
+			     const int &j,
+			     const int &changed);
   bool return_true(const void*) { return true; };
   void resetfailinfo();
-  bool istrue;                    // Well, is it true or not?
+  bool istrue;                   // Well, is it true or not?
   failinfo where;                // Details of where it failed.
 }; 
 
@@ -138,24 +168,63 @@ proof<RowIterator>::proof()
 
 // Constructor - 1 extent only.
 template <class RowIterator>
-proof<RowIterator>::proof(RowIterator first, RowIterator last)
+proof<RowIterator>::proof(RowIterator first,
+			  RowIterator last,
+			  bool qp)
 {
   // Prove it
-  istrue = prove(first, last);
+  istrue = prove(first, last, qp);
 }
 
 // Constructor - multiple extents.
 template <class RowIterator>
-proof<RowIterator>::proof(RowIterator first, RowIterator last,
-	     const int max, proof::hash_function f)
+proof<RowIterator>::proof(RowIterator first,
+			  RowIterator last,
+			  const int max, 
+			  bool qp,
+			  proof::hash_function f)
 {
   // Prove it
-  istrue = prove(first, last, max, f);
+  istrue = prove(first, last, max, qp, f);
+}
+
+template <class RowIterator>
+proof<RowIterator>::proof(RowIterator true_first,
+			  RowIterator true_last,
+			  RowIterator unknown_first,
+			  RowIterator unknown_last,
+			  bool qp)
+{
+  istrue = prove(true_first,
+		 true_last,
+		 unknown_first,
+		 unknown_last,
+		 qp);
+}
+
+template <class RowIterator>
+proof<RowIterator>::proof(RowIterator true_first,
+			  RowIterator true_last,
+			  RowIterator unknown_first,
+			  RowIterator unknown_last,
+			  const int max,
+			  bool qp,
+			  proof::hash_function f)
+{
+  istrue = prove(true_first,
+		 true_last,
+		 unknown_first,
+		 unknown_last,
+		 max,
+		 qp,
+		 f);
 }
 
 // Prove function for rows up to one extent.
 template <class RowIterator>
-bool proof<RowIterator>::prove (RowIterator first, RowIterator last)
+bool proof<RowIterator>::prove (RowIterator first,
+				RowIterator last,
+				bool qp)
 {
   RowIterator i;
   RowIterator j;
@@ -185,46 +254,15 @@ bool proof<RowIterator>::prove (RowIterator first, RowIterator last)
 	  count_j++;
 	  if (*j == *i)
 	    {
-	      istrue = false;
-	      // add the false rows into the failinfo mmap.
-	      // does it exist already?
-	      int exists = 0;
-	      failinfo::iterator fi = where.begin();
-	      // Search only if there is something to search
-	      if (where.size() > 0)
+	      if (!qp)
 		{
-		  fi = where.begin();
-		  while ((fi != where.end()) && (exists == 0))
-		    {
-		      if ((*fi)._row == *i)
-			{
-			  exists = 1;
-			}
-		      else
-			{
-			  fi++;
-			}
-		    }
-		}
-	      if (exists == 0)
-		{
-		  // no, so start a new item.
-		  linedetail l;
-		  l._row = *i;
-		  l._lines.push_back(count_i);
-		  l._lines.push_back(count_j);
-		  where.push_back(l);
+		  istrue = false;
+		  this->add_to_failmap(i, count_i, count_j, changed_line);
 		  changed_line = 0;
 		}
 	      else
-		{
-		  // yes it does, but only record the first time a
-		  // change is entered
-		  if (changed_line == 0)
-		    {
-		      (*fi)._lines.push_back(count_j);
-		    }
-		}
+		// We know this has to be false.
+		return false;
 	    }
 	  j++;
 	}
@@ -236,12 +274,16 @@ bool proof<RowIterator>::prove (RowIterator first, RowIterator last)
 
 // Prove function for rows over one extent.
 template <class RowIterator>
-bool proof<RowIterator>::prove (RowIterator first, RowIterator last,
-				const int max, hash_function f)
+bool proof<RowIterator>::prove(RowIterator first,
+			       RowIterator last,
+			       const int max,
+			       bool qp,
+			       hash_function f)
 {
   RowIterator i;
   int count_i = 0;
   mmap m;
+  nomap n;
   istrue = true;
 
   // First reset out failed information list
@@ -257,58 +299,205 @@ bool proof<RowIterator>::prove (RowIterator first, RowIterator last,
       if ((int) m.count(f(*i)) >= max)
 	{
 	  istrue = false;
-	  // add the false rows into the failinfo mmap.
-	  // does it exist already?
-	  int exists = 0;
-	  failinfo::iterator fi = where.begin();
-	  // Search only if there is something to search
-	  if (where.size() > 0)
+	  if (!qp)
 	    {
-	      fi = where.begin();
-	      while ((fi != where.end()) && (exists == 0))
-		{
-		  if ((*fi)._row == *i)
-		    {
-		      exists = 1;
-		    }
-		  else
-		    {
-		      fi++;
-		    }
-		}
-	    }
-	  if (exists == 0)
-	    {
-	      // no, so start a new item.
-	      linedetail l;
-	      l._row = *i;
-	      RowIterator j = first;
-	      int count_j = 1;
-	      while ((j != i))
-		{
-		  if (*j == *i)
-		    {
-		      l._lines.push_back(count_j);
-		    }
-		  count_j++;
-		  j++;
-		}
-	      l._lines.push_back(count_i);
-	      where.push_back(l);
+	      this->add_to_failmap(i, (*n.find(f(*i))).second, count_i, 0);
 	    }
 	  else
 	    {
-	      // yes, add this one onto the existing item.
-	      (*fi)._lines.push_back(count_i);
+	      // If we are here, then it is false
+	      return false;
 	    }
 	}
       // Insert the pair into the multimap
       m.insert(make_pair(f(*i), *i));
+      n.insert(make_pair(f(*i), count_i));
       i++;
     }
 
   return istrue;
 }
+
+// Proof function for where a block is known to be true, and
+// an additional block has been added on to it.
+template <class RowIterator>
+bool proof<RowIterator>::prove(RowIterator true_first,
+			       RowIterator true_last,
+			       RowIterator unknown_first,
+			       RowIterator unknown_last,
+			       bool qp)
+{
+  RowIterator i;
+  RowIterator j;
+  istrue = true;
+  int changed_line;
+  int count_i = 0;
+  int count_j = 0;
+  
+  // First reset out failed information list
+  resetfailinfo();
+
+  // use i to iterate through just the unknown list.
+  i = unknown_first;
+  while (i != unknown_last)
+    {
+      count_i++;
+      changed_line = 1;
+      count_j = 0;
+      // use j to iterate through both true and unknown.
+      j = true_first;
+      while (j != unknown_last)
+	{
+	  count_j++;
+	  // Only compare if j != i, i.e if this isn't the same row.
+	  if (j != i)
+	    {
+	      // Do we have a match?
+	      if (*j == *i)
+		{
+		  istrue = false;
+		  if (!qp)
+		    {
+		      this->add_to_failmap(i, 
+					   count_i + (true_last - true_first),
+					   count_j,
+					   changed_line);
+		      changed_line = 0;
+		    }
+		  else
+		    {
+		      return false;
+		    }
+		}
+	    }
+
+	  // if j has reached the end of the true list,
+	  // set it to the start of the unknown list.
+	  j++;
+	  if (j == true_last)
+	    {
+	      j = unknown_first;
+	    }
+	}
+      i++;
+    }
+
+  return istrue;
+}
+
+// Proof function for where a block is known to be true, and
+// an additional block has been added on to it.
+template <class RowIterator>
+bool proof<RowIterator>::prove(RowIterator true_first,
+			       RowIterator true_last,
+			       RowIterator unknown_first,
+			       RowIterator unknown_last,
+			       const int max,
+			       bool qp,
+			       proof::hash_function f)
+{
+  RowIterator i;
+  int count_i = 0;
+  mmap m;
+  nomap n;
+  istrue = true;
+
+  // First reset out failed information list
+  resetfailinfo();
+
+  // First add all the true rows into the failmap - we don't need to check
+  // them.
+  for (i = true_first; i != true_last; i++)
+    {
+      count_i++;
+      m.insert(make_pair(f(*i), *i));
+      n.insert(make_pair(f(*i), count_i));
+    }
+
+  // No go through the fail list, checking that we haven't
+  // exceeded max, the limit for the number of rows. If we do, then
+  // we add the item onto a list for later reference.
+  i = unknown_first;
+  while (i != unknown_last)
+    {
+      count_i++;
+      if ((int) m.count(f(*i)) >= max)
+	{
+	  istrue = false;
+	  if (!qp)
+	    {
+	      this->add_to_failmap(i, (*n.find(f(*i))).second, count_i, 0);
+	    }
+	  else
+	    {
+	      // If we are here, then it is false
+	      return false;
+	    }
+	}
+      // Insert the pair into the multimap
+      m.insert(make_pair(f(*i), *i));
+      n.insert(make_pair(f(*i), count_i));
+      i++;
+    }
+
+  return istrue;
+}
+
+template <class RowIterator>
+void proof<RowIterator>::add_to_failmap(RowIterator r,
+					const int &i,
+					const int &j,
+					const int &changed)
+{
+  // add the false rows into the failinfo
+  // does it exist already?
+  int exists = 0;
+  failinfo::iterator fi = where.begin();
+  // Search only if there is something to search
+  if (where.size() > 0)
+    {
+      fi = where.begin();
+      while ((fi != where.end()) && (exists == 0))
+	{
+	  if ((*fi)._row == *r)
+	    {
+	      exists = 1;
+	    }
+	  else
+	    {
+	      fi++;
+	    }
+	}
+    }
+  if (exists == 0)
+    {
+      // no, so start a new item.
+      linedetail l;
+      l._row = *r;
+      // sort out the order
+      if (j > i)
+	{
+	  l._lines.push_back(i);
+	  l._lines.push_back(j);
+	}
+      else
+	{
+	  l._lines.push_back(j);
+	  l._lines.push_back(i);
+	}
+      where.push_back(l);
+    }
+  else
+    {
+      // yes it does, but only record the first time a
+      // change is entered
+      if (changed == 0)
+	{
+	  (*fi)._lines.push_back(j);
+	}
+    }
+}
+
 
 // Function for finding out whether it proved true or not.
 template <class RowIterator>
