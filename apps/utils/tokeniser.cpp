@@ -140,9 +140,9 @@ bool tokeniser::parse( token& tok )
 
   while ( i == e )
     {
+      getline(*in, buffer); buffer += '\n';
       if (!*in) return false;
 
-      getline(*in, buffer); buffer += '\n';
       i = buffer.begin();
       e = buffer.end();
       
