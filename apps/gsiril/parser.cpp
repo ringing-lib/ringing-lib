@@ -26,6 +26,7 @@
 #include "expression.h"
 #include "util.h"
 #include "execution_context.h"
+#include "console_stream.h" // To fix getline bug in MSVC.
 #if RINGING_OLD_INCLUDES
 #include <stdexcept.h>
 #include <vector.h>
