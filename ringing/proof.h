@@ -92,7 +92,7 @@ struct linedetail {
   RINGING_FAKE_COMPARATORS( linedetail );
 };
 
-class prover
+class RINGING_API prover
 {
 public:
   typedef list<linedetail> failinfo;
