@@ -156,6 +156,7 @@ notation (for example @samp{X} or @samp{1258}).
 * The bell Class::              
 * The row Class::               
 * The change Class::            
+* The permute class::           
 * The row_block class::         
 * Other functions in row.h::    
 @end menu
@@ -357,13 +358,13 @@ class row;
 This constructs an empty row.
 @end deftypefn
 
-@deftypefn Constructor {} row::row (int @var{bells});
+@deftypefn Constructor explicit row::row (int @var{bells});
 This constructs an empty row, where @var{bells} is the number of bells
 which the row is to contain.  Note that it is not initialised to
 anything.
 @end deftypefn
 
-@deftypefn Constructor {} row::row (char *@var{s});
+@deftypefn Constructor {} row::row (const char* @var{s});
 This constructs a row from a string, which should be the textual
 representation of the row you wish to construct, for example
 @samp{"135246"} or @samp{"2143658709TE"}.
@@ -380,7 +381,7 @@ This is the copy constructor; it creates a copy of the given row.
 This copies one row to another.
 @end deftypefn
 
-@deftypefn Operator row& row::operator= (char *@var{s});
+@deftypefn Operator row& row::operator= (const char* @var{s});
 This sets the value of a row, given a string. The string @var{s} should
 contain a textual representation of a row, such as @samp{21436587}.
 @end deftypefn
@@ -421,11 +422,21 @@ This writes the row to the given output stream, in the same format as
 returned by @code{row::print()}.
 @end deftypefn
 
+@deftypefn Operator bool row::operator< (const row& @var{other});
+@deftypefnx Operator bool row::operator> (const row& @var{other});
+These functions perform a lexicographical comparison of the two rows.
+They are necessary in order that rows may be put into certain containers.
+@end deftypefn
+
 @node Other row Functions, row static Functions, row Operators, The row Class
 @subsection Other functions
 
 @deftypefun int row::bells (void) const;
 This returns the number of bells which the row contains.
+@end deftypefun
+
+@deftypefun void row::swap (row& @var{other});
+This function swaps this row with @var{other} in an efficient manner.
 @end deftypefun
 
 @c Silly bit to get round a bug
@@ -451,9 +462,13 @@ function returns an integer indicating which lead head it is.
 Otherwise, it returns 0.
 @end deftypefun
 
-@deftypefun {char *} row::print (char *@var{s}) const;
+@deftypefun {char*} row::print (char* @var{s}) const;
 This prints the row to the string @var{s}. Note that @var{s} must be
 long enough.
+@end deftypefun
+
+@deftypefun string row::print () const;
+This prints the row to a string object.
 @end deftypefun
 
 @deftypefun row row::inverse (void) const;
@@ -468,11 +483,20 @@ This returns the sign or parity of a row:  1 for even, -1 for odd.
 This returns the order of the row.
 @end deftypefun
 
-@deftypefun {char *} row::cycles (char *@var{result}) const;
+@deftypefun char* row::cycles (char* @var{result}) const;
 This expresses the row as separate cycles. The string @var{result} will
 afterwards contain a list of all the cycles in the row, separated by
 commas; for example @code{row("21453678").cycles(s)} will return the
 string @code{"12,345,6,7,8"}. Note that @var{result} must be long enough.
+@end deftypefun
+
+@deftypefun {template <> void} swap<row> (row& @var{a}, row& @var{b});
+This specialised the @code{swap} function which is defined in the
+standard library.  The result is that certain standard algorithms may 
+become much more efficient.  Note that according to your namespace
+setup, @code{swap} may need to be in namespace @code{std}; similarly,
+@code{row} may or may not be in namespace @code{ringing}.  This is all
+taken care of.
 @end deftypefun
 
 @node row static Functions,  , Other row Functions, The row Class
@@ -488,7 +512,7 @@ This returns the first lead head of Plain Bob (@var{h} = 1), Grandsire
 bells with @var{h} hunt bells.
 @end deftypefun
 
-@node The change Class, The row_block class, The row Class, Rows and Changes
+@node The change Class, The permute class, The row Class, Rows and Changes
 @section The @code{change} class
 @cindex @code{change} class
 
@@ -518,7 +542,7 @@ class change;
 This constructs an empty change.
 @end deftypefn
 
-@deftypefn Constructor {} change::change (int @var{n});
+@deftypefn Constructor explicit change::change (int @var{n});
 This constructs an empty change for @var{n} bells, which will initially
 contain no swaps, i.e. all bells will remain in the same place.
 @end deftypefn
@@ -527,7 +551,7 @@ contain no swaps, i.e. all bells will remain in the same place.
 This is the copy constructor; it makes a new copy of @var{c}.
 @end deftypefn
 
-@deftypefn Constructor {} change::change (int @var{n}, char *@var{pn});
+@deftypefn Constructor {} change::change (int @var{n}, char* @var{pn});
 @deftypefnx Constructor {} change::change (int @var{n}, const string& @var{pn});
 This constructs a change on @var{n} bells, with place notation as given
 in @var{pn}. This should consist of a sequence of characters which signify
@@ -604,7 +628,37 @@ so on.
 This returns 1 if the change contains internal places, and 0 otherwise.
 @end deftypefun
 
-@node The row_block class, Other functions in row.h, The change Class, Rows and Changes
+@deftypefun char* change::print (char* @var{s}) const;
+This function prints the place notation for the change to the string
+@var{s}, which should be long enough to contain it.
+@end deftypefun
+
+@deftypefun string change::print (void) const;
+This function prints the place notation for the change to a string.
+@end deftypefun
+
+@node The permute class, The row_block class, The change Class, Rows and Changes
+@section The @code{permute} class
+@cindex @code{permute} class
+
+The @code{permute} class is a utility class which makes it possible to
+use some of the standard algorithms contained in the C++ library.  It
+looks like a function object:  it is constructed with a row, and can
+then be called with rows or changes as arguments.  Each time it is called,
+the current row is permuted by the argument and the new row is returned.
+
+@deftypefn Constructor explicit permute::permute(const row& @var{r});
+This creates a @code{permute} function object with its permutation
+initially set to @var{r}.
+@end deftypefn
+
+@deftypefn Operator {const row&} permute::operator() (const row& @var{r});
+@deftypefnx Operator {const row&} permute::operator() (const change& @var{c});
+These operators multiply the permutation contained in the @code{permute}
+object by the given row or change, and return the new permutation.
+@end deftypefn
+
+@node The row_block class, Other functions in row.h, The permute class, Rows and Changes
 @section The @code{row_block} class
 @cindex @code{row_block} class
 
@@ -654,14 +708,14 @@ the row given in @var{r}.
 @subsection Other functions
 
 @ifinfo
-@deftypefun row& row_block::set_start (row& @var{r});
+@deftypefun row& row_block::set_start (const row& @var{r});
 This sets the first row to @var{r}.  Note that this function does @emph{not}
 recalculate the rest of the rows afterwards; you must do this by calling
 @code{recalculate()}.
 @end deftypefun
 @end ifinfo
 @iftex
-@deftypefun row@& row_block::set_start (row& @var{r});
+@deftypefun row@& row_block::set_start (const row& @var{r});
 This sets the first row to @var{r}.  Note that this function does @emph{not}
 recalculate the rest of the rows afterwards; you must do this by calling
 @code{recalculate()}.
@@ -779,7 +833,8 @@ class method : public vector<change>
 
 @deftypefn Constructor {} method::method (int @var{length}, int @var{bells}, char* @var{name} = "Untitled");
 This constructor creates an empty method on @var{bells} bells, with
-@var{length} changes in the lead, and with name @var{name}.
+@var{length} changes in the lead, and with name @var{name}.  All the
+bells stay in the same place for the entire lead.
 @end deftypefn
 
 @deftypefn Constructor {} method::method (const char* @var{pn}, int @var{bells}, char* @var{name} = "Untitled");
@@ -812,6 +867,13 @@ This returns the number of bells on which the method is defined.
 
 @deftypefun int method::length (void);
 This returns the number of changes in a lead of the method.
+@end deftypefun
+
+@deftypefun void method::push_back (const change& @var{c});
+@deftypefunx void method::push_back (const string& @var{s});
+These utility functions add a change to the end of the method.  In
+the first case, @var{c} is the change to be added; in the second case,
+@var{s} is place notation for the change to be added.
 @end deftypefun
 
 @deftypefun row method::lh (void);
@@ -951,7 +1013,7 @@ changed in a later release.
 * proof Constructors::          
 * proof Functions::             
 * proof Operators::             
-* proof Output::
+* proof Output::                
 * Falseness Storage::           
 * How Proof Works::             
 @end menu
@@ -1093,24 +1155,24 @@ Each time the analysis function is called, the results stored in the class are r
 This class in not derived from any other classes.
 
 @example
-template <class RowIterator> class music;
+class music;
 @end example
 
 @node music Constructors, music Functions, music Derivation, Musical Analysis
 @subsection Constructors
 
 @deftypefn Constructor {} music::music (void);
-Default Constructor. Resets all the music variables to zero.
+Default constructor. Resets all the music variables to zero.
 @end deftypefn
 
-@deftypefn Constructor {} music::music (RowIterator @var{first}, RowIterator @var{last});
+@deftypefn Constructor {template<class RowIterator>} music::music (RowIterator @var{first}, RowIterator @var{last});
 This constructor takes the rows and passes them to @code{music::change_rows} which resets the music variables and analyses all the rows. First and last should be an iterator to a container that stores rows. The first should also be a handstroke row.
 @end deftypefn
 
 @node music Functions, music Operators, music Constructors, Musical Analysis
 @subsection Functions
 
-@deftypefn Function {inline void} music::change_rows (RowIterator @var{first}, RowIterator @var{last});
+@deftypefn Function {template<class RowIterator> inline void} music::change_rows (RowIterator @var{first}, RowIterator @var{last});
 This function resets all the music variables and the analyses the rows. First and last should be an iterator to a container that stores rows. The first should also be a handstroke row.
 @end deftypefn
 
@@ -1172,7 +1234,7 @@ This functoin returns the number of reverse four bell rollups present on the fro
 @subsection Operators
 
 @ifinfo
-@deftypefn Operator {friend ostream&} operator<< <>(ostream& @var{o}, const music<RowIterator>& @var{m});
+@deftypefn Operator {ostream&} operator<< (ostream& @var{o}, const music& @var{m});
 Outputs to the ostream a string containing the following details:
 
 @example
