@@ -291,7 +291,7 @@ void if_match_node::execute( proof_context& ctx )
   try {
     result = test.evaluate( ctx2 );
   } 
-  catch ( script_exception const& ex ) {}
+  catch ( script_exception const& ) {}
 
   if ( result )
     iftrue.execute( ctx );

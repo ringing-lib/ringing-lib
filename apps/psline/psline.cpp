@@ -125,8 +125,8 @@ bool parse_colour(const string& arg, colour& col)
       cerr << "Colour out of range: " << i << endl;
       return false;
     }
-    if(j==string::npos) { col.grey = true; col.red = i/100.0; return true; }
-    col.red = i/100.0;
+    if(j==string::npos) { col.grey = true; col.red = i/100.0f; return true; }
+    col.red = i/100.0f;
     
     string::size_type k = arg.find('-', j+1);
     if (k==string::npos) {
@@ -138,14 +138,14 @@ bool parse_colour(const string& arg, colour& col)
       cerr << "Colour out of range: " << i << endl;
       return false;
     }
-    col.green = i/100.0;
+    col.green = i/100.0f;
 
     i = lexical_cast<int>( arg.substr(k+1, string::npos) );
     if(i < 0 || i > 100) {
       cerr << "Colour out of range: " << i << endl;
       return false;
     }
-    col.blue = i/100.0;
+    col.blue = i/100.0f;
     col.grey = false;
     return true;
   } 
@@ -574,7 +574,7 @@ int main(int argc, char *argv[])
   args.grid = false;
   args.grid_style.width.n = 1; args.grid_style.width.d = 4; 
   args.grid_style.width.u = dimension::points;
-  args.grid_style.col.grey = true; args.grid_style.col.red = 0.7;
+  args.grid_style.col.grey = true; args.grid_style.col.red = 0.7f;
 
   // Parse the arguments
   {
@@ -717,7 +717,7 @@ int main(int argc, char *argv[])
     }
     if(!args.title.empty())
       args.fitheight.set_float(args.fitheight.in_points() 
-			       - args.title_style.size * 0.2, 1);
+			       - args.title_style.size * 0.2f, 1);
     
     // Now fit to the space
     if(args.leads_per_column || args.rows_per_column) {
@@ -743,7 +743,7 @@ int main(int argc, char *argv[])
 				  args.pages * pm.sets_per_page
 				  * pm.rows_per_column);
       }
-      pm.scale_to_space(args.fitwidth, args.fitheight, args.numbers ? 1 : 2);
+      pm.scale_to_space(args.fitwidth, args.fitheight, args.numbers ? 1.f : 2.f);
     } else {
       if(args.columns_per_set) {
 	pm.columns_per_set = args.columns_per_set;
@@ -755,7 +755,7 @@ int main(int argc, char *argv[])
 				  * pm.sets_per_page * m.length())
 	  * m.length();
 	pm.scale_to_space(args.fitwidth, args.fitheight, 
-			  args.numbers ? 1 : 2);
+			  args.numbers ? 1.f : 2.f);
       } else {
 	if(args.sets_per_page) {
 	  pm.rows_per_column = m.length();
@@ -765,13 +765,13 @@ int main(int argc, char *argv[])
 				    args.pages * pm.sets_per_page
 				    * pm.rows_per_column);
 	  pm.scale_to_space(args.fitwidth, args.fitheight, 
-			    args.numbers ? 1 : 2);
+			    args.numbers ? 1.f : 2.f);
 	} else {
 	  if(!args.pages) args.pages = 1;
           int tr = pm.total_rows;
 	  pm.total_rows = divu(tr, args.pages * m.length()) * m.length();
 	  pm.fit_to_space(args.fitwidth, args.fitheight, 
-			  args.vgap_mode, args.numbers ? 1 : 2);
+			  args.vgap_mode, args.numbers ? 1.f : 2.f);
 	  pm.total_rows = tr;
 	}
       }
@@ -801,7 +801,7 @@ int main(int argc, char *argv[])
 			    + pm.opt.xspace.in_points())/2, 1);
       pm.yoffset.set_float((args.height.in_points() + pm.total_height() 
 			    - (args.title.empty() ? 0 
-			       : args.title_style.size * 0.2)
+			       : args.title_style.size * 0.2f)
 			    - pm.opt.yspace.in_points())/2, 1);
     }
 
@@ -822,7 +822,7 @@ int main(int argc, char *argv[])
     titlex.set_float(pm.xoffset.in_points() 
 		     + (pm.total_width() - pm.opt.xspace.in_points())/2, 1);
     titley.set_float(pm.yoffset.in_points() + pm.opt.yspace.in_points()/2
-		     + args.title_style.size * 0.1, 1);
+		     + args.title_style.size * 0.1f, 1);
     int i = args.title.find('$');
     if(i != (int) args.title.npos) args.title.replace(i, 1, m.fullname());
 

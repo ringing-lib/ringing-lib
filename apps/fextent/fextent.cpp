@@ -26,6 +26,7 @@
 
 #include <vector>
 #include <cmath>
+#include <ctime>
 #include <iterator>
 #include <iostream>
 #include <iomanip>
@@ -492,14 +493,9 @@ private:
 
 public:
   class const_iterator
+	: public RINGING_STD_CONST_ITERATOR( forward_iterator_tag, row )
   {
   public:
-    typedef row value_type;
-    typedef ptrdiff_t difference_type;
-    typedef forward_iterator_tag iterator_category;
-    typedef row const& reference;
-    typedef row const* pointer;
-
     const_iterator& operator++() {
       ++idx; fixup(); return *this;
     }
@@ -564,7 +560,7 @@ private:
   void init_qsets( method const& m, vector<change> const& calls );
   void init_lhs( method const& m, vector<change> const& calls );
 
-  struct perturbation;
+  class perturbation;
   
   inline bool should_keep( double delta ) {
     return delta > 0 || random_bool( exp(delta * beta) );
@@ -1086,10 +1082,10 @@ private:
   // Row status
   //
   bool is_added( row_t const& r ) const
-    { map<row_t, double>::const_iterator i = rdiff.find(r);
+    { map<row_t, double, row_t::cmp>::const_iterator i = rdiff.find(r);
       return i != rdiff.end() && i->second > 0; }
   bool is_removed( row_t const& r ) const 
-    { map<row_t, double>::const_iterator i = rdiff.find(r);
+    { map<row_t, double, row_t::cmp>::const_iterator i = rdiff.find(r);
       return i != rdiff.end() && i->second < 0; }
 
   // TODO:  It is bad to assume that  (double(w) - double(w) == 0.0)
@@ -1132,7 +1128,7 @@ private:
 
 inline size_t state::perturbation::get_linkage( row_t const& r ) const
 {
-  map<row_t, pair<int,size_t> >::const_iterator i = ldiff.find(r);
+  map<row_t, pair<int,size_t>, row_t::cmp>::const_iterator i = ldiff.find(r);
   return i == ldiff.end() ? s.linkage[r.index()] : i->second.second; 
 }
 
@@ -1207,11 +1203,11 @@ bool state::perturbation::check_delta() const
 {
   double real_delta(0);
 
-  for ( map<row_t, double>::const_iterator 
+  for ( map<row_t, double, row_t::cmp>::const_iterator 
 	  i(rdiff.begin()), e(rdiff.end());  i != e;  ++i )
     real_delta += i->second;
 
-  for ( map< row_t, pair<int, size_t> >::const_iterator 
+  for ( map< row_t, pair<int, size_t>, row_t::cmp>::const_iterator 
 	  i(ldiff.begin()), e(ldiff.end());  i != e;  ++i )
     real_delta += i->second.first * s.link_weight;
 
@@ -1400,7 +1396,7 @@ void state::perturbation::commit2( state& s, lead_state add, lead_state rm )
 {
   DEBUG( "Committing -- delta " << d );
 
-  for ( map<row_t, double>::const_iterator 
+  for ( map<row_t, double, row_t::cmp>::const_iterator 
 	  i(rdiff.begin()), e(rdiff.end());  i != e;  ++i )
     {
       DEBUG( "Commit row: " << i->first.index() << ", score " << i->second );
@@ -1418,7 +1414,7 @@ void state::perturbation::commit2( state& s, lead_state add, lead_state rm )
       s.leads[ i->first.index() ] = ( (i->second > 0) ? add : rm );
     }
 
-  for ( map< row_t, pair<int, size_t> >::const_iterator 
+  for ( map< row_t, pair<int, size_t>, row_t::cmp>::const_iterator 
 	  i(ldiff.begin()), e(ldiff.end());  i != e;  ++i )
     {
       DEBUG( "Commit link: " << i->first.index() << ", score " << i->second.first );
