@@ -1,5 +1,5 @@
 // -*- C++ -*- falseness.cpp - Class for falseness table
-// Copyright (C) 2001, 2002, 2003 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2001, 2002, 2003, 2005 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -220,8 +220,7 @@ string false_courses::symbols() const
 { 
   const size_t b( lh.bells() );
 
-  if ( !(flags & tenors_together) )
-    // TODO:  On 8 bells, they do have names: X, Y and Z.
+  if ( !(flags & tenors_together) && b != 8 )
     throw std::logic_error("Split-tenors falseness groups do not have names");
   
   if ( b % 2 )
@@ -239,9 +238,18 @@ string false_courses::symbols() const
   shared_pointer< map<row, string> > table = make_table(b);
   
   set<string> syms;
-  
+
+  const row rounds(b);  
   for ( const_iterator i(begin()), e(end()); i<e; ++i )
-    syms.insert( (*table)[*i] );
+    if ( are_tenors_together( *i, 6 ) ) 
+      syms.insert( (*table)[*i] );
+    // This is a hack to get X, Y and Z falseness to work on 8 bells
+    else if ( b == 8 && *i == rounds * "17623548" )
+      syms.insert( "X" );
+    else if ( b == 8 && *i == rounds * "17645328" )
+      syms.insert( "Y" );
+    else if ( b == 8 && *i == rounds * "17632458" )
+      syms.insert( "Z" );
 
   make_string ms;
   copy( syms.begin(), syms.end(), 

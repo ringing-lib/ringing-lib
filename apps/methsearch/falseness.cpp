@@ -46,7 +46,8 @@ RINGING_USING_STD
 
 string falseness_group_codes( const method &m )
 {
-  return false_courses( m, false_courses::tenors_together ).symbols();
+  return false_courses
+    ( m, m.bells() == 8 ? 0 : false_courses::tenors_together ).symbols();
 }
 
 
