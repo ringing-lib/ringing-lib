@@ -266,8 +266,8 @@ private:
   void operator=( const scoped_pointer &o );
 
 private:
-  void (*deletor)( element_type *&ptr );
   T *ptr;
+  void (*deletor)( element_type *&ptr );
 };
 
 
