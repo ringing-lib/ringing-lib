@@ -97,6 +97,8 @@ public:
   };
 #endif
 
+  RINGING_FAKE_COMPARATORS(music_details);
+  
 private:
   // Clear the current counts
   void clear();
