@@ -312,7 +312,7 @@ void xmlout::impl::append( library_entry const& entry )
 
     if ( entry.has_facet< rw_ref >() ) {
       if ( !refs_elt ) refs_elt = add_elt( meth_elt, "refs" );
-      add_simple_elt( refs_elt, "rw-ref", entry.get_facet< rw_ref >() );
+      add_simple_elt( refs_elt, "rwref", entry.get_facet< rw_ref >() );
     }
   }
 }
