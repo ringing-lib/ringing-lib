@@ -2281,6 +2281,13 @@ horizontal column set, that is, the number of columns across the printed
 output.
 @end deftypevar
 
+@deftypevar int printmethod::sets_per_page
+This integer controls the number of column sets which appear on each
+page, that is, the number of columns down the printed page.  If the total
+number of columns printed exceeds this numbers, more than one page of
+output will be produced.
+@end deftypevar
+
 @deftypevar dimension printmethod::xoffset
 @deftypevarx dimension printmethod::yoffset
 These two members position the output on the page.  Together, they

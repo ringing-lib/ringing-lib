@@ -38,6 +38,7 @@ void printmethod::defaults()
   total_rows = m->length() * m->leads();
   rows_per_column = m->length();
   columns_per_set = m->leads();
+  sets_per_page = 0;
   xoffset = opt.xspace / 2;
   yoffset = (opt.yspace * (m->length() * 2 + 3)) / 2;
   number_mode = miss_lead;
@@ -108,67 +109,73 @@ void printmethod::print(printpage& pp)
     opt.flags &= ~printrow::options::miss_numbers;
   pn = (pn_mode != pn_none);
   if(pn) pnextra = find_pnextra();
-  printrow pr(pp, opt);
 
   for(columnset = 0; total_row_count < total_rows; columnset++) {
-    // Move to the beginning of this set of columns
-    pr.set_position(xoffset, yoffset);
-    if(pn_mode != pn_none) pr.move_position(opt.xspace * pnextra, 0);
-    pr.move_position(0, -opt.yspace * columnset * (rows_per_column + 1));
-    pr.move_position(0, -vgap * columnset);
-    for(column = 0; column < columns_per_set 
-	  && total_row_count < total_rows; column++) {
-      // Print the first row, which is the same as the last row of the
-      // previous column.
-      pr << b[i]; if(needrule(i)) pr.rule();
-      // Turn on number-missing if necessary
-      if(number_mode == miss_column) {
-	opt.flags |= printrow::options::miss_numbers;
-	pr.set_options(opt);
-      }
-      for(row_count = 0; row_count < rows_per_column 
-	    && total_row_count < total_rows; row_count++) {
-	++i;
-	if(i == b.size()) { // We've got to the end of a lead
-	  b[0] = b[b.size() - 1]; b.recalculate();
-	  // Miss the first row of the lead - we've already printed it
-	  // at the end of the previous lead.
-	  i = 1;
-	  if(pn_mode == pn_first) pn = false;
+    if(sets_per_page && (columnset == sets_per_page)) {
+      pp.new_page();
+      columnset = 0;
+    }
+    {
+      printrow pr(pp, opt);
+      // Move to the beginning of this set of columns
+      pr.set_position(xoffset, yoffset);
+      if(pn_mode != pn_none) pr.move_position(opt.xspace * pnextra, 0);
+      pr.move_position(0, -opt.yspace * columnset * (rows_per_column + 1));
+      pr.move_position(0, -vgap * columnset);
+      for(column = 0; column < columns_per_set 
+	    && total_row_count < total_rows; column++) {
+	// Print the first row, which is the same as the last row of the
+	// previous column.
+	pr << b[i]; if(needrule(i)) pr.rule();
+	// Turn on number-missing if necessary
+	if(number_mode == miss_column) {
+	  opt.flags |= printrow::options::miss_numbers;
+	  pr.set_options(opt);
 	}
-	if(i == 1) {
-	  // Turn number-missing back on
-	  if(number_mode == miss_lead) {
-	    opt.flags |= printrow::options::miss_numbers;
+	for(row_count = 0; row_count < rows_per_column 
+	      && total_row_count < total_rows; row_count++) {
+	  ++i;
+	  if(i == b.size()) { // We've got to the end of a lead
+	    b[0] = b[b.size() - 1]; b.recalculate();
+	    // Miss the first row of the lead - we've already printed it
+	    // at the end of the previous lead.
+	    i = 1;
+	    if(pn_mode == pn_first) pn = false;
+	  }
+	  if(i == 1) {
+	    // Turn number-missing back on
+	    if(number_mode == miss_lead) {
+	      opt.flags |= printrow::options::miss_numbers;
+	      pr.set_options(opt);
+	    }
+	    if(placebells >= 0)// Print place bell
+	      pr.placebell(placebells);
+	    if(!(opt.flags & printrow::options::numbers))
+	      pr.dot(-1);
+	  } else if(i == b.size() - 1) {
+	    if(number_mode == miss_lead) {
+	      // Lead head - print the numbers
+	      opt.flags &= ~printrow::options::miss_numbers;
+	      pr.set_options(opt);
+	    }
+	  }
+	  if(number_mode == miss_column && row_count == rows_per_column - 1) {
+	    // Last row of a column - print the numbers
+	    opt.flags &= ~printrow::options::miss_numbers;
 	    pr.set_options(opt);
 	  }
-	  if(placebells >= 0)// Print place bell
-	    pr.placebell(placebells);
-	  if(!(opt.flags & printrow::options::numbers))
-	    pr.dot(-1);
-	} else if(i == b.size() - 1) {
-	  if(number_mode == miss_lead) {
-	  // Lead head - print the numbers
-	  opt.flags &= ~printrow::options::miss_numbers;
-	  pr.set_options(opt);
-	  }
+	  if(pn && (pn_mode == pn_all 
+		    || (!sym || (i <= (m->length()+1)/2) || i == m->length()))) 
+	    pr.text((*m)[i-1].print(), opt.xspace,text_style::right, 
+		    true, false);
+	  pr << b[i];
+	  if(needrule(i)) pr.rule();
+	  total_row_count++;
 	}
-	if(number_mode == miss_column && row_count == rows_per_column - 1) {
-	  // Last row of a column - print the numbers
-	  opt.flags &= ~printrow::options::miss_numbers;
-	  pr.set_options(opt);
+	if(total_row_count < total_rows) { // Next column
+	  pr.move_position(opt.xspace * m->bells(), 0);
+	  pr.move_position(hgap, 0);
 	}
-	if(pn && (pn_mode == pn_all 
-		  || (!sym || (i <= (m->length()+1)/2) || i == m->length()))) 
-	  pr.text((*m)[i-1].print(), opt.xspace,text_style::right, 
-		  true, false);
-	pr << b[i];
-	if(needrule(i)) pr.rule();
-	total_row_count++;
-      }
-      if(total_row_count < total_rows) { // Next column
-	pr.move_position(opt.xspace * m->bells(), 0);
-	pr.move_position(hgap, 0);
       }
     }
   }
@@ -244,6 +251,7 @@ float printmethod::total_height() {
   int columns = divu(total_rows, rows_per_column);
   if(columns_per_set < columns) columns = columns_per_set;
   int columnsets = divu(total_rows, rows_per_column * columns);
+  if(sets_per_page < columnsets) columnsets = sets_per_page;
   return (opt.yspace.in_points() * (rows_per_column + 1) * columnsets)
     + (vgap.in_points() * (columnsets - 1));
 }

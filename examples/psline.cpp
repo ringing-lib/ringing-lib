@@ -68,6 +68,7 @@ struct arguments {
   int rows_per_column;
   int leads_per_column;
   int columns_per_set;
+  int sets_per_page;
   int total_leads;
   int total_rows;
 };
@@ -234,6 +235,8 @@ void setup_args(arg_parser& p)
 		  "NUMBER"));
   p.add(new myopt('k', "columns-across", "Print NUMBER columns across"
 		  " the page", "NUMBER"));
+  p.add(new myopt('d', "columns-down", "Print NUMBER sets of columns down"
+		  " the page", "NUMBER"));
 }
 
 bool myopt::process(const string& arg, const arg_parser& ap) const
@@ -289,6 +292,8 @@ bool myopt::process(const string& arg, const arg_parser& ap) const
     case 'J' :
       args.total_leads = 0;
       return parse_int(arg, args.total_rows);
+    case 'd' :
+      return parse_int(arg, args.sets_per_page);
     case 'k' :
       return parse_int(arg, args.columns_per_set);
     case 'x' :
@@ -483,6 +488,7 @@ int main(int argc, char *argv[])
   args.rows_per_column = 0;
   args.leads_per_column = 0;
   args.columns_per_set = 0;
+  args.sets_per_page = 0;
   args.total_leads = 0;
   args.total_rows = 0;
   args.custom_lines = false;
@@ -597,6 +603,8 @@ int main(int argc, char *argv[])
       pm.rows_per_column = args.rows_per_column;
     if(args.columns_per_set)
       pm.columns_per_set = args.columns_per_set;
+    if(args.sets_per_page)
+      pm.sets_per_page = args.sets_per_page;
     pm.number_mode = args.number_mode;
 
     // Position the output correctly

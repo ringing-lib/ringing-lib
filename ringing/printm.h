@@ -40,6 +40,7 @@ public:
   int total_rows;
   int rows_per_column;
   int columns_per_set;
+  int sets_per_page;
   dimension xoffset, yoffset;
   list<pair<int,int> > rules;
 
