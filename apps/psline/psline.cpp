@@ -244,7 +244,7 @@ void setup_args(arg_parser& p)
   p.add(new myopt('h', "hgap", "Set the horizontal gap between successive"
 		  " columns to DIMENSION", "DIMENSION"));
   p.add(new myopt('v', "vgap", "Set the vertical gap between successive"
-		  " sets of columns to DIMENSION"));
+		  " sets of columns to DIMENSION", "DIMENSION"));
   p.add(new myopt('i', "leads-per-column", "Print NUMBER leads per column",
 		  "NUMBER"));
   p.add(new myopt('I', "rows-per-column", "Print NUMBER rows per column",
