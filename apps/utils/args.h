@@ -194,6 +194,25 @@ private:
   bool fn_has_ap;
 };
 
+// A range in one of the following forms:
+//
+//   "M-N"   opt.first = M, opt.second = N
+//   "-N"    opt.first = 0, opt.second = N
+//   "M-"    opt.first = M, opt.second = size_t(-1)
+//   "N"     opt.first = M, opt.second = N
+// 
+class range_opt : public option {
+public:
+  // Use these constructor if the argument is not optional
+  range_opt( char c, const string& l, const string& d, const string& a,
+	     pair<size_t, size_t>& opt );
+
+private:
+  // Sets opt to the given argument.
+  virtual bool process( const string&, const arg_parser& ) const;
+  pair<size_t, size_t>& opt;
+};
+
 class help_opt : public option {
 public:
   // Default uses  -?, --help   'Print this help message'

@@ -1,6 +1,6 @@
 // -*- C++ -*- args.cpp - argument-parsing things
-// Copyright (C) 2001, 2002, 2003 Martin Bright <martin@boojum.org.uk> and
-// Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2001, 2002, 2003, 2004 Martin Bright <martin@boojum.org.uk>
+// and Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -15,6 +15,17 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+// Parts of this file are taken from the boost lexical_cast library [see
+// http://www.boost.org for details], and are under the following copyright:
+
+//  Copyright Kevlin Henney, 2000, 2001, 2002. All rights reserved.
+//
+//  Permission to use, copy, modify, and distribute this software for any
+//  purpose is hereby granted without fee, provided that this copyright and
+//  permissions notice appear in all copies and derivatives.
+//
+//  This software is provided "as is" without express or implied warranty.
 
 // $Id$
 
@@ -36,6 +47,46 @@
 
 RINGING_USING_NAMESPACE
 RINGING_USING_STD
+
+// ---------------------------------------------------------------------
+//
+// Lexical cast stuff.  Should this be moved to streamutils.h?
+//
+RINGING_START_ANON_NAMESPACE
+
+// exception used to indicate runtime lexical_cast failure
+class bad_lexical_cast : public bad_cast
+{
+public:
+  virtual const char* what() const throw()
+  {
+    return "bad cast: "
+      "source type value could not be interpreted as target";
+  }
+};
+
+// Last function argument is to make MSVC happy.
+// This is important as omitting it does not give a compile time error
+template<typename Target, typename Source>
+Target lexical_cast(Source arg, Target* = 0)
+{
+#if RINGING_USE_STRINGSTREAM
+  stringstream interpreter;
+#else
+  strstream interpreter; // for out-of-the-box g++ 2.95.2
+# endif
+  Target result;
+  
+  if(!(interpreter << arg) || !(interpreter >> result) ||
+     !(interpreter >> ws).eof())
+    throw bad_lexical_cast();
+  
+  return result;
+}
+
+RINGING_END_ANON_NAMESPACE
+
+// ---------------------------------------------------------------------
 
 bool option::process(const string& a, const arg_parser& ap) const {
   ap.error( "Unprocessed argument.  This is a bug in the program." );
@@ -312,17 +363,11 @@ bool integer_opt::process( const string &arg, const arg_parser &ap ) const
 {
   if ( (flags & opt_arg) && arg.empty() )
     opt = default_val;
-  else {
-#if RINGING_USE_STRINGSTREAM
-    istringstream is(arg);
-#else
-    istrstream is(arg.c_str());
-#endif
-    is >> opt;
-    if(!is || is.get() != EOF) {
-      ap.error( make_string() << "Invalid integer argument: \"" << arg << "\"" );
-      return false;
-    }
+  else try {
+    opt = lexical_cast<int>(arg);
+  } catch ( bad_lexical_cast const& ) {
+    ap.error( make_string() << "Invalid integer argument: \"" << arg << "\"" );
+    return false;
   }
   return true;
 }
@@ -377,6 +422,45 @@ bool delegate_opt::process( const string &arg, const arg_parser &ap ) const
   else
     (*fn2)( arg, ap );
   return true;
+}
+
+range_opt::range_opt( char c, const string& l, const string& d, 
+		      const string& a, pair<size_t, size_t>& opt ) 
+  : option(c, l, d, a), opt(opt)
+{}
+
+bool range_opt::process( const string &arg, const arg_parser& ap ) const
+{
+  try
+    {
+      string::size_type pos( arg.find('-') );
+      if ( pos == string::npos ) {
+	opt.first = opt.second = lexical_cast<size_t>(arg);
+	return true;
+      }
+
+      if ( pos != 0u )
+	opt.first = lexical_cast<size_t>( arg.substr(0, pos) );
+      else
+	opt.first = 0;
+ 
+      if ( pos != arg.size() - 1 )
+	opt.second = lexical_cast<size_t>( arg.substr(pos + 1) );
+      else
+	opt.second = static_cast<size_t>(-1);
+
+      if ( opt.second < opt.first ) {
+	ap.error( "Negative length range" );
+	return false;
+      }
+
+      return true;
+    }
+  catch ( bad_lexical_cast const& ) 
+    {
+      ap.error( make_string() << "Invalid range argument: \"" << arg << "\"" );
+      return false;
+    }
 }
 
 help_opt::help_opt()
