@@ -18,18 +18,17 @@
 // $Id$
 
 #include <ringing/common.h>
+#include <ringing/streamutils.h>
 #include "test-base.h"
 #include <string>
 #if RINGING_OLD_INCLUDES
 #include <typeinfo.h>
 #include <iostream.h>
-#include <sstream.h>
 #include <vector.h>
 #include <utility.h>
 #else
 #include <typeinfo>
 #include <iostream>
-#include <sstream>
 #include <vector>
 #include <utility>
 #endif
@@ -41,21 +40,6 @@ RINGING_USING_STD
 
 RINGING_START_NAMESPACE_TEST
 
-RINGING_START_ANON_NAMESPACE
-
-class make_string
-{
-public:
-  template <class T> 
-  make_string &operator<<( const T &val )
-  { os << val; return *this; } 
-
-  operator string() const { return os.str(); }
-private:
-  ostringstream os;
-};
-
-RINGING_END_ANON_NAMESPACE
 
 ostream &operator<<( ostream &os, const location &loc )
 {
@@ -95,9 +79,11 @@ class test_engine
 {
 private:
   test_engine() {}
+public:
+  // MSVC <= 6 and EGCS compilers need a public destructor in 
+  // a singleton class.
  ~test_engine() {}
 
-public:
   static test_engine &instance() 
   {
     static test_engine tmp;
@@ -112,7 +98,7 @@ RINGING_END_ANON_NAMESPACE
 
 void register_test( const char *str, void (*test)(void) ) 
 {
-  test_engine::instance().tests.push_back( make_pair( str, test ) ); 
+  test_engine::instance().tests.push_back( pair<string, void (*)()>( str, test ) ); 
 }
 
 bool run_tests( bool verbose )

@@ -18,12 +18,8 @@
 // $Id$
 
 #include <ringing/row.h>
+#include <ringing/streamutils.h>
 #include "test-base.h"
-#if RINGING_OLD_INCLUDES
-#include <sstream.h>
-#else
-#include <sstream>
-#endif
 
 RINGING_START_NAMESPACE
 
@@ -62,9 +58,8 @@ void test_bell_to_char(void)
 
 void test_bell_output(void)
 {
-  ostringstream os;
-  os << bell(5) << bell(12) << bell(bell::MAX_BELLS); 
-  RINGING_TEST( os.str() == "6A*" );
+  string s = make_string() << bell(5) << bell(12) << bell(bell::MAX_BELLS); 
+  RINGING_TEST( s == "6A*" );
 }
 
 // ---------------------------------------------------------------------
@@ -266,13 +261,12 @@ void test_change_comparison(void)
 
 void test_change_output(void)
 {
-  ostringstream os;
-  os << change( 6, "-" ) << '.' 
-     << change( 6, "3" ) << '.' 
-     << change( 6, "-" ) << '.' 
-     << change( 6, "4" );
+  string s = make_string() << change( 6, "-" ) << '.' 
+			   << change( 6, "3" ) << '.' 
+			   << change( 6, "-" ) << '.' 
+			   << change( 6, "4" );
 
-  RINGING_TEST( os.str() == "X.36.X.14" );
+  RINGING_TEST( s == "X.36.X.14" );
 }
 
 void test_change_many_bells(void)
@@ -328,51 +322,55 @@ void test_change_multiply_bell(void)
 // ---------------------------------------------------------------------
 // Tests for the interpret_pn function
 
+string get_pn_string( const vector<change> &ch )
+{
+  make_string ms;
+  for ( vector<change>::const_iterator i( ch.begin() ), e( ch.end() );
+	i != e;  ++i )
+    ms << *i << ".";
+  return ms;
+}
+
 void test_interpret_pn(void)
 {
   vector<change> ch;
-  ostringstream os;
 
   {
     string pn( "-3-4" );
     interpret_pn( 6, pn.begin(), pn.end(), back_inserter(ch) );
     
     RINGING_TEST( ch.size() == 4 );
-    copy( ch.begin(), ch.end(), ostream_iterator<change>( os, "." ) );
-    RINGING_TEST( os.str() == "X.36.X.14." );
+    RINGING_TEST( get_pn_string(ch) == "X.36.X.14." );
   }
 
-  ch.clear(); os.str(""); os.clear();
+  ch.clear();
     
   {
     string pn( "XX--.-.X" );
     interpret_pn( 6, pn.begin(), pn.end(), back_inserter(ch) );
     
     RINGING_TEST( ch.size() == 6 );
-    copy( ch.begin(), ch.end(), ostream_iterator<change>( os, "." ) );
-    RINGING_TEST( os.str() == "X.X.X.X.X.X." );
+    RINGING_TEST( get_pn_string(ch) == "X.X.X.X.X.X." );
   }
 
-  ch.clear(); os.str(""); os.clear();
+  ch.clear();
     
   {
     string pn( "&3-36.4,2" );
     interpret_pn( 6, pn.begin(), pn.end(), back_inserter(ch) );
 
     RINGING_TEST( ch.size() == 8 );
-    copy( ch.begin(), ch.end(), ostream_iterator<change>( os, "." ) );
-    RINGING_TEST( os.str() == "36.X.36.14.36.X.36.12." );
+    RINGING_TEST( get_pn_string(ch) == "36.X.36.14.36.X.36.12." );
   }
 
-  ch.clear(); os.str(""); os.clear();
+  ch.clear();
   
   {
     string pn( "3 , & 1 . 5 . 1 . 5 . 1" );
     interpret_pn( 5, pn.begin(), pn.end(), back_inserter(ch) );
 
     RINGING_TEST( ch.size() == 10 );
-    copy( ch.begin(), ch.end(), ostream_iterator<change>( os, "." ) );
-    RINGING_TEST( os.str() == "3.1.5.1.5.1.5.1.5.1." );
+    RINGING_TEST( get_pn_string(ch) == "3.1.5.1.5.1.5.1.5.1." );
   }
 }
 

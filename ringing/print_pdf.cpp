@@ -35,11 +35,10 @@
 #include <ringing/common.h>
 #if RINGING_OLD_INCLUDES
 #include <iomanip.h>
-#include <strstream.h>
 #else
 #include <iomanip>
-#include <strstream>
 #endif
+#include <ringing/streamutils.h>
 #include <ringing/print_pdf.h>
 
 RINGING_START_NAMESPACE
@@ -157,11 +156,8 @@ const string& pdf_file::get_font(const string& f)
 {
   map<string, string>::const_iterator i;
   if((i = fonts.find(f)) == fonts.end()) {
-    ostrstream oss;
-    oss << 'F' << ++font_counter;
     i = fonts.insert(pair<string, string>
-		     (f, string(oss.str(), oss.pcount()))).first;
-    oss.freeze(0);
+		     (f, make_string() << 'F' << ++font_counter)).first;
   }
   return (*i).second;
 }
@@ -453,9 +449,8 @@ void printrow_pdf::placebell(int i)
     tb.y = (count - 1) * opt.yspace.in_points();
     tb.al = text_style::centre;
     tb.squash = (j >= 10);
-    ostrstream oss; oss << j+1; tb.s = string(oss.str(), oss.pcount());
+    tb.s = make_string() << j+1;
     text_bits.push_back(tb);
-    oss.freeze(0);
   }
 }
 

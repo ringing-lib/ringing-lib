@@ -18,12 +18,8 @@
 // $Id$
 
 #include <ringing/row.h>
+#include <ringing/streamutils.h>
 #include "test-base.h"
-#if RINGING_OLD_INCLUDES
-#include <sstream.h>
-#else
-#include <sstream>
-#endif
 
 RINGING_START_NAMESPACE
 
@@ -173,9 +169,8 @@ void test_row_print(void)
   RINGING_TEST( row(          ).print() == ""       );
   RINGING_TEST( row( "123456" ).print() == "123456" );
 
-  ostringstream os;
-  os << row( "1536472" );
-  RINGING_TEST( os.str() == "1536472" );
+  string s = make_string() << row("1536472");
+  RINGING_TEST( s == "1536472" );
 }
 
 void test_row_bells(void)
