@@ -1,4 +1,6 @@
 \input texinfo @c -*-texinfo-*-
+@c Ringing Class Library manual
+@c $Id$
 @c %**start of header
 @setfilename ringing-lib.info
 @settitle The Ringing Class Library
@@ -279,7 +281,7 @@ class bell;
 @node bell Constructors, bell Operators, bell Derivation, The bell Class
 @subsection Constructors
 
-@deftypefn Constructor {} bell::bell ();
+@deftypefn Constructor {} bell::bell (void);
 This constructor initialises the bell object to zero (0).
 @end deftypefn
 
@@ -296,7 +298,7 @@ This assigns the integer value @var{i} to the bell object, where bells
 are numbered starting from 0.
 @end deftypefn
 
-@deftypefn Operator int {bell::operator int} ();
+@deftypefn Operator int {bell::operator int} (void);
 This casts a bell object to the corresponding integer.
 @end deftypefn
 
@@ -315,7 +317,7 @@ that value to the bell object.  See the next function for the mapping
 between characters and bells.
 @end deftypefun
 
-@deftypefun char bell::to_char () const;
+@deftypefun char bell::to_char (void) const;
 This function returns a character indicating the bell represented by the
 object.  The characters used are, in order:
 @example
@@ -350,7 +352,7 @@ class row;
 @node row Constructors, row Operators, row Derivation, The row Class
 @subsection Constructors
 
-@deftypefn Constructor {} row::row ();
+@deftypefn Constructor {} row::row (void);
 This constructs an empty row.
 @end deftypefn
 
@@ -511,7 +513,7 @@ class change;
 @node change Constructors, change Operators, change Derivation, The change Class
 @subsection Constructors
 
-@deftypefn Constructor {} change::change ();
+@deftypefn Constructor {} change::change (void);
 This constructs an empty change.
 @end deftypefn
 
@@ -694,19 +696,19 @@ This returns the @code{vector<change>} object on which the row block is based.
 @end deftypefun
 @end iftex
 
-
 @node Methods, Proof, Rows and Changes, Top
 @chapter Method classes
+@cindex method
 
 The Ringing Class Library provides many useful functions for dealing with
-methods, findinf information about them and classifying them.
+methods, finding information about them and classifying them.
 
-A @dfn{method} is a set of changes.  Every method consists of one block
-which is repeated over and over again; this is called a @dfn{lead}.  If,
-at the end of one lead, every bell is in a different position, then the
-method is called a @dfn{principle} and the leads are called @dfn{divisions}.
-Any bells is a method which end up in the same place at the end of a lead
-are called @dfn{hunt bells}.
+A @dfn{method} consists of one block of changes which is repeated over
+and over again; this is called a @dfn{lead}.  If, at the end of one
+lead, every bell is in a different position, then the method is called a
+@dfn{principle} and the leads are called @dfn{divisions}.  Any bells is
+a method which end up in the same place at the end of a lead are called
+@dfn{hunt bells}.
 
 The Ringing Class Library defines an object @code{method} which is
 simply a block of changes (it is derived from @code{vector<change>}) and
@@ -714,10 +716,192 @@ which provides a large range of member functions.  Many of these are
 used for finding out things about the method, such as the number of
 leads in the plain course, the type of method, the full name and so on.
 
+@menu
+* The method Class::            
+@end menu
+
+@node The method Class,  , Methods, Methods
+@section The @code{method} class
+@cindex @code{method} class
+
+The @code{method} class represents a method by storing the changes which
+make up one lead of the method.
+
+A method may have a name, which is a string variable.  This name is the
+@dfn{base name} of the method, that is, it is the name without any extra
+bits such as `Surprise' or `Triples'.  For example, the base name of
+Plain Bob Major is simply `Plain'.  The parts of the name other than the
+base can be worked out by the Ringing Class Library.
+
+@menu
+* method Derivation::           
+* method Constructors::         
+* Other method Functions::      
+* method static Functions::     
+* method static Variables::     
+@end menu
+
+@node method Derivation, method Constructors, The method Class, The method Class
+@subsection Derivation
+
+The @code{method} class is derived from @code{vector<change>}:
+@example
+class method : public vector<change>
+@end example
+
+@node method Constructors, Other method Functions, method Derivation, The method Class
+@subsection Constructors
+
+@deftypefn Constructor {} method::method (int @var{length}, int @var{bells}, char* @var{name} = "Untitled");
+This constructor creates an empty method on @var{bells} bells, with
+@var{length} changes in the lead, and with name @var{name}.
+@end deftypefn
+
+@deftypefn Constructor {} method::method (const char* @var{pn}, int @var{bells}, char* @var{name} = "Untitled");
+This constructor creates a method on @var{bells} bells from the given
+place notation, which should be an entire lead.  As is standard when
+giving place notation, a change in which all bells swap may be given by
+either @samp{'X'} or @samp{'-'}.  Other changes should be separated by a
+full stop (@samp{'.'}).  External places (leading and lying) may be left
+out whenever reasonable.  The method is given the name @var{name}.
+@end deftypefn
+
+@deftypefn Constructor {} method::method (const method& @var{m});
+This is the copy constructor.
+@end deftypefn
+
+@node Other method Functions, method static Functions, method Constructors, The method Class
+@subsection Other functions
+
+@deftypefun {const char*} method::name (void);
+This returns the base name of the method.
+@end deftypefun
+
+@deftypefun void method::name (const char* @var{name});
+This sets the base name of the method to @var{name}.
+@end deftypefun
+
+@deftypefun int method::bells (void);
+This returns the number of bells on which the method is defined.
+@end deftypefun
+
+@deftypefun int method::length (void);
+This returns the number of changes in a lead of the method.
+@end deftypefun
+
+@deftypefun row method::lh (void);
+This returns the first lead head of the method.
+@end deftypefun
+
+@deftypefun int method::issym (void);
+This returns 1 if the method is symmetrical about the half lead (and has
+an even number of changes in the lead), or 0 otherwise.
+@end deftypefun
+
+@deftypefun int method::isdouble (void);
+This returns 1 if the method is double, or 0 otherwise.  Note that double
+does not imply symmetrical.
+@end deftypefun
+
+@deftypefun int method::isregular (void);
+This returns 1 if the method is regular (that is, has Plain Bob lead 
+heads), or 0 otherwise.
+@end deftypefun
+
+@deftypefun int method::huntbells (void);
+This returns the number of hunt bells in the method.
+@end deftypefun
+
+@deftypefun int method::leads (void);
+This returns the number of leads in the plain course of the method.
+@end deftypefun
+
+@deftypefun char* method::lhcode (void);
+This returns the standard code for the lead end and lead head of the
+method.  The result is stored in a static internal buffer.
+@end deftypefun
+
+@deftypefun int method::issym (bell @var{b});
+This returns 1 if the path of bell @var{b} in a lead of the method is
+symmetrical about the half lead, or 0 otherwise.
+@end deftypefun
+
+@deftypefun int method::isplain (bell @var{b} = 0);
+This returns 1 if bell @var{b} plain hunts for the whole lead of the
+method, or 0 otherwise.
+@end deftypefun
+
+@deftypefun int method::hasdodges (bell @var{b});
+This returns 1 if bell @var{b} dodges during the lead, or 0 otherwise.
+@end deftypefun
+
+@deftypefun int method::hasplaces (bell @var{b});
+This returns 1 if bell @var{b} makes any internal places during the lead,
+or 0 otherwise.
+@end deftypefun
+
+@deftypefun int method::methclass (void);
+This function returns an integer which depends on the class of the
+method.  The following values are defined:
+@example
+enum method::m_class {
+  M_UNKNOWN, M_PRINCIPLE, M_BOB, M_PLACE, M_TREBLE_BOB, M_SURPRISE, 
+  M_DELIGHT, M_TREBLE_PLACE, M_ALLIANCE, M_HYBRID, M_SLOW_COURSE,
+  M_MASK = 0x0f,
+  M_DOUBLE = 0x40,
+  M_LITTLE = 0x80
+};
+@end example
+The @code{M_DOUBLE} and @code{M_LITTLE} bits are flags which will be either
+set or cleared accordingly.
+@end deftypefun
+
+@deftypefun char* method::fullname (char* @var{buffer});
+This function places the full name of the method in @var{buffer}, which
+should be long enough to receive it, and returns a pointer to it.  The
+full name consists of:
+@itemize @bullet
+@item
+the base name of the method;
+@item
+the word ``Little'', if appropriate;
+@item
+the class of the method, or none if it is a principle;
+@item
+the stage (number of bells) of the method.
+@end itemize
+@end deftypefun
+
+@node method static Functions, method static Variables, Other method Functions, The method Class
+@subsection @code{static} functions
+
+@deftypefun {static const char*} method::stagename (int @var{bells});
+This function returns a pointer to a string describing the stage of 
+@var{bells} bells:  thus @code{"Minimus"}, @code{"Doubles"}, and so on.
+For stages above Sixteen, the number is given in digits.
+@end deftypefun
+
+@deftypefun {static const char*} method::classname (int @var{class});
+This function returns a pointer to a string describing the method class
+given in @var{class}, which should be as indicated in the explanation
+of @code{method::methclass()} above.
+@end deftypefun
+
+@node method static Variables,  , method static Functions, The method Class
+@subsection @code{static} variables
+
+@deftypevar {static const char*} method::txt_double;
+This points to the string @code{"Double"}.
+@end deftypevar
+
+@deftypevar {static const char*} method::txt_little;
+This points to the string @code{"Little"}.
+@end deftypevar
+
 @node Proof, Musical Analysis, Methods, Top
 @chapter Method and Touch Proving
 @cindex proving rows
-@cindex proof class
+@cindex @code{proof} class
 
 The proof class provides a simple way of checking that a block of rows
 are true.  It provides functions for finding out where a particular block
@@ -758,7 +942,7 @@ template <class RowIterator> class proof;
 @node proof Constructors, proof Functions, proof Derivation, Proof
 @subsection Constructors
 
-@deftypefn Constructor {} proof::proof ();
+@deftypefn Constructor {} proof::proof (void);
 Default Constructor. Sets trueness to false. Use the prove function to provide the rows to prove.
 @end deftypefn
 
@@ -782,12 +966,12 @@ This checks for repeated rows from first to last. Expects up to @var{max} extent
 @end deftypefn
 
 @ifinfo
-@deftypefn Function {const failinfo&} proof::failed () const;
+@deftypefn Function {const failinfo&} proof::failed (void) const;
 This function simply returns the data detailing where the touch has failed. (*note Falseness Storage::).
 @end deftypefn
 @end ifinfo
 @iftex
-@deftypefn Function {const failinfo@&} proof::failed () const;
+@deftypefn Function {const failinfo@&} proof::failed (void) const;
 This function simply returns the data detailing where the touch has failed.
 @end deftypefn
 @end iftex
@@ -795,11 +979,11 @@ This function simply returns the data detailing where the touch has failed.
 @node proof Operators, Falseness Storage, proof Functions, Proof
 @subsection Operators
 
-@deftypefn Operator operator proof::int () const;
+@deftypefn Operator operator proof::int (void) const;
 This returns true (or 1) if the touch is true.
 @end deftypefn
 
-@deftypefn Operator int proof::operator! () const;
+@deftypefn Operator int proof::operator! (void) const;
 This returns true (or 1) if the touch is not true.
 @end deftypefn
 
@@ -884,7 +1068,7 @@ template <class RowIterator> class music;
 @node music Constructors, music Functions, music Derivation, Musical Analysis
 @subsection Constructors
 
-@deftypefn Constructor {} music::music ();
+@deftypefn Constructor {} music::music (void);
 Default Constructor. Resets all the music variables to zero.
 @end deftypefn
 
