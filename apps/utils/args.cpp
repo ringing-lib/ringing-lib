@@ -348,6 +348,17 @@ bool string_opt::process( const string &arg, const arg_parser & ) const
   return true;
 }
 
+strings_opt::strings_opt( char c, const string& l, const string& d, 
+			  const string& a, vector<string>& opt ) 
+  : option(c, l, d, a), opt(opt)
+{}
+
+bool strings_opt::process( const string &arg, const arg_parser & ) const
+{
+  opt.push_back(arg);
+  return true;
+}
+
 delegate_opt::delegate_opt( char c, const string& l, const string& d, 
 			    const string& a, void (*fn)(const string&) )
   : option(c, l, d, a), fn1(fn), fn_has_ap(false)
@@ -387,7 +398,8 @@ version_opt::version_opt()
 
 bool version_opt::process( const string &, const arg_parser &ap ) const
 {
-  ap.help();
+  cout << "psline is from the Ringing Class Library version "
+    RINGING_VERSION ".\n";
   exit(0);
   return true; // To keep MSVC 5 happy
 }

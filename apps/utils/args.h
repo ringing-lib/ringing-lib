@@ -25,9 +25,11 @@
 #if RINGING_OLD_INCLUDES
 #include <map.h>
 #include <list.h>
+#include <vector.h>
 #else
 #include <map>
 #include <list>
+#include <vector>
 #endif
 #include <string>
 #include "init_val.h"
@@ -158,6 +160,18 @@ private:
   // Sets opt to the given argument.
   virtual bool process( const string&, const arg_parser& ) const;
   string &opt, default_val;
+};
+
+class strings_opt : public option {
+public:
+  // Use these constructor if the argument is not optional
+  strings_opt( char c, const string& l, const string& d, const string& a,
+	       vector<string>& opt );
+
+private:
+  // Sets opt to the given argument.
+  virtual bool process( const string&, const arg_parser& ) const;
+  vector<string>& opt;
 };
 
 class delegate_opt : public option {
