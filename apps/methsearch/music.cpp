@@ -204,7 +204,7 @@ musical_analysis::analyser::analyser( int bells )
 	  string pattern( *i );
 	  if ( pattern.size() > 2 && isdigit( pattern[0] ) )
 	    {
-	      for ( int j = 0; j < pattern.size(); ++j )
+	      for ( unsigned int j = 0; j < pattern.size(); ++j )
 		if ( pattern[j] == ':' )
 		  {
 		    score = atoi( pattern.c_str() );
