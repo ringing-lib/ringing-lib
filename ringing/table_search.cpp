@@ -88,7 +88,8 @@ private:
 
   void init_falseness( const method &meth )
   {
-    falseness_table ft( meth );
+    falseness_table ft( meth, meth.lh()[0] == 0 ? 0 
+			: falseness_table::no_fixed_treble );
     
     for ( falseness_table::const_iterator i( ft.begin() ); i != ft.end(); ++i )
       {
