@@ -59,6 +59,14 @@ public:
   explicit multtab_row_t( int number_of_bells = 0 ) : n(0u) {}
   bool isrounds() const { return n == 0; }
   size_t index() const { return n; }
+
+  static multtab_row_t from_index( size_t idx ) { 
+    multtab_row_t r;  r.n = idx;  return r;
+  }
+
+  bool operator==( multtab_row_t const& o ) const { return n == o.n; }
+  bool operator!=( multtab_row_t const& o ) const { return n != o.n; }
+
   
   friend class multtab;
   friend class multtab_row_iterator;
