@@ -24,6 +24,7 @@
 #include <ringing/common.h>
 #include <ringing/music.h>
 #include <ctype.h>
+#include <stdio.h>
 
 RINGING_START_NAMESPACE
 
@@ -494,7 +495,7 @@ void music_node::add(const music_details &md, const unsigned int &i, const unsig
 		      // First ignore the star and just move on.
 		      add(md, i + 1, key, pos);
 		      // Now deal with the star
-		      if (md.size() - i - 1 >= pos)
+		      if (md.size() - i >= pos)
 			add_to_subtree(0, md, i, key, pos, true);
 		      else
 			add_to_subtree(0, md, i, key, pos, false);
