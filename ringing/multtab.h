@@ -82,7 +82,7 @@ class RINGING_API multtab_row_iterator
   const multtab_row_t &operator*() const  { return r; }
   const multtab_row_t *operator->() const { return &r; }
   
-  multtab_row_iterator &operator++() { ++r.n; }
+  multtab_row_iterator &operator++() { ++r.n; return *this; }
   multtab_row_iterator operator++(int) 
     { multtab_row_iterator tmp(*this); ++*this; return tmp; }  
   bool operator==( const multtab_row_iterator &other ) const
