@@ -303,7 +303,7 @@ my %actions = (
    {
        my ($vptr, $val, $path) = @_;
        my @files = split /[ \t]+/, $val;
-       for (0..$#files) { $files[$_] = $path."/".$files[$_]; }
+       @files = map { $path."/".$_ } @files;
        safe_push $vptr, SOURCES, @files;
    },
 
@@ -316,7 +316,6 @@ my %actions = (
 	   if (/^\-I/) 
 	   {
 	       s!^-I(.*)$!/I "$1"!;
-	       s/\$\(top_srcdir\)/\./;
 	       safe_push $vptr, INCLUDES, $_;
 	   }
        }
@@ -328,7 +327,7 @@ my %actions = (
 
        for (split /[ \t]_+/, $val)
        {
-	   if (/\$\(top_builddir\)\/.*\/(?:lib)?(.*)\.(l?)a/)
+	   if (/\.\/.*\/(?:lib)?(.*)\.(l?)a/)
 	   {
 	       safe_push $vptr, LIBDEPS, $1;
 	       # As soon as we dynamically link against anything, it is 
@@ -359,15 +358,28 @@ sub process_makefile($)
 
     open FILE, "<$path/Makefile.am" or return;
 
-    my (%file_globals, @file_progs);
+    my (%file_globals, @file_progs, @if_stack);
+
+    # Predefined variables
+    my %vars = (
+      top_builddir => ".",
+      top_srcdir   => ".",
+    );
 
     while (<FILE>)
     {
 	chomp; s/\#.*$//; 
 	while (/\\$/) { s/\\$//; $_ .= <FILE>; chomp; s/\#.*$//; }
 
+	# Do variable subsitution
+	s/ \$\( ([a-zA-Z\-\_0-9]+) \) / $vars{$1} /xeg;
+
+	# Is it a variable assignment
 	if (/^\s*([A-Za-z0-9_-]+)\s*=\s*(.*)$/)
 	{
+	    # Are we conditionally compiled out?
+	    next if scalar(@if_stack) and !$if_stack[$#if_stack];
+
 	    my ($var, $val) = ($1, $2);
 
 	    if ($var eq "SUBDIRS")
@@ -403,7 +415,7 @@ sub process_makefile($)
 		        = {type => $tp, name => $name};
 		}
 	    }
-	    else
+	    elsif ( grep { $var =~ /$_$/ } keys %actions )
 	    {
 		for $act (keys %actions)
 		{
@@ -420,11 +432,30 @@ sub process_makefile($)
 		    }
 		}
 	    }
+
+	    $vars{$var} = $val;
+	}
+	elsif ( /^\s*if\s+(\!?)\s*([A-Za-z0-9_-]+)\s*$/ )
+	{
+	    # TODO.  Properly handle other conditionals
+	    my ($negate, $cond) = ($1, $2);
+	    my $bool_val = ( $cond eq "USING_MSVC" );
+	    $bool_val = !$bool_val if $negate eq '!';
+	    push @if_stack, $bool_val;
+	}
+	elsif ( /^\s*else/ )
+	{
+	    push @if_stack, ! pop @if_stack;
+	}
+	elsif ( /^\s*endif/ )
+	{
+	    pop @if_stack;
 	}
     }
 
     close FILE;
 
+    # Apply globals to each target
     for my $p (@file_progs)
     {
 	for my $act (keys %actions)
