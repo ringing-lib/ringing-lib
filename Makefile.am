@@ -15,6 +15,17 @@ dist-hook:
 	done
 	cd $(distdir) && ./mkdsp 
 
+dist-zip: distdir
+	chmod -R a+r $(distdir)
+	zip -lr $(distdir).zip $(distdir)
+	-rm -rf $(distdir)
+
+dist-all: distdir
+	chmod -R a+r $(distdir)
+	GZIP=$(GZIP_ENV) $(TAR) chozf $(distdir).tar.gz $(distdir)
+	zip -lr $(distdir).zip $(distdir)
+	-rm -rf $(distdir)
+
 docdir = $(top_builddir)/doc
 html:
 	@echo Making $@ in $(docdir)
