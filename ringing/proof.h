@@ -123,7 +123,8 @@ public:
   int operator!() const;
 
   // Output to the ostream about true/falseness
-  friend ostream& operator<< <>(ostream& o, const proof<RowIterator>& p);
+  friend ostream& operator<< <RowIterator> (ostream& o, 
+					    const proof<RowIterator>& p);
 private:
   void resetfailinfo();
   bool istrue;                    // Well, is it true or not?
