@@ -83,6 +83,7 @@ versions.
 * Proof::                       
 * Musical Analysis::            
 * Method classification::       
+* Producing printed output::    
 * Copying this manual::         
 * Index::                       
 @end menu
@@ -1323,13 +1324,299 @@ Number of 246s or 468s etc at backstroke 9 = Number of 65s or 87s at backstroke
 @end deftypefn
 @end iftex
 
-@node Method classification, Copying this manual, Musical Analysis, Top
+@node Method classification, Producing printed output, Musical Analysis, Top
 @chapter Classification of methods
 
 Methods are classified according to section E, subsections B and C, of
 the Central Council's Decisions.
 
-@node Copying this manual, Index, Method classification, Top
+@node Producing printed output, Copying this manual, Method classification, Top
+@chapter Producing printed output
+@cindex printing
+
+The Ringing Class Library provides a flexible mechanism for producing
+printed output of rows, methods and lines.  The way this mechanism is
+designed means that the low-level details of printing are hidden from
+the programmer.  Currently the classes in the library only support
+output in PostScript format, but the modularity of the printing system
+makes it easy to extend the library to provide other output formats.
+
+Printing is provided in two classes:  the @code{printpage} class and the
+@code{printrow} class.  The first of these deals with placing text and
+other objects directly on the page; the second allows for formatted
+output of rows and lines.  These classes are both polymorphic classes,
+which are specialised by subclasses to allow for different output
+formats.
+
+@menu
+* The dimension class::         
+* The text_style class::        
+* The printpage class::         
+* The printrow class::          
+@end menu
+
+@node The dimension class, The text_style class, Producing printed output, Producing printed output
+@section The @code{dimension} class
+
+The @code{dimension} class is used extensively by the printing classes
+to specify physical dimensions on the page.  The class has three public
+data members and one public enumerated type:
+
+@example
+class dimension @{
+public:
+  enum units @{
+    points, inches, cm, mm
+  @};
+
+  int n, d;
+  units u;
+@}
+@end example
+
+The integers @code{n} and @code{d} hold the numerator and denominator
+respectively of the dimension.  The member @code{u} defines which units
+the dimension is given in.  For example, a @code{dimension} object
+representing three quarters of an inch would have @code{n} equal to 3,
+@code{d} equal to 4, and @code{u} equal to @code{dimension::inches}.
+
+The @code{dimension} class has several member functions.
+
+@deftypefn Constructor {} dimension::dimension (void);
+This constructs a dimension equal to 0.
+@end deftypefn
+
+@deftypefn Constructor {} dimension::dimension (int @var{i});
+This constructs a dimension equal to @var{i} points.
+@end deftypefn
+
+@deftypefn Constructor {} dimension::dimension (int @var{i}, int @var{j}, dimension::units @var{u});
+This constructs a dimension equal to the fraction @var{i}/@var{j} in
+units @var{u}.
+@end deftypefn
+
+@deftypefn Operator dimension& dimension::operator*= (int @var{i})
+@deftypefnx Operator dimension dimension::operator* (int @var{i})
+These operators multiply the dimension by the integer @var{i}.
+@end deftypefn
+
+@deftypefn Operator bool dimension::operator== (int @var{i});
+@deftypefnx Operator bool dimension::operator!= (int @var{i});
+These operators are only useful for comparing a dimension to 0.
+@end deftypefn
+
+@deftypefun void dimension::reduce (void);
+This function reduces the fraction @code{n}/@code{d} to lowest terms.
+@end deftypefun
+
+@deftypefun float dimension::in_points (void);
+This returns a floating point numbers representing the dimension in
+points.
+@end deftypefun
+
+@deftypefun void dimension::read (const string& @var{s});
+@deftypefunx void dimension::read (const char* @var{s});
+These functions read a dimension from a string.  The string should contain
+following parts:
+@itemize @bullet
+@item An optional minus sign;
+
+@item a number, in either decimal format or as a fraction;
+
+@item the units.
+@end itemize
+
+For example, the following strings would all be recognised: @samp{0.4 cm};
+@samp{1 1/2"}, @samp{56 pt}.  The allowed unit names are @samp{pt}, 
+@samp{points}, @samp{point}, @samp{in}, @samp{inch}, @samp{inches},
+@samp{"}, @samp{cm}, @samp{mm}.
+@end deftypefun
+
+@deftypefun string& dimension::write (string& @var{s});
+This function writes the dimension to the string @var{s}.
+@end deftypefun
+
+@node The text_style class, The printpage class, The dimension class, Producing printed output
+@section The @code{text_style} class
+
+The @code{text_style} class is a structure which represents a text style.
+At the moment, this means that it contains a font name and a size.  It
+also defines an enumerated type which may be used to describe text
+alignment.
+
+@example
+struct text_style @{
+  string font;
+  int size;
+  enum alignment @{ left, right, centre @};
+@};
+@end example
+
+@node The printpage class, The printrow class, The text_style class, Producing printed output
+@section The @code{printpage} class
+
+The @code{printpage} class takes control of producing printed output on
+a page.  To start printing, an object of some subclass of
+@code{printpage} is created, which will handle all further printing.
+For example, to print to a PostScript stream or file, an object of class
+@code{printpage_ps} would be created.  Once the @code{printpage} class
+has been created, it can be used to place text directly on the page.  It
+can also be used to create @code{printrow} objects for printing rows and
+lines.
+
+@menu
+* printpage Derivation::        
+* printpage Constructors::      
+* Other printpage Functions::   
+@end menu
+
+@node printpage Derivation, printpage Constructors, The printpage class, The printpage class
+@subsection Derivation
+
+This class is not derived from any base classes.
+
+@example
+class printpage;
+@end example
+
+@node printpage Constructors, Other printpage Functions, printpage Derivation, The printpage class
+@subsection Constructors
+
+There are no constructors; a @code{printpage} object must be created by
+instantiating a subclass.
+
+@node Other printpage Functions,  , printpage Constructors, The printpage class
+@subsection Other functions
+
+@deftypefun {virtual void} printpage::text (const string @var{t}, const dimension& @var{x}, const dimension& @var{y}, text_style::alignment @var{a}, const text_style& @var{s});
+This function places a text string on the page.  The string is given in
+@var{t} and should consist of printable characters.  The position at
+which the string is to be printed, measured from the bottom left corner
+of the page, is given by @var{x} and @var{y}.  The alignment of the text
+about this point is given by @var{a}, and the text style is given by
+@var{s}.
+@end deftypefun
+
+@node The printrow class,  , The printpage class, Producing printed output
+@section The @code{printrow} class
+
+Printing of rows and lines is handled by the @code{printrow} class and its
+subclasses.  An object of type @code{printrow} is created, attached to
+a given @code{printpage} object.  After the object has been created, it
+can be given rows to print.  The rows can be printed in various ways:  the
+actual numbers representing the row may or may not be printed, and lines
+can be drawn for selected bells.
+
+@menu
+* Row printing options::        
+* printrow Derivation::         
+* printrow Constructors::       
+@end menu
+
+@node Row printing options, printrow Derivation, The printrow class, The printrow class
+@subsection Row printing options
+
+The way in which rows are printed by a @code{printrow} object is
+controlled by various options.  These options are given by a 
+@code{printrow::options} object.
+
+@example
+struct options @{
+  enum o_flags @{
+    numbers = 0x01,
+    miss_numbers = 0x02
+  @};
+  unsigned int flags;
+  text_style style;
+  dimension xspace, yspace;
+  struct line_style @{
+    dimension width;
+  @};
+  map<int, line_style> lines;
+
+  void defaults();
+@};
+@end example
+
+The @code{flags} member contains various flags; bit values are given by
+the enumerated type @code{o_flags}, and possible values for @code{flags}
+can be obtained by logically ORing these values together.  The bits
+are as follows:
+@itemize @bullet
+@item
+The @code{options::numbers} bit controls whether the actual numbers of the
+rows are printed.  If this bit is not set, only lines will be printed.
+
+@item
+If the @code{options::miss_numbers} bit, then any numbers which would
+appear underneath lines are missed out.  An example of this may be seen
+in the @cite{Ringing World} diary, where all rows except lead heads are
+printed with this property.
+@end itemize
+
+The @code{style} member controls the style in which the rows are
+printed; for the declaration of the @code{text_style} class, see
+@ref{The text_style class}.
+
+The @code{xspace} and @code{yspace} members give the horizontal space
+between numbers in a row, and the vertical space between rows, respectively.
+For the declaration of the @code{dimension} class, see
+@ref{The dimension class}.
+
+The @code{lines} member controls which ``blue lines'' are printed.  Each
+element of the map has an integer, denoting the bell number, and a
+@code{line_style} element which defines the style of the line.  Currently
+the only member is @code{line_style} is a @code{dimension} object giving
+the width of the line.
+
+For example, suppose that we wish to print rows in 10-point Helvetica, with
+spacing of 12 points horizontally and vertically.  We want to draw a
+line half a point thick for the second bell.  The following code sets
+up a @code{printrow::options} object to accomplish this:
+
+@example
+printrow::options o;
+o.flags = printrow::options::numbers;
+o.style.size = 10;
+o.style.font = "Helvetica";
+o.xspace.n = 12;
+o.yspace.n = 12;
+line_style s; s.width.n = 1; s.width.d = 2; s.width.u = dimension::points;
+o.lines[1] = s;
+@end example
+
+There is one member function of @code{printrow::options}.
+
+@deftypefun void printrow::options::defaults (void);
+This function sets up the @code{printrow::options} object to the defaults
+as given in the example above.
+@end deftypefun
+
+@node printrow Derivation, printrow Constructors, Row printing options, The printrow class
+@subsection Derivation
+
+This class is not derived from any other classes.
+
+@example
+class printrow;
+@end example
+
+@node printrow Constructors,  , printrow Derivation, The printrow class
+@subsection Constructors
+
+@deftypefn Constructor {} printrow::printrow (const printpage& @var{pp});
+This constructor builds a @code{printrow} object associated to the
+@code{printpage} object given by @var{pp}.  The options are initialised
+to the default options.
+@end deftypefn
+
+@deftypefn Constructor {} printrow::printrow (const printpage& @var{pp}, const printrow::options& @var{op});
+This constructor builds a @code{printrow} object associated to the
+@code{printpage} object given by @var{pp}, and initialised the options
+to @var{op}.
+@end deftypefn
+
+@node Copying this manual, Index, Producing printed output, Top
 @appendix Copying this manual
 
 @menu
