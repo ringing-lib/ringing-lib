@@ -363,7 +363,8 @@ sub process_makefile($)
 
     while (<FILE>)
     {
-	chomp; while (/\\$/) { s/\\$//; $_ .= <FILE>; chomp;}
+	chomp; s/\#.*$//; 
+	while (/\\$/) { s/\\$//; $_ .= <FILE>; chomp; s/\#.*$//; }
 
 	if (/^\s*([A-Za-z0-9_-]+)\s*=\s*(.*)$/)
 	{
