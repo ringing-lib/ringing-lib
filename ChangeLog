@@ -1,3 +1,14 @@
+2001-10-09 14:00  ras52
+
+	* music.cpp, music.h, Makefile.am: Refactored the music class 
+	and added music.cpp.
+	* common.h.in: Various fixes to get a clean compile in msvc-6 
+	with namespaces
+	* method.h: Added overload of method::push_back
+	* row.cpp, row.h: Minor bug fixes.
+	* dimension.h, library.h, mslib.h, print.h, print_ps.h, proof.h:
+	Moved using namespace std inside namespace ringing.
+
 2001-09-27 22:15  mjb47
 
 	* NEWS, configure.in, ringing/common.h.in: Prepare for 0.2.2
