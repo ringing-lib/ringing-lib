@@ -1218,7 +1218,7 @@ rm -f conftest*
 fi
 if eval "test \"`echo '$ac_cv_header_'$ac_safe`\" = yes"; then
   echo "$ac_t""yes" 1>&6
-  RINGING_HEADER_EXT=
+  RINGING_OLD_INCLUDES=0
   iostream_name="<iostream>"
   list_name="<list>"
 else
@@ -1251,7 +1251,7 @@ rm -f conftest*
 fi
 if eval "test \"`echo '$ac_cv_header_'$ac_safe`\" = yes"; then
   echo "$ac_t""yes" 1>&6
-  RINGING_HEADER_EXT=.h
+  RINGING_OLD_INCLUDES=1
     iostream_name="<iostream.h>"
     list_name="<list.h>"
 else
@@ -1293,20 +1293,17 @@ rm -f conftest*
 fi
 if eval "test \"`echo '$ac_cv_header_'$ac_safe`\" = yes"; then
   echo "$ac_t""yes" 1>&6
-  RINGING_CHEADER_PREFIX=c
-  RINGING_CHEADER_EXT=
+  RINGING_OLD_C_INCLUDES=0
 else
   echo "$ac_t""no" 1>&6
-RINGING_CHEADER_PREFIX=
-  RINGING_CHEADER_EXT=.h
+RINGING_OLD_C_INCLUDES=1
 fi
 
 
 
 
-
 echo $ac_n "checking whether the compiler supports exceptions""... $ac_c" 1>&6
-echo "configure:1310: checking whether the compiler supports exceptions" >&5
+echo "configure:1307: checking whether the compiler supports exceptions" >&5
 if eval "test \"`echo '$''{'ac_cv_cxx_exceptions'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1319,14 +1316,14 @@ ac_link='${CXX-g++} -o conftest${ac_exeext} $CXXFLAGS $CPPFLAGS $LDFLAGS conftes
 cross_compiling=$ac_cv_prog_cxx_cross
 
  cat > conftest.$ac_ext <<EOF
-#line 1323 "configure"
+#line 1320 "configure"
 #include "confdefs.h"
 
 int main() {
 try { throw  1; } catch (int i) { return i; }
 ; return 0; }
 EOF
-if { (eval echo configure:1330: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
+if { (eval echo configure:1327: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
   rm -rf conftest*
   ac_cv_cxx_exceptions=yes
 else
@@ -1362,7 +1359,7 @@ fi
 
 
 echo $ac_n "checking whether the compiler implements namespaces""... $ac_c" 1>&6
-echo "configure:1366: checking whether the compiler implements namespaces" >&5
+echo "configure:1363: checking whether the compiler implements namespaces" >&5
 if eval "test \"`echo '$''{'ac_cv_cxx_namespaces'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1375,14 +1372,14 @@ ac_link='${CXX-g++} -o conftest${ac_exeext} $CXXFLAGS $CPPFLAGS $LDFLAGS conftes
 cross_compiling=$ac_cv_prog_cxx_cross
 
  cat > conftest.$ac_ext <<EOF
-#line 1379 "configure"
+#line 1376 "configure"
 #include "confdefs.h"
 namespace Outer { namespace Inner { int i = 0; }}
 int main() {
 using namespace Outer::Inner; return i;
 ; return 0; }
 EOF
-if { (eval echo configure:1386: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
+if { (eval echo configure:1383: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
   rm -rf conftest*
   ac_cv_cxx_namespaces=yes
 else
@@ -1418,19 +1415,19 @@ fi
 
 
 echo $ac_n "checking whether standard includes use namespace std""... $ac_c" 1>&6
-echo "configure:1422: checking whether standard includes use namespace std" >&5
+echo "configure:1419: checking whether standard includes use namespace std" >&5
 if eval "test \"`echo '$''{'ac_cv_cxx_std'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 1427 "configure"
+#line 1424 "configure"
 #include "confdefs.h"
 #include $iostream_name
 int main() {
 std::cout << 'x'; return 0;
 ; return 0; }
 EOF
-if { (eval echo configure:1434: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
+if { (eval echo configure:1431: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
   rm -rf conftest*
   ac_cv_cxx_std=yes
 else
@@ -1452,12 +1449,12 @@ fi
 
 
 echo $ac_n "checking whether the Standard Template Library works""... $ac_c" 1>&6
-echo "configure:1456: checking whether the Standard Template Library works" >&5
+echo "configure:1453: checking whether the Standard Template Library works" >&5
 if eval "test \"`echo '$''{'ac_cv_cxx_stl'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 1461 "configure"
+#line 1458 "configure"
 #include "confdefs.h"
 #include $list_name 
 #if $RINGING_USE_STD 
@@ -1468,7 +1465,7 @@ list<int> l; l.push_back(3);
 list<int>::iterator i = l.begin(); ++i; return 0;
 ; return 0; }
 EOF
-if { (eval echo configure:1472: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
+if { (eval echo configure:1469: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
   rm -rf conftest*
   ac_cv_cxx_stl=yes
 else
@@ -1646,9 +1643,8 @@ s%@CXX@%$CXX%g
 s%@RANLIB@%$RANLIB%g
 s%@CPP@%$CPP%g
 s%@CXXCPP@%$CXXCPP%g
-s%@RINGING_HEADER_EXT@%$RINGING_HEADER_EXT%g
-s%@RINGING_CHEADER_PREFIX@%$RINGING_CHEADER_PREFIX%g
-s%@RINGING_CHEADER_EXT@%$RINGING_CHEADER_EXT%g
+s%@RINGING_OLD_INCLUDES@%$RINGING_OLD_INCLUDES%g
+s%@RINGING_OLD_C_INCLUDES@%$RINGING_OLD_C_INCLUDES%g
 s%@RINGING_USE_EXCEPTIONS@%$RINGING_USE_EXCEPTIONS%g
 s%@RINGING_USE_NAMESPACES@%$RINGING_USE_NAMESPACES%g
 s%@RINGING_USE_STD@%$RINGING_USE_STD%g

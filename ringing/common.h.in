@@ -21,6 +21,8 @@
 // indicated by ***.  The expression @VARIABLE@ should be replaced by
 // the value appropriate for your system.
 
+// $Id$
+
 #ifndef RINGING_COMMON_H
 #define RINGING_COMMON_H
 
@@ -32,16 +34,14 @@
 // #define RINGING_VERSION 0.2.0
 #define RINGING_VERSION @VERSION@
 
-// *** Define RINGING_HEADER_EXT to be either .h or empty, depending
-// on what your standard C++ header files are called (e.g. <iostream> 
-// or <iostream.h>)
-#define RINGING_STD_HEADER(b) < ## b ## @RINGING_HEADER_EXT@ ## >
+// *** Define this to be 1 to use old-style standard C++ header names
+// (<iostream.h>, <list.h> and so on) or 0 to use new-style ones
+// (<iostream>, <list>).
+#define RINGING_OLD_INCLUDES @RINGING_OLD_INCLUDES@
 
-// *** Define RINGING_CHEADER_PREFIX to be either c or empty, and define
-// RINGING_CHEADER_EXT to be either .h or empty, depending on what your C
-// header files are called (e.g. <cstdlib> or <stdlib.h>)
-#define RINGING_C_HEADER(b) < ## @RINGING_CHEADER_PREFIX@ ## \
-b ## @RINGING_CHEADER_EXT@ ## >
+// *** Define this to be 1 to use old-style standard C header names
+// (<stdio.h> and so on) or 0 to use new-style ones (<cstdio>).
+#define RINGING_OLD_C_INCLUDES @RINGING_OLD_C_INCLUDES@
 
 // *** Define this to be 1 if you want the Ringing Class Library to use
 // exceptions, or 0 otherwise.
@@ -55,10 +55,6 @@ b ## @RINGING_CHEADER_EXT@ ## >
 // by RINGING_HEADER_EXT) place their definitions in namespace `std', or 0
 // if the definitions are in the global namespace.
 #define RINGING_USE_STD @RINGING_USE_STD@
-
-// You may want to change this if the Ringing Class Library header files
-// aren't going to be available as <ringing/row.h> etc.
-#define RINGING_LOCAL_HEADER(b) <ringing/ ## b ## .h>
 
 #if RINGING_USE_NAMESPACES
 #define RINGING_START_NAMESPACE namespace ringing {

@@ -15,6 +15,8 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+// $Id$
+
 /********************************************************************
  * Description     :
  *     This is the implementation part of proof.h. As proof is a
@@ -27,7 +29,8 @@
 #endif
 
 #include <ringing/common.h>
-#include RINGING_LOCAL_HEADER(proof)
+#include <ringing/proof.h>
+
 RINGING_USING_STD
 
 RINGING_START_NAMESPACE

@@ -15,6 +15,8 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+// $Id$
+
 #ifndef RINGING_DIMENSION_H
 #define RINGING_DIMENSION_H
 
@@ -24,7 +26,12 @@
 
 #include <ringing/common.h>
 #include <string>
-#include RINGING_STD_HEADER(iostream)
+#if RINGING_OLD_INCLUDES
+#include <iostream.h>
+#else
+#include <iostream>
+#endif
+
 RINGING_USING_STD
 
 RINGING_START_NAMESPACE

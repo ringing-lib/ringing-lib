@@ -15,13 +15,20 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+// $Id$
+
 #ifdef __GNUG__
 #pragma implementation
 #endif
 
 #include <ringing/common.h>
-#include RINGING_LOCAL_HEADER(method)
-#include RINGING_C_HEADER(stdio)		// I want sprintf() !
+#if RINGING_OLD_C_INCLUDES
+#include <stdio.h>
+#else
+#include <cstdio>
+#endif
+#include <ringing/method.h>
+
 RINGING_USING_STD
 
 RINGING_START_NAMESPACE
@@ -46,7 +53,7 @@ const char *method::txt_classes[11] = {
   "Slow Course"
   };
 
-const char *method::txt_stages[10] = {
+const char *method::txt_stages[14] = {
   "Singles",
   "Minimus",
   "Doubles",
@@ -56,7 +63,11 @@ const char *method::txt_stages[10] = {
   "Caters",
   "Royal",
   "Cinques",
-  "Maximus"
+  "Maximus",
+  "Sextuples",
+  "Fourteen",
+  "Septuples",
+  "Sixteen"
   };
 
 const char *method::txt_double = "Double";
@@ -277,7 +288,7 @@ int method::methclass(void) const
 const char *method::stagename(int n)
 {
   static char buff[4];
-  if(n >= 3 && n <= 12)
+  if(n >= 3 && n <= 16)
     return txt_stages[n-3];
   else {
     sprintf(buff,"%d",n);

@@ -15,6 +15,8 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+// $Id$
+
 #ifndef RINGING_LIBRARY_H
 #define RINGING_LIBRARY_H
 
@@ -23,11 +25,17 @@
 #endif
 
 #include <ringing/common.h>
-#include RINGING_STD_HEADER(iostream)
-#include RINGING_STD_HEADER(fstream)
-#include RINGING_STD_HEADER(list)
-#include RINGING_LOCAL_HEADER(method)
-#include RINGING_LOCAL_HEADER(stuff)
+#if RINGING_OLD_INCLUDES
+#include <iostream.h>
+#include <fstream.h>
+#include <list.h>
+#else
+#include <iostream>
+#include <fstream>
+#include <list>
+#endif
+#include <ringing/method.h>
+#include <ringing/stuff.h>
 RINGING_USING_STD
 
 RINGING_START_NAMESPACE

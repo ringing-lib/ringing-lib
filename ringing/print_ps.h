@@ -15,6 +15,8 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+// $Id$
+
 #ifndef RINGING_PRINT_PS_H
 #define RINGING_PRINT_PS_H
 
@@ -23,10 +25,17 @@
 #endif
 
 #include <ringing/common.h>
-#include RINGING_STD_HEADER(list)
-#include RINGING_STD_HEADER(map)
-#include RINGING_STD_HEADER(iostream)
-#include RINGING_LOCAL_HEADER(print)
+#if RINGING_OLD_INCLUDES
+#include <list.h>
+#include <map.h>
+#include <iostream.h>
+#else
+#include <list>
+#include <map>
+#include <iostream>
+#endif
+#include <ringing/print.h>
+
 RINGING_USING_STD
 
 RINGING_START_NAMESPACE

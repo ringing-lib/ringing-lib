@@ -15,6 +15,8 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+// $Id$
+
 #ifndef RINGING_METHOD_H
 #define RINGING_METHOD_H
 
@@ -23,10 +25,15 @@
 #endif
 
 #include <ringing/common.h>
-#include RINGING_STD_HEADER(list)
+#if RINGING_OLD_INCLUDES
+#include <list.h>
+#else
+#include <list>
+#endif
 #include <string>
-#include RINGING_LOCAL_HEADER(row)
-#include RINGING_LOCAL_HEADER(stuff)
+#include <ringing/row.h>
+#include <ringing/stuff.h>
+
 RINGING_USING_STD
 
 RINGING_START_NAMESPACE
@@ -36,12 +43,8 @@ class method : public vector<change> {
 private:
   string myname;		// The name of the method, without Major etc. 
 
-// Stop anybody calling these
-  method(method& m);
-  method& operator=(method& m);
-
   static const char *txt_classes[11]; // Bob, Place etc.
-  static const char *txt_stages[10];  // Minimum, Doubles etc.
+  static const char *txt_stages[14];  // Minimum, Doubles etc.
 
 public: 
 
@@ -76,7 +79,7 @@ public:
     { return txt_classes[cl & M_MASK]; }
 
   method(int l, int b, char *n = "Untitled") : vector<change>(l)
-    { name(n); }
+    { (*this)[0] = change(b); name(n); }
   // Make a method from place notation
   method(char *pn, int b, char *n = "Untitled");
   ~method() {}

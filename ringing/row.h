@@ -15,6 +15,8 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+// $Id$
+
 #ifndef RINGING_ROW_H
 #define RINGING_ROW_H
 
@@ -23,9 +25,15 @@
 #endif
 
 #include <ringing/common.h>
-#include RINGING_STD_HEADER(iostream)
+#if RINGING_OLD_INCLUDES
+#include <iostream.h>
+#include <vector.h>
+#else
+#include <iostream>
+#include <vector>
+#endif
 #include <string>
-#include RINGING_STD_HEADER(vector)
+
 RINGING_USING_STD
 
 RINGING_START_NAMESPACE
@@ -128,8 +136,8 @@ public:
   int bells(void) const { return data.size(); } // How many bells?
   row& rounds(void);		// Set it to rounds
   static row rounds(int n);	// Return rounds on n bells
-  static row pblh(int n, int h=1); // Return ith plain bob lead head on n bells
-				// with h hunt bells
+  static row pblh(int n, int h=1); // Return first plain bob lead head on 
+                                // n bells with h hunt bells
   int isrounds(void) const;	// Is it rounds?
   int ispblh(void) const;	// Which plain bob lead head is it?
   int sign(void) const;         // Return whether it's odd or even

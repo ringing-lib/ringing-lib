@@ -19,23 +19,19 @@ AC_HEADER_STDC
 
 dnl Now we check to see what the C++ headers are called
 AC_LANG_CPLUSPLUS
-AC_CHECK_HEADER([iostream], RINGING_HEADER_EXT=[]
+AC_CHECK_HEADER([iostream], RINGING_OLD_INCLUDES=0
   iostream_name="<iostream>"
   list_name="<list>",
-  [AC_CHECK_HEADER([iostream.h], RINGING_HEADER_EXT=[.h]
+  [AC_CHECK_HEADER([iostream.h], RINGING_OLD_INCLUDES=1
     iostream_name="<iostream.h>"
     list_name="<list.h>",
     [AC_MSG_WARN([Can't find either <iostream> or <iostream.h>.  This means
 that you don't appear to have the standard C++ libraries installed, which is 
 necessary if you wish to compile or use the Ringing Class Library.])
     can_build=no])])
-AC_SUBST(RINGING_HEADER_EXT)
-AC_CHECK_HEADER([cstdio], RINGING_CHEADER_PREFIX=[c]
-  RINGING_CHEADER_EXT=[], 
-  RINGING_CHEADER_PREFIX=[]
-  RINGING_CHEADER_EXT=[.h])
-AC_SUBST(RINGING_CHEADER_PREFIX)
-AC_SUBST(RINGING_CHEADER_EXT)
+AC_SUBST(RINGING_OLD_INCLUDES)
+AC_CHECK_HEADER([cstdio], RINGING_OLD_C_INCLUDES=0, RINGING_OLD_C_INCLUDES=1)
+AC_SUBST(RINGING_OLD_C_INCLUDES)
 
 dnl Checks for typedefs, structures, and compiler characteristics.
 

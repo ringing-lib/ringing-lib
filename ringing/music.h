@@ -1,4 +1,4 @@
-// music.h - Musical Analysis
+// -*- C++ -*- music.h - Musical Analysis
 // Copyright (C) 2001 Mark Banner <mark@standard8.co.uk>
 
 // This program is free software; you can redistribute it and/or modify
@@ -14,6 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+// $Id$
 
 /********************************************************************
  * Description     :
@@ -64,9 +66,14 @@
 #endif
 
 #include <ringing/common.h>
-#include RINGING_STD_HEADER(iostream)
+#if RINGING_OLD_INCLUDES
+#include <iostream.h>
+#else
+#include <iostream>
+#endif
 #include <string>
-#include RINGING_LOCAL_HEADER(row)
+#include <ringing/row.h>
+
 RINGING_USING_STD
 
 RINGING_START_NAMESPACE

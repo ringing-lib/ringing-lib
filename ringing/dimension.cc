@@ -15,14 +15,25 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+// $Id$
+
 #ifdef __GNUG__
 #pragma implementation
 #endif
 
 #include <ringing/common.h>
-#include RINGING_STD_HEADER(strstream)
-#include RINGING_LOCAL_HEADER(dimension)
-#include RINGING_C_HEADER(ctype)
+#if RINGING_OLD_INCLUDES
+#include <strstream.h>
+#else
+#include <strstream>
+#endif
+#if RINGING_OLD_C_INCLUDES
+#include <ctype.h>
+#else
+#include <cctype>
+#endif
+#include <ringing/dimension.h>
+
 RINGING_USING_STD
 
 RINGING_START_NAMESPACE

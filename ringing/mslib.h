@@ -15,6 +15,8 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+// $Id$
+
 #ifndef RINGING_MSLIB_H
 #define RINGING_MSLIB_H
 
@@ -23,9 +25,12 @@
 #endif
 
 #include <ringing/common.h>
-#include RINGING_STD_HEADER(fstream)
-#include RINGING_C_HEADER(ctype)
-#include RINGING_LOCAL_HEADER(library)
+#if RINGING_OLD_C_INCLUDES
+#include <ctype.h>
+#else
+#include <cctype>
+#endif
+#include <ringing/library.h>
 RINGING_USING_STD
 
 RINGING_START_NAMESPACE
