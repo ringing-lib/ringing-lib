@@ -35,11 +35,12 @@
  * hash function must be defined here.
  ********************************************************************/
 
-#ifdef __GNUG__
+#include <ringing/common.h>
+
+#ifdef RINGING_HAS_PRAGMA_INTERFACE
 #pragma implementation
 #endif
 
-#include <ringing/common.h>
 #include <ringing/proof.h>
 
 RINGING_USING_STD

@@ -20,7 +20,7 @@
 #ifndef RINGING_BASIC_SEARCH_H
 #define RINGING_BASIC_SEARCH_H
 
-#ifdef __GNUG__
+#ifdef RINGING_HAS_PRAGMA_INTERFACE
 #pragma interface
 #endif
 

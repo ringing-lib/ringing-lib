@@ -17,11 +17,12 @@
 
 // $Id$
 
-#ifdef __GNUG__
+#include <ringing/common.h>
+
+#ifdef RINGING_HAS_PRAGMA_INTERFACE
 #pragma implementation
 #endif
 
-#include <ringing/common.h>
 #if !RINGING_USE_READLINE
 #error "This file requires GNU readline" 
 #endif

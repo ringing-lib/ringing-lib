@@ -21,7 +21,7 @@
 #ifndef METHSEARCH_MASK_INCLUDED
 #define METHSEARCH_MASK_INCLUDED
 
-#ifdef __GNUG__
+#ifdef RINGING_HAS_PRAGMA_INTERFACE
 #pragma interface
 #endif
 

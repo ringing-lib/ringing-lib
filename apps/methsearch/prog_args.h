@@ -20,7 +20,7 @@
 #ifndef METHSEARCH_ARGS_INCLUDED
 #define METHSEARCH_ARGS_INCLUDED
 
-#ifdef __GNUG__
+#ifdef RINGING_HAS_PRAGMA_INTERFACE
 #pragma interface
 #endif
 

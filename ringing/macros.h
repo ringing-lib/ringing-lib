@@ -210,4 +210,12 @@ RINGING_END_NAMESPACE_STD
 # define RINGING_FAKE_ASSIGNMENT(classname)
 #endif
 
+// Cygwin's version of gcc 3.2 (20020927 build) has a broken
+// pragma interface / implementation.  This really ought to
+// be wrapped up into a autoconf test, but I can't make
+// a simple test case.
+#if defined(__GNUG__) && !defined(__CYGWIN__)
+# define RINGING_HAS_PRAGMA_INTERFACE
+#endif
+
 #endif // RINGING_MACROS_H

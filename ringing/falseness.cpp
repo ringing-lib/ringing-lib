@@ -17,11 +17,12 @@
 
 // $Id$
 
-#if __GNUG__
+#include <ringing/common.h>
+
+#if RINGING_HAS_PRAGMA_INTERFACE
 #pragma implementation
 #endif
 
-#include <ringing/common.h>
 #include <ringing/row.h>
 #include <ringing/method.h>
 #include <ringing/falseness.h>

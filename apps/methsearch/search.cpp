@@ -18,7 +18,7 @@
 // $Id$
 
 
-#ifdef __GNUG__
+#ifdef RINGING_HAS_PRAGMA_INTERFACE
 #pragma implementation
 #endif
 

@@ -20,7 +20,7 @@
 #ifndef RINGING_MSLIB_H
 #define RINGING_MSLIB_H
 
-#ifdef __GNUG__
+#ifdef RINGING_HAS_PRAGMA_INTERFACE
 #pragma interface
 #endif
 

@@ -19,7 +19,7 @@
 #ifndef GSIRIL_UTIL_INCLUDED
 #define GSIRIL_UTIL_INCLUDED
 
-#ifdef __GNUG__
+#ifdef RINGING_HAS_PRAGMA_INTERFACE
 #pragma interface
 #endif
 

@@ -30,7 +30,7 @@
 #ifndef RINGING_MUSIC_H
 #define RINGING_MUSIC_H
 
-#ifdef __GNUG__
+#ifdef RINGING_HAS_PRAGMA_INTERFACE
 #pragma interface
 #endif
 

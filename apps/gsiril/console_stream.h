@@ -20,7 +20,7 @@
 #ifndef GSIRIL_CONSOLE_STREAM_INCLUDED
 #define GSIRIL_CONSOLE_STREAM_INCLUDED
 
-#ifdef __GNUG__
+#ifdef RINGING_HAS_PRAGMA_INTERFACE
 #pragma interface
 #endif
 

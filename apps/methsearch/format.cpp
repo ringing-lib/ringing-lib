@@ -28,12 +28,12 @@
 
 // $Id$
 
+#include <ringing/common.h>
 
-#ifdef __GNUG__
+#ifdef RINGING_HAS_PRAGMA_INTERFACE
 #pragma implementation
 #endif
 
-#include <ringing/common.h>
 #include "format.h"
 #include "libraries.h"
 #include "methodutils.h"

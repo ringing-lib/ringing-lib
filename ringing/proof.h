@@ -58,7 +58,7 @@
 #ifndef RINGING_PROOF_H
 #define RINGING_PROOF_H
 
-#ifdef __GNUG__
+#ifdef RINGING_HAS_PRAGMA_INTERFACE
 #pragma interface
 #endif
 

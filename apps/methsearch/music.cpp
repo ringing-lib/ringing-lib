@@ -17,11 +17,12 @@
 
 // $Id$
 
-#ifdef __GNUG__
+#include <ringing/common.h>
+
+#ifdef RINGING_HAS_PRAGMA_INTERFACE
 #pragma implementation "methsearch/music"
 #endif
 
-#include <ringing/common.h>
 #include "music.h"
 #if RINGING_OLD_INCLUDES
 #include <vector.h>

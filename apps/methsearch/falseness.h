@@ -20,7 +20,7 @@
 #ifndef METHSEARCH_FALSENESS_INCLUDED
 #define METHSEARCH_FALSENESS_INCLUDED
 
-#ifdef __GNUG__
+#ifdef RINGING_HAS_PRAGMA_INTERFACE
 #pragma interface "methsearch/falseness"
 #endif
 

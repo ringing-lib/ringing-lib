@@ -17,12 +17,13 @@
 
 // $Id$
 
-#ifdef __GNUG__
+#include <ringing/common.h>
+
+#ifdef RINGING_HAS_PRAGMA_INTERFACE
 #pragma implementation "gsiril/expression.h"
 #pragma implementation "gsiril/common_expr.h"
 #endif
 
-#include <ringing/common.h>
 #include "expression.h"
 #include "common_expr.h"
 #include "parser.h"

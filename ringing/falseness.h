@@ -20,7 +20,7 @@
 #ifndef RINGING_FALSENESS_H
 #define RINGING_FALSENESS_H
 
-#if __GNUG__
+#if RINGING_HAS_PRAGMA_INTERFACE
 #pragma interface
 #endif
 

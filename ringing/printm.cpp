@@ -17,7 +17,9 @@
 
 // $Id$
 
-#ifdef __GNUG__
+#include <ringing/common.h>
+
+#ifdef RINGING_HAS_PRAGMA_INTERFACE
 #pragma implementation
 #endif
 

@@ -21,7 +21,7 @@
 #ifndef METHSEARCH_LIBRARIES_INCLUDED
 #define METHSEARCH_LIBRARIES_INCLUDED
 
-#ifdef __GNUG__
+#ifdef RINGING_HAS_PRAGMA_INTERFACE
 #pragma interface
 #endif
 

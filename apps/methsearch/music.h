@@ -20,7 +20,7 @@
 #ifndef METHSEARCH_MUSIC_INCLUDED
 #define METHSEARCH_MUSIC_INCLUDED
 
-#ifdef __GNUG__
+#ifdef RINGING_HAS_PRAGMA_INTERFACE
 #pragma interface "methsearch/music"
 #endif
 

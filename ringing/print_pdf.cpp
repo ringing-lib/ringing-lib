@@ -28,11 +28,12 @@
 //
 //  3 Page tree
 
-#ifdef __GNUG__
+#include <ringing/common.h>
+
+#ifdef RINGING_HAS_PRAGMA_INTERFACE
 #pragma implementation
 #endif
 
-#include <ringing/common.h>
 #if RINGING_OLD_INCLUDES
 #include <iomanip.h>
 #else

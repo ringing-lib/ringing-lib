@@ -20,7 +20,7 @@
 #ifndef RINGING_STREAMUTILS_H
 #define RINGING_STREAMUTILS_H
 
-#ifdef __GNUG__
+#ifdef RINGING_HAS_PRAGMA_INTERFACE
 #pragma interface
 #endif
 

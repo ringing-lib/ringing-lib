@@ -17,11 +17,12 @@
 
 // $Id$
 
-#ifdef __GNUG__
+#include <ringing/common.h>
+
+#ifdef RINGING_HAS_PRAGMA_INTERFACE
 #pragma implementation
 #endif
 
-#include <ringing/common.h>
 #include <ringing/print_ps.h>
 
 RINGING_START_NAMESPACE

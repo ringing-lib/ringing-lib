@@ -20,7 +20,7 @@
 #ifndef GSIRIL_COMMON_EXPR_INCLUDED
 #define GSIRIL_COMMON_EXPR_INCLUDED
 
-#ifdef __GNUG__
+#ifdef RINGING_HAS_PRAGMA_INTERFACE
 #pragma interface "gsiril/common_expr.h"
 #endif
 

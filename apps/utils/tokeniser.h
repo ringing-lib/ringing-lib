@@ -20,7 +20,7 @@
 #ifndef GSIRIL_TOKENISER_INCLUDED
 #define GSIRIL_TOKENISER_INCLUDED
 
-#ifdef __GNUG__
+#ifdef RINGING_HAS_PRAGMA_INTERFACE
 #pragma interface
 #endif
 

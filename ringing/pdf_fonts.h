@@ -20,7 +20,7 @@
 #ifndef RINGING_PDF_FONTS_H
 #define RINGING_PDF_FONTS_H
 
-#ifdef __GNUG__
+#ifdef RINGING_HAS_PRAGMA_INTERFACE
 #pragma interface
 #endif
 
