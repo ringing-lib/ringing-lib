@@ -11,6 +11,13 @@
 
 @include version.texi
 
+@ifinfo
+@dircategory Libraries
+@direntry
+* Ringing-lib: (ringing-lib).   The Ringing Class Library.
+@end direntry
+@end ifinfo
+
 @ifnottex
 This is the manual for the Ringing Class Library, version
 @value{VERSION}.  Last updated @value{UPDATED}.
@@ -51,6 +58,7 @@ HTML and GNU Info formats are also available.
 @node Top, Introduction, (dir), (dir)
 @top
 @ifinfo
+
 The Ringing Class Library (ringing-lib) is a library of C++ classes designed
 for writing change ringing application programs.
 
