@@ -26,4 +26,4 @@ bin_PROGRAMS = psline
 psline_SOURCES = psline.cpp
 INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/apps/utils
 psline_LDADD = $(top_builddir)/apps/utils/libstuff.a \
-$(top_builddir)/ringing/libringing.a
+$(top_builddir)/ringing/libringing.la

@@ -27,6 +27,6 @@ bin_PROGRAMS = fextent
 INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/apps/utils
 
 fextent_LDADD = $(top_builddir)/apps/utils/libstuff.a \
-$(top_builddir)/ringing/libringing.a
+$(top_builddir)/ringing/libringing.la
 
 fextent_SOURCES = fextent.cpp
