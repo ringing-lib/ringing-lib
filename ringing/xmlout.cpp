@@ -250,6 +250,15 @@ void xmlout::impl::append( library_entry const& entry )
   if ( entry.has_facet< first_hand_peal >() )
     add_peal( add_elt( meth_elt, "first-hand" ),
 	      entry.get_facet< first_hand_peal >() );
+  
+  {
+    DOMElement* refs_elt = NULL;
+
+    if ( entry.has_facet< rw_ref >() ) {
+      if ( !refs_elt ) refs_elt = add_elt( meth_elt, "refs" );
+      add_simple_elt( refs_elt, "rw-ref", entry.get_facet< rw_ref >() );
+    }
+  }
 }
 
 xmlout::xmlout( const string& filename )

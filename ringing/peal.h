@@ -57,6 +57,8 @@ private:
 RINGING_DECLARE_LIBRARY_FACET( first_tower_peal, peal );
 RINGING_DECLARE_LIBRARY_FACET( first_hand_peal,  peal );
 
+RINGING_DECLARE_LIBRARY_FACET( rw_ref, string );
+
 RINGING_END_NAMESPACE
 
 #endif

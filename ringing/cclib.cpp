@@ -150,6 +150,9 @@ class cclib::impl::entry_type : public library_entry::impl
   string::size_type hand_date;
   string::size_type hand_end;
 
+  string::size_type rw_start;
+  string::size_type rw_end;
+
   // Method class & stage information
   int b;
 };
@@ -175,6 +178,8 @@ cclib::impl::entry_type::entry_type()
     tower_end       ( string::npos ),
     hand_date       ( string::npos ),
     hand_end        ( string::npos ),
+    rw_start        ( string::npos ),
+    rw_end          ( string::npos ),
     b               ( 0            )
 {}
 
@@ -287,7 +292,7 @@ peal cclib::impl::entry_type::read_peal( string::size_type date,
   if ( date == string::npos || date > linebuf.size() ) 
     return peal();
 
-  if ( end > linebuf.size() ) end = linebuf.size()+1;
+  if ( end > linebuf.size() ) end = linebuf.size();
   if ( place > linebuf.size() ) place = string::npos;
 
   peal::date dt( read_date( date, place == string::npos ? end : place ) );
@@ -337,9 +342,15 @@ void cclib::impl::entry_type::parse_header()
   hand_date = linebuf.find("Handbells");
 
   if ( hand_date != string::npos )
-    hand_end = linebuf.find_first_not_of( " \t", hand_date + 9 );
+    hand_end = linebuf.find_first_not_of( " \t\r\n", hand_date + 9 );
   else 
     hand_end = string::npos;
+
+  rw_start = linebuf.find("RW ref");
+  if ( rw_start != string::npos )
+    rw_end = linebuf.find_first_not_of( " \t\r\n", rw_start + 6 );
+  else
+    rw_end = rw_end;
 }
 
 string cclib::impl::entry_type::name() const
@@ -369,6 +380,9 @@ bool cclib::impl::entry_type::has_facet( const library_facet_id& id ) const
   else if ( id == first_hand_peal::id ) 
     return tower_end != string::npos && bool( get_facet( id ) );
 
+  else if ( id == rw_ref::id ) 
+    return rw_start != string::npos && bool( get_facet( id ) );
+
   else
     return false;
 }
@@ -393,11 +407,23 @@ cclib::impl::entry_type::get_facet( const library_facet_id& id ) const
       result.reset( new first_hand_peal( p ) );
   }
 
+  else if ( id == rw_ref::id ) {
+    if ( rw_start != string::npos && rw_start < linebuf.size() ) {
+      string::size_type end( rw_end );
+      if ( end > linebuf.size() ) end = linebuf.size();
+      while ( end > rw_start && isspace( linebuf[end-1] ) )
+	--end;
+      if ( end != rw_start )
+	result.reset( new rw_ref( linebuf.substr( rw_start, end-rw_start ) ) );
+    }
+  }
+
   return result;
 }
 
 bool 
-cclib::impl::entry_type::maybe_strip_class( string& name, const string& clname )
+cclib::impl::entry_type::maybe_strip_class( string& name, 
+					    const string& clname )
 {
   string::size_type pos = name.rfind(clname);
   if ( pos != string::npos && pos + clname.size() == name.size() ) {
