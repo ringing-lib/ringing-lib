@@ -1,0 +1,32 @@
+			       FExtent
+                               -------
+
+FExtent is a program for searching for maximal sets of mutually true leads.
+
+
+
+Command Line Options
+--------------------
+
+  -?, --help             Print this help message
+  -V, --version          Print the program version
+  -b, --bells=BELLS      The default number of bells
+  -n, --iterations=NUM   The number of iterations to perform
+  -c, --whole-courses    Look for mutually true courses rather than leads
+  -t, --tenors-together  Look for mutually true tenors-together leads (or
+                         courses)
+  -i, --in-course        Look for in-course lead-heads (or course-heads)
+  -l, --loop[=NUM]       Repeat some number of times (or indefinitely)
+  -P, --part-end=ROW     Specify a part-end
+  --seed=NUM             Seed the random number generator
+  -q, --quiet            Supress all output other than the maximum score
+  --print-leads          Print the matching leads (or courses)
+  --min-leads=NUM        Require at least this number of leads
+
+
+*** TODO:  Write some proper documentation ***
+
+
+--
+Richard Smith
+<richard@ex-parrot.com>
