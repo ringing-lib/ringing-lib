@@ -2,7 +2,7 @@
 #
 # mkdsp - makes a Visual Studio workspace from Makefile.am
 #
-# Copyright (C) 2001, 2002, 2003 Richard Smith <richard@ex-parrot.com>
+# Copyright (C) 2001, 2002, 2003, 2004 Richard Smith <richard@ex-parrot.com>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -46,7 +46,7 @@ EOF
 my $assume_msvc6;  $assume_msvc6 = 1 if grep /^--assume-msvc6$/, @ARGV;
 
 # Always create DLLs where unix static libraries are used?
-my $force_dll;  $force_dll = 1 if grep /^--force-dll$/, @ARGV;
+my $use_dll = 1 if grep /^--force-dll$/, @ARGV;
 
 #############################################################################
 
@@ -345,6 +345,18 @@ sub filter_deps(@)
     return @deps;
 }
 
+sub process_configure()
+{
+    open FILE, "<configure.ac" or return;
+
+    while (<FILE>) 
+    {
+	chomp; s/\#.*$//; 
+
+	$use_dll = 1 if /AC_LIBTOOL_WIN32_DLL/;
+    }
+}
+
 sub process_makefile($)
 {
     my ($path) = @_;
@@ -396,7 +408,7 @@ sub process_makefile($)
 	    {
 		for my $p (split /[ \t+]+/, $val)
 		{
-		    my $tp = (($force_dll or $p =~ /.la$/) ? 'dll' : 'lib');
+		    my $tp = (($use_dll or $p =~ /.la$/) ? 'dll' : 'lib');
 			       
 		    $p =~ s/\.l?a$//;
 		    $p =~ s/^lib//;
@@ -506,5 +518,6 @@ sub make_dsps
     close DSW;
 }
 
+process_configure;
 process_makefile(".");
 make_dsps
