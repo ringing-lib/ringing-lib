@@ -51,15 +51,51 @@ RINGING_START_DETAILS_NAMESPACE
 class multtab_row_t
 {
 public:
+  // The number_of_bells parameter is ignored.  It is here
+  // to give the constructor of multtab::row_t and row the 
+  // same interface.
   explicit multtab_row_t( int number_of_bells = 0 ) : n(0u) {}
   bool isrounds() const { return n == 0; }
   size_t index() const { return n; }
   
   friend class multtab;
+  friend class multtab_row_iterator;
   RINGING_FAKE_COMPARATORS( multtab_row_t );
 
 private:
   size_t n; 
+};
+
+// Iterate through the rows in the table
+class RINGING_API multtab_row_iterator 
+  : public RINGING_STD_CONST_ITERATOR( forward_iterator_tag, multtab_row_t )
+{
+ public:
+  // These typedefs are needed to compile get the code to 
+  // compile in gcc-2.95.x.
+  typedef forward_iterator_tag iterator_category;
+  typedef multtab_row_t value_type;
+  typedef ptrdiff_t difference_type;
+  typedef const multtab_row_t *pointer;
+  typedef const multtab_row_t &reference;
+  
+  const multtab_row_t &operator*() const  { return r; }
+  const multtab_row_t *operator->() const { return &r; }
+  
+  multtab_row_iterator &operator++() { ++r.n; }
+  multtab_row_iterator operator++(int) 
+    { multtab_row_iterator tmp(*this); ++*this; return tmp; }  
+  bool operator==( const multtab_row_iterator &other ) const
+    { return r.index() == other.r.index(); }
+  bool operator!=( const multtab_row_iterator &other ) const
+    { return r.index() != other.r.index(); }
+
+ private:  
+  friend class multtab;
+  multtab_row_iterator( int n ) { r.n = n; }
+
+ private:
+  multtab_row_t r;
 };
 
 class multtab_post_col_t
@@ -128,8 +164,7 @@ public:
 
   // As above but use factor out some part-end.
   template < class InputIterator >
-  multtab( InputIterator first, InputIterator last,
-			const row &partend )
+  multtab( InputIterator first, InputIterator last, const row &partend )
     : partend( partend ), colcount( 0u )
   { init( make_vector( first, last ) ); }
 
@@ -149,6 +184,11 @@ public:
 
   // The number of rows in the table
   size_t size() const { return table.size(); }
+
+  // Iterate through the rows in the multiplication table
+  typedef RINGING_DETAILS_PREFIX multtab_row_iterator row_iterator;
+  row_iterator begin_rows() const { return row_iterator(0); }
+  row_iterator end_rows() const   { return row_iterator(size()); }
 
   // Operators to do optimised multiplication of rows:
   friend row_t RINGING_DETAILS_PREFIX operator*( row_t r, post_col_t c )
