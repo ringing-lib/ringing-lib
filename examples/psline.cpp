@@ -227,6 +227,9 @@ static error_t parser (int key, char *arg, struct argp_state *state)
     case 'a':
       args->vgap_mode = true;
       break;
+    case 'L':
+      args->landscape = true;
+      break;
     case 'o' :
       args->output_file = arg;
       break;
@@ -474,6 +477,10 @@ int main(int argc, char *argv[])
       args.fitwidth.set_float(args.width.in_points() - 72, 1);
       args.fitheight.set_float(args.height.in_points() - 72, 1);
     }
+    if(args.landscape) {
+      swap(args.width, args.height);
+      swap(args.fitwidth, args.fitheight);
+    }
     if(!args.title.empty())
       args.fitheight.set_float(args.fitheight.in_points() 
 			       - args.title_style.size * 2, 1);
@@ -531,20 +538,25 @@ int main(int argc, char *argv[])
     int i = args.title.find('$');
     if(i != args.title.npos) args.title.replace(i, 1, m.fullname());
 
+    // Create a printpage object
+    printpage* pp;
+
     // Print the method!
     if(args.eps) {
-      printpage_ps pp(*os, 0, 0, pm.total_width(), pm.total_height()
-		      + (args.title.empty() ? 0 : args.title_style.size * 2));
-      pp.text(args.title, titlex, titley, 
-	      text_style::centre, args.title_style);
-      pm.print(pp);
+      pp = new printpage_ps(*os, 0, 0, pm.total_width(), pm.total_height() 
+			    + (args.title.empty() ? 0 
+			       : args.title_style.size * 2));
+    } else if(args.landscape) {
+      pp = new printpage_ps(*os, args.height);
     } else {
-      printpage_ps pp(*os);
-      pp.text(args.title, titlex, titley, 
-	      text_style::centre, args.title_style);
-      pm.print(pp);
+      pp = new printpage_ps(*os);
     } 
 
+    // Print the method!
+    pp->text(args.title, titlex, titley, 
+	    text_style::centre, args.title_style);
+    pm.print(*pp);
+    delete pp;
   }
   catch(exception& e) {
     cerr << argv[0] << ": " << e.what() << endl;

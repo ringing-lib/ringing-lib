@@ -215,7 +215,7 @@ void printmethod::fit_to_space(const dimension& width,
 
   opt.xspace.set_float(curr_xspace, 100);
   opt.yspace.set_float(curr_xspace / aspect, 100);
-  hgap = opt.xspace * (((placebells >= 0) ? 3 : 0) + 
+  hgap = opt.xspace * (((placebells >= 0) ? 3 : 1) + 
 		       ((pn_mode == pn_all) ? pnextra : 0));
   vgap = opt.yspace * 2;
   opt.style.size = static_cast<int>(opt.xspace.in_points() * 0.9);

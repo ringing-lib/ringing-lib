@@ -754,6 +754,10 @@ Returns 1 if the change doesn't move the bell in the @var{i}th place
 (i.e. if @var{i}ths place is made), and 0 otherwise.
 @end deftypefun
 
+@deftypefun int change::count_places (void) const;
+This function returns the number of places made in the change.
+@end deftypefun
+
 @deftypefun int change::swappair (int @var{i});
 If the change doesn't currently swap bells @var{i} and @var{i+1}, then
 this will add that swap.  If those bells are swapped, this will remove
@@ -803,14 +807,14 @@ its argument, and the second takes a reference to a row.  In either case,
 a function object (of type @code{permuter} or @code{row_permuter}) is returned,
 which can be used with standard algorithms.
 
-@deftypefun {inline permuter} permute(unsigned @var{n});
+@deftypefun {inline permuter} permute (unsigned @var{n});
 This global function returns a function object of type @code{permuter}, which
 contains a row initialised to rounds on @var{n} bells.  When the function
 object is called with an argument of either a row or change, its internal
 row is multiplied by that row or change and then returned.
 @end deftypefun
 
-@deftypefun {inline row_permuter} permute(row& @var{r});
+@deftypefun {inline row_permuter} permute (row& @var{r});
 This global function creates a @code{row_permuter} function object, which
 contains a reference to the row @var{r}.  When the function object is called
 with a row or change as an argument, the row @var{r} will be multiplied
@@ -1024,7 +1028,7 @@ This is the copy constructor.
 @node Other method Functions, method static Functions, method Constructors, The method Class
 @subsection Other functions
 
-@deftypefun {const char*} method::name (void);
+@deftypefun {const char*} method::name (void) const;
 This returns the base name of the method.
 @end deftypefun
 
@@ -1033,11 +1037,11 @@ This returns the base name of the method.
 This sets the base name of the method to @var{name}.
 @end deftypefun
 
-@deftypefun int method::bells (void);
+@deftypefun int method::bells (void) const;
 This returns the number of bells on which the method is defined.
 @end deftypefun
 
-@deftypefun int method::length (void);
+@deftypefun int method::length (void) const;
 This returns the number of changes in a lead of the method.
 @end deftypefun
 
@@ -1048,58 +1052,58 @@ the first case, @var{c} is the change to be added; in the second case,
 @var{s} is place notation for the change to be added.
 @end deftypefun
 
-@deftypefun row method::lh (void);
+@deftypefun row method::lh (void) const;
 This returns the first lead head of the method.
 @end deftypefun
 
-@deftypefun int method::issym (void);
+@deftypefun int method::issym (void) const;
 This returns 1 if the method is symmetrical about the half lead (and has
 an even number of changes in the lead), or 0 otherwise.
 @end deftypefun
 
-@deftypefun int method::isdouble (void);
+@deftypefun int method::isdouble (void) const;
 This returns 1 if the method is double, or 0 otherwise.  Note that double
 does not imply symmetrical.
 @end deftypefun
 
-@deftypefun int method::isregular (void);
+@deftypefun int method::isregular (void) const;
 This returns 1 if the method is regular (that is, has Plain Bob lead 
 heads), or 0 otherwise.
 @end deftypefun
 
-@deftypefun int method::huntbells (void);
+@deftypefun int method::huntbells (void) const;
 This returns the number of hunt bells in the method.
 @end deftypefun
 
-@deftypefun int method::leads (void);
+@deftypefun int method::leads (void) const;
 This returns the number of leads in the plain course of the method.
 @end deftypefun
 
-@deftypefun char* method::lhcode (void);
+@deftypefun char* method::lhcode (void) const;
 This returns the standard code for the lead end and lead head of the
 method.  The result is stored in a static internal buffer.
 @end deftypefun
 
-@deftypefun int method::issym (bell @var{b});
+@deftypefun int method::issym (bell @var{b}) const;
 This returns 1 if the path of bell @var{b} in a lead of the method is
 symmetrical about the half lead, or 0 otherwise.
 @end deftypefun
 
-@deftypefun int method::isplain (bell @var{b} = 0);
+@deftypefun int method::isplain (bell @var{b} = 0) const;
 This returns 1 if bell @var{b} plain hunts for the whole lead of the
 method, or 0 otherwise.
 @end deftypefun
 
-@deftypefun int method::hasdodges (bell @var{b});
+@deftypefun int method::hasdodges (bell @var{b}) const;
 This returns 1 if bell @var{b} dodges during the lead, or 0 otherwise.
 @end deftypefun
 
-@deftypefun int method::hasplaces (bell @var{b});
+@deftypefun int method::hasplaces (bell @var{b}) const;
 This returns 1 if bell @var{b} makes any internal places during the lead,
 or 0 otherwise.
 @end deftypefun
 
-@deftypefun int method::methclass (void);
+@deftypefun int method::methclass (void) const;
 This function returns an integer which depends on the class of the
 method.  The following values are defined:
 @example
@@ -1115,7 +1119,7 @@ The @code{M_DOUBLE} and @code{M_LITTLE} bits are flags which will be either
 set or cleared accordingly.
 @end deftypefun
 
-@deftypefun char* method::fullname (char* @var{buffer});
+@deftypefun char* method::fullname (char* @var{buffer}) const;
 This function places the full name of the method in @var{buffer}, which
 should be long enough to receive it, and returns a pointer to it.  The
 full name consists of:
@@ -1129,6 +1133,10 @@ the class of the method, or none if it is a principle;
 @item
 the stage (number of bells) of the method.
 @end itemize
+@end deftypefun
+
+@deftypefun string method::fullname (void) const;
+This function returns the full name of the method as a string.
 @end deftypefun
 
 @node method static Functions, method static Variables, Other method Functions, The method Class
@@ -1850,6 +1858,7 @@ respectively of the dimension.  The member @code{u} defines which units
 the dimension is given in.  For example, a @code{dimension} object
 representing three quarters of an inch would have @code{n} equal to 3,
 @code{d} equal to 4, and @code{u} equal to @code{dimension::inches}.
+Points here are PostScript points, which are equal to 1/72 of an inch.
 
 The @code{dimension} class has several member functions.
 
@@ -1866,9 +1875,18 @@ This constructs a dimension equal to the fraction @var{i}/@var{j} in
 units @var{u}.
 @end deftypefn
 
+@deftypefn Operator dimension dimension::operator- (void)
+This operator returns the negation of the dimension.
+@end deftypefn
+
 @deftypefn Operator dimension& dimension::operator*= (int @var{i})
 @deftypefnx Operator dimension dimension::operator* (int @var{i})
 These operators multiply the dimension by the integer @var{i}.
+@end deftypefn
+
+@deftypefn Operator dimension& dimension::operator/= (int @var{i})
+@deftypefnx Operator dimension dimension::operator/ (int @var{i})
+These operators divide the dimension by the integer @var{i}.
 @end deftypefn
 
 @deftypefn Operator bool dimension::operator== (int @var{i});
@@ -1883,6 +1901,13 @@ This function reduces the fraction @code{n}/@code{d} to lowest terms.
 @deftypefun float dimension::in_points (void);
 This returns a floating point numbers representing the dimension in
 points.
+@end deftypefun
+
+@deftypefun void dimension::set_float (float @var{value}, int @var{denom}, units @var{uu}=points);
+This function sets the dimension to an approximation of the given 
+floating-point number @var{value}.  Specifically, the denominator is set
+to @var{denom}, and the numerator is set to the integer closest to
+the product of @var{value} and @var{denom}.
 @end deftypefun
 
 @deftypefun void dimension::read (const string& @var{s});
@@ -2068,7 +2093,7 @@ last row printed.  If @var{i} is -1, prints dots for all bells which are
 having lines drawn.
 @end deftypefun
 
-@deftypefun void printrow::placebell(int @var{i});
+@deftypefun void printrow::placebell (int @var{i});
 This function finds what place the bell @var{i} was at in the last row 
 printed, and then prints this number in a circle to the right of that row.
 @end deftypefun
@@ -2189,6 +2214,13 @@ constructors and some PostScript-specific operations.
 @deftypefn Constructor {} printpage_ps::printpage_ps (ostream& @var{o});
 This creates a new PostScript printing object, which will send its
 output to the stream @var{o}.
+@end deftypefn
+
+@deftypefn Constructor {} printpage_ps::printpage_ps (ostream& @var{o}, const dimension& @var{page_height});
+This creates a new PostScript printing object, which will send its output
+to the stream @var{o}.  Each page will be printed with landscape orientation;
+because of the way PostScript works, this means that the page height must
+be given.
 @end deftypefn
 
 @deftypefn Constructor {} printpage_ps::printpage_ps (ostream @var{o}, int @var{x0}, int @var{y0}, int @var{x1}, int @var{y1});

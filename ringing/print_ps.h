@@ -108,13 +108,18 @@ public:
 class printpage_ps : public printpage {
 protected:
   ostream& os;
-  bool eps;
+  bool eps, landscape;
   static const string def_string, header_string;
   int pages;
   set<string> used_fonts;
+  int ph;
 
 public:
+  // Portrait output
   printpage_ps(ostream& o);
+  // Landscape output
+  printpage_ps(ostream& o, const dimension& page_height);
+  // EPS output
   printpage_ps(ostream& o, int x0, int y0, int x1, int y1);
   ~printpage_ps();
   void text(const string t, const dimension& x, const dimension& y,
@@ -132,6 +137,7 @@ private:
 protected:
   void set_text_style(const text_style& s);
   void set_colour(const colour& c);
+  void landscape_mode();
 };
 
 RINGING_END_NAMESPACE

@@ -102,11 +102,21 @@ RINGING_VERSION " 0\n"
 "%%DocumentNeededResources: (atend)\n"
 "%%EndComments\n\n";
 
-printpage_ps::printpage_ps(ostream& o) : os(o), eps(false)
+printpage_ps::printpage_ps(ostream& o) : os(o), eps(false), landscape(false)
 {
   pages = 1;
-  os << "%!PS-Adobe-3.0\n" << "%%Pages: (atend)\n" << header_string 
-     << def_string << "%%Page: 1\nsave\n";
+  os << "%!PS-Adobe-3.0\n" << "%%Pages: (atend)\n%%Orientation: Portrait\n"
+     << header_string << def_string << "%%Page: 1\nsave\n";
+}
+
+printpage_ps::printpage_ps(ostream& o, const dimension& page_height) 
+  : os(o), eps(false), landscape(true)
+{
+  pages = 1;
+  os << "%!PS-Adobe-3.0\n" << "%%Pages: (atend)\n%%Orientation: Landscape\n"
+     << header_string << def_string << "%%Page: 1\nsave\n";
+  ph = static_cast<int>(page_height.in_points());
+  landscape_mode();
 }
 
 printpage_ps::printpage_ps(ostream& o, int x0, int y0, int x1, int y1)
@@ -134,11 +144,16 @@ printpage_ps::~printpage_ps()
   os << "%%EOF\n";
 }
 
-
 void printpage_ps::new_page()
 {
   pages++;
   os << "restore showpage\n\n%%Page: " << pages << "\nsave\n";
+  if(landscape) landscape_mode();
+}
+
+void printpage_ps::landscape_mode()
+{
+  os << "90 rotate 0 -" << ph << " translate\n";
 }
 
 void printpage_ps::set_text_style(const text_style& s)
