@@ -199,5 +199,18 @@ private:
   string sym;
 };
 
+class assign_node : public expression::node
+{
+public:
+  assign_node( const string& sym, const expression& val )
+    : defn( make_pair(sym, val) ) {}
+
+protected:
+  virtual void debug_print( ostream &os ) const;
+  virtual void execute( proof_context &ctx );
+
+private:
+  pair< const string, expression > defn;
+};
 
 #endif // GSIRIL_EXPRESSION_INCLUDED

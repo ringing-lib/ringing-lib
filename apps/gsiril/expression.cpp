@@ -63,7 +63,9 @@ void prove_stmt::execute( execution_context& e ) const
   try 
     {
       proof_context p(e);
+      p.execute_symbol( "start" );
       expr.execute(p);
+      p.execute_symbol( "finish" );
       switch ( p.state() )
 	{
 	case proof_context::rounds: 
@@ -231,3 +233,14 @@ void symbol_node::execute( proof_context &ctx )
   ctx.execute_symbol(sym);
 }
 
+void assign_node::debug_print( ostream &os ) const
+{
+  os << "(" << defn.first << " = ";
+  defn.second.debug_print(os);
+  os << ")";
+}
+
+void assign_node::execute( proof_context& ctx )
+{
+  ctx.define_symbol(defn);
+}

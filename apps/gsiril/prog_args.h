@@ -38,7 +38,8 @@ RINGING_USING_STD
 struct arguments
 {
   init_val<int,0>      bells; // the default number of bells
-
+  init_val<int,1>      num_extents;
+  
   init_val<bool,false> interactive;
   init_val<bool,false> case_insensitive;
 

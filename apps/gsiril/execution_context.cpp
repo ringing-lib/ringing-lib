@@ -32,29 +32,15 @@
 RINGING_USING_NAMESPACE
 
 
-execution_context::execution_context( ostream& os, const arguments& args )
-  : args(args), os(&os)
-{
-}
-
-execution_context::~execution_context() 
-{
-}
-
-expression execution_context::lookup_symbol( const string& sym ) const
+expression symbol_table::lookup( const string& sym ) const
 {
   sym_table_t::const_iterator i = sym_table.find(sym);
   if ( i == sym_table.end() )
-    throw runtime_error( make_string() << "Unknown symbol: " << sym );
+    return expression( NULL );
   return i->second;
 }
 
-void execution_context::undefine_symbol( const string& sym )
-{
-  sym_table.erase(sym);
-}
-
-bool execution_context::define_symbol( const pair< const string, expression > &defn )
+bool symbol_table::define( const pair<const string, expression>& defn )
 {
   sym_table_t::iterator i = sym_table.find( defn.first );
 
@@ -67,13 +53,47 @@ bool execution_context::define_symbol( const pair< const string, expression > &d
   else
     {
       sym_table.insert( defn );
-      if ( sym_table.find( "__first__" ) == sym_table.end() )
-	sym_table.insert
-	  ( pair<const string, expression>( "__first__", defn.second ) );
       return false;
     }
+}
 
-  return sym_table.insert( defn ).second;
+void symbol_table::undefine( const string& sym )
+{
+  sym_table.erase(sym);
+}
+
+
+execution_context::execution_context( ostream& os, const arguments& args )
+  : args(args), os(&os)
+{
+}
+
+execution_context::~execution_context() 
+{
+}
+
+expression execution_context::lookup_symbol( const string& sym ) const
+{
+  expression e( sym_table.lookup(sym) );
+  if ( e.isnull() )
+    throw runtime_error( make_string() << "Unknown symbol: " << sym );
+  return e;
+}
+
+void execution_context::undefine_symbol( const string& sym )
+{
+  sym_table.undefine(sym);
+}
+
+bool execution_context::define_symbol( const pair< const string, expression > &defn )
+{
+  if ( sym_table.define(defn) )
+    return true;  // redefinition can't be first
+
+  if ( sym_table.lookup( "__first" ).isnull() )
+    sym_table.define
+      ( pair<const string, expression>( "__first__", defn.second ) );
+  return false;
 }
 
 void execution_context::prove_symbol( const string& sym )
@@ -84,7 +104,7 @@ void execution_context::prove_symbol( const string& sym )
 }
 
 proof_context::proof_context( const execution_context &ectx ) 
-  : ectx(ectx)
+  : ectx(ectx), p( ectx.get_args().num_extents )
 {
   if ( ectx.bells() == -1 )
     throw runtime_error( "Must set number of bells before proving" ); 
@@ -123,7 +143,14 @@ proof_context::permute_and_prove()
 
 void proof_context::execute_symbol( const string &sym ) 
 {
-  ectx.lookup_symbol( sym ).execute( *this );
+  expression e( dsym_table.lookup(sym) );
+  if ( e.isnull() ) e = ectx.lookup_symbol(sym);
+  e.execute( *this );
+}
+
+void proof_context::define_symbol( const pair<const string, expression>& defn )
+{
+  dsym_table.define(defn);
 }
 
 proof_context::proof_state proof_context::state() const

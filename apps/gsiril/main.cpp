@@ -84,6 +84,11 @@ void arguments::bind( arg_parser& p )
 	   "The default number of bells.",  "BELLS",
 	   bells ) );
 
+  p.add( new integer_opt
+	 ( 'n', "extents",
+	   "The number of extents required.",  "NUM",
+	   num_extents ) );
+
   p.add( new boolean_opt
 	 ( 'i', "interactive",
 	   "Run in interactive mode", 
@@ -109,6 +114,12 @@ bool arguments::validate( arg_parser& ap )
     {
       ap.error( make_string() << "The number of bells must be between 3 and " 
 		<< bell::MAX_BELLS-1 << " (inclusive)" );
+      return false;
+    }
+
+  if ( num_extents < 1 )
+    {
+      ap.error( "The number of extents must be at least one" );
       return false;
     }
 
@@ -159,7 +170,7 @@ void initialse( execution_context& e, const arguments& args )
 "rounds   = \n"
 "everyrow = \n"
 "start    = \n"
-"end      = \n";
+"finish   = \n";
 
   // Turn off interactivity whilst it prepopulates the symbol table
   bool interactive = e.interactive(false);

@@ -48,6 +48,21 @@ RINGING_USING_NAMESPACE
 
 class expression;
 
+class symbol_table
+{
+public:
+  expression lookup( const string& sym ) const;
+
+  // Returns true for a redefinition and false otherwise
+  bool define( const pair< const string, expression >& defn );
+
+  void undefine( const string& sym );
+
+private:
+  typedef map< string, expression > sym_table_t;
+  sym_table_t sym_table;
+};
+
 class execution_context
 {
 public:
@@ -76,8 +91,7 @@ private:
 
   ostream* os;
 
-  typedef map< string, expression > sym_table_t;
-  sym_table_t sym_table;
+  symbol_table sym_table;
 };
 
 class proof_context
@@ -107,12 +121,14 @@ public:
   permute_and_prove_t permute_and_prove();
 
   void execute_symbol( const string &sym );
+  void define_symbol( const pair< const string, expression > &defn );
 
   enum proof_state { rounds, notround, isfalse } state() const;
   string substitute_string( const string &str, bool &do_exit );
 
 private:
   const execution_context &ectx;
+  symbol_table dsym_table; // dynamic symbol table
   row r;
   prover p;
 };

@@ -284,7 +284,41 @@ msparser::make_expr( vector< token >::const_iterator first,
 	}
     }
 
-  // Comma is the lowest precedence operator
+  // Assignment is the lowest precedence operator
+  {
+    int depth = 0;
+    for ( iter_t i(first); i != last; ++i )
+      {
+	if ( i->type() == mstokeniser::open_paren )
+	  ++depth;
+	else if ( i->type() == mstokeniser::close_paren )
+	  --depth;
+	else if ( i->type() == mstokeniser::assignment && depth == 0 )
+	  {
+	    if ( first == i )
+	      throw runtime_error
+		( "Assignment operator needs first argument" );
+	    
+	    if ( first->type() != mstokeniser::name || 
+		 first+1 != i )
+	      throw runtime_error
+		( "First argument of assignment operator must be"
+		  " a variable name" );
+
+	    if ( i+1 == last)
+	      return expression
+		( new assign_node( *first, expression( new nop_node ) ) );
+	    else
+	      return expression
+		( new assign_node( *first, make_expr( i+1, last ) ) );
+	  }
+      }
+
+    if (depth) 
+      throw runtime_error( "Unmatched parentheses" );
+  }
+
+  // Comma is the next lowest precedence operator
   // It is left associative
   {
     int depth = 0;
