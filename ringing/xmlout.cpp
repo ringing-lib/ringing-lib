@@ -36,6 +36,10 @@
 #include <xercesc/framework/LocalFileFormatTarget.hpp>
 #endif
 
+#ifdef _MSC_VER
+#define snprintf _snprintf
+#endif
+
 RINGING_START_NAMESPACE
 
 RINGING_USING_STD

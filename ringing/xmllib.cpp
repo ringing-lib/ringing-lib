@@ -78,7 +78,7 @@ struct init_xerces_t {
 };
 
 static bool init_xerces() {
-  static struct init_xerces_t tmp;
+  static struct init_xerces_t init;
   return true;
 }
 
@@ -96,11 +96,9 @@ static DOMElement* next_sibling_element( DOMNode* start, const string& name )
 RINGING_END_ANON_NAMESPACE
 
 
-class xmllib::impl : public library_base
-{
+class xmllib::impl : public library_base {
 public:
   impl( xmllib::file_arg_type type, const string& url );
- ~impl() {}
 
 private:
   // Iterators into the library
@@ -112,15 +110,10 @@ private:
   virtual bool good() const  { return true; } 
 
   // Data members
-  bool force_init;
+  bool const force_init;
   XercesDOMParser parser;
   shared_pointer<DOMDocument> doc;
 };
-
-xmllib::xmllib( xmllib::file_arg_type type, const string& url )
-  : library( new impl(type, url) )
-{
-}
 
 xmllib::impl::impl( xmllib::file_arg_type type, const string& url )
   : force_init( init_xerces() )
@@ -164,15 +157,6 @@ xmllib::impl::impl( xmllib::file_arg_type type, const string& url )
 
       throw runtime_error( err );
     }
-}
-
-library_base *xmllib::canread( const string& name )
-{
-  try {
-    return new xmllib::impl(xmllib::filename, name);
-  } catch (...) {
-    return NULL;
-  }
 }
 
 class xmllib::impl::entry_type : public library_entry::impl
@@ -376,21 +360,36 @@ library_base::const_iterator xmllib::impl::begin() const
 			 new entry_type(doc) );
 }
 
-#else // Stub code if were not using xerces
+xmllib::xmllib( xmllib::file_arg_type type, const string& url )
+  : library( new impl(type, url) )
+{
+}
 
-class xmllib::impl {};
+#else // Stub code if were not using Xerces
+
+class xmllib::impl : public library_base {
+public:
+  impl( xmllib::file_arg_type type, const string& url ) {}
+
+  virtual bool good() const  { return false; } 
+  virtual library_base::const_iterator begin() const { return end(); }
+};
 
 xmllib::xmllib( xmllib::file_arg_type, const string& )
 {
   throw runtime_error( "XML libraries not supported in this build" );
 }
 
+#endif // XML library-specific code
+
 library_base *xmllib::canread( const string& name )
 {
-  return NULL;
+  try {
+    return new xmllib::impl(xmllib::filename, name);
+  } catch (...) {
+    return NULL;
+  }
 }
-
-#endif // RINGING_USE_XERCES
 
 RINGING_END_NAMESPACE
 
