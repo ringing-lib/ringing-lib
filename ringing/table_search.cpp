@@ -85,13 +85,25 @@ private:
   typedef multtab::post_col_t post_col_t;
   typedef multtab::row_t row_t;
 
+  static bool is_fixed_treble( const table_search *s )
+  {
+    if ( s->meth.lh()[0] || !s->meth.back().findplace(0) )
+      return false;
+
+    for ( size_t i=0; i < s->calls.size(); ++i )
+      if ( !s->calls[i].findplace(0) )
+	return false;
+
+    return true;
+  }
+
   static multtab make_table( const table_search *s )
   {
-    if ( s->meth.lh()[0] )
-      return multtab( extent_iterator( s->meth.bells() ),
+    if ( is_fixed_treble(s) )
+      return multtab( extent_iterator( s->meth.bells() - 1, 1),
 		      extent_iterator() );
     else
-      return multtab( extent_iterator( s->meth.bells() - 1, 1),
+      return multtab( extent_iterator( s->meth.bells() ),
 		      extent_iterator() );
   }
 
