@@ -951,6 +951,7 @@ changed in a later release.
 * proof Constructors::          
 * proof Functions::             
 * proof Operators::             
+* proof Output::
 * Falseness Storage::           
 * How Proof Works::             
 @end menu
@@ -1001,7 +1002,7 @@ This function simply returns the data detailing where the touch has failed.
 @end deftypefn
 @end iftex
 
-@node proof Operators, Falseness Storage, proof Functions, Proof
+@node proof Operators, proof Output, proof Functions, Proof
 @subsection Operators
 
 @deftypefn Operator operator proof::int (void) const;
@@ -1012,18 +1013,23 @@ This returns true (or 1) if the touch is true.
 This returns true (or 1) if the touch is not true.
 @end deftypefn
 
+@node proof Output, Falseness Storage, proof Operators, Proof
+@subsection Output
+
+Output of the proof class is achieved in one of two ways. Either, the functions proof::int and failed() are used, or an overloaded ostream operator for a fixed format.
+
 @ifinfo
-@deftypefn Operator {friend ostream&} operator<< <>(ostream& @var{o}, const proof<RowIterator>& @var{p});
+@deftypefn Operator {template <class RowIterator> ostream&} operator<< (ostream& @var{o}, const proof<RowIterator>& @var{p});
 Outputs to the ostream, @var{o}, if @var{p} is true or false in a predefined format. If p is false, then additional information regarding where is also output.
 @end deftypefn
 @end ifinfo
 @iftex
-@deftypefn Operator {friend ostream@&} operator<< <>(ostream@& @var{o}, const proof<RowIterator>@& @var{p});
+@deftypefn Operator {template <class RowIterator> ostream@&} operator<< (ostream@& @var{o}, const proof<RowIterator>@& @var{p});
 Outputs to the ostream, @var{o}, if @var{p} is true or false in a predefined format. If p is false, then additional information regarding where is also output.
 @end deftypefn
 @end iftex
 
-@node Falseness Storage, How Proof Works, proof Operators, Proof
+@node Falseness Storage, How Proof Works, proof Output, Proof
 @subsection How falseness is stored
 @cindex falseness storage
 

@@ -85,12 +85,6 @@ int our_hash(const row& r);           // Default hash function
 /******************************************
   Proof Class
  *****************************************/
-template <class RowIterator>
-class proof;
-
-// Prototype for the output function
-template <class RowIterator>
-ostream& operator<< (ostream&, const proof<RowIterator>&);
 
 // Struct to store falseness details
 struct linedetail {
@@ -122,9 +116,6 @@ public:
   operator int() const;          // Is touch true or false?
   int operator!() const;
 
-  // Output to the ostream about true/falseness
-  friend ostream& operator<< <RowIterator> (ostream& o, 
-					    const proof<RowIterator>& p);
 private:
   void resetfailinfo();
   bool istrue;                    // Well, is it true or not?
@@ -330,7 +321,7 @@ ostream& operator<<(ostream &o, const proof<RowIterator> &p)
       o << "False\n";
       
       // go through the list outputting details in turn.
-      proof<RowIterator>::failinfo faili = p.where;
+      proof<RowIterator>::failinfo faili = p.failed();
       proof<RowIterator>::failinfo::iterator fi;
       for (fi = faili.begin(); fi != faili.end(); fi++)
 	{
