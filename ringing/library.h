@@ -68,7 +68,7 @@ protected:
 };
 
 // library_base : A base class for method libraries
-class library_base {
+class RINGING_API library_base {
 public:
   virtual ~library_base() {}		// Got to have a virtual destructor
   virtual method load(const char* name) = 0; // Load a method
@@ -92,7 +92,11 @@ public:
 #endif
 };
 
-class library {
+#if RINGING_AS_DLL
+RINGING_EXPLICIT_STL_TEMPLATE list<libtype*>;
+#endif
+
+class RINGING_API library {
 private:
   library_base* lb;
   static list<libtype*> libtypes;

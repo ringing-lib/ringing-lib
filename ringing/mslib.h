@@ -51,7 +51,7 @@ private:
   static newlib<mslib> type;    // Provide a handle to this library type
 
 public:
-  static void registerlib(void) {
+  static RINGING_API void registerlib(void) {
     library::addtype(&type);
   }
 

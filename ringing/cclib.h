@@ -63,7 +63,7 @@ private:
   iterator end();
 
 public:
-  static void registerlib(void) {
+  static RINGING_API void registerlib(void) {
     library::addtype(&type);
   }
 #if defined(SEPERATE_FILES)
