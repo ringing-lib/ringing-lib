@@ -64,7 +64,7 @@ public:
   
   // Equality Comparable implementation
   bool operator==( const extent_iterator &i ) const
-    { return end == i.end && end || r == i.r; }
+    { return end == i.end && (end || r == i.r); }
   bool operator!=( const extent_iterator &i ) const
     { return !( *this == i ); }
 
@@ -94,7 +94,7 @@ public:
   typedef const change &reference;
 
   // The end iterator
-  changes_iterator() {}
+  changes_iterator() : end(true) {}
 
   // The beginning iterator
   //   nw == The number of working bells 
@@ -111,7 +111,7 @@ public:
 
   // Equality Comparable implementation
   bool operator==( const changes_iterator &i ) const 
-    { return c == i.c; }
+    { return end == i.end && (end || c == i.c); }
   bool operator!=( const changes_iterator &i ) const 
     { return !operator==(i); }
 
@@ -125,6 +125,7 @@ private:
   void next();
 
   unsigned nw, nh;
+  bool end;
   change c;
   vector<int> stk;
 };

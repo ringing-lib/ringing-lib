@@ -89,9 +89,9 @@ extent_iterator &extent_iterator::operator++()
 
 void changes_iterator::next()
 {
-  if ( stk.size() == nw && stk.back() == nw+nh-1 )
+  if ( nw == 0 || stk.size() == nw && stk.back() == nw+nh-1 )
     {
-      c = change();
+      end = true;
       return;
     }
   
@@ -112,7 +112,7 @@ void changes_iterator::next()
 }
 
 changes_iterator::changes_iterator( unsigned int nw, unsigned int nh )
-  : nw(nw), nh(nh), c(nw ? nw+nh : 0)
+  : nw(nw), nh(nh), end(false), c(nw+nh)
 {
   stk.push_back(nh); 
   if ( nw>1 ) next(); 
@@ -120,7 +120,7 @@ changes_iterator::changes_iterator( unsigned int nw, unsigned int nh )
 
 changes_iterator::changes_iterator( unsigned int nw, unsigned int nh, 
 				    unsigned int nt )
-  : nw(nw), nh(nh), c(nw ? nt : 0) 
+  : nw(nw), nh(nh), end(false), c(nt) 
 {
   stk.push_back(nh); 
   if ( nw>1 ) next(); 
