@@ -2,7 +2,7 @@ dnl -*- M4 -*- acinclude.m4 - Tests for compiler functionality
 
 dnl Process this file with aclocal to produce aclocal.m4.
 
-dnl Copyright (C) 2001, 2002, 2003 Martin Bright <martin@boojum.org.uk>
+dnl Copyright (C) 2001, 2002, 2003, 2004 Martin Bright <martin@boojum.org.uk>
 dnl and Richard Smith <richard@ex-parrot.com>
 
 dnl This program is free software; you can redistribute it and/or modify
@@ -447,14 +447,18 @@ AC_DEFUN([AC_USE_READLINE],
       [AC_CHECK_CXX_LIB(
 	readline, [#include <readline/readline.h>
 	], [ readline(">"); ],
-	ac_cv_use_readline=yes,
-	AC_CHECK_CXX_LIB(
-	  readline, [#include <stdio.h>
-	  #include <readline/readline.h>
-	  ], [ readline(">"); ],
+	ac_cv_use_readline=yes)])
+  fi
+  if test -z "$ac_cv_use_readline" ; then
+    AC_CACHE_CHECK(
+      [for GNU readline library with stdio],
+      [ac_cv_use_readline],
+      [AC_CHECK_CXX_LIB(
+	readline, [#include <stdio.h>
+	#include <readline/readline.h>
+	], [ readline(">"); ],
 	ac_cv_use_readline=stdio,
-	ac_cv_use_readline=no
-    ))])
+	ac_cv_use_readline=no)])
   fi
   if test "$ac_cv_use_readline" = yes ; then
     READLINE_LIBS=[-lreadline]
