@@ -20,11 +20,12 @@
 #ifndef RINGING_PRINTM_H
 #define RINGING_PRINTM_H
 
-#ifdef RINGING_HAS_PRAGMA_INTERFACE
+#include <ringing/common.h>
+
+#if RINGING_HAS_PRAGMA_INTERFACE
 #pragma interface
 #endif
 
-#include <ringing/common.h>
 #include <ringing/print.h>
 #include <ringing/method.h>
 

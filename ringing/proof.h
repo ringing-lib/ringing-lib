@@ -58,11 +58,12 @@
 #ifndef RINGING_PROOF_H
 #define RINGING_PROOF_H
 
-#ifdef RINGING_HAS_PRAGMA_INTERFACE
+#include <ringing/common.h>
+
+#if RINGING_HAS_PRAGMA_INTERFACE
 #pragma interface
 #endif
 
-#include <ringing/common.h>
 #if RINGING_OLD_INCLUDES
 #include <iostream.h>
 #include <list.h>

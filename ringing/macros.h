@@ -215,7 +215,9 @@ RINGING_END_NAMESPACE_STD
 // be wrapped up into a autoconf test, but I can't make
 // a simple test case.
 #if defined(__GNUG__) && !defined(__CYGWIN__)
-# define RINGING_HAS_PRAGMA_INTERFACE
+# define RINGING_HAS_PRAGMA_INTERFACE 1
+#else
+# define RINGING_HAS_PRAGMA_INTERFACE 0
 #endif
 
 #endif // RINGING_MACROS_H

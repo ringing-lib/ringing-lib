@@ -20,11 +20,12 @@
 #ifndef RINGING_MSLIB_H
 #define RINGING_MSLIB_H
 
-#ifdef RINGING_HAS_PRAGMA_INTERFACE
+#include <ringing/common.h>
+
+#if RINGING_HAS_PRAGMA_INTERFACE
 #pragma interface
 #endif
 
-#include <ringing/common.h>
 #if RINGING_OLD_C_INCLUDES
 #include <ctype.h>
 #include <algo.h>

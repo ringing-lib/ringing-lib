@@ -20,11 +20,12 @@
 #ifndef RINGING_BASIC_SEARCH_H
 #define RINGING_BASIC_SEARCH_H
 
-#ifdef RINGING_HAS_PRAGMA_INTERFACE
+#include <ringing/common.h>
+
+#if RINGING_HAS_PRAGMA_INTERFACE
 #pragma interface
 #endif
 
-#include <ringing/common.h>
 #if RINGING_OLD_INCLUDES
 #include <vector.h>
 #else

@@ -30,7 +30,9 @@
 #ifndef RINGING_MUSIC_H
 #define RINGING_MUSIC_H
 
-#ifdef RINGING_HAS_PRAGMA_INTERFACE
+#include <ringing/common.h>
+
+#if RINGING_HAS_PRAGMA_INTERFACE
 #pragma interface
 #endif
 

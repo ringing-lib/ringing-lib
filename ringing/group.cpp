@@ -19,7 +19,7 @@
 
 #include <ringing/common.h>
 
-#ifdef RINGING_HAS_PRAGMA_INTERFACE
+#if RINGING_HAS_PRAGMA_INTERFACE
 #pragma implementation
 #endif
 
@@ -103,7 +103,7 @@ group::group( const vector<row>& gens )
   set< row > s;
 
   // Find the maximum number of bells in any of the gens
-  size_t b(0);
+  int b(0);
 
   for ( vector<row>::const_iterator i( gens.begin() ), e( gens.end() );
 	i != e;  ++i )

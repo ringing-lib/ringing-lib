@@ -20,7 +20,7 @@
 #ifndef RINGING_XMLLIB_H
 #define RINGING_XMLLIB_H
 
-#ifdef RINGING_HAS_PRAGMA_INTERFACE
+#if RINGING_HAS_PRAGMA_INTERFACE
 #pragma interface
 #endif
 

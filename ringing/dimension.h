@@ -20,11 +20,12 @@
 #ifndef RINGING_DIMENSION_H
 #define RINGING_DIMENSION_H
 
-#ifdef RINGING_HAS_PRAGMA_INTERFACE
+#include <ringing/common.h>
+
+#if RINGING_HAS_PRAGMA_INTERFACE
 #pragma interface
 #endif
 
-#include <ringing/common.h>
 #include <string>
 #if RINGING_OLD_INCLUDES
 #include <iostream.h>

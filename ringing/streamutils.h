@@ -20,11 +20,12 @@
 #ifndef RINGING_STREAMUTILS_H
 #define RINGING_STREAMUTILS_H
 
-#ifdef RINGING_HAS_PRAGMA_INTERFACE
+#include <ringing/common.h>
+
+#if RINGING_HAS_PRAGMA_INTERFACE
 #pragma interface
 #endif
 
-#include <ringing/common.h>
 #if RINGING_USE_STRINGSTREAM
 #if RINGING_OLD_INCLUDES
 #include <sstream.h>

@@ -20,11 +20,12 @@
 #ifndef RINGING_TOUCH_H
 #define RINGING_TOUCH_H
 
-#ifdef RINGING_HAS_PRAGMA_INTERFACE
+#include <ringing/common.h>
+
+#if RINGING_HAS_PRAGMA_INTERFACE
 #pragma interface
 #endif
 
-#include <ringing/common.h>
 #if RINGING_OLD_INCLUDES
 #include <vector.h>
 #include <list.h>

@@ -20,11 +20,12 @@
 #ifndef RINGING_GROUP_H
 #define RINGING_GROUP_H
 
-#ifdef RINGING_HAS_PRAGMA_INTERFACE
+#include <ringing/common.h>
+
+#if RINGING_HAS_PRAGMA_INTERFACE
 #pragma interface
 #endif
 
-#include <ringing/common.h>
 #include <ringing/row.h>
 #if RINGING_OLD_INCLUDES
 #include <vector.h>

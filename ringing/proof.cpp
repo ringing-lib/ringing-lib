@@ -37,7 +37,7 @@
 
 #include <ringing/common.h>
 
-#ifdef RINGING_HAS_PRAGMA_INTERFACE
+#if RINGING_HAS_PRAGMA_INTERFACE
 #pragma implementation
 #endif
 
