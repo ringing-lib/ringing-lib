@@ -158,20 +158,18 @@ public:
   // range [first, last).
   template < class InputIterator >
   multtab( InputIterator first, InputIterator last )
-    : colcount( 0u ), rows( make_vector( first, last ) ), table( rows.size() )
+    : rows( make_vector( first, last ) ), table( rows.size() )
   { pends.push_back( row(first->bells()) ); }
 
   // As above but use factor out some part-end.
   template < class InputIterator >
   multtab( InputIterator first, InputIterator last, const row &partend )
-    : colcount( 0u )
   { init( make_vector( first, last ), vector<row>( 1u, partend ) ); }
 
   // ... And more complicated part end groups.
   template < class InputIterator >
   multtab( InputIterator first, InputIterator last, 
 	   const vector< row >& partends )
-    : colcount( 0u )
   { init( make_vector( first, last ), partends ); }
 
   typedef RINGING_DETAILS_PREFIX multtab_row_t      row_t;
@@ -223,10 +221,11 @@ private:
 
   void init( const vector< row > &r, const vector< row >& gens );
 
-  size_t colcount;
   vector< row > rows;
   vector< vector< row_t > > table;
   vector< row > pends;
+  enum pre_or_post { pre_mult, post_mult };
+  vector< pair< row, pre_or_post > > cols;
 };
 
 RINGING_END_NAMESPACE

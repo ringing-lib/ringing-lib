@@ -96,7 +96,7 @@ void multtab::swap( multtab &other )
   rows.swap( other.rows );
   table.swap( other.table );
   pends.swap( other.pends );
-  RINGING_PREFIX_STD swap( colcount, other.colcount );
+  cols.swap( other.cols );
 }
 
 multtab &multtab::operator=( const multtab &other ) 
@@ -182,27 +182,33 @@ multtab::compute_pre_mult( const row &r )
 	    "multiplication table that does not commute with the part ends" );
   }
 
-  size_t i(0);
-  for ( vector< row >::const_iterator ri( rows.begin() );
-	ri != rows.end(); ++ri )
-    {
-      table[ i++ ].push_back( find( r * *ri ) );
-    }
+  {
+    for ( size_t i(0); i < cols.size(); ++i )
+      if ( cols[i].second == pre_mult && cols[i].first == r )
+	return pre_col_t( i, this );
+  }
+
+  for ( size_t i(0); i < table.size(); ++i )
+    table[i].push_back( find( r * rows[i] ) );
   
-  return pre_col_t( colcount++, this );
+  cols.push_back( make_pair( r, pre_mult ) );
+  return pre_col_t( cols.size() - 1, this );
 }
 
 multtab::post_col_t 
 multtab::compute_post_mult( const row &r )
 {
-  size_t i(0);
-  for ( vector< row >::const_iterator ri( rows.begin() ); 
-	ri != rows.end(); ++ri )
-    {
-      table[ i++ ].push_back( find( *ri * r ) );
-    }
-  
-  return post_col_t( colcount++, this );
+  {
+    for ( size_t i(0); i < cols.size(); ++i )
+      if ( cols[i].second == post_mult && cols[i].first == r )
+	return post_col_t( i, this );
+  }
+
+  for ( size_t i(0); i < table.size(); ++i )
+    table[i].push_back( find( rows[i] * r ) );
+
+  cols.push_back( make_pair( r, pre_mult ) );
+  return post_col_t( cols.size() - 1, this );
 }
 
 multtab::row_t 
