@@ -466,7 +466,7 @@ void printrow_pdf::text(const string& t, const dimension& x,
   tb.x = right ? 
     (x.in_points() + (lastrow.bells() - 1) * opt.xspace.in_points())
     : -x.in_points();
-  tb.y = (between ? (count - 1) : (count - 0.5f)) * opt.yspace.in_points();
+  tb.y = (between ? (count - 0.5f) : (count - 1)) * opt.yspace.in_points();
   tb.al = al;
   tb.squash = false;
   tb.s = t;
