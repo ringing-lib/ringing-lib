@@ -1,5 +1,5 @@
 // execution_context.cpp - Environment to evaluate expressions
-// Copyright (C) 2002, 2003 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003, 2004 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -83,6 +83,19 @@ expression execution_context::lookup_symbol( const string& sym ) const
 void execution_context::undefine_symbol( const string& sym )
 {
   sym_table.undefine(sym);
+}
+
+bool execution_context::default_define_symbol( const pair< const string, expression > &defn )
+{
+  if ( ! sym_table.lookup(defn.first).isnop() ) 
+    return false;
+
+  sym_table.define(defn);
+
+  if ( sym_table.lookup( "__first__" ).isnull() )
+    sym_table.define
+      ( pair<const string, expression>( "__first__", defn.second ) );
+  return true;
 }
 
 bool execution_context::define_symbol( const pair< const string, expression > &defn )

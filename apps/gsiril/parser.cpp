@@ -1,5 +1,5 @@
 // parser.cpp - Tokenise and parse lines of input
-// Copyright (C) 2002, 2003 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003, 2004 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -66,18 +66,20 @@ public:
     comment     = first_token,
     string_lit,
     transp_lit,
-    pn_lit
+    pn_lit,
+    def_assign  /* ?= */
   };
 
   mstokeniser( istream& in, bool is_case_insensitive )
     : tokeniser( in, keep_new_lines, 
 		 is_case_insensitive ? case_insensitive : case_sensitive ), 
       q( "'", transp_lit ), qq( "\"", string_lit ), 
-      sym( "&" ), asym( "+" )
+      sym( "&" ), asym( "+" ), defass( "?=", def_assign )
   {
     add_qtype(&c);
     add_qtype(&q);    add_qtype(&qq);
     add_qtype(&sym);  add_qtype(&asym);
+    add_qtype(&defass);
   }
 
 
@@ -86,7 +88,7 @@ public:
     switch ( t.type() )
       case name: case num_lit: case open_paren: case close_paren:
       case comma: case times: case assignment: case new_line: case semicolon:
-      case comment: case string_lit: case transp_lit: case pn_lit: 
+      case comment: case string_lit: case transp_lit: case pn_lit: case def_assign:
 	return;
     
     throw runtime_error( make_string() << "Unknown token in input: " << t );
@@ -131,6 +133,7 @@ private:
   comment_impl c;
   string_token q, qq;
   pn_impl sym, asym;
+  basic_token defass;
 };
 
 
@@ -247,6 +250,15 @@ statement msparser::parse()
        && cmd[1].type() == mstokeniser::assignment )
     return statement
       ( new definition_stmt
+        ( cmd[0], cmd.size() == 2 
+	            ? expression( new nop_node )
+	            : make_expr( cmd.begin() + 2, cmd.end() ) ) );
+
+  // Default definition
+  if ( cmd.size() > 1 && cmd[0].type() == mstokeniser::name
+       && cmd[1].type() == mstokeniser::def_assign )
+    return statement
+      ( new default_defn_stmt
         ( cmd[0], cmd.size() == 2 
 	            ? expression( new nop_node )
 	            : make_expr( cmd.begin() + 2, cmd.end() ) ) );

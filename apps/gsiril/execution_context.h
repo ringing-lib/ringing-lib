@@ -73,6 +73,10 @@ public:
 
   // Returns true for a redefinition and false otherwise
   bool define_symbol( const pair< const string, expression > &defn );
+
+  // Returns true if used and false otherwise
+  bool default_define_symbol( const pair< const string, expression > &defn );
+
   void undefine_symbol( const string& sym );
   expression lookup_symbol( const string &sym ) const;
   void prove_symbol( const string& str ); 

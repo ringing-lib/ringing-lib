@@ -69,12 +69,14 @@ public:
     virtual ~node() {}
     virtual void debug_print( ostream &os ) const = 0;
     virtual void execute( proof_context &ctx ) = 0;
+    virtual bool isnop() const { return false; }
   };
 
   // Create an expression handle
   expression( node* impl ) : impl(impl) {}
 
   bool isnull() const { return !impl; }
+  bool isnop() const { return !impl || impl->isnop(); }
 
   void debug_print( ostream &os ) const    { impl->debug_print(os); }
   void execute( proof_context &ctx ) const { impl->execute(ctx);    }

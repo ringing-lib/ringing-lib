@@ -1,5 +1,5 @@
 // -*- C++ -*- common_expr.h - Some reusable expression & statement classes
-// Copyright (C) 2003 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2003, 2004 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -49,6 +49,21 @@ private:
 
   pair<const string, expression> defn;
 };
+
+// Default definition of a symbol 
+// (defines only if not already defined)
+class default_defn_stmt : public statement::impl
+{
+public:
+  explicit default_defn_stmt( const string& name, const expression& val )
+    : defn(name, val) {}
+
+private:
+  virtual void execute( execution_context& ) const;
+
+  pair<const string, expression> defn;
+};
+
 
 // These can be emited by directives that are handled
 // entirely within the parser.  The diagnostic allows the parser
@@ -140,6 +155,7 @@ class nop_node : public expression::node
 protected:
   virtual void debug_print( ostream &os ) const;
   virtual void execute( proof_context & );
+  virtual bool isnop() const;
 };
 
 class repeated_node : public expression::node

@@ -1,5 +1,5 @@
 // main.cpp - Entry point for gsiril
-// Copyright (C) 2002, 2003 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003, 2004 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -39,8 +39,10 @@
 #endif
 #if RINGING_OLD_IOSTREAMS
 #include <iostream.h>
+#include <fstream.h>
 #else
 #include <iostream>
+#include <fstream>
 #endif
 #if RINGING_USE_STRINGSTREAM
 #if RINGING_OLD_INCLUDES
@@ -143,6 +145,12 @@ void arguments::bind( arg_parser& p )
 	   "SYMBOL",
 	   prove_symbol, "__first__" ) );
  
+  p.add( new strings_opt
+	 ( 'm', "module",
+	   "Import the given module",
+	   "MODULE",
+	   import_modules ) );
+
   p.add( new msiril_opt
 	 ( '\0', "msiril",
 	   "Run in microsiril compatibile mode",
@@ -201,7 +209,23 @@ void welcome()
 "conditions."  << endl;
 }
 
-void initialse( execution_context& e, const arguments& args )
+shared_pointer<istream> load_file( string const& name )
+{
+  shared_pointer<istream> in( new ifstream(name.c_str()) );
+  if ( !*in ) {
+    string filename( name ); filename += ".gsir";
+    in.reset( new ifstream(filename.c_str()) );
+  }
+  if ( !*in ) {
+    string filename( name ); filename += ".sir";
+    in.reset( new ifstream(filename.c_str()) );
+  }
+  if ( !*in )
+    in.reset();
+  return in;
+}
+
+void initialise( execution_context& ex, const arguments& args )
 {
   string init_string = 
 "true     = \"# rows ending in @\", \"Touch is true\"\n"
@@ -220,24 +244,41 @@ void initialse( execution_context& e, const arguments& args )
     init_string += "everyrow = \n";
 
   // Turn off interactivity whilst it prepopulates the symbol table
-  bool interactive = e.interactive(false);
-  bool verbose     = e.verbose(false);
-
-#if RINGING_USE_STRINGSTREAM
-  istringstream in(init_string);
-#else
-  istrstream in(init_string);
-#endif
+  bool interactive = ex.interactive(false);
+  bool verbose     = ex.verbose(false);
 
   // Prepopulate symbol table
-  parse_all(e, make_default_parser(in, args),
-	    "Error initialising", true);
+  {
+#if RINGING_USE_STRINGSTREAM
+    istringstream in(init_string);
+#else
+    istrstream in(init_string);
+#endif
 
-  e.interactive(interactive);
-  e.verbose(verbose);
+    parse_all(ex, make_default_parser(in, args),
+	      "Error initialising", true);
+  }
+
+  // Import any required modules
+  for ( vector< string >::const_iterator 
+	  i(args.import_modules.begin()), e( args.import_modules.end());
+	i != e; ++i ) 
+    {
+      shared_pointer<istream> in( load_file(*i) );
+
+      if ( !in )
+	throw runtime_error
+	  ( make_string() << "Unable to find module: " << *i );
+
+      parse_all(ex, make_default_parser(*in, args),
+		make_string() << "Error loading module '" << *i << "'", true);
+    }
+
+  ex.interactive(interactive);
+  ex.verbose(verbose);
 
   // Don't allow any of the predefined symbols to polute 'first'.
-  e.undefine_symbol( "__first__" );
+  ex.undefine_symbol( "__first__" );
 }
 
 bool prove_final_symbol( execution_context& e, const arguments& args )
@@ -265,7 +306,7 @@ int main( int argc, char *argv[] )
 	args.prove_symbol = lower_case( args.prove_symbol );
 
       execution_context e( cout, args );
-      initialse(e, args);
+      initialise(e, args);
 
       if (args.interactive) welcome();
 

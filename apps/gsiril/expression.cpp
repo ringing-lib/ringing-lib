@@ -1,5 +1,5 @@
 // expression.cpp - Nodes and factory function for expressions
-// Copyright (C) 2002, 2003 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003, 2004 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -42,13 +42,30 @@ void definition_stmt::execute( execution_context& e ) const
 {
   if ( e.define_symbol( defn ) )
     {
-      if ( e.verbose() )
-	e.output() << "Redefinition of '" << defn.first << "'." << endl;
+      if ( e.verbose() ) {
+	if ( defn.second.isnop() )
+	  e.output() << "Definition of '" << defn.first << "' cleared." << endl;
+	else
+	  e.output() << "Redefinition of '" << defn.first << "'." << endl;
+      }
     }
   else
     {
-      if ( e.verbose() )
-	e.output() << "Definition of '" << defn.first << "' added." << endl;
+      if ( e.verbose() ) {
+	if ( ! defn.second.isnop() )
+	  e.output() << "Definition of '" << defn.first << "' added." << endl;
+      }
+    }
+}
+
+void default_defn_stmt::execute( execution_context& e ) const
+{
+  if ( e.default_define_symbol( defn ) )
+    {
+      if ( e.verbose() ) {
+	if ( ! defn.second.isnop() )
+	  e.output() << "Definition of '" << defn.first << "' added." << endl;
+      }
     }
 }
 
@@ -176,6 +193,11 @@ void nop_node::debug_print( ostream &os ) const
 
 void nop_node::execute( proof_context & )
 {
+}
+
+bool nop_node::isnop() const
+{
+  return true;
 }
 
 void repeated_node::debug_print( ostream &os ) const

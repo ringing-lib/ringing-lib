@@ -1,5 +1,5 @@
 // -*- C++ -*- prog_args.h - program arguments for gsiril
-// Copyright (C) 2003 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2003, 2004 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -45,6 +45,8 @@ struct arguments
   init_val<bool,false> case_insensitive;
 
   init_val<bool,false> everyrow_only;
+
+  vector<string>       import_modules;
 
   string               prove_symbol;
 
