@@ -99,10 +99,11 @@ struct arguments
   vector< vector<change> > allowed_changes;
   vector<row>    required_rows;
 
+  string H_fmt_str, R_fmt_str;
   format_string H_fmt, R_fmt;
 
   string require_str;
-  expression require_expr;
+  size_t require_expr_idx;
 
   arguments();
 

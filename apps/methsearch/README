@@ -196,7 +196,7 @@ listed below from highest to lowest precedence.
 
   Associativity   Operators
   left            *  /  %
-  left            +  -
+  left            +  -  .
   left            <  >  <=  >=  lt  gt  le  ge
   left            ==  !=  eq  ne
   left            &&
@@ -207,7 +207,8 @@ The arithmetic operators (+, -, *, /, %) operate on integers with rounding
 done towards zero -- thus 3/2 is 1 (rounding is towards zero).  The modulo
 operator, a % b, computes the value of a modulo b, thus 5 % 2 is 1.
 Parentheses can be used to override the natural precedence and associativity 
-of operators in the usual way.  
+of operators in the usual way.  The . operator is the string concatenation
+operator.
 
 The numerical comparison operators (<, >, <=, >=, ==, !=) convert their 
 arguments to integers before doing the comparison.  If their arguments were

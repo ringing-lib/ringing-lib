@@ -28,6 +28,7 @@
 #include "search.h"
 #include "falseness.h"
 #include "format.h"
+#include "expression.h"
 #include "prog_args.h"
 #if RINGING_OLD_INCLUDES
 #include <vector.h>
@@ -117,21 +118,22 @@ void run_search( const arguments &args, const method &initm )
   if ( args.count || args.raw_count )
     {
       if ( args.status ) clear_status();
-      if ( args.count ) {
-	if ( !args.quiet ) cout << "\n";
-	output_count( s.search_count );
-      }
-      else if ( args.raw_count )
-	output_raw_count( s.search_count );
+      if ( !args.quiet ) cout << "\n";
+      if ( args.raw_count ) output_raw_count( s.search_count );
+      else if ( args.count ) output_count( s.search_count );
     }
 }
 
 void searcher::found_method()
 {
+  method_properties props;
+  if ( args.histogram || !args.quiet )
+    props = method_properties( m );
+
   // Add it to the histogram
   if ( args.histogram )
     {
-      args.H_fmt.add_method_to_stats( m );
+      args.H_fmt.add_method_to_stats( props );
     }
 
   if ( !args.quiet )
@@ -139,7 +141,7 @@ void searcher::found_method()
       if ( args.status )
 	clear_status();
 
-      args.R_fmt.print_method( m, cout ); 
+      args.R_fmt.print_method( props, cout ); 
     }
 
   ++search_count;
@@ -269,8 +271,11 @@ bool searcher::is_acceptable_method()
   if ( args.true_positive_extent && !might_support_positive_extent(m) )
     return false;
 
-  if ( !args.require_expr.null() && !args.require_expr.b_evaluate(m) )
-    return false;
+  if ( args.require_expr_idx != static_cast<size_t>(-1) ) {
+    method_properties props(m);
+    if ( !expression_cache::b_evaluate( args.require_expr_idx, props ) )
+      return false;
+  }
 
   if ( args.prefer_limited_le && !is_limited_le( m.back() ) &&
        ( try_with_limited_le( change( bells, "1"  ) ) ||
@@ -644,7 +649,7 @@ void searcher::new_midlead_change()
 	      continue;
 
 	  if ( args.hunt_bells % 2 == 1 && depth == hl_len-1 ||
-	       args.hunt_bells % 2 == 0 && depth == hl_len )
+	       args.hunt_bells % 2 == 0 && depth == hl_len+args.treble_dodges )
 	    if ( ! try_halflead_sym_change( ch ) )
 	      continue;
 	  
@@ -653,7 +658,7 @@ void searcher::new_midlead_change()
 	      continue;
 	  
 	  if ( args.hunt_bells % 2 == 1 && depth == 2*hl_len-1 ||
-	       args.hunt_bells % 2 == 0 && depth == 0 )
+	       args.hunt_bells % 2 == 0 && depth == args.treble_dodges )
 	    if ( ! try_leadend_sym_change( ch ) )
 	      continue;
 	  
@@ -921,11 +926,13 @@ void searcher::general_recurse()
 
 
   // Only conventional symmetry
-  else if ( args.sym && depth == hl_len + 1 - args.hunt_bells % 2 )
+  else if ( args.sym && depth == hl_len + 
+	    ( args.hunt_bells % 2 ? 0 : args.treble_dodges + 1 ) )
     {
       assert( !args.skewsym && !args.doubsym );
 
-      copy( m.rbegin() + 1, m.rend() - (1 - args.hunt_bells % 2), 
+      copy( m.rbegin() + 1, 
+	    m.rend() - ( args.hunt_bells % 2 ? 0 : 2*args.treble_dodges + 1 ),
 	    back_inserter(m) );
 
       general_recurse();
@@ -934,6 +941,19 @@ void searcher::general_recurse()
 	m.pop_back();
     }
 
+
+  // Conventional symmetry when we have an even number of hunt bells 
+  // treble dodging -- first division
+  else if ( args.sym && args.hunt_bells % 2 == 0 && args.treble_dodges &&
+	    depth == args.treble_dodges + 1 )
+    {
+      copy( m.rbegin() + 1, m.rend(), back_inserter(m) );
+
+      general_recurse();
+
+      while ( size_t(m.length()) > depth )
+	m.pop_back();
+    }
 
   // Only rotational symmetry
   else if ( args.skewsym && depth == 3*hl_len / 2 + 1 - args.hunt_bells % 2 )

@@ -58,4 +58,11 @@ string get_compressed_pn( const method &m );
 string get_short_compressed_pn( const method &m );
 
 
+// S -- invariant under reflection in a change
+// M -- invariant under reflection through the middle of a row
+// G -- invariant under reflection through the middle of a row followed by
+//      translation by half a lead
+// R -- invariant under rotation
+string method_symmetry_string( const method& m );
+
 #endif // METHSEARCH_METHODUTILS_INCLUDED

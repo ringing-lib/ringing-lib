@@ -30,11 +30,11 @@
 #if RINGING_OLD_INCLUDES
 #include <stdexcept.h>
 #include <vector.h>
-#include <map.h>
+#include <utility.h>
 #else
 #include <stdexcept>
 #include <vector>
-#include <map>
+#include <utility>
 #endif
 #include <string>
 #if RINGING_HAVE_OLD_IOSTREAMS
@@ -52,6 +52,26 @@ RINGING_END_NAMESPACE
 RINGING_USING_NAMESPACE
 RINGING_USING_STD
 
+class method_properties 
+{
+public:
+  explicit method_properties( const method& m );
+
+  // All out-of-line so impl is complete
+  method_properties();
+ ~method_properties();
+  method_properties( const method_properties& );
+  method_properties& operator=( const method_properties& );
+
+  string get_property( int num_opt, const string& name ) const;
+
+private:
+
+  class impl;
+  shared_pointer<impl> pimpl;
+};
+
+
 // Exception to do exit(0) but calling destructors
 class exit_exception
 {
@@ -65,73 +85,31 @@ public:
   {}
 };
 
-class expression
-{
-public:
-  expression() {}
-  expression( const string& str );
-
-  class node {
-  public:
-    node() {} // Keep gcc-2.95.3 happy
-    virtual ~node() {}
-    virtual string s_evaluate( const method& m ) const = 0;
-    virtual long   i_evaluate( const method& m ) const = 0;
-    
-  private:
-    node(const node&); // Unimplemented
-    node& operator=(const node&); // Unimplemented
-  };
-
-  bool null() const { return !pimpl; }
-  string evaluate( const method& m ) const;
-  bool   b_evaluate( const method& m ) const;
-
-private:
-  class parser;
-  shared_pointer<node> pimpl;
-};
+class histogram_entry;
 
 struct format_string
 {
-  enum format_type { stat_type, normal_type };
+  enum format_type { stat_type, normal_type, require_type, preparsed_type };
 
-  format_string( const string &fmt, format_type type );
+  explicit format_string( const string &fmt = "", 
+			  format_type type = normal_type );
 
-  void print_method( const method &m, ostream &os ) const;
-  void add_method_to_stats( const method &m ) const;
+  void print_method( const method_properties &m, ostream &os ) const;
+  void add_method_to_stats( const method_properties &m ) const;
 
-  bool has_lead_head;
-  bool has_pn;
-  bool has_compressed_pn;
-  bool has_short_compressed_pn;
-  bool has_blow_count;
-  bool has_lh_order;
-  bool has_lh_code;
-  bool has_hunt_bells;
-  
+  vector< pair< int, string > > vars;
+
   bool has_name;
-  bool has_full_name;
-  bool has_class_name;
-  bool has_stage_name;
-  
-  bool has_music_score;
   bool has_falseness_group;
   
-  bool line_break;
+  bool null() const { return fmt.empty(); }
 
-  bool has_expression;
+  static size_t parse_requirement( const string& str );
 
-  vector<size_t> has_rows;
-  vector<size_t> has_changes;
-  vector<size_t> has_path;
-  
-  map<string, expression> exprs;
-
+private:
+  friend class histogram_entry;
   string fmt;
 };
-
-class histogram_entry;
 
 class statistics
 {
@@ -150,6 +128,8 @@ private:
 
   statistics();
 };
+
+size_t parse_requirement( const string& str );
 
 void clear_status();
 void output_status( const method &m );

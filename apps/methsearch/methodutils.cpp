@@ -324,7 +324,7 @@ bool has_rotational_symmetry( const method &m )
 	// Try m[i] as the rotational symmetry point
 	bool ok = true;
 
-	for ( int j=0; j<n/2 && ok; ++j )
+	for ( int j=0; j<n/2+1 && ok; ++j )
 	  if ( m[ (i+j)%n ] != m[ (n+i-j)%n ].reverse() )
 	    ok = false;
 
@@ -350,5 +350,53 @@ bool has_rotational_symmetry( const method &m )
   return false;
 }
 
+bool has_conventional_symmetry( const method& m )
+{
+  const int n( m.size() );
+  for ( int i=0; i<n/2; ++i )
+    {
+      // try m[i] as the sym point
+      bool ok(true);
 
+      for ( int j=1; ok && j<n/2; ++j ) 
+	if ( m[(i+j) % n] != m[(i-j+n) % n] )
+	  ok = false;
+
+      if (ok) return true;
+    }
+
+  return false;
+}
+
+bool has_mirror_symmetry( const method& m )
+{
+  const int n( m.size() );
+  for ( int i=0; i<n; ++i )
+    if ( m[i] != m[i].reverse() )
+      return false;
+
+  return true;
+}
+
+bool has_glide_symmetry( const method& m )
+{
+  const int n( m.size() );
+  for ( int i=0; i<n/2; ++i )
+    if ( m[i] != m[(i + n/2) % n].reverse() )
+      return false;
+
+  return true;
+}
+
+string method_symmetry_string( const method& m )
+{
+  assert( m.size() % 2 == 0 );
+
+  string rv;
+  if ( has_conventional_symmetry(m) ) rv += 'S';
+  if ( has_mirror_symmetry(m) )       rv += 'M';
+  if ( has_glide_symmetry(m) )        rv += 'G';
+  if ( has_rotational_symmetry(m) )   rv += 'R';
+  return rv;
+}
 

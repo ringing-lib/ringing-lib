@@ -108,8 +108,8 @@ bool falseness_opt::process( const string &arg, const arg_parser & ) const
 
 arguments::arguments()
   : mask("*"),
-    H_fmt( "",       format_string::stat_type   ),
-    R_fmt( "%p\t%l", format_string::normal_type )
+    R_fmt_str( "$p\t$l" ),
+    require_expr_idx( static_cast<size_t>(-1) )
 {
 }
 
@@ -161,12 +161,12 @@ void arguments::bind( arg_parser &p )
   p.add( new string_opt
 	 ( 'H', "frequencies", 
 	   "Count frequencies of different method properties", "FMT", 
-	   H_fmt.fmt ) );
+	   H_fmt_str ) );
 
   p.add( new string_opt
 	 ( 'R', "format", 
 	   "Use FMT to format methods as found", "FMT",
-	   R_fmt.fmt ) );
+	   R_fmt_str ) );
 
   p.add( new string_opt
 	 ( '\0', "require", 
@@ -339,6 +339,13 @@ bool arguments::validate( arg_parser &ap )
       return false;
     }
 
+  if ( hunt_bells % 2 == 0 && (require_limited_le || prefer_limited_le) )
+    {
+      ap.error( "Lead ends can only be limited with an odd number of "
+		"hunt bells");
+      return false;
+    }
+
   if ( ! hunt_bells && ! lead_len )
     {
       ap.error( "Must specify the lead length when searching for principles" );
@@ -427,7 +434,7 @@ bool arguments::validate( arg_parser &ap )
 
   try
     {
-      R_fmt = format_string( R_fmt.fmt, format_string::normal_type );
+      R_fmt = format_string( R_fmt_str, format_string::normal_type );
     }
   catch ( const argument_error &error )
     {
@@ -437,8 +444,8 @@ bool arguments::validate( arg_parser &ap )
 
   try
     {
-      H_fmt = format_string( H_fmt.fmt, format_string::stat_type );
-      histogram = !H_fmt.fmt.empty();
+      H_fmt = format_string( H_fmt_str, format_string::stat_type );
+      histogram = !H_fmt_str.empty();
     }
   catch ( const argument_error &error )
     {
@@ -451,7 +458,7 @@ bool arguments::validate( arg_parser &ap )
     {
       try
 	{
-	  require_expr = expression(require_str);
+	  require_expr_idx = format_string::parse_requirement( require_str );
 	}
       catch ( const argument_error &error )
 	{
@@ -460,30 +467,6 @@ bool arguments::validate( arg_parser &ap )
 	  return false;
 	}
     }
-
-  {
-    for ( vector<size_t>::const_iterator i( R_fmt.has_rows.begin() ), 
-	    e( R_fmt.has_rows.end() ); i != e; ++i )
-      {
-	if ( int(*i) > bells * (1 + treble_dodges) * 2 )
-	  {
-	    ap.error( "Format specifies row after end of method" );
-	    return false;
-	  }
-      }
-  }
-
-  {
-    for ( vector<size_t>::const_iterator i( H_fmt.has_rows.begin() ), 
-	    e( H_fmt.has_rows.end() ); i != e; ++i )
-      {
-	if ( int(*i) > bells * (1 + treble_dodges) * 2 )
-	  {
-	    ap.error( "Format specifies row after end of method" );
-	    return false;
-	  }
-      }
-  }
 
   if ( skewsym + sym + doubsym >= 2 )
     skewsym = sym = doubsym = true;
@@ -499,11 +482,11 @@ bool arguments::validate( arg_parser &ap )
 	}
     }
 
-  if ( R_fmt.has_name || R_fmt.has_full_name )
+  if ( R_fmt.has_name || H_fmt.has_name )
     {
       if ( ! method_libraries::has_libraries() )
 	{
-	  ap.error( "The -L option must be used if either %n or %N is used" );
+	  ap.error( "The -L option must be used if either $n or $N is used" );
 	  return false;
 	}
     }

@@ -88,10 +88,9 @@ int main( int argc, char *argv[] )
       {}
   }
 
-  if ( args.status )
-    cerr << '\r' << string( 60, ' ' ) << '\r';
+  if ( args.status ) clear_status();
 
-  if ( !args.R_fmt.line_break )
+//   if ( !args.R_fmt.line_break )
     cout << "\n";
 
   if ( args.histogram ) 
@@ -100,8 +99,8 @@ int main( int argc, char *argv[] )
       if ( args.count || !args.quiet ) cout << "\n";
 
       size_t count = statistics::output( cout );
-
-      if ( !args.H_fmt.line_break && count ) cout << "\n";
+      if ( count ) cout << "\n";
+//       if ( !args.H_fmt.line_break && count ) cout << "\n";
     }
 
   return 0;
