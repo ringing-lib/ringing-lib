@@ -103,6 +103,8 @@ private:
   shared_pointer<library_base> lb;
   static list<libtype*> libtypes;
 
+protected:
+  library(library_base* lb) : lb(lb) {}
 public:
   library(const string& filename = "");
   method load(const string& name) { return lb->load(name); }

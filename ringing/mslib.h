@@ -58,6 +58,9 @@ public:
   mslib(const string& name);
   ~mslib() { if (_good == 1) f.close(); }
 
+private:
+  friend class newlib<mslib>;
+  
   // Is this file in the right format?
   static int canread(ifstream& ifs);
 

@@ -12,7 +12,7 @@ printm.cpp print_pdf.cpp pdf_fonts.cpp stl.cpp
 
 myincludedir = $(includedir)/ringing
 myinclude_HEADERS = macros.h row.h method.h library.h mslib.h cclib.h proof.h \
-music.h print.h print_ps.h dimension.h stuff.h common.h touch.h printm.h \
+music.h print.h print_ps.h dimension.h common.h touch.h printm.h \
 print_pdf.h pdf_fonts.h pointers.h
 
 

@@ -30,7 +30,6 @@
 #include <cstdlib>
 #endif
 #include <ringing/row.h>
-#include <ringing/stuff.h>
 
 RINGING_USING_STD
 
@@ -128,25 +127,6 @@ change change::reverse(void) const
 }
 
 // Print place notation to a string
-char *change::print(char *pn) const
-{
-  char *p = pn;
-
-  if(n != 0) {
-    bell i = 0;
-    vector<bell>::const_iterator s;
-    for(s = swaps.begin(); s != swaps.end(); s++) { // Find the next swap
-      while(i < *s) { *p++ = i.to_char(); i = i + 1; } // Write all the places
-      i = i + 2;
-    }
-    // Write the remaining places
-    while(i < n) { *p++ = i.to_char(); i = i + 1; } 
-    if(p == pn) *p++ = 'X';
-  }
-  *p = '\0';
-  return pn;
-}
-
 string change::print() const
 {
   string p;
@@ -164,6 +144,12 @@ string change::print() const
   }
   return p;
 }
+
+char *change::print(char *pn) const
+{
+  return strcpy( pn, print().c_str() );
+}
+
 
 // Check whether a particular swap is done
 int change::findswap(bell which) const
@@ -394,17 +380,6 @@ row row::operator*(const change& c) const
 }
 
 // Print it to a string
-char *row::print(char *s) const
-{
-  char *t = s;
-  if(!data.empty())
-    for(vector<bell>::const_iterator i = data.begin(); 
-	i != data.end(); ++i)
-      *t++ = i->to_char();
-  *t = 0;
-  return s;
-}
-
 string row::print() const
 {
   string s;
@@ -414,6 +389,11 @@ string row::print() const
 	i != data.end(); ++i)
       s += i->to_char();
   return s;
+}
+
+char *row::print(char *s) const
+{
+  return strcpy( s, print().c_str() );
 }
 
 // Set it to rounds
@@ -554,41 +534,42 @@ int row::ispblh(void) const
 }
 
 // Express it as a product of disjoint cycles
-char *row::cycles(char *result) const
+string row::cycles() const
 {
   // Note: If you change the format of the output of this function,
   // make sure you verify that row::sign() still works.
+  string result;
 
-  if(data.empty()) {
-    *result = '\0';
-    return result;
-  }
-  buffer done(bells());
-  int i;
+  if (data.empty()) return result;
+  vector<bool> done(bells(), false);
 
-  for(i = 0;i < bells();i++) done[i] = 0;
-  i = 0;
-  char *s = result;
-  for(;;) {
-    while(i < bells() && done[i]) i++; // Find the next bell we haven't got yet
-    if(i == bells()) break;
+  int i = 0;
+  for (;;) {
+    // Find the next bell we haven't got yet
+    while ( i < bells() && done[i] ) ++i;
+    if ( i == bells() ) break;
     do {
-      *s++ = bell(i).to_char();        // Write it to the string
-      done[i] = 1;              // Remember that we've done it
-      i = data[i];              // Find the next one in this cycle
-    } while(!done[i]);          // until the finish the cycle
-    *s++ = ',';                 // Write a separator
+      result.append( 1, bell(i).to_char() );  // Write it to the string
+      done[i] = true;		// Remember that we've done it
+      i = data[i];		// Find the next one in this cycle
+    } while (!done[i]);		// until the finish the cycle
+    result.append(1, ',');	// Write a separator
   }
-  *(s-1) = '\0';                // Get rid of the final separator
+
+  result.erase( result.end() - 1 );// Get rid of the final separator
   return result;
+}
+
+// Express it as a product of disjoint cycles
+char *row::cycles(char *result) const
+{
+  return strcpy( result, cycles().c_str() );
 }
 
 // Return the order of a row
 int row::order(void) const
 {
   if(data.empty()) return 1;
-  buffer cyc(2 * bells());
-  char *s;
   int o = 1;
 
   // We do this by expressing the row as disjoint cycles, then by taking the
@@ -598,20 +579,20 @@ int row::order(void) const
   // but the maximum order on 16 bells is (I think) 4x5x7 = 140. It's quicker
   // to do it this way.
 
-  cycles(cyc);                  // Get the cycles representation
-  for(s = strtok(cyc,",");s != NULL;s = strtok(NULL,","))   // For each cycle in the string
-    o = lcm(o,strlen(s));
+  string cyc( cycles() );              // Get the cycles representation
+  
+  // For each cycle in the string
+  for(char *s = strtok(&*cyc.begin(),","); s != NULL; s = strtok(NULL,","))
+    o = lcm(o, strlen(s));
+
   return o;
 }
 
 // Return the sign of a row
 int row::sign(void) const
 {
-  if(data.empty()) return 1;
-  buffer c(bells() * 2);
-  cycles(c);                    // Express it in cycles
-  int sgn = strlen(c) & 1; // Just take the length of the string
-  return sgn ? 1 : -1;
+  // Express it in cycles and take the length of the string
+  return ( cycles().length() & 1 ) ? 1 : -1;
 }
 
 

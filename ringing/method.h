@@ -32,7 +32,6 @@
 #endif
 #include <string>
 #include <ringing/row.h>
-#include <ringing/stuff.h>
 
 RINGING_START_NAMESPACE
 

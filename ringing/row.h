@@ -133,8 +133,8 @@ public:
   friend RINGING_API row& operator*=(row& r, const change& c);
   friend RINGING_API bell& operator*=(bell& i, const change& c);
 
-  char *print(char *pn) const;	// Print place notation to a string
-  string print() const;
+  string print() const;         // Print place notation to a string
+  char *print(char *pn) const;	// This overload is deprecated.
   int bells(void) const { return n; } // Return number of bells
   int sign(void) const;		// Return whether it's odd or even
   int findswap(bell which) const; // Check whether a particular swap is done
@@ -235,8 +235,8 @@ public:
   row operator*(const change& c) const;	
   row inverse(void) const;	// Find the inverse
 
-  char *print(char *s) const;	// Print the row into a string
-  string print() const;
+  char *print(char *s) const;	// This overload is deprecated.
+  string print() const;		// Print the row into a string
   int bells(void) const { return data.size(); } // How many bells?
   row& rounds(void);		// Set it to rounds
 
@@ -252,7 +252,8 @@ public:
   int isrounds(void) const;	// Is it rounds?
   int ispblh(void) const;	// Which plain bob lead head is it?
   int sign(void) const;         // Return whether it's odd or even
-  char *cycles(char *result) const; // Express it as a product of disjoint cycles
+  string cycles() const;        // Express it as a product of disjoint cycles
+  char *cycles(char *result) const; // This overload is deprecated.
   int order(void) const;	    // Return the order
   friend RINGING_API ostream& operator<<(ostream&, const row&);
   void swap(row &other) { data.swap(other.data); }

@@ -69,8 +69,12 @@ public:
 #if defined(SEPERATE_FILES)
   static int seperatefiles(const string&);
 #endif
+
   cclib::cclib(const string& name);
   ~cclib() { if (_good == 1) f.close(); }
+
+private:
+  friend class newlib<cclib>;
 
   // Is this file in the right format?
   static int canread(ifstream& ifs);
