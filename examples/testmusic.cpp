@@ -118,7 +118,7 @@ int main()
     for (k = mu.begin(); k != mu.end(); k++)
       cout << "Total " << k->get() << "\t: " << k->count() << " : " << k->total() << " : " << k->possible_matches(5) << endl;
 
-    cout << "Total Score: " << mu.get_score() << endl;
+    cout << "Total Score: " << mu.get_score() << "\tTotal Possible Score: " << mu.get_possible_score() << endl;
 
     cout << "Results for handstrokes:\n";
 

@@ -160,6 +160,11 @@ string music_details::get() const
   return *this;
 }
 
+int music_details::possible_score(const unsigned int &bells) const
+{
+  return possible_matches(bells) * _score;
+}
+
 unsigned int music_details::possible_matches(const unsigned int &bells) const
 {
   int q = 1;
@@ -568,7 +573,7 @@ void music_node::match(const row &r, const unsigned int &pos, vector<music_detai
 // ********************************************************
 
 // default constructor.
-music::music(const unsigned int &b) : TopNode(b)
+music::music(const unsigned int &b) : TopNode(b), bells(b)
 {
   // Reset the music
   reset_music();
@@ -609,6 +614,7 @@ music::size_type music::size() const
 void music::set_bells(const unsigned int &b)
 {
   TopNode.set_bells(b);
+  bells = b;
 }
 
 // reset_music - clears all the music information entries.
@@ -647,6 +653,15 @@ unsigned int music::get_count(const EStroke &stroke)
   for (i = begin(); i != end(); i++)
     count += i->count(stroke);
   return count;
+}
+
+int music::get_possible_score()
+{
+  int total = 0;
+  music::const_iterator i;
+  for (i = begin(); i != end(); i++)
+    total += i->possible_score(bells);
+  return total;
 }
 
 RINGING_END_NAMESPACE

@@ -2236,8 +2236,12 @@ of rows matched.
 Returns the currently stored expression.
 @end deftypefun
 
-@deftypefun {unsigned int} possible matches (const unsigned int &bells) const;
+@deftypefun {unsigned int} possible_matches (const unsigned int &bells) const;
 Returns the maximum number of possible matches (in one true extent) for the currently specified expression. @var{bells} must be specified as the @code{music_details} class has no knowledge of this under normal circumstances.
+@end deftypefun
+
+@deftypefun {int} possible_score (const unsigned int &bells) const;
+Returns the maximum possible score (based on one true extent) for the currently specified expression. @var{bells} must be specified as the @code{music_details} class has no knowledge of this under normal circumstances.
 @end deftypefun
 
 @deftypefun {unsigned int} count (const EStroke& = eBoth) const;

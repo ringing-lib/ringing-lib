@@ -79,6 +79,7 @@ public:
 
   // Return the number of possible matches
   unsigned int possible_matches(const unsigned int &bells) const;
+  int possible_score(const unsigned int &bells) const;
 
   // Return the count
   unsigned int count(const EStroke& = eBoth) const;
@@ -191,11 +192,16 @@ public:
   // Get the total matches.
   unsigned int get_count(const EStroke& = eBoth);
 
+  // Total Possible Score
+  int get_possible_score();
+
 private:
   // The music specification details
   mdvector MusicInfo;
   // The tree containing the structure for matching rows
   music_node TopNode;
+
+  unsigned int bells;
 
   // The main processing function
   void process_row(const row&, const bool&);
