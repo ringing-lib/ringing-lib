@@ -85,6 +85,8 @@ public:
   void version() const;
   void error(const string &s) const;
 
+  std::string program_name() const { return progname; }
+
 private:
   void wrap(const string& s, int l, int r, int c) const;
 

@@ -46,6 +46,23 @@ arg_parser::arg_parser(const string& n, const string& d,
 		       const string& s) 
   : default_opt(0), progname(n), description(d), synopsis(s) 
 {
+#if RINGING_WINDOWS
+  const char dir_sep[] = "/\\";
+#else
+  const char dir_sep = '/';
+#endif
+
+  // Strip directory names
+  string::size_type i = progname.find_last_of( dir_sep );
+  if ( i != string::npos )
+    progname.erase(0, i+1);
+
+  // Strip '.exe' suffix
+#if RINGING_WINDOWS
+  i = progname.rfind(".exe");
+  if ( i == progname.size() - 4 /* = strlen(".exe") */ )
+    progname.erase( progname.size()-4 );
+#endif
 }
 
 arg_parser::~arg_parser()
