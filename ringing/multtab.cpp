@@ -28,10 +28,12 @@
 #include <iostream.h>
 #include <iomanip.h>
 #include <map.h>
+#include <set.h>
 #else
 #include <iostream>
 #include <iomanip>
 #include <map>
+#include <set>
 #endif
 #if RINGING_OLD_C_INCLUDES
 #include <assert.h>
@@ -59,9 +61,24 @@ multtab &multtab::operator=( const multtab &other )
   return *this;
 }
 
-bool multtab::is_representative( const row& r ) const
+row multtab::make_post_representative( const row& r ) const
 {
-  return r == make_representative(r);
+  if ( postgroup.size() < 2 ) return r;
+
+  row res;
+
+  for ( group::const_iterator i( postgroup.begin() ), e( postgroup.end() ); 
+	i != e; ++i )
+    {
+      row const x( r * *i );
+      if ( (res.bells() == 0 || x < res) && 
+	   // Handle case where pends and postgroup are not subsets of rows
+	   RINGING_PREFIX_STD find( rows.begin(), rows.end(), 
+				    x ) != rows.end() )
+	res = x;
+    }
+
+  return res;
 }
 
 row multtab::make_representative( const row& r ) const
@@ -71,10 +88,8 @@ row multtab::make_representative( const row& r ) const
   for ( group::const_iterator i( pends.begin() ), e( pends.end() ); 
 	i != e; ++i )
     {
-      row x( *i * r );
-      if ( x < res && 
-	   RINGING_PREFIX_STD find( rows.begin(), rows.end(), 
-				    x ) != rows.end() )
+      row const x( make_post_representative( *i * r ) );
+      if ( x.bells() && x < res )
 	res = x;
     }
 
@@ -83,11 +98,30 @@ row multtab::make_representative( const row& r ) const
 
 void multtab::init( const vector< row >& r )
 {
+  // This, and the two functions above, are complicated by having to
+  // handle the case where the part end group is not a subset of row 
+  // list.  (This occurs when, for example, generating a list of 
+  // 8-bell course ends with the standard nine-part part end
+  // group, <13425678, 12345786>.)
+  
+
+  rows = r; // so that we can call make_representative, below
+
+  set<row> rows2;
+
+  for ( vector<row>::const_iterator i( r.begin() ), e( r.end() ); 
+	i != e; ++i ) 
+    rows2.insert( make_representative(*i) );
+
+  // TODO:  Better error checking for this:
+  assert( rows2.size() == r.size() / pends.size() );
+
+  // Force the capacity to be reduced.  
+  // (Calling clear doesn't necessarily do this.)
+  vector<row>().swap(rows);
   rows.reserve( r.size() / pends.size() );
 
-  for ( vector<row>::const_iterator i( r.begin() ), e( r.end() ); i != e; ++i )
-    if ( is_representative( *i ) )
-      rows.push_back( *i );
+  copy( rows2.begin(), rows2.end(), back_inserter(rows) );
 
   table.resize( rows.size() );
 }
