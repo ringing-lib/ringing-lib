@@ -129,14 +129,18 @@ xmllib::impl::impl( xmllib::file_arg_type type, const string& url )
 	  break;
 	  
 	case xmllib::url:
-	  parser.parse( URLInputSource( XMLURL( url.c_str() ) ) );
+	  {
+	    URLInputSource src( XMLURL( url.c_str() ) );
+	    parser.parse( src );
+	  }
 	  break;
 
 	case xmllib::default_url:
 	  {
 	    string full_url( "http://methods.ringing.org/cgi-bin/simple.pl?" );
 	    full_url.append( url );
-	    parser.parse( URLInputSource( XMLURL( full_url.c_str() ) ) );
+	    URLInputSource src( XMLURL( full_url.c_str() ) );
+	    parser.parse( src );
 	  }
 	  break;
 	}
