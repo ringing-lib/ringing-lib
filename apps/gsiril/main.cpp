@@ -144,6 +144,13 @@ void arguments::bind( arg_parser& p )
 	   "Proves a particular symbol (or the first if none specified)",
 	   "SYMBOL",
 	   prove_symbol, "__first__" ) );
+
+  // NB __first__ is an alias for the first symbol
+  p.add( new strings_opt
+	 ( 'D', "define",
+	   "Define a particular symbol",
+	   "NAME=VALUE",
+	   definitions ) );
  
   p.add( new strings_opt
 	 ( 'm', "module",
@@ -272,6 +279,21 @@ void initialise( execution_context& ex, const arguments& args )
 
       parse_all(ex, make_default_parser(*in, args),
 		make_string() << "Error loading module '" << *i << "'", true);
+    }
+    
+  for ( vector< string >::const_iterator 
+	  i(args.definitions.begin()), e( args.definitions.end());
+	i != e; ++i ) 
+    {
+#if RINGING_USE_STRINGSTREAM
+      istringstream in(*i);
+#else
+      istrstream in(*i);
+#endif
+      
+      parse_all(ex, make_default_parser(in, args),
+		make_string() << "Error parsing definition '" << *i << "'", 
+		true);
     }
 
   ex.interactive(interactive);

@@ -47,6 +47,7 @@ struct arguments
   init_val<bool,false> everyrow_only;
 
   vector<string>       import_modules;
+  vector<string>       definitions;
 
   string               prove_symbol;
 
