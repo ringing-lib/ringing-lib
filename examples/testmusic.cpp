@@ -62,8 +62,9 @@ int main()
     }
 
   {
-    int i[2];
-    int j = 0;
+    vector<int> thedetails;
+    vector<int>::const_iterator k;
+
     cout << "Testing Music Class...\n\n";
     
     cout << "Testing in Plain Bob Doubles (120)\n";
@@ -75,28 +76,28 @@ int main()
       {
 #endif
 	music_details md("*45");
-	i[j] = mu.specify_music(md);
-	cout << j++ << ":" << md << endl;
+	thedetails.push_back(mu.specify_music(md));
+	cout << thedetails[thedetails.size() - 1] << ":" << md << endl;
 
-	md.Set("*45*");
-	i[j] = mu.specify_music(md);
-	cout << j++ << ":" << md << " To be implemented" << endl;
+	md.Set("*345*");
+	thedetails.push_back(mu.specify_music(md));
+	cout << thedetails[thedetails.size() - 1] << ":" << md << endl;
 	
 	md.Set("54*", 2);
-	i[j] = mu.specify_music(md);
-	cout << j++ << ":" << md << endl;
+	thedetails.push_back(mu.specify_music(md));
+	cout << thedetails[thedetails.size() - 1] << ":" << md << endl;
 	
 	md.Set("12??5", 4);
-	i[j] = mu.specify_music(md);
-	cout << j++ << ":" << md << endl;
+	thedetails.push_back(mu.specify_music(md));
+	cout << thedetails[thedetails.size() - 1] << ":" << md << endl;
 	
 	md.Set("??345", 6);
-	i[j] = mu.specify_music(md);
-	cout << j++ << ":" << md << endl;
+	thedetails.push_back(mu.specify_music(md));
+	cout << thedetails[thedetails.size() - 1] << ":" << md << endl;
 
 	md.Set("13524", 6);
-	i[j] = mu.specify_music(md);
-	cout << j++ << ":" << md << endl;
+	thedetails.push_back(mu.specify_music(md));
+	cout << thedetails[thedetails.size() - 1] << ":" << md << endl;
 #if RINGING_USE_EXCEPTIONS
       }
     catch (exception &e)
@@ -108,23 +109,22 @@ int main()
 
     cout << "Results for both strokes:\n";
 
-    int k; // MSVC-5/6 don't correctly understand for scope.
-    for ( k = 0; k < j; k++)
-      cout << "Total " << k << ": " << mu.Get_Results(i[k]) << " : " << mu.Get_Score(i[k]) << endl;
+    for ( k = thedetails.begin(); k != thedetails.end(); k++)
+      cout << "Total " << *k << ": " << mu.Get_Results(*k) << " : " << mu.Get_Score(*k) << endl;
 
     cout << "Total Score: " << mu.Get_Score() << endl;
 
     cout << "Results for handstrokes:\n";
 
-    for ( k = 0; k < j; k++)
-      cout << "Total " << k << ": " << mu.Get_Results(i[k], eHandstroke) << " : " << mu.Get_Score(i[k], eHandstroke) << endl;
+    for ( k = thedetails.begin(); k != thedetails.end(); k++)
+      cout << "Total " << *k << ": " << mu.Get_Results(*k, eHandstroke) << " : " << mu.Get_Score(*k, eHandstroke) << endl;
 
     cout << "Total Score: " << mu.Get_Score(eHandstroke) << endl;
 
     cout << "Results for backstrokes:\n";
 
-    for ( k = 0; k < j; k++)
-      cout << "Total " << k << ": " << mu.Get_Results(i[k], eBackstroke) << " : " << mu.Get_Score(i[k], eBackstroke) << endl;
+    for ( k = thedetails.begin(); k != thedetails.end(); k++)
+      cout << "Total " << *k << ": " << mu.Get_Results(*k, eBackstroke) << " : " << mu.Get_Score(*k, eBackstroke) << endl;
 
     cout << "Total Score: " << mu.Get_Score(eBackstroke) << endl;
   }

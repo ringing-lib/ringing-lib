@@ -154,7 +154,7 @@ void music_node::add(const music_details &md, const unsigned int &i, const unsig
     {
       detailsmatch.push_back(key);
     }
-  else
+  else if (pos <= bells)
     {
       bell b;
       bool isbell = true;
@@ -208,6 +208,13 @@ void music_node::add(const music_details &md, const unsigned int &i, const unsig
 		    {
 		      // We have *456*
 		      // This functionality to be implemented.
+		      // First ignore the star and just move on.
+		      add(md, i + 1, key, pos);
+		      // Now deal with the star
+		      if (md.size() - i - 1 >= pos)
+			add_to_subtree(0, md, i, key, pos, true);
+		      else
+			add_to_subtree(0, md, i, key, pos, false);
 		    }
 		}
 	    }
@@ -237,7 +244,8 @@ void music_node::add_to_subtree(const unsigned int &place, const music_details &
   if (process_star)
     {
       // We are to process star data star.
-      if (bells - pos == md.size() - i)
+      if ((bells - pos == md.size() - i) &&
+	  (md.find('*', i + 1) >= md.size()))
 	{
 	  // There are now only numbers to go.
 	  j->second->add(md, i + 1, key, pos + 1);

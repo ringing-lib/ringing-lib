@@ -1633,184 +1633,131 @@ Now we proceed through the list just once. Each row is put into a multimap, if a
 @cindex Music Analysis
 @cindex music class
 
-The music class provides analysis for music within a set of rows. Like the proof class, it is also a template class defined as @code{template <class RowIterator> class music;}. Hence, you can define your own format for the set of rows as long as you can provide an iterator for it.
+The music class provides analysis for music within a set of rows. The class has been designed around providing a regular-expression style matching algorithm. This provides flexibility in the way the user can enter their own music. Additionally, for each 'regular-expression' a score can be allocated. For a full description of the regular expressions the ringing library currently provides see Music Regular Expressions.
 
 The music class processes each row just once, it does not store any rows. It assumes that the first row given is a handstroke row. The class should be able to handle any number of bells. If an odd number of bells is given, e.g. 5, then a tenor is assumed in looking for items like queens, e.g. 13524 essentially becomes 135246.
 
 Each time the analysis function is called, the results stored in the class are reset to zero, and then incremented based on the rows given.
 
 @menu
-* music Derivation::            
-* music Constructors::          
-* music Functions::             
-* music Operators::             
+* Stroke Enumeration::          
+* Music Regular Expressions::   
+* Using the Music Class::       
+* music class definition::      
+* music node class definition::  
 @end menu
 
-@node music Derivation, music Constructors, Musical Analysis, Musical Analysis
-@subsection Derivation
+@node Stroke Enumeration, Music Regular Expressions, Musical Analysis, Musical Analysis
+@section Stroke Description
+@cindex EStroke
+@cindex eHandstroke
+@cindex eBackstroke
+@cindex eBoth
 
-This class in not derived from any other classes.
+Part of the music class functionality is to allow handstrokes and backstrokes to be specified independently, or together. An enumeration, @code{EStroke} is provided to enable this to take place.
 
-@example
-class music;
-@end example
-
-@node music Constructors, music Functions, music Derivation, Musical Analysis
-@subsection Constructors
-
-@deftypefn Constructor {} music::music (void);
-Default constructor. Resets all the music variables to zero.
-@end deftypefn
-
-@deftypefn Constructor {template<class RowIterator>} music::music (RowIterator @var{first}, RowIterator @var{last}, bool @var{backstroke} = false);
-This constructor takes the rows and passes them to @code{music::change_rows} which resets the music variables and analyses all the rows. First and last should be an iterator to a container that stores rows.
-
-The backstroke operator allows the user to specify if the first row is a backstroke row (@var{backstroke} = true) or a handstroke row (default, @var{backstroke} = false).
-@end deftypefn
-
-@node music Functions, music Operators, music Constructors, Musical Analysis
-@subsection Functions
-
-@deftypefn Function {template<class RowIterator> inline void} music::change_rows (RowIterator @var{first}, RowIterator @var{last}, bool @var{backstroke} = false);
-This function resets all the music variables and the analyses the rows. First and last should be an iterator to a container that stores rows.
-
-The backstroke operator allows the user to specify if the first row is a backstroke row (@var{backstroke} = true) or a handstroke row (default, @var{backstroke} = false).
-@end deftypefn
-
-The following functions all return values depending on the last block of rows analysed.
-
-@deftypefn Function bool music::queens (void) const;
-This function returns true if queens was present.
-@end deftypefn
-
-@deftypefn Function bool music::titums (void) const;
-This function returns true if titums was present.
-@end deftypefn
-
-@deftypefn Function bool music::kings (void) const;
-This function returns true if kings was present.
-@end deftypefn
-
-@deftypefn Function bool music::reverse_rounds (void) const;
-This function returns true if reverse_rounds was present.
-@end deftypefn
-
-@deftypefn Function int music::t_tminus1_at_back (void) const;
-This function returns the number of 65s, 87s, 09s etc present at backstroke
-@end deftypefn
-
-@deftypefn Function int music::tminus2_t_at_the_back_hs (void) const;
-This function returns the number of 46s, 68s, etc at the end of the change present at handstroke. Note, this also includes the number of 246s, 468s etc.
-@end deftypefn
-
-@deftypefn Function int music::tminus4_tminus2_t_at_the_back_hs (void) const;
-This function returns the number of 246s, 468s, etc at the end of the change present at handstroke.
-@end deftypefn
-
-@deftypefn Function int music::tminus2_t_at_the_back_bs (void) const;
-This function returns the number of 46s, 68s, etc at the end of the change present at backstroke. Note, this also includes the number of 246s, 468s etc.
-@end deftypefn
-
-@deftypefn Function int music::tminus4_tminus2_t_at_the_back_bs (void) const;
-This function returns the number of 246s, 468s, etc at the end of the change present at backstroke.
-@end deftypefn
-
-@deftypefn Function int music::rollup_3 (void) const;
-This function returns the number of three bell rollups present on the back, this does not include other numbers of rollups.
-@end deftypefn
-
-@deftypefn Function int music::rollup_4 (void) const;
-This function returns the number of four bell rollups present on the back, this does not include other numbers of rollups.
-@end deftypefn
-
-@deftypefn Function int music::reverse_rollup_3 (void) const;
-This functoin returns the number of reverse three bell rollups present on the front (e.g. 876, 654), this does not include other number of rollups.
-@end deftypefn
-
-@deftypefn Function int music::reverse_rollup_4 (void) const;
-This functoin returns the number of reverse four bell rollups present on the front (e.g. 8765, 6543), this does not include other number of rollups.
-@end deftypefn
-
-@node music Operators,  , music Functions, Musical Analysis
-@subsection Operators
-
-@ifinfo
-@deftypefn Operator {ostream&} operator<< (ostream& @var{o}, const music& @var{m});
-Outputs to the ostream a string containing the following details:
+It is defined as follows:
 
 @example
-qktr,1,2,3,4,5,6,7,8,9
+enum EStroke
+@{
+  eHandstroke,
+  eBackstroke,
+  eBoth
+@};
 @end example
 
-Letter are displayed only when the following music in the touch, otherwise there is just a space:
+@node Music Regular Expressions, Using the Music Class, Stroke Enumeration, Musical Analysis
+@section Music Regular Expressions
+@cindex Regular Expressions
+@cindex Specifiying Musical Rows
+@cindex Musical Rows
+@cindex Music Expressions
+
+The @code{music_details} class provides the means to describe musical rows to the @code{music} class. The @code{music_details} class stores details of the expression to be matched (as a string) and an associated rating, if the user so desires.
+
+Ratings may be positive or negative, this allows a total weighted score to be calculated from the sum of the result scores. For example, 678s may be rated at a +2, but 87s at backstroke rated as -10. 
+
+When a match sequence is run via the music class, if a row matches that described by the details provided to a @code{music_details} object, then the count will be incremented.
+
+The result can either be returned as a raw count, or as a score calculated from the multiplication of the count and the given rating.
+
+If it is specified, then the count or score can be return for just the handstroke, backstroke or both.
+
+Further details relating to the music_details class can be accessed from the menu below:
+
+@menu
+* Expression Language::         
+* Music_Details class::         
+@end menu
+
+@node Expression Language, Music_Details class, Music Regular Expressions, Music Regular Expressions
+@subsection Music Regular Expression Language
+
+The regular expression strings describing rows that can be matched as 'musical' can be specified using the following characters:
+
+Representing a bell:
+
 @example
-q = queens
-k = kings
-t = titums
-r = reverse rounds
+1234567890ETABCDFGHJKLMNPQRSUVWYZ
 @end example
 
-Otherwise numbers provide the following information
-@example
-1 = Number of 3 bell rollups in the touch (i.e.  678 on the back)
-2 = Number of 4 bell rollups in the touch (i.e. 5678 on the back)
-3 = Number of reverse 3 bell rollups off the front (i.e. 654 or 876)
-4 = Number of reverse 4 bell rollups off the front (i.e. 6543 or 8765)
-5 = Number of 46s or 68s etc at handstroke (note: this also adds in total for item 7).
-6 = Number of 46s or 68s etc at backstroke (note: this also adds in total for item 8).
-7 = Number of 246s or 468s etc at handstroke
-8 = Number of 246s or 468s etc at backstroke
-9 = Number of 65s or 87s at backstroke (will be zero for odd nos of bells)
-@end example
-@end deftypefn
-@end ifinfo
-@iftex
-@deftypefn Operator friend ostream@& operator<< <>(ostream@& @var{o}, const music<RowIterator>@& @var{m});
-Outputs to the ostream a string containing the following details:
+Representing any bell:
 
 @example
-qktr,1,2,3,4,5,6,7,8,9
+?
 @end example
 
-Letter are displayed only when the following music in the touch, otherwise there is just a space:
+Representing any bells in any order:
+
 @example
-q = queens
-k = kings
-t = titums
-r = reverse rounds
+*
 @end example
 
-Otherwise numbers provide the following information
-@table @asis
-@item 1
-Number of 3 bell rollups in the touch (i.e.  678 on the back)
+These constructs can be formed into the following (in all these cases we are matching with a 6 bell method):
 
-@item 2
-Number of 4 bell rollups in the touch (i.e. 5678 on the back)
+@example
+"12??56" In this case we are wishing to know how many rows occur that are 124356 or 123456.
+@end example
 
-@item 3
-Number of reverse 3 bell rollups off the front (i.e. 654 or 876)
+@example
+"135246" In this case we are wishing to know how many times queens occur.
+@end example
 
-@item 4
-Number of reverse 4 bell rollups off the front (i.e. 6543 or 8765)
+@example
+"*456" In this case we wish to know how many rows there are that finish in 456.
+@end example
 
-@item 5
-Number of 46s or 68s etc at handstroke (note: this also adds in total
-for item 7).
+@example
+"654*" In this case we wish to know how many rows there are that start with 654.
+@end example
 
-@item 6
-Number of 46s or 68s etc at backstroke (note: this also adds in total
-for item 8).  
+@example
+"*456*" In this case we wish to know how many rows have 456 in the middle of them, note this includes rows that start 456 and end 456 as well.
+@end example
 
-@item 7
-Number of 246s or 468s etc at handstroke 
+@node Music_Details class,  , Expression Language, Music Regular Expressions
+@subsection Music Details class
+@cindex music_details
 
-@item 8
-Number of 246s or 468s etc at backstroke 9 = Number of 65s or 87s at backstroke
-(will be zero for odd nos of bells)
-@end table
-@end deftypefn
-@end iftex
+To be written
+
+@node Using the Music Class, music class definition, Music Regular Expressions, Musical Analysis
+@section Using the Music Class
+
+To be written
+
+@node music class definition, music node class definition, Using the Music Class, Musical Analysis
+@section Music Class definition
+@cindex music class
+
+To be written
+
+@node music node class definition,  , music class definition, Musical Analysis
+@section Music Node Class definition
+@cindex music_node
+
+To be written
 
 @node Method classification, Producing printed output, Musical Analysis, Top
 @chapter Classification of methods
