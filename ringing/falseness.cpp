@@ -19,7 +19,7 @@
 
 #include <ringing/common.h>
 
-#if RINGING_HAS_PRAGMA_INTERFACE
+#ifdef RINGING_HAS_PRAGMA_INTERFACE
 #pragma implementation
 #endif
 

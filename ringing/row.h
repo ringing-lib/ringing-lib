@@ -21,7 +21,7 @@
 #ifndef RINGING_ROW_H
 #define RINGING_ROW_H
 
-#if RINGING_HAS_PRAGMA_INTERFACE
+#ifdef RINGING_HAS_PRAGMA_INTERFACE
 #pragma interface
 #endif
 
