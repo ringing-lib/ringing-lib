@@ -1,4 +1,7 @@
-/* config.h.in.  Generated automatically from configure.in by autoheader.  */
+/* config.h.in.  Generated automatically from configure.ac by autoheader.  */
+
+/* Define if you have the <dlfcn.h> header file. */
+#undef HAVE_DLFCN_H
 
 /* define if the compiler supports exceptions */
 #undef HAVE_EXCEPTIONS

@@ -1,6 +1,7 @@
 dnl Process this file with autoconf to produce a configure script.
 dnl $Id$
-AC_INIT(ringing/method.cpp)
+AC_INIT
+AC_CONFIG_SRCDIR([ringing/method.cpp])
 AC_CONFIG_AUX_DIR(config)
 AM_INIT_AUTOMAKE(ringing-lib, 0.2.4)
 AM_CONFIG_HEADER(config.h)
@@ -10,7 +11,6 @@ can_build=yes
 
 dnl Checks for programs.
 AC_PROG_CXX
-AC_PROG_RANLIB
 
 dnl Checks for libraries.
 
@@ -18,7 +18,7 @@ dnl Checks for header files.
 AC_HEADER_STDC
 
 dnl Now we check to see what the C++ headers are called
-AC_LANG_CPLUSPLUS
+AC_LANG([C++])
 AC_CHECK_HEADER([iostream], RINGING_OLD_INCLUDES=0
   iostream_name="<iostream>"
   list_name="<list>",
@@ -159,6 +159,9 @@ Ringing Class Library.]);
   can_build=no;
 fi
 
+dnl Build a libtool
+AC_PROG_LIBTOOL
+
 if test "$can_build" = no; then
   AC_MSG_WARN([Some problems were encountered which mean that you will not
 be able to build the Ringing Class Library.  You will still be able to install
@@ -167,5 +170,6 @@ what environment will be present when using the library, then you will also
 be able to install the header files.]);
 fi
 
-AC_OUTPUT(Makefile ringing/Makefile doc/Makefile examples/Makefile 
-  ringing/common.h)
+AC_CONFIG_FILES([Makefile ringing/Makefile doc/Makefile examples/Makefile 
+  ringing/common.h])
+AC_OUTPUT
