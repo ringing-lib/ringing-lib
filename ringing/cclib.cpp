@@ -155,6 +155,7 @@ class cclib::impl::entry_type : public library_entry::impl
 
   // Method class & stage information
   int b;
+  bool diff, little, plain;
 };
 
 
@@ -240,6 +241,19 @@ void cclib::impl::entry_type::parse_title()
   bool meth( linebuf.find( "methods" ) != string::npos );
   bool prin( linebuf.find( "principles" ) != string::npos );
 
+  // Find out a few characteristics of the method class - we need
+  // them to sort out the method name later
+  diff = ( linebuf.find( "differential " ) != string::npos )
+    || ( linebuf.find( "Differential ") != string::npos );
+  little = ( linebuf.find( "Little " ) != string::npos );
+  plain = ( linebuf.find( "Treble Place " ) == string::npos )
+    && ( linebuf.find( "Alliance " ) == string::npos )
+    && ( linebuf.find( "Hybrid " ) == string::npos )
+    && ( linebuf.find( "Surprise " ) == string::npos )
+    && ( linebuf.find( "Delight " ) == string::npos )
+    && ( linebuf.find( "Treble Bob " ) == string::npos );
+
+  // Read the stage name
   for ( int i=3; i<=22; ++i )
     if ( linebuf.find( string( method::stagename(i) ) + 
 		       string( meth ? " methods" : 
@@ -430,12 +444,16 @@ string cclib::impl::entry_type::base_name() const
   // and Slow Course."  It also appears that for Differential Hunters 
   // (but not Differentials) have "Differential" in their name.
 
-  maybe_strip_class( newname, method::classname( method::M_BOB          ) ) ||
-  maybe_strip_class( newname, method::classname( method::M_PLACE        ) ) ||
-  maybe_strip_class( newname, method::classname( method::M_SLOW_COURSE  ) );
+  if(plain)
+    maybe_strip_class( newname, method::classname( method::M_BOB ) ) ||
+      maybe_strip_class( newname, method::classname( method::M_PLACE ) ) ||
+      maybe_strip_class( newname, method::classname( method::M_SLOW_COURSE  ) );
+  
+  if(little)
+    maybe_strip_class( newname, method::classname( method::M_LITTLE       ) );
 
-  maybe_strip_class( newname, method::classname( method::M_DIFFERENTIAL ) );
-  maybe_strip_class( newname, method::classname( method::M_LITTLE       ) );
+  if(diff)
+    maybe_strip_class( newname, method::classname( method::M_DIFFERENTIAL ) );
 
   return newname;
 }

@@ -130,7 +130,7 @@ void test_method_stagename(void)
   RINGING_TEST( method::stagename(19) == string("Nonuples"  ) );
   RINGING_TEST( method::stagename(20) == string("Twenty"    ) );
   RINGING_TEST( method::stagename(21) == string("Decuples"  ) );
-  RINGING_TEST( method::stagename(22) == string("Twenty-Two") );
+  RINGING_TEST( method::stagename(22) == string("Twenty-two") );
 
   RINGING_TEST( method::stagename(54) == string("54") );
 }
