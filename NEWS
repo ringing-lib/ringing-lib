@@ -1,3 +1,10 @@
+Version 0.2.8 (14 December 2002):
+  Improved support for older compilers.
+  New iterator-based interface to libraries.
+  Improved falseness classes.
+  Additions to music classes.
+  Various other minor improvements and bug-fixes.
+
 Version 0.2.7 (26 March 2002):
   New, greatly improved music classes.
   Mechanism for exhaustive search for touches in a method.
