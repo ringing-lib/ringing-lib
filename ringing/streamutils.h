@@ -1,5 +1,5 @@
 // -*- C++ -*- streamutils.h - Utilities to cope with old iostream libraries
-// Copyright (C) 2002 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -75,6 +75,8 @@ public:
 
   RINGING_API operator string();
 
+  ostream& out_stream() { return os; }
+
 private:
 #if RINGING_USE_STRINGSTREAM
   ostringstream os;
@@ -83,6 +85,16 @@ private:
 #endif
 };
 
+
 RINGING_END_NAMESPACE
+
+
+// This exists because Visual Studio's default STL (an old version of the
+// Dinkumware STL) has a bug in it's implementation of istream<>::getline.
+// If we're using that STL, this provides a work around.  This overload gets
+// chosen in preference to std::getline because it is non-templated.
+#if defined(_MSC_VER) && _MSC_VER <= 1200 && defined(_YVALS) && (!defined(_CPPLIB_VER) || _CPPLIB_VER < 306)
+istream& getline( istream& in, string &str, char c = '\n' );
+#endif
 
 #endif
