@@ -31,9 +31,11 @@ void printrow::options::defaults()
   flags = numbers;
   style.size = 10;
   style.font = "Helvetica";
+  style.col.grey = true; style.col.red = 0;
   xspace.n = 12; xspace.d = 1; xspace.u = dimension::points; 
   yspace.n = 12; yspace.d = 1; yspace.u = dimension::points;
   line_style s; s.width.n = 1; s.width.d = 2; s.width.u = dimension::points;
+  s.col.grey = false; s.col.red = 0; s.col.green = 0; s.col.blue = 1.0;
   lines[1] = s;
 }
 

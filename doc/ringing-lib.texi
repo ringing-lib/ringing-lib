@@ -66,6 +66,7 @@ This menu lists the available topics in the documentation. This
 documentation is also available in HTML and PostScript versions.
 @end ifinfo
 @ifhtml
+
 The Ringing Class Library (ringing-lib) is a library of C++ classes designed
 for writing change ringing application programs.
 
@@ -74,6 +75,8 @@ documentation is also available in GNU Info and PostScript
 versions.
 @end ifhtml
 @end ifnottex
+
+@contents
 
 @menu
 * Introduction::                
@@ -1723,20 +1726,32 @@ makes it easy to extend the library to provide other output formats.
 Printing is provided in two classes:  the @code{printpage} class and the
 @code{printrow} class.  The first of these deals with placing text and
 other objects directly on the page; the second allows for formatted
-output of rows and lines.  These classes are both polymorphic classes,
+output of rows and lines.  These classes are both pure virtual classes,
 which are specialised by subclasses to allow for different output
 formats.
 
 @menu
-* The dimension class::         
-* The text_style class::        
+* Auxiliary classes::           
 * The printpage class::         
 * The printrow class::          
 * Printing in PostScript::      
 @end menu
 
-@node The dimension class, The text_style class, Producing printed output, Producing printed output
-@section The @code{dimension} class
+@node Auxiliary classes, The printpage class, Producing printed output, Producing printed output
+@section Auxiliary classes
+
+The printing mechanism of the Ringing Class Library declares several 
+auxiliary classes, for specifying printing parameters in a device-independent
+way.  This section describes those classes.
+
+@menu
+* The dimension class::         
+* The colour class::            
+* The text_style class::        
+@end menu
+
+@node The dimension class, The colour class, Auxiliary classes, Auxiliary classes
+@subsection The @code{dimension} class
 
 The @code{dimension} class is used extensively by the printing classes
 to specify physical dimensions on the page.  The class has three public
@@ -1816,23 +1831,51 @@ For example, the following strings would all be recognised: @samp{0.4 cm};
 This function writes the dimension to the string @var{s}.
 @end deftypefun
 
-@node The text_style class, The printpage class, The dimension class, Producing printed output
-@section The @code{text_style} class
+@node The colour class, The text_style class, The dimension class, Auxiliary classes
+@subsection The @code{colour} class
 
-The @code{text_style} class is a structure which represents a text style.
-At the moment, this means that it contains a font name and a size.  It
-also defines an enumerated type which may be used to describe text
-alignment.
+The @code{colour} class is a structure which represents a colour.  It
+is defined thus:
+
+@example
+struct colour @{ bool grey; float red, green, blue; @};
+@end example
+
+The red-green-blue (@acronym{RGB}) colour space is used to specify
+colours.  This is not particularly well suited to printing, where a
+subtractive colour model such as @acronym{CMYK} is more useful, but
+@acronym{RGB} is at least very widely used.  Colours printed using the
+Ringing Class Library will probably vary quite a lot from one device to
+another, but your blue lines will be blue and your red lines will be
+red.
+
+To specify a colour in a @code{colour} object, simply set @code{grey} to 
+@code{false} and set the other three members to numbers between 0 and 1,
+inclusive.  You can also specify a shade of grey by setting @code{grey} to
+@code{true}; then the @code{red} element specifies the shade of grey, from
+0 (black) to 1 (white).
+
+@node The text_style class,  , The colour class, Auxiliary classes
+@subsection The @code{text_style} class
+
+The @code{text_style} class is a structure which represents a text
+style.  It contains a font name, a point size and a colour.  It also
+defines an enumerated type which may be used to describe text alignment.
 
 @example
 struct text_style @{
   string font;
   int size;
+  colour col;
   enum alignment @{ left, right, centre @};
 @};
 @end example
 
-@node The printpage class, The printrow class, The text_style class, Producing printed output
+Font names are dependent on the output device; as the only output device
+currently supported is a PostScript device, the font name should be a
+PostScript font name such as @samp{Helvetica-Oblique} or @samp{Times-Roman}.
+
+@node The printpage class, The printrow class, Auxiliary classes, Producing printed output
 @section The @code{printpage} class
 
 The @code{printpage} class takes control of producing printed output on
@@ -1954,17 +1997,17 @@ printed, and then prints this number in a circle to the right of that row.
 @end deftypefun
 
 @deftypefun  void printrow::text (const string& @var{t}, const dimension& @var{x}, text_style::alignment @var{al}, bool @var{between}, bool @var{right});
-This function prints some text to one side of the last row printed.  The text
-is given in @var{t} and is printed in the same style as the rows.  If the
-boolean argument @var{right} is true, the text is printed to the right of
-the row; otherwise the text is printed to the left of the row.  The
-dimension @var{x} is a distance from the leftmost or rightmost number in
-the row, and the text is aligned about this point as given by @var{al}
-(@pxref{The text_style class}).  If the argument @var{between} is true,
-then the text is not aligned vertically with the previous row, but rather
-appears halfway between the previous row and the next one to be printed.
-This last option is useful, for example, for print place notation beside
-a method.
+This function prints some text to one side of the last row printed.  The
+text is given in @var{t} and is printed in the same style as the rows.
+If the boolean argument @var{right} is true, the text is printed to the
+right of the row; otherwise the text is printed to the left of the row.
+The dimension @var{x} is a distance from the leftmost or rightmost
+number in the row, and the text is aligned about this point as given by
+@var{al} (@pxref{The text_style class}).  If the argument @var{between}
+is true, then the text is not aligned vertically with the previous row,
+but rather appears halfway between the previous row and the next one to
+be printed.  This last option is useful, for example, for printing place
+notation beside a method.
 @end deftypefun
 
 @node Row printing options,  , Using the printrow class, The printrow class
@@ -1985,6 +2028,7 @@ struct options @{
   dimension xspace, yspace;
   struct line_style @{
     dimension width;
+    colour col;
   @};
   map<int, line_style> lines;
 
@@ -2022,13 +2066,14 @@ printing.
 
 The @code{lines} member controls which ``blue lines'' are printed.  Each
 element of the map has an integer, denoting the bell number, and a
-@code{line_style} element which defines the style of the line.  Currently
-the only member is @code{line_style} is a @code{dimension} object giving
-the width of the line.  This option may be changed in between columns,
-but not in the middle of a column.
+@code{line_style} element which defines the style of the line.  The two
+members of @code{line_style} are a @code{dimension} object, giving the
+width of the line, and a @code{colour} object, giving the colour of the
+line.  This option may be changed in between columns, but not in the
+middle of a column.
 
 For example, suppose that we wish to print rows in 10-point Helvetica, with
-spacing of 12 points horizontally and vertically.  We want to draw a
+spacing of 12 points horizontally and vertically.  We want to draw a blue
 line half a point thick for the second bell.  The following code sets
 up a @code{printrow::options} object to accomplish this:
 
@@ -2040,6 +2085,7 @@ o.style.font = "Helvetica";
 o.xspace.n = 12;
 o.yspace.n = 12;
 line_style s; s.width.n = 1; s.width.d = 2; s.width.u = dimension::points;
+s.col.grey = false; s.col.red = 0; s.col.green = 0; s.col.blue = 1.0;
 o.lines[1] = s;
 @end example
 
@@ -2496,5 +2542,4 @@ to permit their use in free software.
 
 @printindex cp
 
-@contents
 @bye

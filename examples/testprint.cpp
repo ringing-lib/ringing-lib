@@ -41,6 +41,7 @@ int main() {
     {
       printrow::options::line_style s;
       s.width = dimension(0);
+      s.col.grey = false; s.col.red = 1.0; s.col.green = 0; s.col.blue = 0;
       o.lines[-1] = s;
     }
     o.flags |= printrow::options::miss_numbers;

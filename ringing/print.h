@@ -43,9 +43,12 @@ RINGING_USING_STD
 
 class printpage;
 
+struct colour { bool grey; float red, green, blue; };
+
 struct text_style {
   string font;
   int size;
+  colour col;
 
   enum alignment { left, right, centre };
 };
@@ -65,6 +68,7 @@ public:
 
     struct line_style {
       dimension width;
+      colour col;
     };
     map<int, line_style> lines; // What lines draw in what styles
 
@@ -124,6 +128,7 @@ public:
   virtual void text(const string t, const dimension& x, const dimension& y, 
 	       text_style::alignment al, const text_style& s) = 0;
   virtual void new_page() = 0;
+
 protected:
   friend class printrow;
   virtual printrow::base* new_printrow(const printrow::options&) = 0;

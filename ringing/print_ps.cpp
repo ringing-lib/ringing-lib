@@ -56,6 +56,8 @@ const string printpage_ps::def_string =
 "/S {stroke} BD\n"
 "/N {newpath} BD\n"
 "/SL {setlinewidth} BD\n"
+"/SC {setrgbcolor} BD\n"
+"/SG {setgray} BD\n"
 "/buf 1 string def\n"
 "/W { \n"
 "   /xpos xstart def\n"
@@ -139,7 +141,16 @@ void printpage_ps::new_page()
 void printpage_ps::set_text_style(const text_style& s)
 {
   os << '/' << s.font << ' ' << s.size << " F\n";
+  set_colour(s.col);
   add_font(s.font);
+}
+
+void printpage_ps::set_colour(const colour& c)
+{
+  if(c.grey) 
+    os << c.red << " SG\n";
+  else
+    os << c.red << ' ' << c.green << ' ' << c.blue << " SC\n";
 }
 
 // NOTE: At the moment this is quite likely to break when printing
@@ -172,13 +183,13 @@ void printrow_ps::print(const row& r)
 
   // Print the row
   if(opt.flags & printrow::options::numbers) {
-    os << '(';
+    pp.os << '(';
     for(int j = 0; j < r.bells(); j++) 
       if((opt.flags & printrow::options::miss_numbers) && has_line(r[j]))
-	os << ' ';
+	pp.os << ' ';
       else
-	os << r[j];
-    os << ") W\n";
+	pp.os << r[j];
+    pp.os << ") W\n";
     gapcount = 0;
   } else
     gapcount++;
@@ -193,7 +204,7 @@ void printrow_ps::print(const row& r)
 void printrow_ps::fill_gap()
 {
   if(gapcount > 0) {
-    os << gapcount << " G\n";
+    pp.os << gapcount << " G\n";
     gapcount = 0;
   }
 }
@@ -202,7 +213,7 @@ void printrow_ps::rule()
 {
   if(!in_column) return;
   fill_gap();
-  os << lastrow.bells() << " RO\n";
+  pp.os << lastrow.bells() << " RO\n";
 }
 
 void printrow_ps::set_position(const dimension& x, const dimension& y)
@@ -221,13 +232,13 @@ void printrow_ps::new_column(const dimension& d)
 void printrow_ps::start()
 {
   // Select the font we'll be using
-  os << '/' << opt.style.font << ' ' << opt.style.size << " F\n";
+  pp.set_text_style(opt.style);
   // Define xspace and yspace
-  os << "/xspace " << opt.xspace.in_points() << " def /yspace "
-     << opt.yspace.in_points() << " def\n";
+  pp.os << "/xspace " << opt.xspace.in_points() << " def /yspace "
+	<< opt.yspace.in_points() << " def\n";
   // Find the height of an X
-  os << "gsave N 0 0 M (X) true charpath pathbbox grestore\n"
-     << "exch pop sub 2 div neg /offset exch def pop\n";
+  pp.os << "gsave N 0 0 M (X) true charpath pathbbox grestore\n"
+	<< "exch pop sub 2 div neg /offset exch def pop\n";
 }
 
 void printrow_ps::start_column()
@@ -235,17 +246,21 @@ void printrow_ps::start_column()
   map<int, printrow::options::line_style>::iterator i;
   for(i = opt.lines.begin(); i != opt.lines.end(); i++)
     drawlines.push_back(drawline_ps(*this, (*i).first, (*i).second));
-  os << currx << " X " << curry << " Y\n";
+  pp.os << currx << " X " << curry << " Y\n";
   in_column = true;
   gapcount = 0;
 }
 
 void printrow_ps::end_column()
 {
-  list<drawline_ps>::iterator i;
-  for(i = drawlines.begin(); i != drawlines.end(); i++)
-    (*i).output(os, currx, curry);
-  drawlines.erase(drawlines.begin(), drawlines.end());
+  if(!drawlines.empty()) {
+    list<drawline_ps>::iterator i;
+    pp.os << "gsave\n";
+    for(i = drawlines.begin(); i != drawlines.end(); i++)
+      (*i).output(pp.os, currx, curry);
+    pp.os << "grestore\n";
+    drawlines.erase(drawlines.begin(), drawlines.end());
+  }
   in_column = false;
 }
 
@@ -262,9 +277,12 @@ void printrow_ps::dot(int i)
     if(j < lastrow.bells()) {
       map<int, printrow::options::line_style>::const_iterator k;
       k = opt.lines.find(i);
-      if(k != opt.lines.end())
-	os << "0 SL " << (*k).second.width.in_points() 
-	   << ' ' << j << " O\n";
+      if(k != opt.lines.end()) {
+	pp.os << "gsave ";
+	pp.set_colour((*k).second.col);
+	pp.os << "0 SL " << (*k).second.width.in_points() 
+	   << ' ' << j << " O grestore\n";
+      }
     }
   }
 }
@@ -275,7 +293,7 @@ void printrow_ps::placebell(int i)
   int j = 0;
   while(j < lastrow.bells() && lastrow[j] != i) j++;
   if(j < lastrow.bells()) {
-    os << lastrow.bells() << ' ' << opt.style.size << " PB (" 
+    pp.os << lastrow.bells() << ' ' << opt.style.size << " PB (" 
        << j+1 << ((j < 9) ? ") C\n" : ") E\n");
   }
 }
@@ -283,19 +301,19 @@ void printrow_ps::placebell(int i)
 void printrow_ps::text(const string& t, const dimension& x, 
 		       text_style::alignment al, bool between, bool right)
 {
-  if(right) os << lastrow.bells(); else os << '0';
-  os << " MR ";
-  if(right) os << x.in_points(); else os << -(x.in_points());
-  if(between) os << " yspace 2 div neg "; else os << " 0 ";
-  os << " R (";
+  if(right) pp.os << lastrow.bells(); else pp.os << '0';
+  pp.os << " MR ";
+  if(right) pp.os << x.in_points(); else pp.os << -(x.in_points());
+  if(between) pp.os << " yspace 2 div neg "; else pp.os << " 0 ";
+  pp.os << " R (";
   string::const_iterator i;
   for(i = t.begin(); i != t.end(); i++)
-    if(isprint(*i)) os << *i;
-  os << ") ";
+    if(isprint(*i)) pp.os << *i;
+  pp.os << ") ";
   switch(al) {
-    case text_style::left: os << "D\n"; break;
-    case text_style::right: os << "DR\n"; break;
-    case text_style::centre: os << "C\n"; break;
+    case text_style::left: pp.os << "D\n"; break;
+    case text_style::right: pp.os << "DR\n"; break;
+    case text_style::centre: pp.os << "C\n"; break;
   }
 }
 
@@ -327,6 +345,7 @@ void drawline_ps::output(ostream& o, int x, int y)
   int t, count;
   bool in_line = false;
   i = l.begin(); count = -1;
+  p.pp.set_colour(s.col);
   o << s.width.in_points() << " SL N " << x << ' ' << y << " M\n";
   while(i != l.end()) {
     t = (*i);
@@ -346,7 +365,7 @@ void drawline_ps::output(ostream& o, int x, int y)
     count = 0;
   }
   if(in_line) o << ") DL ";
-  o << "S\n";
+  o << "S \n";
 }
 
 RINGING_END_NAMESPACE

@@ -43,6 +43,7 @@ RINGING_START_NAMESPACE
 RINGING_USING_STD
 
 class printrow_ps;
+class printpage_ps;
 
 class drawline_ps {
 private:
@@ -72,7 +73,7 @@ public:
 
 class printrow_ps : public printrow::base {
 private:
-  ostream& os;
+  printpage_ps& pp;
   int currx, curry;
   bool in_column;
   row lastrow;
@@ -89,9 +90,9 @@ private:
   void fill_gap();
 
 public:
-  printrow_ps(ostream& o, const printrow::options& op) 
-    : os(o), in_column(false), lastrow(8), opt(op) { start(); }
-  ~printrow_ps() { end_column(); }
+  printrow_ps(printpage_ps& p, const printrow::options& op) 
+    : pp(p), in_column(false), lastrow(8), opt(op) { start(); }
+  ~printrow_ps() { if(in_column) end_column(); }
   void print(const row& r);
   void rule();
   void set_position(const dimension& x, const dimension& y);
@@ -123,11 +124,14 @@ public:
 
 private:
   friend class printrow;
+  friend class printrow_ps;
+  friend class drawline_ps;
   printrow::base* new_printrow(const printrow::options& o) 
-    { add_font(o.style.font); return new printrow_ps(os, o); }
+    { return new printrow_ps(*this, o); }
 
 protected:
   void set_text_style(const text_style& s);
+  void set_colour(const colour& c);
 };
 
 RINGING_END_NAMESPACE
