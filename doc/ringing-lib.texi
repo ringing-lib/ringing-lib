@@ -1329,8 +1329,11 @@ It is a friend of the library class so that it's only function can be accessed.
 
 It contains just one function definition that is protected:
 
-@deftypefn @code{virtual library_base *open(const char *n) const}
+@deftypefn @code{virtual library_base *open(ifstream& ifs, const string &n) const}
 This function is the prototype that the @code{library} class will use to attempt to open a library file. For this class it simply returns null.
+
+@code{ifs} should be an open file stream, that may or may not be a library file.
+@code{*n} should be the name of the open file.
 @end deftypefn
 
 @node The newlib class, The library_base class, The libtype class, The Library Classes
@@ -1339,13 +1342,15 @@ This function is the prototype that the @code{library} class will use to attempt
 Each new method library must declare one of these. The user must then register it with the library class to allow the method library to be used. The library class calls the open method to see if the method library is able to load the library:
 
 @example
-  library_base *open(const char *name) const @{
+  library_base *open(ifstream& ifs, const string &name) const @{
     if(mylibrary::canread(name)) @{
       return new mylibrary(name);
     @} else
       return NULL;
   @}
 @end example
+
+@code{ifs} should be an open file stream, that may or may not be a library file. @code{*n} should be the name of the open file.
 
 The @code{mylibrary::canread} function is a static function that must be present in the derived class. The open function uses this to determine if the library can read the file that is given to it.
 

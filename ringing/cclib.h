@@ -29,12 +29,10 @@
 #include <ctype.h>
 #include <algorithm.h>
 #include <fstream.h>
-#include <stdexcept.h>
 #else
 #include <cctype>
 #include <algorithm>
 #include <fstream>
-#include <stdexcept>
 #endif
 #include <ringing/library.h>
 #include <string>
@@ -46,7 +44,7 @@ RINGING_USING_STD
 // cclib : Implement Central Council Method libraries
 class cclib : public library_base {
 private:
-  string filename;              // The filename we're using
+  ifstream f;                   // The file stream we're using
   int b;                        // Number of bells for files in this lib
   int wr;                       // Is it open for writing?
   int _good;                    // If we have a good filename or not.
@@ -58,58 +56,14 @@ public:
     library::addtype(&type);
   }
 
-  cclib(const char *name) : wr(0), filename(name), _good(0) {
-    // Open file. Not going to bother to see if it's writeable as the
-    // save function is not currently planned to be implemented.
-    ifstream f(filename.c_str());
-    if(f.good())
-      {
-	_good = 1;
-	const char *s;
-	// Get the number off the end of the file name
-	// Is there a '.'? e.g. '.txt', if so account for it
-	const char* last = find(name, name + strlen(name) - 1, '.');
-	// now start to reverse from last.
-	for(s = last - 1; s > name && isdigit(s[-1]); s--);
-	b = atoi(s);
-	f.close();
-      }
-  }
-  ~cclib() {
-  }
+  cclib::cclib(const string& name);
+  ~cclib() { if (_good == 1) f.close(); }
 
-  static int canread(const char* const name) // Is this file in the right format?
-  {
-    ifstream ifs(name);
-    if (ifs.good())
-      {
-	int valid = 0;
-	int temp = -1;
-	ifs.seekg(0, ios::beg);
-	while ((ifs.good()) && (valid < 2))
-	  {
-	    string linebuf;
-	    getline(ifs, linebuf);
-	    if (linebuf.length() > 1)
-	      {
-		// The second check for No. is used as an extra insurance check...
-		if ((linebuf.find("Name") != string::npos) && (linebuf.find("No.") != string::npos))
-		  {
-		    temp = linebuf.find("Name") - 1;
-		    valid++;
-		  }
-		else if ((temp != -1) && (atoi(linebuf.substr(0, temp).c_str()) != 0))
-		  {
-		    valid++;
-		  }
-	      }
-	  }
-	ifs.close();
-	// if valid is 2 both the checks have been successful
-	return (valid == 2 ? 1 : 0);
-      }
-    return 0;
-  }
+  // Is this file in the right format?
+  static int canread(ifstream& ifs);
+
+  // Return a list of items
+  int dir(list<string>& result);
 
   int good(void) const          // Is the library in a usable state?
     { return _good; }
@@ -119,12 +73,6 @@ public:
 
   method load(const char *name);     // Load a method
 //int save(method& name);       // Save a method - not defined for cclib
-
-#if RINGING_USE_EXCEPTIONS
-  struct invalid_name : public invalid_argument {
-    invalid_name();
-  };
-#endif
 };
 
 RINGING_END_NAMESPACE

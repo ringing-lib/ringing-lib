@@ -81,8 +81,11 @@ public:
   static const char *classname(int cl) // Get the name of the class
     { return txt_classes[cl & M_MASK]; }
 
-  method(int l, int b, const char *n = "Untitled") : vector<change>(l)
-    { (*this)[0] = change(b); name(n); }
+  method(int l = 0, int b = 0, const char *n = "Untitled") : vector<change>(l)
+    {
+      if (l > 0) (*this)[0] = change(b);
+      name(n);
+    }
   // Make a method from place notation
   method(const char *pn, int b, const char *n = "Untitled") {
     name(n);

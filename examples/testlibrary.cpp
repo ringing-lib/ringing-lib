@@ -37,7 +37,7 @@ void print_row_block(const row_block& b)
 {
   cout << "\t" << b[0] << " " 
        << ((b[0].sign() < 0) ? '-' : '+') << " " << endl;
-  for(int i = 1;i < b.size();i++)
+  for(unsigned int i = 1;i < b.size();i++)
     cout << b.get_changes()[i-1] << "\t" << b[i]  << " " 
 	 << ((b[i].sign() < 0) ? '-' : '+') << " " << endl;
 }
@@ -98,6 +98,32 @@ int main()
     else
       {
 	cout << "A library can read that file.\n";
+
+	string input;
+
+	cout << "\nDo you wish to list the methods (y/n)? ";
+	getline(cin, input);
+
+	if ((input[0] == 'y') || (input[0] == 'Y'))
+	  {
+	    list<string> mylist;
+	    if (l.dir(mylist) == 0)
+	      {
+		// Either Library doesn't support the function, or there were
+		// no methods present - this second one shouldn't happen
+		// of course.
+		cerr << "Sorry, Could not list files in library\n";
+	      }
+	    else
+	      {
+		cout << "\nMethod list:\n\n";
+		list<string>::iterator i;
+		for(i = mylist.begin(); i != mylist.end(); i++)
+		  {
+		    cout << *i << endl;
+		  }
+	      }
+	  }
 
 	cout << "\nTesting multiple loads of methods...\n";
 	string methname;

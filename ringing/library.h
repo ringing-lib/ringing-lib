@@ -29,10 +29,12 @@
 #include <iostream.h>
 #include <fstream.h>
 #include <list.h>
+#include <stdexcept.h>
 #else
 #include <iostream>
 #include <fstream>
 #include <list>
+#include <stdexcept>
 #endif
 #include <ringing/method.h>
 
@@ -46,7 +48,7 @@ class library_base;
 // libtype : A type of library
 class libtype {
 protected:
-  virtual library_base *open(const char *n) const  // Try to open this file.
+  virtual library_base *open(ifstream& ifs, const string &n) const  // Try to open this file.
   { return NULL; }			  // Return NULL if it's not the
 					  // right sort of library.
   friend class library;
@@ -56,8 +58,8 @@ protected:
 template <class mylibrary>
 class newlib : public libtype {
 protected:
-  library_base *open(const char *name) const {
-    if(mylibrary::canread(name)) {
+  library_base *open(ifstream& ifs, const string &name) const {
+    if(mylibrary::canread(ifs)) {
       return new mylibrary(name);
     } else
       return NULL;
@@ -76,12 +78,18 @@ public:
     { return 0; }
   virtual int remove(const string name)
     { return 0; }
-  virtual int dir(list<string>& result)
+  virtual int dir(list<string>& result) // Return a list of items
     { return 0; }
   virtual int good (void) const	// Is it in a usable state?
     { return 0; }
   virtual int writeable(void) const // Is it writeable?
     { return 0; }
+
+#if RINGING_USE_EXCEPTIONS
+  struct invalid_name : public invalid_argument {
+    invalid_name();
+  };
+#endif
 };
 
 class library {
@@ -90,7 +98,7 @@ private:
   static list<libtype*> libtypes;
 
 public:
-  library(const char* filename);
+  library(const string& filename = "");
   ~library() { if(lb) delete lb; }
   method load(const char* name) { return lb->load(name); }
   int save(const method& m) { return lb->save(m); }

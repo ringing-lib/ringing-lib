@@ -40,6 +40,97 @@ void lowercase(char &c)
   c = tolower(c);
 }
 
+cclib::cclib(const string& name) : f(name.c_str()), wr(0), _good(0)
+{
+  // Open file. Not going to bother to see if it's writeable as the
+  // save function is not currently planned to be implemented.
+  if(f.good())
+    {
+      _good = 1;
+      string::const_iterator s;
+      // Get the number off the end of the file name
+      // Is there a '.'? e.g. '.txt', if so account for it
+
+      string subname(name, 0, name.find('.'));
+
+      // now start to reverse from last.
+      for(s = subname.end(); s > subname.begin() && isdigit(s[-1]); s--);
+      b = atoi(s);
+    }
+}
+
+// Is this file in the right format?
+int cclib::canread(ifstream& ifs)
+{
+  int valid = 0;
+  int temp = -1;
+  ifs.clear();
+  ifs.seekg(0, ios::beg);
+  while ((ifs.good()) && (valid < 2))
+    {
+      string linebuf;
+      getline(ifs, linebuf);
+      if (linebuf.length() > 1)
+	{
+	  // The second check for No. is used as an extra insurance check...
+	  if ((linebuf.find("Name") != string::npos) && (linebuf.find("No.") != string::npos))
+	    {
+	      temp = linebuf.find("Name") - 1;
+	      valid++;
+	    }
+	  else if ((temp != -1) && (atoi(linebuf.substr(0, temp).c_str()) != 0))
+	    {
+	      valid++;
+	    }
+	}
+    }
+  // if valid is 2 both the checks have been successful
+  return (valid == 2 ? 1 : 0);
+}
+
+// Return a list of items
+int cclib::dir(list<string>& result)
+{
+  if (_good != 1)
+    return 0;
+
+  // return file to the start.
+  f.clear();
+  f.seekg(0, ios::beg);
+
+  string line;
+  string::size_type meth_name_starts = string::npos;
+  string::size_type meth_name_ends = string::npos;
+
+  // Go through a line at a time.
+  while(f.good()) {
+    getline(f, line);
+
+    if (line.length() > 1)
+      {
+        // The second check for No. is used as an extra insurance check...
+        if ((line.find("Name") != string::npos) && (line.find("No.") != string::npos))
+          {
+            // we now have start and end position.
+            meth_name_starts = line.find("Name");
+            meth_name_ends = line.find("Notation");
+          }
+        else if (meth_name_starts != meth_name_ends)
+          {
+            // Check first bit equates to a number...
+            string startof(line, 0, meth_name_starts);
+
+            if ((line.length() > meth_name_ends) && (atoi(startof.c_str()) != 0))
+              {
+                result.push_back(line.substr(meth_name_starts, meth_name_ends - meth_name_starts));
+              }
+          }
+      }
+  }
+
+  return result.size();
+}
+
 // Load a method from a Central Council Method library
 method cclib::load(const char *name)
 {
@@ -52,7 +143,8 @@ method cclib::load(const char *name)
   string::size_type meth_le = string::npos;
   string::size_type meth_lh = string::npos;
 
-  ifstream f(filename.c_str());
+  f.clear();
+  f.seekg(0, ios::beg);
 
   while(f.good()) {
     // first, read in a line
@@ -108,7 +200,7 @@ method cclib::load(const char *name)
 
 		// Do we have the correct line for the method?
 		if ((wordbuf.length() == methname.length()) &&
-		    (wordbuf.compare(methname, 0, methname.length()) == 0))
+		    (wordbuf.compare(methname) == 0))//, 0, methname.length()) == 0))
 		  {
 		    // we have found the method.
 		    // now get the rest of the details
@@ -125,12 +217,10 @@ method cclib::load(const char *name)
 
 			// Now create the method
 			method m(pn, b, methodname);
-
 			// Strip any whitespace
 			string ch(linebuf, meth_le, meth_lh - meth_le);
 			string::const_iterator i = ch.begin();
 			while(!isspace(*i)) i++;
-			
 			// Create the change
 			ch = ch.substr(0, i - ch.begin());
 			change c(b, ch);
@@ -173,7 +263,6 @@ method cclib::load(const char *name)
       }
     // else ignore the line (length < 1)
   }
-  f.close();
   // If we are here we couldn't find the method.
 #if RINGING_USE_EXCEPTIONS
   // If we are using exceptions, throw one to notify it couldn't be found.
@@ -182,14 +271,9 @@ method cclib::load(const char *name)
   // Otherwise we have to return something to avoid warning and errors, so
   // make up something strange. Give it a name so it can always be checked
   // against.
-  method m(1,2, "Not Found");
+  method m;
   return m;
 #endif
 }
-
-#if RINGING_USE_EXCEPTIONS
-cclib::invalid_name::invalid_name() 
-  : invalid_argument("The method name supplied could not be found in the library file") {}
-#endif
 
 RINGING_END_NAMESPACE

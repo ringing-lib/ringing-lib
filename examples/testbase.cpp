@@ -25,8 +25,6 @@
 #include <stdexcept>
 #endif
 #include <ringing/method.h>
-#include <ringing/cclib.h>
-#include <ringing/mslib.h>
 #include <string>
 
 #if RINGING_USE_NAMESPACES
@@ -37,7 +35,7 @@ void print_row_block(const row_block& b)
 {
   cout << "\t" << b[0] << " " 
        << ((b[0].sign() < 0) ? '-' : '+') << " " << endl;
-  for(int i = 1;i < b.size();i++)
+  for(unsigned int i = 1;i < b.size();i++)
     cout << b.get_changes()[i-1] << "\t" << b[i]  << " " 
 	 << ((b[i].sign() < 0) ? '-' : '+') << " " << endl;
 }
@@ -89,8 +87,6 @@ int main()
   }
 
   {
-    int i;
-
     cout << "\nTesting method operations...\n";
     method m("&-5-4.5-5.36.4-4.5-4-1,1",8,"Bristol");
 
@@ -100,50 +96,6 @@ int main()
     char s[40];
     cout << "Full name: " << m.fullname(s) << endl;
     cout << "Lead head code: " << m.lhcode() << endl;
-  }
-
-  {
-    cout << "\nTesting method libraries...\n";
-
-    string filename;
-    string methname;
-
-    cout << "File name: ";
-    getline(cin, filename);
-
-    cout << "Method name: ";
-    getline(cin, methname);
-
-    mslib::registerlib();
-    cclib::registerlib();
-
-    library l(filename.c_str());
-    if (!l.good())
-      {
-	cerr << "Could not load method file\n";
-	return 1;
-      }
-    try
-      {
-	method m(l.load(methname.c_str()));
-
-	char s[80];
-	cout << m.fullname(s) << endl;
-      
-	print_row_block((row_block)m);
-      
-	cout << "This method is "
-	     << ((m.isregular()) ? "" : "ir")
-	     << "regular"
-	     << ((m.isdouble()) ? " and double" : "")
-	     << ".\n";
-	cout << "Lead head code: " << m.lhcode() << endl;
-      }
-    catch (exception &e)
-      {
-	cerr << "Error: " << e.what() << endl;
-	return 1;
-      }
   }
     
   return 0;

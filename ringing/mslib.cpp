@@ -24,8 +24,10 @@
 #include <ringing/common.h>
 #if RINGING_OLD_C_INCLUDES
 #include <string.h>
+#include <ctype.h>
 #else
 #include <cstring>
+#include <cctype>
 #endif
 #include <ringing/mslib.h>
 
@@ -33,12 +35,94 @@ RINGING_START_NAMESPACE
 
 newlib<mslib> mslib::type;
 
+mslib::mslib(const string& name) : wr(0),
+				   _good(0)
+{
+  f.open(name.c_str(), ios::in | ios::out);
+  if(f.good())
+    {
+      wr = 1;
+      _good = 1;
+    }
+  else
+    {
+      f.open(name.c_str(), ios::in);
+      if (f.good())
+	{
+	  _good = 1;
+	}
+    }
+  if (_good)
+    {
+      string::const_iterator s;
+      // Get the number off the end of the file name
+      for(s = name.begin() + name.length() - 1; s > name.begin() && isdigit(s[-1]); s--);
+      b = atoi(s);
+    }
+}
+
+// Is this file in the right format?
+int mslib::canread(ifstream& ifs)
+{
+  int valid = 0;
+  int notvalid = 0;
+  ifs.clear();
+  ifs.seekg(0, ios::beg);
+  while (ifs.good() && (notvalid != 1))
+    {
+      string linebuf;
+      getline(ifs, linebuf);
+      if (linebuf.length() > 1)
+	{
+	  if ((linebuf.find("Name") != string::npos) && (linebuf.find("No.") != string::npos))
+	    {
+	      notvalid = 1;
+	    }
+	  else if (linebuf[0] != '*')
+	    {
+	      valid = (count(linebuf.begin(), linebuf.end(), ' ') == 2 ? 1 : 0);
+	    }
+	}
+    }
+  return (notvalid == 1 ? 0 : valid);
+}
+
+// Return a list of items
+int mslib::dir(list<string>& result)
+{
+  if (_good != 1)
+    return 0;
+
+  // return file to the start.
+  f.clear();
+  f.seekg(0, ios::beg);
+
+  string line;
+
+  while(f.good()) {
+    getline(f, line);
+    
+    if ((line.length() > 0) && (line[0] != '*'))
+      {
+	// find the first space
+	string::size_type pos = line.find(' ', 0);
+	
+	// Add the name onto the list
+	result.push_back(line.substr(0, pos));
+      }
+  }
+
+  return result.size();
+}
+
 // Load a method from a MicroSIRIL library
 method mslib::load(const char *name)
 {
   const char *s;
-  char *x;
-  ifstream f(filename.c_str());
+  string x;
+
+  f.clear();
+  f.seekg(0, ios::beg);
 
   while(f.good()) {
     s = name;
@@ -47,21 +131,43 @@ method mslib::load(const char *name)
     if(*s == '\0' && isspace(f.get())) { // Found it
       char lh[16];		       // Get the lead head code
       f.get(lh,16,' ');
-      buffer linebuf(256);
-      f.get(linebuf, linebuf.size()); // Read in the rest of the line
-      x = strtok(linebuf," \t"); // Strip blanks
+      string linebuf;
+      getline(f, linebuf);
+      string::iterator x = linebuf.begin();
+
+      // Remove whitespace
+      while (x != linebuf.end())
+	{
+	  if (isspace(*x) && (*x != '\n'))
+	    {
+	      if (x == linebuf.begin())
+		{
+		  linebuf.erase(x);
+		  x = linebuf.begin();
+		}
+	      else
+		{
+		  linebuf.erase(x);
+		}
+	    }
+	  else
+	    {
+	      x++;
+	    }
+	}
 
       // if we have a + on the front it is not a reflection method,
       // hence don't add the last change.
-      bool final_change = (*x != '+');
+      bool final_change = (linebuf[0] != '+');
 
-      method m(x,b,name);
+      method m(linebuf,b,name);
       if(*lh) {
-	x = lh + strlen(lh) - 1;
+	char *y;
+	y = lh + strlen(lh) - 1;
 	if (final_change)
 	  {
-	    if(*x == 'z') {
-	      *x = '\0';
+	    if(*y == 'z') {
+	      *y = '\0';
 	      m.push_back(change(b, lh));
 	    } else {
 	      if((lh[0] >= 'a' && lh[0] <= 'f')
@@ -81,7 +187,6 @@ method mslib::load(const char *name)
 
     while(!f.eof() && f.get() != '\n');	// Skip to the next line
   }
-  f.close();
   // If we are here we couldn't find the method.
 #if RINGING_USE_EXCEPTIONS
   // If we are using exceptions, throw one to notify it couldn't be found.
@@ -90,15 +195,10 @@ method mslib::load(const char *name)
   // Otherwise we have to return something to avoid warning and errors, so
   // make up something strange. Give it a name so it can always be checked
   // against.
-  method m(1,2, "Not Found");
+  method m;
   return m;
 #endif
 }
-
-#if RINGING_USE_EXCEPTIONS
-mslib::invalid_name::invalid_name() 
-  : invalid_argument("The method name supplied could not be found in the library file") {}
-#endif
 
 #if 0
 // Write a method to a MicroSIRIL library

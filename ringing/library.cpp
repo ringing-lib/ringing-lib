@@ -30,14 +30,28 @@ RINGING_USING_STD
 
 list<libtype*> library::libtypes;
 
-library::library(const char* filename)
+#if RINGING_USE_EXCEPTIONS
+library_base::invalid_name::invalid_name() 
+  : invalid_argument("The method name supplied could not be found in the library file") {}
+#endif
+
+library::library(const string& filename)
 {
   lb = NULL;
-  list<libtype*>::const_iterator i = libtypes.begin();
-  while ((lb == NULL) && (i != libtypes.end()))
+  if (filename.length() > 0)
     {
-      lb = (*i)->open(filename);
-      i++;
+      ifstream ifs(filename.c_str(), ios::in);
+      if (ifs.good())
+	{
+	  list<libtype*>::const_iterator i = libtypes.begin();
+	  while ((lb == NULL) && (i != libtypes.end()))
+	    {
+	      lb = (*i)->open(ifs, filename);
+	      i++;
+	    }
+	  ifs.close();
+	}
+      // Don't worry about else condition - user should check for good()
     }
 }
 

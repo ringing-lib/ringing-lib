@@ -518,7 +518,7 @@ row_block::row_block(const vector<change> &c)
   : vector<row>(c.size() + 1), ch(c)
 {
   if(ch.size() > 0) {
-    (*this)[0] = row::rounds(ch[1].bells());
+    (*this)[0] = row::rounds(ch[0].bells());
     recalculate();
   }
 }
@@ -541,18 +541,3 @@ row_block& row_block::recalculate(int start)
 }
 
 RINGING_END_NAMESPACE
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
