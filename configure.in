@@ -45,20 +45,19 @@ dnl
 dnl Now we check to see what the C++ headers are called
 dnl
 AC_LANG_CPLUSPLUS
-AC_CHECK_HEADER([iostream], RINGING_OLD_INCLUDES=0
+AC_CHECK_HEADER([vector], RINGING_OLD_INCLUDES=0
   iostream_name="<iostream>"
   list_name="<list>",
-  [AC_CHECK_HEADER([iostream.h], RINGING_OLD_INCLUDES=1
+  [AC_CHECK_HEADER([vector.h], RINGING_OLD_INCLUDES=1
     iostream_name="<iostream.h>"
     list_name="<list.h>",
-    [AC_MSG_WARN([Can't find either <iostream> or <iostream.h>.  This means
+    [AC_MSG_WARN([Can't find either <vector> or <vector.h>.  This means
 that you don't appear to have the standard C++ libraries installed, which is 
 necessary if you wish to compile or use the Ringing Class Library.])
     can_build=no])])
 AC_SUBST(RINGING_OLD_INCLUDES)
 AC_CHECK_HEADER([cstdio], RINGING_OLD_C_INCLUDES=0, RINGING_OLD_C_INCLUDES=1)
 AC_SUBST(RINGING_OLD_C_INCLUDES)
-
 
 dnl --------------------------------------------------------------------------
 dnl
@@ -214,11 +213,54 @@ ac_cv_cxx_std,
 )
 if test "$ac_cv_cxx_std" = yes; then
   RINGING_USE_STD=1;
+  std_using_directive="using namespace std;"
 else
   RINGING_USE_STD=0;
+  std_using_directive=
 fi
 AC_SUBST(RINGING_USE_STD)
 
+
+dnl --------------------------------------------------------------------------
+dnl
+dnl Now whether it is a standard or a pre-standard iostream implementation
+dnl
+AC_CACHE_CHECK(
+  [whether the compiler implements standard iostreams],
+  [ac_cv_cxx_std_iostreams],
+  [AC_TRY_COMPILE(
+    [#include <iostream>
+    ] $std_using_directive,
+    [ typedef basic_ostream<char> my_ostream; ],
+    ac_cv_cxx_std_iostreams=yes,
+    ac_cv_cxx_std_iostreams=no
+  )]
+)
+if test "$ac_cv_cxx_std_iostreams" = yes ; then
+  RINGING_HAVE_OLD_IOSTREAMS=0
+else
+  AC_CACHE_CHECK(
+    [whether the compiler implements pre-standard iostreams],
+    [ac_cv_cxx_old_iostreams],
+    [AC_TRY_COMPILE(
+      [#include <iostream.h>
+      ] $std_using_directive,
+      [ typedef ostream my_ostream; ],
+      ac_cv_cxx_old_iostreams=yes,
+      ac_cv_cxx_old_iostreams=no
+    )]
+  )
+  if test "$ac_cv_cxx_old_iostreams" = yes ; then
+    RINGING_HAVE_OLD_IOSTREAMS=1
+  else
+    AC_MSG_WARN(
+[You appear not to have either standard iostreams or pre-standard iostreams
+avaliable.  It is necessary to have one of these to use the Ringing Class 
+Library.]);
+    can_build=no;
+  fi
+fi
+AC_SUBST(RINGING_HAVE_OLD_IOSTREAMS)
 
 dnl --------------------------------------------------------------------------
 dnl
@@ -234,10 +276,7 @@ AC_CACHE_CHECK(
       #else
       #  include <iterator>
       #endif
-
-      #if ] $RINGING_USE_STD [ 
-      using namespace std;
-      #endif
+      ] $std_using_directive [
 
       class iter
         : public iterator< input_iterator_tag, int, ptrdiff_t, int *, int & >
@@ -258,7 +297,7 @@ AC_SUBST(RINGING_HAVE_STD_ITERATOR)
 
 dnl --------------------------------------------------------------------------
 dnl
-dnl Check to see whether the STL has a compliant std::iterator
+dnl Check to see whether the STL has a compliant std::ostringstream
 dnl
 AC_CACHE_CHECK(
   [whether the STL has stringstreams],
@@ -271,10 +310,7 @@ AC_CACHE_CHECK(
       #  include <sstream>
       #endif
       #include <string>
-
-      #if ] $RINGING_USE_STD [ 
-      using namespace std;
-      #endif
+      ] $std_using_directive [
     ],
     [ 
       ostringstream os;
@@ -299,10 +335,7 @@ else
 	#  include <strstream>
 	#endif
         #include <string>
-
-	#if ] $RINGING_USE_STD [ 
-	using namespace std;
-	#endif
+	] $std_using_directive [
       ],
       [
         ostrstream os;
@@ -330,13 +363,16 @@ dnl
 dnl Now check whether the STL seems to work
 dnl
 AC_CACHE_CHECK(whether the Standard Template Library works,
-ac_cv_cxx_stl,
-[AC_TRY_COMPILE([#include] $list_name [
-#if] $RINGING_USE_STD [
-using namespace std;
-#endif],[list<int> l; l.push_back(3);
-list<int>::iterator i = l.begin(); ++i; return 0;],
-  ac_cv_cxx_stl=yes, ac_cv_cxx_stl=no)]
+  ac_cv_cxx_stl,
+  [AC_TRY_COMPILE(
+    [#include] $list_name [
+    ] $std_using_directive,
+    [
+      list<int> l; l.push_back(3);
+      list<int>::iterator i = l.begin(); ++i; 
+      return 0;
+    ],
+    ac_cv_cxx_stl=yes, ac_cv_cxx_stl=no)]
 )
 if test "$ac_cv_cxx_stl" = no; then
   AC_MSG_WARN([You do not appear to have a working version of the Standard
@@ -353,5 +389,56 @@ reflect what environment will be present when using the library, then you will
 also be able to install the header files.]);
 fi
 
-AC_OUTPUT(Makefile ringing/Makefile doc/Makefile examples/Makefile 
-  tests/Makefile ringing/common-am.h)
+dnl --------------------------------------------------------------------------
+dnl
+dnl See whether we've got GNU readline installed
+dnl
+AC_ARG_WITH(
+  readline,
+  AC_HELP_STRING([--with-readline], [support fancy command line editing])
+  ac_cv_use_readline=$withval, ac_cv_use_readline=no
+)
+
+AC_CACHE_CHECK(
+  [for GNU readline],
+  [ac_cv_use_readline],
+  [ LIBS="$LIBS -lreadline" 
+    AC_TRY_LINK(
+    [#include <readline/readline.h>
+    ],
+    [readline( ">> " );],
+    ac_cv_use_readline=yes,
+    ac_cv_use_readline=no)]
+)
+if test "$ac_cv_use_readline" = yes ; then
+  RINGING_USE_READLINE=1
+else
+  RINGING_USE_READLINE=0
+fi
+AM_CONDITIONAL(HAVE_READLINE, test "$ac_cv_use_readline" = yes )
+AC_SUBST(RINGING_USE_READLINE)
+
+dnl --------------------------------------------------------------------------
+dnl
+dnl See whether we're using Microsoft Visual Studio
+dnl
+
+# mkdsp automatically sets this Automake conditional to true.  We don't just 
+# set it to false in case anyone is using Visual Studio with Autoconf.
+AC_CACHE_CHECK(
+  [if the compile is Microsoft Visual C++],
+  [ac_cv_msvc],
+  [AC_TRY_COMPILE(
+    [ #if !defined(_MSC_VER)
+      #error "Not using MSVC"
+      #endif
+    ], [], 
+    ac_cv_msvc=yes,
+    ac_cv_msvc=no)]
+)
+AM_CONDITIONAL(USING_MSVC, test "$ac_cv_msvc" = yes)
+
+dnl --------------------------------------------------------------------------
+
+AC_OUTPUT(Makefile ringing/Makefile apps/Makefile apps/gsiril/Makefile 
+  doc/Makefile examples/Makefile tests/Makefile ringing/common-am.h)

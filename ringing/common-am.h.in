@@ -1,5 +1,5 @@
 // -*- C++ -*- common-am.h.in - Common macros and so on.
-// Copyright (C) 2001 Martin Bright <M.Bright@dpmms.cam.ac.uk>
+// Copyright (C) 2001, 2002 Martin Bright <M.Bright@dpmms.cam.ac.uk>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -68,12 +68,20 @@
 // it implicitly instantiates a class, or 0 otherwise.
 #define RINGING_PREMATURE_MEMBER_INSTANTIATION @RINGING_PREMATURE_MEMBER_INSTANTIATION@
 
+// *** Define this to be 1 if your STL only has pre-standard, non-templated
+// iostreams, or to 0 if it has standard templated iostreams.
+#define RINGING_HAVE_OLD_IOSTREAMS @RINGING_HAVE_OLD_IOSTREAMS@
+
 // *** Define this to be 1 if your STL has a compliant std::iterator class
 #define RINGING_HAVE_STD_ITERATOR @RINGING_HAVE_STD_ITERATOR@
 
-// *** Define this to be 1 if your STL have working {o,i}stringstream classes,
+// *** Define this to be 1 if your STL has working {o,i}stringstream classes,
 // or to 0 otherwise.
 #define RINGING_USE_STRINGSTREAM @RINGING_USE_STRINGSTREAM@
+
+// *** Define this to be 1 if want to include GNU readline support
+// or to 0 otherwise.
+#define RINGING_USE_READLINE @RINGING_USE_READLINE@
 
 #endif
 
