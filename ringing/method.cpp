@@ -78,7 +78,7 @@ const char *method::txt_stages[20] = {
   "Nonuples",
   "Twenty",
   "Decuples",
-  "Twenty-Two"
+  "Twenty-two"
   };
 
 const char *method::txt_differential = "Differential";
@@ -222,7 +222,7 @@ int method::methclass(void) const
     if (wb == bells())
       return cl | M_PRINCIPLE;
     else      
-      return cl | M_DIFFERENTIAL;
+      return cl | M_PRINCIPLE | M_DIFFERENTIAL;
   }
   else if (wb < bells()-huntbells())
     cl |= M_DIFFERENTIAL;
@@ -269,14 +269,16 @@ int method::methclass(void) const
   // Go through and see whether we spent the same amount of time
   // in each position
   j = 1;
-  for(i = tmin+1;i < tmax;i++)
-    if(count[i] != count[i-1]) j = 0;
+  for(i = tmin+1;i <= tmax;i++)
+    if(count[i-tmin] != count[i-1-tmin]) j = 0;
 
   // Same time in each position, and places -> Treble Place
   if(j) {
     if(place)
       return cl | M_TREBLE_PLACE;
     else { // Treble Dodging
+      // Treble confined to two places -> Treble Bob
+      if(tmax - tmin == 1) return cl | M_TREBLE_BOB;
       // Look at internal places
       int y = 0, n = 0;
       int step=length() / (tmax-tmin+1);

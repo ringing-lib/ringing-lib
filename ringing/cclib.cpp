@@ -207,25 +207,12 @@ bool cclib::impl::entry_type::readentry( library_base &lb )
 	{
 	  bool is_wrapped(true);
 	  
-	  // Unfortunately, I can't see a non-heuristical way
-	  // of doing this.  
 	  {
-	    string wrap( linebuf, meth_name_ends - 4, string::npos );
-	    
-	    for ( string::const_iterator i(wrap.begin()), e(wrap.end()-1); 
-		  i < e; ++i )
-	      {
-		if ( // Does it have multiple consecutive spaces?
-		    *i == ' ' && i[1] == ' ' 
-		    // Or does it contain characters that are not
-		    // from [A-Za-z\']?
-		    || *i != ' ' && !isalnum(*i) && *i != '\'' )
-		  { 
-		    is_wrapped = false; 
-		    break; 
-		  }
-	      }
 
+	    if(linebuf.length() > meth_name_ends
+	       && linebuf[meth_name_ends - 2] == ' '
+	       && linebuf[meth_name_ends - 1] == ' ')
+	      is_wrapped = false;
 	    
 	    if ( is_wrapped )
 	      {
