@@ -365,7 +365,7 @@ sub process_makefile($)
     {
 	chomp; while (/\\$/) { s/\\$//; $_ .= <FILE>; chomp;}
 
-	if (/^\s*([A-Za-z0-9_]+)\s*=\s*(.*)$/)
+	if (/^\s*([A-Za-z0-9_-]+)\s*=\s*(.*)$/)
 	{
 	    my ($var, $val) = ($1, $2);
 
@@ -380,8 +380,10 @@ sub process_makefile($)
 	    {
 		for my $p (split /[ \t+]+/, $val)
 		{
-		    $p =~ s/\./_/g;
-		    push @file_progs, $progs{$p} = {type => 'prog'};
+		    my $name = $p;
+		    $p =~ s/[\-\.]/_/g;
+		    push @file_progs, $progs{$p} 
+		        = {type => 'prog', name => $name};
 		}
 	    }
 	    elsif ($var =~ /LIBRARIES$/)
@@ -390,19 +392,23 @@ sub process_makefile($)
 		{
 		    my $tp = (($force_dll or $p =~ /.la$/) ? 'dll' : 'lib');
 			       
-		    $p =~ s/\./_/g;
+		    $p =~ s/\.l?a$//;
 		    $p =~ s/^lib//;
-		    $p =~ s/_l?a$//;
-		    push @file_progs, $progs{$p} = {type => $tp};
+
+		    my $name = $p;
+
+		    $p =~ s/[\-\.]/_/g;
+		    push @file_progs, $progs{$p} 
+		        = {type => $tp, name => $name};
 		}
 	    }
 	    else
 	    {
 		for $act (keys %actions)
 		{
-		    if ($var =~ /^(?:lib)?([a-zA-Z0-9_]+?)(?:_l?a)?_$act$/)
+		    if ($var =~ /^(?:lib)?([a-zA-Z0-9_-]+?)(?:_l?a)?_$act$/)
 		    {
-			(my $p = $1) =~ s/\./_/g;
+			(my $p = $1) =~ s/[\.\-]/_/g;
 			$actions{$act}->($progs{$p}, $val, $path);
 			last;
 		    }
@@ -438,7 +444,7 @@ sub make_dsps
 
     for my $p (keys %progs)
     {
-	my $name = $p;
+	my $name = $progs{$p}->{name};
 	my $dsp;
 
 	$dsp .= dsp_head($name, join(' ',@{$progs{$p}->{INCLUDES}}),
