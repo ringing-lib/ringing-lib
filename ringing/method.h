@@ -40,10 +40,12 @@ RINGING_USING_STD
 // method - A method.
 class RINGING_API method : public vector<change> {
 private:
+  int b;                        // The number of bells
   string myname;		// The name of the method, without Major etc. 
 
-  static const char *txt_classes[12]; // Bob, Place etc.
-  static const char *txt_stages[20];  // Minimus, Doubles etc.
+  static const char *txt_classes[12];  // Bob, Place etc.
+  static const char *txt_differential; // Differential
+  static const char *txt_stages[20];   // Minimus, Doubles etc.
 
 public: 
 
@@ -59,9 +61,8 @@ public:
     M_ALLIANCE,
     M_HYBRID,
     M_SLOW_COURSE,
-    M_DIFFERENTIAL,
     M_MASK = 0x0f,
-    M_DOUBLE = 0x40,
+    M_DIFFERENTIAL = 0x10,
     M_LITTLE = 0x80
   };
   
@@ -72,25 +73,24 @@ public:
     { return myname.c_str(); }
   void name(const char *n)	// Set name
     { myname = n; }
-  void name(const string n)
+  void name(const string& n)
     { myname = n; }
   char *fullname(char *c) const; // Return the full name
   string fullname() const;
 
   static const char *stagename(int n); // Get the name of this stage
-  static const char *classname(int cl) // Get the name of the class
-    { return txt_classes[cl & M_MASK]; }
+  static string classname(int cl); // Get the name of the class
 
   explicit method(int l = 0, int b = 0, const char *n = "Untitled") 
-    : vector<change>(l, change(b)), myname(n) {}
+    : vector<change>(l, change(b)), b(b), myname(n) {}
 
   // Make a method from place notation
-  method(const char *pn, int b, const char *n = "Untitled") {
+  method(const char *pn, int b, const char *n = "Untitled") : b(b) {
     name(n);
     interpret_pn(b, pn, pn + strlen(pn), 
 		 back_insert_iterator<vector<change> >(*this));
   }
-  method(const string pn, int b, const string n = "Untitled") {
+  method(const string pn, int b, const string& n = "Untitled") : b(b) {
     name(n);
     interpret_pn(b, pn.begin(), pn.end(),
 		 back_insert_iterator<vector<change> >(*this));
@@ -98,15 +98,15 @@ public:
   ~method() {}
 
   void push_back(const change &ch)
-    { vector<change>::push_back(ch); }
+    { b = b > ch.bells() ? b : ch.bells(); vector<change>::push_back(ch); }
   void push_back(const string &str)
     { vector<change>::push_back(change(bells(), str)); }
 
   int length() const { return size(); }
-  int bells() const { return empty() ? 0 : (*this)[0].bells(); }
+  int bells() const { return b; }
   row lh() const { 
     vector<change>::const_iterator i;
-    row r(bells()); r.rounds();
+    row r(bells());
     for(i=begin(); i != end(); i++) r *= *i;
     return r;
   }

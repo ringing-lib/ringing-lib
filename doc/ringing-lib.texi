@@ -1152,14 +1152,16 @@ method.  The following values are defined:
 enum method::m_class @{
   M_UNKNOWN, M_PRINCIPLE, M_BOB, M_PLACE, M_TREBLE_BOB, M_SURPRISE, 
   M_DELIGHT, M_TREBLE_PLACE, M_ALLIANCE, M_HYBRID, M_SLOW_COURSE,
-  M_DIFFERENTIAL,
   M_MASK = 0x0f,
-  M_DOUBLE = 0x40,
+  M_DIFFERENTIAL = 0x10,
   M_LITTLE = 0x80
 @};
 @end example
-The @code{M_DOUBLE} and @code{M_LITTLE} bits are flags which will be either
-set or cleared accordingly.
+The @code{M_DIFFERENTIAL} and @code{M_LITTLE} bits are flags which will be 
+either set or cleared accordingly.  (For the purpose of this function, 
+``Differential'' is considered a method class.  Differential hunters will have
+the @code{M_DIFFERENTIAL} bit set, together with one of the other classes;
+differential methods will just have the @code{M_DIFFERENTIAL} bit set.)
 @end deftypefun
 
 @deftypefun char* method::fullname (char* @var{buffer}) const;
@@ -1195,10 +1197,11 @@ This function returns a pointer to a string describing the stage of
 For stages above Sixteen, the number is given in digits.
 @end deftypefun
 
-@deftypefun {static const char*} method::classname (int @var{class});
-This function returns a pointer to a string describing the method class
+@deftypefun {static string} method::classname (int @var{class});
+This function returns a string describing the method class
 given in @var{class}, which should be as indicated in the explanation
-of @code{method::methclass()} above.
+of @code{method::methclass()} above.  For the purpose of this function,
+``Differential'' and ``Little'' are both considered to be method classes.
 @end deftypefun
 
 @node method static Variables,  , method static Functions, The method Class
@@ -2366,41 +2369,41 @@ This type defines the type of variable returned from the @code{size()} function.
 @node Music Functions,  , Music Type Definitions, music class definition
 @subsection Functions
 
-@deftypefun void push_back(const music_details &);
+@deftypefun void push_back (const music_details &);
 This function adds a @code{music_details} expression onto the vector of expressions to be matched. It will also add it to the tree ready for processing against rows.
 @end deftypefun
 
-@deftypefun music::iterator begin();
-@deftypefunx music::const_iterator begin() const;
+@deftypefun music::iterator begin (void);
+@deftypefunx music::const_iterator begin (void) const;
 These functions return an iterator that points at the beginning of the expression list.
 @end deftypefun
 
-@deftypefun music::iterator end();
-@deftypefunx music::const_iterator end() const;
+@deftypefun music::iterator end (void);
+@deftypefunx music::const_iterator end (void) const;
 These functions return an iterator that points past the end of the expression list.
 @end deftypefun
 
-@deftypefun music::size_type size();
+@deftypefun music::size_type size (void);
 This function returns the number of expressions currently stored.
 @end deftypefun
 
-@deftypefun void set_bells(const unsigned int &b);
+@deftypefun void set_bells (const unsigned int &b);
 This function sets the number of bells that will be in the matched rows to @code{b}.
 @end deftypefun
 
-@deftypefun template <class RowIterator> void process_rows(RowIterator first, RowIterator last, bool backstroke = false);
+@deftypefun {template <class RowIterator> void} process_rows (RowIterator first, RowIterator last, bool backstroke = false);
 This function first resets the all of the music counts, and then processes the supplied rows. If backstroke is true, then a backstroke is assumed to be the first row, otherwise it will be noted as a handstroke. The stroke will be toggled for every row processed.
 @end deftypefun
 
-@deftypefun int get_score(const EStroke& = eBoth);
+@deftypefun int get_score (const EStroke& = eBoth);
 Returns the score for music matched at the specified stroke. If eBoth is specified as the stroke, then scores for both strokes are added together and returned.
 @end deftypefun
 
-@deftypefun unsigned int get_count(const EStroke& = eBoth);
+@deftypefun unsigned int get_count (const EStroke& = eBoth);
 Returns the total number of matches for all music expressions at the specified stroke. If eBoth is specified, then the counts for both strokes are added and returned.
 @end deftypefun
 
-@deftypefun int get_possible_score();
+@deftypefun int get_possible_score (void);
 This function returns the maximum possible score that could be obtained matching the expressions currently stored against a true extent on the number of bells previously specified.
 @end deftypefun
 
@@ -2524,12 +2527,12 @@ class music_node;
 @node Music_Node Constructors and Destructors, Music_Node Type Definitions, Music_Node Derivation, music node class definition
 @subsection Constructors and Destructors
 
-@deftypefn Constructor {} music_node::music_node();
-@deftypefnx Constructor {} music_node::music_node(const unsigned int &b);
+@deftypefn Constructor {} music_node::music_node (void);
+@deftypefnx Constructor {} music_node::music_node (const unsigned int &b);
 The constructor initialises the object and sets the number of bells in the rows that will be matched. If the default constructor is used, then the @code{set_bells()} function should be used to perform this action.
 @end deftypefn
 
-@deftypefn Destructor {} music_node::~music_node ();
+@deftypefn Destructor {} music_node::~music_node (void);
 The destructor will go through the tree structure, deleting the sub-nodes of the current node.
 @end deftypefn
 
@@ -2555,23 +2558,23 @@ This type definition is used to provide a shorter type name to iterate the detai
 @node Music_Node Functions, Music_Node Exceptions, Music_Node Type Definitions, music node class definition
 @subsection Functions
 
-@deftypefun void set_bells(const unsigned int &b);
+@deftypefun void set_bells (const unsigned int &b);
 This function is used to set the number of bells that will be in the rows to be matched against. This provides a way for the algorithms to know when they are finished processing the expressions or row.
 @end deftypefun
 
-@deftypefun void add(const music_details &md, const unsigned int &i, const unsigned int &key, const unsigned int &pos);
+@deftypefun void add (const music_details &md, const unsigned int &i, const unsigned int &key, const unsigned int &pos);
 This function is used to add the supplied expression (@code{md}), to the tree. The location in the expression to look at is supplied by @code{i}, the @code{key} is the reference number that the @code{music} class stores the @code{md} expression against, and the @code{pos} is the number of bells deep we are in the tree.
 
 Depending on the item in the expression at index @code{i}, the algorithm will do different things, normally, it will call the @code{add_to_subtree(...)} function which in turn will usually call this function again; sometimes it will call itself (in the case of a @samp{'*'}) to move along the current expression without necessarily adding it to a subtree. Hence, the @code{add(...)} function is an iterative one.
 @end deftypefun
 
-@deftypefun void add_to_subtree(const unsigned int &place, const music_details &md, const unsigned int &i, const unsigned int &key, const unsigned int &pos, const bool &process_star);
+@deftypefun void add_to_subtree (const unsigned int &place, const music_details &md, const unsigned int &i, const unsigned int &key, const unsigned int &pos, const bool &process_star);
 This private function is used to create a branch (if required) and add an expression to a branch of a node. If it cannot allocate memory for the new node, it will either throw a @code{memory_error} exception (if enabled), or it will simply return without going any further.
 
 The @code{place} parameter provides the branch number (= bell) to create and add to, the @code{process_star} parameter is used to indicate if the number of @samp{*}s remaining should be processed or ignored. The rest of the parameters are as for the @code{add(...)} function.
 @end deftypefun
 
-@deftypefun void match(const row &r, const unsigned int &pos, vector<music_details> &results, const EStroke &stroke);
+@deftypefun void match (const row &r, const unsigned int &pos, vector<music_details> &results, const EStroke &stroke);
 This function is iterative and is used to match the expressions stored to a row, @code{r}. If a node is found to have an expression ending there, the number of counts for that expression are incremented according to the specified @code{stroke}. The @code{pos} parameter is used to specify the current position in the row @code{r}, and the @code{results} parameter is the expressions for which the indexes have previously been stored, and against which the count should be incremented as appropriate.
 @end deftypefun
 

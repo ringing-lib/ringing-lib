@@ -53,8 +53,7 @@ const char *method::txt_classes[12] = {
   "Treble Place",
   "Alliance",
   "Hybrid",
-  "Slow Course",
-  "Differential"
+  "Slow Course"
   };
 
 const char *method::txt_stages[20] = {
@@ -80,8 +79,27 @@ const char *method::txt_stages[20] = {
   "Twenty-Two"
   };
 
-const char *method::txt_double = "Double";
-const char *method::txt_little = "Little";
+const char *method::txt_differential = "Differential";
+const char *method::txt_double       = "Double";
+const char *method::txt_little       = "Little";
+
+string method::classname(int cl)
+{
+  string s;      //  12345678901234567890123456789012
+  s.reserve(35); // "Differential Little Treble Place" is the longest class
+  if ( cl & M_DIFFERENTIAL ) {
+    s += txt_differential;
+  }
+  if ( cl & M_LITTLE ) {
+    if (s.size()) s += " ";
+    s += txt_little;
+  }
+  if ( txt_classes[cl & M_MASK][0] ) {
+    if (s.size()) s += " ";
+    s += txt_classes[cl & M_MASK];
+  }
+  return s;
+}
 
 // issym : Find out whether the method is symmetrical
 // This means symmetrical, not counting the half-lead or lead end.
@@ -182,29 +200,30 @@ int method::methclass(void) const
   int i;
   bell j, hb;
 
-  // Is it double?
-  if(isdouble()) cl = M_DOUBLE;
-
   // Find the first hunt bell
   row lhr = lh();
   for(hb = 0; lhr[hb] != hb && hb < bells(); hb = hb + 1);
-  if(hb == bells()) {
-    // It's a non-hunter.  Is it a principle?
-    vector<bool> v(bells());
-
-    // Find the size of the first set of working bells    
-    int wb=0;
-    i=0;
+  
+  // Find the size of the first set of working bells    
+  int wb=0;
+  for(j = 0; lhr[j] == j && j < bells(); j=j+1);
+  if ( j < bells() ) {
+    i = j;
     do {
       i = lhr[i];
       ++wb;
-    } while (i);
+    } while (i != j);
+  }
 
+  if(hb == bells()) {
+    // It's a non-hunter.  Is it a principle?
     if (wb == bells())
       return cl | M_PRINCIPLE;
     else      
       return cl | M_DIFFERENTIAL;
   }
+  else if (wb < bells()-huntbells())
+    cl |= M_DIFFERENTIAL;
 
   // Find how far the treble ever gets
   bell tmin = hb, tmax = hb;
@@ -306,9 +325,9 @@ string method::fullname() const
     ; // Nor does Union ...
   else
     {
-      if(cl & M_LITTLE) { result += txt_little; result += ' '; }
-      result += classname(cl);
-      if (strlen(classname(cl))) result += ' ';
+      const string cn( classname(cl) );
+      result += cn;
+      if (cn.size()) result += ' ';
     }
   result += stagename(bells());
   return result;

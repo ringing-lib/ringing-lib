@@ -1,5 +1,5 @@
 // -*- C++ -*- method-tests.cc - Tests for the method class
-// Copyright (C) 2002 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -72,6 +72,14 @@ void test_method_fullname(void)
   RINGING_TEST( method( "&-5-4.5-5.36.4-4.5-4-1,8", 8, 
 			"Bristol" ).fullname()
 		== "Bristol Surprise Major" );
+
+  RINGING_TEST( method( "-", 8, 
+			"Cross" ).fullname()
+		== "Cross Differential Major" );
+
+  RINGING_TEST( method( "-4-6-6-4-6-6-2", 6, 
+			"Tetley's Smoothflow" ).fullname()
+		== "Tetley's Smoothflow Differential Hybrid Minor" );
 }
 
 void test_method_fullname_grandsire(void)
@@ -130,7 +138,7 @@ void test_method_stagename(void)
 void test_method_classname(void)
 {
   RINGING_TEST( method::classname( method::M_UNKNOWN      ) 
-		== string() );
+		== string() ); // ??? (or exception?)
   RINGING_TEST( method::classname( method::M_PRINCIPLE    )
 		== string() ); // ???
   RINGING_TEST( method::classname( method::M_BOB          ) 
@@ -151,11 +159,22 @@ void test_method_classname(void)
 		== string("Hybrid") );
   RINGING_TEST( method::classname( method::M_SLOW_COURSE  )
 		== string("Slow Course") );
-  RINGING_TEST( method::classname( method::M_DIFFERENTIAL  )
+  RINGING_TEST( method::classname( method::M_DIFFERENTIAL )
 		== string("Differential") );
 
-  RINGING_TEST( method::classname( method::M_BOB | method::M_LITTLE )
-		== string("Bob") );
+  RINGING_TEST( method::classname( method::M_BOB          |
+				   method::M_LITTLE       )
+		== string("Little Bob") );
+  RINGING_TEST( method::classname( method::M_HYBRID       | 
+				   method::M_LITTLE       )
+		== string("Little Hybrid") );
+  RINGING_TEST( method::classname( method::M_SURPRISE     | 
+				   method::M_DIFFERENTIAL )
+		== string("Differential Surprise") );
+  RINGING_TEST( method::classname( method::M_TREBLE_PLACE |
+				   method::M_LITTLE       | 
+				   method::M_DIFFERENTIAL )
+		== string("Differential Little Treble Place") );
 }
 
 void test_method_length(void)
@@ -167,7 +186,7 @@ void test_method_length(void)
 
 void test_method_bells(void)
 {
-  RINGING_TEST( method( "",          6 ).bells() == 0 ); // ???
+  RINGING_TEST( method( "",          6 ).bells() == 6 );
   RINGING_TEST( method( "&-1-1-1,2", 6 ).bells() == 6 );
 }
 

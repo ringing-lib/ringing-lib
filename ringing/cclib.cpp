@@ -1,5 +1,5 @@
 // cclib.cpp - Read and write the Central Council Method libraries
-// Copyright (C) 2001-2 Mark Banner <mark@standard8.co.uk>
+// Copyright (C) 2001, 2002, 2003 Mark Banner <mark@standard8.co.uk>
 // and Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -58,6 +58,8 @@ class cclib::entry_type : public library_entry::impl
   virtual ~entry_type() { };
   void parse_header();
   void parse_title();
+  static bool maybe_strip_class( string& name, const string& clname );
+
   virtual bool readentry( library_base &lb );
   virtual library_entry::impl *clone() const { return new entry_type(*this); }
 
@@ -76,7 +78,7 @@ class cclib::entry_type : public library_entry::impl
   string::size_type meth_le;
   string::size_type meth_lh;
 
-  // Method class information
+  // Method class & stage information
   int b;
 };
 
@@ -153,7 +155,8 @@ bool cclib::entry_type::readentry( library_base &lb )
 	  }
 	}
       else if ( linebuf.find( "methods" ) != string::npos ||
-		linebuf.find( "principles" ) != string::npos )
+		linebuf.find( "principles" ) != string::npos ||
+		linebuf.find( "differentials" ) != string::npos )
 	{
 	  parse_title();
 	}
@@ -165,10 +168,12 @@ void cclib::entry_type::parse_title()
 {
   // True if it's a method, false if it's a principle
   bool meth( linebuf.find( "methods" ) != string::npos );
+  bool prin( linebuf.find( "principles" ) != string::npos );
 
   for ( int i=3; i<=22; ++i )
     if ( linebuf.find( string( method::stagename(i) ) + 
-		       string( meth ? " methods" : " principles" ) )
+		       string( meth ? " methods" : 
+			       prin ? " principles" : " differentials" ) )
 	 != string::npos )
       {
 	b = i;
@@ -212,52 +217,34 @@ string cclib::entry_type::name() const
   return n.substr( 0, i - n.begin() );
 }
 
+bool cclib::entry_type::maybe_strip_class( string& name, const string& clname )
+{
+  string::size_type pos = name.rfind(clname);
+  if ( pos != string::npos && pos + clname.size() == name.size() ) {
+    while (pos>0 && isspace(name[pos-1])) --pos;
+    name.erase( pos, string::npos );
+    return true;
+  }
+  return false;
+}
+
 string cclib::entry_type::base_name() const
 {
   string newname(name());
-  string::size_type pos = 0;
 
-  // Entries in CC Libs do not contain the stage name.
+  // Entries in CC Libs do not contain the stage and only contain 
+  // "selected" classes.  "The selected classes are Bob, Little, Place 
+  // and Slow Course."  It also appears that for Differential Hunters 
+  // (but not Differentials) have "Differential" in their name.
 
-  // Erase sections of the string that contain a classname.
-  for (int i = 2; i < 11; i++)
-    {
-      const char *clname = method::classname(i);
-      size_t cllen = strlen(clname);
+  maybe_strip_class( newname, method::classname( method::M_BOB          ) ) ||
+  maybe_strip_class( newname, method::classname( method::M_PLACE        ) ) ||
+  maybe_strip_class( newname, method::classname( method::M_SLOW_COURSE  ) );
 
-      if ((pos = newname.find(clname)) != string::npos
-	  && pos + cllen == newname.size() )
-	{
-	  newname.erase(pos, cllen);
-	  break; // There is only ever one class
-	}
-    }
+  maybe_strip_class( newname, method::classname( method::M_DIFFERENTIAL ) );
+  maybe_strip_class( newname, method::classname( method::M_LITTLE       ) );
 
-  // Now remove space on end of line.
-  {
-    string::iterator j = newname.end();
-    while ((j >= newname.begin()) && (isspace(*(j - 1))))
-      {
-	j--;
-      }
-    newname.erase(j, newname.end());
-  }
-
-  // Do the same for little - but only find the last
-  if ((pos = newname.rfind(method::txt_little)) != string::npos
-      && pos + strlen(method::txt_little) == newname.size() )
-    {
-      newname.erase(pos, strlen(method::txt_little));
-    }
-
-  // Now remove space on end of line.
-  string::const_iterator j = newname.end();
-  while ((j >= newname.begin()) && (isspace(*(j - 1))))
-    {
-      j--;
-    }
-
-  return newname.substr(0, j - newname.begin());
+  return newname;
 }
 
 string cclib::entry_type::pn() const
