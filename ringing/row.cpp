@@ -85,12 +85,12 @@ void change::init( const string &pn )
     while(p != pn.end()) {
       b.from_char(*p);
 #if RINGING_USE_EXCEPTIONS
-      if(b >= n || b <= c-1) throw invalid();
+      if(b >= n || b <= c-1) throw invalid(pn);
 #endif
       if(b >= c) {
 	for(d = c; d < b-1; d = d + 2) swaps.push_back(d);
 #if RINGING_USE_EXCEPTIONS
-	if ( d == b-1 ) throw invalid();
+	if ( d == b-1 ) throw invalid(pn);
 #endif
 	c = b + 1;
       }
@@ -116,6 +116,9 @@ change::change(int num, const string& pn)
 
 change::invalid::invalid() 
   : invalid_argument("The change supplied was invalid") {}
+
+change::invalid::invalid(const string& s)
+  : invalid_argument("The change '" + s + "' was invalid") {} 
 
 change::out_of_range::out_of_range()
   : RINGING_PREFIX_STD out_of_range("The place supplied was out of range") {}
@@ -266,6 +269,9 @@ place_notation::invalid::invalid()
   : invalid_argument("The place notation supplied was invalid")
 {}
 
+place_notation::invalid::invalid(const string& s)
+  : invalid_argument("The place notation '" + s + "' was invalid") {} 
+
 // *********************************************************************
 // *                    Functions for class row                        *
 // *********************************************************************
@@ -289,7 +295,7 @@ row::row(const char *s)
   for(i=0; i<bells(); ++i) found[i] = false;
   for(i=0; i<bells(); ++i) 
     if (data[i] < 0 || data[i] >= (int) data.size() || found[data[i]])
-      throw invalid();
+      throw invalid(s);
     else
       found[data[i]] = true;
 #endif
@@ -304,6 +310,9 @@ row::row(const string &s)
 row::invalid::invalid()
   : invalid_argument("The row supplied was invalid")
 {}
+
+row::invalid::invalid(const string& s)
+  : invalid_argument("The row '" + s + "' was invalid") {} 
 
 // Assign a string value to a row
 row& row::operator=(const char *s)

@@ -122,6 +122,16 @@ your program; for example, a method editing program would use the method
 classes, whereas a program to simulate call changes would just use the
 row and change classes.
 
+There are also several utilities included with the library.  These
+demonstrate how to use the Ringing Class Library in your own programs,
+and are useful in their own right.  Currently included are
+@command{gsiril}, a peal proving program with an interface similar to
+the popular MicroSIRIL program; @command{psline}, a utility to print
+lines for methods in @acronym{PDF} or PostScript; and
+@command{methsearch}, a program which searches for methods satisfying
+various given criteria.  These utilities may be found in the @file{apps}
+subdirectory.
+
 To get information about latest releases of the Ringing Class Library,
 to report bugs, request features, use forums and access the CVS
 repository, visit the project web page at
@@ -234,7 +244,13 @@ subdirectory into a library, which you will probably want to call
 @item Install the compiled library and the header files in places where
 your compiler and linker will be able to find them;
 
+@item Optionally, install and run the tests in the @file{tests}
+subdirectory.
+
 @item Copy the documentation to somewhere permanent.
+
+@item If desired, compile and install the utilities in the @file{apps}
+subdirectory.
 @end itemize
 
 Note that the header files are designed to be included from a
@@ -256,9 +272,13 @@ the authors would be please to hear of any success.
 @node Testing the library, Using the library in your programs, Microsoft Windows, Installing and using the library
 @section Testing the library
 
-The library is now being provided with basic test facilities that exercise the main classes and provide confidence that they are working correctly.
+The library is now being provided with basic test facilities that
+exercise the main classes and provide confidence that they are working
+correctly.
 
-The tests are found under the 'tests' directory and are linked into one executable called 'test'. If all tests are succesfully a message will be printed stating this on the last line of output of the program.
+The tests are found under the @file{tests} directory and are linked into
+one executable called @command{test}. If all tests are succesfully a message
+will be printed stating this on the last line of output of the program.
 
 @node Using the library in your programs,  , Testing the library, Installing and using the library
 @section Using the library in your programs
@@ -292,11 +312,11 @@ will have to add @code{-lringing} to link with the library.
 Classes for manupulating rows and changes, and all the other classes and
 functions described in this chapter, are declared in @file{ringing/row.h}.
 
-For ease of notation, I am using the idea that a @dfn{row} is an
-individual permutation of bells (such as @samp{13572468}), and a
-@dfn{change} is a means of getting from one row to another, by swapping
-pairs of bells; the most convenient way to write a change is a place
-notation (for example @samp{X} or @samp{1258}).
+For ease of notation, we use the idea that a @dfn{row} is an individual
+permutation of bells (such as @samp{13572468}), and a @dfn{change} is a
+means of getting from one row to another, by swapping pairs of bells;
+the most convenient way to write a change is a place notation (for
+example @samp{X} or @samp{1258}).
 
 @menu
 * Row Operations::              Explanation of algebra on rows
@@ -1216,7 +1236,7 @@ This points to the string @code{"Little"}.
 @end deftypevar
 
 @node Method Libraries, Proof, Methods, Top
-@chapter Method Libraries and control
+@chapter Method Libraries
 @cindex library
 @cindex method library
 
@@ -2772,8 +2792,9 @@ inclusive.  You can also specify a shade of grey by setting @code{grey} to
 @subsection The @code{text_style} class
 
 The @code{text_style} class is a structure which represents a text
-style.  It contains a font name, a point size and a colour.  It also
-defines an enumerated type which may be used to describe text alignment.
+style.  It contains a font name, a size in tenths of a point and a
+colour.  It also defines an enumerated type which may be used to
+describe text alignment.
 
 @example
 struct text_style @{
@@ -2994,7 +3015,7 @@ up a @code{printrow::options} object to accomplish this:
 @example
 printrow::options o;
 o.flags = printrow::options::numbers;
-o.style.size = 10;
+o.style.size = 100;
 o.style.font = "Helvetica";
 o.xspace.n = 12;
 o.yspace.n = 12;

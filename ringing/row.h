@@ -165,6 +165,7 @@ public:
   // Thrown by the constructor if an invalid place-notation is given 
   struct invalid : public invalid_argument {
     invalid();
+    invalid(const string& s);
   };
 
 };
@@ -189,6 +190,7 @@ struct place_notation {
   // Exception thrown if place-notation is malformed 
   struct RINGING_API invalid : public invalid_argument {
     invalid();
+    invalid(const string& s);
   };
 };
 
@@ -302,6 +304,7 @@ public:
   
   struct invalid : public invalid_argument {
     invalid();
+    invalid(const string& s);
   };
 
   // So that we can put rows in containers

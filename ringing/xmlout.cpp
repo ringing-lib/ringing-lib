@@ -48,7 +48,8 @@ RINGING_USING_STD
 
 XERCES_CPP_NAMESPACE_USE
 
-#define METHODS_XMLNS "http://methods.ringing.org/NS/methods"
+#define METHODS_XMLNS "http://methods.ringing.org/NS/method"
+#define XSI_XMLNS "http://www.w3.org/2001/XMLSchema-instance"
 
 RINGING_START_ANON_NAMESPACE
 
@@ -242,7 +243,8 @@ void xmlout::impl::append( library_entry const& entry )
       method b1, b2; 
 
       copy( meth.begin(), meth.begin() + sp+1, back_inserter( b1 ) );
-      copy( meth.begin() + 2*sp+1, meth.end(), back_inserter( b2 ) );
+      copy( meth.begin() + 2*sp+1, meth.begin() + (meth.length()/2 + sp+1), 
+	    back_inserter( b2 ) );
 
       add_simple_elt( pn_elt, "symblock", b1.format(fmt_opts) );
       add_simple_elt( pn_elt, "symblock", b2.format(fmt_opts) );
@@ -250,6 +252,21 @@ void xmlout::impl::append( library_entry const& entry )
   }
 
   add_simple_elt( meth_elt, "lead-head", meth.lh().print() );
+
+  {
+    DOMElement* cl_elt = add_elt( meth_elt, "classification" );
+    DOMElement* lhcode_elt = add_elt( cl_elt, "lhcode" );
+    string lhcode = meth.lhcode();
+    if(lhcode.empty() || lhcode[0] == 'z') {
+      lhcode_elt->setAttributeNS( TRANSCODE( XSI_XMLNS ),
+				  TRANSCODE( "xsi:nil" ),
+				  TRANSCODE( "true" ) );
+    } else {
+      lhcode_elt->setAttributeNS( TRANSCODE( METHODS_XMLNS ),
+				  TRANSCODE( "code" ),
+				  TRANSCODE( lhcode.c_str() ));
+    }
+  }
 
   if ( entry.has_facet< first_tower_peal >() )
     add_peal( add_elt( meth_elt, "first-tower" ),
