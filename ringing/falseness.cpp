@@ -1,5 +1,5 @@
 // -*- C++ -*- falseness.cpp - Class for falseness table
-// Copyright (C) 2001 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2001-2 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -98,8 +98,8 @@ public:
   {
     if ( f[0] != 0 ) return;
 
-	  // For efficiency.  We know that if the first lead-head is even
-	  // and the false lead-head is odd there can be no even FCHs.
+    // For efficiency.  We know that if the first lead-head is even
+    // and the false lead-head is odd there can be no even FCHs.
     if ( ( fc.flags & in_course_only ) 
 	 && fc.lh.sign() == +1 && f.sign() == -1 )
       return;
@@ -107,22 +107,21 @@ public:
     row lead; 
     do 
       {
-	lead *= fc.lh;
-	      
 	row c( lead * f );
+	lead *= fc.lh;
 	      
 	// Transpose to the course head
 	while ( c[ f.bells() - 1 ] != f.bells() - 1 ) 
 	  c *= fc.lh;
 	      
 	if ( ( fc.flags & in_course_only ) && c.sign() == -1 )
-	  return;
+	  continue;
 
 	if ( ( fc.flags & tenors_together ) 
 	     && !are_tenors_together( c, 6 ) )
-	  return;
+	  continue;
 
-	fs.insert( c );	      
+	fs.insert( c );
       }
     while ( !lead.isrounds() );
   }
