@@ -71,5 +71,9 @@
 // *** Define this to be 1 if your STL has a compliant std::iterator class
 #define RINGING_HAVE_STD_ITERATOR @RINGING_HAVE_STD_ITERATOR@
 
+// *** Define this to be 1 if your STL have working {o,i}stringstream classes,
+// or to 0 otherwise.
+#define RINGING_USE_STRINGSTREAM @RINGING_USE_STRINGSTREAM@
+
 #endif
 

@@ -226,7 +226,7 @@ dnl Check to see whether the STL has a compliant std::iterator
 dnl
 AC_CACHE_CHECK(
   [whether the STL has a compilant std::iterator],
-  [ac_cv_std_iterator],
+  [ac_cv_cxx_std_iterator],
   [AC_TRY_COMPILE(
     [
       #if ] $RINGING_OLD_INCLUDES [
@@ -255,6 +255,75 @@ else
 fi
 AC_SUBST(RINGING_HAVE_STD_ITERATOR)
 
+
+dnl --------------------------------------------------------------------------
+dnl
+dnl Check to see whether the STL has a compliant std::iterator
+dnl
+AC_CACHE_CHECK(
+  [whether the STL has stringstreams],
+  [ac_cv_cxx_stringstream],
+  [AC_TRY_COMPILE(
+    [
+      #if ] $RINGING_OLD_INCLUDES [
+      #  include <sstream.h>
+      #else
+      #  include <sstream>
+      #endif
+      #include <string>
+
+      #if ] $RINGING_USE_STD [ 
+      using namespace std;
+      #endif
+    ],
+    [ 
+      ostringstream os;
+      os << "Hello, world: " << 42 << "!";
+      string s( os.str() ); 
+    ],
+    ac_cv_cxx_stringstream=yes,
+    ac_cv_cxx_stringstream=no
+  )]
+)
+if test "$ac_cv_cxx_stringstream" = yes ; then
+  RINGING_USE_STRINGSTREAM=1
+else
+  AC_CACHE_CHECK(
+    [whether the STL has strstreams],
+    [ac_cv_cxx_strstream],
+    [AC_TRY_COMPILE(
+      [
+	#if ] $RINGING_OLD_INCLUDES [
+	#  include <strstream.h>
+	#else
+	#  include <strstream>
+	#endif
+        #include <string>
+
+	#if ] $RINGING_USE_STD [ 
+	using namespace std;
+	#endif
+      ],
+      [
+        ostrstream os;
+        os << "Hello, world: " << 42 << "!";
+        string s( os.str(), os.pcount() );
+        os.freeze(0);
+      ],
+      ac_cv_cxx_strstream=yes,
+      ac_cv_cxx_strstream=no
+    )]
+  )
+  if test "$ac_cv_cxx_strstream" = yes ; then
+    RINGING_USE_STRINGSTREAM=0
+  else
+    AC_MSG_WARN([You appear not to have either a working stringstream class 
+or a working strstream class.  It is necessary to have one of these to use the
+Ringing Class Library.]);
+    can_build=no;
+  fi
+fi
+AC_SUBST(RINGING_USE_STRINGSTREAM)
 
 dnl --------------------------------------------------------------------------
 dnl
