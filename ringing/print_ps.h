@@ -28,10 +28,12 @@
 #if RINGING_OLD_INCLUDES
 #include <list.h>
 #include <map.h>
+#include <set.h>
 #include <iostream.h>
 #else
 #include <list>
 #include <map>
+#include <set>
 #include <iostream>
 #endif
 #include <ringing/print.h>
@@ -106,21 +108,23 @@ class printpage_ps : public printpage {
 protected:
   ostream& os;
   bool eps;
-  static const string def_string;
+  static const string def_string, header_string;
+  int pages;
+  set<string> used_fonts;
 
 public:
   printpage_ps(ostream& o);
   printpage_ps(ostream& o, int x0, int y0, int x1, int y1);
-  ~printpage_ps() {
-    if(eps) os << "restore\n"; else os << "showpage\n";
-  }
+  ~printpage_ps();
   void text(const string t, const dimension& x, const dimension& y,
        text_style::alignment al, const text_style& s);
+  void new_page();
+  void add_font(const string& s) { used_fonts.insert(s); }
 
 private:
   friend class printrow;
   printrow::base* new_printrow(const printrow::options& o) 
-    { return new printrow_ps(os, o); }
+    { add_font(o.style.font); return new printrow_ps(os, o); }
 
 protected:
   void set_text_style(const text_style& s);

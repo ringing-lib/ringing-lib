@@ -27,6 +27,8 @@
 RINGING_START_NAMESPACE
 
 const string printpage_ps::def_string =
+"%%BeginProlog\n"
+"%%BeginResource: procset " RINGING_PACKAGE " " RINGING_VERSION " 0\n"
 "/BD {bind def} bind def\n"
 "/C {dup stringwidth pop 2 div neg offset neg rmoveto show} BD\n"
 "/TR {dup stringwidth pop neg 4 -1 roll add 3 -1 roll moveto show} BD\n"
@@ -83,33 +85,61 @@ const string printpage_ps::def_string =
 "(d) { xspace neg yspace neg R } defline\n"
 "(p) { 0 yspace neg R } defline\n"
 "/J { yspace mul neg exch xspace mul xstart add \n"
-"currentpoint pop neg add exch rmoveto } BD\n";
+"currentpoint pop neg add exch rmoveto } BD\n"
+"%%EndResource\n"
+"%%EndProlog\n\n";
+
+const string printpage_ps::header_string =
+"%%Creator: Ringing Class Library (" RINGING_PACKAGE " " 
+RINGING_VERSION ") \n"
+"%%DocumentSuppliedResources: procset " RINGING_PACKAGE " "
+RINGING_VERSION " 0\n"
+"%%DocumentNeededResources: (atend)\n"
+"%%EndComments\n\n";
 
 printpage_ps::printpage_ps(ostream& o) : os(o), eps(false)
 {
-  os << "%!PS-Adobe 2.0\n"
-    "%%Creator: Ringing Class Library (" RINGING_PACKAGE " " 
-    RINGING_VERSION ") \n" 
-    "%%EndComments\n\n" 
-     << def_string << "%%Page: 1\n";
+  pages = 1;
+  os << "%!PS-Adobe-3.0\n" << "%%Pages: (atend)\n" << header_string 
+     << def_string << "%%Page: 1\nsave\n";
 }
 
 printpage_ps::printpage_ps(ostream& o, int x0, int y0, int x1, int y1)
   : os(o), eps(true)
 {
-  os << "%!PS-Adobe 2.0 EPSF\n"
+  pages = 0;
+  os << "%!PS-Adobe-3.0 EPSF-3.0\n"
      << "%%BoundingBox: " << x0 << ' ' << y0 
      << ' ' << x1 << ' ' << y1
-     << "\n%%Creator: Ringing Class Library (" RINGING_PACKAGE " "
-    RINGING_VERSION ") \n"
-    "%%Pages: 0\n"
-    "%%EndComments\n\n"
-    "save\n" << def_string;
+     << "%%Pages: 0\n" << header_string << def_string;
+}
+
+printpage_ps::~printpage_ps()
+{
+  if(!eps) os << "restore showpage\n";
+  os <<"\n%%Trailer\n";
+  if(!eps) os << "%%Pages: " << pages << "\n";
+  os << "%%DocumentNeededResources:";
+  if(!used_fonts.empty()) {
+    os << " font ";
+    copy(used_fonts.begin(), used_fonts.end(), 
+	 ostream_iterator<string>(os, " "));
+    os << '\n';
+  } 
+  os << "%%EOF\n";
+}
+
+
+void printpage_ps::new_page()
+{
+  pages++;
+  os << "restore showpage\n\n%%Page: " << pages << "\nsave\n";
 }
 
 void printpage_ps::set_text_style(const text_style& s)
 {
   os << '/' << s.font << ' ' << s.size << " F\n";
+  add_font(s.font);
 }
 
 // NOTE: At the moment this is quite likely to break when printing

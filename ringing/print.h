@@ -38,6 +38,7 @@
 
 RINGING_START_NAMESPACE
 
+
 RINGING_USING_STD
 
 class printpage;
@@ -122,6 +123,7 @@ public:
   virtual ~printpage() {}
   virtual void text(const string t, const dimension& x, const dimension& y, 
 	       text_style::alignment al, const text_style& s) = 0;
+  virtual void new_page() = 0;
 protected:
   friend class printrow;
   virtual printrow::base* new_printrow(const printrow::options&) = 0;
