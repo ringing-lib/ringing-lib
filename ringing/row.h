@@ -179,12 +179,21 @@ inline RINGING_API bell operator*(bell i, const change& c)
   bell j = i; j *= c; return j;
 }
 
+#if RINGING_AS_DLL && defined(_MSC_VER)
+#pragma warning( push )
+#pragma warning( disable : 4275 )
+#endif
+
 struct place_notation { 
   // Exception thrown if place-notation is malformed 
-  struct invalid : public invalid_argument {
+  struct RINGING_API invalid : public invalid_argument {
     invalid();
   };
 };
+
+#if RINGING_AS_DLL && defined(_MSC_VER)
+#pragma warning( pop )
+#endif
 
 // Take the place notation between start and finish, and send it as
 // a sequence of changes to out.

@@ -39,7 +39,7 @@ RINGING_USING_STD
 class method;
 
 // The set of lead-heads that are false against the lead starting with rounds.
-class falseness_table
+class RINGING_API falseness_table
 {
 public:
   // Contains just the trivial falseness (a row is false against itself)
@@ -74,7 +74,7 @@ private:
 };
 
 // The set of course heads that are false against the plain course
-class false_courses
+class RINGING_API false_courses
 {
 public:
   // Contains just the trivial falseness (a row is false against itself)

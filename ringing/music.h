@@ -61,7 +61,7 @@ enum EStroke
 };
 
 // Class to store details of the expressions and count.
-class music_details : public string
+class RINGING_API music_details : public string
 {
 public:
   music_details(const string& = "", const int& = 1);
@@ -98,7 +98,7 @@ private:
   int _score;
 };
 
-class music_node
+class RINGING_API music_node
 {
 public:
   // bell -> node map
@@ -133,7 +133,7 @@ private:
 };
 
 // Main class definition
-class music
+class RINGING_API music
 {
 public:
   typedef vector<music_details> mdvector;
