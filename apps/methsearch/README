@@ -126,14 +126,17 @@ The -H and -R formats accept the following format specifiers:
   %Nh    The Nth change in the lead -- N should be an integer starting at 1
   %[N]b  The maximum number of consecutive blows in one place;  if a number,
          N, is specified, it is the minimum width of the field
+  %[N]o  The number of leads in the method;  if a number, N, is specified,
+         it is the minimum width of the field
+  %NP    The path of the bell N -- N should be an integer not a bell symbol
   %n     The method's name (minus class and stage); requires a -L option
   %N     The method's full name (including class and stage); requires -L
   %C     The class of the method
   %S     The stage name of the method (e.g. 'Major')
   %[N]M  The musical score for the course;  if a number, N, is specified, 
          it is the minimum width of the field
+  %F     The in-course, tenors together falseness groups
   %%     A literal %
-
 
 \t and \n are interpreted as a tab and a line break respectively,
 although in some situations these are interpreted by the shell and so will
@@ -147,6 +150,10 @@ with an extra back-slash.
 Some versions of the Windows command shell apparently have dificulty 
 coping with a % on the command line.  For this reason $ is provided as an
 alternative to % in the above format specifiers.
+
+The %F option is only currently supported for -sr or -kc searches.  For 
+regular, symmetric searches, these have the obvious names; for the names
+of rotationally symmetric cyclic falseness groups see table supplied.
 
 
 
@@ -174,10 +181,17 @@ Various named rows can be searched for using the -M'<name>' syntax:
 
 The -M<name> syntax also provides short-hands for counting CRUs with,
 
-  -M<CRUs>,   which counts the number of CRUs in the plain course, and
-  -M<N-runs>, which counts the number of N-bell runs (either ascending or 
-              descending).  (N should be an integer between 3 and the number
-	      of bells.)
+  -M<CRUs>          which counts the number of CRUs in the plain course, and
+  -M<N-runs>        which counts the number of N-bell runs (either ascending 
+                    or descending).  (N should be an integer between 3 and 
+                    the number of bells.)
+  -M<front-N-runs>  which counts the number of N-bell runs (either ascending
+                    or descending) from the front of the change. (N should 
+                    be an integer between 3 and the number of bells.)
+  -M<back-N-runs>   which counts the number of N-bell runs (either ascending
+                    or descending) from the back of the change. (N should 
+                    be an integer between 3 and the number of bells.)
+
 
 Note that -M<4-runs> will multiply count rows with longer runs in them; thus, 
 for example, 21345678 will be counted three times one for each subsidiary 

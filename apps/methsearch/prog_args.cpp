@@ -1,5 +1,5 @@
 // -*- C++ -*- prog_args.cpp - handle program arguments
-// Copyright (C) 2002 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -304,6 +304,11 @@ void arguments::bind( arg_parser &p )
 	 ( '\0', "rev-cyclic-hlh", 
 	   "Require reverse cyclic half-lead heads",
 	   require_rev_cyclic_hlh.get() ) );
+
+  p.add( new boolean_opt
+	 ( '\0', "offset-cyclic", 
+	   "Require offset cyclicity",
+	   require_offset_cyclic.get() ) );
 }
 
 bool arguments::validate( arg_parser &ap )
@@ -396,6 +401,13 @@ bool arguments::validate( arg_parser &ap )
     {
       ap.error( "The `parity-hack' option is not currently"
 		" implemented with asymmetrical methods" );
+      return false;
+    }
+
+  if ( require_offset_cyclic && !treble_dodges )
+    {
+      ap.error( "The `offset-cyclic' option requires a treble-dodging"
+		" path (e.g. -G1)" );
       return false;
     }
 

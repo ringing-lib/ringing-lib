@@ -1,5 +1,5 @@
 // -*- C++ -*- music.cpp - things to analyse music
-// Copyright (C) 2002 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -69,15 +69,19 @@ public:
 
   void init_crus();
   void init_n_runs( int n );
+  void init_front_n_runs( int n );
+  void init_back_n_runs( int n );
 
   friend class patterns;
     
+  void check_n( int n );
+
   // Data members
   int bells;
   music mu;
 };
 
-void musical_analysis::analyser::init_n_runs( int n )
+void musical_analysis::analyser::check_n( int n )
 {
   if ( n > bells )
     {
@@ -89,6 +93,60 @@ void musical_analysis::analyser::init_n_runs( int n )
       cerr << "Can only search for runs of three or more bells\n";
       exit(1);
     }
+}
+
+
+void musical_analysis::analyser::init_front_n_runs( int n )
+{
+  check_n(n);
+
+  {
+    for ( int i=0; i<=bells-n; ++i )
+      {
+	make_string os;
+	for ( int j=0; j<n; ++j ) os << bell( i+j );
+	os << '*';
+	mu.push_back(music_details(os));
+      }
+  }
+  {
+    for ( int i=0; i<=bells-n; ++i )
+      {
+	make_string os;
+	for ( int j=n-1; j>=0; --j ) os << bell( i+j );
+	os << '*';
+	mu.push_back(music_details(os));
+      }
+  }
+}
+
+void musical_analysis::analyser::init_back_n_runs( int n )
+{
+  check_n(n);
+
+  {
+    for ( int i=0; i<=bells-n; ++i )
+      {
+	make_string os;
+	os << '*';
+	for ( int j=0; j<n; ++j ) os << bell( i+j );
+	mu.push_back(music_details(os));
+      }
+  }
+  {
+    for ( int i=0; i<=bells-n; ++i )
+      {
+	make_string os;
+	os << '*';
+	for ( int j=n-1; j>=0; --j ) os << bell( i+j );
+	mu.push_back(music_details(os));
+      }
+  }
+}
+
+void musical_analysis::analyser::init_n_runs( int n )
+{
+  check_n(n);
 
   {
     for ( int i=0; i<=bells-n; ++i )
@@ -165,6 +223,34 @@ musical_analysis::analyser::analyser( int bells )
 	      else if ( n == "CRUs" )
 		init_crus();
 	      
+	      else if ( n.length() > 11 && n.substr(0,6) == "front-" 
+			&& n.find("-runs") != string::npos )
+		{
+		  char *endp;
+		  int l = strtol( n.c_str() + 6, &endp, 10 );
+		  if ( strcmp(endp, "-runs") )
+		    {
+		      cerr << "Unknown type of front-run: " << n << endl;
+		      exit(1);
+		    }
+
+		  init_front_n_runs( l );
+		}
+
+	      else if ( n.length() > 10 && n.substr(0,5) == "back-" 
+			&& n.find("-runs") != string::npos )
+		{
+		  char *endp;
+		  int l = strtol( n.c_str() + 5, &endp, 10 );
+		  if ( strcmp(endp, "-runs") )
+		    {
+		      cerr << "Unknown type of back-run: " << n << endl;
+		      exit(1);
+		    }
+
+		  init_back_n_runs( l );
+		}
+
 	      else if ( n.length() > 5 && n.find("-runs") != string::npos )
 		{
 		  char *endp;

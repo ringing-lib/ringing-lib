@@ -1,5 +1,5 @@
 // -*- C++ -*- search.cpp - the actual search algorithm
-// Copyright (C) 2002 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -85,11 +85,14 @@ private:
   bool try_halflead_sym_change( const change &ch );
   bool try_midlead_change( const change &ch );
   bool try_quarterlead_change( const change &ch );
+  bool try_offset_start_change( const change &ch);
 
   bool try_principle_symmetry();
 
   void found_method();
   void maybe_found_method();
+
+  bool is_acceptable_leadhead( const row &lh );
 
 private:
   const arguments &args; 
@@ -149,6 +152,42 @@ void searcher::maybe_found_method()
   if ( !args.hunt_bells )
     if ( ! try_principle_symmetry() )
       return;
+
+  if ( args.require_offset_cyclic )
+    {
+      row r(bells);
+      for (int i=0; i< div_len-2; ++i) r *= m[i];
+
+      // Generate the row 13456782 (or similar)
+      string s; s.reserve(bells);
+      { 
+	for (int i=0; i<args.hunt_bells; ++i)
+	  s.append(1u, bell(i).to_char() );
+      }
+      {
+	for (int i=args.hunt_bells+1; i<bells; ++i)
+	  s.append(1u, bell(i).to_char() );
+      }
+      s.append(1u, bell(args.hunt_bells).to_char() );
+
+      const row k(s);
+      const row rlh( r * k * r.inverse() );
+
+      const row lh( m.lh() );
+
+      // Is lh a power of rlh?
+      bool ok(false);
+      r = row(); 
+      do 
+	{
+	  r *= rlh;
+	  if (r == lh) ok = true;
+	} 
+      while ( !r.isrounds() );
+
+      if (!ok)
+	return;
+    }
 
   if ( args.true_course )
     {
@@ -322,6 +361,28 @@ bool searcher::try_halflead_sym_change( const change &ch )
     return false;
 
   return true;
+}
+
+bool searcher::try_offset_start_change( const change &ch) 
+{
+  const row r( m.lh() * ch );
+  
+  // Generate the row 13456782 (or similar)
+  string s; s.reserve(bells);
+  {
+    for (int i=0; i<args.hunt_bells; ++i)
+      s.append(1u, bell(i).to_char() );
+  }
+  {
+    for (int i=args.hunt_bells+1; i<bells; ++i)
+      s.append(1u, bell(i).to_char() );
+  }
+  s.append(1u, bell(args.hunt_bells).to_char() );
+
+  const row k(s);
+  const row lh( r * k * r.inverse() );
+
+  return is_acceptable_leadhead( lh );
 }
 
 bool searcher::try_leadend_change( const change &ch )
@@ -582,6 +643,11 @@ void searcher::new_midlead_change()
 		if ( ! try_leadend_sym_change( ch ) )
 		  continue;
 
+	      if ( args.require_offset_cyclic && div_len > 3
+		   && depth == div_len-3 )
+		if ( ! try_offset_start_change( ch ) )
+		  continue;
+
 	      changes_to_try.push_back( ch );
 	    }
 	}
@@ -820,6 +886,33 @@ void searcher::double_existing()
 
 // -----------------------------------------
 
+
+bool searcher::is_acceptable_leadhead( const row &lh )
+{
+
+  if ( ( args.show_all_meths 
+	 || lh.cycles().substr( args.hunt_bells * 2 ).find(',')
+	 == string::npos ) )
+    {
+      if ( args.require_pbles ) 
+	{
+	  if ( is_pble(lh, args.hunt_bells) )
+	    return true;
+	}
+      else if ( args.require_cyclic_les )
+	{
+	  if ( is_cyclic_le(lh, args.hunt_bells) )
+	    return true;
+	}
+      else
+	{
+	  return true;
+	} 
+    }
+
+  return false;
+}
+
 void searcher::general_recurse()
 {
   const int depth = m.length();
@@ -840,25 +933,8 @@ void searcher::general_recurse()
   // Found something
   if ( depth == args.lead_len )
     {
-      if ( ( args.show_all_meths 
-	     || m.lh().cycles().substr( args.hunt_bells * 2 ).find(',')
-	       == string::npos ) )
-	{
-	  if ( args.require_pbles ) 
-	    {
-	      if ( has_pbles(m, args.hunt_bells) )
-		maybe_found_method();
-	    }
-	  else if ( args.require_cyclic_les )
-	    {
-	      if ( has_cyclic_les(m, args.hunt_bells) )
-		maybe_found_method();
-	    }
-	  else
-	    {
-	      maybe_found_method();
-	    } 
-	}
+      if ( is_acceptable_leadhead( m.lh() ) )
+	maybe_found_method();
     }
 
 

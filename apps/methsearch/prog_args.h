@@ -1,5 +1,5 @@
 // -*- C++ -*- prog_args.h - program arguments
-// Copyright (C) 2002 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -76,6 +76,7 @@ struct arguments
   init_val<bool,false> require_cyclic_hle;
   init_val<bool,false> require_rev_cyclic_hlh;
   init_val<bool,false> require_rev_cyclic_hle;
+  init_val<bool,false> require_offset_cyclic;
   init_val<bool,false> right_place;
   init_val<bool,false> show_all_meths;
 

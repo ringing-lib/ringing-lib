@@ -1,5 +1,5 @@
 // -*- C++ -*- format.cpp - classes to handle format specifiers
-// Copyright (C) 2002 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -84,6 +84,7 @@ private:
   row lead_head;
   string pn, compressed_pn;
   map< size_t, row > rows;
+  map< size_t, string > paths;
   method changes;
   unsigned int blow_count, lh_order;
   string name, full_name;
@@ -139,6 +140,16 @@ bool histogram_entry::cmp::operator()( const histogram_entry &x,
 	  return true;
 	else if ( x.changes[*i-1] > y.changes[*i-1] )
 	  return false;
+      }
+
+  if ( x.f.has_path.size() )
+    for ( vector<size_t>::const_iterator i( x.f.has_path.begin() ), 
+	    e( x.f.has_path.end() ); i != e; ++i )
+      {
+	if ( *x.paths.find(*i) < *y.paths.find(*i) )
+	  return true;
+	else if ( *x.paths.find(*i) > *y.paths.find(*i) )
+	  return false;	 
       }
 
   if ( x.f.has_blow_count )
@@ -242,6 +253,17 @@ histogram_entry::histogram_entry( const format_string &f, const method &m )
   if ( f.has_changes.size() )
     changes = m;
 
+  if ( f.has_path.size() )
+    for ( vector<size_t>::const_iterator i( f.has_path.begin() ), 
+	    e( f.has_path.end() ); i != e; ++i )
+      {
+	make_string os; bell b(*i-1); os << b;
+	for ( method::const_iterator i2( m.begin() ), 
+		e2( m.end() ); i2 != e2; ++i2 )
+	  os << (b *= *i2);
+	paths[*i] = os;
+      }
+
   if ( f.has_blow_count )
     blow_count = max_blows_per_place( m );
 
@@ -303,7 +325,8 @@ void histogram_entry::print( ostream &os, size_t count ) const
 	    case 'C': os << class_name; break;
 	    case 'S': os << stage_name; break;
 	    case 'M': os << setw(num_opt) << music_score; break;
-	    case 'F': os << setw(num_opt) << falseness_group; break;
+	    case 'F': os << falseness_group; break;
+	    case 'P': os << paths.find( num_opt )->second; break;
 	    }
 	}
       else if ( *iter == '\\' )
@@ -382,7 +405,7 @@ format_string::format_string( const string &fmt,
 				      " can only be used in stats formats" );
 	      break;
 
-	    case 'p': case 'q': case 'n': case 'N':
+	    case 'p': case 'q': case 'n': case 'N': case 'P':
 	      if ( type != normal_type )
 		throw argument_error( make_string() << "The `%" << *iter << "'"
 				      " can only be used in output formats" );
@@ -402,7 +425,7 @@ format_string::format_string( const string &fmt,
 
 	  int num_opt = atoi( string( &*iter2, &*iter ).c_str() );
 
-	  // Errors for formats that can only be used with -H or -R
+	  // Errors for formats that must or mustn't have a numeric argument
 	  switch ( *iter )
 	    {
 	    case '%': case '$': case 'c': case 'b': case 'M': 
@@ -419,7 +442,7 @@ format_string::format_string( const string &fmt,
 		    "a number" );
 	      break;
 
-	    case 'r': case 'h':
+	    case 'r': case 'h': case 'P':
 	      if ( iter == iter2 )
 		throw argument_error
 		  ( make_string() << "The `%" << *iter << "' "
@@ -460,6 +483,12 @@ format_string::format_string( const string &fmt,
 	      if ( find( has_changes.begin(), has_changes.end(), num_opt ) 
 		   == has_changes.end() )
 		has_changes.push_back( num_opt );
+	      break;
+
+	    case 'P':
+	      if ( find( has_path.begin(), has_path.end(), num_opt ) 
+		   == has_path.end() )
+		has_path.push_back( num_opt );
 	      break;
 
 	    case 'n':

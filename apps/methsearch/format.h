@@ -1,5 +1,5 @@
 // -*- C++ -*- format.h - classes to handle format specifiers
-// Copyright (C) 2002 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -84,6 +84,7 @@ struct format_string
 
   vector<size_t> has_rows;
   vector<size_t> has_changes;
+  vector<size_t> has_path;
 
   string fmt;
 };
