@@ -36,6 +36,12 @@
 #endif
 #include <ringing/method.h>
 
+#if _MSC_VER
+// Something deep within the STL in Visual Studio decides to 
+// turn this warning back on.  
+#pragma warning(disable: 4231)
+#endif
+
 RINGING_START_NAMESPACE
 
 RINGING_USING_STD
@@ -44,13 +50,17 @@ class library;
 class library_base;
 
 // libtype : A type of library
-class libtype {
+class RINGING_API libtype {
 protected:
   virtual library_base *open(const char *n) const  // Try to open this file.
   { return NULL; }			  // Return NULL if it's not the
 					  // right sort of library.
   friend class library;
-  };
+};
+
+#if RINGING_AS_DLL
+RINGING_EXPLICIT_STL_TEMPLATE list<libtype *>;
+#endif
 
 // newlib : Each new type of library should declare one of these
 template <class mylibrary>
@@ -66,7 +76,7 @@ protected:
 };
 
 // library_base : A base class for method libraries
-class library_base {
+class RINGING_API library_base {
 public:
   virtual ~library_base() {}		// Got to have a virtual destructor
   virtual method load(const char* name) = 0; // Load a method
@@ -84,7 +94,7 @@ public:
     { return 0; }
 };
 
-class library {
+class RINGING_API library {
 private:
   library_base* lb;
   static list<libtype*> libtypes;

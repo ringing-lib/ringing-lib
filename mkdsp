@@ -32,6 +32,8 @@
 # (Note: this will not prevent it compilation in msvc-5.)
 my $assume_msvc6 = 1;
 
+#############################################################################
+
 sub dsw_head()
 {
     return <<EOF
@@ -108,24 +110,33 @@ sub dsp_head($$$)
     my %proj_type = (
         dll  => "Win32 (x86) Dynamic-Link Library",
         prog => "Win32 (x86) Console Application",
+        dprog=> "Win32 (x86) Console Application",
 	lib  => "Win32 (x86) Static Library",
     );
 
     my %proj_num = (
         dll  => "0x0102",
         prog => "0x0103",
+        dprog=> "0x0103",
 	lib  => "0x0104",
     );
 
+    # /MD(d)  Dynamically link to the multithreaded runtime (msvcrt(d).lib/dll)
+    # /ML(d)  Statically link to the single-threaded runtime (libc(d).lib)
+    # /MT(d)  Statically link to the multithreaded runtime (libcmt(d).lib)
+    # (The optional `d' is for the debugging version.)
+
     my %cxx_flags = (
-        dll  => "/MT /D \"_USRDLL\" /D \"_WINDOWS\"",
+        dll  => "/MD /D \"_USRDLL\" /D \"_WINDOWS\" /D \"".(uc$name)."_EXPORTS\"",
 	prog => "/D \"_CONSOLE\"",
+	dprog=> "/MD /D \"_CONSOLE\"",
         lib  => "/D \"_WINDOWS\"",
     );
 
     my %dbg_cxx_flags = (
-        dll  => "/MTd /D \"_USRDLL\" /D \"_WINDOWS\"",
+        dll  => "/MDd /D \"_USRDLL\" /D \"_WINDOWS\" /D \"".(uc$name)."_EXPORTS\"",
 	prog => "/D \"_CONSOLE\"",
+	dprog=> "/MDd /D \"_CONSOLE\"",
 	lib  => "/D \"_WINDOWS\"",
     );
 
@@ -142,6 +153,7 @@ sub dsp_head($$$)
     my %ld_flags = (
 	dll  => "$libs /subsystem:windows /dll",
 	prog => "$libs /subsystem:console",
+	dprog=> "$libs /subsystem:console",
 	lib  => "/subsystem:windows /lib",
     );
 
@@ -154,6 +166,7 @@ sub dsp_head($$$)
 # PROP Output_Dir "\@\@\@BUILDTYPE\@\@\@"
 # PROP Intermediate_Dir "\@\@\@BUILDTYPE\@\@\@"
 # PROP Target_Dir ""
+# PROP Ignore_Export_Lib 0
 EOF
     
     (my $debug_dirs = $dirs) =~ s/\@\@\@BUILDTYPE\@\@\@/Debug/g;
@@ -295,9 +308,12 @@ my %actions = (
 
        for (split /[ \t]_+/, $val)
        {
-	   if (/\$\(top_builddir\)\/.*\/(?:lib)?(.*)\.a/)
+	   if (/\$\(top_builddir\)\/.*\/(?:lib)?(.*)\.(l?)a/)
 	   {
 	       safe_push $vptr, LIBDEPS, $1;
+	       # As soon as we dynamically link against anything, it is 
+	       # probably safe to assume we need the dynamic runtime.
+	       $vptr->{type} = 'dprog' if $2 eq 'l' && $vptr->{type} == 'prog';
 	   }
        }
    },
@@ -351,17 +367,19 @@ sub process_makefile($)
 	    {
 		for my $p (split /[ \t+]+/, $val)
 		{
+		    my $tp = (($p =~ /.la$/) ? 'dll' : 'lib');
+			       
 		    $p =~ s/\./_/g;
 		    $p =~ s/^lib//;
-		    $p =~ s/_a$//;
-		    push @file_progs, $progs{$p} = {type => 'lib'};
+		    $p =~ s/_l?a$//;
+		    push @file_progs, $progs{$p} = {type => $tp};
 		}
 	    }
 	    else
 	    {
 		for $act (keys %actions)
 		{
-		    if ($var =~ /^(?:lib)?([a-zA-Z0-9_]+?)(?:_a)?_$act$/)
+		    if ($var =~ /^(?:lib)?([a-zA-Z0-9_]+?)(?:_l?a)?_$act$/)
 		    {
 			(my $p = $1) =~ s/\./_/g;
 			$actions{$act}->($progs{$p}, $val, $path);
@@ -379,9 +397,9 @@ sub process_makefile($)
 
     close FILE;
 
-    for $p (@file_progs)
+    for my $p (@file_progs)
     {
-	for $act (keys %actions)
+	for my $act (keys %actions)
 	{
 	    if (defined $file_globals{$act})
 	    {
@@ -412,7 +430,7 @@ sub make_dsps
 	open DSP, ">$name.dsp"
 	    or die "Unable to open $name.dsp for writing";
 
-	$dsp =~ s/\n/\r\n/mg;
+	$dsp =~ s/\n/\x0D\x0A/mg;
 
 	print DSP $dsp;
 

@@ -43,8 +43,14 @@ RINGING_START_NAMESPACE
 
 RINGING_USING_STD
 
+class mslib;
+
+#if RINGING_AS_DLL
+RINGING_EXPLICIT_TEMPLATE class RINGING_API newlib<mslib>;
+#endif
+
 // mslib : Implement MicroSIRIL libraries
-class mslib : public library_base {
+class RINGING_API mslib : public library_base {
 private:
   string filename;              // The filename we're using.
   int b;                        // Number of bells for files in this lib

@@ -17,6 +17,7 @@
 
 // $Id$
 
+#include <ringing/common.h>
 #if RINGING_OLD_INCLUDES
 #include <iostream.h>
 #include <stdexcept.h>

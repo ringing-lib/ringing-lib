@@ -107,8 +107,10 @@ method cclib::load(const char *name)
 		for_each(methname.begin(), methname.end(), lowercase);
 
 		// Do we have the correct line for the method?
-		if ((wordbuf.length() == methname.length()) &&
-		    (wordbuf.compare(methname, 0, methname.length()) == 0))
+                // (The overloads of compare provided by glibstdc++-2.x are
+                // non-standard extentions, and have been changed in v3.0.
+		// I think the following does the same.  RAS)
+		if (wordbuf.find(methname) == 0)
 		  {
 		    // we have found the method.
 		    // now get the rest of the details

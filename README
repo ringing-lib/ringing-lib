@@ -42,3 +42,16 @@ Using the library
 directory.  If you don't have the software necessary to build the Texinfo
 documentation, you can download it separately in various formats.
 
+
+Building as a shared library
+----------------------------
+
+  First make sure that you have a copy of the Class Library that supports this.
+This copy only has experimental support for this.
+
+  If you are on Windows and are building a DLL, make sure that you set 
+RINGING_AS_DLL to 1 in common.h.in, and make sure that $always_dll = 1 in 
+mkdsp.  Generate a workspace and project files by running ./mkdsp.
+
+  If you are not on Windows and are building a shared object, make sure that
+RINGING_AS_DLL is 0 in common.h.in.

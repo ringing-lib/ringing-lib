@@ -43,8 +43,14 @@ RINGING_START_NAMESPACE
 
 RINGING_USING_STD
 
+class cclib;
+
+#if RINGING_AS_DLL
+RINGING_EXPLICIT_TEMPLATE class RINGING_API newlib<cclib>;
+#endif
+
 // cclib : Implement Central Council Method libraries
-class cclib : public library_base {
+class RINGING_API cclib : public library_base {
 private:
   string filename;              // The filename we're using
   int b;                        // Number of bells for files in this lib

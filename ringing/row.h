@@ -47,13 +47,19 @@
 #endif
 #include <string>
 
+#if _MSC_VER
+// Something deep within the STL in Visual Studio decides to 
+// turn this warning back on.  
+#pragma warning(disable: 4231)
+#endif
+
 RINGING_START_NAMESPACE
 
 RINGING_USING_STD
 
 // Declare a couple of random functions for hcf and lcm
-int hcf(int a, int b);
-int inline lcm(int a, int b) 
+RINGING_API int hcf(int a, int b);
+inline RINGING_API int lcm(int a, int b) 
 {
   // Check for a couple of quick cases
   if(a == 1) return b;
@@ -61,7 +67,7 @@ int inline lcm(int a, int b)
   return a * b / hcf(a,b);
 }
 
-class bell {
+class RINGING_API bell {
 private:
   unsigned char x;
   static char symbols[];	// Symbols for the individual bells
@@ -87,13 +93,17 @@ public:
   };
 };
 
-inline ostream& operator<<(ostream& o, const bell b) 
+inline RINGING_API ostream& operator<<(ostream& o, const bell b) 
   { return o << b.to_char(); }
 
 class row;
 
+#if RINGING_AS_DLL
+RINGING_EXPLICIT_STL_TEMPLATE vector<bell>;
+#endif
+
 // change : This stores one change
-class change {
+class RINGING_API change {
 private:
   int n;			// Number of bells
   vector<bell> swaps;		// List of pairs to swap
@@ -119,8 +129,8 @@ public:
     swaps.swap(other.swaps);
   }
 
-  friend row& operator*=(row& r, const change& c);
-  friend bell& operator*=(bell& i, const change& c);
+  friend RINGING_API row& operator*=(row& r, const change& c);
+  friend RINGING_API bell& operator*=(bell& i, const change& c);
 
   char *print(char *pn) const;	// Print place notation to a string
   string print() const;
@@ -145,11 +155,13 @@ public:
 
 };
 
-inline ostream& operator<<(ostream& o, const change& c) {
+inline RINGING_API ostream& operator<<(ostream& o, const change& c) {
   return o << c.print();
 }
-bell& operator*=(bell& i, const change& c); // Apply a change to a position
-inline bell operator*(bell i, const change& c)
+
+// Apply a change to a position
+RINGING_API bell& operator*=(bell& i, const change& c); 
+inline RINGING_API bell operator*(bell i, const change& c)
 {
   bell j = i; j *= c; return j;
 }
@@ -197,7 +209,7 @@ void interpret_pn(int num, ForwardIterator i, ForwardIterator finish,
 }
 
 // row : This stores one row 
-class row {
+class RINGING_API row {
 private:
   vector<bell> data;	        // The actual row
 
@@ -217,7 +229,7 @@ public:
   row& operator*=(const row& r);
   row operator/(const row& r) const; // Inverse of transposition
   row& operator/=(const row& r);
-  friend row& operator*=(row& r, const change& c); // Apply a change to a row
+  friend RINGING_API row& operator*=(row& r, const change& c); // Apply a change to a row
   row operator*(const change& c) const;	
   row inverse(void) const;	// Find the inverse
 
@@ -233,7 +245,7 @@ public:
   int sign(void) const;         // Return whether it's odd or even
   char *cycles(char *result) const; // Express it as a product of disjoint cycles
   int order(void) const;	    // Return the order
-  friend ostream& operator<<(ostream&, const row&);
+  friend RINGING_API ostream& operator<<(ostream&, const row&);
   void swap(row &other) { data.swap(other.data); }
   
   struct invalid : public invalid_argument {
@@ -250,9 +262,9 @@ inline ostream& operator<<(ostream& o, const row& r) {
 }
 
 // An operator which has to be here
-row& operator*=(row& r, const change& c);
+RINGING_API row& operator*=(row& r, const change& c);
 
-struct permuter
+struct RINGING_API permuter
 {
   typedef row result_type;
   explicit permuter(unsigned n) : r(row::rounds(n)) {}
@@ -264,7 +276,7 @@ private:
   row r;
 };
 
-struct row_permuter
+struct RINGING_API row_permuter
 {
   typedef row result_type;
   explicit row_permuter(row &r) : r(r) {}  
@@ -276,12 +288,17 @@ private:
   row &r;
 };
 
-inline permuter permute(unsigned n) { return permuter(n); }
-inline row_permuter permute(row &r) { return row_permuter(r); }
+inline RINGING_API permuter permute(unsigned n) { return permuter(n); }
+inline RINGING_API row_permuter permute(row &r) { return row_permuter(r); }
+
+#if RINGING_AS_DLL
+RINGING_EXPLICIT_STL_TEMPLATE vector<row>;
+RINGING_EXPLICIT_STL_TEMPLATE vector<change>;
+#endif
 
 // row_block : Stores some rows, along with a pointer to some
 // changes from which they can be calculated.
-class row_block : public vector<row> {
+class RINGING_API row_block : public vector<row> {
 private:
   const vector<change>& ch;	  // The changes which these rows are based on
 
@@ -303,20 +320,8 @@ public:
 RINGING_END_NAMESPACE
 
 // specialise std::swap
-#if RINGING_USE_TEMPLATE_FUNCTION_SPECIALISATION
-RINGING_START_NAMESPACE_STD
 
-template <> inline 
-void swap<RINGING_PREFIX row>(RINGING_PREFIX row &a, RINGING_PREFIX row &b)
-  { a.swap(b); }
-
-template <> inline 
-void swap<RINGING_PREFIX change>(RINGING_PREFIX change &a, 
-				 RINGING_PREFIX change &b)
-  { a.swap(b); }
-
-RINGING_END_NAMESPACE_STD
-#endif
-
+RINGING_DELEGATE_STD_SWAP(row)
+RINGING_DELEGATE_STD_SWAP(change)
 
 #endif
