@@ -1,5 +1,5 @@
 // mslib.cpp - Read and write MicroSIRIL libraries
-// Copyright (C) 2001-2 Martin Bright <M.Bright@dpmms.cam.ac.uk>
+// Copyright (C) 2001-2 Martin Bright <martin@boojum.org.uk>
 // and Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify

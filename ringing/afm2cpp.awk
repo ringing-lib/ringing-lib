@@ -6,7 +6,7 @@ BEGIN {
   RS = "\r?\n";
   count = 0;
   print "// -*- C++ -*- pdf_fonts.cpp";
-  print "// Copyright (C) 2002 Martin Bright <M.Bright@dpmms.cam.ac.uk>";
+  print "// Copyright (C) 2002 Martin Bright <martin@boojum.org.uk>";
   print "";
   print "// This program is free software; you can redistribute it and/or modify";
   print "// it under the terms of the GNU General Public License as published by";

@@ -1,8 +1,8 @@
-# -*- Makefile -*- gsiril/Makefile.am - Automake script for GSiril
+# -*- Makefile -*- 
 
 # Process this file with automake to produce Makefile.in
 
-# Copyright (C) 2002 Richard Smith <richard@ex-parrot.com>
+# Copyright (C) 2002 Martin Bright <martin@boojum.org.uk>
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -22,18 +22,7 @@
 
 MAINTAINERCLEANFILES = Makefile.in
 
-bin_PROGRAMS = gsiril
-
-INCLUDES = -I$(top_srcdir)
-
-gsiril_LDADD = $(top_builddir)/ringing/libringing.a @READLINE_LIBS@
-
-if HAVE_READLINE
-additional =  rlstream.cpp rlstream.h
-endif
-
-gsiril_SOURCES = main.cpp console_stream.cpp console_stream.h \
-execution_context.cpp execution_context.h expression.cpp expression.h \
-parser.cpp parser.h util.cpp util.h $(additional)
-
-EXTRA_gsiril_SOURCES = rlstream.cpp rlstream.h
+bin_PROGRAMS = psline
+psline_SOURCES = psline.cpp
+INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/apps/utils
+psline_LDADD = ../utils/libstuff.a $(top_builddir)/ringing/libringing.a

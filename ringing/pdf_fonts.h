@@ -1,5 +1,5 @@
 // -*- C++ -*- pdf_fonts.h - Handling of PDF font metrics
-// Copyright (C) 2001 Martin Bright <M.Bright@dpmms.cam.ac.uk>
+// Copyright (C) 2001 Martin Bright <martin@boojum.org.uk>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by

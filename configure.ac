@@ -2,7 +2,7 @@ dnl -*- M4 -*- configure.in - Autoconf script for the Ringing Class Library
 
 dnl Process this file with autoconf to produce a configure script.
 
-dnl Copyright (C) 2001, 2002 Martin Bright <M.Bright@dpmms.cam.ac.uk>
+dnl Copyright (C) 2001, 2002 Martin Bright <martin@boojum.org.uk>
 dnl and Richard Smith <richard@ex-parrot.com>
 
 dnl This program is free software; you can redistribute it and/or modify
@@ -267,7 +267,7 @@ dnl
 dnl Check to see whether the STL has a compliant std::iterator
 dnl
 AC_CACHE_CHECK(
-  [whether the STL has a compilant std::iterator],
+  [whether the STL has a compliant std::iterator],
   [ac_cv_cxx_std_iterator],
   [AC_TRY_COMPILE(
     [
@@ -402,21 +402,26 @@ AC_ARG_WITH(
 AC_CACHE_CHECK(
   [for GNU readline],
   [ac_cv_use_readline],
-  [ LIBS="$LIBS -lreadline" 
+  [ OLD_LIBS=$LIBS
+    LIBS="$LIBS -lreadline" 
     AC_TRY_LINK(
     [#include <readline/readline.h>
     ],
     [readline( ">> " );],
     ac_cv_use_readline=yes,
-    ac_cv_use_readline=no)]
+    ac_cv_use_readline=no)
+    LIBS=$OLD_LIBS]
 )
 if test "$ac_cv_use_readline" = yes ; then
+  READLINE_LIBS=[-lreadline]
   RINGING_USE_READLINE=1
 else
+  READLINE_LIBS=[]
   RINGING_USE_READLINE=0
 fi
 AM_CONDITIONAL(HAVE_READLINE, test "$ac_cv_use_readline" = yes )
 AC_SUBST(RINGING_USE_READLINE)
+AC_SUBST(READLINE_LIBS)
 
 dnl --------------------------------------------------------------------------
 dnl
@@ -440,5 +445,6 @@ AM_CONDITIONAL(USING_MSVC, test "$ac_cv_msvc" = yes)
 
 dnl --------------------------------------------------------------------------
 
-AC_OUTPUT(Makefile ringing/Makefile apps/Makefile apps/gsiril/Makefile 
+AC_OUTPUT(Makefile ringing/Makefile apps/Makefile apps/gsiril/Makefile
+  apps/utils/Makefile apps/psline/Makefile 
   doc/Makefile examples/Makefile tests/Makefile ringing/common-am.h)

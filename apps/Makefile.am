@@ -1,3 +1,3 @@
 ## Makefile.am -- process this file with automake to produce Makefile.in
 
-SUBDIRS = gsiril
+SUBDIRS = utils gsiril psline
