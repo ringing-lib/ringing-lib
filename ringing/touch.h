@@ -85,6 +85,8 @@ public:
     iterator& operator++() { if(bp) ++*bp; return *this; }
     bool operator==(const iterator& i) const 
       { return (!bp && !(i.bp)) || (*bp == *(i.bp)); }
+    bool operator!=(const iterator& i) const
+      { return !operator==(i); }
   };
 
   virtual iterator begin() = 0;

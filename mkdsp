@@ -129,8 +129,10 @@ sub dsp_head($$$)
 	lib  => "/D \"_WINDOWS\"",
     );
 
-    my $cxx_flags = "/W3 /GX /O2 /YX /FD";
-    my $dbg_cxx_flags = "/W3 /Gm /GX /Od /YX /FD";
+    # /GX enables exception handling, /GR enables RTTI.
+    # ( By default neither of these are enabled. )
+    my $cxx_flags = "/W3 /GX /GR /O2 /YX /FD";
+    my $dbg_cxx_flags = "/W3 /Gm /GX /GR /Od /YX /FD";
 
     $dbg_cxx_flags .= " /ZI /GZ" if $assume_msvc6;
 

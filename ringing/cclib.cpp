@@ -267,13 +267,14 @@ method cclib::load(const char *name)
 #if RINGING_USE_EXCEPTIONS
   // If we are using exceptions, throw one to notify it couldn't be found.
   throw invalid_name();
-#else
+#endif 
+  // Visual Studio 5 requires a return statement even after a throw.
+
   // Otherwise we have to return something to avoid warning and errors, so
   // make up something strange. Give it a name so it can always be checked
   // against.
   method m;
   return m;
-#endif
 }
 
 RINGING_END_NAMESPACE
