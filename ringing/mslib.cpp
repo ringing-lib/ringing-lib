@@ -47,7 +47,7 @@ class mslib::entry_type : public library_entry::impl
   friend class mslib;
   entry_type();
   virtual ~entry_type() { };
-  virtual bool readentry( ifstream &ifs );
+  virtual bool readentry( library_base &lb );
   virtual library_entry::impl *clone() const { return new entry_type(*this); }
 
   // The current line
@@ -63,20 +63,17 @@ mslib::const_iterator mslib::begin() const
   ifstream *ifs = const_cast< ifstream * >( &f );
   ifs->clear();
   ifs->seekg(0, ios::beg);
-  return const_iterator(ifs, new mslib::entry_type);
-}
-
-mslib::const_iterator mslib::end() const
-{
-  return const_iterator();
+  return const_iterator(const_cast< mslib * >(this), new mslib::entry_type);
 }
 
 mslib::entry_type::entry_type()
   : b(0)
 {}
 
-bool mslib::entry_type::readentry( ifstream &ifs )
+bool mslib::entry_type::readentry( library_base &lb )
 {
+  ifstream &ifs = dynamic_cast<mslib&>(lb).f;
+
   while ( ifs )
     {
       getline( ifs, linebuf );
@@ -188,23 +185,24 @@ static int extractNumber(const string &filename)
 }
 
 
-mslib::mslib(const string& name) 
-  : f(name.c_str()), wr(0), _good(0)
+mslib::mslib(const string& filename) 
+  : f(filename.c_str()), wr(0), _good(0)
 {
   // Open file. Not going to bother to see if it's writeable as the
   // save function is not currently planned to be implemented.
   if(f.good())
     {
       _good = 1;
-      b = extractNumber(name);
+      b = extractNumber(filename);
     }
 }
 
 // Is this file in the right format?
-library_base *mslib::canread(ifstream& ifs, const string& name)
+library_base *mslib::canread(const string& filename)
 {
-  if ( const_iterator(&ifs, new entry_type) != const_iterator() )
-    return new mslib( name );
+  scoped_pointer<library_base> ptr( new mslib(filename) );
+  if ( ptr->begin() != ptr->end() )
+    return ptr.release();
   else
     return NULL;
 }

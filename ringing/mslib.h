@@ -56,22 +56,22 @@ public:
 
 private:
   // Construction handled by library class
-  mslib(const string& name);
+  mslib(const string& filename);
  ~mslib() { if (_good == 1) f.close(); }
 
   // Is this file in the right format?
-  static library_base *canread(ifstream& ifs, const string& name);
+  static library_base *canread(const string& filename);
 
   // Iterators into the library
   class entry_type;
+  friend class entry_type;
   virtual const_iterator begin() const;
-  virtual const_iterator end() const;
 
-  bool good(void) const          // Is the library in a usable state?
-    { return _good; }
+  // Is the library in a usable state?
+  virtual bool good(void) const { return _good; }
 
-  bool writeable(void) const     // Is this library writeable?
-    { return wr; }
+  // Is this library writeable?
+  virtual bool writeable(void) const { return wr; }
 };
 
 RINGING_END_NAMESPACE

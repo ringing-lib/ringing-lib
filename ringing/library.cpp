@@ -43,31 +43,14 @@ library_base::invalid_name::invalid_name()
 
 library::library(const string& filename)
 {
-  if (filename.length() > 0)
-    {
-      ifstream ifs(filename.c_str(), ios::in);
-      if (ifs.good())
-	{
-	  list<init_function>::const_iterator i = libtypes.begin();
-	  while (!lb && (i != libtypes.end()))
-	    {
-	      // Do the stream rewinding here as all libraries will
-	      // need to do it.
-	      ifs.clear();
-	      ifs.seekg(0, ios::beg);
-
-	      lb.reset( (**i)(ifs, filename) );
-	      i++;
-	    }
-	  ifs.close();
-	}
-      // Don't worry about else condition - user should check for good()
-    }
+  typedef list<init_function>::const_iterator iterator;
+  for ( iterator i=libtypes.begin(), e=libtypes.end(); !lb && i!=e; ++i )
+    lb.reset( (**i)(filename) );
 }
 
 
 // Return a list of items
-int library_base::dir(list<string>& result)
+int library_base::dir(list<string>& result) const
 {
   if (!good())
     return 0;
@@ -81,7 +64,7 @@ int library_base::dir(list<string>& result)
 }
 
 // Return a list of items
-int library_base::mdir(list<method>& result)
+int library_base::mdir(list<method>& result) const
 {
   if (!good())
     return 0;
@@ -100,8 +83,13 @@ static void lowercase(char &c)
   c = tolower(c);
 }
 
+library_base::const_iterator library_base::end() const
+{
+  return const_iterator();
+}
+
 // Load a method from a Central Council Method library
-method library_base::load(const string& name, int stage)
+method library_base::load(const string& name, int stage) const
 {
   string methname(name);
   for_each(methname.begin(), methname.end(), lowercase);
@@ -110,9 +98,6 @@ method library_base::load(const string& name, int stage)
     {
       // Extract the method name section
       string wordbuf( i->name() );
-      
-      // Copy wordbuf to preserve for later
-      string methodname(wordbuf);
       
       // Make all letters lower case
       for_each(wordbuf.begin(), wordbuf.end(), lowercase);

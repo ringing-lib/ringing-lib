@@ -54,10 +54,10 @@ class RINGING_API library_base {
 public:
   virtual ~library_base() {}		// Got to have a virtual destructor
 
-  // Reading the library
-  virtual method load(const string& s, int stage); // Load a method
-  virtual int dir(list<string>& result);
-  virtual int mdir(list<method>& result);
+  // Reading the library.
+  virtual method load(const string& s, int stage) const; // Load a method
+  virtual int dir(list<string>& result) const;
+  virtual int mdir(list<method>& result) const;
 
   // Writing to the library
   virtual bool save(const method& m)	// Save a method
@@ -68,15 +68,14 @@ public:
     { return false; }
 
   // Library status
-  virtual bool good (void) const	// Is it in a usable state?
-    { return false; }
-  virtual bool writeable(void) const // Is it writeable?
+  virtual bool good (void) const = 0;	// Is it in a usable state?
+  virtual bool writeable(void) const    // Is it writeable?
     { return false; }
 
   // The new style library interface uses iterators
   class const_iterator;
   virtual const_iterator begin() const = 0;
-  virtual const_iterator end() const = 0;
+  const_iterator end() const;
 
 #if RINGING_USE_EXCEPTIONS
   struct invalid_name : public invalid_argument {
@@ -109,7 +108,7 @@ public:
     virtual string pn() const = 0;
     virtual int bells() const = 0;
     
-    virtual bool readentry( ifstream &ifs ) = 0;
+    virtual bool readentry( library_base &lb ) = 0;
   };
 
   // Public accessor functions
@@ -117,6 +116,7 @@ public:
   string base_name() const { return pimpl->base_name(); }
   string pn() const        { return pimpl->pn(); }
   int bells() const        { return pimpl->bells(); }
+  method meth() const      { return method( pn(), bells(), base_name() ); }
 
 private:
   friend class library_base::const_iterator;
@@ -136,13 +136,16 @@ public:
   typedef const value_type *pointer;
 
   // Construction
-  const_iterator( ifstream *ifs = NULL, library_entry::impl *val = NULL ) 
-    : ifs(ifs), val(val), ok( ifs && val && val->readentry(*ifs) ) 
+  const_iterator() 
+    : lb(NULL), ok(false)
+  {}
+  const_iterator( library_base *lb, library_entry::impl *val ) 
+    : lb(lb), val(val), ok( lb && val && val->readentry(*lb) ) 
   {}
 
   // Equality Comparable requirements
   bool operator==( const const_iterator &i ) const
-    { return ok ? (i.ok && ifs == i.ifs) : !i.ok; }
+    { return ok ? (i.ok && lb == i.lb) : !i.ok; }
   bool operator!=( const const_iterator &i ) const
     { return !operator==( i ); }
 
@@ -152,46 +155,52 @@ public:
 
   // Input Iterator requirements
   const_iterator &operator++() 
-    { ok = val.pimpl->readentry( *ifs ); return *this; }
+    { ok = val.pimpl->readentry(*lb); return *this; }
   const_iterator operator++(int) 
     { const_iterator tmp(*this); ++*this; return tmp; }
 
 private:
   // Data members
-  ifstream *ifs;
+  library_base *lb;
   library_entry val;
   bool ok;
 };
 
 class RINGING_API library {
 public:
-  typedef library_base *(*init_function)( ifstream &, const string & );
-
-private:
-  shared_pointer<library_base> lb;
-  static list<init_function> libtypes;
-
-protected:
+  // Construction
+  library() {}
+  library(const string& filename);
   library(library_base* lb) : lb(lb) {}
-public:
-  library(const string& filename = "");
-  method load(const string& name, int stage=0) 
+
+  // Reading the library.
+  method load(const string& name, int stage=0) const
     { return lb->load(name, stage); }
+  int dir(list<string>& result) const { return lb->dir(result); }
+  int mdir(list<method>& result ) const { return lb->mdir(result); }
+
+  // Writing to the library
   bool save(const method& m) { return lb->save(m); }
   bool rename_method(const string& name1, const string& name2) 
     { return lb->rename_method(name1, name2); }
   bool remove(const string name) { return lb->remove(name); }
-  int dir(list<string>& result) { return lb->dir(result); }
-  int mdir(list<method>& result ) { return lb->mdir(result); }
+
+  // Library status
   bool good() { return bool(lb) && lb->good(); }
   bool writeable() { return bool(lb) && lb->writeable(); }
 
   // New style, iterator based interface
   typedef library_base::const_iterator const_iterator;
-  const_iterator begin() const { return lb->begin(); }
-  const_iterator end() const { return lb->end(); }
+  const_iterator begin() const { return lb ? lb->begin() : const_iterator(); }
+  const_iterator end() const { return lb ? lb->end() : const_iterator(); }
 
+  // Register a new type of library
+  typedef library_base *(*init_function)( const string & );
   static void addtype(init_function lt) { libtypes.push_back(lt); }
+
+private:
+  shared_pointer<library_base> lb;
+  static list<init_function> libtypes;
 };
 
 RINGING_END_NAMESPACE

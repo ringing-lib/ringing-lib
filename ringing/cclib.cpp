@@ -27,9 +27,11 @@
 #if RINGING_OLD_C_INCLUDES
 #include <string.h>
 #include <stdio.h>
+#include <assert.h>
 #else
 #include <cstring>
 #include <cstdio>
+#include <cassert>
 #endif
 #include <ringing/method.h>
 #include <ringing/pointers.h>
@@ -56,7 +58,7 @@ class cclib::entry_type : public library_entry::impl
   virtual ~entry_type() { };
   void parse_header();
   void parse_title();
-  virtual bool readentry( ifstream &ifs );
+  virtual bool readentry( library_base &lb );
   virtual library_entry::impl *clone() const { return new entry_type(*this); }
 
   // The current line
@@ -84,14 +86,9 @@ cclib::const_iterator cclib::begin() const
   ifstream *ifs = const_cast< ifstream * >( &f );
   ifs->clear();
   ifs->seekg(0, ios::beg);
-  return const_iterator(ifs, new cclib::entry_type);
+  return const_iterator(const_cast< cclib * >(this), new cclib::entry_type);
 }
-  
-cclib::const_iterator cclib::end() const
-{
-  return const_iterator();
-}
-
+ 
 cclib::entry_type::entry_type()
   : meth_name_starts( string::npos ),
     meth_name_ends  ( string::npos ),
@@ -101,8 +98,10 @@ cclib::entry_type::entry_type()
     b               ( 0            )
 {}
 
-bool cclib::entry_type::readentry( ifstream &ifs )
+bool cclib::entry_type::readentry( library_base &lb )
 {
+  ifstream &ifs = dynamic_cast<cclib&>(lb).f;
+
   // Go through a line at a time.
   while ( ifs )
     {
@@ -337,23 +336,24 @@ int cclib::extractNumber(const string &filename)
   return atoi(&*s);
 }
 
-cclib::cclib(const string& name)
-  : f(name.c_str()), wr(0), _good(0)
+cclib::cclib(const string& filename)
+  : f(filename.c_str()), wr(0), _good(0)
 {
   // Open file. Not going to bother to see if it's writeable as the
   // save function is not currently planned to be implemented.
   if(f.good())
     {
       _good = 1;
-      b = extractNumber(name);
+      b = extractNumber(filename);
     }
 }
 
 // Is this file in the right format?
-library_base *cclib::canread(ifstream& ifs, const string& name)
+library_base *cclib::canread(const string& filename)
 {
-  if ( const_iterator(&ifs, new entry_type) != const_iterator() )
-    return new cclib( name );
+  scoped_pointer<library_base> ptr( new cclib(filename) );
+  if ( ptr->begin() != ptr->end() )
+    return ptr.release();
   else
     return NULL;
 }
