@@ -2,7 +2,7 @@
 
 MAINTAINERCLEANFILES = Makefile.in
 
-bin_PROGRAMS = testbase
+noinst_PROGRAMS = testbase
 LDADD = $(top_builddir)/ringing/libringing.a
 
 testbase_SOURCES = testbase.cc
