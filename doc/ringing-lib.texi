@@ -162,6 +162,7 @@ you may have to generate it by hand from the template in
 @file{ringing/common.h.in}.
 
 @menu
+* Licensing::                   
 * The Standard Template Library::  
 * Unix-like systems::           
 * Microsoft Windows::           
@@ -169,7 +170,45 @@ you may have to generate it by hand from the template in
 * Using the library in your programs::  
 @end menu
 
-@node The Standard Template Library, Unix-like systems, Installing and using the library, Installing and using the library
+@node Licensing, The Standard Template Library, Installing and using the library, Installing and using the library
+@section Licensing
+
+As of version 0.2.9, the Ringing Class Library is split into two parts,
+which are licensed differently.  This is explained again in the file
+@file{COPYING} in the distribution.  A summary is given here, but to be
+sure you should consult individual files for their licensing conditions.
+
+@itemize @bullet
+@item
+Most of the library is released under the GNU Public License
+(@acronym{GPL}).  A copy of this licence can be found in the file
+@file{COPYING.GPL} in the top directory of the distribution.  This
+licence allows you to copy, modify and distribute the library, provided
+that you stay within the stated terms.  However, it does @strong{not}
+allow you to include the library in your own commercial programs.  Any
+programs which use the library must again be free.  For full details,
+please read the text of the licence.
+
+@item
+A @dfn{core} part of the library is under the Lesser GNU Public License
+(@acronym{LGPL}).  A copy of this licence can be found in the file
+@file{COPYING.LGPL} in the top directory of the distribution.  Unlike
+the @acronym{GPL}, this licence @emph{does} allow you to use this part
+of the library in commercial programs.  The reason for releasing the
+core part of the library under the @acronym{LGPL} is principally to
+encourage authors to use the online method database at
+@url{http://methods.ringing.org/} in their programs, whether commercial
+or not.  All the files you need to use that database are under the
+@acronym{LGPL}.
+@end itemize
+
+@quotation Important
+Using any part of the library in a commercial program, @emph{except} for
+those parts specifically stated to be under the weaker @acronym{LGPL},
+is against the terms of the licence.  If in doubt, ask the authors.
+@end quotation
+
+@node The Standard Template Library, Unix-like systems, Licensing, Installing and using the library
 @section The Standard Template Library
 @cindex Standard Template Library
 @cindex STL
@@ -258,6 +297,11 @@ subdirectory.
 Note that the header files are designed to be included from a
 subdirectory called @file{ringing} within your system's collection of
 header files.
+
+If you wish to compile only the part of the library which is licensed
+for use in commercial programs, make sure you only compile and link
+those files which explicitly state that they are under the Lesser GNU
+Public License @acronym{LGPL}.  @xref{Licensing}.
 
 If you are using Microsoft Developer Studio, then you can use the
 supplied workspace file @file{ringing-lib.dsw} to accomplish the
@@ -1660,6 +1704,9 @@ auto-detection mechanism.
 @node XML library facets,  , The xmllib class, XML libraries
 @subsubsection XML library facets
 
+The XML library type supports only the built-in facets.  @xref{Built-in
+facets}.
+
 @node Central Council libraries,  , XML libraries, Built-in library types
 @subsection Central Council libraries
 
@@ -1694,6 +1741,16 @@ list of library types.
 
 @node Central Council library facets,  , The cclib class, Central Council libraries
 @subsubsection Central Council library facets
+
+The Central Council library type supports the built-in facets
+@pxref{Built-in facets} and one further facet.
+
+@table @code
+@item cclib::ref
+This facet, of type @code{int}, contains the reference number of the
+method in the library file.  This is the number which appears at the
+beginning of the line containing the method.
+@end table
 
 @node Library framework, Implementing new library classes, Built-in library types, Method libraries
 @section Library framework
