@@ -442,5 +442,5 @@ AM_CONDITIONAL(USING_MSVC, test "$ac_cv_msvc" = yes)
 dnl --------------------------------------------------------------------------
 
 AC_OUTPUT(Makefile ringing/Makefile apps/Makefile apps/gsiril/Makefile
-  apps/utils/Makefile apps/psline/Makefile 
+  apps/utils/Makefile apps/psline/Makefile apps/methsearch/Makefile
   doc/Makefile examples/Makefile tests/Makefile ringing/common-am.h)

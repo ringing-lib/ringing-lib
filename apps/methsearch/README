@@ -1,0 +1,343 @@
+General Options
+---------------
+
+General options:
+  -?, --help             Print this help message
+  -V, --version          Print this help message
+  -b, --bells=BELLS      The number of bells
+  -c, --cyclic           Require cyclic lead ends
+  -r, --regular          Require regular (P.B.) lead ends
+  -A, --all-methods      Include differentials or differential hunters
+  -p, --blows-per-place=NUM 
+                         At most NUM blows in one place (0 = unlimited)
+  -l, --places-per-change=NUM 
+                         At most NUM places in one change (0 = unlimited)
+  -n, --changes-per-lead=NUM 
+			 Require NUM changes per lead (0 = automatic)
+  -q, --quiet            Do not display methods when found
+  -H, --frequencies[=FMT] 
+                         Count frequencies of different method properties
+  -R, --format=FMT       Use FMT to format methods as found
+  -h, --any-hl-le        Allow any change at the half-lead and lead-end
+  -e, --restricted-le    Only allow 12 and 1N (or 1 and 12N lead ends)
+  -w, --right-place      Require right place methods
+  -f, --no-78s           Prohibit 78s (on 8 bells) in the place notation
+			 (except at the half-lead).
+  -j, --max-adj-places[=NUM]
+			 Forbid methods with more than NUM adjacent places
+  -s, --symmetric        Look for (normally) symmetric methods (default)
+  -k, --rotational       Look for rotationally symmteric methods 'Brave New
+                          Worlds' symmetry
+  -d, --double           Look for double methods - 'Double Eastern' symmetry
+  -S, --surprise         Require an internal place between dodging positions
+  -T, --treble-bob       Forbid an internal place between dodging positions
+  -G, --treble-dodges=NUM 
+                         Look for methods where the treble dodges NUM times
+                         in each position
+  -U, --hunts=NUM        Look for methods with NUM hunt bells
+  -u, --status           Display the current search status
+  --limit=NUM            Limit the search to the first NUM methods
+  --count                Count the number of methods found
+  -P, --parity-hack      Require an equal number of rows of each parity for
+                         each place in the treble's path
+  -L, --library=LIB      Look up method names in the library LIB
+  -F, --falseness=TYPE   Check for falseness
+  -m, --mask=PATTERN     Require that the method matches the given mask
+  -M, --music=PATTERN    Score the music in a plain course
+  --bob=CHANGE           Use CHANGE as the bob (used with some -F options)
+  --start-at=PN          (Re-)start the search with the method PN.
+  --le-change=CHANGE     Require CHANGE as the lead-end change
+  --hl-change=CHANGE     Require CHANGE as the half-lead change
+  --cyclic-hle           Require cyclic half-lead ends
+  --cyclic-hlh           Require cyclic half-lead heads
+  --rev-cyclic-hle       Require reverse cyclic half-lead ends
+  --rev-cyclic-hlh       Require reverse cyclic half-lead heads
+
+
+-L libraries should be either Central Council method libraries or MicroSIRIL
+method libraries.  (CC libraries are recommended as they allow spaces in 
+method names and are updated more frequently.)  CC libraries are obtainable 
+from
+
+   http://www.methods.clara.net/method-collections/zip-files/index.htm
+
+
+It is often a good idea to use -u with long searches so that you have some
+idea how far the search is progressing.  This also means that, if necessary,
+you can restart the search using --start-at.
+
+
+Falseness Options
+-----------------
+
+The -F option checks some property of the method's falseness.   The TYPE
+argument to the -F option specifies what property to check.  Each argument
+has a long form and a short form.  If no -F option is given, -Fl is assumed.
+
+  e, extent	    Require a extent to be potentially possible (see below)
+  CPS		    Require the method to be clear proof scale
+  U		    Require the method to be true to U falseness
+  c, course         Require the plain course to be true
+  l, lead           Require a lead to be true [default]
+  h, half-lead      Only require a half-lead to be true
+  n, none           No requirements on the truth of the method
+  x, really-none    As 'n' but even allowing 'trivial' falseness (see below)
+
+With the exception of -Fe each option implies all of the options below, and
+should not be used with any lower options.  -Fe and -Fc or -FU are orthogonal 
+and may both be specified (extents may be possible in methods that are false 
+in the plain course).  -Fe, -Fc and -FU all imply -Fl.
+
+Note that even with -Fn certain 'trivial' falsenesses are excluded:  the 
+change where no bells cross (123456 on 6 bells) is still forbidden, and 
+methods containing the same change twice in succession are also forbidden
+(e.g. Surprise methods beginning -.-.-.14).  To find methods with these
+'trivial' falsenesses, use the -Fx option (probably in conjunction with the 
+-h option).
+
+It is worth being aware that the use of -Fe and -Fc can have a significant
+impact on the speed of a search.  
+
+Note that -Fe does not search for an extent of the method, it merely checks
+to see whether there exists a set of mutually true leads including each row
+in the extent exactly once.  This is necessary (although not sufficient) for 
+an extent using single change, lead-end calls to exist.  The -Fe option is
+only currently implemented for single-hunt plain methods.
+
+For methods without regular (i.e. Plain Bob) lead heads, U falseness is
+generalised to be the falseness 'group' that includes the course head brought
+up by a bob at home.  Thus -FU means that three homes will be a true touch.
+To use -FU, the --bob option may be used to specify what call is being used.
+If the bob specified is the same as the lead end, -FU is the same as -Fc.
+
+
+
+Format Specifiers
+-----------------
+
+The -H and -R formats accept the following format specifiers:
+
+  %[N]c  The number of matching methods ( -H only ).  If a number, N, is 
+         specified, it is the minimum width of the field.
+  %l     The lead head
+  %p     The place notation
+  %q     The place notation, but in a slightly more compressed format
+  %Nr    The Nth row in the lead -- N should be an integer starting at 0
+  %Nh    The Nth change in the lead -- N should be an integer starting at 1
+  %[N]b  The maximum number of consecutive blows in one place;  if a number,
+         N, is specified, it is the minimum width of the field
+  %n     The method's name (minus class and stage); requires a -L option
+  %N     The method's full name (including class and stage); requires -L
+  %C     The class of the method
+  %S     The stage name of the method (e.g. 'Major')
+  %[N]M  The musical score for the course;  if a number, N, is specified, 
+         it is the minimum width of the field
+  %%     A literal %
+
+
+\t and \n are interpreted as a tab and a line break respectively,
+although in some situations these are interpreted by the shell and so will
+need to be written \\t and \\n respectively.  (Although, typically it will 
+do the same thing if the shell interprets it, so this is not particularly
+important.)  A trailing \ in a format string suppresses the line break 
+between entries.  In this case, it is important to ensure that the shell
+does not interpret this and so it will probably need escaping from the shell
+with an extra back-slash.
+
+Some versions of the Windows command shell apparently have dificulty 
+coping with a % on the command line.  For this reason $ is provided as an
+alternative to % in the above format specifiers.
+
+
+
+Music Patterns
+--------------
+
+The -M option accepts a pattern.  Each row in the plain course is tried  
+against each pattern and if it matches the score is incremented.  Thus, if 
+a row matches more than one pattern it will be counted multiple times.  The
+pattern is a simple type of regular expression. 
+
+  1234567890ETABCD...	  Match that particular bell
+  *			  Match any number of unspecified bells, including 
+			  none.
+  ?			  Matches exactly one unspecified bell.
+  <name>		  Matches some special named sort of music (see below)
+
+Various named rows can be searched for using the -M'<name>' syntax:
+
+  queens		  Searches for queens
+  kings			  Searches for kings
+  tittums		  Searches for tittums
+  reverse-rounds	  Searches for reverse-rounds
+
+
+The -M<name> syntax also provides short-hands for counting CRUs with,
+
+  -M<CRUs>,   which counts the number of CRUs in the plain course, and
+  -M<N-runs>, which counts the number of N-bell runs (either ascending or 
+              descending).  (N should be an integer between 3 and the number
+	      of bells.)
+
+Note that -M<4-runs> will multiply count rows with longer runs in them; thus, 
+for example, 21345678 will be counted three times one for each subsidiary 
+run of four bells (3456, 4567 and 5678).  This means that in an extent on 
+eight bells has a total <4-runs> score of 1200 and not 1002.
+
+Note that depending on your shell you may need to quote or escape the < and >
+characters to prevent the shell from using them for redirection.  One of the 
+following styles will probably work in most shells:
+
+  -M'<queens>'  -M"<queens>"  -M\<queens\>  "-M<queens>"  '-M<queens>'
+
+
+The * and ? metacharacters can be used to describe other types of music, 
+for example, -M'*5678' searches for roll-ups, and -M'8765*' searches for a 
+reverse roll-up on the front.  The -M<name> options can all be constructed 
+using this notation, for example, -M'<CRUs>' on 8 bells is equivalent to
+
+  -M'*5678' -M'*6578' -M'*4678' -M'*6478' -M'*4578' -M'*5478'
+
+(Again, careful quoting and/or escaping of * is needed to prevent the shell
+from interpretting it.)
+
+
+
+Method Masks
+-------------
+
+The -m option can be used to supply a mask that a method must match.  At its
+simplest, a mask is just a method place-notation.  Thus -b6 -m'&-4-3.234.5,2'
+lists just Armitage Bob Minor.  The syntax for place-notations is fairly 
+flexible:  a '.' only need be used where it is necessary to separate two 
+non-cross changes, although may be used to separate any changes; external
+places can be left implicit; the cross change may be specified '-', 'x' or 
+'X'; and the symbols for bells may be specified in upper or lower case.  
+
+The '&' symbol specifies that the following place notation, upto the next 
+comma (or the end) is a symmetric block.  Thus, '&-4-3.234.5,2' is short 
+hand for '-4-3.234.5.234.3-4-2'.  The '&' needn't be at the start of the 
+place notation, for example, the place notation of Grandsire Major can be 
+written '3,&1-1-1-1-' (note the comma before the ampersand).
+
+As well as just containing place-notation, a mask may also use the '?' and '*'
+metacharacters, which respectively represent exactly one and zero or more 
+unspecified changes.  So, for a plain minor method the mask '-?-?-?-?-?-?' 
+is equivalent to the -w (right-place) option.  The '*' symbol may be used at
+most once in a mask (because otherwise the notation between the two '*'s 
+would be moveable), and methsearch uses the -b and -G (where present) options
+to work out how many '?'s to expand this to.  
+
+Note that the --le-change and --hl-change options are alternatives to using 
+the -m option, and may not be used in conjuction with it.
+
+
+
+Examples
+--------
+
+  methsearch -b6 -p2 -sre -L PLAIN6.TXT -R"%p [%N]"
+
+This prints all Plain Minor (-b6) methods with conventional symmetry (-s), 
+regular lead heads (-r), 12 or 16 lead end changes (-e), no more that two 
+consecutive blows in any one place (-p2).  It prints out the place notation 
+(%p) and the full method name (%N), using the library PLAIN6.TXT in the current
+directory to find the names.  The output begins
+
+X.16.X.36.X.36.X.36.X.16.X.16. [College Bob Minor]
+X.16.X.36.X.36.X.36.X.16.X.12. [St Clement's College Bob Minor]
+etc...
+
+
+
+  methsearch -b6 -p2 -srfS -p2 -LPLAIN6.TXT -R '%n  [%q]'
+
+
+This lists the twelve minor methods from the above list that have Court places
+around the treble (-S works for plain methods too), and which have no 56s in 
+the place notation (other than at the half lead).
+
+London  [&-4-3-5,6]
+Double Oxford  [&-4-3-5,2]
+Double Court  [&-4-3-1,6]
+Hereward  [&-4-3-1,2]
+Lytham  [&-4-3.2.5,6]
+Thelwall  [&-4-3.2.5,2]
+Westlecott  [&-4-23-5,6]
+Pinehurst  [&-4-23-5,2]
+Frodsham  [&3.4-3-5,2]
+Bala  [&3.4-3.4.3,2]
+Windermere  [&3.4-3.2.5,2]
+Helvellyn  [&3.4-23-5,2]
+
+
+
+  methsearch -b6 -kc -qH"%3c\t%5r"
+
+This finds all methods with 'Brave New Worlds' symmetry and cyclic lead ends, 
+and finds out what their hand-stroke half-lead changes are (the 5th row of 
+the method: the initial rounds is the 0th row).  It prints out a table of the 
+relative frequencies of each hand-stroke half-lead change:
+
+ 95     234561
+ 29     456231
+ 44     623451
+Total: 168
+
+
+
+  methsearch -b6 -PSG1 -fsr -p2 -l2 -L SURP6.TXT -R"%n"
+
+This lists the names of the 'Standard' 41 Surprise Minor methods.  Note 
+however that because of the issues mentioned below, the program is probably 
+not very useable with treble-dodging methods in general.  A mask option,
+for example, -m'&-3-4-2-3*,2' can be used to further reduce the number of 
+methods found.  This particular mask will only select those of the 41 which
+have Cambridge above the treble.
+
+
+
+  methsearch -b4 -s
+
+This shows the 11 symmetric Plain Minimus methods.  Removing the -s option 
+finds an additional six asymmetric methods, although these go away again 
+if -Fc is added.  (These six methods are false in the plain course.)
+
+
+
+Issues
+------
+
+The following functionality does not exist in the methsearch program.
+
+  * Extent length.  At some point I might add some options to filter out
+    methods that cannot produce extents (because of their falseness) or 
+    cannot produce a peal-length composition.  This would be particularly
+    useful for Surprise Minor where methods which cannot give 720s are
+    of very limited use.  It would also remove the need for the -P option.
+    This will be rolled into the -Fe option.
+
+  * Music.  There's still a long way to go with the code to evaluate the
+    musical potential of a method.  In the long run I'd like to be able to 
+    write -M"*{4+}*" to find runs of four or more bells in descending pitch,
+    or -M"*[456][456]78" to find CRUs.
+
+  * Falseness.  There are some serious opportunities for optimization in 
+    the handling of -Fc, -Fl and -Fe options.
+
+  * Masks.  I would like some way of saying that a change at some point 
+    must contain, say, places in 14, but needn't be the change 14.  For 
+    example, a Surprise Minor method could then be described with the mask
+    &???.14+.???.36+.????,? (where + denotes that the previous change merely
+    needs to contain 14 but not actually be 14).  I might also get around
+    to adding a short-hand for repeated symbols, e.g. ?{5} for ?????, and
+    possibly even alternation:  -(4|45).
+
+
+Comments & suggestions welcome.
+
+
+--
+Richard Smith
+<richard@ex-parrot.com>
+
