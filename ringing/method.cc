@@ -73,45 +73,6 @@ const char *method::txt_stages[14] = {
 const char *method::txt_double = "Double";
 const char *method::txt_little = "Little";
 
-// Constructor to make a method from place notation
-// The place notation should be expanded, i.e. no symmetrical bits
-method::method(char *pn, int b, char *n)
-{
-  name(n);
-  
-  // First find out the number of bells
-  char *c;
-/*  int a, b = 0;
-  for(c = pn; *c != '\0'; c++)
-    if(b < (a = row::c_to_b(*c) + 1)) b = a;
-
-  // Work out how long it is
-  int l = 0;
-  c = pn;
-  if(*c != 'X' && *c != 'x' && *c != '-' && *c != '.') l = 1;
-  for(; *c != '\0'; c++) {
-    if(*c == '.') l++;
-    if(*c == 'X' || *c == 'x' || *c == '-') l += 2;
-  }
-*/
-  // Set up the place notation
-  char t[32];
-  c = pn;
-  while(*c != '\0') {
-    if(*c == 'X' || *c == '-') {
-      t[0] = 'X'; t[1] = '\0';
-      c++;
-    } else {
-      char *s = t;
-      while(*c != '\0' && *c != 'X' && *c != '-' && *c != '.')
-	*s++ = *c++;
-      *s = '\0';
-      if(*c == '.') c++;
-    }
-    push_back(change(b, t));
-  }
-}
-
 // issym : Find out whether the method is symmetrical
 // This means symmetrical, not counting the half-lead or lead end.
 int method::issym(void) const

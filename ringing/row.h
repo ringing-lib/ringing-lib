@@ -28,9 +28,18 @@
 #if RINGING_OLD_INCLUDES
 #include <iostream.h>
 #include <vector.h>
+#include <iterator.h>
+#include <list.h>
 #else
 #include <iostream>
 #include <vector>
+#include <iterator>
+#include <list>
+#endif
+#if RINGING_OLD_C_INCLUDES
+#include <ctype.h>
+#else
+#include <cctype>
 #endif
 #include <string>
 
@@ -55,7 +64,8 @@ private:
 public:
   bell() : x(0) {}
   bell(int i) : x(i) {}
-  void from_char(char c) { 
+  void from_char(char c) {
+    c = toupper(c);
     for(x = 0; x < 33 && symbols[x] != c; x++);
     if(x == 33) x = 0;
   }
@@ -77,10 +87,12 @@ private:
 public:
   change() : n(0) {}	        //
   change(int num) : n(num) {}   // Construct an empty change
-  change(int num, char *pn) { set(num, pn); }
+  change(int num, const char *pn) { set(num, pn); }
+  change(int num, const string& s) { set(num, s); }
   // Use default copy constructor and assignment
 
-  change& set(int num, char *pn); // Assign from place notation
+  change& set(int num, const char *pn); // Assign from place notation
+  change& set(int num, const string& s) { return set(num, s.c_str()); }
   int operator==(const change& c) const
   { return (n == c.n) && (n == 0 || swaps == c.swaps); }
   int operator!=(const change& c) const
@@ -106,6 +118,45 @@ inline bell operator*(bell i, const change& c)
   bell j = i; j *= c; return j;
 }
 
+// Take the place notation between start and finish, and send it as
+// a sequence of changes to out.
+template<class OutputIterator, class ForwardIterator>
+void interpret_pn(int num, ForwardIterator i, ForwardIterator finish, 
+		  OutputIterator out)
+{
+  ForwardIterator j;
+  bool symblock;
+  change cross = change(num,"X");
+  while(i != finish) {
+    list<change> block;
+    // Skip rubbish
+    while(i != finish && !(isalnum(*i) || *i == '&' || *i == '-')) ++i;
+    // See whether it's a symmetrical block or not
+    if(i == finish) return;
+    symblock = (*i == '&'); if(symblock) ++i;
+    while(i != finish && *i == '.') ++i;
+    while(i != finish && (isalnum(*i) || *i == '-')) {
+      // Get a change
+      if(*i == 'X' || *i == 'x' || *i == '-') {
+	++i;
+	block.push_back(cross);
+      }
+      else {
+	j = i;
+	while(j != finish && isalnum(*j) && *j != 'X' && *j != 'x') ++j;
+	if(j != i) block.push_back(change(num, string(i, j)));
+	i = j;
+      }
+      while(i != finish && *i == '.') ++i;
+    }
+    // Now output the block
+    copy(block.begin(), block.end(), out);
+    if(symblock) { 
+      block.pop_back(); 
+      copy(block.rbegin(), block.rend(), out);
+    }
+  }
+}
 
 // row : This stores one row 
 class row {
@@ -171,7 +222,7 @@ public:
   const vector<change>& get_changes(void) const // Return the changes which we are using
     { return ch; }
 };
-
+      
 RINGING_END_NAMESPACE
 
 #endif

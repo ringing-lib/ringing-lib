@@ -67,8 +67,6 @@ public:
 
   method *load(char *name);     // Load a method
 //int save(method& name);       // Save a method
-
-  static int expand_pn(char *in, char *out, char *lh); // Expand place notation
 };
 
 RINGING_END_NAMESPACE

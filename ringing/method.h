@@ -72,16 +72,27 @@ public:
     { return myname.c_str(); }
   void name(const char *n)	// Set name
     { myname = n; }
+  void name(const string n)
+    { myname = n; }
   char *fullname(char *c) const; // Return the full name
   
   static const char *stagename(int n); // Get the name of this stage
   static const char *classname(int cl) // Get the name of the class
     { return txt_classes[cl & M_MASK]; }
 
-  method(int l, int b, char *n = "Untitled") : vector<change>(l)
+  method(int l, int b, const char *n = "Untitled") : vector<change>(l)
     { (*this)[0] = change(b); name(n); }
   // Make a method from place notation
-  method(char *pn, int b, char *n = "Untitled");
+  method(const char *pn, int b, const char *n = "Untitled") {
+    name(n);
+    interpret_pn(b, pn, pn + strlen(pn), 
+		 back_insert_iterator<vector<change> >(*this));
+  }
+  method(const string pn, int b, const string n = "Untitled") {
+    name(n);
+    interpret_pn(b, pn.begin(), pn.end(),
+		 back_insert_iterator<vector<change> >(*this));
+  }
   ~method() {}
 
   int length() const { return size(); }

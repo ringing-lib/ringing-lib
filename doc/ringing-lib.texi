@@ -157,6 +157,7 @@ notation (for example @samp{X} or @samp{1258}).
 * The row Class::               
 * The change Class::            
 * The row_block class::         
+* Other functions in row.h::    
 @end menu
 
 @node Row Operations, Row Properties, Rows and Changes, Rows and Changes
@@ -527,6 +528,7 @@ This is the copy constructor; it makes a new copy of @var{c}.
 @end deftypefn
 
 @deftypefn Constructor {} change::change (int @var{n}, char *@var{pn});
+@deftypefnx Constructor {} change::change (int @var{n}, const string& @var{pn});
 This constructs a change on @var{n} bells, with place notation as given
 in @var{pn}. This should consist of a sequence of characters which signify
 the places to be made, arranged in ascending order. If no places are to
@@ -602,7 +604,7 @@ so on.
 This returns 1 if the change contains internal places, and 0 otherwise.
 @end deftypefun
 
-@node The row_block class,  , The change Class, Rows and Changes
+@node The row_block class, Other functions in row.h, The change Class, Rows and Changes
 @section The @code{row_block} class
 @cindex @code{row_block} class
 
@@ -696,6 +698,29 @@ This returns the @code{vector<change>} object on which the row block is based.
 @end deftypefun
 @end iftex
 
+@node Other functions in row.h,  , The row_block class, Rows and Changes
+@section Other functions in @file{row.h}
+
+@deftypefun {template<OutputIterator, ForwardIterator> void} interpret_pn (int @var{bells}, ForwardIterator @var{start}, ForwardIterator @var{finish}, OutputIterator @var{out});
+This template function is for expanding place notation into changes.  The
+arguments are as follows: @var{bells} is the number of bells; @var{start} and
+@var{finish} should be forward iterators with value type @code{char}, and
+indicate a string of characters containing the place notation; and @var{out}
+is an output iterator of value type @code{change}, to which the changes
+will be written.
+
+The syntax of the place notation is as follows: place notation consists of 
+a sequence of blocks, which are delimited by commas.  Each block is a 
+sequence of changes, with @samp{X} or @samp{-} meaning a cross change.
+Changes other than cross changes are separated by full stops.
+A block may optionally be preceded by an ampersand @samp{&}, which means
+that the entire block, except the last change, is repeated backwards.  All
+other characters are ignored.
+
+For examples of this function in use, look at one of the @code{method} 
+constructors in @file{ringing/method.h} or in the example code.
+@end deftypefun
+
 @node Methods, Proof, Rows and Changes, Top
 @chapter Method classes
 @cindex method
@@ -758,12 +783,11 @@ This constructor creates an empty method on @var{bells} bells, with
 @end deftypefn
 
 @deftypefn Constructor {} method::method (const char* @var{pn}, int @var{bells}, char* @var{name} = "Untitled");
+@deftypefnx Constructor {} method::method (const string& @var{pn}, int @var{bells}, const string& @var{name} = "Untitled");
 This constructor creates a method on @var{bells} bells from the given
-place notation, which should be an entire lead.  As is standard when
-giving place notation, a change in which all bells swap may be given by
-either @samp{'X'} or @samp{'-'}.  Other changes should be separated by a
-full stop (@samp{'.'}).  External places (leading and lying) may be left
-out whenever reasonable.  The method is given the name @var{name}.
+place notation, which should be an entire lead.  The method is given the name 
+@var{name}.  For information on how to specify the place notation, see the
+discussion of @code{interpret_pn} in @ref{Other functions in row.h}.
 @end deftypefn
 
 @deftypefn Constructor {} method::method (const method& @var{m});
@@ -778,6 +802,7 @@ This returns the base name of the method.
 @end deftypefun
 
 @deftypefun void method::name (const char* @var{name});
+@deftypefunx void method::name (const string& @var{name});
 This sets the base name of the method to @var{name}.
 @end deftypefun
 

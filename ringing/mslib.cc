@@ -33,47 +33,6 @@ RINGING_START_NAMESPACE
 
 newlib<mslib> mslib::type;
 
-int mslib::expand_pn(char *in, char *out, char *lh)
-{
-  if(in[0] != '+' && in[0] != '&') return 1; // Invalid
-
-  char *s = in + 1, *t = out;
-  while(*s != '\0') *t++ = *s++;
-  *t = '\0';
-  if(in[0] == '&') {		// Symmetrical
-    char *u, *v;
-    // Skip the half-lead bit
-    while(*(--s) != '-' && *s != '.');
-    // Now copy every bit, working backwards
-    while(s > in + 1) {
-      *t++ = *s--;		// Copy the separator
-      u = s;			// Remember where the end is
-      while(*s != '-' && *s != '.' && s > in) s--; // Find the next one
-      for(v = s+1; v <= u; *t++ = *v++); // Copy the bit in between
-    }
-    if(s > in) *t++ = *s;
-    *t = '\0';
-    if(*lh != 'z' && t[-1] != '.' && t[-1] != '-') { // More to come
-      *t++ = '.';
-      *t = '\0';
-    }
-    if(*lh) {
-      s = lh + strlen(lh) - 1;
-      if(*s == 'z') {
-	*s = '\0';
-	strcat(out, lh);
-      } else {
-	if((lh[0] >= 'a' && lh[0] <= 'f')
-	   || (lh[0] >= 'p' && lh[0] <= 'q'))
-	  strcat(out, "12");
-	else
-	  strcat(out, "1");
-      }
-    }
-  }
-  return 0;
-}
-
 // Load a method from a MicroSIRIL library
 method *mslib::load(char *name)
 {
@@ -87,13 +46,25 @@ method *mslib::load(char *name)
     if(*s == '\0' && isspace(f.get())) { // Found it
       char lh[16];		       // Get the lead head code
       f.get(lh,16,' ');
-      buffer linebuf(256), pn(512);
+      buffer linebuf(256);
       f.get(linebuf, linebuf.size()); // Read in the rest of the line
       s = strtok(linebuf," \t"); // Strip blanks
       method *m = NULL;
+      m = new method(s,b,name);
+      if(*lh) {
+	s = lh + strlen(lh) - 1;
+	if(*s == 'z') {
+	  *s = '\0';
+	  m->push_back(change(b, lh));
+	} else {
+	  if((lh[0] >= 'a' && lh[0] <= 'f')
+	     || (lh[0] >= 'p' && lh[0] <= 'q'))
+	    m->push_back(change(b, "12"));
+	  else
+	    m->push_back(change(b, "1"));
+	}
+    }
 
-      if(expand_pn(s,pn,lh) == 0)
-        m = new method(pn,b,name);
       return m;
     }
     while(!f.eof() && f.get() != '\n');	// Skip to the next line

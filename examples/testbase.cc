@@ -39,7 +39,7 @@ int main()
   {
     cout << "Testing row constructor & printing...\n";
     row r("13572468");
-    cout << "This should be Queen's: " << r << endl;
+    cout << "This should be Queens: " << r << endl;
     r = "15263748";
     cout << "This should be Tittums: " << r << endl;
   }
@@ -56,6 +56,10 @@ int main()
     cout << r << " * " << c << " = " << (r * c) << endl;
     c.set(8,"12");
     cout << c << " reversed is " << c.reverse() << endl;
+    cout << "\nTesting place notation expansion...\n";
+    string s("&-5-4.5-5.36.4-4.5-4-1,1");
+    cout << "Place notation " << s << " becomes:\n";
+    interpret_pn(8, s.begin(), s.end(), ostream_iterator<change>(cout, " "));
   }
 
   {
@@ -80,7 +84,7 @@ int main()
     int i;
 
     cout << "\nTesting method operations...\n";
-    method m("-5-4.5-5.36.4-4.5-4-1-4-5.4-4.36.5-5.4-5-1",8,"Bristol");
+    method m("&-5-4.5-5.36.4-4.5-4-1,1",8,"Bristol");
 
     cout << "This should be a lead of Bristol Major...\n";
     print_row_block((row_block)m);

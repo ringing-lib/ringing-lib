@@ -66,19 +66,25 @@ char bell::symbols[] = "1234567890ETABCDFGHJKLMNPQRSUVWYZ";
 // *********************************************************************
 
 // Assign place notation to a change
-change& change::set(int num, char *pn)
+change& change::set(int num, const char *pn)
 {
   n = num; swaps.erase(swaps.begin(), swaps.end());
-  auto_ptr<char> buff1(new char[n]);
-  char *buff = buff1.get();
-  int i = 0; bell b;
-  while(i < n && (buff[i] = toupper(pn[i])) != '\0') i++;
-  // Allowed to miss out the first bell
-  b.from_char(buff[0]);
-  if(b > 0 && b & 1) i = 1; else i = 0;
-  for(;i < n - 1;i++)
-    if(strchr(buff,bell(i).to_char()) == NULL)
-      swaps.push_back(i++);
+  if(*pn == '\0') return *this;
+  bell b, c, d;
+  if(*pn == 'X' || *pn == 'x' || *pn == '-')
+    c = 0;
+  else {
+    b.from_char(*pn); if(b > 0 && b & 1) c = 1; else c = 0;
+    while(*pn != '\0') {
+      b.from_char(*pn);
+      if(b >= c) {
+	for(d = c; d < b-1; d = d + 2) swaps.push_back(d);
+	c = b + 1;
+      }
+      ++pn;
+    }
+  }
+  for(d = c; d < n-1; d = d + 2) swaps.push_back(d);
   return *this;
 }
 
@@ -208,6 +214,7 @@ bell& operator*=(bell& b, const change& c)
       b = b + 1;
   return b;
 }
+
 
 // *********************************************************************
 // *                    Functions for class row                        *
