@@ -91,12 +91,11 @@ method *cclib::load(const char *name)
 		if (wordbuf.compare(methname, 0, methname.length()) == 0)
 		  {
 		    // we have found the method.
-
 		    // now get the rest of the details
 		    method *m = NULL;
 		    string pn;
 		    // Get place notation
-		    if (meth_hl != -1)
+		    if ((meth_hl != -1) && (meth_le != -1))
 		      {
 			// We have a reflection
 			pn.append("&");
@@ -106,6 +105,15 @@ method *cclib::load(const char *name)
 			pn.append(linebuf.substr(meth_hl, meth_le - meth_hl));
 			m = new method(pn, b, name);
 			m->push_back(change(b, linebuf.substr(meth_le, meth_lh - meth_le)));
+		      }
+		    else if (meth_hl != -1)
+		      {
+			// Make this a reflection temporarily
+			pn.append("&");
+		        pn.append(linebuf.substr(meth_name_ends, meth_lh - meth_name_ends));
+			m = new method(pn, b, name);
+			// Now remove the last change
+			m->pop_back();
 		      }
 		    else
 		      {
