@@ -1,3 +1,9 @@
+Version 0.2.4 (30 October 2001):
+  More Windows fixes.
+  Fixes to printing classes.
+  Minor changes to proof and music classes.
+  First stab at a touch class introduced.
+
 Version 0.2.3 (9 October 2001):
   Fixed a few more bugs.
   Improvements to C++ style and fixes of compiler problems.

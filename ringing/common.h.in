@@ -55,7 +55,7 @@
 #define RINGING_PACKAGE "@PACKAGE@"
 
 // *** Define this to be the version number of the package
-// #define RINGING_VERSION 0.2.3
+// #define RINGING_VERSION 0.2.4
 #define RINGING_VERSION "@VERSION@"
 
 // *** Define this to be 1 to use old-style standard C++ header names

@@ -12,6 +12,3 @@
 /* define if the compiler supports exceptions */
 #undef HAVE_EXCEPTIONS
 
-/* define if the compiler implements namespaces */
-#undef HAVE_NAMESPACES
-
