@@ -167,7 +167,7 @@ row random_row( unsigned int nw, unsigned int nh, unsigned int nt )
   for (i=nh; i<nw+nh; ++i)
     {
       const int fact( factorial(nw-i+nh-1) );
-      int b = idx / fact;
+      unsigned int b = idx / fact;
       idx %= fact;
       
       for (unsigned ob=0; ob<=b; ++ob)

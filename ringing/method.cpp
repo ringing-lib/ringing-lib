@@ -483,7 +483,7 @@ string method::format( int flags ) const
 
   if ( flags & M_SYMMETRY && issym() ) {
     out += '&';
-    for ( int i=0; i<size() / 2; ++i )
+    for ( unsigned int i=0; i<size() / 2; ++i )
       do_single_compressed_pn( out, (*this)[i], flags, might_need_dot, first );
 
     out += ','; 
@@ -491,7 +491,7 @@ string method::format( int flags ) const
     do_single_compressed_pn( out, back(), flags, might_need_dot, first );
 
   } else {
-    for ( int i=0; i<size(); ++i )
+    for ( unsigned int i=0; i<size(); ++i )
       do_single_compressed_pn( out, (*this)[i], flags, might_need_dot, first );
   }
 
