@@ -18,11 +18,13 @@
 // Parts of this file are taken from the boost smart_ptr library [see
 // http://www.boost.org for details], and are under the following copyright:
 
-// (C) Copyright Greg Colvin and Beman Dawes 1998, 1999. Permission to copy,
-// use, modify, sell and distribute this software is granted provided this
-// copyright notice appears in all copies. This software is provided "as is"
-// without express or implied warranty, and with no claim as to its
-// suitability for any purpose.
+//  (C) Copyright Greg Colvin and Beman Dawes 1998, 1999. 
+//  Copyright (c) 2001, 2002 Peter Dimov
+
+//  Permission to copy, use, modify, sell and distribute this software
+//  is granted provided this copyright notice appears in all copies.
+//  This software is provided "as is" without express or implied
+//  warranty, and with no claim as to its suitability for any purpose.
 
 // $Id$
 
@@ -246,6 +248,9 @@ public:
 
   // Reset the pointer
   void reset( T *x = 0 ) { deletor(ptr); ptr = x; }
+
+  // Release the pointer.  Deleting it is now the caller's responsibility.
+  element_type *release() { T *tmp = ptr; ptr = 0; return tmp; }
 
   // Safe boolean conversions
   operator safe_bool_t() const { return make_safe_bool( ptr ); }
