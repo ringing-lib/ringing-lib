@@ -78,6 +78,8 @@ public:
   void debug_print( ostream &os ) const        { impl->debug_print(os); }
   void execute( execution_context &ctx ) const { impl->execute(ctx);    }
 
+  RINGING_FAKE_DEFAULT_CONSTRUCTOR(expression);
+
 private:
   static shared_pointer< node > 
   make_expr( const parser &p,

@@ -263,6 +263,7 @@ expression::make_expr( const parser &p,
 
     default:
       throw runtime_error( "Unknown token in input" );
+      return shared_node_t(); // To keep MSVC 5 happy
     }
 }
 
