@@ -618,7 +618,20 @@ int main(int argc, char *argv[])
 	    pm.opt.lines[b] = (*j).second;
       }
     }
-    if(args.custom_rules) pm.rules = args.rules;
+    if(args.custom_rules) 
+      pm.rules = args.rules;
+    else { // Set up some default rules
+      pm.rules.clear();
+      if(args.numbers) {
+	int cl = m.methclass();
+	if(cl == method::M_TREBLE_BOB 
+	   || cl == method::M_SURPRISE 
+	   || cl == method::M_DELIGHT)
+	  pm.rules.push_back(pair<int,int>(4,4));
+	else
+	  pm.rules.push_back(pair<int,int>(m.length(),0));
+      }
+    }
     if(args.placebells == -2) {
       bell b;
       pm.placebells = -1;
@@ -635,7 +648,7 @@ int main(int argc, char *argv[])
       pm.placebells = args.placebells;
     pm.opt.flags = args.numbers ? printrow::options::numbers : 0;
     if(args.pn_mode == -1)
-      pm.pn_mode = args.numbers ? printmethod::pn_first : printmethod::pn_none;
+      pm.pn_mode = printmethod::pn_first;
     else
       pm.pn_mode = static_cast<printmethod::pn_mode_t>(args.pn_mode);
     

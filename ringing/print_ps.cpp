@@ -342,6 +342,8 @@ void printrow_ps::placebell(int i)
 void printrow_ps::text(const string& t, const dimension& x, 
 		       text_style::alignment al, bool between, bool right)
 {
+  if(!in_column) return;
+  fill_gap();
   if(right) pp.os << lastrow.bells(); else pp.os << '0';
   pp.os << " MR ";
   if(right) pp.os << x.in_points(); else pp.os << -(x.in_points());

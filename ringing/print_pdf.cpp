@@ -141,15 +141,22 @@ void pdf_file::output_pages()
   os << "     /Resources << /Procset [/PDF /Text]\n"
         "                   /Font << \n";
   map<string, string>::const_iterator i;
+  int j = obj_count;
   for(i = fonts.begin(); i != fonts.end(); ++i)
-    os << "                          /" << (*i).second 
-       << " << /Type /Font /Subtype /Type1\n"
-       << "                          /Name /" << (*i).second 
-       << " /BaseFont /" << (*i).first << " >>\n";
+    os << "                          /" << (*i).second
+       << ' ' << ++j << " 0 R\n";
   os << "                         >>\n"
         "                >>\n"
         "  >>\n";
   end_object();
+
+  for(i = fonts.begin(); i != fonts.end(); ++i) {
+    start_object();
+    os << "  << /Type /Font /Subtype /Type1"
+       << " /Name /" << (*i).second 
+       << " /BaseFont /" << (*i).first << " >>\n";
+    end_object();
+  }
 }
 
 const string& pdf_file::get_font(const string& f)

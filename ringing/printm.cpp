@@ -127,7 +127,7 @@ void printmethod::print(printpage& pp)
 	    && total_row_count < total_rows; column++) {
 	// Print the first row, which is the same as the last row of the
 	// previous column.
-	pr << b[i]; if(needrule(i)) pr.rule();
+	pr << b[i]; if(needrule(i % (b.size()-1))) pr.rule();
 	// Turn on number-missing if necessary
 	if(number_mode == miss_column) {
 	  opt.flags |= printrow::options::miss_numbers;
@@ -170,7 +170,9 @@ void printmethod::print(printpage& pp)
 	    pr.text((*m)[i-1].print(), opt.xspace,text_style::right, 
 		    true, false);
 	  pr << b[i];
-	  if(needrule(i)) pr.rule();
+	  if(row_count < (rows_per_column - 1)
+	     && total_row_count < (total_rows - 1)
+	     && needrule(i % (b.size()-1))) pr.rule();
 	  total_row_count++;
 	}
 	if(total_row_count < total_rows) { // Next column
@@ -236,7 +238,7 @@ void printmethod::fit_to_space(const dimension& width,
   hgap = opt.xspace * (((placebells >= 0) ? 3 : 1) + 
 		       ((pn_mode == pn_all) ? pnextra : 0));
   vgap = opt.yspace * 2;
-  opt.style.size = static_cast<int>(opt.xspace.in_points() * 0.9);
+  opt.style.size = static_cast<int>(opt.yspace.in_points() * 0.9);
 }
 
 float printmethod::total_width() {
