@@ -1201,6 +1201,7 @@ the inner workings more easily.
 * Initialisation::              
 * Opening Files::               
 * Loading Methods::             
+* Listing Methods::             
 * Saving Methods::              
 @end menu
 
@@ -1219,8 +1220,8 @@ Now we have to register the type of libraries that we are using to the library
 class. This is done by a function call for each library; these can be placed anywhere before the library is used. As they are calls to static functions, once they are registered, they will remain so until the program finishes. For mslib and cclib to be included use the following function calls:
 
 @example
-mslib::register();
-cclib::register();
+mslib::registerlib();
+cclib::registerlib();
 @end example
 
 This declares our libraries. If we only wish to load one type of library, then
@@ -1259,7 +1260,7 @@ else
 
 Now you have a library loaded, you can use it to load multiple methods from that file.
 
-@node  Loading Methods, Saving Methods, Opening Files, General Use
+@node  Loading Methods, Listing Methods, Opening Files, General Use
 @subsection Loading Methods
 
 Now we have a file loaded into a library, you will want to get a method definition from it. To do this use the following:
@@ -1290,7 +1291,27 @@ Note: It is worth examining the contents of the method libraries to note the
 different format of the method names. Both mslib and cclib are case-insensitive
 when specifying methname.
 
-@node Saving Methods,  , Loading Methods, General Use
+@node Listing Methods, Saving Methods, Loading Methods, General Use
+@subsection Listing Methods
+
+It may be useful to obtain a list of methods within a method file, and so the libraries provide this functionality. To obtain a list of strings containing the list of methods within a file use:
+
+@example
+list<string> mylist;
+if (l.dir(mylist) == 0)
+  @{
+    // Either Library doesn't support the function, or there were
+    // no methods present.
+  @}
+else
+  @{
+    // We can proceed with using the list.
+  @}
+@end example
+
+Note, this provides the method names as given in the method library file. Some formatting may be required.
+
+@node Saving Methods,  , Listing Methods, General Use
 @subsection Saving Methods
 
 Due to the human read/write style formats for the method library files, there
@@ -1360,16 +1381,64 @@ The @code{mylibrary::canread} function is a static function that must be present
 @node The library_base class, The library class, The newlib class, The Library Classes
 @subsection The @code{library_base} class
 
-The @code{library_base} class is the base class for any new method library classes that are developed.
+The @code{library_base} class is the base class for any new method library classes that are developed. All functions are virtual, and @code{load()} is a pure virtual function. Therefore, it has to be defined in derived classes for them to be used. The functions described below indicate their intended use in a derived class.
 
-The rest of this section is still to be written.
+@deftypefn @code{virtual ~library_base()}
+As our class is virtual, we must also have a virtual destructor. This function does that and performs no activites.
+@end deftypefn
+
+@deftypefn @code{virtual method load(const char* name) = 0}
+@code{load} is a pure virtual function and therefore must be defined before any derived class can be used.
+
+The function is intended to load a method called @var{name} from the current specified file. If the function cannot load the method given, then one of two things will happen.
+
+If exceptions are enabled, an @code{invalid_name} of type @code{exception} will be thrown. If exceptions are not enabled, the method returned will be an empty object.
+@end deftypefn
+
+@deftypefn @code{virtual int save(const method& m)}
+This function is intended to save a method to the currently loaded method library, if it is possible to do so.
+@end deftypefn
+
+@deftypefn @code{virtual int rename(const string name1, const string name2)}
+This function is intended to rename a method from @var{name1} to @var{name2} within the currently loaded method library if it is possible to do so.
+@end deftypefn
+
+@deftypefn @code{virtual int dir(list<string> &result)}
+This function is intended to list the method names contained within the currently loaded method library.
+@end deftypefn
+
+@deftypefn @code{virtual int good(void) const}
+This function is intended to indicate to the user of the library object if the object currently has a valid library loaded.
+@end deftypefn
+
+@deftypefn @code{virtual int writeable(void) const}
+This function is intended to indicate to the user if the library is writeable, and hence if functions such as rename, and save can be used.
+@end deftypefn
 
 @node The library class,  , The library_base class, The Library Classes
 @subsection The @code{library} class
 
 The @code{library} class is the main interface to the individual method libraries. It provides a interface that will automatically determine which library to use and deal with the creation and deletion of that library as necessary.
 
-The rest of this section is still to be written.
+For the following functions, see the definitions under * The library_base_class:: . The definitions are the same, except that these are not virtual functions.
+
+@code{load, save, rename, remove, dir, good, writeable}
+
+The rest of the functions control the accessing of libraries and determining if those libraries can correctly access files given to them.
+
+The functions are:
+
+@deftypefn @code{library(const string &filename = "")}
+The constructor attempts to find a specific library class (e.g. mslib or cclib) that is able to correctly read the file at location @var{filename}. If it can, it creates a new object of the relevant type and instructs the new object to open the file. The rest of the functions then provide the 
+@end deftypefn
+
+@deftypefn @code{~library()}
+The destructor is, as expected, used to tidy up the class, deleting any specific library classes that had been created.
+@end deftypefn
+
+@deftypefn @code{static void addtype(libtype* lt)}
+This is used to add a specific (derived) library class to the list of classes that library knows about. This function is typically called by the static function @code{registerlib} in the derived functions.
+@end deftypefn
 
 @node Deriving Library Classes,  , The Library Classes, Method Libraries
 @section Deriving Library Classes
