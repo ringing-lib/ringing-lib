@@ -3,7 +3,7 @@
 MAINTAINERCLEANFILES = Makefile.in
 INCLUDES = -I$(top_srcdir)
 
-noinst_PROGRAMS = testbase testprint testtouch testlibrary psline testproof
+noinst_PROGRAMS = testbase testprint testtouch testlibrary psline testproof testmusic
 LDADD = $(top_builddir)/ringing/libringing.a
 
 testbase_SOURCES = testbase.cpp
@@ -12,4 +12,4 @@ testtouch_SOURCES = testtouch.cpp
 testlibrary_SOURCES = testlibrary.cpp
 psline_SOURCES = psline.cpp
 testproof_SOURCES = testproof.cpp
-
+testmusic_SOURCES = testmusic.cpp

@@ -28,177 +28,234 @@ RINGING_START_NAMESPACE
 
 RINGING_USING_STD
 
-// default constructor.
-music::music()
+// ********************************************************
+// function definitions for MUSIC_DETAILS
+// ********************************************************
+
+music_details::music_details(const string &e, const int &s) : string(e)
 {
+  _score = s;
+  _count_handstroke = 0;
+  _count_backstroke = 0;
+}
+
+music_details::music_details(const char *e, const int &s) : string(e)
+{
+  _score = s;
+  _count_handstroke = 0;
+  _count_backstroke = 0;
+}
+
+music_details::~music_details()
+{
+}
+
+void music_details::Set(const string &e, const int &s)
+{
+  *this = e;
+  _score = s;
+  // Should reset this here as we have changed the expression
+  _count_handstroke = 0;
+  _count_backstroke = 0;
+}
+
+void music_details::Set(const char *e, const int &s)
+{
+  *this = (string) e;
+  _score = s;
+  // Should reset this here as we have changed the expression
+  _count_handstroke = 0;
+  _count_backstroke = 0;
+}
+
+// Return the count
+unsigned int music_details::count(const EStroke &stroke) const
+{
+  switch (stroke)
+    {
+    case eHandstroke:
+      return _count_handstroke;
+      break;
+    case eBackstroke:
+      return _count_backstroke;
+      break;
+    case eBoth:
+      return _count_handstroke + _count_backstroke;
+      break;
+    default:
+      return 0;
+    }
+  return 0;
+}
+
+// Return the calculated score
+int music_details::total(const EStroke &stroke) const
+{
+  return count(stroke) * _score;
+}
+
+// Clear the Current counts
+void music_details::clear()
+{
+  _count_backstroke = 0;
+  _count_handstroke = 0;
+}
+
+// Which count to increment
+void music_details::increment(const EStroke &stroke)
+{
+  if (stroke == eBackstroke)
+    {
+      _count_backstroke++;
+    }
+  else if (stroke == eHandstroke)
+    {
+      _count_handstroke++;
+    }
+}
+
+// ********************************************************
+// function definitions for MUSIC_NODE
+// ********************************************************
+
+void music_node::set_bells(const unsigned int &b)
+{
+  bells = b;
+  // for each subnode
+  BellNodeMap::iterator i;
+  for (i = subnodes.begin(); i != subnodes.end(); i++)
+    {
+      i->second.set_bells(b);
+    }
+}
+
+void music_node::add(const music_details &md, const unsigned int &i, const unsigned int &key)
+{
+  // Does this item end here?
+  if (i >= md.size())
+    {
+      detailsmatch.push_back(key);
+    }
+  else
+    {
+      bell b;
+      bool isbell = true;
+      try
+	{
+	  b.from_char(md[i]);
+	}
+      catch (exception &e)
+	{
+	  isbell = false;
+	}
+      if (isbell)
+	{
+	  add_to_subtree(b + 1, md, i, key);
+	}
+      else
+	{
+	  if (md[i] == '?')
+	    {
+	      add_to_subtree(0, md, i, key);
+	    }
+	}
+    }
+}
+
+void music_node::match(const row &r, const unsigned int &pos, vector<music_details> &results, const EStroke &stroke)
+{
+  DetailsVectorIterator i;
+  for (i = detailsmatch.begin(); i < detailsmatch.end(); i++)
+    {
+      results[*i].increment(stroke);
+    }
+  // Try all against ?
+  BellNodeMapIterator j = subnodes.find(0);
+  if (j != subnodes.end())
+    {
+      j->second.match(r, pos + 1, results, stroke);
+    }
+  // Now try the actual number
+  j = subnodes.find(r[pos] + 1);
+  if (j != subnodes.end())
+    {
+      j->second.match(r, pos + 1, results, stroke);
+    }
+}
+
+void music_node::add_to_subtree(const unsigned int &pos, const music_details &md, const unsigned int &i, const unsigned int &key)
+{
+  BellNodeMap::iterator j = subnodes.find(pos);
+  if (j == subnodes.end())
+    {
+      music_node mn(bells);
+      subnodes.insert(make_pair(pos, mn));
+      j = subnodes.find(pos);
+    }
+  j->second.add(md, i + 1, key);
+}
+
+// ********************************************************
+// function definitions for MUSIC
+// ********************************************************
+
+// default constructor.
+music::music(const unsigned int &b) : TopNode(b)
+{
+  bells = 0;
+
   // Reset the music
   reset_music();
+}
+
+unsigned int music::specify_music(const music_details &md)
+{
+  MusicInfo.push_back(md);
+  TopNode.add(md, 0, MusicInfo.size() - 1);
+  return MusicInfo.size() - 1;
+}
+
+void music::set_bells(const unsigned int &b)
+{
+  bells = b;
+  TopNode.set_bells(b);
 }
 
 // reset_music - clears all the music information entries.
 void music::reset_music(void)
 {
-  // Find the music
-  _queens = false;
-  _titums = false;
-  _kings = false;
-  _t_tminus1_at_back = 0;
-  _tminus2_t_at_the_back_hs = 0;
-  _tminus4_tminus2_t_at_the_back_hs = 0;
-  _tminus2_t_at_the_back_bs = 0;
-  _tminus4_tminus2_t_at_the_back_bs = 0;
-  _reverse_rounds = false;
-  _rollup_3 = 0;
-  _rollup_4 = 0;
-  _reverse_rollup_3 = 0;
-  _reverse_rollup_4 = 0;
+  mdvector::iterator i;
+  for (i = MusicInfo.begin(); i != MusicInfo.end(); i++)
+    i->clear();
 }
 
 // process_row - works out if a certain row is considered musical,
 // and increments or changes the appriopriate variable.
 void music::process_row(const row &r, const bool &back)
 {
-  // Find out how many bells we have by looking at the first row.
-  int nobells = r.bells();
-
-  int i = 0;
-  // For queens, titums, kings etc.
-  int half = nobells / 2;
-  half += (nobells % 2 ? 1 : 0);
-  // rr for examining for reverse rollups off the front.
-  int rr = 0;
-  // fr for examining for rollups on the back.
-  int fr = 0;
-  // q for examining for queens
-  int q = 0;
-  // k for examining for kings
-  int k = 0;
-  // t for examining for titums
-  int t = 0;
-  
-  // Some algorithms to work out for ANY number of bells.
-  // First we look at queens, kings, titums and reverse rollups/rounds.
-  for (i = 0; i < nobells; i++)
-    {
-      if ((r[i] == nobells - i - 1) && (rr == i))
-	{
-	  rr++;
-	}
-      t += (i % 2 == 0 ? (r[i] == i / 2) : (r[i] == (i / 2) + half)); 
-      if (i < half)
-	{
-	  if (r[i] == (i * 2))
-	    {
-	      q++;
-	    }
-	  if (r[i] == (half - i - 1) * 2)
-	    {
-	      k++;
-	    }
-	}
-      else
-	{
-	  if (r[i] == ((i - half + 1) * 2) - 1)
-	    {
-	      // we can increment kings AND queens here.
-	      q++;
-	      k++;
-	    }
-	}
-    }
-
-  // Now we check for rollups on the back.
-  for (i = nobells - 1; i >= 0; i--)
-    {
-      if ((r[i] == i) && (fr == nobells - i - 1))
-	{
-	  fr++;
-	}
-    }
-
-  if ((nobells % 2 == 0) && (back))
-    {
-      // Check for 65s, 87s, 09s etc at back
-      if ((r[nobells - 1] == (nobells - 1) - 1) &&
-	  (r[nobells - 2] == (nobells - 1)))
-	{
-	  _t_tminus1_at_back++;
-	}
-    }
-
-  // Now look for 246s, 46s etc.
-  if (nobells % 2 == 0)
-    {
-      if ((r[nobells - 1] == nobells - 1) &&
-	  (r[nobells - 2] == nobells - 3))
-	{
-	  // we have a 46 for example.
-	  (back ? _tminus2_t_at_the_back_bs++ : _tminus2_t_at_the_back_hs++);
-
-	  if (r[nobells - 3] == nobells - 5)
-	    {
-	      // we have a 246 for example.
-	      (back ? _tminus4_tminus2_t_at_the_back_bs++ : _tminus4_tminus2_t_at_the_back_hs++);
-	    }
-	}
-    }
-
-  // Now find out excatly what we have.
-  if (fr == 4)
-    {
-      _rollup_4++;
-    }
-  if (fr == 3)
-    {
-      _rollup_3++;
-    }
-
-  if (rr == nobells)
-    {
-      _reverse_rounds = true;
-    }
-  if (rr == 4)
-    {
-      _reverse_rollup_4++;
-    }
-  if (rr == 3)
-    {
-      _reverse_rollup_3++;
-    }
-  if (q == nobells)
-    {
-      _queens = true;
-    }
-  if (k == nobells)
-    {
-      _kings = true;
-    }
-  if (t == nobells)
-    {
-      _titums = true;
-    }
+  if (back)
+    TopNode.match(r, 0, MusicInfo, eBackstroke);
+  else
+    TopNode.match(r, 0, MusicInfo, eHandstroke);
 }
 
-// Output operator. Outputs the variables in a specific order according
-// to the specification at the start of this file.
-ostream& operator<< (ostream &o, const music &m)
+unsigned int music::Get_Results(const unsigned int &i, const EStroke &stroke)
 {
-  o << (m._queens         ? "q" : " ");
-  o << (m._kings          ? "k" : " ");
-  o << (m._titums         ? "t" : " ");
-  o << (m._reverse_rounds ? "r" : " ");
-  o << "," << m._rollup_3;
-  o << "," << m._rollup_4;
-  o << "," << m._reverse_rollup_3;
-  o << "," << m._reverse_rollup_4;
-  o << "," << m._tminus2_t_at_the_back_hs;
-  o << "," << m._tminus2_t_at_the_back_bs;
-  o << "," << m._tminus4_tminus2_t_at_the_back_hs;
-  o << "," << m._tminus4_tminus2_t_at_the_back_bs;      
-  o << "," << m._t_tminus1_at_back;
-  return o;
+  return MusicInfo[i].count(stroke);
 }
 
+int music::Get_Score(const unsigned int &i, const EStroke &stroke)
+{
+  return MusicInfo[i].total(stroke);
+}
 
+int music::Get_Score(const EStroke &stroke)
+{
+  int total = 0;
+  mdvector::iterator i;
+  for (i = MusicInfo.begin(); i != MusicInfo.end(); i++)
+    total += i->total(stroke);
+  return total;
+}
 
 RINGING_END_NAMESPACE
