@@ -120,6 +120,18 @@ private:
   int bells;
 };
 
+class rounds_stmt : public statement::impl
+{
+public:
+  explicit rounds_stmt( const row& rounds )
+    : rounds(rounds) {}
+
+private:
+  virtual void execute( execution_context& ) const;
+
+  row rounds;
+};
+
 // Import a resource
 class import_stmt : public statement::impl
 {

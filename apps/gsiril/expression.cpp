@@ -128,6 +128,14 @@ void bells_stmt::execute( execution_context& e ) const
     e.output() << "Set bells to " << bells << endl;
 }
 
+void rounds_stmt::execute( execution_context& e ) const
+{
+  e.rounds( rounds );
+
+  if ( e.verbose() )
+    e.output() << "Set rounds to " << rounds << endl;
+}
+
 void import_stmt::execute( execution_context& e ) const
 {
   bool i( e.interactive() );

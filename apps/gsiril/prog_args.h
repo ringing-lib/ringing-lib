@@ -52,6 +52,8 @@ struct arguments
 
   string               prove_symbol;
 
+  row                  rounds;
+
   arguments( int argc, char** argv );
 
   void set_msiril_compatible();

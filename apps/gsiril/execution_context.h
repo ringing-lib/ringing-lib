@@ -92,6 +92,9 @@ public:
   bool verbose( bool v ) { swap(v, args.verbose.get()); return v; }
   bool verbose() const   { return args.verbose; }
 
+  row rounds( row r ) { swap(r, args.rounds); return r; }
+  row rounds() const { return args.rounds; }
+
   const arguments& get_args() const { return args; }
 
 private:
@@ -129,6 +132,7 @@ public:
   permute_and_prove_t permute_and_prove();
 
   row current_row() const { return r; }
+  bool isrounds() const { return r == ectx.rounds(); }
 
   void execute_symbol( const string &sym );
   void define_symbol( const pair< const string, expression > &defn );

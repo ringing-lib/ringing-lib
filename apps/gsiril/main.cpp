@@ -88,6 +88,26 @@ void arguments::set_msiril_compatible()
   prove_symbol = "__first__";
 }
 
+class row_opt : public option {
+public:
+  row_opt( char c, const string &l, const string &d, const string& a,
+	   row& opt )
+    : option(c, l, d, a), opt(opt)
+  {}
+
+private:
+  virtual bool process( const string& arg, const arg_parser& ap ) const {
+    try {
+      opt = arg;
+    } catch ( exception const& ex ) {
+      ap.error(make_string() << "Invalid row '" << arg << "': " << ex.what());
+      return false;
+    }
+    return true;
+  }
+  row &opt;
+};
+
 class msiril_opt : public option {
 public:
   msiril_opt( char c, const string &l, const string &d,
@@ -119,6 +139,11 @@ void arguments::bind( arg_parser& p )
 	   "The number of extents required.",  "NUM",
 	   num_extents ) );
 
+  p.add( new row_opt
+	 ( 'r', "rounds",
+	   "The starting 'rounds'.",  "ROW",
+	   rounds ) );
+
   p.add( new boolean_opt
 	 ( 'i', "interactive",
 	   "Run in interactive mode", 
@@ -146,7 +171,6 @@ void arguments::bind( arg_parser& p )
 	   "SYMBOL",
 	   prove_symbol, "__first__" ) );
 
-  // NB __first__ is an alias for the first symbol
   p.add( new strings_opt
 	 ( 'D', "define",
 	   "Define a particular symbol",
@@ -177,6 +201,18 @@ bool arguments::validate( arg_parser& ap )
   if ( num_extents < 1 )
     {
       ap.error( "The number of extents must be at least one" );
+      return false;
+    }
+
+  if ( bells == 0 && rounds.bells() )
+    {
+      ap.error( "Must specify the number of bells if rounds is used" );
+      return false;
+    }
+
+  if ( rounds.bells() != bells )
+    {
+      ap.error( "Rounds is on the wrong number of bells" );
       return false;
     }
 

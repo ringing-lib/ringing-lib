@@ -122,7 +122,9 @@ proof_context::proof_context( const execution_context &ectx )
 {
   if ( ectx.bells() == -1 )
     throw runtime_error( "Must set number of bells before proving" ); 
-  r = row(ectx.bells());
+  if ( ectx.rounds().bells() > ectx.bells() )
+    throw runtime_error( "Rounds is on too many bells" ); 
+  r = row(ectx.bells()) * ectx.rounds();
 }
 
 proof_context::~proof_context()
@@ -155,7 +157,7 @@ bool proof_context::permute_and_prove_t::operator()( const change &c )
 {
   bool rv = p.add_row( r *= c ); 
   pctx.execute_everyrow();
-  if ( r.isrounds() ) pctx.execute_symbol("rounds");
+  if ( pctx.isrounds() ) pctx.execute_symbol("rounds");
   if ( !rv ) pctx.execute_symbol("conflict");
   return rv;
 }
@@ -164,7 +166,7 @@ bool proof_context::permute_and_prove_t::operator()( const row &c )
 {
   bool rv = p.add_row( r *= c ); 
   pctx.execute_symbol("everyrow");
-  if ( r.isrounds() ) pctx.execute_symbol("rounds");
+  if ( pctx.isrounds() ) pctx.execute_symbol("rounds");
   if ( !rv ) pctx.execute_symbol("conflict");
   return rv;
 }
@@ -195,7 +197,7 @@ void proof_context::define_symbol( const pair<const string, expression>& defn )
 
 proof_context::proof_state proof_context::state() const
 {
-  if ( p.truth() && r.isrounds() ) 
+  if ( p.truth() && isrounds() ) 
     return rounds;
   else if ( p.truth() )
     return notround;
