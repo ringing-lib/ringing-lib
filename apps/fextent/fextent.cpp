@@ -172,14 +172,25 @@ arguments::arguments( int argc, char** argv )
     exit(1);
 }
 
-bool arguments::generate_pends( arg_parser& )
+bool arguments::generate_pends( arg_parser& ap )
 {
   vector<row> gens; 
   gens.reserve( pend_strs.size() );
 
   for ( vector<string>::const_iterator
-	  i( pend_strs.begin() ), e( pend_strs.end() ); i != e; ++i ) 
-    gens.push_back( row(bells) * row(*i) );
+	  i( pend_strs.begin() ), e( pend_strs.end() ); i != e; ++i )  
+    {
+      row const g( row(bells) * row(*i) );
+
+      // This is hopelessly broken.  Let's just admit it and bail out.
+      if ( linkage && whole_courses && g[bells-1] != bells-1 ) {
+	ap.error( "Part end groups affecting the tenor are not supported " 
+		  "for linked touches in whole courses" );
+	return false;
+      }
+
+      gens.push_back(g);
+    }
   
   if ( gens.size() )
     pends = group( gens );
@@ -448,6 +459,10 @@ public:
   bool fully_linked() const { 
     return links == len;
   }
+
+  double percent_linked() const {
+    return 100 * (double)links / len;
+  }
  
   void dump( ostream& os ) const;
 
@@ -525,7 +540,7 @@ public:
   void clear();
 
 private:
-  void init_mt( group const& pgrp, weighting const& wprof );
+  void init_mt( method const& m, group const& pgrp, weighting const& wprof );
   void init_fchs( method const& m );
   void init_flhs( method const& m );
   void init_req( method const& m, vector<row> const& required_rows );
@@ -603,17 +618,24 @@ void state::dump( ostream& os ) const
     }
 }
 
-void state::init_mt( group const& pgrp, weighting const& wprof )
+void state::init_mt( method const& m, group const& pgrp, 
+		     weighting const& wprof )
 {
   status_out( "Generating multiplication table ..." );
 
+  group postgroup;
+  if ( flags & whole_courses )
+    postgroup = group( m.lh() );
+
   if ( flags & in_course_only )
     mt.reset( new multtab( incourse_extent_iterator(nw, nh, bells),
-			   incourse_extent_iterator(), pgrp ) );
+			   incourse_extent_iterator(), pgrp, postgroup ) );
   else
     mt.reset( new multtab( extent_iterator(nw, nh, bells),
-			   extent_iterator(), pgrp ) );
+			   extent_iterator(), pgrp, postgroup ) );
 
+  assert( mt->size() * pgrp.size() 
+	  == factorial(nw) / ( (flags & in_course_only) ? 2 : 1 ) );
 
   vector<double>( mt->size(), 1.0 ).swap( weight );
 
@@ -650,9 +672,10 @@ void state::init_fchs( method const& m )
 		  "[" << ++n << "/" << ft.size() <<  "] ..." );
       
       multtab::post_col_t f( mt->compute_post_mult(*i) );
-      if ( (multtab::row_t() * f).isrounds() )
+      if ( (multtab::row_t() * f).isrounds() ) {
 	throw runtime_error
 	  ( "Error: the falseness conflicts with the part-end group" );
+      }
       fchs.push_back( f );
     }
 
@@ -862,7 +885,7 @@ state::state( const method& m, int flags, const group& pgrp,
   else
     nw = m.bells() - nh;
   
-  init_mt( pgrp, wprof );
+  init_mt( m, pgrp, wprof );
  
   if ( flags & whole_courses )
     init_fchs( m );
@@ -880,21 +903,31 @@ state::state( const method& m, int flags, const group& pgrp,
 
 size_t state::check_linkage( row_t r ) const
 {
-  for ( size_t qidx(0); qidx != qsets.size(); ++qidx )
+  for ( size_t qi(0); qi != qsets.size(); ++qi )
     {
-      size_t count(0);
+      size_t count(0), n(qsets[qi].first.size());
 
-      for ( size_t i(0), n(qsets[qidx].first.size()); 
-	    i != n && count == i; ++i )
+      for ( size_t i(0); i != n && count == i; ++i )
 	{
-	  row_t q = r * qsets[qidx].first[i].first;
-	  if (q != r && is_present(q) )
+	  row_t const q( r * qsets[qi].first[i].first );
+
+	  // Handle Q-sets that are partially self-Q-sets
+	  // That is, Q-sets where some, but not all, of the elements 
+	  // correspond to the same course (modulo the part end group).
+	  // This can happen with Q-sets that affect the tenors.
+	  bool self( q == r );
+	  for ( size_t j(0); !self && j != i; ++j )
+	    if ( r * qsets[qi].first[j].first == q )
+	      self = true;
+
+	  if (self) 
+	    ; // exclude "self" Q-sets
+	  else if ( is_present(q) )
 	    ++count;
 	}
 
-      if ( count == qsets[qidx].first.size() ) {
-	return qidx;
-      }
+      if ( count == n ) 
+	return qi;
     }
   return size_t(-1);
 }
@@ -914,8 +947,13 @@ bool state::check() const
     }
   }
 
+  if ( linkage != links ) {
+    cerr << "ERROR: Linkage mismatch: actual " << linkage << "; expected " << links << endl;
+    return false;
+  }
+
   if ( realsc != sc ) {
-    cerr << "ERROR: Score mismatch " << realsc << " " << sc << endl;
+    cerr << "ERROR: Score mismatch: actual " << realsc << "; expected " << sc << endl;
     return false;
   }
 
@@ -981,17 +1019,9 @@ private:
     { double const w( s.weight[ r.index() ] ); 
       d -= w; if ( (rdiff[r] -= w) == 0 ) rdiff.erase(r); }
 
-  size_t get_linkage( row_t const& r ) const
-    { map<row_t, pair<int,size_t> >::const_iterator i = ldiff.find(r);
-      return i == ldiff.end() ? s.linkage[r.index()] : i->second.second; }
-
-  void do_add_link( row_t const& r, size_t link )
-    { pair<int, size_t>& x = ldiff[r];
-      ++d; x.first++; x.second = link; }
-  void do_rm_link( row_t const& r )
-    { pair<int, size_t>& x = ldiff[r];
-      --d; if ( --x.first == 0 ) ldiff.erase(r); 
-      else x.second = size_t(-1); }
+  size_t get_linkage( row_t const& r ) const;
+  void do_add_link( row_t const& r, size_t link );
+  void do_rm_link( row_t const& r );
 
   void remove_link( row_t const& r );
   void try_add_link( row_t const& r );
@@ -1007,10 +1037,43 @@ private:
   double d;
 };
 
+inline size_t state::perturbation::get_linkage( row_t const& r ) const
+{
+  map<row_t, pair<int,size_t> >::const_iterator i = ldiff.find(r);
+  return i == ldiff.end() ? s.linkage[r.index()] : i->second.second; 
+}
+
+inline void state::perturbation::do_add_link( row_t const& r, size_t link )
+{ 
+  pair<int, size_t>& x = ldiff[r];
+
+  DEBUG( "Actually adding link " << r.index() << ": " << link );
+
+  ++d; 
+  x.first++; 
+  x.second = link; 
+}
+
+inline void state::perturbation::do_rm_link( row_t const& r )
+{ 
+  pair<int, size_t>& x = ldiff[r];
+
+  DEBUG( "Actually removing link " << r.index() << ": " << get_linkage(r) );
+
+  --d; 
+  if ( --x.first == 0 ) 
+    ldiff.erase(r); 
+  else 
+    x.second = size_t(-1); 
+}
+
+
 state::perturbation::perturbation( state const& s )
   : s(s), d(0)
 {
-  DEBUG( "New perturbation" );
+  DEBUG( "" );
+  DEBUG( "New perturbation -- initial score " << s.sc << "; " 
+	 << "links " << s.links );
 }
 
 void state::clear()
@@ -1071,11 +1134,17 @@ void state::perturbation::try_add_link( row_t const& r )
       for ( size_t qi(0); qi != s.qsets.size(); ++qi )
 	{
 	  size_t count(0), n(s.qsets[qi].first.size());
-	  
+
 	  for ( size_t i(0); i != n && count == i; ++i )
 	    {
-	      row_t const q = r * s.qsets[qi].first[i].first;
-	      if (q == r) 
+	      row_t const q( r * s.qsets[qi].first[i].first );
+	      
+	      bool self( q == r );
+	      for ( size_t j(0); !self && j != i; ++j )
+		if ( r * s.qsets[qi].first[j].first == q )
+		  self = true;
+
+	      if (self) 
 		; // exclude "self" Q-sets
 	      else if ( s.is_present(q) && !is_removed(q) ||
 			s.is_absent(q) && is_added(q) )
@@ -1092,6 +1161,7 @@ void state::perturbation::try_add_link( row_t const& r )
 	      for ( size_t i(0); i != n; ++i ) 
 		{
 		  row_t const q = r * s.qsets[qi].first[i].first;
+
 		  if ( get_linkage(q) == size_t(-1) )
 		    do_add_link( q, s.qsets[qi].first[i].second );
 		}
@@ -1104,6 +1174,8 @@ void state::perturbation::remove_link( row_t const& r )
 {
   if ( get_linkage(r) != size_t(-1) )
     {
+      DEBUG( "Remove link " << r.index() );
+
       do_rm_link(r);
 
       // Remove links elsewhere
@@ -1111,6 +1183,7 @@ void state::perturbation::remove_link( row_t const& r )
 	for ( size_t j=0, m=s.qsets[i].first.size(); j != m; ++j )
 	  {
 	    row_t const q( r * s.qsets[i].first[j].first );
+
 	    if ( get_linkage(q) == s.qsets[i].first[j].second )
 	      do_rm_link(q);
 	  }
@@ -1169,7 +1242,7 @@ bool state::perturbation::add_row( row_t const& r )
 
 void state::perturbation::commit2( state& s, lead_state add, lead_state rm )
 {
-  DEBUG( "Committing" );
+  DEBUG( "Committing -- delta " << d );
 
   for ( map<row_t, double>::const_iterator 
 	  i(rdiff.begin()), e(rdiff.end());  i != e;  ++i )
@@ -1180,7 +1253,7 @@ void state::perturbation::commit2( state& s, lead_state add, lead_state rm )
       if ( i->second > 0 && s.is_absent(i->first) ||
 	   i->second < 0 && s.is_present(i->first) )
 	{
-	  // TODOGah! More assertions on floating equalities.  Bad, bad, bad.
+	  // TODO Gah! More assertions on floating equalities.  Bad, bad, bad.
 	  assert( s.weight[ i->first.index() ] == i->second * sign(i->second) );
 	  s.sc += i->second;
 	  s.len += sign(i->second);
@@ -1192,6 +1265,8 @@ void state::perturbation::commit2( state& s, lead_state add, lead_state rm )
   for ( map< row_t, pair<int, size_t> >::const_iterator 
 	  i(ldiff.begin()), e(ldiff.end());  i != e;  ++i )
     {
+      DEBUG( "Commit link: " << i->first.index() << ", score " << i->second.first );
+
       s.linkage[ i->first.index() ] = i->second.second;
       s.sc += i->second.first;
       s.links += i->second.first;
@@ -1301,7 +1376,7 @@ int main( int argc, char* argv[] )
 	cout << s->length() << " leads " 
 	     << "(" << s->length() * args.meth.size() << ")";
 	if ( args.linkage && !s->fully_linked() )
-	  cout << " not fully linked";
+	  cout << " not fully linked (" << setw(2) << s->percent_linked() << "%)";
 	if ( args.loop != 1 )
 	  cout << " [highest = " << mx << " leads "
 	       << "(" << mx * args.meth.size() << ")]";
@@ -1309,7 +1384,7 @@ int main( int argc, char* argv[] )
       }
 
       if ( args.print_leads && s->length() >= args.min_leads 
-	   /*&& ( !args.linkage || s->fully_linked() )*/ ) {
+	   && ( !args.linkage || s->fully_linked() ) ) {
 	s->dump( cout );
 	cout << "\n\n\n" << endl;
       }
