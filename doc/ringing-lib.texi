@@ -1513,7 +1513,7 @@ Default Constructor. Sets trueness to false. Use the prove function to provide t
 This checks for repeated rows from first to last. Expects up to 1 extent only. Result is stored in class for later retrieval.
 @end deftypefn
 
-@deftypefn Constructor {} proof::proof (RowIterator @var{first}, RowIterator @var{last}, const int @var{max}, bool @var{qp} = false, proof::hash_function @var{f});
+@deftypefn Constructor {} proof::proof (RowIterator @var{first}, RowIterator @var{last}, const int @var{max}, bool @var{qp} = false);
 This checks for repeated rows from first to last. Expects up to @var{max} extents. Result is stored in class for later retrieval.
 @end deftypefn
 
@@ -1523,7 +1523,7 @@ The function looks at rows @var{unknown_first} to @var{unknown_last} comparing t
 The failure information is reset before the analysis takes place, hence any falseness details obtained will be for the new block only.
 @end deftypefn
 
-@deftypefn Constructor {} proof::proof (RowIterator @var{true_first}, RowIterator @var{true_last}, RowIterator @var{unknown_first}, RowIterator @var{unknown_last}, const int @var{max}, bool @var{qp} = false, proof::hash_function @var{f});
+@deftypefn Constructor {} proof::proof (RowIterator @var{true_first}, RowIterator @var{true_last}, RowIterator @var{unknown_first}, RowIterator @var{unknown_last}, const int @var{max}, bool @var{qp} = false);
 This constructor acts like the previous, except it will expect up to @var{max} extents (and hence repititions).
 @end deftypefn
 
@@ -1536,7 +1536,7 @@ Where the variable @var{qp} is passed into a function, if this is set to true, t
 This checks for repeated rows from first to last. Expects up to 1 extent only. Full result is stored in class for later retrieval, but trueness of rows is returned. This function will erase any falseness details stored in the class.
 @end deftypefn
 
-@deftypefn Function bool proof::prove (RowIterator @var{first}, RowIterator @var{last}, const int @var{max}, bool @var{qp} = false, proof::hash_function @var{f});
+@deftypefn Function bool proof::prove (RowIterator @var{first}, RowIterator @var{last}, const int @var{max}, bool @var{qp} = false);
 This checks for repeated rows from first to last. Expects up to @var{max} extents. Full result is stored in class for later retrieval, but trueness of rows is returned. This function will erase any falseness details stored in the class.
 @end deftypefn
 
@@ -1546,7 +1546,7 @@ The function looks at rows @var{unknown_first} to @var{unknown_last} comparing t
 The failure information is reset before the analysis takes place, hence any falseness details obtained will be for the new block only.
 @end deftypefn
 
-@deftypefn Function bool proof::prove (RowIterator @var{true_first}, RowIterator @var{true_last}, RowIterator @var{unknown_first}, RowIterator @var{unknown_last}, const int @var{max}, bool @var{qp} = false, hash_function @var{f});
+@deftypefn Function bool proof::prove (RowIterator @var{true_first}, RowIterator @var{true_last}, RowIterator @var{unknown_first}, RowIterator @var{unknown_last}, const int @var{max}, bool @var{qp} = false);
 This function acts like the previous, except it will expect up to @var{max} extents (and hence repititions).
 @end deftypefn
 

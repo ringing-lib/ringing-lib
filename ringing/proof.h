@@ -73,14 +73,12 @@
 #include <map>
 #include <algorithm>
 #endif
+#include <multiset.h>
 #include <ringing/row.h>
 
 RINGING_START_NAMESPACE
 
 RINGING_USING_STD
-
-// Our hash function
-int our_hash(const row& r);           // Default hash function
 
 /******************************************
   Proof Class
@@ -103,17 +101,16 @@ template <class RowIterator>
 class proof {
 public:
   typedef list<linedetail> failinfo;
-  typedef multimap<int, row> mmap;
-  typedef map<int, int> nomap;
-  typedef int (*hash_function)(const row& r);
+  typedef multimap<row, int> mmap;
 
   proof();   // Default constructor. Use prove to provide rows to prove.
 
   // In these and the prove functions we assume we are given only the rows
   // to prove. i.e. check all rows from first to last.
+  // qp = quick prove
   proof(RowIterator first, RowIterator last, bool qp = false);
   proof(RowIterator first, RowIterator last, const int max, 
-	bool qp = false, hash_function f = &our_hash);
+	bool qp = false);
   proof(RowIterator true_first,
 	RowIterator true_last,
 	RowIterator unknown_first,
@@ -124,12 +121,11 @@ public:
 	RowIterator unknown_first,
 	RowIterator unknown_last,
 	const int max,
-	bool qp = false,
-	hash_function f = &our_hash);
+	bool qp = false);
 
   inline bool prove(RowIterator first, RowIterator last, bool qp = false);
   inline bool prove(RowIterator first, RowIterator last, const int max, 
-		    bool qp = false, hash_function f = &our_hash);
+		    bool qp = false);
 
   inline bool prove(RowIterator true_first,
 		    RowIterator true_last,
@@ -141,8 +137,7 @@ public:
 		    RowIterator unknown_first,
 		    RowIterator unknown_last,
 		    const int max,
-		    bool qp = false,
-		    hash_function f = &our_hash);
+		    bool qp = false);
 
   const failinfo& failed() const // Return rows where it failed.
     { return where; }
@@ -188,8 +183,7 @@ template <class RowIterator>
 proof<RowIterator>::proof(RowIterator first,
 			  RowIterator last,
 			  const int max, 
-			  bool qp,
-			  proof::hash_function f)
+			  bool qp)
 {
   // Prove it
   istrue = prove(first, last, max, qp, f);
@@ -215,8 +209,7 @@ proof<RowIterator>::proof(RowIterator true_first,
 			  RowIterator unknown_first,
 			  RowIterator unknown_last,
 			  const int max,
-			  bool qp,
-			  proof::hash_function f)
+			  bool qp)
 {
   istrue = prove(true_first,
 		 true_last,
@@ -284,13 +277,11 @@ template <class RowIterator>
 bool proof<RowIterator>::prove(RowIterator first,
 			       RowIterator last,
 			       const int max,
-			       bool qp,
-			       hash_function f)
+			       bool qp)
 {
   RowIterator i;
   int count_i = 0;
   mmap m;
-  nomap n;
   istrue = true;
 
   // First reset out failed information list
@@ -303,12 +294,12 @@ bool proof<RowIterator>::prove(RowIterator first,
   while (i != last)
     {
       count_i++;
-      if ((int) m.count(f(*i)) >= max)
+      if ((int) m.count(*i) >= max)
 	{
 	  istrue = false;
 	  if (!qp)
 	    {
-	      this->add_to_failmap(i, (*n.find(f(*i))).second, count_i, 0);
+	      this->add_to_failmap(i, (*m.find(*i)).second, count_i, 0);
 	    }
 	  else
 	    {
@@ -317,8 +308,7 @@ bool proof<RowIterator>::prove(RowIterator first,
 	    }
 	}
       // Insert the pair into the multimap
-      m.insert(make_pair(f(*i), *i));
-      n.insert(make_pair(f(*i), count_i));
+      m.insert(make_pair(*i, count_i));
       i++;
     }
 
@@ -400,13 +390,11 @@ bool proof<RowIterator>::prove(RowIterator true_first,
 			       RowIterator unknown_first,
 			       RowIterator unknown_last,
 			       const int max,
-			       bool qp,
-			       proof::hash_function f)
+			       bool qp)
 {
   RowIterator i;
   int count_i = 0;
   mmap m;
-  nomap n;
   istrue = true;
 
   // First reset out failed information list
@@ -417,8 +405,7 @@ bool proof<RowIterator>::prove(RowIterator true_first,
   for (i = true_first; i != true_last; i++)
     {
       count_i++;
-      m.insert(make_pair(f(*i), *i));
-      n.insert(make_pair(f(*i), count_i));
+      m.insert(make_pair(*i, count_i));
     }
 
   // No go through the fail list, checking that we haven't
@@ -428,12 +415,12 @@ bool proof<RowIterator>::prove(RowIterator true_first,
   while (i != unknown_last)
     {
       count_i++;
-      if ((int) m.count(f(*i)) >= max)
+      if ((int) m.count(*i) >= max)
 	{
 	  istrue = false;
 	  if (!qp)
 	    {
-	      this->add_to_failmap(i, (*n.find(f(*i))).second, count_i, 0);
+	      this->add_to_failmap(i, (*m.find(*i)).second, count_i, 0);
 	    }
 	  else
 	    {
@@ -442,8 +429,7 @@ bool proof<RowIterator>::prove(RowIterator true_first,
 	    }
 	}
       // Insert the pair into the multimap
-      m.insert(make_pair(f(*i), *i));
-      n.insert(make_pair(f(*i), count_i));
+      m.insert(make_pair(*i, count_i));
       i++;
     }
 

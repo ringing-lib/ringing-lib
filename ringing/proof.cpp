@@ -35,17 +35,4 @@ RINGING_USING_STD
 
 RINGING_START_NAMESPACE
 
-// Our default hash function
-int our_hash(const row& r)
-{
-  int sum = 0;
-  int factor = 1;
-  for (int i = 0; i < r.bells(); i++)
-    {
-      sum += (r[i] + 1) * factor;
-      factor *= 10;
-    }
-  return sum;
-}
-
 RINGING_END_NAMESPACE
