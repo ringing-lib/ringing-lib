@@ -285,7 +285,7 @@ bool parser::maybe_handle_bells_command( const string &cmd, ostream &out )
     return false;
 }
 
-bool parser::maybe_handle_defintion( const string &cmd, ostream &out )
+bool parser::maybe_handle_definition( const string &cmd, ostream &out )
 {
   if ( cmd.find( '=' ) == string::npos )
     return false;
@@ -306,7 +306,7 @@ bool parser::maybe_handle_defintion( const string &cmd, ostream &out )
       sym_table.insert( defn );
   
       if ( interactive )
-	cout << "Defintion of '" << defn.first << "' added." << endl;
+	cout << "Definition of '" << defn.first << "' added." << endl;
     }
   
   // Is this the first symbol?  If so, this is the entry point
@@ -344,8 +344,8 @@ void parser::read_file( istream &in, ostream &out )
 	  else if ( maybe_handle_prove_command( cmd, out ) )
 	    ;
 
-	  // A symbol defintion
-	  else if ( maybe_handle_defintion( cmd, out ) )
+	  // A symbol definition
+	  else if ( maybe_handle_definition( cmd, out ) )
 	    ;
 
 	  else

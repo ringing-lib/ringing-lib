@@ -66,7 +66,7 @@ private:
 
   bool maybe_handle_bells_command( const string &cmd, ostream &out );
   bool maybe_handle_prove_command( const string &cmd, ostream &out );
-  bool maybe_handle_defintion( const string &cmd, ostream &out );
+  bool maybe_handle_definition( const string &cmd, ostream &out );
   pair< const string, expression > parse_definition( const string &cmd ) const;
 
   bool interactive;
