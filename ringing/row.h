@@ -73,21 +73,23 @@ private:
   unsigned char x;
   static char symbols[];	// Symbols for the individual bells
 public:
+  static const unsigned int MAX_BELLS;
+
   bell() : x(0) {}
   bell(int i) : x(i) {}
   void from_char(char c) {
     c = toupper(c);
-    for(x = 0; x < 33 && symbols[x] != c; x++);
-    if(x == 33) 
+    for(x = 0; x < MAX_BELLS && symbols[x] != c; x++);
+    if(x == MAX_BELLS) 
 #if RINGING_USE_EXCEPTIONS
       throw invalid();
 #else
-      x = 0;
+      x = MAX_BELLS + 1;
 #endif
   }
   operator int() const { return x; }
   bell& operator=(int i) { x = i; return *this; }
-  char to_char() const { return (x < 33) ? symbols[x] : '*'; }
+  char to_char() const { return (x < MAX_BELLS) ? symbols[x] : '*'; }
 
   struct invalid : public invalid_argument {
     invalid();

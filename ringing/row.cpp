@@ -54,6 +54,7 @@ int hcf(int a, int b)
 }
 
 char bell::symbols[] = "1234567890ETABCDFGHJKLMNPQRSUVWYZ";
+const unsigned int bell::MAX_BELLS = 33;
 
 bell::invalid::invalid()
   : invalid_argument("The bell supplied was invalid") {}

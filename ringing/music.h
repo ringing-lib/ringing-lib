@@ -37,9 +37,11 @@
 #if RINGING_OLD_INCLUDES
 #include <iostream.h>
 #include <map.h>
+#include <stdexcept.h>
 #else
 #include <iostream>
 #include <map>
+#include <stdexcept>
 #endif
 #include <string>
 #include <ringing/row.h>
@@ -100,7 +102,7 @@ class music_node
 {
 public:
   // bell -> node map
-  typedef map<unsigned int, music_node> BellNodeMap;
+  typedef map<unsigned int, music_node*> BellNodeMap;
   typedef BellNodeMap::iterator BellNodeMapIterator;
   // Music Details that finish at this node
   typedef vector<unsigned int> DetailsVector;
@@ -109,19 +111,25 @@ public:
   // Have to know how many bells there are
   music_node() { bells = 0; }
   music_node(const unsigned int &b = 0) { bells = b; }
+  ~music_node();
 
   void set_bells(const unsigned int &b);
 
-  void add(const music_details &md, const unsigned int &i, const unsigned int &key);
+  void add(const music_details &md, const unsigned int &i, const unsigned int &key, const unsigned int &pos);
 
   void match(const row &r, const unsigned int &pos, vector<music_details> &results, const EStroke &stroke);
 
+#if RINGING_USE_EXCEPTIONS
+  struct memory_error : public overflow_error {
+    memory_error();
+  };
+#endif
 private:
   BellNodeMap subnodes;
   DetailsVector detailsmatch;
   unsigned int bells;
 
-  void add_to_subtree(const unsigned int &pos, const music_details &md, const unsigned int &i, const unsigned int &key);
+  void add_to_subtree(const unsigned int &place, const music_details &md, const unsigned int &i, const unsigned int &key, const unsigned int &pos, const bool &process_star);
 };
 
 // Main class definition

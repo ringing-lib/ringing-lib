@@ -118,18 +118,36 @@ void music_details::increment(const EStroke &stroke)
 // function definitions for MUSIC_NODE
 // ********************************************************
 
+#if RINGING_USE_EXCEPTIONS
+music_node::memory_error::memory_error() 
+  : overflow_error("Not enough memory to allocate to music_node item") {}
+#endif
+
+music_node::~music_node()
+{
+  BellNodeMapIterator i;
+  for (i = subnodes.begin(); i != subnodes.end(); i++)
+    {
+      if (i->second != NULL)
+	{
+	  delete i->second;
+	}
+    }
+}
+
 void music_node::set_bells(const unsigned int &b)
 {
   bells = b;
   // for each subnode
-  BellNodeMap::iterator i;
+  BellNodeMapIterator i;
   for (i = subnodes.begin(); i != subnodes.end(); i++)
     {
-      i->second.set_bells(b);
+      if (i->second != NULL)
+	i->second->set_bells(b);
     }
 }
 
-void music_node::add(const music_details &md, const unsigned int &i, const unsigned int &key)
+void music_node::add(const music_details &md, const unsigned int &i, const unsigned int &key, const unsigned int &pos)
 {
   // Does this item end here?
   if (i >= md.size())
@@ -140,6 +158,8 @@ void music_node::add(const music_details &md, const unsigned int &i, const unsig
     {
       bell b;
       bool isbell = true;
+
+#if RINGING_USE_EXCEPTIONS
       try
 	{
 	  b.from_char(md[i]);
@@ -148,17 +168,90 @@ void music_node::add(const music_details &md, const unsigned int &i, const unsig
 	{
 	  isbell = false;
 	}
+#else
+      b.from_char(md[i]);
+      if (b > bell::MAX_BELLS)
+	{
+	  isbell = false;
+	}
+#endif
       if (isbell)
 	{
-	  add_to_subtree(b + 1, md, i, key);
+	  // Simple bell, add it and move on.
+	  add_to_subtree(b + 1, md, i, key,  pos, false);
 	}
       else
 	{
 	  if (md[i] == '?')
 	    {
-	      add_to_subtree(0, md, i, key);
+	      add_to_subtree(0, md, i, key, pos, false);
+	    }
+	  else if (md[i] == '*')
+	    {
+	      if (md.size() == i + 1)
+		{
+		  // no more bells to go, don't bother adding to the subtree.
+		  // just add here
+		  detailsmatch.push_back(key);
+		}
+	      else
+		{
+		  // There are more to go
+		  // Any of them '*'s?
+		  if (md.find('*', i + 1) >= md.size())
+		    {
+		      // Deal with the only *5 to go in the add_to_subtree
+		      // function.
+		      add_to_subtree(0, md, i, key, pos, true);
+		    }
+		  else
+		    {
+		      // We have *456*
+		      // This functionality to be implemented.
+		    }
+		}
 	    }
 	}
+    }
+}
+
+void music_node::add_to_subtree(const unsigned int &place, const music_details &md, const unsigned int &i, const unsigned int &key, const unsigned int &pos, const bool &process_star)
+{
+  BellNodeMap::iterator j = subnodes.find(place);
+  if (j == subnodes.end())
+    {
+      music_node *mn = new music_node(bells);
+      if (mn != NULL)
+	j = (subnodes.insert(make_pair(place, mn))).first;
+      else
+	{
+#if RINGING_USE_EXCEPTIONS
+	  throw memory_error();
+	  return;
+#else
+	  cerr << "Not enough memory to allocate to new music_node\n";
+	  return;
+#endif
+	}
+    }
+  if (process_star)
+    {
+      // We are to process star data star.
+      if (bells - pos == md.size() - i)
+	{
+	  // There are now only numbers to go.
+	  j->second->add(md, i + 1, key, pos + 1);
+	}
+      else
+	{
+	  // We haven't got to the last * position yet, so carry on.
+	  j->second->add(md, i, key, pos + 1);
+	}
+    }
+  else
+    {
+      // Not a star, so move on as normal.
+      j->second->add(md, i + 1, key, pos + 1);
     }
 }
 
@@ -169,30 +262,18 @@ void music_node::match(const row &r, const unsigned int &pos, vector<music_detai
     {
       results[*i].increment(stroke);
     }
-  // Try all against ?
+  // Try all against ? or *
   BellNodeMapIterator j = subnodes.find(0);
   if (j != subnodes.end())
     {
-      j->second.match(r, pos + 1, results, stroke);
+      j->second->match(r, pos + 1, results, stroke);
     }
   // Now try the actual number
   j = subnodes.find(r[pos] + 1);
   if (j != subnodes.end())
     {
-      j->second.match(r, pos + 1, results, stroke);
+      j->second->match(r, pos + 1, results, stroke);
     }
-}
-
-void music_node::add_to_subtree(const unsigned int &pos, const music_details &md, const unsigned int &i, const unsigned int &key)
-{
-  BellNodeMap::iterator j = subnodes.find(pos);
-  if (j == subnodes.end())
-    {
-      music_node mn(bells);
-      subnodes.insert(make_pair(pos, mn));
-      j = subnodes.find(pos);
-    }
-  j->second.add(md, i + 1, key);
 }
 
 // ********************************************************
@@ -211,7 +292,7 @@ music::music(const unsigned int &b) : TopNode(b)
 unsigned int music::specify_music(const music_details &md)
 {
   MusicInfo.push_back(md);
-  TopNode.add(md, 0, MusicInfo.size() - 1);
+  TopNode.add(md, 0, MusicInfo.size() - 1, 0);
   return MusicInfo.size() - 1;
 }
 

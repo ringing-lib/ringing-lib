@@ -67,28 +67,43 @@ int main()
     cout << "Testing Music Class...\n\n";
     
     cout << "Testing in Plain Bob Doubles (120)\n";
-
+    
     music mu(5);
-    music_details md("???45");
-    i[j++] = mu.specify_music(md);
-    cout << "0: ???45\n";
 
-    md.Set("54???", 2);
-    i[j++] = mu.specify_music(md);
-    cout << "1: 54???\n";
+#if RINGING_USE_EXCEPTIONS
+    try
+      {
+#endif
+	music_details md("*45");
+	i[j] = mu.specify_music(md);
+	cout << j++ << ":" << md << endl;
 
-    md.Set("12??5", 4);
-    i[j++] = mu.specify_music(md);
-    cout << "2: 12??5\n";
+	md.Set("*45*");
+	i[j] = mu.specify_music(md);
+	cout << j++ << ":" << md << " To be implemented" << endl;
+	
+	md.Set("54*", 2);
+	i[j] = mu.specify_music(md);
+	cout << j++ << ":" << md << endl;
+	
+	md.Set("12??5", 4);
+	i[j] = mu.specify_music(md);
+	cout << j++ << ":" << md << endl;
+	
+	md.Set("??345", 6);
+	i[j] = mu.specify_music(md);
+	cout << j++ << ":" << md << endl;
 
-    md.Set("??345", 6);
-    i[j++] = mu.specify_music(md);
-    cout << "3: ??345\n";
-
-    md.Set("13524", 6);
-    i[j++] = mu.specify_music(md);
-    cout << "4: 13524\n";
-
+	md.Set("13524", 6);
+	i[j] = mu.specify_music(md);
+	cout << j++ << ":" << md << endl;
+#if RINGING_USE_EXCEPTIONS
+      }
+    catch (exception &e)
+      {
+	cerr << "Error cannot specify music: " << e.what() << endl;
+      }
+#endif
     mu.process_rows(pbdoubles.begin(), pbdoubles.end());
 
     cout << "Results for both strokes:\n";
