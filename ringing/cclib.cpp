@@ -121,6 +121,7 @@ class cclib::impl::entry_type : public library_entry::impl
   void parse_title();
   peal read_peal( string::size_type date, string::size_type place,
 		  string::size_type end ) const;
+  peal::date read_date( string::size_type start, string::size_type end ) const;
   static bool maybe_strip_class( string& name, const string& clname );
 
   virtual bool readentry( library_base &lb );
@@ -258,31 +259,49 @@ void cclib::impl::entry_type::parse_title()
       }
 }
 
+peal::date cclib::impl::entry_type::read_date( string::size_type start,
+					       string::size_type end ) const
+{
+  peal::date dt;
+
+  string::size_type i(start);
+  dt.day = atoi( &linebuf[i] );
+
+  i = linebuf.find('.', i);
+  if ( i >= end ) return peal::date();
+  dt.month = atoi( &linebuf[++i] );
+    
+  i = linebuf.find('.', i);
+  if ( i >= end ) return peal::date();
+  dt.year = atoi( &linebuf[++i] );
+  
+  if ( !dt.day || !dt.month || !dt.year )
+    dt.day = dt.month = dt.year = 0;
+  return dt;
+}
+
 peal cclib::impl::entry_type::read_peal( string::size_type date, 
 					 string::size_type place,
 					 string::size_type end ) const
 {
-  if ( date == string::npos ) 
+  if ( date == string::npos || date > linebuf.size() ) 
     return peal();
 
-  string::size_type i(date);
-  int d( atoi( &linebuf[i] ) );
+  if ( end > linebuf.size() ) end = linebuf.size()+1;
+  if ( place > linebuf.size() ) place = string::npos;
 
-  i = linebuf.find('.', i) + 1;
-  int m( atoi( &linebuf[i] ) );
-
-  i = linebuf.find('.', i) + 1;
-  int y( atoi( &linebuf[i] ) );
+  peal::date dt( read_date( date, place == string::npos ? end : place ) );
 
   string loc;
   if ( place != string::npos ) {
-    // Remove trailing whitespace
-    while ( end > 0 && isspace( linebuf[end-1] ) )
+     // Remove trailing whitespace
+    while ( end > place && isspace( linebuf[end-1] ) )
       --end;
+
     loc.assign( linebuf, place, end - place );
   }
 
-  return peal( peal::date(d,m,y), loc );
+  return peal( dt, loc );
 }
 
 void cclib::impl::entry_type::parse_header()
@@ -314,8 +333,8 @@ void cclib::impl::entry_type::parse_header()
     tower_place = string::npos;
     tower_end = string::npos;
   }
-  
-  hand_date   = linebuf.find("Handbells");
+
+  hand_date = linebuf.find("Handbells");
 
   if ( hand_date != string::npos )
     hand_end = linebuf.find_first_not_of( " \t", hand_date + 9 );
@@ -341,9 +360,14 @@ string cclib::impl::entry_type::name() const
 
 bool cclib::impl::entry_type::has_facet( const library_facet_id& id ) const
 {
-  if ( id == cclib::ref::id || id == first_tower_peal::id
-       || id == first_hand_peal::id ) 
+  if ( id == cclib::ref::id )
     return true;
+
+  else if ( id == first_tower_peal::id )
+    return tower_date != string::npos && bool( get_facet( id ) );
+  
+  else if ( id == first_hand_peal::id ) 
+    return tower_end != string::npos && bool( get_facet( id ) );
 
   else
     return false;
@@ -357,13 +381,17 @@ cclib::impl::entry_type::get_facet( const library_facet_id& id ) const
   if ( id == cclib::ref::id ) 
     result.reset( new cclib::ref( atoi( linebuf.c_str() ) ) );
 
-  else if ( id == first_tower_peal::id ) 
-    result.reset( new first_tower_peal( read_peal( tower_date, tower_place, 
-						   tower_end ) ) );
+  else if ( id == first_tower_peal::id ) {
+    peal p( read_peal( tower_date, tower_place, tower_end ) );
+    if ( p.when().day || p.where().size() )
+      result.reset( new first_tower_peal( p ) );
+  }
 
-  else if ( id == first_hand_peal::id )
-    result.reset( new first_tower_peal( read_peal( hand_date, string::npos, 
-						   hand_end ) ) );
+  else if ( id == first_hand_peal::id ) {
+    peal p( read_peal( hand_date, string::npos, hand_end ) );
+    if ( p.when().day || p.where().size() )
+      result.reset( new first_hand_peal( p ) );
+  }
 
   return result;
 }

@@ -117,8 +117,15 @@ void xmlout::impl::add_simple_elt( DOMElement* parent, char const* name,
 				   string const& content )
 {
   DOMElement* elt = add_elt( parent, name );
-  DOMText* txt = doc->createTextNode( TRANSCODE( content.c_str() ) );
-  elt->appendChild( txt );
+
+  // We only add the text if it is not empty.  This is because
+  // the DOMWriter will output <foo/> for an element with no DOMText
+  // children, but <foo></foo> for an element with an empty DOMText
+  // child.  I prefer the former.
+  if ( content.size() ) {
+    DOMText* txt = doc->createTextNode( TRANSCODE( content.c_str() ) );
+    elt->appendChild( txt );
+  }
 }
 
 

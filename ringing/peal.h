@@ -37,7 +37,8 @@ class peal {
 public:
   struct date {
     date() : day(0), month(0), year(0) {}
-    date( int day, int month, int year ) : day(day), month(month), year(year) {}
+    date( int day, int month, int year )
+      : day(day), month(month), year(year) {}
 
     int day, month, year;
   };
@@ -45,8 +46,8 @@ public:
   peal() {}
   peal( const date& d, const string& l ) : d(d), l(l) {}
 
-  date when() const { return d; }
-  string where() const { return l; }
+  date const& when() const { return d; }
+  string const& where() const { return l; }
 
 private:
   date d;

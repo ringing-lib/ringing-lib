@@ -27,6 +27,7 @@
 #include <ringing/pointers.h>
 #include <ringing/library.h>
 #include <ringing/xmllib.h>
+#include <ringing/peal.h>
 
 // Important note:  DO NOT include <ringing/streamutils.h> from here.  That
 // file includes GPL'd content and this file is only LGPL'd.
@@ -76,12 +77,12 @@ struct init_xerces_t {
  ~init_xerces_t() { XMLPlatformUtils::Terminate(); }
 };
 
-bool init_xerces() {
+static bool init_xerces() {
   static struct init_xerces_t tmp;
   return true;
 }
 
-DOMElement* next_sibling_element( DOMNode* start, const string& name )
+static DOMElement* next_sibling_element( DOMNode* start, const string& name )
 {
   while ( start 
 	  && ( start->getNodeType() != DOMNode::ELEMENT_NODE ||
@@ -91,7 +92,6 @@ DOMElement* next_sibling_element( DOMNode* start, const string& name )
 
   return static_cast<DOMElement*>(start);
 }  
-
 
 RINGING_END_ANON_NAMESPACE
 
@@ -177,14 +177,20 @@ library_base *xmllib::canread( const string& name )
 
 class xmllib::impl::entry_type : public library_entry::impl
 {
-  string get_field( const string& ) const;
+  string get_field( DOMElement* parent, const string& elt_name ) const;
   string extract_text( const DOMElement* e ) const;
+  peal get_peal( const string& elt_name ) const;
 
   virtual string name() const;
   virtual string base_name() const;
   virtual string pn() const;
   virtual int bells() const;
   
+  virtual bool has_facet( const library_facet_id& id ) const;
+
+  virtual shared_pointer< library_facet_base >
+    get_facet( const library_facet_id& id ) const;
+
   friend class xmllib::impl;
   explicit entry_type( const shared_pointer<DOMDocument>& doc );
   virtual bool readentry( library_base &lb );
@@ -194,16 +200,52 @@ class xmllib::impl::entry_type : public library_entry::impl
   DOMElement* meth;
 };
 
-string xmllib::impl::entry_type::get_field( const string& name ) const
+string xmllib::impl::entry_type::get_field( DOMElement* parent,
+					    const string& name) const
+{
+  DOMElement *e = next_sibling_element( parent->getFirstChild(), name );
+  if (e)  
+    return extract_text( e );
+  else
+    return string();
+}
+
+peal xmllib::impl::entry_type::get_peal( const string& name ) const
 {
   DOMElement *e = next_sibling_element( meth->getFirstChild(), name );
-  if (!e) {
-    string err( "XML <method> element has no <" );
-    err.append( name );
-    err.append( "> sub-element" );
-    throw runtime_error( err );
+  if (!e) return peal();
+
+  peal::date dt;
+  if ( sscanf( get_field( e, "date" ).c_str(), "%d-%d-%d", 
+	       &dt.year, &dt.month, &dt.day ) != 3 )
+    dt.day = dt.month = dt.year = 0;
+
+  string loc;
+
+  DOMElement* l = next_sibling_element( meth->getFirstChild(), "location" );
+  if ( l ) {
+    // TODO: The peal object should know about the different 
+    // parts of a location
+    string tmp;
+
+    tmp=get_field( l, "dedication" );
+    if (tmp.size() && loc.size()) loc += ", ";
+    if (tmp.size()) loc += tmp;
+
+    tmp=get_field( l, "place" );
+    if (tmp.size() && loc.size()) loc += ", ";
+    if (tmp.size()) loc += tmp;
+
+    tmp=get_field( l, "county" );
+    if (tmp.size() && loc.size()) loc += ", ";
+    if (tmp.size()) loc += tmp;
+
+    tmp=get_field( l, "country" );
+    if (tmp.size() && loc.size()) loc += ", ";
+    if (tmp.size()) loc += tmp;
   }
-  return extract_text( e );
+
+  return peal( dt, loc );
 }
 
 string xmllib::impl::entry_type::extract_text( const DOMElement* e ) const
@@ -223,12 +265,12 @@ string xmllib::impl::entry_type::extract_text( const DOMElement* e ) const
 
 string xmllib::impl::entry_type::name() const
 {
-  return get_field("title"); 
+  return get_field( meth, "title" );
 }
 
 string xmllib::impl::entry_type::base_name() const
 {
-  return get_field("name"); 
+  return get_field( meth, "name" );
 }
 
 string xmllib::impl::entry_type::pn() const
@@ -269,7 +311,11 @@ string xmllib::impl::entry_type::pn() const
 
 int xmllib::impl::entry_type::bells() const 
 {
-  return atoi( get_field("stage").c_str() );
+  int b = atoi( get_field( meth, "stage" ).c_str() );
+  if ( b == 0 )
+    throw runtime_error
+      ( "Invalid or missing stage specified" );
+  return b;
 }
 
 
@@ -287,6 +333,37 @@ bool xmllib::impl::entry_type::readentry( library_base& lb )
 
   return !!meth;
 }
+
+bool xmllib::impl::entry_type::has_facet( const library_facet_id& id ) const
+{
+  if ( id == first_tower_peal::id )
+    return bool( next_sibling_element( meth->getFirstChild(), "first-tower" ));
+
+  else if ( id == first_hand_peal::id ) 
+    return bool( next_sibling_element( meth->getFirstChild(), "first-hand" ) );
+
+  else
+    return false;
+}
+
+shared_pointer< library_facet_base >
+xmllib::impl::entry_type::get_facet( const library_facet_id& id ) const
+{
+  shared_pointer< library_facet_base > result;
+
+  if ( id == first_tower_peal::id ) {
+    if ( next_sibling_element( meth->getFirstChild(), "first-tower" ) ) 
+      result.reset( new first_tower_peal( get_peal( "first-tower" ) ) );
+  }
+
+  else if ( id == first_hand_peal::id ) {
+    if ( next_sibling_element( meth->getFirstChild(), "first-hand" ) ) 
+      result.reset( new first_hand_peal( get_peal( "first-hand" ) ) );
+  }
+
+  return result;
+}
+
 
 xmllib::impl::entry_type::entry_type( const shared_pointer<DOMDocument>& doc )
   : doc(doc), meth(NULL)
