@@ -138,11 +138,13 @@ multtab::compute_pre_mult( const row &r )
   // O(n ln n).  For a 1-part table on 8 bells, this
   // improves speed a factor of over 100.
   map< row, row_t > finder;
-  for ( size_t i(0); i < table.size(); ++i )
-    finder[ rows[i] ] = row_t::from_index(i);
+  {
+    for ( size_t i(0); i < table.size(); ++i )
+      finder[ rows[i] ] = row_t::from_index(i);
+  }
 
   for ( size_t i(0); i < table.size(); ++i )
-    table[i].push_back( finder[ r * rows[i] ] );
+    table[i].push_back( finder[ make_representative( r * rows[i] ) ] );
   
   cols.push_back( make_pair( r, pre_mult ) );
   return pre_col_t( cols.size() - 1, this );
@@ -162,11 +164,13 @@ multtab::compute_post_mult( const row &r )
   // O(n ln n).  For a 1-part table on 8 bells, this
   // improves speed a factor of over 100.
   map< row, row_t > finder;
-  for ( size_t i(0); i < table.size(); ++i )
-    finder[ rows[i] ] = row_t::from_index(i);
+  {
+    for ( size_t i(0); i < table.size(); ++i )
+      finder[ rows[i] ] = row_t::from_index(i);
+  }
 
   for ( size_t i(0); i < table.size(); ++i )
-    table[i].push_back( finder[ rows[i] * r ] );
+    table[i].push_back( finder[ make_representative( rows[i] * r ) ] );
 
   cols.push_back( make_pair( r, post_mult ) );
   return post_col_t( cols.size() - 1, this );
