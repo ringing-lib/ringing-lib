@@ -104,34 +104,54 @@ void execution_context::prove_symbol( const string& sym )
 }
 
 proof_context::proof_context( const execution_context &ectx ) 
-  : ectx(ectx), p( ectx.get_args().num_extents )
+  : ectx(ectx), p( ectx.get_args().num_extents ), 
+    silent( ectx.get_args().everyrow_only )
 {
   if ( ectx.bells() == -1 )
     throw runtime_error( "Must set number of bells before proving" ); 
   r = row(ectx.bells());
 }
 
+void proof_context::output_string( const string& str )
+{
+  bool do_exit( false );
+  std::string o( substitute_string(str, do_exit) );
+  if ( !silent )
+    ectx.output() << o;
+  if (do_exit)
+    throw script_exception();
+}
+
+void proof_context::execute_everyrow()
+{
+  // Temporarily disable silent flag if running with -E
+  bool s = silent;
+  if ( ectx.get_args().everyrow_only ) silent = false;
+  execute_symbol("everyrow");
+  silent = s;
+}
+
 bool proof_context::permute_and_prove_t::operator()( const change &c )
 {
   bool rv = p.add_row( r *= c ); 
-  ex.execute_symbol("everyrow");
-  if ( r.isrounds() ) ex.execute_symbol("rounds");
-  if ( !rv ) ex.execute_symbol("conflict");
+  pctx.execute_everyrow();
+  if ( r.isrounds() ) pctx.execute_symbol("rounds");
+  if ( !rv ) pctx.execute_symbol("conflict");
   return rv;
 }
 
 bool proof_context::permute_and_prove_t::operator()( const row &c )
 {
   bool rv = p.add_row( r *= c ); 
-  ex.execute_symbol("everyrow");
-  if ( r.isrounds() ) ex.execute_symbol("rounds");
-  if ( !rv ) ex.execute_symbol("conflict");
+  pctx.execute_symbol("everyrow");
+  if ( r.isrounds() ) pctx.execute_symbol("rounds");
+  if ( !rv ) pctx.execute_symbol("conflict");
   return rv;
 }
 
 proof_context::permute_and_prove_t::
-permute_and_prove_t( row &r, prover &p, proof_context &ex ) 
-  : r(r), p(p), ex(ex)
+permute_and_prove_t( row &r, prover &p, proof_context &pctx ) 
+  : r(r), p(p), pctx(pctx)
 {
 }
 

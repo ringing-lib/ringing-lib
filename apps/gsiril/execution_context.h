@@ -112,16 +112,15 @@ public:
 
   private:
     friend class proof_context;
-    permute_and_prove_t( row &r, prover &p, proof_context &ex );
+    permute_and_prove_t( row &r, prover &p, proof_context &pctx );
   
     row &r;
     prover &p;
-    proof_context &ex;
+    proof_context &pctx;
   };
 
   explicit proof_context( const execution_context & );
   
-  ostream &output() { return ectx.output(); }
   permute_and_prove_t permute_and_prove();
 
   void execute_symbol( const string &sym );
@@ -130,11 +129,15 @@ public:
   enum proof_state { rounds, notround, isfalse } state() const;
   string substitute_string( const string &str, bool &do_exit );
 
+  void execute_everyrow();
+  void output_string( const string& str );
+
 private:
   const execution_context &ectx;
   symbol_table dsym_table; // dynamic symbol table
   row r;
   prover p;
+  bool silent;
 };
 
 #endif // GSIRIL_EXECUTION_CONTEXT_INCLUDED

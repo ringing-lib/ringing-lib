@@ -15,6 +15,7 @@ Command Line Options
   -n, --extents=NUM      The number of extents required.
   -i, --interactive      Run in interactive mode
   -I, --case-insensitive Run case insensitively 
+  -E, --everyrow-only    Only print output from the everyrow symbol
   -P, --prove[=SYMBOL]   Proves a particular symbol (or the first if none
                          specified)
   --msiril               Run in microsiril compatibile mode
@@ -37,6 +38,11 @@ into interactive mode.  This is does two things: errors in user input do
 not cause gsiril to exit immediately, and on systems that support it, more
 advanced line editting is enabled (for example, via the GNU readline library).
 The -v option can also be useful in this situation.
+
+The -E option suppresses all ordinary output (including messages about touches
+being false -- beware!) and instead initialises the everyrow symbol with "@".
+Unless everyrow is redefined, this causes gsiril to print every row of the 
+touch(es) proved.
 
 
 
@@ -256,7 +262,7 @@ For example, in the following it is used to switch the meaning of the symbol
 
 Dynamic variables can also be used (in conjuction with the 'final' symbol, 
 describe above) to make the 'p' symbol option in the previous example. 
-This is demonstrated in the final example, which also includes an code to 
+This is demonstrated in the final example, which also includes code to 
 format the touch in a convenient manner.
 
   6 bells;

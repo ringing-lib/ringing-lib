@@ -126,6 +126,11 @@ void arguments::bind( arg_parser& p )
 	   verbose ) );
 
   p.add( new boolean_opt
+	 ( 'E', "everyrow-only",
+	   "Only print output from the everyrow symbol",
+	   everyrow_only ) );
+
+  p.add( new boolean_opt
 	 ( 'I', "case-insensitive",
 	   "Run case insensitively ", 
 	   case_insensitive ) );
@@ -197,16 +202,21 @@ void welcome()
 
 void initialse( execution_context& e, const arguments& args )
 {
-  const char init_string[] = 
+  string init_string = 
 "true     = \"# rows ending in @\", \"Touch is true\"\n"
 "notround = \"# rows ending in @\", \"Is this OK?\"\n"
 "false    = \"# rows ending in @\", \"Touch is false in $ rows\"\n"
 "conflict = \"# rows ending in @\", \"Touch not completed due to false row$$\"\n"
 "rounds   = \n"
-"everyrow = \n"
 "start    = \n"
 "finish   = \n"
 "abort    = \n";
+
+  // The 'everyrow' symbol is defined to "@" if -E is specified.
+  if ( args.everyrow_only )
+    init_string += "everyrow = \"@\"\n";
+  else
+    init_string += "everyrow = \n";
 
   // Turn off interactivity whilst it prepopulates the symbol table
   bool interactive = e.interactive(false);

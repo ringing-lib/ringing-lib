@@ -192,10 +192,7 @@ void repeated_node::execute( proof_context &ctx )
 
 void string_node::execute( proof_context &ctx )
 {
-  bool do_exit = false;
-  ctx.output() << ctx.substitute_string(str, do_exit);
-  if (do_exit)
-    throw script_exception();
+  ctx.output_string(str);
 }
 
 void string_node::debug_print( ostream &os ) const
