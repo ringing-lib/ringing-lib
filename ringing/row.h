@@ -226,7 +226,14 @@ public:
   string print() const;
   int bells(void) const { return data.size(); } // How many bells?
   row& rounds(void);		// Set it to rounds
-  static row rounds(int n) { return row(n); }	// Return rounds on n bells
+
+  static row rounds(const int n) { return row(n); }	// Return rounds on n bells
+
+  static row queens(const int n); // Return queens on n bells
+  static row kings(const int n); // Return kings on n bells
+  static row titums(const int n); // Return titums on n bells
+  static row reverse_rounds(const int n); // Return reverse rounds on n bells
+
   static row pblh(int n, int h=1); // Return first plain bob lead head on 
                                 // n bells with h hunt bells
   int isrounds(void) const;	// Is it rounds?

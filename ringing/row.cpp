@@ -424,6 +424,85 @@ row& row::rounds(void)
   return *this;
 }
 
+// Return queens on n bells
+row row::queens(const int n)
+{
+  row r(n);
+
+  int half = 0;
+  if (n % 2 == 1)
+    {
+      half = (n + 1) / 2;
+    }
+  else
+    {
+      half = n / 2;
+    }
+  for (int i = 0; i <= half; i++)
+    {
+      r.data[i] = (i * 2);
+    }
+  for (int i = 0; i < (n / 2); i++)
+    {
+      r.data[i + half] = (i * 2) + 1;
+    }
+  return r;
+}
+
+// Return kings on n bells
+row row::kings(const int n)
+{
+  row r(n);
+
+  int half = 0;
+  if (n % 2 == 1)
+    {
+      half = (n + 1) / 2;
+    }
+  else
+    {
+      half = n / 2;
+    }
+  for (int i = 0; i <= half; i++)
+    {
+      r.data[i] = (half * 2) - (i * 2) - 2;
+    }
+  for (int i = 0; i < (n / 2); i++)
+    {
+      r.data[i + half] = (i * 2) + 1;
+    }
+
+  return r;
+}
+
+// Return titums on n bells
+row row::titums(const int n)
+{
+  row r(n);
+  int i;
+  int j = 0;
+  for (i = 0; i < n; i += 2)
+    {
+      r.data[i] = j++;
+    }
+  for (i = 1; i < n; i += 2)
+    {
+      r.data[i] = j++;
+    }
+  return r;
+}
+
+// Return reverse rounds on n bells
+row row::reverse_rounds(const int n)
+{
+  row r(n);
+  for (int i = 0; i < n; i++)
+    {
+      r.data[i] = n - i - 1;
+    }
+  return r;
+}
+
 // Return 1st plain bob lead head on n bells
 // h=1 for Plain Bob, 2 for Grandsire etc.
 row row::pblh(int n, int h)
