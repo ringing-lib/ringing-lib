@@ -89,7 +89,6 @@ public:
 RINGING_EXPLICIT_STL_TEMPLATE list< library_base *(*)( ifstream &, 
 						       const string & ) >;
 RINGING_EXPLICIT_RINGING_TEMPLATE shared_pointer<library_base>;
-RINGING_EXPLICIT_RINGING_TEMPLATE cloning_pointer<library_entry>;
 #endif
 
 // library_entry : A base class for entries from libraries

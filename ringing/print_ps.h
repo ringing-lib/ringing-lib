@@ -102,7 +102,7 @@ public:
 	    text_style::alignment al, bool between, bool right);
 };
 
-class printpage_ps : public printpage {
+class RINGING_API printpage_ps : public printpage {
 protected:
   ostream& os;
   bool eps, landscape;

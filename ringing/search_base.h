@@ -1,5 +1,5 @@
 // -*- C++ -*- search_base.h - Base class for searching
-// Copyright (C) 2001, 2002 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2001, 2002, 2003 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -26,10 +26,30 @@
 #pragma interface
 #endif
 
+#if RINGING_AS_DLL
+#if RINGING_OLD_INCLUDES
+#include <utility.h>
+#else
+#include <utility>
+#endif
+#if RINGING_OLD_C_INCLUDES
+#include <stddef.h>
+#else
+#include <cstddef>
+#endif
+#endif // RINGING_AS_DLL
+
 RINGING_START_NAMESPACE
 
-// FIXME!!
-class search_common;
+RINGING_USING_STD
+
+// This doesn't really belong here, but it can't be in the derived
+// classes' headers as it would then be multiply defined.
+#if RINGING_AS_DLL
+RINGING_EXPLICIT_TEMPLATE 
+struct RINGING_API RINGING_PREFIX_STD pair<size_t, size_t>;
+#endif
+
 class touch;
 
 class RINGING_API search_base
@@ -54,7 +74,6 @@ RINGING_PROTECTED_IMPL:
     virtual ~context_base() {}
   };
 
-  friend class search_common;
 private:
   virtual context_base *new_context() const = 0;
 };

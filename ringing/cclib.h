@@ -72,7 +72,7 @@ private:
  ~cclib() { if (_good == 1) f.close(); }
 
   // Is this file in the right format?
-  static library_base *canread(const string& filename);
+  static RINGING_API library_base *canread(const string& filename);
 
   // Iterators into the library
   class entry_type;

@@ -23,6 +23,13 @@
 #pragma implementation
 #endif
 
+#if RINGING_OLD_INCLUDES
+#include <iostream.h>
+#include <map.h>
+#else
+#include <iostream>
+#include <map>
+#endif
 #if RINGING_OLD_C_INCLUDES
 #include <ctype.h>
 #else
@@ -35,21 +42,35 @@ RINGING_USING_STD
 
 RINGING_START_NAMESPACE
 
-const string dimension::unit_strings[] = {"pt", "in", "cm", "mm"};
-const float dimension::to_points[] = {1, 72, 72/2.54f, 72/25.4f};
-const dimension::unit_names_map dimension::unit_names;
+RINGING_START_ANON_NAMESPACE
 
-dimension::unit_names_map::unit_names_map()
+class unit_names_map : public map<string, dimension::units> {
+public:
+  unit_names_map();
+};
+
+static const string unit_strings[] = {"pt", "in", "cm", "mm"};
+static const float to_points[] = {1, 72, 72/2.54f, 72/25.4f};
+static const unit_names_map unit_names = unit_names_map();
+
+unit_names_map::unit_names_map()
 {
-  (*this)["pt"] = points;
-  (*this)["points"] = points;
-  (*this)["point"] = points;
-  (*this)["in"] = inches;
-  (*this)["\""] = inches;
-  (*this)["inches"] = inches;
-  (*this)["inch"] = inches;
-  (*this)["cm"] = cm;
-  (*this)["mm"] = mm;
+  (*this)["pt"] = dimension::points;
+  (*this)["points"] = dimension::points;
+  (*this)["point"] = dimension::points;
+  (*this)["in"] = dimension::inches;
+  (*this)["\""] = dimension::inches;
+  (*this)["inches"] = dimension::inches;
+  (*this)["inch"] = dimension::inches;
+  (*this)["cm"] = dimension::cm;
+  (*this)["mm"] = dimension::mm;
+}
+
+RINGING_END_ANON_NAMESPACE
+
+float dimension::in_points() const
+{
+  return to_points[u] * n / d;
 }
 
 void dimension::reduce()
@@ -77,7 +98,7 @@ ostream& operator<<(ostream& o, const dimension& d)
   if(q != 0 && r != 0) o << ' ';
   if(r < 0) r = -r;
   if(r != 0) o << r << '/' << d.d;
-  o << ' ' << dimension::unit_strings[d.u];
+  o << ' ' << unit_strings[d.u];
   return o;
 }
 

@@ -54,7 +54,7 @@ struct text_style {
   enum alignment { left, right, centre };
 };
 
-class printrow {
+class RINGING_API printrow {
 public:
   // options : Options for outputting blue line
   // These together form a blue line `style'
@@ -124,7 +124,7 @@ public:
     { pr->text(t, x, al, between, right); }
 };
 
-class printpage {
+class RINGING_API printpage {
 public:
   virtual ~printpage() {}
   virtual void text(const string t, const dimension& x, const dimension& y, 

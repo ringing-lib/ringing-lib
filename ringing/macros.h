@@ -121,6 +121,19 @@ RINGING_START_NAMESPACE RINGING_USING_STD RINGING_END_NAMESPACE
 #  define RINGING_WINDOWS 0
 #endif
 
+#if !defined(RINGING_AS_DLL)
+#if RINGING_WINDOWS
+#  // Libtool with Cygwin defines -DPIC
+#  if defined(PIC)
+#    define RINGING_AS_DLL 1
+#  else 
+#    define RINGING_AS_DLL 0
+#  endif
+#else
+#  define RINGING_AS_DLL 0
+#endif
+#endif // !defined(RINGING_AS_DLL)
+
 // Macros ready for Windows DLL support.
 #if RINGING_AS_DLL
 #  // Symbols exported from the dll:

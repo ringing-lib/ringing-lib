@@ -1,5 +1,5 @@
 // stl.cpp - Placeholder file for explicit instantiations of STL classes
-// Copyright (C) 2001-2 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2001, 2002, 2003 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -17,9 +17,11 @@
 
 // $Id$
 
-#if RINGING_AS_DLL
-
 #define RINGING_DO_STL_INSTANTIATIONS
+
+#include <ringing/common.h>
+
+#if RINGING_AS_DLL
 
 #if defined(_MSC_VER)
 #pragma warning( disable: 4660 )
@@ -29,8 +31,8 @@
 #include <ringing/row.h>
 #include <ringing/library.h>
 #include <ringing/touch.h>
-#include <ringing/basic_search.h>
-#include <ringing/table_search.h>
+#include <ringing/search_base.h>
+#include <ringing/printm.h>
 
 #undef RINGING_DO_STL_INSTANTIATIONS
 

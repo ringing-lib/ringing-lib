@@ -175,7 +175,7 @@ public:
 	    text_style::alignment al, bool between, bool right);
 };
 
-class printpage_pdf : public printpage {
+class RINGING_API printpage_pdf : public printpage {
 protected:
   pdf_file f;
 

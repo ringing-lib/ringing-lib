@@ -31,7 +31,9 @@
 
 RINGING_START_NAMESPACE
 
-class printmethod {
+RINGING_USING_STD
+
+class RINGING_API printmethod {
 private:
   const method* m;
 

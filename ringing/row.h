@@ -92,7 +92,7 @@ public:
   bell& operator=(int i) { x = i; return *this; }
   char to_char() const { return (x < MAX_BELLS) ? symbols[x] : '*'; }
 
-  struct invalid : public invalid_argument {
+  struct RINGING_API invalid : public invalid_argument {
     invalid();
   };
 };
@@ -163,7 +163,7 @@ public:
   };
 
   // Thrown by the constructor if an invalid place-notation is given 
-  struct invalid : public invalid_argument {
+  struct RINGING_API invalid : public invalid_argument {
     invalid();
   };
 
@@ -300,7 +300,7 @@ public:
   friend RINGING_API ostream& operator<<(ostream&, const row&);
   void swap(row &other) { data.swap(other.data); }
   
-  struct invalid : public invalid_argument {
+  struct RINGING_API invalid : public invalid_argument {
     invalid();
   };
 

@@ -260,7 +260,7 @@ library_base::const_iterator xmllib::impl::begin() const
 			 new entry_type(doc) );
 }
 
-#else // Stub code if were not using xerces
+#else // Stub code if we're not using xerces
 
 class xmllib::impl {};
 

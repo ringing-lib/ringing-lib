@@ -5,9 +5,13 @@ DISTCLEANFILES = common-am.h
 MAINTAINERCLEANFILES = Makefile.in
 INCLUDES = -I$(top_srcdir)
 
+# For DLL supprt (and harmless otherwise)
+libringing_la_CPPFLAGS = -DRINGING_EXPORTS
+libringing_la_LDFLAGS  = -no-undefined
+
 lib_LTLIBRARIES = libringing.la
 
-LIBS += @XERCES_LIBS@
+libringing_la_LIBADD = @XERCES_LIBS@
 
 libringing_la_SOURCES = row.cpp method.cpp library.cpp mslib.cpp cclib.cpp \
 proof.cpp music.cpp print.cpp print_ps.cpp dimension.cpp touch.cpp \
