@@ -210,7 +210,7 @@ bool arguments::validate( arg_parser& ap )
       return false;
     }
 
-  if ( rounds.bells() != bells )
+  if ( rounds.bells() && rounds.bells() != bells )
     {
       ap.error( "Rounds is on the wrong number of bells" );
       return false;
