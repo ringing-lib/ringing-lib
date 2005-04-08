@@ -634,7 +634,7 @@ void searcher::new_midlead_change()
 	  i( changes_to_try.begin() ), e( changes_to_try.end() ); 
 	i != e; ++i )
     {
-      if ( first.bells() == 0 || *i >= first )
+      if ( first.bells() == 0 || !compare_changes(*i, first) )
 	{
 	  const change& ch = *i;
 
