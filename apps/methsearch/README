@@ -164,6 +164,7 @@ The -H and -R formats accept the following format specifiers:
          specified, it is the minimum width of the field
   $l     The lead head
   $d     The lead head code
+  $D     The lead head code (old-style notation)
   $p     The place notation (-R only).
   $q     The place notation (-R only), but in a slightly more compressed 
          format
