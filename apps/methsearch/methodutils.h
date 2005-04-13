@@ -68,4 +68,6 @@ string tenors_together_coursing_order( const method& m );
 //   x < 12 < 1234 < 14 < 34
 bool compare_changes( change const& a, change const& b );
 
+char old_lhcode( method const& m );
+
 #endif // METHSEARCH_METHODUTILS_INCLUDED

@@ -1,5 +1,5 @@
 // -*- C++ -*- prog_args.cpp - handle program arguments
-// Copyright (C) 2002, 2003, 2004 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003, 2004, 2005 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -530,6 +530,22 @@ bool arguments::validate( arg_parser &ap )
     {
       ap.error( "The -L option must be used if either $n or $N is used" );
       return false;
+    }
+
+  if ( formats_have_old_lhcodes() )
+    {
+      if ( bells != 6 || hunt_bells != 1 || show_all_meths )
+	{
+	  ap.error( "Old-style lead end codes are only supported for "
+		    "non-differential single-hunt minor methods" );
+	  return false;
+	}
+      else if ( !require_limited_le && !require_pbles ) 
+	{
+	  ap.error( "Old-style lead end codes only apply to 12 or 16 lead "
+		    "heads: -e or -r must be used" );
+	  return false;
+	}
     }
 
   assert( !mask.empty() );

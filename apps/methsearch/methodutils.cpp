@@ -1,5 +1,5 @@
 // -*- C++ -*- methodutils.h - utility functions missing from the ringing-lib
-// Copyright (C) 2002, 2003, 2004 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003, 2004, 2005 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -356,4 +356,73 @@ bool compare_changes( change const& a, change const& b )
   // TODO:  This coule be much more efficient
   const string sa(a.print()), sb(b.print());
   return sa < sb;
+}
+
+char old_lhcode( method const& m ) 
+{
+  row const lh( m.lh() );
+  change const c12( m.bells(), "12" ), c1N( m.bells(), "1" );
+
+  if ( m.bells() != 6 ) 
+    return '?';
+
+  bool const seconds( m.back() == c12 );
+
+  switch (lh[1])
+    {
+    case 2:
+      if ( lh == "135264" ) return seconds ? 'G' : 'L';
+      if ( lh == "136245" ) return seconds ? 'Q' : '?';
+      if ( lh == "134625" ) return seconds ? '?' : 'W';
+      break;
+      
+    case 3:
+      if ( lh == "142635" ) return seconds ? 'K' : 'O';
+      if ( lh == "142563" ) return seconds ? 'P' : '?';
+      if ( lh == "146532" ) return seconds ? '?' : 'U';
+      break;
+      
+    case 4:
+      if ( lh == "156342" ) return seconds ? 'H' : 'M';
+      if ( lh == "154632" ) return seconds ? 'S' : '?';
+      if ( lh == "152364" ) return seconds ? '?' : 'T';
+      break;
+      
+    case 5:
+      if ( lh == "164523" ) return seconds ? 'J' : 'N';
+      if ( lh == "165324" ) return seconds ? 'R' : '?';
+      if ( lh == "165243" ) return seconds ? '?' : 'V';
+      break;
+    }
+
+  return '?';
+
+  /*  TODO:  On 5 bells:
+
+125 lead heads
+
+A = 13524 (reg)
+B = 14253 (reg)
+G = 12534 (SC)
+H = 13425 (5)
+J = 14235 (5)
+K = 12453 (SC)
+
+1 lead heads
+
+C = 13524 (reg)
+D = 14253 (reg)
+E = 15234
+F = 13452
+
+123 lead heads
+
+Q = 15423
+R = 14532
+S = 12453 (SC)
+T = 12534 (SC)
+U = 14352 (3)
+V = 15324 (3)
+
+  */
 }

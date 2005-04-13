@@ -68,6 +68,7 @@ private:
 
 bool formats_have_falseness_groups();
 bool formats_have_names();
+bool formats_have_old_lhcodes();
 
 
 // Exception to do exit(0) but calling destructors
