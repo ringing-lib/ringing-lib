@@ -137,7 +137,8 @@ xmllib::impl::impl( xmllib::file_arg_type type, const string& url )
 
 	case xmllib::default_url:
 	  {
-	    string full_url( "http://methods.ringing.org/cgi-bin/simple.pl?" );
+	    string full_url( "http://methods.ringing.org/cgi-bin/simple.pl"
+			     "?format=old&" );
 	    full_url.append( url );
 	    URLInputSource src( XMLURL( full_url.c_str() ) );
 	    parser.parse( src );
