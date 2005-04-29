@@ -376,8 +376,14 @@ format_string::format_string( const string &infmt,
 				      " can only be used in stats formats" );
 	      break;
 
+	    case '#':
+	      if ( type != normal_type )
+		throw argument_error( make_string() << "The `$" << *iter << "'"
+				      " can only be used in output formats" );
+	      break;
+
 	    case 'p': case 'q': case 'Q': case 'n': case 'N': 
-	    case 'P': case '#':
+	    case 'P': 
 	      if ( type != normal_type && type != require_type 
 		   && parens.empty() )
 		throw argument_error( make_string() << "The `$" << *iter << "'"
