@@ -650,7 +650,7 @@ private:
       while ( j < e && isdigit(*j) ) ++j;
       if ( j == e ) return more; // Or fail?
       // $N* is magic:
-      if ( !isalpha(*j) && *j != '*' ) return failed; ++j;
+      if ( !isalpha(*j) && *j != '*' && *j != '#' ) return failed; ++j;
       tok.assign(i,j); tok.type( variable ); i = j;
       return done;
     }
