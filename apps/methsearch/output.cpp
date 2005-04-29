@@ -231,6 +231,11 @@ string method_properties::impl2::get_property( int num_opt,
 	  os << tenors_together_coursing_order(m);
 	  break;
 
+	case '#': {
+	  static int n=0;
+	  os << ++n;
+	} break;
+
 	default:
 	  throw logic_error( "Unknown variable requested" );
 	}

@@ -191,6 +191,7 @@ The -H and -R formats accept the following format specifiers:
          glide, 'R' for rotational
   $[N]L  The number of changes per lead;  if a number, N, is specified,
          it is the minimum width of the field
+  $#     The number of that method
   $$     A literal $
   $)     A literal )
   $[...] An expression; see below
