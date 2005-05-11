@@ -64,7 +64,7 @@ The Ringing Class Library (ringing-lib) is a library of C++ classes designed
 for writing change ringing application programs.
 
 This menu lists the available topics in the documentation. This
-documentation is also available in HTML and PostScript versions.
+documentation is also available in HTML and PDF versions.
 @end ifinfo
 @ifhtml
 
@@ -72,7 +72,7 @@ The Ringing Class Library (ringing-lib) is a library of C++ classes designed
 for writing change ringing application programs.
 
 This menu lists the available topics in the documentation. This
-documentation is also available in GNU Info and PostScript 
+documentation is also available in GNU Info and PDF
 versions.
 @end ifhtml
 @end ifnottex
