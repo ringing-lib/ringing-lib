@@ -1,3 +1,10 @@
+Version 0.3.0 (11 May 2005):
+  Split into separate GPL and LGPL portions.
+  Reading & writing of XML libraries.
+  Accessing online method database. 
+  Major updates to gsiril and methsearch.
+  Use libtool for building shared libraries.
+
 Version 0.2.8 (14 December 2002):
   Improved support for older compilers.
   New iterator-based interface to libraries.
