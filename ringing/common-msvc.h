@@ -34,7 +34,7 @@
 
 
 #define RINGING_PACKAGE "ringing-lib"
-#define RINGING_VERSION "0.2.8"
+#define RINGING_VERSION "0.3.0"
 
 
 #define RINGING_OLD_INCLUDES 0
