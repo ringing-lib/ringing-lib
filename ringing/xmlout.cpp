@@ -301,14 +301,25 @@ void xmlout::impl::append( library_entry const& entry )
     }
   }
 
-  if ( entry.has_facet< first_tower_peal >() )
-    add_peal( add_elt( meth_elt, "first-tower" ),
-	      entry.get_facet< first_tower_peal >() );
+  {
+    DOMElement* performances_elt = NULL;
 
-  if ( entry.has_facet< first_hand_peal >() )
-    add_peal( add_elt( meth_elt, "first-hand" ),
-	      entry.get_facet< first_hand_peal >() );
-  
+
+    if ( entry.has_facet< first_tower_peal >() ) {
+      if(!performances_elt) 
+	performances_elt = add_elt( meth_elt, "performances" );
+      add_peal( add_elt( performances_elt, "firsttower" ),
+		entry.get_facet< first_tower_peal >() );
+    }    
+
+    if ( entry.has_facet< first_hand_peal >() ) {
+      if(!performances_elt) 
+	performances_elt = add_elt( meth_elt, "performances" );
+      add_peal( add_elt( performances_elt, "firsthand" ),
+		entry.get_facet< first_hand_peal >() );  
+    }
+  }
+
   {
     DOMElement* refs_elt = NULL;
 

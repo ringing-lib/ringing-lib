@@ -173,7 +173,7 @@ you may have to generate it by hand from the template in
 @node Licensing, The Standard Template Library, Installing and using the library, Installing and using the library
 @section Licensing
 
-As of version 0.2.9, the Ringing Class Library is split into two parts,
+As of version 0.3.0, the Ringing Class Library is split into two parts,
 which are licensed differently.  This is explained again in the file
 @file{COPYING} in the distribution.  A summary is given here, but to be
 sure you should consult individual files for their licensing conditions.
@@ -185,7 +185,7 @@ Most of the library is released under the GNU Public License
 @file{COPYING.GPL} in the top directory of the distribution.  This
 licence allows you to copy, modify and distribute the library, provided
 that you stay within the stated terms.  However, it does @strong{not}
-allow you to include the library in your own commercial programs.  Any
+allow you to include the library in your own closed-source programs.  Any
 programs which use the library must again be free.  For full details,
 please read the text of the licence.
 
