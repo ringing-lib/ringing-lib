@@ -584,8 +584,9 @@ bool searcher::try_quarterlead_change( const change &ch )
 	  int count(2);
 	  
 	  {
-	    for ( size_t offset = m.length()-1;
-		  offset >= (m.length()/hl_len)*hl_len 
+	    // NOTE: Must be signed to allow decrementing below zero
+	    for ( signed offset = m.length()-1;
+		  offset >= signed( (m.length()/hl_len)*hl_len ) 
 		    && count <= args.max_consec_blows + 1;
 		  --offset, ++count )
 	      if ( !m[offset].findplace(i) )
@@ -593,8 +594,9 @@ bool searcher::try_quarterlead_change( const change &ch )
 	  }
 	  
 	  {
-	    for ( size_t offset = m.length()-1;
-		  offset >= (m.length()/hl_len)*hl_len 
+	    // NOTE: Must be signed to allow decrementing below zero
+	    for ( signed offset = m.length()-1;
+		  offset >= signed( (m.length()/hl_len)*hl_len ) 
 		    && count <= args.max_consec_blows + 1;
 		  --offset, ++count )
 	      if ( !m[offset].reverse().findplace(i) )
