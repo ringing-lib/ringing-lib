@@ -667,9 +667,11 @@ int main(int argc, char *argv[])
       }
       if(!found_working_bell 
 	 && (j = args.lines.find(-4)) != args.lines.end()) {
-	for(b = 0; b < m.bells(); b = b + 1)
-	  if(lh[b] != b)
+	for(b = 0; b < m.bells() && !found_working_bell; b = b + 1)
+	  if(lh[b] != b) {
 	    pm.opt.lines[b] = (*j).second;
+	    found_working_bell = true;
+	  }
       }
     }
     if(args.custom_rules) 
