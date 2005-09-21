@@ -160,7 +160,9 @@ private:
 };
 
 
-class RINGING_API library_base::const_iterator {
+class RINGING_API library_base::const_iterator 
+  : public RINGING_STD_CONST_ITERATOR( input_iterator_tag, library_entry )
+{
 public:
   // Standard iterator typedefs
   typedef library_entry value_type;

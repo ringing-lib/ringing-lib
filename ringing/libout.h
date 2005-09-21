@@ -72,7 +72,9 @@ private:
   scoped_pointer<interface> pimpl;
 };
 
-class libout::iterator {
+class libout::iterator 
+  : public RINGING_STD_OUTPUT_ITERATOR( library_entry )
+{
 public:
   iterator() : pimpl(NULL) {}
   

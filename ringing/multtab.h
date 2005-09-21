@@ -72,7 +72,7 @@ public:
     { return x.n < y.n; }
   };
 
-  friend class multtab;
+  friend class RINGING_PREFIX multtab;
   friend class multtab_row_iterator;
   friend struct cmp;
 
@@ -105,7 +105,7 @@ class RINGING_API multtab_row_iterator
     { return r.index() != other.r.index(); }
 
  private:  
-  friend class multtab;
+  friend class RINGING_PREFIX multtab;
   multtab_row_iterator( int n ) { r.n = n; }
 
  private:
@@ -122,7 +122,7 @@ private:
   friend multtab_row_t 
   operator*( multtab_row_t r, multtab_post_col_t c );
 
-  friend class multtab;
+  friend class RINGING_PREFIX multtab;
 
 public:
   multtab_post_col_t() : n(0), t(NULL) {}
@@ -157,7 +157,7 @@ private:
   friend multtab_row_t 
   operator*( multtab_pre_col_t c, multtab_row_t r );
 
-  friend class multtab;
+  friend class RINGING_PREFIX multtab;
 
 public:
   multtab_pre_col_t() : n(0), t(NULL) {}

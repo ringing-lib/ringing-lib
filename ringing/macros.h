@@ -187,6 +187,9 @@ RINGING_END_NAMESPACE_STD
 # define RINGING_STD_CONST_ITERATOR( category, type )		\
     RINGING_PREFIX_STD iterator< category, type, ptrdiff_t,	\
                                  const type *, const type & >
+# define RINGING_STD_OUTPUT_ITERATOR( type )			\
+    RINGING_PREFIX_STD iterator< output_iterator_tag, void, 	\
+				 void, void, void >
 
 #elif defined(_MSC_VER) && _MSC_VER <= 1200 
   // MSVC-5 has a three-argument iterator, but it is important 
@@ -196,12 +199,15 @@ RINGING_END_NAMESPACE_STD
     RINGING_PREFIX_STD iterator< category, type, ptrdiff_t >
 # define RINGING_STD_CONST_ITERATOR( category, type )		\
     RINGING_STD_ITERATOR( category, type )
+# define RINGING_STD_OUTPUT_ITERATOR( type )			\
+    RINGING_PREFIX_STD iterator< output_iterator_tag, void, void >
 
 #else
   // Need some class just so that the program is syntactically correct
   class ringing_dummy_iterator {};
 # define RINGING_STD_ITERATOR( category, type )       ringing_dummy_iterator
 # define RINGING_STD_CONST_ITERATOR( category, type ) ringing_dummy_iterator
+# define RINGING_STD_OUTPUT_ITERATOR( type )          ringing_dummy_iterator
 
 #endif
 

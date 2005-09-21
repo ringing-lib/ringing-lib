@@ -90,6 +90,8 @@ struct linedetail {
   row _row;
   list<int> _lines;
 
+  linedetail() {} // Compiler-generated constructor triggers bug in gcc 4.0.1
+
   RINGING_FAKE_COMPARATORS( linedetail )
 };
 

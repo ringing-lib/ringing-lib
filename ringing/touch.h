@@ -172,6 +172,9 @@ public:
   touch_node *get_head() { return head; }
 
   touch() : head(0) {}
+ 
+  // Compiler-generated constructor triggers bug in gcc 4.0.1
+  touch( touch const& o ) : head(o.head), nodes(o.nodes) {} 
 
 private:
   touch_node *head;
