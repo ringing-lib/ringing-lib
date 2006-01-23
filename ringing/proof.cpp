@@ -1,5 +1,5 @@
 // proof.cpp - Proving Stuff
-// Copyright (C) 2001-2 Mark Banner <mark@standard8.co.uk>
+// Copyright (C) 2001, 2002, 2006 Mark Banner <mark@standard8.co.uk>
 // and Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -28,12 +28,6 @@
 
 // $Id$
 
-/********************************************************************
- * Description     :
- *     This is the implementation part of proof.h. As proof is a
- * template class, most of it is defined in the header, however the
- * hash function must be defined here.
- ********************************************************************/
 
 #include <ringing/common.h>
 
@@ -66,7 +60,7 @@ RINGING_END_ANON_NAMESPACE
 bool prover::add_row( const row &r )
 {
   // This function is quite complicated to avoid doing more than one
-  // O( ln N ) operation on the multimap.  The equal_range function call
+  // O( ln N ) operation on each multimap.  The equal_range function call
   // will be O( ln N ); the insert function ought to be O(1) because a 
   // sensible hint is supplied (although the C++ standard doesn't require
   // the hint to be used).  The number of identical elements is also 
@@ -74,14 +68,25 @@ bool prover::add_row( const row &r )
   // multimap::count.
 
   typedef pair< mmap::iterator, mmap::iterator > range;
-  range rng = m.equal_range(r);
-  size_t n = distance( rng.first, rng.second ) + 1; // effecively m.count(r)
+  list<range> ranges;
+
+  for ( prover* p = this; p; p = p->chain.get() ) 
+    ranges.push_front( p->m.equal_range(r) );
+
+  // effecively m.count(r)
+  size_t n(1);
+  for ( list<range>::const_iterator ri = ranges.begin(), re = ranges.end(); 
+	ri != re; ++ri ) 
+    n += distance( ri->first, ri->second );
+
+  range const& rng = ranges.back();
+
   mmap::iterator i( m.insert( rng.first == m.begin() ? m.begin() 
 			                             : prior( rng.first ),
 			      mmap::value_type( r, ++lineno ) ) );
 
   if ( n > 1 )
-    ++dups;
+    ++dups; 
 
   if ( (int) n > max_occurs )
     {
@@ -123,5 +128,48 @@ bool prover::add_row( const row &r )
   return is_true;
 }
 
+shared_pointer<prover> 
+prover::create_branch( shared_pointer<prover> const& chain )
+{
+  shared_pointer<prover> p( new prover );
+  p->chain      = chain;
+  p->max_occurs = chain->max_occurs;
+  p->lineno     = chain->lineno;
+  p->dups       = chain->dups;
+  p->fi         = chain->fi;
+  // NB do not copy chain->m.
+  return p;
+}
+
+RINGING_START_DETAILS_NAMESPACE
+
+void print_failinfo( ostream& o, bool istrue, prover::failinfo const& faili )
+{
+  if (istrue)
+    {
+      o << "True\n";
+    }
+  else
+    {
+      o << "False\n";
+      
+      // go through the list outputting details in turn.
+      
+      for (prover::failinfo::const_iterator fi = faili.begin(); 
+	   fi != faili.end(); ++fi)
+	{
+	  o << "Row " << fi->_row << " is repeated on lines";
+	  
+	  for (list<int>::const_iterator i = fi->_lines.begin(); 
+	       i != fi->_lines.end(); ++i)
+	    {
+	      o << " " << *i;
+	    }
+	  o << endl;
+	}
+    }
+}
+
+RINGING_END_DETAILS_NAMESPACE
 
 RINGING_END_NAMESPACE
