@@ -582,6 +582,8 @@ msparser::make_expr( vector< token >::const_iterator first,
     case tok_types::name:
       if ( *first == "break" )
 	return expression( new exception_node( script_exception::do_break ) );
+      else if ( *first == "rounds" )
+	return expression( new isrounds_node() );
       else
 	return expression( new symbol_node( *first ) );
 

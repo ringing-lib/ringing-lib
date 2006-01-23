@@ -147,6 +147,13 @@ private:
   pair< const string, expression > defn;
 };
 
+class isrounds_node : public expression::bnode
+{
+protected:
+  virtual void debug_print( ostream &os ) const;
+  virtual bool evaluate( proof_context &ctx );
+};
+
 class pattern_node : public expression::bnode
 {
 public:

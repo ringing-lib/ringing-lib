@@ -206,6 +206,16 @@ static void validate_regex( const music_details& desc, int bells )
   // TODO: Check for multiple occurances of the same bell
 }
 
+bool isrounds_node::evaluate( proof_context& ctx )
+{
+  return ctx.isrounds();
+}
+
+void isrounds_node::debug_print( ostream &os ) const
+{
+  os << "rounds";
+}
+
 pattern_node::pattern_node( int bells, const string& regex )
   : mus( bells )
 {
