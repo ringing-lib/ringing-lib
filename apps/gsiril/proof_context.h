@@ -1,5 +1,6 @@
 // -*- C++ -*- proof_context.h - Environment to evaluate expressions
-// Copyright (C) 2002, 2003, 2004, 2005 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003, 2004, 2005, 2006 
+// Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -86,7 +87,8 @@ private:
   const execution_context &ectx;
   symbol_table dsym_table; // dynamic symbol table
   row r;
-  prover p;
+  shared_pointer<prover> p;
+
   ostream* output;
   bool silent;
 };

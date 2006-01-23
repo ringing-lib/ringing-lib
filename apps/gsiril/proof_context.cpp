@@ -1,5 +1,6 @@
 // proof_context.cpp - Environment to evaluate expressions
-// Copyright (C) 2002, 2003, 2004, 2005 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003, 2004, 2005, 2006 
+// Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -33,7 +34,7 @@
 RINGING_USING_NAMESPACE
 
 proof_context::proof_context( const execution_context &ectx ) 
-  : ectx(ectx), p( ectx.get_args().num_extents ), 
+  : ectx(ectx), p( new prover(ectx.get_args().num_extents) ), 
     output( &ectx.output() ),
     silent( ectx.get_args().everyrow_only )
 {
@@ -98,7 +99,7 @@ permute_and_prove_t( row &r, prover &p, proof_context &pctx )
 proof_context::permute_and_prove_t 
 proof_context::permute_and_prove()
 {
-  return permute_and_prove_t( r, p, *this );
+  return permute_and_prove_t( r, *p, *this );
 }
 
 bool proof_context::isrounds() const 
@@ -120,9 +121,9 @@ void proof_context::define_symbol( const pair<const string, expression>& defn )
 
 proof_context::proof_state proof_context::state() const
 {
-  if ( p.truth() && isrounds() ) 
+  if ( p->truth() && isrounds() ) 
     return rounds;
-  else if ( p.truth() )
+  else if ( p->truth() )
     return notround;
   else
     return isfalse;
@@ -141,12 +142,12 @@ string proof_context::substitute_string( const string &str, bool &do_exit )
 	break;
       case '$': 
 	if ( i+1 == e || i[1] != '$' )
-	  os << p.duplicates();
+	  os << p->duplicates();
 	else
 	  ++i, do_exit = true;
 	break;
       case '#':
-	os << p.size();
+	os << p->size();
 	break;
       case '\\':
 	if (i+1 == e) 
@@ -173,6 +174,7 @@ string proof_context::substitute_string( const string &str, bool &do_exit )
 proof_context proof_context::silent_clone() const
 {
   proof_context copy( *this );
+  copy.p = prover::create_branch(copy.p);
   copy.silent = true;
   copy.output = NULL;
   return copy;
