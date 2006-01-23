@@ -97,6 +97,11 @@ public:
 		 back_insert_iterator<vector<change> >(*this));
   }
   ~method() {}
+  void swap( method& other ) {
+    vector<change>::swap(other); 
+    RINGING_PREFIX_STD swap(b, other.b);
+    RINGING_PREFIX_STD swap(myname, other.myname);
+  }      
 
   void push_back(const change &ch)
     { b = b > ch.bells() ? b : ch.bells(); vector<change>::push_back(ch); }
@@ -140,6 +145,8 @@ public:
 };
 
 RINGING_END_NAMESPACE
+
+RINGING_DELEGATE_STD_SWAP( method )
 
 #endif
 
