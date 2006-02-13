@@ -1,6 +1,6 @@
 // -*- C++ -*- macros.h.in - Macros to hide system specific constructs
 //
-// Copyright (C) 2001, 2002, 2003 Martin Bright <martin@boojum.org.uk> 
+// Copyright (C) 2001, 2002, 2003, 2006 Martin Bright <martin@boojum.org.uk> 
 // and Richard Smith <richard@ex-parrot.com>
 
 // This library is free software; you can redistribute it and/or
@@ -235,7 +235,11 @@ RINGING_END_NAMESPACE_STD
 // pragma interface / implementation.  This really ought to
 // be wrapped up into a autoconf test, but I can't make
 // a simple test case.
-#if defined(__GNUG__) && !defined(__CYGWIN__)
+// This is also broken in gcc 4.0.x (x <= 2).  Hopefully it might
+// be fixed in 4.0.3 and 4.1, but both are still at the release
+// candidate stage at the moment, so I'll leave it as a test of
+// all gcc 4.x.y.
+#if defined(__GNUG__) && !defined(__CYGWIN__) && __GNUG__ < 4
 # define RINGING_HAS_PRAGMA_INTERFACE 1
 #else
 # define RINGING_HAS_PRAGMA_INTERFACE 0
