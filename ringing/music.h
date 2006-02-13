@@ -188,6 +188,9 @@ public:
       }
   }
 
+  // As above, but for a single row
+  void process_row( row const& r, bool backstroke = false);
+
   // Get the total score - individual scores now obtained from accessing
   // the items within the music_details vector.
   int get_score(const EStroke& = eBoth);
@@ -205,9 +208,6 @@ private:
   music_node TopNode;
 
   unsigned int bells;
-
-  // The main processing function
-  void process_row(const row&, const bool&);
 
   // Reset the music information
   void reset_music(void);

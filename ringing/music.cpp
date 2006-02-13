@@ -628,7 +628,7 @@ void music::reset_music(void)
 
 // process_row - works out if a certain row is considered musical,
 // and increments or changes the appriopriate variable.
-void music::process_row(const row &r, const bool &back)
+void music::process_row(const row &r, const bool back)
 {
   if (back)
     TopNode.match(r, 0, MusicInfo, eBackstroke);
