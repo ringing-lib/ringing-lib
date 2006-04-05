@@ -793,18 +793,20 @@ int main(int argc, char *argv[])
       pm.opt.grid_style = args.grid_style;
     }
 
+    // Get the bounding box of the image
+    float blx, bly, urx, ury;
+    pm.get_bbox(blx, bly, urx, ury);
+
     // Position the output correctly
     if(args.format == eps) {
-      pm.xoffset.set_float(pm.opt.xspace.in_points()/2, 1); 
-      pm.yoffset.set_float(pm.total_height() - pm.opt.yspace.in_points()/2, 1);
+      pm.xoffset.set_float(-blx, 1); 
+      pm.yoffset.set_float(-bly, 1);
     } else {
       // Centre the output on the page
-      pm.xoffset.set_float((args.width.in_points() - pm.total_width() 
-			    + pm.opt.xspace.in_points())/2, 1);
-      pm.yoffset.set_float((args.height.in_points() + pm.total_height() 
+      pm.xoffset.set_float((args.width.in_points() - (urx + blx)) / 2, 1);
+      pm.yoffset.set_float((args.height.in_points() - (ury + bly) 
 			    - (args.title.empty() ? 0 
-			       : args.title_style.size * 0.2f)
-			    - pm.opt.yspace.in_points())/2, 1);
+			       : args.title_style.size * 0.2f)) / 2, 1);
     }
 
     // Find a stream to write to
@@ -822,8 +824,8 @@ int main(int argc, char *argv[])
 
     dimension titlex, titley;
     titlex.set_float(pm.xoffset.in_points() 
-		     + (pm.total_width() - pm.opt.xspace.in_points())/2, 1);
-    titley.set_float(pm.yoffset.in_points() + pm.opt.yspace.in_points()/2
+		     + (urx + blx) / 2, 1);
+    titley.set_float(pm.yoffset.in_points() + ury
 		     + args.title_style.size * 0.1f, 1);
     int i = args.title.find('$');
     if(i != (int) args.title.npos) args.title.replace(i, 1, m.fullname());
@@ -832,8 +834,8 @@ int main(int argc, char *argv[])
     printpage* pp = NULL;
     switch(args.format) {
       case eps :
-	pp = new printpage_ps(*os, 0, 0, int(pm.total_width()), 
-			      int(pm.total_height() 
+	pp = new printpage_ps(*os, 0, 0, int(urx-blx), 
+			      int(ury-bly
 				   + (args.title.empty() ? 0 
 				      : args.title_style.size * 0.2)));
 	break;
@@ -852,8 +854,9 @@ int main(int argc, char *argv[])
     }
 
     // Print the method!
-    pp->text(args.title, titlex, titley, 
-	    text_style::centre, args.title_style);
+    if(!args.title.empty()) 
+      pp->text(args.title, titlex, titley, 
+	       text_style::centre, args.title_style);
     pm.print(*pp);
     delete pp;
   }

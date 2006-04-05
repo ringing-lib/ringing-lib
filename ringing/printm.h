@@ -62,6 +62,7 @@ public:
 
   float total_width();
   float total_height();
+  void get_bbox(float& blx, float& bly, float& urx, float& ury);
 
   void scale_to_space(const dimension &width, const dimension& height,
 		      float aspect)

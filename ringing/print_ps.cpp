@@ -396,7 +396,7 @@ void printrow_ps::text(const string& t, const dimension& x,
 {
   if(!in_column) return;
   fill_gap();
-  if(right) pp.os << lastrow.bells(); else pp.os << '0';
+  if(right) pp.os << (lastrow.bells() - 1); else pp.os << '0';
   pp.os << " MR ";
   if(right) pp.os << x.in_points(); else pp.os << -(x.in_points());
   if(between) pp.os << " Q "; else pp.os << " 0 ";

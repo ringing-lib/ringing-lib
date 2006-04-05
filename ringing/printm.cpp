@@ -122,7 +122,6 @@ void printmethod::print(printpage& pp)
       printrow pr(pp, opt);
       // Move to the beginning of this set of columns
       pr.set_position(xoffset, yoffset);
-      if(pn_mode != pn_none) pr.move_position(opt.xspace * pnextra, 0);
       pr.move_position(0, -opt.yspace * columnset * (rows_per_column + 1));
       pr.move_position(0, -vgap * columnset);
       for(column = 0; column < columns_per_set 
@@ -266,11 +265,11 @@ float printmethod::total_width() {
   int columns = divu(total_rows, rows_per_column);
   if(columns_per_set < columns) columns = columns_per_set;
   return (opt.xspace.in_points() * (m->bells() * columns + 
-				    (placebells >= 0 ? 2.4f : 0) +
-				    ((pn_mode != pn_none) ? find_pnextra():0))
-	  + (hgap.in_points() * (columns - 1)));
+				    ((pn_mode != pn_none) ? find_pnextra():0)))
+	  + (hgap.in_points() * (columns - 1))
+	  + ((placebells >= 0) ? opt.style.size * 0.035f : 0);
 }
-  
+ 
 float printmethod::total_height() {
   int columns = divu(total_rows, rows_per_column);
   if(columns_per_set < columns) columns = columns_per_set;
@@ -278,9 +277,29 @@ float printmethod::total_height() {
   if(sets_per_page && (sets_per_page < columnsets)) 
     columnsets = sets_per_page;
   return (opt.yspace.in_points() * (rows_per_column + 1) * columnsets)
-    + (vgap.in_points() * (columnsets - 1));
+    + (vgap.in_points() * (columnsets - 1))
+    + ((placebells >= 0) ? opt.style.size * 0.035f : 0);
 }
-  
+
+void printmethod::get_bbox(float& blx, float& bly, float& urx, float& ury)
+{
+  int columns = divu(total_rows, rows_per_column);
+  if(columns_per_set < columns) columns = columns_per_set;
+  blx = -opt.xspace.in_points() 
+    * (0.5 + ((pn_mode != pn_none) ? find_pnextra() : 0));
+  urx = opt.xspace.in_points() * (m->bells() * columns - 0.5
+				  + ((placebells >= 0) ? 2.4 : 0))
+    + (hgap.in_points() * (columns - 1));
+ 
+  int columnsets = divu(total_rows, rows_per_column * columns);
+  if(sets_per_page && (sets_per_page < columnsets)) 
+    columnsets = sets_per_page;
+  bly = -(opt.yspace.in_points() * ((rows_per_column + 1) * columnsets - 0.5))
+    - (vgap.in_points() * (columnsets - 1));
+  ury = ((placebells >= 0) ? opt.style.size * 0.07f : 0);
+  if(ury < opt.yspace.in_points() * 0.5)
+    ury = opt.yspace.in_points() * 0.5;
+}
 
 RINGING_END_NAMESPACE
 
