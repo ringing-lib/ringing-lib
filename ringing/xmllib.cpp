@@ -1,5 +1,5 @@
 // -*- C++ -*- xmllib.cpp - Access to the online XML method library
-// Copyright (C) 2003, 2004 Richard Smith <richard@ex-parrot.com>.
+// Copyright (C) 2003, 2004, 2006 Richard Smith <richard@ex-parrot.com>.
 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -148,7 +148,7 @@ xmllib::impl::impl( xmllib::file_arg_type type, const string& url )
       
       doc.reset( parser.adoptDocument() );
 
-      if ( !doc->getDocumentElement() )
+      if ( !doc || !doc->getDocumentElement() )
 	throw runtime_error( "No document element" );
 
       if ( TRANSCODE( doc->getDocumentElement()->getTagName() ) != "methods" ) 
