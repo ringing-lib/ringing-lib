@@ -164,7 +164,7 @@ RINGING_END_NAMESPACE_STD
 #define RINGING_DELEGATE_STD_SWAP(type)
 #endif
 
-// The following construct does work in all compilers:
+// The following construct doesn't work in all compilers:
 //   class base {
 //   protected:
 //     class impl_base {};
@@ -256,6 +256,20 @@ RINGING_END_NAMESPACE_STD
 // we use this heinous macro hack:
 #if defined(_MSC_VER) && _MSC_VER <= 1200 
 # define for if (false) {} else for
+#endif
+
+// Support for #pragma once.  This can significantly speed up 
+// compilation with MSVC. It is supported in gcc, though produces
+// a warning prior to 3.4, but makes little difference to compile
+// times.  It ought to become an autoconf test, but that would 
+// require writing an autoconf test with multiple files, and that's 
+// non-trivial.
+#if defined(_MSC_VER) && _MSC_VER > 1000
+# define RINGING_HAS_PRAGMA_ONCE 1
+#elif defined(__GNUG__) && __GNUG__ >= 4
+# define RINGING_HAS_PRAGMA_ONCE 1
+#else
+# define RINGING_HAS_PRAGMA_ONCE 0
 #endif
 
 #endif // RINGING_MACROS_H

@@ -23,6 +23,10 @@
 
 #include <ringing/common.h>
 
+#if RINGING_HAS_PRAGMA_ONCE
+#pragma once
+#endif
+
 #if RINGING_HAS_PRAGMA_INTERFACE
 #pragma interface
 #endif

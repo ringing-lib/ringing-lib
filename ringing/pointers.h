@@ -32,6 +32,11 @@
 #define RINGING_POINTERS_H
 
 #include <ringing/common.h>
+
+#if RINGING_HAS_PRAGMA_ONCE
+#pragma once
+#endif
+
 #if RINGING_OLD_INCLUDES
 #include <algo.h>
 #else
