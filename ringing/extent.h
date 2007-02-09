@@ -40,22 +40,11 @@
 #endif
 #include <ringing/row.h>
 
+#include <ringing/mathutils.h> // For compile-time compatibility with 0.3
+
 RINGING_START_NAMESPACE
 
 RINGING_USING_STD
-
-RINGING_API unsigned factorial(unsigned n);
-RINGING_API unsigned fibonacci(unsigned n);
-
-// Uniformly distributed, 0 <= random_int(max) < max
-RINGING_API unsigned random_int(unsigned max);
-
-// Returns true with probability ptrue
-RINGING_API bool random_bool( double ptrue = 0.5 );
-
-// Supply and alternative random number generator
-// If rand is NULL, then just return the existing one
-RINGING_API pair<int (*)(), int> random_fn( int (*randfn)(), int max_rand );
 
 class RINGING_API extent_iterator
   : public RINGING_STD_CONST_ITERATOR( forward_iterator_tag, row )

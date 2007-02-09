@@ -53,6 +53,8 @@
 #endif
 #include <string>
 
+#include <ringing/mathutils.h> // For compile-time compatibility with 0.3
+
 #if _MSC_VER
 // Something deep within the STL in Visual Studio decides to 
 // turn this warning back on.  
@@ -62,16 +64,6 @@
 RINGING_START_NAMESPACE
 
 RINGING_USING_STD
-
-// Declare a couple of random functions for hcf and lcm
-RINGING_API int hcf(int a, int b);
-inline RINGING_API int lcm(int a, int b) 
-{
-  // Check for a couple of quick cases
-  if(a == 1) return b;
-  if(b == 1) return a;
-  return a * b / hcf(a,b);
-}
 
 class RINGING_API bell {
 private:

@@ -33,29 +33,14 @@
 #if RINGING_OLD_INCLUDES
 #include <bvector.h>
 #endif
+
 #include <ringing/row.h>
+#include <ringing/mathutils.h>
+
 
 RINGING_USING_STD
 
 RINGING_START_NAMESPACE
-
-// An hcf function. Uses, ahhhh, ze Euclidean algorizm.
-int hcf(int a, int b)
-{
-  int r;
-
-  // Make sure we have a >= b
-  if(a < b) { r = a; a = b; b = r; }
-
-  do {
-    r = a % b;
-    a = b;
-    b = r;
-  } while(r > 0);
-
-  // a is now the last non-zero remainder we had.
-  return a;
-}
 
 char bell::symbols[] = "1234567890ETABCDFGHJKLMNPQRSUVWYZ";
 const unsigned int bell::MAX_BELLS = 33;

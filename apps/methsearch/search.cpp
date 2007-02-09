@@ -49,6 +49,7 @@
 #include <ringing/method.h>
 #include <ringing/extent.h>
 #include <ringing/proof.h>
+#include <ringing/mathutils.h>
 
 
 RINGING_USING_NAMESPACE

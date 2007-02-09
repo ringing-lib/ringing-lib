@@ -23,6 +23,7 @@
 #include <ringing/multtab.h>
 #include <ringing/pointers.h>
 #include <ringing/streamutils.h>
+#include <ringing/mathutils.h>
 
 #include <vector>
 #include <cmath>

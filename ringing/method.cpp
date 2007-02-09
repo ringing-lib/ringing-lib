@@ -32,7 +32,9 @@
 #if RINGING_OLD_INCLUDES
 #include <bvector.h>
 #endif
+
 #include <ringing/method.h>
+#include <ringing/mathutils.h>
 
 RINGING_USING_STD
 

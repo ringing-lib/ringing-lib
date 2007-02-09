@@ -19,6 +19,7 @@
 
 #include <ringing/row.h>
 #include <ringing/streamutils.h>
+#include <ringing/mathutils.h>
 #include "test-base.h"
 
 RINGING_START_NAMESPACE

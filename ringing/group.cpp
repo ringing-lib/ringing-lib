@@ -26,6 +26,8 @@
 #include <ringing/row.h>
 #include <ringing/group.h>
 #include <ringing/extent.h>
+#include <ringing/mathutils.h>
+
 #if RINGING_OLD_INCLUDES
 #include <set.h>
 #include <vector.h>

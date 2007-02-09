@@ -1,5 +1,5 @@
 // -*- C++ -*- extent.h - Classes for iterating through an extent
-// Copyright (C) 2001, 2002, 2003, 2005 
+// Copyright (C) 2001, 2002, 2003, 2005, 2007
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -24,7 +24,6 @@
 #pragma implementation
 #endif
 
-#include <ringing/extent.h>
 #if RINGING_OLD_C_INCLUDES
 #include <assert.h>
 #else
@@ -36,65 +35,13 @@
 #include <algorithm>
 #endif
 
+#include <ringing/extent.h>
+#include <ringing/mathutils.h>
+
 
 RINGING_START_NAMESPACE
 
 RINGING_USING_STD
-
-unsigned factorial(unsigned n)
-{
-  if (!n) return 1;
-  unsigned f = n;
-  while (--n)
-    f *= n;
-  return f;
-}
-
-unsigned fibonacci(unsigned n)
-{
-  if (!n) return 1;
-  unsigned f1=1, f2=1;
-  while (--n)
-    {
-      unsigned sum =f1+f2;
-      f1 = f2;
-      f2 = sum;
-    }
-  return f2;
-}
-
-RINGING_START_ANON_NAMESPACE
-
-static int (*rand_fn)() = &rand;
-static int rand_max    = RAND_MAX;
-
-RINGING_END_ANON_NAMESPACE
-
-pair<int (*)(), int> random_fn( int (*randfn)(), int randmax )
-{
-  pair< int(*)(), int > old = make_pair( rand_fn, rand_max );
-
-  if (randfn) {
-    rand_fn  = randfn;
-    rand_max = randmax;
-  }
-  
-  return old;
-}
-
-
-unsigned random_int(unsigned max) 
-{
-  assert( max );
-
-  unsigned r;
-  do 
-    r = (unsigned)( (double)rand_fn() * ((double)max / (double)rand_max) );
-  while ( r == max );
-  
-  assert( r < max );
-  return r;
-}
 
 struct extent_iterator::bellsym_cmp
 {
@@ -172,12 +119,6 @@ changes_iterator::changes_iterator( unsigned int nw, unsigned int nh,
 {
   stk.push_back(nh); 
   if ( nw>1 ) next(); 
-}
-
-bool random_bool( double ptrue )
-{
-  assert( ptrue <= 1 );
-  return rand_fn() < rand_max * ptrue;
 }
 
 row random_row( unsigned int nw, unsigned int nh, unsigned int nt )
