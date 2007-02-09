@@ -9,7 +9,8 @@ lib_LTLIBRARIES = libringingcore.la libringing.la
 
 # These source files are released under the LGPL
 libringingcore_la_SOURCES = row.cpp method.cpp library.cpp libfacet.cpp \
-libout.cpp stl.cpp xmllib.cpp xmlout.cpp peal.cpp mathutils.cpp
+libout.cpp stl.cpp xmllib.cpp xmlout.cpp peal.cpp mathutils.cpp bell.cpp \
+change.cpp
 
 # These source files are released under the GPL
 libringing_la_SOURCES = mslib.cpp cclib.cpp \
@@ -28,7 +29,8 @@ myinclude_HEADERS = macros.h row.h method.h library.h mslib.h cclib.h proof.h \
 music.h print.h print_ps.h dimension.h common.h common-am.h common-msvc.h \
 touch.h printm.h print_pdf.h pdf_fonts.h pointers.h extent.h falseness.h \
 search_base.h basic_search.h multtab.h table_search.h streamutils.h \
-xmllib.h group.h libfacet.h peal.h xmlout.h libout.h mathutils.h
+xmllib.h group.h libfacet.h peal.h xmlout.h libout.h mathutils.h bell.h \
+change.h
 
 # Delete common-am.h before packaging up the distribution
 dist-hook:

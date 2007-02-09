@@ -54,6 +54,8 @@
 #include <string>
 
 #include <ringing/mathutils.h> // For compile-time compatibility with 0.3
+#include <ringing/bell.h>
+#include <ringing/change.h> // For compile-time compatibility with 0.3
 
 #if _MSC_VER
 // Something deep within the STL in Visual Studio decides to 
@@ -65,118 +67,7 @@ RINGING_START_NAMESPACE
 
 RINGING_USING_STD
 
-class RINGING_API bell {
-private:
-  unsigned char x;
-  static char symbols[];	// Symbols for the individual bells
-public:
-  static const unsigned int MAX_BELLS;
-
-  bell() : x(0) {}
-  bell(int i) : x(i) {}
-  bell& from_char(char c) {
-    c = toupper(c);
-    for(x = 0; x < MAX_BELLS && symbols[x] != c; x++);
-    if(x == MAX_BELLS) 
-#if RINGING_USE_EXCEPTIONS
-      throw invalid();
-#else
-      x = MAX_BELLS + 1;
-#endif
-      return *this;
-  }
-  operator int() const { return x; }
-  bell& operator=(int i) { x = i; return *this; }
-  char to_char() const { return (x < MAX_BELLS) ? symbols[x] : '*'; }
-
-  struct invalid : public invalid_argument {
-    invalid();
-  };
-};
-
-inline RINGING_API ostream& operator<<(ostream& o, const bell b) 
-  { return o << b.to_char(); }
-
 class row;
-
-#if RINGING_AS_DLL
-RINGING_EXPLICIT_STL_TEMPLATE vector<bell>;
-#endif
-
-// change : This stores one change
-class RINGING_API change {
-private:
-  int n;			// Number of bells
-  vector<bell> swaps;		// List of pairs to swap
-
-  void init( const string & );
-public:
-  change() : n(0) {}	        //
-  explicit change(int num) : n(num) {}   // Construct an empty change
-  change(int num, const char *pn);
-  change(int num, const string& s);
-  // Use default copy constructor and assignment
-
-  change& set(int num, const char *pn) // Assign from place notation
-    { change(num, pn).swap(*this); return *this; }
-  change& set(int num, const string& pn)
-    { change(num, pn).swap(*this); return *this; }
-  bool operator==(const change& c) const
-    { return (n == c.n) && (n == 0 || swaps == c.swaps); }
-  bool operator!=(const change& c) const
-    { return !(*this == c); }
-  change reverse(void) const;		 // Return the reverse
-  void swap(change& other) {  // Swap this with another change 
-    int t = n; n = other.n; other.n = t;
-    swaps.swap(other.swaps);
-  }
-
-  friend RINGING_API row& operator*=(row& r, const change& c);
-  friend RINGING_API bell& operator*=(bell& i, const change& c);
-
-  string print() const;         // Print place notation to a string
-  char *print(char *pn) const;	// This overload is deprecated.
-  int bells(void) const { return n; } // Return number of bells
-  int sign(void) const;		// Return whether it's odd or even
-  bool findswap(bell which) const; // Check whether a particular swap is done
-  bool findplace(bell which) const; // Check whether a particular place is made
-  bool swappair(bell which);		// Swap or unswap a pair
-  bool internal(void) const;	// Does it contain internal places?
-  int count_places(void) const; // Count the number of places made
-
-  // So that we can put changes into containers
-  bool operator<(const change& c) const {
-    return (n < c.n) || (n == c.n && swaps < c.swaps);
-  }
-  bool operator>(const change& c) const {
-    return (n > c.n) || (n == c.n && swaps > c.swaps);
-  }
-  bool operator>=(const change& c) const { return !( *this < c ); }
-  bool operator<=(const change& c) const { return !( *this > c ); }
-
-  // Thrown by swappair if the pair to swap is out of range
-  struct out_of_range : public RINGING_PREFIX_STD out_of_range {
-    out_of_range();
-  };
-
-  // Thrown by the constructor if an invalid place-notation is given 
-  struct invalid : public invalid_argument {
-    invalid();
-    invalid(const string& s);
-  };
-
-};
-
-inline RINGING_API ostream& operator<<(ostream& o, const change& c) {
-  return o << c.print();
-}
-
-// Apply a change to a position
-RINGING_API bell& operator*=(bell& i, const change& c); 
-inline RINGING_API bell operator*(bell i, const change& c)
-{
-  bell j = i; j *= c; return j;
-}
 
 #if RINGING_AS_DLL && defined(_MSC_VER)
 #pragma warning( push )
@@ -350,7 +241,6 @@ inline RINGING_API row_permuter permute(row &r) { return row_permuter(r); }
 
 #if RINGING_AS_DLL
 RINGING_EXPLICIT_STL_TEMPLATE vector<row>;
-RINGING_EXPLICIT_STL_TEMPLATE vector<change>;
 #endif
 
 // row_block : Stores some rows, along with a pointer to some
@@ -374,6 +264,5 @@ RINGING_END_NAMESPACE
 
 // specialise std::swap
 RINGING_DELEGATE_STD_SWAP( row )
-RINGING_DELEGATE_STD_SWAP( change )
 
 #endif
