@@ -23,6 +23,8 @@
 #pragma implementation
 #endif
 
+#include <iterator>
+
 #include <ringing/print_ps.h>
 
 RINGING_START_NAMESPACE

@@ -23,10 +23,14 @@
 #pragma implementation
 #endif
 
+#include <iterator>
+
 #include "expression.h"
 #include "proof_context.h"
 #include <ringing/streamutils.h>
 #include <ringing/music.h>
+#include <ringing/place_notation.h>
+
 
 RINGING_USING_NAMESPACE
 

@@ -33,6 +33,7 @@
 #include <stack.h>
 #include <stdexcept.h>
 #include <functional.h>
+#include <iostream.h>
 #else
 #include <iterator>
 #include <algorithm>
@@ -40,6 +41,7 @@
 #include <stack>
 #include <stdexcept>
 #include <functional>
+#include <iostream>
 #endif
 #if RINGING_HAVE_OLD_IOSTREAMS
 #include <iostream.h>

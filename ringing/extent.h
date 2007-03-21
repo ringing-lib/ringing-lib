@@ -40,7 +40,9 @@
 #endif
 #include <ringing/row.h>
 
-#include <ringing/mathutils.h> // For compile-time compatibility with 0.3
+#if RINGING_BACKWARDS_COMPATIBLE(0,3,0)
+#include <ringing/mathutils.h>
+#endif
 
 RINGING_START_NAMESPACE
 

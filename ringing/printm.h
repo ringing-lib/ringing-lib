@@ -30,6 +30,8 @@
 #pragma interface
 #endif
 
+#include <list>
+
 #include <ringing/print.h>
 #include <ringing/method.h>
 

@@ -36,11 +36,15 @@
 #include <vector>
 #endif
 #include <string>
+
+#include <ringing/change.h>
 #include <ringing/row.h>
 
 RINGING_START_NAMESPACE
 
 RINGING_USING_STD
+
+class row;
 
 // method - A method.
 class RINGING_API method : public vector<change> {
@@ -90,16 +94,9 @@ public:
     : vector<change>(l, change(b)), b(b), myname(n) {}
 
   // Make a method from place notation
-  method(const char *pn, int b, const char *n = "Untitled") : b(b) {
-    name(n);
-    interpret_pn(b, pn, pn + strlen(pn), 
-		 back_insert_iterator<vector<change> >(*this));
-  }
-  method(const string pn, int b, const string& n = "Untitled") : b(b) {
-    name(n);
-    interpret_pn(b, pn.begin(), pn.end(),
-		 back_insert_iterator<vector<change> >(*this));
-  }
+  method(const char *pn, int b, const char *n = "Untitled");
+  method(const string& pn, int b, const string& n = "Untitled");
+  
   ~method() {}
   void swap( method& other ) {
     vector<change>::swap(other); 
@@ -114,12 +111,7 @@ public:
 
   int length() const { return size(); }
   int bells() const { return b; }
-  row lh() const { 
-    vector<change>::const_iterator i;
-    row r(bells());
-    for(i=begin(); i != end(); i++) r *= *i;
-    return r;
-  }
+  row lh() const;
   bool issym(void) const;	// Is it symmetrical?
   bool isdouble(void) const;	// Is it double?
   bool isregular(void) const 	// Is it regular?

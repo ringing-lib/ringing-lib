@@ -42,13 +42,6 @@ RINGING_USING_STD
 
 RINGING_START_NAMESPACE
 
-place_notation::invalid::invalid()
-  : invalid_argument("The place notation supplied was invalid")
-{}
-
-place_notation::invalid::invalid(const string& s)
-  : invalid_argument("The place notation '" + s + "' was invalid") {} 
-
 // *********************************************************************
 // *                    Functions for class row                        *
 // *********************************************************************

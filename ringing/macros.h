@@ -1,6 +1,6 @@
 // -*- C++ -*- macros.h.in - Macros to hide system specific constructs
 //
-// Copyright (C) 2001, 2002, 2003, 2006 Martin Bright <martin@boojum.org.uk> 
+// Copyright (C) 2001, 2002, 2003, 2006, 2007 Martin Bright <martin@boojum.org.uk> 
 // and Richard Smith <richard@ex-parrot.com>
 
 // This library is free software; you can redistribute it and/or
@@ -271,5 +271,16 @@ RINGING_END_NAMESPACE_STD
 #else
 # define RINGING_HAS_PRAGMA_ONCE 0
 #endif
+
+// Handle optional backwards compatibility
+#define RINGING_MAKE_VERSION(major, minor, patch) 			\
+  ( (major)*10000 + (minor)*100 + patch )
+#define RINGING_BACKWARDS_COMPATIBLE(major,minor,patch) 		\
+  ( defined(RINGING_COMPATIBLE_WITH) && 				\
+    RINGING_MAKE_VERSION(major,minor,patch) >= RINGING_COMPATIBLE_WITH )
+
+// Edit this line to enable/disable compatibility
+#define RINGING_COMPATIBLE_WITH RINGING_MAKE_VERSION(0,3,0)
+
 
 #endif // RINGING_MACROS_H

@@ -47,6 +47,7 @@
 #include <ringing/extent.h>
 #include <ringing/streamutils.h>
 #include <ringing/mathutils.h>
+#include <ringing/place_notation.h>
 
 
 RINGING_USING_NAMESPACE

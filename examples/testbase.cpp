@@ -20,12 +20,15 @@
 #if RINGING_OLD_INCLUDES
 #include <iostream.h>
 #include <stdexcept.h>
+#include <iterator.h>
 #else
 #include <iostream>
+#include <iterator>
 #include <stdexcept>
 #endif
 #include <ringing/method.h>
 #include <ringing/extent.h>
+#include <ringing/place_notation.h>
 #include <string>
 
 #if RINGING_USE_NAMESPACES

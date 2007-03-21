@@ -27,8 +27,10 @@
 #include <string>
 #if RINGING_OLD_INCLUDES
 #include <stdexcept.h>
+#include <iostream.h>
 #else
 #include <stdexcept>
+#include <iostream>
 #endif
 #if RINGING_OLD_C_INCLUDES
 #include <stddef.h>

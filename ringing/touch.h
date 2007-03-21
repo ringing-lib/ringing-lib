@@ -41,6 +41,7 @@
 #endif
 
 #include <ringing/row.h>
+#include <ringing/place_notation.h>
 #include <ringing/pointers.h>
 
 RINGING_START_NAMESPACE

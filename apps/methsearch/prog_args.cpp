@@ -37,6 +37,7 @@
 #else
 #include <cassert>
 #endif
+#include <iostream>
 
 RINGING_USING_NAMESPACE
 RINGING_USING_STD

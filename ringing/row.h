@@ -32,18 +32,12 @@
 #endif
 
 #if RINGING_OLD_INCLUDES
-#include <iostream.h>
+#include <ostream.h>
 #include <vector.h>
-#include <iterator.h>
-#include <list.h>
-#include <algo.h>
 #include <stdexcept.h>
 #else
-#include <iostream>
+#include <ostream>
 #include <vector>
-#include <iterator>
-#include <list>
-#include <algorithm>
 #include <stdexcept>
 #endif
 #if RINGING_OLD_C_INCLUDES
@@ -53,9 +47,14 @@
 #endif
 #include <string>
 
-#include <ringing/mathutils.h> // For compile-time compatibility with 0.3
 #include <ringing/bell.h>
-#include <ringing/change.h> // For compile-time compatibility with 0.3
+#include <ringing/change.h> // For row_block
+
+#if RINGING_BACKWARDS_COMPATIBLE(0,3,0)
+#include <ringing/change.h> 
+#include <ringing/mathutils.h>
+#include <ringing/place_notation.h>
+#endif
 
 #if _MSC_VER
 // Something deep within the STL in Visual Studio decides to 
@@ -67,75 +66,7 @@ RINGING_START_NAMESPACE
 
 RINGING_USING_STD
 
-class row;
-
-#if RINGING_AS_DLL && defined(_MSC_VER)
-#pragma warning( push )
-#pragma warning( disable : 4275 )
-#endif
-
-struct place_notation { 
-  // Exception thrown if place-notation is malformed 
-  struct RINGING_API invalid : public invalid_argument {
-    invalid();
-    invalid(const string& s);
-  };
-};
-
-#if RINGING_AS_DLL && defined(_MSC_VER)
-#pragma warning( pop )
-#endif
-
-// Take the place notation between start and finish, and send it as
-// a sequence of changes to out.
-template<class OutputIterator, class ForwardIterator>
-void interpret_pn(int num, ForwardIterator i, ForwardIterator finish, 
-		  OutputIterator out)
-{
-  ForwardIterator j;
-  bool symblock;
-  change cross = change(num,"X");
-  while(i != finish && isspace(*i)) ++i; // Skip whitespace
-  while(i != finish) {
-    list<change> block;
-    // See whether it's a symmetrical block or not
-    symblock = (*i == '&'); 
-    // Allow MicroSIRIL style '+' prefix
-    if(*i == '&' || *i == '+') { 
-      ++i; 
-      while(i != finish && isspace(*i)) ++i; // Skip whitespace
-      if(i != finish && *i == '.') ++i; // Skip a '.' separator
-      while(i != finish && isspace(*i)) ++i; // Skip whitespace
-    }
-    while(i != finish && (isalnum(*i) || *i == '-')) {
-      // Get a change
-      if(*i == 'X' || *i == 'x' || *i == '-') {
-	++i;
-	block.push_back(cross);
-      }
-      else {
-	j = i;
-	while(j != finish && isalnum(*j) && *j != 'X' && *j != 'x') ++j;
-	if(j != i) block.push_back(change(num, string(i, j)));
-	i = j;
-      }
-      while(i != finish && isspace(*i)) ++i; // Skip whitespace
-      if(i != finish && *i == '.') ++i; // Skip a '.' separator
-      while(i != finish && isspace(*i)) ++i; // Skip whitespace
-    }
-    // Now output the block
-    copy(block.begin(), block.end(), out);
-    if(symblock && !block.empty()) { 
-      block.pop_back(); 
-      copy(block.rbegin(), block.rend(), out);
-    }
-    if(i != finish) {
-      if (*i != ',') throw place_notation::invalid(); 
-      ++i; // Skip a ',' separator
-      while(i != finish && isspace(*i)) ++i; // Skip whitespace
-    }
-  }
-}
+class change;
 
 // row : This stores one row 
 class RINGING_API row {

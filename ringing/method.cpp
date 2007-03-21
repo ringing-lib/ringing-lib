@@ -33,8 +33,11 @@
 #include <bvector.h>
 #endif
 
-#include <ringing/method.h>
+#include <ringing/change.h>
 #include <ringing/mathutils.h>
+#include <ringing/method.h>
+#include <ringing/place_notation.h>
+#include <ringing/row.h>
 
 RINGING_USING_STD
 
@@ -58,7 +61,7 @@ const char *method::txt_classes[12] = {
   "Alliance",
   "Hybrid",
   "Slow Course"
-  };
+};
 
 const char *method::txt_stages[20] = {
   "Singles",
@@ -81,11 +84,35 @@ const char *method::txt_stages[20] = {
   "Twenty",
   "Decuples",
   "Twenty-two"
-  };
+};
 
 const char *method::txt_differential = "Differential";
 const char *method::txt_double       = "Double";
 const char *method::txt_little       = "Little";
+
+method::method(const char *pn, int b, const char *n) 
+  : b(b) 
+{
+  name(n);
+  interpret_pn(b, pn, pn + strlen(pn),
+               back_insert_iterator<vector<change> >(*this));
+}
+
+method::method(const string& pn, int b, const string& n) 
+  : b(b) 
+{
+  name(n);
+  interpret_pn(b, pn.begin(), pn.end(),
+               back_insert_iterator<vector<change> >(*this));
+}
+
+row method::lh() const
+{
+  vector<change>::const_iterator i;
+  row r(bells());
+  for(i=begin(); i != end(); i++) r *= *i;
+  return r;
+}
 
 string method::classname(int cl)
 {

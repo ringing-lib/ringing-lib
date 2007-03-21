@@ -4,34 +4,26 @@ distributed with it, are under the terms of the GNU General Public License
 
 However, some of the core files from the Ringing Class Library are licenced 
 under the less restrictive terms of the GNU Lesser General Public License
-(see COPYING.LGPL for the terms of this).  These files are are all clearly 
+(see COPYING.LGPL for the terms of this).  These files are all clearly 
 marked.
 
 The purpose of this is to allow the parts of the Ringing Class Library needed
-to reads XML method libraries to be linked into commercial applications 
+to read XML method libraries to be linked into commercial applications 
 without placing any restrictions on the licence used in such applications 
 as a whole.
 
-At the time of writing the following files are licenced under the LGPL
+At the time of writing the following files are licenced under the LGPL:
 
-  ./ringing/common.h
-  ./ringing/common-am.h.in
-  ./ringing/common-msvc.h
-  ./ringing/libfacet.cpp
-  ./ringing/libfacet.h
-  ./ringing/library.cpp
-  ./ringing/library.h
-  ./ringing/macros.h
-  ./ringing/method.cpp
-  ./ringing/method.h
-  ./ringing/peal.cpp
-  ./ringing/peal.h
-  ./ringing/pointers.h
-  ./ringing/row.cpp
-  ./ringing/row.h
-  ./ringing/stl.cpp
-  ./ringing/xmllib.cpp
-  ./ringing/xmllib.h
+  ringing/bell.h          ringing/method.h        ringing/library.cpp
+  ringing/change.h        ringing/peal.h          ringing/mathutils.cpp
+  ringing/common-am.h     ringing/pointers.h      ringing/method.cpp
+  ringing/common.h        ringing/row.h           ringing/peal.cpp
+  ringing/common-msvc.h   ringing/xmllib.h        ringing/row.cpp
+  ringing/libfacet.h      ringing/xmlout.h        ringing/stl.cpp
+  ringing/libout.h        ringing/bell.cpp        ringing/xmllib.cpp
+  ringing/library.h       ringing/change.cpp      ringing/xmlout.cpp
+  ringing/macros.h        ringing/libfacet.cpp
+  ringing/mathutils.h     ringing/libout.cpp
 
-however, for an up-to-date list, the licences on the individual files should 
-be consulted.
+For an up-to-date list, the licences on the individual files should be 
+consulted.
