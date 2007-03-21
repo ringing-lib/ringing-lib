@@ -239,7 +239,7 @@ public:
   // second argument to these constructors, however, in code that 
   // needs to compile in MSVC 5, if the class is used on an incomplete 
   // type (e.g. in the pimpl idiom), pass delete_helper<T>::fn
-  // as the second argument and ignore all the warnings of the 
+  // as the second argument and ignore all the warnings
   // 
   explicit scoped_pointer( T *src, deletor_type d )
     : ptr( src ), deletor(d) 
