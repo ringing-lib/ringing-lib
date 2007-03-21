@@ -69,7 +69,8 @@ make_string::operator string()
 
 RINGING_END_NAMESPACE
 
-
+// This code is pinched from gcc and is therefore under the GPL 
+// (with the compiled-by-gcc exception)
 #if defined(_MSC_VER) && _MSC_VER <= 1200 && defined(_YVALS) && (!defined(_CPPLIB_VER) || _CPPLIB_VER < 306)
 istream& getline( istream& in, string &str, char delim )
 {

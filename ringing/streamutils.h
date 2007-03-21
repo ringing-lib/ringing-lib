@@ -140,7 +140,7 @@ Target lexical_cast(Source arg, Target* = 0)
 RINGING_END_NAMESPACE
 
 
-// This exists because Visual Studio's default STL (an old version of the
+// This exists because Visual Studio 6's default STL (an old version of the
 // Dinkumware STL) has a bug in it's implementation of istream<>::getline.
 // If we're using that STL, this provides a work around.  This overload gets
 // chosen in preference to std::getline because it is non-templated.
