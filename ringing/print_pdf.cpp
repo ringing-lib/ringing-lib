@@ -44,6 +44,12 @@
 
 RINGING_START_NAMESPACE
 
+pdf_file::pdf_file(ostream& o, bool l, int w, int h)
+  : csb(o.rdbuf()), os(&csb), width(w), height(h), landscape(l)
+{
+  start();
+}
+
 void pdf_file::start()
 {
   os << "%PDF-1.4\n";

@@ -84,10 +84,9 @@ private:
   int font_counter;
 
 public:
-  pdf_file(ostream& o, bool l = false, int w = 590, int h = 835) 
-    : csb(o.rdbuf()), os(&csb) , width(w), height(h), landscape(l) 
-    { start(); }
-  ~pdf_file() { end(); }
+  pdf_file(ostream& o, bool is_landscape = false, 
+           int pagewidth = 590, int pageheight = 835);
+ ~pdf_file() { end(); }
 
   void start();
   void end();
