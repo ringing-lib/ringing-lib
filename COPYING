@@ -14,16 +14,21 @@ as a whole.
 
 At the time of writing the following files are licenced under the LGPL:
 
-  ringing/bell.h          ringing/method.h        ringing/library.cpp
-  ringing/change.h        ringing/peal.h          ringing/mathutils.cpp
-  ringing/common-am.h     ringing/pointers.h      ringing/method.cpp
-  ringing/common.h        ringing/row.h           ringing/peal.cpp
-  ringing/common-msvc.h   ringing/xmllib.h        ringing/row.cpp
-  ringing/libfacet.h      ringing/xmlout.h        ringing/stl.cpp
-  ringing/libout.h        ringing/bell.cpp        ringing/xmllib.cpp
-  ringing/library.h       ringing/change.cpp      ringing/xmlout.cpp
-  ringing/macros.h        ringing/libfacet.cpp
-  ringing/mathutils.h     ringing/libout.cpp
+  ringing/bell.cpp                ringing/mathutils.h
+  ringing/bell.h                  ringing/method.cpp
+  ringing/change.cpp              ringing/method.h
+  ringing/change.h                ringing/peal.cpp
+  ringing/common-am.h             ringing/peal.h
+  ringing/common.h                ringing/place_notation.cpp
+  ringing/common-msvc.h           ringing/place_notation.h
+  ringing/libfacet.cpp            ringing/pointers.h
+  ringing/libfacet.h              ringing/row.cpp
+  ringing/libout.cpp              ringing/row.h
+  ringing/libout.h                ringing/stl.cpp
+  ringing/library.cpp             ringing/xmllib.cpp
+  ringing/library.h               ringing/xmllib.h
+  ringing/macros.h                ringing/xmlout.cpp
+  ringing/mathutils.cpp           ringing/xmlout.h
 
 For an up-to-date list, the licences on the individual files should be 
 consulted.
