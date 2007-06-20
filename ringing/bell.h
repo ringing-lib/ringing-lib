@@ -1,5 +1,6 @@
 // -*- C++ -*- bell.h - A simple class representing a bell's position in a row
-// Copyright (C) 2001 Martin Bright <martin@boojum.org.uk>
+// Copyright (C) 2001, 2007 Martin Bright <martin@boojum.org.uk> 
+// and Richard Smith <richard@ex-parrot.com>
 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
