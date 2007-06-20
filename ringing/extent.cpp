@@ -74,11 +74,71 @@ extent_iterator &extent_iterator::operator++()
   return *this;
 }
 
+RINGING_API size_t
+position_in_extent( row const& r, unsigned nw, unsigned nh, unsigned nt )
+{
+  size_t const b = r.bells();
+
+  if (b > nt) 
+    throw out_of_range( "Row has too many bells" );
+  for ( size_t i=0; i<nh; ++i )
+    if ( r[i] != i )
+      throw out_of_range( "Row does not have fixed trebles" );
+  for ( size_t i=nh+nw; i<nt; ++i )
+    if ( r[i] != i )
+      throw out_of_range( "Row does not have fixed tenors" );
+
+  size_t x = 0u;
+  for ( size_t i=nh; i<nw+nh; ++i )
+  {
+    x *= nw + nh - i;
+    for ( size_t j=i+1; j<nw+nh; ++j )
+      if ( j < b && r[j] < r[i] ) 
+        ++x;
+  }
+
+  return x;
+}
+
+RINGING_API row
+nth_row_of_extent( size_t n, unsigned nw, unsigned nh, unsigned nt )
+{
+  row r(nt);
+  vector<bell> v;
+  r.swap(v);
+
+  for ( size_t i=nh; i<nw+nh; ++i )
+  {
+    size_t const fact = factorial(nw + nh - i - 1);
+    v[i] = n / fact + nh; n %= fact;
+     
+    for ( bell b(nh); b <= v[i]; ++b )
+      if ( find( v.begin()+nh, v.begin()+i, b ) != v.begin()+i )
+        ++v[i];
+  }
+
+  r.swap(v);
+  return r;
+}
+
+RINGING_API row
+nth_row_of_incourse_extent( size_t n, unsigned nw, unsigned nh, unsigned nt )
+{
+  row r( nth_row_of_extent( n*2, nw, nh, nt ) );
+  if ( r.sign() < 0 ) {
+    change c(nt); 
+    c.swappair(nw+nh-2); 
+    r *= c;
+  }
+  return r;
+}
+
+
 incourse_extent_iterator &incourse_extent_iterator::operator++() 
 {
   do { 
     ++ei; 
-  } while (ei != ee && ei->sign() < 0);
+  } while ( !ei.is_end() && ei->sign() < 0);
   return *this;
 }
 
