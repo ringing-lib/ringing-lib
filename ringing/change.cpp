@@ -55,10 +55,11 @@ void change::init( const string &pn )
 #endif
     return;
   }
-  bell b, c, d;
+  bell c;
   if( pn.size() == 1 && (*p == 'X' || *p == 'x' || *p == '-') )
     c = 0;
   else {
+    bell b;
     b.from_char(*p); if(b > 0 && b & 1) c = 1; else c = 0;
     while(p != pn.end()) {
       b.from_char(*p);
@@ -66,7 +67,8 @@ void change::init( const string &pn )
       if(b >= n || b <= c-1) throw invalid(pn);
 #endif
       if(b >= c) {
-        for(d = c; d < b-1; d = d + 2) swaps.push_back(d);
+        bell d;
+        for(d = c; d < b-1; d += 2) swaps.push_back(d);
 #if RINGING_USE_EXCEPTIONS
         if ( d == b-1 ) throw invalid(pn);
 #endif
@@ -75,7 +77,7 @@ void change::init( const string &pn )
       ++p;
     }
   }
-  for(d = c; d < n-1; d = d + 2) swaps.push_back(d);
+  for(bell d = c; d < n-1; d += 2) swaps.push_back(d);
 }
 
 // Construct from place notation to a change
@@ -121,11 +123,11 @@ string change::print() const
     bell i = 0;
     vector<bell>::const_iterator s;
     for(s = swaps.begin(); s != swaps.end(); s++) { // Find the next swap
-      while(i < *s) { p += i.to_char(); i = i + 1; } // Write all the places
-      i = i + 2;
+      while(i < *s) { p += i.to_char(); ++i; } // Write all the places
+      i += 2;
     }
     // Write the remaining places
-    while(i < n) { p += i.to_char(); i = i + 1; }
+    while(i < n) { p += i.to_char(); ++i; }
     if(p.empty()) p = "X";
   }
   return p;
@@ -238,9 +240,9 @@ bell& operator*=(bell& b, const change& c)
   vector<bell>::const_iterator s;
   for(s = c.swaps.begin(); s != c.swaps.end() && *s <= b; s++)
     if(*s == b - 1)
-      b = b - 1;
+      --b;
     else if(*s == b)
-      b = b + 1;
+      ++b;
   return b;
 }
 

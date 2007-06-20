@@ -233,7 +233,7 @@ int method::methclass(void) const
 
   // Find the first hunt bell
   row lhr = lh();
-  for(hb = 0; lhr[hb] != hb && hb < bells(); hb = hb + 1);
+  for(hb = 0; lhr[hb] != hb && hb < bells(); ++hb);
   
   // Find the size of the first set of working bells    
   int wb=0;

@@ -63,8 +63,8 @@ void printmethod::defaults()
   huntstyle.crossing = false;
 
   opt.lines.clear();
-  bell b; bool found_working_bell = false;
-  for(b = 0; b < m->bells(); b = b + 1) {
+  bool found_working_bell = false;
+  for(bell b(0); b < m->bells(); ++b) {
     if(r[b] == b)
       opt.lines[b] = huntstyle;
     else if(!found_working_bell && c.findplace(b)) {
@@ -74,7 +74,7 @@ void printmethod::defaults()
     }
   }
   if(!found_working_bell)
-    for(b = 0; b < m->bells(); b = b + 1)
+    for(bell b(0); b < m->bells(); ++b)
       if(r[b] != b) {
 	opt.lines[b] = workstyle;
 	placebells = b;

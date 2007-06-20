@@ -86,11 +86,16 @@ public:
 #endif
       return *this;
   }
-  operator int() const { return x; }
-  bell& operator=(int i) { x = i; return *this; }
+  operator int() const    { return x; }
+  bell& operator=(int i)  { x = i; return *this; }
 
-  bell& operator++() { ++x; return *this; }
-  bell operator++(int) { return x++; }
+  // Incrementing and decrementing.
+  bell& operator++()      { ++x;  return *this; }
+  bell  operator++(int)   {       return x++; }
+  bell& operator--()      { --x;  return *this; }
+  bell  operator--(int)   {       return x--; }
+  bell& operator+=(int i) { x+=i; return *this;}
+  bell& operator-=(int i) { x-=i; return *this;}
 
   char to_char() const { return (x < MAX_BELLS) ? symbols[x] : '*'; }
 
