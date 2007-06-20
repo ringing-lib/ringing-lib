@@ -56,22 +56,50 @@ struct extent_iterator::bellsym_cmp
 
 extent_iterator::extent_iterator( unsigned int nw, unsigned int nh, 
 				  unsigned int nt )
-  : nw(nw), nh(nh), nt(nt), end(false), 
-    r(nt), s(r.print())
+  : nw(nw), nh(nh), nt(nt), end_(false), r(nt)
 {}
 
 extent_iterator::extent_iterator( unsigned int nw, unsigned int nh )
-  : nw(nw), nh(nh), nt(nw+nh), 
-    end(false),
-    r(nt), s(r.print())
+  : nw(nw), nh(nh), nt(nw+nh), end_(false), r(nt)
 {}
 
 extent_iterator &extent_iterator::operator++()
 {
-  end = ! next_permutation( s.begin() + nh, s.end() + (nh + nw - nt),
-			    bellsym_cmp() );
-  if (!end) r = s.c_str();
+  vector<bell> v; r.swap(v);
+  end_ = ! next_permutation( v.begin() + nh, v.end() + (nh + nw - nt) );
+  if (!end_) r.swap(v);
   return *this;
+}
+
+extent_iterator &extent_iterator::operator--()
+{
+  if (end_) { // back rounds on working bells
+    vector<bell> v(nt);
+    for ( unsigned i=0; i<nh; ++i ) v[i] = i;
+    for ( unsigned i=nh; i<nw+nh; ++i ) v[i] = nw+nh-1 - i + nh;
+    for ( unsigned i=nw+nh; i<nt; ++i ) v[i] = i;
+    r.swap(v);
+  } 
+  else {
+    vector<bell> v; r.swap(v);
+    prev_permutation( v.begin() + nh, v.end() + (nh + nw - nt) );
+    r.swap(v);
+  }
+  return *this;
+}
+
+bool extent_iterator::operator<( const extent_iterator& i ) const
+{
+  if (i.end_) return !end_;
+  else if (end_) return false;
+  else r < i.r; 
+}
+
+extent_iterator extent_iterator::end( unsigned nw, unsigned nh, unsigned nt )
+{ 
+  extent_iterator e(nw, nh, nt); 
+  e.end_ = true; 
+  return e;
 }
 
 RINGING_API size_t
@@ -103,23 +131,51 @@ position_in_extent( row const& r, unsigned nw, unsigned nh, unsigned nt )
 RINGING_API row
 nth_row_of_extent( size_t n, unsigned nw, unsigned nh, unsigned nt )
 {
-  row r(nt);
   vector<bell> v;
-  r.swap(v);
 
-  for ( size_t i=nh; i<nw+nh; ++i )
+  for ( unsigned i=0; i<nh; ++i ) v[i] = i;
+  for ( unsigned i=nh; i<nw+nh; ++i )
   {
     size_t const fact = factorial(nw + nh - i - 1);
-    v[i] = n / fact + nh; n %= fact;
+    bell b = n / fact + nh; n %= fact;
      
-    for ( bell b(nh); b <= v[i]; ++b )
-      if ( find( v.begin()+nh, v.begin()+i, b ) != v.begin()+i )
-        ++v[i];
-  }
+    for ( bell ob(nh); ob <= v[i]; ++ob )
+      for ( unsigned j=0; j<i; ++j )
+        if ( ob == v[j] ) {
+          ++b; break;
+        }
 
-  r.swap(v);
-  return r;
+    v[i] = b;
+  }
+  for ( unsigned i=nw+nh; i<nt; ++i ) v[i] = i;
+  return row(v);
 }
+
+extent_iterator extent::begin() const
+{
+  return extent_iterator(nw, nh, nt); 
+}
+
+extent_iterator extent::end() const
+{ 
+  return extent_iterator::end(nw, nh, nt); 
+}
+
+row extent::operator[]( size_t n ) const 
+{
+  return nth_row_of_extent(n, nw, nh, nt);
+}
+
+size_t extent::operator[]( row r ) const
+{
+  return position_in_extent( r, nw, nh, nt );
+}
+
+size_t extent::size() const
+{
+  return factorial(nw); 
+}
+
 
 RINGING_API row
 nth_row_of_incourse_extent( size_t n, unsigned nw, unsigned nh, unsigned nt )
@@ -146,7 +202,7 @@ void changes_iterator::next()
 {
   if ( nw == 0 || stk.size() == nw && stk.back() == nw+nh-1 )
     {
-      end = true;
+      end_ = true;
       return;
     }
   
@@ -167,7 +223,7 @@ void changes_iterator::next()
 }
 
 changes_iterator::changes_iterator( unsigned int nw, unsigned int nh )
-  : nw(nw), nh(nh), end(false), c(nw+nh)
+  : nw(nw), nh(nh), end_(false), c(nw+nh)
 {
   stk.push_back(nh); 
   if ( nw>1 ) next(); 
@@ -175,7 +231,7 @@ changes_iterator::changes_iterator( unsigned int nw, unsigned int nh )
 
 changes_iterator::changes_iterator( unsigned int nw, unsigned int nh, 
 				    unsigned int nt )
-  : nw(nw), nh(nh), end(false), c(nt) 
+  : nw(nw), nh(nh), end_(false), c(nt) 
 {
   stk.push_back(nh); 
   if ( nw>1 ) next(); 
@@ -183,25 +239,7 @@ changes_iterator::changes_iterator( unsigned int nw, unsigned int nh,
 
 row random_row( unsigned int nw, unsigned int nh, unsigned int nt )
 {
-  int idx( random_int( factorial(nw) ) );
-  string s( nt, '?' );
-  unsigned i;
-  for (i=0; i<nh; ++i) s[i] = bell(i).to_char();
-  for (i=nh; i<nw+nh; ++i)
-    {
-      const int fact( factorial(nw-i+nh-1) );
-      unsigned int b = idx / fact;
-      idx %= fact;
-      
-      for (unsigned ob=0; ob<=b; ++ob)
-	for (unsigned j=0; j<i; ++j)
-	  if ( bell(ob).to_char() == s[j] )
-	    ++b;
-      
-      s[i] = bell(b).to_char();
-    }
-  for (i=nw+nh; i<nt; ++i) s[i] = bell(i).to_char();
-  return s;
+  return nth_row_of_extent( random_int( factorial(nw) ), nw, nh, nt );
 }
 
 

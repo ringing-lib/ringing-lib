@@ -55,14 +55,14 @@ class RINGING_API extent_iterator
 {
 public:
   // Standard iterator typedefs
-  typedef forward_iterator_tag iterator_category;
+  typedef bidirectional_iterator_tag iterator_category;
   typedef row value_type;
   typedef ptrdiff_t difference_type;
   typedef const row *pointer;
   typedef const row &reference;
 
-  // The end iterator
-  extent_iterator() : end(true) {}
+  // A generic end iterator (cannot be decremented)
+  extent_iterator() : end_(true) {}
   
   // The beginning iterator
   //   nw == The number of working bells 
@@ -79,25 +79,43 @@ public:
   
   // Equality Comparable implementation
   bool operator==( const extent_iterator &i ) const
-    { return end == i.end && (end || r == i.r); }
+    { return end_ == i.end_ && (end_ || r == i.r); }
   bool operator!=( const extent_iterator &i ) const
     { return !( *this == i ); }
+
+  // Less-than Comparable implementation
+  bool operator< ( const extent_iterator &i ) const;
+  bool operator> ( const extent_iterator &i ) const
+    { return i < *this; }
+  bool operator<=( const extent_iterator &i ) const 
+    { return !( i < *this ); }
+  bool operator>=( const extent_iterator &i ) const
+    { return !( *this < i ); }
 
   // Forward Iterator implementation
   extent_iterator &operator++();
   extent_iterator operator++(int)
     { extent_iterator tmp(*this); ++*this; return tmp; }
 
-  bool is_end() const { return end; }
+  // Bidirectional Iterator implementation
+  extent_iterator &operator--();
+  extent_iterator operator--(int)
+    { extent_iterator tmp(*this); --*this; return tmp; }
+
+
+  bool is_end() const { return end_; }
+  static extent_iterator end( unsigned nw, unsigned nh, unsigned nt );
+  static extent_iterator end( unsigned nw, unsigned nh = 0)
+    { return end(nw, nh, nw+nh);  }
 
 private:
   struct bellsym_cmp;
 
   unsigned int nw, nh, nt;
-  bool end;
+  bool end_;
   row r;
-  string s;
 };
+
 
 // Find the position of the row with in an extent ordered lexicographically.
 // Returns in range [0, nw!)
@@ -109,6 +127,7 @@ position_in_extent( row const& r, unsigned nw, unsigned nh = 0 ) {
   return position_in_extent( r, nw, nh, nw+nh );
 }
 
+
 // Finds the nth row of an extent ordered lexicographically.
 RINGING_API row
 nth_row_of_extent( size_t n, unsigned nw, unsigned nh, unsigned nt );
@@ -118,6 +137,30 @@ nth_row_of_extent( size_t n, unsigned nw, unsigned nh = 0 ) {
   return nth_row_of_extent( n, nw, nh, nw+nh );
 }
 
+
+// A pseudo-container class representing the extent
+class RINGING_API extent {
+public:
+  typedef row    value_type;
+  typedef size_t size_type;
+  typedef extent_iterator const_iterator;
+
+  explicit extent( unsigned nw, unsigned nh = 0 ) 
+    : nw(nw), nh(nh), nt(nw+nh) {}
+  extent( unsigned nw, unsigned nh, unsigned nt )
+    : nw(nw), nh(nh), nt(nt) {}
+
+  extent_iterator begin() const;
+  extent_iterator end() const;
+  size_t size() const;
+
+  // Get nth row and corresponding reverse map
+  row operator[]( size_t n ) const;
+  size_t operator[]( row r ) const;
+ 
+private:
+  unsigned nw, nh, nt;
+};
 
 
 // Generate the in-course half-extent in lexicographical order
@@ -201,8 +244,8 @@ public:
   typedef const change *pointer;
   typedef const change &reference;
 
-  // The end iterator
-  changes_iterator() : end(true) {}
+  // A generic end iterator
+  changes_iterator() : end_(true) {}
 
   // The beginning iterator
   //   nw == The number of working bells 
@@ -219,7 +262,7 @@ public:
 
   // Equality Comparable implementation
   bool operator==( const changes_iterator &i ) const 
-    { return end == i.end && (end || c == i.c); }
+    { return end_ == i.end_ && (end_ || c == i.c); }
   bool operator!=( const changes_iterator &i ) const 
     { return !operator==(i); }
 
@@ -233,7 +276,7 @@ private:
   void next();
 
   unsigned nw, nh;
-  bool end;
+  bool end_;
   change c;
   vector<unsigned int> stk;
 };
