@@ -31,6 +31,12 @@
 #pragma interface
 #endif
 
+#if RINGING_OLD_C_INCLUDES
+#include <limits.h>
+#else
+#include <climits>
+#endif
+
 #if RINGING_OLD_INCLUDES
 #include <iostream.h>
 #include <stdexcept.h>
@@ -47,15 +53,22 @@
 #endif
 #endif
 
+// WARNING: Changing this requires rebuilding the whole library.
+#ifndef RINGING_BELL_BITS 
+#define RINGING_BELL_BITS  CHAR_BIT // defined in limits.h
+#endif
+
+#if RINGING_BELL_BITS != 8
+// The header stdint.h does not exist on all older systems.
+#include <stdint.h>
+#endif
+
 
 RINGING_START_NAMESPACE
   
 RINGING_USING_STD
 
 class RINGING_API bell {
-private:
-  unsigned char x;
-  static char symbols[];        // Symbols for the individual bells
 public:
   static const unsigned int MAX_BELLS;
 
@@ -79,6 +92,17 @@ public:
   struct invalid : public invalid_argument {
     invalid();
   };
+
+private:
+#if RINGING_BELL_BITS == CHAR_BIT
+  typedef unsigned char underlying_type;
+#else
+  typedef RINGING_CONCAT( uint, RINGING_CONCAT(RINGING_BELL_BITS, _t) ) 
+    underlying_type;
+#endif
+
+  underlying_type x;
+  static char symbols[];        // Symbols for the individual bells
 };
 
 inline RINGING_API ostream& operator<<(ostream& o, const bell b)

@@ -1,7 +1,8 @@
 // -*- C++ -*- macros.h.in - Macros to hide system specific constructs
 //
-// Copyright (C) 2001, 2002, 2003, 2006, 2007 Martin Bright <martin@boojum.org.uk> 
-// and Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2001, 2002, 2003, 2006, 2007 
+// Martin Bright <martin@boojum.org.uk> and
+// Richard Smith <richard@ex-parrot.com>
 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -16,6 +17,17 @@
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+// Part of this file is taken from the boost preprocessor library,
+// version 1.33.1 [see http://www.boost.org for details], and is under
+// the following copyright:
+
+//  Copyright (C) 2001, Housemarque Oy http://www.housemarque.com
+//
+//  Distributed under the Boost Software License, Version 1.0. 
+//  (See copy at http://www.boost.org/LICENSE_1_0.txt.)
+//
+//  Revised by Paul Mensonides (2002)
 
 // $Id$
 
@@ -282,5 +294,14 @@ RINGING_END_NAMESPACE_STD
 // Edit this line to enable/disable compatibility
 #define RINGING_COMPATIBLE_WITH RINGING_MAKE_VERSION(0,3,0)
 
+// RINGING_CONCAT -- concatenate two preprocessor tokens
+#define RINGING_CONCAT(a, b) RINGING_CONCAT_I(a, b)
+#
+#if !defined(_MSC_VER)
+# define RINGING_CONCAT_I(a, b) a ## b
+#else
+# define RINGING_CONCAT_I(a, b) RINGING_CONCAT_II(a ## b)
+# define RINGING_CONCAT_II(res) res
+#endif
 
 #endif // RINGING_MACROS_H
