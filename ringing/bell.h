@@ -88,6 +88,10 @@ public:
   }
   operator int() const { return x; }
   bell& operator=(int i) { x = i; return *this; }
+
+  bell& operator++() { ++x; return *this; }
+  bell operator++(int) { return x++; }
+
   char to_char() const { return (x < MAX_BELLS) ? symbols[x] : '*'; }
 
   struct invalid : public invalid_argument {
