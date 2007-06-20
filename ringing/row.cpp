@@ -59,23 +59,36 @@ row::row(const char *s)
 {
   for(const char *t = s; *t != '\0'; t++)
     data[t - s].from_char(*t);
+  validate();
+}
+
+void row::validate() const
+{
 #if RINGING_USE_EXCEPTIONS
   vector<bool> found(bells());
   int i;
   for(i=0; i<bells(); ++i) found[i] = false;
   for(i=0; i<bells(); ++i) 
     if (data[i] < 0 || data[i] >= (int) data.size() || found[data[i]])
-      throw invalid(s);
+      throw invalid(print());
     else
       found[data[i]] = true;
 #endif
 }
 
 row::row(const string &s)
+  : data(s.size())
 {
-  row(s.c_str()).swap(*this);
+  for(size_t i = 0, n = s.size(); i != n; ++i )
+    data[i].from_char(s[i]);
+  validate();
 }
 
+row::row(vector<bell> const& d)
+  : data(d)
+{
+  validate();
+}
 
 row::invalid::invalid()
   : invalid_argument("The row supplied was invalid")

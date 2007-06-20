@@ -1,5 +1,6 @@
 // -*- C++ -*- row.h - Classes for rows and changes
-// Copyright (C) 2001 Martin Bright <martin@boojum.org.uk>
+// Copyright (C) 2001, 2007 Martin Bright <martin@boojum.org.uk>
+// and Richard Smith <richard@ex-parrot.com>
 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -78,6 +79,7 @@ public:
   explicit row(int num);	// Construct rounds on n bells
   row(const char *s);			// Construct a row from a string
   row(const string &s);			// Construct a row from a string
+  explicit row(const vector<bell>& d);  // Construct from data
   // Use default copy constructor and copy assignment
 
   row& operator=(const char *s);	// Assign a string
@@ -121,6 +123,7 @@ public:
   int order(void) const;	    // Return the order
   friend RINGING_API ostream& operator<<(ostream&, const row&);
   void swap(row &other) { data.swap(other.data); }
+  void swap(vector<bell>& other) { data.swap(other); validate(); }
 
   int find(bell const& b) const;// Finds the bell
   
@@ -134,6 +137,9 @@ public:
   bool operator>(const row& r) const { return data > r.data; }
   bool operator<=(const row& r) const { return data <= r.data; }
   bool operator>=(const row& r) const { return data >= r.data; }
+
+private:
+  void validate() const;
 };
 
 inline ostream& operator<<(ostream& o, const row& r) {
