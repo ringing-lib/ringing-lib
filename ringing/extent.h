@@ -30,7 +30,6 @@
 #pragma interface
 #endif
 
-#include <string>
 #if RINGING_OLD_INCLUDES
 #include <vector.h>
 #include <utility.h>
