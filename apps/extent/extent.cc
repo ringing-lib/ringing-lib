@@ -80,6 +80,13 @@ void arguments::bind( arg_parser& p )
 
 bool arguments::validate( arg_parser& ap )
 {
+  if ( bells < 0 || hunts < 0 || tenors < 0 )
+    {
+      ap.error( "Then number of bells, hunts and tenors must "
+                "all be positive" );
+      return false;
+    }
+
   if ( bells < hunts + tenors ) 
     {
       ap.error( "More hunt bells and fixed tenors than the "
