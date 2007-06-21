@@ -131,7 +131,7 @@ position_in_extent( row const& r, unsigned nw, unsigned nh, unsigned nt )
 RINGING_API row
 nth_row_of_extent( size_t n, unsigned nw, unsigned nh, unsigned nt )
 {
-  vector<bell> v;
+  vector<bell> v(nt);
 
   for ( unsigned i=0; i<nh; ++i ) v[i] = i;
   for ( unsigned i=nh; i<nw+nh; ++i )
@@ -139,7 +139,7 @@ nth_row_of_extent( size_t n, unsigned nw, unsigned nh, unsigned nt )
     size_t const fact = factorial(nw + nh - i - 1);
     bell b = n / fact + nh; n %= fact;
      
-    for ( bell ob(nh); ob <= v[i]; ++ob )
+    for ( bell ob(nh); ob <= b; ++ob )
       for ( unsigned j=0; j<i; ++j )
         if ( ob == v[j] ) {
           ++b; break;
