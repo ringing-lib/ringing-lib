@@ -141,18 +141,22 @@ nth_row_of_extent( size_t n, unsigned nw, unsigned nh = 0 ) {
 // A pseudo-container class representing the extent
 class RINGING_API extent {
 public:
-  typedef row    value_type;
-  typedef size_t size_type;
-  typedef extent_iterator const_iterator;
+  typedef row       value_type;
+  typedef size_t    size_type;
+  typedef ptrdiff_t difference_type;
 
   explicit extent( unsigned nw, unsigned nh = 0 ) 
     : nw(nw), nh(nh), nt(nw+nh) {}
   extent( unsigned nw, unsigned nh, unsigned nt )
     : nw(nw), nh(nh), nt(nt) {}
 
+  typedef extent_iterator const_iterator;
   extent_iterator begin() const;
   extent_iterator end() const;
   size_t size() const;
+
+  // A less-than comparator for lexicographical ordering
+  typedef less<row> compare;
 
   // Get nth row and corresponding reverse map
   row operator[]( size_t n ) const;

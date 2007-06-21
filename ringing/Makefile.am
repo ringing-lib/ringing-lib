@@ -8,16 +8,17 @@ INCLUDES = -I$(top_srcdir)
 lib_LTLIBRARIES = libringingcore.la libringing.la
 
 # These source files are released under the LGPL
-libringingcore_la_SOURCES = row.cpp method.cpp library.cpp libfacet.cpp \
-libout.cpp stl.cpp xmllib.cpp xmlout.cpp peal.cpp mathutils.cpp bell.cpp \
-change.cpp place_notation.cpp
+libringingcore_la_SOURCES = bell.cpp change.cpp row.cpp mathutils.cpp \
+place_notation.cpp method.cpp \
+library.cpp libfacet.cpp libout.cpp xmllib.cpp xmlout.cpp peal.cpp \
+stl.cpp
 
 # These source files are released under the GPL
-libringing_la_SOURCES = mslib.cpp cclib.cpp \
-proof.cpp music.cpp print.cpp print_ps.cpp dimension.cpp touch.cpp \
-printm.cpp print_pdf.cpp pdf_fonts.cpp extent.cpp falseness.cpp \
-search_base.cpp basic_search.cpp multtab.cpp table_search.cpp streamutils.cpp \
-falseness.dat group.cpp $(libringingcore_la_SOURCES)
+libringing_la_SOURCES = $(libringingcore_la_SOURCES) \
+mslib.cpp cclib.cpp extent.cpp group.cpp proof.cpp \
+falseness.cpp falseness.dat touch.cpp music.cpp \
+print.cpp print_ps.cpp dimension.cpp printm.cpp print_pdf.cpp pdf_fonts.cpp \
+search_base.cpp basic_search.cpp multtab.cpp table_search.cpp streamutils.cpp 
 
 # Link against Xerces
 libringingcore_la_LIBADD = @XERCES_LIBS@
