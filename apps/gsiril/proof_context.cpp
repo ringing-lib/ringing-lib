@@ -1,5 +1,5 @@
 // proof_context.cpp - Environment to evaluate expressions
-// Copyright (C) 2002, 2003, 2004, 2005, 2006 
+// Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -24,6 +24,20 @@
 #pragma implementation
 #endif
 
+#if RINGING_USE_READLINE
+// TODO: Should allow terminfo without readline, and should cope with the 
+// possibility of readline not linking against terminfo.
+# include <term.h>
+# ifdef bell
+#   undef bell
+# endif
+# define RINGING_TERMINFO_VAR( name ) \
+    ( (name) == (char const*)-1 ? 0 : (name) )
+#else
+# define RINGING_TERMINFO_VAR( name ) 0
+#endif
+
+
 #include "expr_base.h" // Must be before execution_context.h because 
                        // of bug in MSVC 6.0
 #include "proof_context.h"
@@ -36,7 +50,7 @@ RINGING_USING_NAMESPACE
 proof_context::proof_context( const execution_context &ectx ) 
   : ectx(ectx), p( new prover(ectx.get_args().num_extents) ), 
     output( &ectx.output() ),
-    silent( ectx.get_args().everyrow_only )
+    silent( ectx.get_args().everyrow_only ), underline( false )
 {
   if ( ectx.bells() == -1 )
     throw runtime_error( "Must set number of bells before proving" ); 
@@ -49,8 +63,20 @@ proof_context::~proof_context()
 {
   // MSVC 7.1 does not line-buffer std::cout (there is no requirement
   // for it to).
-  if (output)
+  if (output) {
+    termination_sequence(*output);
     output->flush();
+  }
+}
+
+void proof_context::termination_sequence(ostream& os)
+{
+  if (underline) {
+    if ( char const* e = RINGING_TERMINFO_VAR( exit_underline_mode ) ) {
+      os << e; 
+      underline = false; 
+    }
+  }
 }
 
 void proof_context::output_string( const string& str )
@@ -161,13 +187,21 @@ string proof_context::substitute_string( const string &str, bool &do_exit )
 	else
 	  os << *++i;
 	break;
+      case '_':
+        if (ectx.get_args().sirilic_syntax) {
+          if ( char const* e = RINGING_TERMINFO_VAR( enter_underline_mode ) ) {
+            os << e; underline = true; break; 
+          }
+        } // fall through
       default:
 	os << *i;
 	break;
       }
 
-  if (nl) 
+  if (nl) {
+    termination_sequence(os.out_stream());
     os << '\n';
+  }
   return os;
 }
 

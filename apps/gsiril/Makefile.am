@@ -45,7 +45,9 @@ EXTRA_gsiril_SOURCES = rlstream.cpp rlstream.h
 # runs in MicroSiril compatibility mode.  Create a symlink to 
 # assist in this.
 install-exec-hook:
-	cd $(DESTDIR)$(bindir) && $(RM) msiril && $(LN_S) gsiril msiril
+	for link in msiril sirilic; do \
+	  cd $(DESTDIR)$(bindir) && $(RM) $$link && $(LN_S) gsiril $$link; \
+	done
 
 uninstall-hook:
-	cd $(DESTDIR)$(bindir) && $(RM) gsiril msiril
+	cd $(DESTDIR)$(bindir) && $(RM) gsiril msiril sirilic

@@ -1,5 +1,6 @@
 // parser.cpp - Tokenise and parse lines of input
-// Copyright (C) 2002, 2003, 2004, 2005 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003, 2004, 2005, 2007 
+// Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -120,7 +121,7 @@ public:
     : tokeniser( in, keep_new_lines, 
 		 args.case_insensitive ? case_insensitive : case_sensitive ), 
       args( args ),
-      c( args.msiril_comments ? "/" : "//" ), 
+      c( args.msiril_syntax ? "/" : "//" ), 
       r( "/",   tok_types::regex_lit,  string_token::one_line ),
       q( "'",   tok_types::transp_lit, string_token::one_line ), 
       qq( "\"", tok_types::string_lit, string_token::one_line ), 
@@ -133,7 +134,7 @@ public:
     // for // and /.
 
     add_qtype(&c);
-    if ( !args.msiril_comments ) add_qtype(&r);
+    if ( !args.msiril_syntax ) add_qtype(&r);
     add_qtype(&q);    add_qtype(&qq);
     add_qtype(&defass); add_qtype(&land); add_qtype(&lor);
     add_qtype(&sym);  add_qtype(&asym);
@@ -152,7 +153,7 @@ public:
 
     case regex_lit: case open_brace: case close_brace: case colon:
       // These can only work when msiril comments are disabled
-      if ( !args.msiril_comments ) return;
+      if ( !args.msiril_syntax ) return;
       break;
     }
      

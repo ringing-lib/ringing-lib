@@ -1,5 +1,5 @@
 // -*- C++ -*- proof_context.h - Environment to evaluate expressions
-// Copyright (C) 2002, 2003, 2004, 2005, 2006 
+// Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -84,6 +84,8 @@ public:
   proof_context silent_clone() const;
 
 private:
+  void termination_sequence( ostream& os );
+
   const execution_context &ectx;
   symbol_table dsym_table; // dynamic symbol table
   row r;
@@ -91,6 +93,7 @@ private:
 
   ostream* output;
   bool silent;
+  bool underline;
 };
 
 #endif // GSIRIL_PROOF_CONTEXT_INCLUDED

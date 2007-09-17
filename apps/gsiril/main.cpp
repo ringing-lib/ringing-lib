@@ -1,5 +1,5 @@
 // main.cpp - Entry point for gsiril
-// Copyright (C) 2002, 2003, 2004 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003, 2004, 2007 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -70,6 +70,8 @@ arguments::arguments( int argc, char** argv )
   // compatibility mode.
   if ( ap.program_name() == "msiril" || ap.program_name() == "microsiril" )
     set_msiril_compatible();
+  else if ( ap.program_name() == "sirilic" )
+    set_sirilic_compatible();
   
   bind(ap);
   if ( !ap.parse(argc, argv) ) {
@@ -83,9 +85,15 @@ arguments::arguments( int argc, char** argv )
 
 void arguments::set_msiril_compatible()
 {
-  msiril_comments = true;
+  msiril_syntax = true;
   case_insensitive = true;
   prove_symbol = "__first__";
+}
+
+void arguments::set_sirilic_compatible()
+{
+  set_msiril_compatible();
+  sirilic_syntax = true;
 }
 
 class row_opt : public option {
@@ -108,20 +116,21 @@ private:
   row &opt;
 };
 
-class msiril_opt : public option {
+class function_opt : public option {
 public:
-  msiril_opt( char c, const string &l, const string &d,
-	      arguments& args ) 
-    : option(c, l, d), args(args)
+  function_opt( char c, const string &l, const string &d,
+	        arguments& args, void (arguments::*fn)() ) 
+    : option(c, l, d), args(args), fn(fn)
   {}
   
   virtual bool process( const string&, const arg_parser& ) const {
-    args.set_msiril_compatible();
+    (args.*fn)();
     return true;
   }
 
 private:
   arguments& args;
+  void (arguments::*fn)();
 };
 
 void arguments::bind( arg_parser& p )
@@ -183,10 +192,15 @@ void arguments::bind( arg_parser& p )
 	   "MODULE",
 	   import_modules ) );
 
-  p.add( new msiril_opt
+  p.add( new function_opt
 	 ( '\0', "msiril",
 	   "Run in microsiril compatibile mode",
-	   *this ) );
+	   *this, &arguments::set_msiril_compatible ) );
+
+  p.add( new function_opt
+         ( '\0', "sirilic",
+           "Run in sirilic compatibile mode",
+           *this, &arguments::set_sirilic_compatible ) );
 }
 
 bool arguments::validate( arg_parser& ap )
