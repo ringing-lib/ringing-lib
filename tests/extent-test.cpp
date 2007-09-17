@@ -66,12 +66,28 @@ void test_extent_fixed_bells(void)
       }
 }
 
+void test_extent_index(void)
+{
+  for ( unsigned nh=0; nh<3; ++nh )
+    for ( unsigned nw=0; nw<6; ++nw )
+      for ( unsigned nt=nh+nw; nt<nh+nw+4; ++nt )
+      {
+        extent ex(nw, nh, nt);
+        for ( extent::const_iterator i(ex.begin()), e(ex.end()); i!=e; ++i ) {
+          RINGING_TEST( ex[ex[*i]] == *i );
+          RINGING_TEST( sign_of_nth_row_of_extent(ex[*i]) == i->sign() );
+        }
+      }
+}
+
+
 RINGING_END_ANON_NAMESPACE
   
 RINGING_START_TEST_FILE( extent )
 
   RINGING_REGISTER_TEST( test_extent_length )
   RINGING_REGISTER_TEST( test_extent_fixed_bells )
+  RINGING_REGISTER_TEST( test_extent_index )
 
 RINGING_END_TEST_FILE
 
