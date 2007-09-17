@@ -27,12 +27,13 @@
 #if RINGING_USE_READLINE
 // TODO: Should allow terminfo without readline, and should cope with the 
 // possibility of readline not linking against terminfo.
+# include <curses.h>
 # include <term.h>
 # ifdef bell
 #   undef bell
 # endif
 # define RINGING_TERMINFO_VAR( name ) \
-    ( (name) == (char const*)-1 ? 0 : (name) )
+    ( cur_term && (name) != (char const*)-1 ? (name) : 0 )
 #else
 # define RINGING_TERMINFO_VAR( name ) 0
 #endif
@@ -52,6 +53,14 @@ proof_context::proof_context( const execution_context &ectx )
     output( &ectx.output() ),
     silent( ectx.get_args().everyrow_only ), underline( false )
 {
+# if RINGING_USE_READLINE
+  static bool terminfo_initialized = false;
+  if ( !terminfo_initialized ) {
+    setupterm(NULL, 1, NULL); 
+    terminfo_initialized = true;
+  }
+# endif
+
   if ( ectx.bells() == -1 )
     throw runtime_error( "Must set number of bells before proving" ); 
   if ( ectx.rounds().bells() > ectx.bells() )
