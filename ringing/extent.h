@@ -136,6 +136,10 @@ nth_row_of_extent( size_t n, unsigned nw, unsigned nh = 0 ) {
   return nth_row_of_extent( n, nw, nh, nw+nh );
 }
 
+// Determine the sign (parity) of the nth row of the extend ordered
+// lexicographically.  Returns +1 or -1.
+RINGING_API int sign_of_nth_row_of_extent( size_t n );
+
 
 // A pseudo-container class representing the extent
 class RINGING_API extent {

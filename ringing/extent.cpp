@@ -151,6 +151,19 @@ nth_row_of_extent( size_t n, unsigned nw, unsigned nh, unsigned nt )
   return row(v);
 }
 
+RINGING_API int
+sign_of_nth_row_of_extent( size_t n )
+{
+  // This algorithm is documented here:
+  // <http://ex-parrot.com/~richard/r-t/2007/06/001763.html>
+  int sign = +1;
+  for ( unsigned i = 1, f = i; n; f *= ++i ) {
+    sign *= (n % i) % 2 == 0 ? +1 : -1;
+    n /= i;
+  }
+  return sign;
+}
+
 extent_iterator extent::begin() const
 {
   return extent_iterator(nw, nh, nt); 
