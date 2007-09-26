@@ -25,7 +25,6 @@ dnl $Id$
 AC_INIT(ringing/method.cpp)
 AC_CONFIG_AUX_DIR(config)
 AM_INIT_AUTOMAKE(ringing-lib, 0.3.0)
-AM_CONFIG_HEADER(config.h)
 AC_SUBST(ac_aux_dir)
 
 can_build=yes
