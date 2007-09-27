@@ -1,5 +1,5 @@
 // -*- C++ -*- streamutils.h - Utilities to cope with old iostream libraries
-// Copyright (C) 2002, 2003, 2005 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003, 2005, 2007 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -111,7 +111,7 @@ private:
 
 
 // exception used to indicate runtime lexical_cast failure
-class bad_lexical_cast : public bad_cast
+class RINGING_API bad_lexical_cast : public bad_cast
 {
 public:
   virtual const char* what() const throw();
@@ -145,7 +145,7 @@ RINGING_END_NAMESPACE
 // If we're using that STL, this provides a work around.  This overload gets
 // chosen in preference to std::getline because it is non-templated.
 #if defined(_MSC_VER) && _MSC_VER <= 1200 && defined(_YVALS) && (!defined(_CPPLIB_VER) || _CPPLIB_VER < 306)
-istream& getline( istream& in, string &str, char c = '\n' );
+RINGING_API istream& getline( istream& in, string &str, char c = '\n' );
 #endif
 
 #endif
