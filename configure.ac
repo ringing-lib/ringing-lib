@@ -112,5 +112,5 @@ dnl --------------------------------------------------------------------------
 
 AC_OUTPUT(Makefile ringing/Makefile apps/Makefile apps/gsiril/Makefile
   apps/utils/Makefile apps/psline/Makefile apps/methsearch/Makefile
-  apps/fextent/Makefile apps/extent/Makefile
+  apps/fextent/Makefile apps/extent/Makefile apps/touchsearch/Makefile
   doc/Makefile examples/Makefile tests/Makefile ringing/common-am.h)

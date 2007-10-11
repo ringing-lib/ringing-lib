@@ -32,8 +32,6 @@
 
 RINGING_START_NAMESPACE
 
-// FIXME!!
-class search_common;
 class touch;
 
 class RINGING_API search_base
@@ -44,6 +42,8 @@ public:
   class outputer
   {
   public:
+    virtual ~outputer() {}
+
     // Returns true if the search should halt
     virtual bool operator()( const touch &t ) = 0;
   };
@@ -58,7 +58,6 @@ RINGING_PROTECTED_IMPL:
     virtual ~context_base() {}
   };
 
-  friend class search_common;
 private:
   virtual context_base *new_context() const = 0;
 };
@@ -116,11 +115,11 @@ void touch_search( const search_base &searcher,
   searcher.run( o );
 }
 
-  
+
 template < class OutputIterator, class UnaryPredicate > 
-void touch_search( const search_base &searcher, 
-		   const OutputIterator &iter,
-		   const UnaryPredicate &terminate )
+void touch_search_until( const search_base &searcher, 
+		         const OutputIterator &iter,
+		         const UnaryPredicate &terminate )
 {
   RINGING_USING_DETAILS
   search_output_until< OutputIterator, UnaryPredicate > o( iter, terminate );

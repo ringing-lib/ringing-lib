@@ -1,5 +1,5 @@
-// -*- C++ -*- prog_args.h - program arguments for gsiril
-// Copyright (C) 2003, 2004, 2007 Richard Smith <richard@ex-parrot.com>
+// -*- C++ -*- prog_args.h - program arguments for touchsearch
+// Copyright (C) 2007 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,10 +16,9 @@
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 // $Id$
-
-
-#ifndef GSIRIL_ARGS_INCLUDED
-#define GSIRIL_ARGS_INCLUDED
+  
+#ifndef TOUCHSEARCH_PROG_ARGS_INCLUDED
+#define TOUCHSEARCH_PROG_ARGS_INCLUDED
 
 #include <ringing/common.h>
 
@@ -27,13 +26,15 @@
 #pragma interface "gsiril/prog_args.h"
 #endif
 
-#include <ringing/row.h>
+#include <ringing/change.h>
+#include <ringing/method.h>
+#include <ringing/group.h>
 #include "init_val.h"
 #include <string>
 #if RINGING_OLD_INCLUDES
 #include <vector.h>
 #else
-#include <vector>
+#include <vector>      
 #endif
 
 class arg_parser;
@@ -41,35 +42,29 @@ class arg_parser;
 RINGING_USING_NAMESPACE
 RINGING_USING_STD
 
-
 struct arguments
 {
   init_val<int,0>      bells; // the default number of bells
-  init_val<int,1>      num_extents;
-  
-  init_val<bool,false> interactive;
-  init_val<bool,false> verbose;
-  init_val<bool,false> case_insensitive;
-  init_val<bool,false> msiril_syntax;
-  init_val<bool,false> sirilic_syntax;
 
-  init_val<bool,false> everyrow_only;
+  pair<size_t,size_t>  length;
+  init_val<bool,false> ignore_rotations;
 
-  vector<string>       import_modules;
-  vector<string>       definitions;
+  string               meth_str;
+  method               meth;
 
-  string               prove_symbol;
+  vector<string>       call_strs;
+  vector<change>       calls;
 
-  row                  rounds;
+  vector<string>       pend_strs;
+  group                pends;
 
   arguments( int argc, char** argv );
-
-  void set_msiril_compatible();
-  void set_sirilic_compatible();
 
 private:
   void bind( arg_parser& p );
   bool validate( arg_parser& p );
+  bool generate_calls( arg_parser& ap );
+  bool generate_pends( arg_parser& ap );
 };
 
-#endif // GSIRIL_ARGS_INCLUDED
+#endif // TOUCHSEARCH_PROG_ARGS_INCLUDED

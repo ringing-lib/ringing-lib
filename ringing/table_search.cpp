@@ -36,6 +36,15 @@
 #include <ringing/extent.h>
 #include <ringing/touch.h>
 
+#define DEBUG_LEVEL 0
+
+#if DEBUG_LEVEL
+#include <iostream>
+#define DEBUG( expr ) (void)((cout << expr) << endl)
+#else 
+#define DEBUG( expr ) (void)(false)
+#endif
+
 RINGING_START_NAMESPACE
 
 RINGING_USING_STD
@@ -64,6 +73,8 @@ public:
       table( make_table( s ) ),
       ignore_rotations( s->ignore_rotations )
   {
+    DEBUG( "Constructing context: table size " << table.size() );
+
     row le; 
     for_each( s->meth.begin(), s->meth.end()-1, permute(le) );
       
@@ -74,11 +85,14 @@ public:
     
     for ( size_t i=0; i < s->calls.size(); ++i )
       init_call( le, s->calls[i] );
+
+    DEBUG( "Initialised " << s->calls.size() << " calls" );
     
     t.push_back( tl = new touch_child_list );    
     t.set_head( tl );
 
     init_falseness( s->meth );
+    DEBUG( "Initialised " << falsenesses.size() << " flhs" );
   }
 
 private:
@@ -120,8 +134,8 @@ private:
 
   void init_call( const row &le, const change &ch )
   {
-    touch_changes *c;
-    touch_child_list *cl;
+    touch_changes *c; // the lead end change
+    touch_child_list *cl; // the whole lead
     
     t.push_back( c = new touch_changes() );
     t.push_back( cl = new touch_child_list );
@@ -205,7 +219,8 @@ private:
   }
 
   // The main loop of the algorithm   
-  void run_recursive( outputer &output, const row_t &r, size_t depth, size_t cur )
+  void run_recursive( outputer &output, const row_t &r, 
+                      size_t depth, size_t cur )
   {
     // Is the touch lexicographically no greater than any of it's rotations?
     if ( !is_possibly_canonical( cur ) )

@@ -63,6 +63,11 @@ arg_parser::arg_parser(const string& n, const string& d,
   if ( i == progname.size() - 4 /* = strlen(".exe") */ )
     progname.erase( progname.size()-4 );
 #endif
+
+  // Strip 'lt-' prefix (from libtool)
+  i = progname.find("lt-");
+  if ( i == 0 )
+    progname.erase( 0, 3 );
 }
 
 arg_parser::~arg_parser()
