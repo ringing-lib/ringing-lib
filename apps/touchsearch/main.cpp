@@ -95,6 +95,11 @@ void arguments::bind( arg_parser& p )
          ( 'l', "length",
            "Length or range of lengths required",  "MIN-MAX",
            length ) );
+
+  p.add( new strings_opt
+         ( 'P', "part-end",
+           "Specify a part end",  "ROW",
+           pend_strs ) );
 }
 
 bool arguments::validate( arg_parser& ap )
@@ -129,7 +134,7 @@ bool arguments::validate( arg_parser& ap )
   if ( !generate_calls( ap ) )
     return false;
 
-  const size_t leadlen = meth.size();
+  const size_t leadlen = meth.size() * pends.size();
   if ( length.first % leadlen )
     length.first = (length.first / leadlen + 1);
   else
@@ -141,6 +146,8 @@ bool arguments::validate( arg_parser& ap )
     ap.error( "The length range does not encompass a whole number of leads" );
     return false;
   }
+
+  return true;
 }
 
 bool arguments::generate_calls( arg_parser& ap )
@@ -239,7 +246,7 @@ int main( int argc, char *argv[] )
     {
       arguments args( argc, argv );
 
-      table_search srch( args.meth, args.calls, args.length, 
+      table_search srch( args.meth, args.calls, args.pends, args.length, 
                          args.ignore_rotations );
       touch_search( srch, iter_from_fun( print_touch(args) ) );
       cout << endl;

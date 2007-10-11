@@ -38,6 +38,7 @@
 #include <ringing/row.h>
 #include <ringing/method.h>
 #include <ringing/search_base.h>
+#include <ringing/group.h>
 
 RINGING_START_NAMESPACE
 
@@ -53,10 +54,15 @@ class RINGING_API table_search : public search_base
 public:
   // Constructors
   table_search( const method &meth, const vector<change> &calls,
+                const group& partends = group(),
 		bool ignore_rotations = false );
 
   table_search( const method &meth, const vector<change> &calls,
-		pair< size_t, size_t > lenrange, 
+                pair< size_t, size_t > lenrange,
+                bool ignore_rotations = false );
+
+  table_search( const method &meth, const vector<change> &calls,
+                const group& partends, pair< size_t, size_t > lenrange, 
 		bool ignore_rotations = false );
 
 private:
@@ -68,6 +74,7 @@ private:
   // Data members
   method meth;
   vector<change> calls;
+  group partends;
   pair< size_t, size_t > lenrange; // The minimum and maximum number of leads
   bool ignore_rotations;
 };

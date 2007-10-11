@@ -1,5 +1,5 @@
 // -*- C++ -*- table_search.cpp - A search class using a multiplication table
-// Copyright (C) 2001, 2002 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2001, 2002, 2007 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -35,31 +35,42 @@
 #include <ringing/multtab.h>
 #include <ringing/extent.h>
 #include <ringing/touch.h>
+#include <ringing/group.h>
 
 #define DEBUG_LEVEL 0
 
 #if DEBUG_LEVEL
 #include <iostream>
-#define DEBUG( expr ) (void)((cout << expr) << endl)
+#define IF_DEBUG( expr ) (void)( expr )
 #else 
-#define DEBUG( expr ) (void)(false)
+#define IF_DEBUG( expr ) (void)(false)
 #endif
+#define DEBUG( expr ) IF_DEBUG((cout << expr) << endl)
 
 RINGING_START_NAMESPACE
 
 RINGING_USING_STD
 
 table_search::table_search( const method &meth, const vector<change> &calls,
-			    bool ignore_rotations )
-  : meth( meth ), calls( calls ), 
+			    const group& partends, bool ignore_rotations )
+  : meth( meth ), calls( calls ), partends( partends ),
     lenrange( make_pair( size_t(0), size_t(-1) ) ),
     ignore_rotations( ignore_rotations )
 {}
 
 table_search::table_search( const method &meth, const vector<change> &calls,
-			    pair< size_t, size_t > lenrange, 
+                            pair< size_t, size_t > lenrange,
+                            bool ignore_rotations )
+  : meth( meth ), calls( calls ),
+    lenrange( lenrange ),
+    ignore_rotations( ignore_rotations )
+{}
+
+table_search::table_search( const method &meth, const vector<change> &calls,
+			    const group& partends, 
+                            pair< size_t, size_t > lenrange, 
 			    bool ignore_rotations )
-  : meth( meth ), calls( calls ), 
+  : meth( meth ), calls( calls ), partends( partends ),
     lenrange( lenrange ),
     ignore_rotations( ignore_rotations )
 {}
@@ -115,10 +126,10 @@ private:
   {
     if ( is_fixed_treble(s) )
       return multtab( extent_iterator( s->meth.bells() - 1, 1),
-		      extent_iterator() );
+		      extent_iterator(), s->partends );
     else
       return multtab( extent_iterator( s->meth.bells() ),
-		      extent_iterator() );
+		      extent_iterator(), s->partends );
   }
 
   void init_falseness( const method &meth )
@@ -169,7 +180,6 @@ private:
   void output_touches( outputer &output, size_t cur )
   {
     size_t len( calls.size() );
-    size_t parts( len % cur ? cur : len / cur );
     list< touch_child_list::entry > &ch = tl->children();
 
     ch.clear();
@@ -179,13 +189,14 @@ private:
 
     force_halt = output( t );
 
-    if ( ! ignore_rotations )
-      for ( size_t start = 1; !force_halt && start < len / parts; ++start )
-	{
-	  // Try all of it's distinguishable rotations.
-	  ch.splice( ch.end(), ch, ch.begin() );
-	  force_halt = output( t );
-	}
+    if ( ! ignore_rotations && table.partends().size() == 1 ) {
+      size_t parts( len % cur ? cur : len / cur );
+      for ( size_t start = 1; !force_halt && start < len / parts; ++start ) {
+        // Try all of it's distinguishable rotations.
+        ch.splice( ch.end(), ch, ch.begin() );
+        force_halt = output( t );
+      }
+    }
   }
 
   // A touch, T, is in canonical form if there exists no rotation of T
@@ -197,6 +208,9 @@ private:
   {
     if ( calls.empty() )
       return true;
+
+    // Multipart comps are always canonical 
+    if ( table.partends().size() > 1 ) return true;
 
     if ( cur == 0 || calls.back() > calls[ calls.size() - 1 - cur ] )
       cur = calls.size();
@@ -211,6 +225,9 @@ private:
   // is_possibly_canonical() returns true is a canonical complete touch.
   bool is_really_canonical()
   {
+    // Multipart comps are always canonical
+    if ( table.partends().size() > 1 ) return true;
+
     for ( vector< size_t >::const_iterator i( calls.begin() ); 
 	  i != calls.end(); ++i )
       if ( *i != calls.front() )
@@ -222,6 +239,9 @@ private:
   void run_recursive( outputer &output, const row_t &r, 
                       size_t depth, size_t cur )
   {
+    IF_DEBUG( copy( calls.begin(), calls.end(), ostream_iterator<int>(cout) ));
+    DEBUG( " at depth " << depth );
+
     // Is the touch lexicographically no greater than any of it's rotations?
     if ( !is_possibly_canonical( cur ) )
       return;
