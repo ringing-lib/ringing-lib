@@ -1,5 +1,5 @@
 // execution_context.cpp - Global environment
-// Copyright (C) 2002, 2003, 2004 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003, 2004, 2007 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -55,6 +55,11 @@ execution_context::execution_context( ostream& os, const arguments& args )
 
 execution_context::~execution_context() 
 {
+}
+
+bool execution_context::defined( const string& sym ) const
+{
+  return !sym_table.lookup(sym).isnull();
 }
 
 expression execution_context::lookup_symbol( const string& sym ) const

@@ -80,6 +80,10 @@
 // or to 0 otherwise.
 #define RINGING_USE_STRINGSTREAM @USE_STRINGSTREAM@
 
+// *** Define this to be 1 if want to include termcap support
+// or to 0 otherwise.
+#define RINGING_USE_TERMCAP @USE_TERMCAP@
+
 // *** Define this to be 1 if want to include GNU readline support
 // or to 0 otherwise.
 #define RINGING_USE_READLINE @USE_READLINE@

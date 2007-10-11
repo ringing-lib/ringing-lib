@@ -1,5 +1,5 @@
 // -*- C++ -*- execution_context.h - Global environment
-// Copyright (C) 2002, 2003, 2004 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003, 2004, 2007 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -56,6 +56,8 @@ public:
  ~execution_context();
 
   ostream& output() const { return *os; }
+
+  bool defined( const string& sym ) const;
 
   // Returns true for a redefinition and false otherwise
   bool define_symbol( const pair< const string, expression > &defn );

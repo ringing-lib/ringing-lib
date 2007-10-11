@@ -73,6 +73,10 @@
 
 #define RINGING_AS_DLL 0
 
+// *** Define this to be 1 if want to include termcap support
+// or to 0 otherwise.
+#define RINGING_USE_TERMCAP 0
+
 // *** Define this to be 1 if want to include GNU readline support
 // or to 0 otherwise.
 #define RINGING_USE_READLINE 0

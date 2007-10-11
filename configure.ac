@@ -32,11 +32,16 @@ can_build=yes
 dnl --------------------------------------------------------------------------
 dnl Checks for programs.
 AC_PROG_CXX
+AC_LIBTOOL_WIN32_DLL
 AC_PROG_LIBTOOL
 AC_PROG_LN_S
 
 dnl --------------------------------------------------------------------------
 dnl Checks for libraries.
+AC_USE_TERMCAP
+AC_SUBST(USE_TERMCAP)
+AC_SUBST(TERMCAP_LIBS)
+
 AC_USE_READLINE
 AM_CONDITIONAL(HAVE_READLINE, test "$USE_READLINE" = 1 )
 AC_SUBST(USE_READLINE)

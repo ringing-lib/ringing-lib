@@ -68,9 +68,10 @@ arguments::arguments( int argc, char** argv )
 
   // If the program is called msiril or microsiril, go into microsiril
   // compatibility mode.
-  if ( ap.program_name() == "msiril" || ap.program_name() == "microsiril" )
+  if ( ap.program_name() ==  "msiril" || ap.program_name() ==  "microsiril" ||
+       ap.program_name() == "gmsiril" || ap.program_name() == "gmicrosiril" )
     set_msiril_compatible();
-  else if ( ap.program_name() == "sirilic" )
+  else if ( ap.program_name() == "sirilic" || ap.program_name() == "gsirilic" )
     set_sirilic_compatible();
   
   bind(ap);
@@ -358,7 +359,13 @@ bool prove_final_symbol( execution_context& e, const arguments& args )
 {
   try 
     {
-      e.prove_symbol( args.prove_symbol );
+      // We want to suppress a warning about the prove symbol not being
+      // defined only when it is __first__: the logic being that if it
+      // has been explicitly set, it should be there; but if it is 
+      // implicitly set (e.g. by invoking as 'msiril'), we shouldn't give
+      // an error.
+      if ( args.prove_symbol != "__first__" || e.defined("__first__") )
+        e.prove_symbol( args.prove_symbol );
       return true;
     } 
   catch (const exception& ex ) 

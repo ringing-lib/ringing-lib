@@ -24,9 +24,7 @@
 #pragma implementation
 #endif
 
-#if RINGING_USE_READLINE
-// TODO: Should allow terminfo without readline, and should cope with the 
-// possibility of readline not linking against terminfo.
+#if RINGING_USE_TERMCAP
 # include <curses.h>
 # include <term.h>
 # ifdef bell
@@ -53,7 +51,7 @@ proof_context::proof_context( const execution_context &ectx )
     output( &ectx.output() ),
     silent( ectx.get_args().everyrow_only ), underline( false )
 {
-# if RINGING_USE_READLINE
+# if RINGING_USE_TERMCAP
   static bool terminfo_initialized = false;
   if ( !terminfo_initialized ) {
     setupterm(NULL, 1, NULL); 
@@ -70,10 +68,12 @@ proof_context::proof_context( const execution_context &ectx )
 
 proof_context::~proof_context()
 {
-  // MSVC 7.1 does not line-buffer std::cout (there is no requirement
-  // for it to).
   if (output) {
+    // Turn off any underlining, etc.
     termination_sequence(*output);
+
+    // MSVC 7.1 does not line-buffer std::cout (there is no requirement
+    // for it to).
     output->flush();
   }
 }

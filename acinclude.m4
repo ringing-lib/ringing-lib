@@ -428,6 +428,40 @@ AC_DEFUN([AC_CHECK_CXX_LIB],
   AC_LANG_RESTORE
 ])
 dnl --------------------------------------------------------------------------
+dnl @synopsis AC_USE_TERMCAP
+dnl
+dnl See whether we've got GNU readline installed
+dnl
+dnl @author Richard Smith <richard@ex-parrot.com>
+dnl
+AC_DEFUN([AC_USE_TERMCAP],
+ [AC_ARG_WITH(
+    readline,
+    AC_HELP_STRING([--with-termcap], [support fancy command line editing]),
+    ac_cv_use_readline=$withval
+  )
+  if test -z "$ac_cv_use_termcap" ; then
+    AC_CACHE_CHECK(
+      [for a termcap library],
+      [ac_cv_use_termcap],
+      [AC_COMPILE_IFELSE(
+         AC_LANG_PROGRAM(
+           [#include <curses.h>
+            #include <term.h>
+           ], [char const* dummy = enter_underline_mode]),
+         ac_cv_use_termcap=yes,
+         ac_cv_use_termcap=no)
+    ])
+  fi
+  if test "$ac_cv_use_termcap" != no; then
+    USE_TERMCAP=1
+    TERMCAP_LIBS=-ltermcap
+  else
+    USE_TERMCAP=0
+    TERMCAP_LISB=
+  fi
+])
+dnl --------------------------------------------------------------------------
 dnl @synopsis AC_USE_READLINE
 dnl
 dnl See whether we've got GNU readline installed
@@ -468,7 +502,7 @@ AC_DEFUN([AC_USE_READLINE],
       [ac_cv_readline_libs],
       [AC_LANG_PUSH(C++)
        ac_check_cxx_lib_save_LIBS="$LIBS"
-       for library in "" -ltermcap -lncurses -lcurses; do
+       for library in "" -ltermcap -lncurses -lcurses -lpdcurses; do
 	 if test -z "$ac_cv_readline_libs"; then
 	   LIBS="$ac_check_cxx_lib_save_LIBS -lreadline $library"
 	   AC_LINK_IFELSE(

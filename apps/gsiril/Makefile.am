@@ -27,7 +27,7 @@ bin_PROGRAMS = gsiril
 INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/apps/utils
 
 gsiril_LDADD = $(top_builddir)/apps/utils/libstuff.a \
-$(top_builddir)/ringing/libringing.la @READLINE_LIBS@
+$(top_builddir)/ringing/libringing.la @READLINE_LIBS@ @TERMCAP_LIBS@
 
 if HAVE_READLINE
 additional =  rlstream.cpp rlstream.h
@@ -43,11 +43,13 @@ EXTRA_gsiril_SOURCES = rlstream.cpp rlstream.h
 
 # When gsiril is run under the name msiril, it automatically
 # runs in MicroSiril compatibility mode.  Create a symlink to 
-# assist in this.
+# assist in this.  Similarly for sirilic.
 install-exec-hook:
-	for link in msiril sirilic; do \
-	  cd $(DESTDIR)$(bindir) && $(RM) $$link && $(LN_S) gsiril $$link; \
+	for link in msiril gsirilic; do \
+	  cd $(DESTDIR)$(bindir) && $(RM) $$link$(EXEEXT) && \
+	    $(LN_S) gsiril$(EXEEXT) $$link$(EXEEXT); \
 	done
 
 uninstall-hook:
-	cd $(DESTDIR)$(bindir) && $(RM) gsiril msiril sirilic
+	cd $(DESTDIR)$(bindir) && \
+	  $(RM) gsiril$(EXEEXT) msiril$(EXEEXT) gsirilic$(EXEEXT)

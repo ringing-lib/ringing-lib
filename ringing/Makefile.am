@@ -20,9 +20,17 @@ falseness.cpp falseness.dat touch.cpp music.cpp \
 print.cpp print_ps.cpp dimension.cpp printm.cpp print_pdf.cpp pdf_fonts.cpp \
 search_base.cpp basic_search.cpp multtab.cpp table_search.cpp streamutils.cpp 
 
-# Link against Xerces
+# Link against Xerces; -no-undefined is needed for DLLs
 libringingcore_la_LIBADD = @XERCES_LIBS@
 libringing_la_LIBADD = @XERCES_LIBS@
+
+# -no-undefined is needed for DLLs
+libringingcore_la_LDFLAGS = -no-undefined
+libringing_la_LDFLAGS = -no-undefined
+
+# Preprocessor hooks to DLL export symbols
+libringingcore_la_CPPFLAGS = -DRINGING_EXPORTS
+libringing_la_CPPFLAGS = -DRINGING_EXPORTS
 
 # TODO: Split this into a list of GPL'd and LGPL'd files.
 myincludedir = $(includedir)/ringing
