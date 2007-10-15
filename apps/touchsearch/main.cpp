@@ -154,7 +154,7 @@ bool arguments::generate_calls( arg_parser& ap )
 {
   // This is only a warning -- so don't return false
   if ( call_strs.empty() ) {
-    call_strs.push_back( "14" );
+    call_strs.push_back( "b=14" );
     ap.error( "No calls specified -- assuming fourths place bobs");
   }
 
