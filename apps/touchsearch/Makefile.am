@@ -29,7 +29,7 @@ INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/apps/utils
 touchsearch_LDADD = $(top_builddir)/apps/utils/libstuff.a \
 $(top_builddir)/ringing/libringing.la
 
-touchsearch_SOURCES = main.cpp prog_args.h iteratorutils.h
+touchsearch_SOURCES = main.cpp prog_args.h prog_args.cpp iteratorutils.h
 
 
 

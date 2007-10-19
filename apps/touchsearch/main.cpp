@@ -19,28 +19,22 @@
 
 #include <ringing/common.h>
 
-#if RINGING_HAS_PRAGMA_INTERFACE
-#pragma implementation "gsiril/prog_args.h"
-#endif
-
 #include <ringing/change.h>
 #include <ringing/method.h>
 #include <ringing/streamutils.h>
 #include <ringing/table_search.h>
 #include <ringing/touch.h>
+#include <ringing/pointers.h>
+#include <ringing/litelib.h>
 
-#include "args.h"
-#include "init_val.h"
 #include "prog_args.h"
 #include "iteratorutils.h"
 
 #include <string>
 #if RINGING_OLD_INCLUDES
 #include <stdexcept.h>
-#include <vector.h>
 #else
 #include <stdexcept>
-#include <vector>
 #endif
 #if RINGING_OLD_IOSTREAMS
 #include <iostream.h>
@@ -53,158 +47,6 @@
 
 RINGING_USING_NAMESPACE
 
-arguments::arguments( int argc, char** argv )
-  : length( 0u, static_cast<size_t>(-1) )
-{
-  arg_parser ap( argv[0], "touchsearch -- search for touches.",
-                 "OPTIONS" );
-
-  bind(ap);
-  if ( !ap.parse(argc, argv) ) {
-    ap.usage();
-    exit(1);
-  }
-
-  if ( !validate(ap) )
-    exit(1);
-}
-
-void arguments::bind( arg_parser& p )
-{
-  p.add( new help_opt );
-  p.add( new version_opt );
-
-  p.set_default( new string_opt( '\0', "", "", "", meth_str ) );
-  
-  p.add( new integer_opt
-         ( 'b', "bells",
-           "The default number of bells.",  "BELLS",
-           bells ) );
-
-  p.add( new strings_opt
-         ( 'C', "call",
-           "Specify a call",  "CHANGE",
-           call_strs ) );
-
-  p.add( new boolean_opt
-         ( 'r', "ignore-rotations",
-           "Filter touches only differing by a rotation",
-           ignore_rotations ) );
- 
-  p.add( new range_opt
-         ( 'l', "length",
-           "Length or range of lengths required",  "MIN-MAX",
-           length ) );
-
-  p.add( new strings_opt
-         ( 'P', "part-end",
-           "Specify a part end",  "ROW",
-           pend_strs ) );
-}
-
-bool arguments::validate( arg_parser& ap )
-{
-  if ( !bells ) {
-    ap.error( "Must specify the number of bells" );
-    return false;
-  }
-
-  if ( bells < 4 || bells >= int(bell::MAX_BELLS) ) {
-    ap.error( make_string() << "The number of bells must be between 4 and "
-              << bell::MAX_BELLS-1 << " (inclusive)" );
-    return false;
-  }
-
-  try {  
-    meth = method( meth_str, bells );
-  } catch ( const exception& e ) {
-    ap.error( make_string() << "Invalid method place notation: "
-              << e.what() );
-    return false;
-  }
-
-  if ( meth.empty() ) {
-    ap.error( "Must specify a method" );
-    return false;
-  }
-
-  if ( !generate_pends( ap ) )
-    return false;
-
-  if ( !generate_calls( ap ) )
-    return false;
-
-  const size_t leadlen = meth.size() * pends.size();
-  if ( length.first % leadlen )
-    length.first = (length.first / leadlen + 1);
-  else
-    length.first /= leadlen;
-  if ( length.second < static_cast<size_t>(-1) )
-    length.second /= leadlen;
-
-  if ( length.first > length.second ) {
-    ap.error( "The length range does not encompass a whole number of leads" );
-    return false;
-  }
-
-  return true;
-}
-
-bool arguments::generate_calls( arg_parser& ap )
-{
-  // This is only a warning -- so don't return false
-  if ( call_strs.empty() ) {
-    call_strs.push_back( "b=14" );
-    ap.error( "No calls specified -- assuming fourths place bobs");
-  }
-
-  for ( vector<string>::iterator
-          i( call_strs.begin() ), e( call_strs.end() ); i != e; ++i )
-    try {
-      size_t eq = i->find('=');
-      if ( eq != string::npos ) {
-        change const ch( bells, i->substr(eq+1, string::npos) );
-        calls.push_back( ch );
-        i->erase(eq);
-      } 
-      else {
-        change const ch( bells, *i );
-        calls.push_back(ch);
-      }
-    }
-    catch ( exception const& ex ) {
-      ap.error( make_string() << "Unable to parse change '"
-                << *i << "': " << ex.what() );
-      return false;
-    }
-
-  return true;
-}
-
-bool arguments::generate_pends( arg_parser& ap )
-{
-  vector<row> gens;
-  gens.reserve( pend_strs.size() );
-
-  for ( vector<string>::const_iterator
-          i( pend_strs.begin() ), e( pend_strs.end() ); i != e; ++i )
-    {
-      row const g( row(bells) * row(*i) );
-      gens.push_back(g);
-    }
-
-  if ( gens.size() )
-    pends = group( gens );
-  else
-    pends = group( row(bells) );
-
-  // TODO: Warning if partends generate the extent? 
-  // Or anything equally silly?
-
-  return true;
-}
-
-
 // NB.  Once ostream &operator<<( ostream &, const touch & ) has
 // been defined, there will be no need for this.
 
@@ -215,15 +57,19 @@ public:
   typedef touch argument_type;
   typedef void result_type;
   
-  print_touch( arguments const& args ) 
-    : args(args), leadlen(args.meth.size()) 
+  print_touch( arguments const& args, method const& meth, 
+               string const& filter_line ) 
+    : args(args), meth(meth), filter_line(filter_line)
   {}
     
   void operator()( const touch &t ) const
   {
+    if (args.filter_mode)
+      cout << filter_line << "\t";
+
     int n=0;
     for ( touch::const_iterator i( t.begin() ); i != t.end(); ++i )
-      if ( ++n % leadlen == 0 ) {
+      if ( ++n % meth.size() == 0 ) {
         size_t cn = find( args.calls.begin(), args.calls.end(), *i ) 
           - args.calls.begin();
         if ( cn < args.calls.size() ) cout << args.call_strs[cn];
@@ -235,10 +81,72 @@ public:
 
 private:
   arguments const& args;
-  size_t leadlen;
+  method const& meth;
+  string filter_line;
 };
 
+class have_finished
+{
+public:
+  typedef touch argument_type;
+  typedef bool result_type;
 
+  have_finished( arguments const& args )
+    : args(args), i(new size_t(0u))
+  {}
+
+  bool operator()( const touch& )
+  {
+    // Abort when we reach the --limit
+    return ++*i >= args.search_limit 
+      // Or after the first one for a --filter search
+      || args.filter_mode;
+  }
+
+private:
+  arguments const& args;
+  shared_pointer<size_t> i;
+};
+
+void search( arguments const& args, method const& meth, 
+             string const& filter_line )
+{
+  const size_t leadlen = meth.size() * args.pends.size();
+  pair<size_t, size_t> leads = range_div( args.length, leadlen );
+  
+  table_search searcher( meth, args.calls, args.pends, leads,
+                         args.ignore_rotations );
+  print_touch printer( args, meth, filter_line );
+
+  touch_search_until( searcher, iter_from_fun(printer), have_finished(args) );
+}
+
+void filter( arguments const& args )
+{
+  litelib in( args.bells, std::cin );
+  for ( library::const_iterator i=in.begin(), e=in.end(); i!=e; ++i )
+    {
+      method filter_method;
+      try {
+        filter_method = i->meth();
+      } 
+      catch ( std::exception const& ex ) {
+        std::cerr << "Error reading method from input stream: "
+                  << ex.what() << "\n";
+        string pn;  try { pn = i->pn(); } catch (...) {}
+        if ( pn.size() ) std::cerr << "Place notation: '" << pn << "'\n";
+        std::cerr << std::flush;
+
+        continue;
+      }
+
+      string filter_line = i->pn();
+      filter_line += "\t";
+      filter_line += i->get_facet<litelib::payload>();
+
+      search( args, filter_method, filter_line );
+    }
+}
 
 int main( int argc, char *argv[] )
 {
@@ -246,10 +154,10 @@ int main( int argc, char *argv[] )
     {
       arguments args( argc, argv );
 
-      table_search srch( args.meth, args.calls, args.pends, args.length, 
-                         args.ignore_rotations );
-      touch_search( srch, iter_from_fun( print_touch(args) ) );
-      cout << endl;
+      if ( args.filter_mode )
+        filter( args );
+      else
+        search( args, args.meth, string() );
     }
   catch ( const exception &ex )
     {

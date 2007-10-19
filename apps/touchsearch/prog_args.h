@@ -48,6 +48,9 @@ struct arguments
 
   pair<size_t,size_t>  length;
   init_val<bool,false> ignore_rotations;
+  
+  init_val<int,-1>     search_limit;
+  init_val<bool,false> filter_mode;
 
   string               meth_str;
   method               meth;
@@ -66,5 +69,9 @@ private:
   bool generate_calls( arg_parser& ap );
   bool generate_pends( arg_parser& ap );
 };
+
+// TODO:  This doesn't belong here!
+pair<size_t, size_t> range_div( pair<size_t, size_t> const& r, size_t n );
+
 
 #endif // TOUCHSEARCH_PROG_ARGS_INCLUDED

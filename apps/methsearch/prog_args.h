@@ -1,5 +1,5 @@
 // -*- C++ -*- prog_args.h - program arguments
-// Copyright (C) 2002, 2003, 2004 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003, 2004, 2007 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -41,6 +41,7 @@
 #include <ringing/row.h>
 #include <ringing/pointers.h>
 #include <ringing/libout.h>
+#include <ringing/method.h>
 
 class arg_parser;
 
@@ -77,6 +78,7 @@ struct arguments
   init_val<bool,false> status;
   init_val<bool,false> count;
   init_val<bool,false> raw_count;
+  init_val<bool,false> filter_mode;
 
   init_val<bool,false> no_78_pns;
 
@@ -96,7 +98,11 @@ struct arguments
 
   init_val<bool,false> require_CPS;
 
-  string startmeth;
+  string startmethstr;
+  method startmeth;
+
+  string prefixstr;
+  method prefix;
 
   string pn;
 

@@ -1,5 +1,6 @@
 // -*- C++ -*- search.cpp - the actual search algorithm
-// Copyright (C) 2002, 2003, 2004, 2005 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003, 2004, 2005, 2007 
+// Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -50,6 +51,7 @@
 #include <ringing/extent.h>
 #include <ringing/proof.h>
 #include <ringing/mathutils.h>
+#include <ringing/litelib.h>
 
 
 RINGING_USING_NAMESPACE
@@ -58,21 +60,11 @@ RINGING_USING_STD
 class searcher
 {
 private:
-  friend void run_search( const arguments &args, const method &initm );
+  friend void run_search( const arguments &args );
 
-  searcher( const arguments &args, const method &initm )
-    : args(args),
-      bells( args.bells ),
-      div_len( (1 + args.treble_dodges) * 2 ),
-      hl_len( args.lead_len / 2 ),
-      search_count( 0ul )
-  {
-    m.reserve( 2 * hl_len );
-    first_meth.reserve( initm.size() );
-    copy( initm.rbegin(), initm.rend(),
-	  back_inserter( first_meth ) );
-  }
+  searcher( const arguments &args );
 
+  void filter();
   void general_recurse();
 
   inline void call_recurse( const change &ch );
@@ -110,15 +102,61 @@ private:
 
   unsigned long search_count;
 
-  vector< change > first_meth;  // To allow searches to be resumed
+  vector<change> startmeth;
+  method filter_method;
   method m;
 };
 
-void run_search( const arguments &args, const method &initm )
+searcher::searcher( const arguments &args )
+  : args(args),
+    bells( args.bells ),
+    div_len( (1 + args.treble_dodges) * 2 ),
+    hl_len( args.lead_len / 2 ),
+    search_count( 0ul )
 {
-  searcher s( args, initm );
-  s.general_recurse();
-  assert( s.m.length() == 0 );
+  m.reserve( 2 * hl_len );
+
+  copy( args.startmeth.rbegin(), args.startmeth.rend(), 
+        back_inserter(startmeth) );
+}
+
+void searcher::filter()
+{
+  litelib in( args.bells, std::cin );
+  for ( library::const_iterator i=in.begin(), e=in.end(); i!=e; ++i ) 
+    {
+      try {
+        filter_method = i->meth();
+      } 
+      catch ( std::exception const& ex ) {
+        std::cerr << "Error reading method from input stream: " 
+                  << ex.what() << "\n";
+        string pn;  try { pn = i->pn(); } catch (...) {}
+        if ( pn.size() ) std::cerr << "Place notation: '" << pn << "'\n";
+        std::cerr << std::flush;
+
+        continue;
+      }
+      general_recurse();
+      assert( m.length() == 0 );
+    } 
+}
+
+void run_search( const arguments &args )
+{
+  searcher s( args );
+
+  try 
+  {
+    if ( args.filter_mode ) {
+      s.filter();
+    } else {
+      s.general_recurse();
+      assert( s.m.length() == 0 );
+    }
+  } 
+  catch ( const exit_exception& ) {}
+
   if ( args.count || args.raw_count )
     {
       if ( args.status && args.outfile.empty() ) clear_status();
@@ -126,6 +164,10 @@ void run_search( const arguments &args, const method &initm )
       if ( args.raw_count ) output_raw_count( cout, s.search_count );
       else if ( args.count ) output_count( cout, s.search_count );
     }
+
+  if ( args.status ) clear_status();
+
+  args.outputs.flush(); // Causes stats to be emitted.
 }
 
 void searcher::found_method()
@@ -197,6 +239,11 @@ bool searcher::try_with_limited_le( const change& ch )
 
 bool searcher::is_acceptable_method()
 {
+  if ( lexicographical_compare( m.begin(), m.end(), 
+           args.startmeth.begin(), args.startmeth.end(),
+           compare_changes ) )
+    return false;
+
   if ( ! is_acceptable_leadhead( m.lh() ) )
     return false;
 
@@ -254,6 +301,8 @@ bool searcher::is_acceptable_method()
       if (!ok) return false;
     }
 
+  // --- Falseness requirements ---
+ 
   if ( args.true_course )
     {
       prover p( (int) ceil( (double) (bells - args.hunt_bells) * args.lead_len
@@ -292,16 +341,20 @@ bool searcher::is_acceptable_method()
   if ( args.true_positive_extent && !might_support_positive_extent(m) )
     return false;
 
+  // --- Other expensive requirements ---
+
+  // Calls back to this function, so pretty expensive
+  if ( args.prefer_limited_le && !is_limited_le( m.back() ) &&
+       ( try_with_limited_le( change( bells, "1"  ) ) ||
+	 try_with_limited_le( change( bells, "12" ) ) ) )
+    return false;
+
+  // Leave this one last as --requires is very expensive
   if ( args.require_expr_idx != static_cast<size_t>(-1) ) {
     method_properties props(m);
     if ( !expression_cache::b_evaluate( args.require_expr_idx, props ) )
       return false;
   }
-
-  if ( args.prefer_limited_le && !is_limited_le( m.back() ) &&
-       ( try_with_limited_le( change( bells, "1"  ) ) ||
-	 try_with_limited_le( change( bells, "12" ) ) ) )
-    return false;
 
   return true;
 }
@@ -628,54 +681,60 @@ void searcher::new_midlead_change()
 
   // Code to start at a particular point       
   change first;
-  if ( ! first_meth.empty() ) {
-    first = change( first_meth.back() ); 
-    first_meth.pop_back();
+  if ( startmeth.size() ) {
+    first = startmeth.back();
+    startmeth.pop_back();
   }
 
   for ( vector<change>::const_iterator 
 	  i( changes_to_try.begin() ), e( changes_to_try.end() ); 
 	i != e; ++i )
     {
-      if ( first.bells() == 0 || !compare_changes(*i, first) )
-	{
-	  const change& ch = *i;
+      const change& ch = *i;
 
-	  if ( ! try_midlead_change( ch ) )
-	    continue;
+      if ( first.bells() != 0 && compare_changes(*i, first) )
+        continue;
 
-	  if ( args.hunt_bells && args.skewsym && hl_len % 2 == 0 
-	       && depth % hl_len == hl_len / 2 - args.hunt_bells % 2 &&
-	       ! try_quarterlead_change( ch ) )
-	    continue;
+      if ( args.prefix.size() > m.size() && ch != args.prefix[m.size()] )
+        continue;
 
-	  if ( depth == hl_len-1 )
-	    if ( ! try_halflead_change( ch ) )
-	      continue;
+      if ( filter_method.size() > m.size() && ch != filter_method[m.size()] )
+        continue;
 
-	  if ( args.hunt_bells % 2 == 1 && depth == hl_len-1 ||
-	       args.hunt_bells && 
-	       args.hunt_bells % 2 == 0 && depth == hl_len+args.treble_dodges )
-	    if ( ! try_halflead_sym_change( ch ) )
-	      continue;
-	  
-	  if ( depth == size_t(args.lead_len-1) )
-	    if ( ! try_leadend_change( ch ) )
-	      continue;
-	  
-	  if ( args.hunt_bells % 2 == 1 && depth == 2*hl_len-1 ||
-	       args.hunt_bells && 
-	       args.hunt_bells % 2 == 0 && depth == size_t(args.treble_dodges) )
-	    if ( ! try_leadend_sym_change( ch ) )
-	      continue;
-	  
-	  if ( args.hunt_bells && args.require_offset_cyclic && div_len > 3
-	       && depth == div_len-3 )
-	    if ( ! try_offset_start_change( ch ) )
-	      continue;
+      if ( ! try_midlead_change( ch ) )
+        continue;
 
-	  call_recurse( ch );
-	}
+      if ( args.hunt_bells && args.skewsym && hl_len % 2 == 0 
+           && depth % hl_len == hl_len / 2 - args.hunt_bells % 2 &&
+           ! try_quarterlead_change( ch ) )
+        continue;
+
+      if ( depth == hl_len-1 )
+        if ( ! try_halflead_change( ch ) )
+          continue;
+
+      if ( args.hunt_bells % 2 == 1 && depth == hl_len-1 ||
+           args.hunt_bells && 
+           args.hunt_bells % 2 == 0 && depth == hl_len+args.treble_dodges )
+        if ( ! try_halflead_sym_change( ch ) )
+          continue;
+      
+      if ( depth == size_t(args.lead_len-1) )
+        if ( ! try_leadend_change( ch ) )
+          continue;
+      
+      if ( args.hunt_bells % 2 == 1 && depth == 2*hl_len-1 ||
+           args.hunt_bells && 
+           args.hunt_bells % 2 == 0 && depth == size_t(args.treble_dodges) )
+        if ( ! try_leadend_sym_change( ch ) )
+          continue;
+      
+      if ( args.hunt_bells && args.require_offset_cyclic && div_len > 3
+           && depth == div_len-3 )
+        if ( ! try_offset_start_change( ch ) )
+          continue;
+
+      call_recurse( ch );
     }
 }
 
@@ -722,21 +781,13 @@ void searcher::double_existing()
 	{
 	  int count(2);
 	  
-	  {
-	    for ( int offset = m.length()-1;
-		  offset >= 0;
-		  --offset, ++count )
-	      if ( !m[offset].findplace(i) )
-		break;
-	  }
+	  for ( int offset = m.length()-1; offset >= 0; --offset, ++count )
+	    if ( !m[offset].findplace(i) )
+	      break;
 
-	  {	  
-	    for ( int offset = 0;
-		  offset < m.length();
-		  ++offset, ++count )
-	      if ( !m[offset].findplace(i) )
-		break;
-	  }
+	  for ( int offset = 0; offset < m.length(); ++offset, ++count )
+	    if ( !m[offset].findplace(i) )
+	      break;
 	  
 	  if ( count > args.max_consec_blows )
 	    goto end_of_function;
@@ -800,7 +851,15 @@ void searcher::general_recurse()
   // Found something
   if ( depth == size_t(args.lead_len) )
     {
-      if ( is_acceptable_method() )
+      if ( filter_method.size() && filter_method != m )
+        ;
+      // This test can't go in the is_acceptable_method or it
+      // would break -E searches
+      else if ( lexicographical_compare( m.begin(), m.end(), 
+                    args.startmeth.begin(), args.startmeth.end(),
+                    compare_changes ) )
+        ;
+      else if ( is_acceptable_method() )
 	found_method();
     }
 

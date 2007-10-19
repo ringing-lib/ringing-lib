@@ -1,5 +1,5 @@
 // -*- C++ -*- search.h - the main search algorithm
-// Copyright (C) 2002 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2007 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -36,7 +36,7 @@ RINGING_USING_STD
 
 struct arguments;
 
-void run_search( const arguments &args, const method &initm );
+void run_search( const arguments &args );
 
 
 #endif // METHSEARCH_SEARCH_INCLUDED

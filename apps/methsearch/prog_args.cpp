@@ -1,5 +1,6 @@
 // -*- C++ -*- prog_args.cpp - handle program arguments
-// Copyright (C) 2002, 2003, 2004, 2005 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003, 2004, 2005, 2007
+// Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -32,6 +33,7 @@
 #include "mask.h"
 #include "format.h"
 #include "music.h"
+#include "methodutils.h"
 #if RINGING_OLD_C_INCLUDES
 #include <assert.h>
 #else
@@ -258,6 +260,11 @@ void arguments::bind( arg_parser &p )
 	   raw_count ) );
 
   p.add( new boolean_opt
+         ( '\0', "filter",
+           "Act as a filter on standard input rather than searching",
+           filter_mode ) );
+
+  p.add( new boolean_opt
 	 ( 'P', "parity-hack",
 	   "Require an equal number of rows of each parity for each place "
 	   "in the treble's path",
@@ -286,7 +293,12 @@ void arguments::bind( arg_parser &p )
   p.add( new string_opt
 	 ( '\0', "start-at",
 	   "Start the search with the method PN", "PN",
-	   startmeth ) );
+	   startmethstr ) );
+
+  p.add( new string_opt
+         ( '\0', "prefix",
+           "Require the method to start with PN", "PN",
+           prefixstr ) );
 
   p.add( new boolean_opt
 	 ( '\0', "cyclic-hle", 
@@ -565,6 +577,30 @@ bool arguments::validate( arg_parser &ap )
   if ( int(allowed_changes.size()) != lead_len )
     {
       ap.error( "The specified mask was an incorrect length" );
+      return false;
+    }
+
+  try
+    {
+      startmeth = method( startmethstr, bells );
+    }
+  catch ( const exception &e )
+    {
+      ap.error( make_string() 
+                << "Unable to parse place-notation passed to --start-at: "
+                << e.what() );
+      return false;
+    }
+
+  try
+    {
+      prefix = method( prefixstr, bells );
+    }
+  catch ( const exception &e )
+    {
+      ap.error( make_string()
+                << "Unable to parse place-notation passed to --prefix: "
+                << e.what() );
       return false;
     }
 

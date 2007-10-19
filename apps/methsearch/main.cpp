@@ -1,5 +1,5 @@
 // -*- C++ -*- main.cpp - the entry point for methsearch 
-// Copyright (C) 2002 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2007 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -66,31 +66,7 @@ int main( int argc, char *argv[] )
   if ( formats_have_falseness_groups() )
     false_courses::optimise( args.bells );
 
-  {
-    method startmeth;
-    try
-      {
-	startmeth = method( args.startmeth, args.bells );
-      }
-    catch ( const exception &e )
-      {
-	cerr << argv[0] 
-	     << ": Unable to parse place-notation passed to start-at\n"
-	     << e.what() << "\n";
-	return 1;
-      }
-
-    try 
-      {
-	run_search( args, startmeth );
-      }
-    catch ( const exit_exception& ) 
-      {}
-  }
-
-  if ( args.status ) clear_status();
-
-  args.outputs.flush(); // Causes stats to be emitted.
+  run_search( args );
 
   return 0;
 }
