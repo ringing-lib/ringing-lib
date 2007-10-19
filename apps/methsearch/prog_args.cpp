@@ -111,8 +111,7 @@ bool falseness_opt::process( const string &arg, const arg_parser & ) const
 
 
 arguments::arguments()
-  : mask("*"),
-    require_expr_idx( static_cast<size_t>(-1) )
+ :  require_expr_idx( static_cast<size_t>(-1) )
 {
 }
 
@@ -486,8 +485,14 @@ bool arguments::validate( arg_parser &ap )
 	outputs.add( new fmtout( R_fmt_str, outfile ) );
       } 
       else if ( outfmt == "xml" ) 
-	outputs.add( new xmlout( outfile ) );
-
+        try {
+	  outputs.add( new xmlout( outfile ) );
+        } 
+        catch ( exception const& ex ) {
+          ap.error( make_string() << "Unable to produce XML output: " 
+                    << ex.what() ); 
+          return false;
+        }
       else {
 	ap.error( "Unknown -O format: must be either `xml' or `fmt'" );
 	return false;
@@ -561,7 +566,7 @@ bool arguments::validate( arg_parser &ap )
 	}
     }
 
-  assert( !mask.empty() );
+  if (mask.empty()) mask = "*";
       
   try
     {
