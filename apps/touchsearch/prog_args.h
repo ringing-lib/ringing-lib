@@ -48,6 +48,7 @@ struct arguments
 
   pair<size_t,size_t>  length;
   init_val<bool,false> ignore_rotations;
+  init_val<bool,false> mutually_true_parts;
   
   init_val<int,-1>     search_limit;
   init_val<bool,false> filter_mode;

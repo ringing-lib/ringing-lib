@@ -157,6 +157,8 @@ struct RINGING_API permuter
   const row &operator()(const change &c) { return r *= c; }
   const row &operator()(const row &c) { return r *= c; }
 
+  row const& get() const { return r; }
+
 private:
   row r;
 };

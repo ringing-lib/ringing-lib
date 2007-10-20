@@ -52,27 +52,28 @@ RINGING_START_NAMESPACE
 RINGING_USING_STD
 
 table_search::table_search( const method &meth, const vector<change> &calls,
-			    const group& partends, bool ignore_rotations )
+			    const group& partends, flags f )
   : meth( meth ), calls( calls ), partends( partends ),
-    lenrange( make_pair( size_t(0), size_t(-1) ) ),
-    ignore_rotations( ignore_rotations )
-{}
-
-table_search::table_search( const method &meth, const vector<change> &calls,
-                            pair< size_t, size_t > lenrange,
-                            bool ignore_rotations )
-  : meth( meth ), calls( calls ),
-    lenrange( lenrange ),
-    ignore_rotations( ignore_rotations )
+    lenrange( make_pair( size_t(0), size_t(-1) ) ),  f(f)
 {}
 
 table_search::table_search( const method &meth, const vector<change> &calls,
 			    const group& partends, 
-                            pair< size_t, size_t > lenrange, 
-			    bool ignore_rotations )
+                            pair< size_t, size_t > lenrange,  flags f )
   : meth( meth ), calls( calls ), partends( partends ),
-    lenrange( lenrange ),
-    ignore_rotations( ignore_rotations )
+    lenrange( lenrange ), f( f )
+{}
+
+table_search::table_search( const method &meth, const vector<change> &calls,
+                            bool set_nr )
+  : meth( meth ), calls( calls ),
+    f( set_nr ? ignore_rotations : no_flags )
+{}
+
+table_search::table_search( const method &meth, const vector<change> &calls,
+                            pair< size_t, size_t > lenrange, bool set_nr )
+  : meth( meth ), calls( calls ),
+    lenrange( lenrange ), f( set_nr ? ignore_rotations : no_flags )
 {}
 
 
@@ -82,7 +83,7 @@ public:
   context( const table_search *s ) 
     : lenrange( s->lenrange ), 
       table( make_table( s ) ),
-      ignore_rotations( s->ignore_rotations )
+      f( s->f )
   {
     DEBUG( "Constructing context: table size " << table.size() );
 
@@ -187,12 +188,20 @@ private:
     for ( size_t i=0; i < len; ++i )
       tl->push_back( 1, t.get_node( 2 * (1 + calls[i]) ) );
 
+    // If we want more than mutually true blocks, make sure it is 
+    // actually an n-part.
+    if ( !(f & mutually_true_parts) && table.partends().size() > 1 ) {
+      if ( for_each( t.begin(), t.end(), permute(table.bells()) ).get().order()
+             != table.partends().size() )
+        return;
+    }
+
     force_halt = output( t );
 
-    if ( ! ignore_rotations && table.partends().size() == 1 ) {
+    // Try all of it's distinguishable rotations.
+    if ( !(f & ignore_rotations) && table.partends().size() == 1 ) {
       size_t parts( len % cur ? cur : len / cur );
       for ( size_t start = 1; !force_halt && start < len / parts; ++start ) {
-        // Try all of it's distinguishable rotations.
         ch.splice( ch.end(), ch, ch.begin() );
         force_halt = output( t );
       }
@@ -277,7 +286,7 @@ private:
   touch t;				// The current touch
   touch_child_list *tl;
   multtab table;			// A precomputed multiplication table
-  bool ignore_rotations;		// Are we to ignore rotations?
+  flags f;	                        // Are we to ignore rotations, etc.
 
   vector< bool > leads;			// The leads had so far
   vector< post_col_t > call_lhs;	// The effect of each call (inc. Pl.)

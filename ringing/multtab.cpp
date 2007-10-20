@@ -47,6 +47,11 @@ RINGING_START_NAMESPACE
 
 RINGING_USING_STD
 
+int multtab::bells() const
+{
+  return rows.empty() ? 0 : rows.front().bells();
+}
+
 void multtab::swap( multtab &other )
 {
   rows.swap( other.rows );

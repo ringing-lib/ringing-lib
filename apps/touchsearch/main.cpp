@@ -67,16 +67,22 @@ public:
     if (args.filter_mode)
       cout << filter_line << "\t";
 
-    int n=0;
-    for ( touch::const_iterator i( t.begin() ); i != t.end(); ++i )
+    int n=0;  row r( args.bells );
+
+    for ( touch::const_iterator i( t.begin() ); i != t.end(); ++i ) {
+      r *= *i;
       if ( ++n % meth.size() == 0 ) {
         size_t cn = find( args.calls.begin(), args.calls.end(), *i ) 
           - args.calls.begin();
         if ( cn < args.calls.size() ) cout << args.call_strs[cn];
         else cout << '.';
       }
+    }
 
-    cout << "  (" << n << " changes)" << endl;
+    if ( r.order() > 1 ) 
+      cout << " x" << r.order();
+
+    cout << "  (" << (n*r.order()) << " changes)" << endl;
   } 
 
 private:
@@ -113,10 +119,13 @@ void search( arguments const& args, method const& meth,
 {
   const size_t leadlen = meth.size() * args.pends.size();
   pair<size_t, size_t> leads = range_div( args.length, leadlen );
-  
-  table_search searcher( meth, args.calls, args.pends, leads,
-                         args.ignore_rotations );
-  print_touch printer( args, meth, filter_line );
+ 
+  table_search::flags flags = static_cast<table_search::flags>( 0 |
+    args.ignore_rotations ? table_search::ignore_rotations : 0 |
+    args.mutually_true_parts ? table_search::mutually_true_parts : 0 );
+ 
+  table_search searcher( meth, args.calls, args.pends, leads, flags );
+  print_touch  printer ( args, meth, filter_line );
 
   touch_search_until( searcher, iter_from_fun(printer), have_finished(args) );
 }

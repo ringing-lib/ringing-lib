@@ -52,18 +52,32 @@ struct RINGING_API RINGING_PREFIX_STD pair<size_t, size_t>;
 class RINGING_API table_search : public search_base
 {
 public:
+  enum flags {
+    no_flags = 0x0,
+
+    // Prune rotations from the search
+    ignore_rotations = 0x01,  // == true
+
+    // In multipart searches, allow blocks that do not all join together
+    // (e.g. WHx2 as 6-part of PB6)
+    mutually_true_parts = 0x02
+  };
+
   // Constructors
   table_search( const method &meth, const vector<change> &calls,
-                const group& partends = group(),
-		bool ignore_rotations = false );
-
-  table_search( const method &meth, const vector<change> &calls,
-                pair< size_t, size_t > lenrange,
-                bool ignore_rotations = false );
+                const group& partends, flags = no_flags);
 
   table_search( const method &meth, const vector<change> &calls,
                 const group& partends, pair< size_t, size_t > lenrange, 
-		bool ignore_rotations = false );
+		flags = no_flags );
+
+  // Older constructors, partly left for backwards compatibility
+  table_search( const method &meth, const vector<change> &calls,
+                bool set_ignore_rotations = false);
+
+  table_search( const method &meth, const vector<change> &calls,
+                pair< size_t, size_t > lenrange, 
+                bool set_ignore_rotations = false);
 
 private:
   // The implementation
@@ -76,7 +90,7 @@ private:
   vector<change> calls;
   group partends;
   pair< size_t, size_t > lenrange; // The minimum and maximum number of leads
-  bool ignore_rotations;
+  flags f;
 };
 
 

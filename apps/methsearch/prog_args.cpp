@@ -202,7 +202,7 @@ void arguments::bind( arg_parser &p )
 
   p.add( new boolean_opt
 	 ( 's', "symmetric", 
-	   "Look for (normally) symmetric methods (default)",
+	   "Look for palindromically symmetric methods (default)",
 	   sym ) );
 
   p.add( new boolean_opt
@@ -213,7 +213,7 @@ void arguments::bind( arg_parser &p )
 
   p.add( new boolean_opt
 	 ( 'd', "double", 
-	   "Look for double methods - 'Double Eastern' symmetry",
+	   "Look for double methods - i.e. 'glide' symmetry",
 	   doubsym ) );
 
   p.add( new boolean_opt

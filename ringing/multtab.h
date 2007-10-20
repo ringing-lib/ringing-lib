@@ -230,6 +230,8 @@ public:
   typedef RINGING_DETAILS_PREFIX multtab_post_col_t post_col_t;
   typedef RINGING_DETAILS_PREFIX multtab_pre_col_t  pre_col_t;
 
+  int bells() const;
+
   // Primarily for debugging.  Prints out the multiplication table
   void dump( ostream &os ) const;
   

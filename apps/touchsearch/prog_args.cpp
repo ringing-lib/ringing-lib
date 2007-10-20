@@ -90,6 +90,11 @@ void arguments::bind( arg_parser& p )
            "Specify a part end",  "ROW",
            pend_strs ) );
 
+  p.add( new boolean_opt
+         ( 'm', "mutually-true-parts",
+           "Only require mutually true parts with requiring them to be joined",
+           mutually_true_parts ) );
+
   p.add( new integer_opt
          ( '\0', "limit",
            "Limit the search to the first NUM touches", "NUM",
