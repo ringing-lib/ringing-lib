@@ -2,7 +2,7 @@ dnl -*- M4 -*- configure.ac - Autoconf script for the Ringing Class Library
 
 dnl Process this file with autoconf to produce a configure script.
 
-dnl Copyright (C) 2001, 2002 Martin Bright <martin@boojum.org.uk>
+dnl Copyright (C) 2001, 2002, 2008 Martin Bright <martin@boojum.org.uk>
 dnl and Richard Smith <richard@ex-parrot.com>
 
 dnl This program is free software; you can redistribute it and/or modify
@@ -49,6 +49,7 @@ AC_SUBST(READLINE_NEEDS_STDIO_H)
 AC_SUBST(READLINE_LIBS)
 
 AC_USE_XERCES
+AM_CONDITIONAL(HAVE_XERCES, test "$USE_XERCES" = 1 )
 AC_SUBST(USE_XERCES)
 AC_SUBST(XERCES_LIBS)
 

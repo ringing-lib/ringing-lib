@@ -1,5 +1,5 @@
 // -*- C++ -*- xmllib.cpp - Access to the online XML method library
-// Copyright (C) 2003, 2004, 2006 Richard Smith <richard@ex-parrot.com>.
+// Copyright (C) 2003, 2004, 2006, 2008 Richard Smith <richard@ex-parrot.com>.
 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -28,69 +28,22 @@
 #include <ringing/library.h>
 #include <ringing/xmllib.h>
 #include <ringing/peal.h>
+#include <ringing/dom.h>
 
 // Important note:  DO NOT include <ringing/streamutils.h> from here.  That
 // file includes GPL'd content and this file is only LGPL'd.
-
-#if RINGING_USE_XERCES
-#include <xercesc/parsers/XercesDOMParser.hpp>
-#include <xercesc/util/XMLURL.hpp>
-#include <xercesc/util/PlatformUtils.hpp>
-#include <xercesc/framework/URLInputSource.hpp>
-#include <xercesc/dom/DOMDocument.hpp>
-#include <xercesc/dom/DOMElement.hpp>
-#include <xercesc/dom/DOMCharacterData.hpp>
-#endif
 
 RINGING_START_NAMESPACE
 
 RINGING_USING_STD
 
-#if RINGING_USE_XERCES
-
-XERCES_CPP_NAMESPACE_USE
-
 RINGING_START_ANON_NAMESPACE
 
-class transcode
+static dom_element next_sibling_element( dom_element start, const string& name )
 {
-public:
-  transcode( const XMLCh* src )
-    : data( XMLString::transcode(src) )
-  {}
-
- ~transcode() { XMLString::release(&data); }
-
-  string to_string() const { return string(data); }
-
-private:
-  transcode( const transcode& ); // Unimplemented 
-  transcode& operator=( const transcode& ); // Unimplemented 
-
-  char* data;
-};
-
-#define TRANSCODE(str) transcode(str).to_string()
-
-struct init_xerces_t {
-  init_xerces_t() { XMLPlatformUtils::Initialize(); }
- ~init_xerces_t() { XMLPlatformUtils::Terminate(); }
-};
-
-static bool init_xerces() {
-  static struct init_xerces_t init;
-  return true;
-}
-
-static DOMElement* next_sibling_element( DOMNode* start, const string& name )
-{
-  while ( start 
-	  && ( start->getNodeType() != DOMNode::ELEMENT_NODE ||
-	       TRANSCODE( static_cast<DOMElement*>(start)->getTagName() )
-	         != name ) ) 
-    start = start->getNextSibling();
-
-  return static_cast<DOMElement*>(start);
+  while ( start && start.get_name() != name )
+    start = start.get_next_sibling();
+  return start;
 }  
 
 RINGING_END_ANON_NAMESPACE
@@ -110,64 +63,40 @@ private:
   virtual bool good() const  { return true; } 
 
   // Data members
-  bool const force_init;
-  XercesDOMParser parser;
-  shared_pointer<DOMDocument> doc;
+  shared_pointer<dom_document> doc;
 };
 
 xmllib::impl::impl( xmllib::file_arg_type type, const string& url )
-  : force_init( init_xerces() )
 {
-  parser.setDoNamespaces(true);
+  dom_document::filetype ftype;
+  string filename;
 
-  try
-    {
-      switch (type) 
-	{
-	case xmllib::filename:
-	  parser.parse( url.c_str() );
-	  break;
-	  
-	case xmllib::url:
-	  {
-	    URLInputSource src( XMLURL( url.c_str() ) );
-	    parser.parse( src );
-	  }
-	  break;
-
-	case xmllib::default_url:
-	  {
-	    string full_url( "http://methods.ringing.org/cgi-bin/simple.pl"
-			     "?format=old&" );
-	    full_url.append( url );
-	    URLInputSource src( XMLURL( full_url.c_str() ) );
-	    parser.parse( src );
-	  }
-	  break;
-	}
+  switch (type) {
+    case xmllib::filename:
+      ftype = dom_document::file; filename = url;
+      break;
       
-      doc.reset( parser.adoptDocument() );
+    case xmllib::default_url:
+      filename = "http://methods.ringing.org/cgi-bin/simple.pl?format=old&";
+  
+    case xmllib::url:
+      ftype = dom_document::url; filename += url;
+      break;
+  }
+      
+  doc.reset( new dom_document( filename, dom_document::in, ftype ) );
 
-      if ( !doc || !doc->getDocumentElement() )
-	throw runtime_error( "No document element" );
-
-      if ( TRANSCODE( doc->getDocumentElement()->getTagName() ) != "methods" ) 
-	throw runtime_error
-	  ( "Document root should be a <methods/> element" );
-    } 
-  catch ( const XMLException& e ) 
-    {
-      string err( "An error occured parsing the XML: " );
-      err.append( TRANSCODE( e.getMessage() ) );
-
-      throw runtime_error( err );
-    }
+  if ( doc->get_document().get_name() != "methods" ) 
+    throw runtime_error
+      ( "Document root should be a <methods/> element" );
 }
 
 class xmllib::impl::entry_type : public library_entry::impl
 {
-  string get_field( DOMElement* parent, const string& elt_name ) const;
-  string extract_text( const DOMElement* e ) const;
+  dom_element 
+    next_sibling_element( dom_element start, const string& name) const;
+  string get_field( dom_element const& parent, const string& elt_name ) const;
+  string extract_text( const dom_element& e ) const;
   peal get_peal( const string& elt_name ) const;
 
   virtual string name() const;
@@ -181,18 +110,26 @@ class xmllib::impl::entry_type : public library_entry::impl
     get_facet( const library_facet_id& id ) const;
 
   friend class xmllib::impl;
-  explicit entry_type( const shared_pointer<DOMDocument>& doc );
+  explicit entry_type( const shared_pointer<dom_document>& doc );
   virtual bool readentry( library_base &lb );
   virtual library_entry::impl *clone() const;
 
-  shared_pointer<DOMDocument> doc;  // To deal with persistence
-  DOMElement* meth;
+  shared_pointer<dom_document> doc;  // To deal with persistence
+  dom_element meth;
 };
 
-string xmllib::impl::entry_type::get_field( DOMElement* parent,
+dom_element xmllib::impl::entry_type
+  ::next_sibling_element( dom_element start, const string& name ) const
+{
+  while ( start && start.get_name() != name )
+    start = start.get_next_sibling();
+  return start;
+}
+
+string xmllib::impl::entry_type::get_field( dom_element const& parent,
 					    const string& name) const
 {
-  DOMElement *e = next_sibling_element( parent->getFirstChild(), name );
+  dom_element e = next_sibling_element( parent.get_first_child(), name );
   if (e)  
     return extract_text( e );
   else
@@ -201,7 +138,7 @@ string xmllib::impl::entry_type::get_field( DOMElement* parent,
 
 peal xmllib::impl::entry_type::get_peal( const string& name ) const
 {
-  DOMElement *e = next_sibling_element( meth->getFirstChild(), name );
+  dom_element e = next_sibling_element( meth.get_first_child(), name );
   if (!e) return peal();
 
   peal::date dt;
@@ -211,7 +148,7 @@ peal xmllib::impl::entry_type::get_peal( const string& name ) const
 
   string loc;
 
-  DOMElement* l = next_sibling_element( meth->getFirstChild(), "location" );
+  dom_element l = next_sibling_element( meth.get_first_child(), "location" );
   if ( l ) {
     // TODO: The peal object should know about the different 
     // parts of a location
@@ -237,19 +174,9 @@ peal xmllib::impl::entry_type::get_peal( const string& name ) const
   return peal( dt, loc );
 }
 
-string xmllib::impl::entry_type::extract_text( const DOMElement* e ) const
+string xmllib::impl::entry_type::extract_text( const dom_element& e ) const
 {
-  string value;
-
-  for ( DOMNode *t = e->getFirstChild(); t; t = t->getNextSibling() )
-    if ( t->getNodeType() == DOMNode::TEXT_NODE )
-      {
-	DOMCharacterData *cd = static_cast<DOMCharacterData*>(t);
-	if (cd)
-	  value.append( TRANSCODE( cd->getData() ) );
-      }
-
-  return value;
+  return e.get_content();
 }
 
 string xmllib::impl::entry_type::name() const
@@ -264,25 +191,25 @@ string xmllib::impl::entry_type::base_name() const
 
 string xmllib::impl::entry_type::pn() const
 {
-  DOMElement *pn_elt = next_sibling_element( meth->getFirstChild(), "pn" );
+  dom_element pn_elt = next_sibling_element( meth.get_first_child(), "pn" );
 
   if ( !pn_elt ) 
     throw runtime_error
       ( "XML method element has no <pn> element" );
 
-  if ( DOMElement *block_elt 
-       = next_sibling_element( pn_elt->getFirstChild(), "block" ) )
+  if ( dom_element block_elt 
+       = next_sibling_element( pn_elt.get_first_child(), "block" ) )
     {
       return extract_text( block_elt );
     }
-  else if ( DOMElement *sym_elt
-	= next_sibling_element( pn_elt->getFirstChild(), "symblock" ) )
+  else if ( dom_element sym_elt
+	= next_sibling_element( pn_elt.get_first_child(), "symblock" ) )
     {
       string value( 1u, '&' );
       value.append( extract_text( sym_elt ) );
       value.append( 1u, ',');
       
-      sym_elt = next_sibling_element( sym_elt->getNextSibling(), "symblock" );
+      sym_elt = next_sibling_element( sym_elt.get_next_sibling(), "symblock" );
 
       if ( !sym_elt )
 	throw runtime_error
@@ -316,8 +243,8 @@ library_entry::impl *xmllib::impl::entry_type::clone() const
 bool xmllib::impl::entry_type::readentry( library_base& lb )
 {
   meth = next_sibling_element
-	   ( meth ? meth->getNextSibling()
-		  : doc->getDocumentElement()->getFirstChild(),
+	   ( meth ? meth.get_next_sibling()
+		  : doc->get_document().get_first_child(),
 	     "method" );
 
   return !!meth;
@@ -326,10 +253,10 @@ bool xmllib::impl::entry_type::readentry( library_base& lb )
 bool xmllib::impl::entry_type::has_facet( const library_facet_id& id ) const
 {
   if ( id == first_tower_peal::id )
-    return bool( next_sibling_element( meth->getFirstChild(), "first-tower" ));
+    return next_sibling_element( meth.get_first_child(), "first-tower" );
 
   else if ( id == first_hand_peal::id ) 
-    return bool( next_sibling_element( meth->getFirstChild(), "first-hand" ) );
+    return next_sibling_element( meth.get_first_child(), "first-hand" );
 
   else
     return false;
@@ -341,12 +268,12 @@ xmllib::impl::entry_type::get_facet( const library_facet_id& id ) const
   shared_pointer< library_facet_base > result;
 
   if ( id == first_tower_peal::id ) {
-    if ( next_sibling_element( meth->getFirstChild(), "first-tower" ) ) 
+    if ( next_sibling_element( meth.get_first_child(), "first-tower" ) ) 
       result.reset( new first_tower_peal( get_peal( "first-tower" ) ) );
   }
 
   else if ( id == first_hand_peal::id ) {
-    if ( next_sibling_element( meth->getFirstChild(), "first-hand" ) ) 
+    if ( next_sibling_element( meth.get_first_child(), "first-hand" ) ) 
       result.reset( new first_hand_peal( get_peal( "first-hand" ) ) );
   }
 
@@ -354,8 +281,8 @@ xmllib::impl::entry_type::get_facet( const library_facet_id& id ) const
 }
 
 
-xmllib::impl::entry_type::entry_type( const shared_pointer<DOMDocument>& doc )
-  : doc(doc), meth(NULL)
+xmllib::impl::entry_type::entry_type( const shared_pointer<dom_document>& doc )
+  : doc(doc)
 {
 }
 
@@ -369,23 +296,6 @@ xmllib::xmllib( xmllib::file_arg_type type, const string& url )
   : library( new impl(type, url) )
 {
 }
-
-#else // Stub code if were not using Xerces
-
-class xmllib::impl : public library_base {
-public:
-  impl( xmllib::file_arg_type type, const string& url ) {}
-
-  virtual bool good() const  { return false; } 
-  virtual library_base::const_iterator begin() const { return end(); }
-};
-
-xmllib::xmllib( xmllib::file_arg_type, const string& )
-{
-  throw runtime_error( "XML libraries not supported in this build" );
-}
-
-#endif // XML library-specific code
 
 library_base *xmllib::canread( const string& name )
 {

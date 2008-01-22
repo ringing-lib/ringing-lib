@@ -1,5 +1,5 @@
 // -*- C++ -*- xmlout.cpp - Output of xml libraries
-// Copyright (C) 2004 Richard Smith <richard@ex-parrot.com>.
+// Copyright (C) 2004, 2008 Richard Smith <richard@ex-parrot.com>.
 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -26,15 +26,7 @@
 #include <ringing/xmlout.h>
 #include <ringing/library.h>
 #include <ringing/peal.h>
-
-#if RINGING_USE_XERCES
-#include <xercesc/dom/DOM.hpp>
-#include <xercesc/dom/DOMImplementation.hpp>
-#include <xercesc/dom/DOMWriter.hpp>
-#include <xercesc/util/PlatformUtils.hpp>
-#include <xercesc/framework/StdOutFormatTarget.hpp>
-#include <xercesc/framework/LocalFileFormatTarget.hpp>
-#endif
+#include <ringing/dom.h>
 
 #ifdef _MSC_VER
 #define snprintf _snprintf
@@ -44,49 +36,8 @@ RINGING_START_NAMESPACE
 
 RINGING_USING_STD
 
-#if RINGING_USE_XERCES
-
-XERCES_CPP_NAMESPACE_USE
-
 #define METHODS_XMLNS "http://methods.ringing.org/NS/method"
 #define XSI_XMLNS "http://www.w3.org/2001/XMLSchema-instance"
-
-RINGING_START_ANON_NAMESPACE
-
-// TODO: There's significant code duplication between here and xmllib.cpp
-
-class transcode
-{
-public:
-  transcode( const char* src )
-    : data( XMLString::transcode(src) )
-  {}
-
- ~transcode() { XMLString::release(&data); }
-
-  XMLCh* to_string() const { return data; }
-
-private:
-  transcode( const transcode& ); // Unimplemented 
-  transcode& operator=( const transcode& ); // Unimplemented 
-
-  XMLCh* data;
-};
-
-#define TRANSCODE(str) transcode(str).to_string()
-
-struct init_xerces_t {
-  init_xerces_t() { XMLPlatformUtils::Initialize(); }
- ~init_xerces_t() { XMLPlatformUtils::Terminate(); }
-};
-
-bool init_xerces() {
-  static struct init_xerces_t tmp;
-  return true;
-}
-
-RINGING_END_ANON_NAMESPACE
-
 
 class xmlout::impl : public libout::interface {
 public:
@@ -97,20 +48,24 @@ public:
   virtual void flush();
 
 private:
-  // XML helper functions
-  DOMElement* add_elt( DOMElement* parent, char const* name );
-  void add_simple_elt( DOMElement* parent, char const* name, 
-                       string const& content );
+  static dom_document::filetype filetype(string const& filename);
 
-  void add_peal( DOMElement* peal_elt, peal const& p );
+  void add_peal( dom_element peal_elt, peal const& p );
 
-  bool force_init;
-  DOMDocument* doc;
-  scoped_pointer< DOMWriter > writer;
-  scoped_pointer< XMLFormatTarget > target;
+  dom_document doc;
+  dom_element docelt;
 
   static const char *txt_classes[12];
 };
+
+dom_document::filetype xmlout::impl::filetype(string const& filename)
+{
+  if (filename.empty() || filename == "-")
+    return dom_document::stdio;
+  else
+    return dom_document::file;
+}
+
 
 const char *xmlout::impl::txt_classes[12] = {
   "",
@@ -127,67 +82,15 @@ const char *xmlout::impl::txt_classes[12] = {
 };
 
 
-DOMElement* xmlout::impl::add_elt( DOMElement* parent, char const* name )
-{
-  DOMElement* elt
-    = doc->createElementNS( TRANSCODE( METHODS_XMLNS ), TRANSCODE( name ) );
-  parent->appendChild( elt );
-  return elt;
-}
-
-void xmlout::impl::add_simple_elt( DOMElement* parent, char const* name, 
-				   string const& content )
-{
-  DOMElement* elt = add_elt( parent, name );
-
-  // We only add the text if it is not empty.  This is because
-  // the DOMWriter will output <foo/> for an element with no DOMText
-  // children, but <foo></foo> for an element with an empty DOMText
-  // child.  I prefer the former.
-  if ( content.size() ) {
-    DOMText* txt = doc->createTextNode( TRANSCODE( content.c_str() ) );
-    elt->appendChild( txt );
-  }
-}
-
-
 xmlout::impl::impl( const string& filename )
-  : force_init( init_xerces() ),
-    doc(NULL)
-{
-  // "LS" means we require the "Load and Save" feature
-  DOMImplementation* i
-    = DOMImplementationRegistry::getDOMImplementation( TRANSCODE("LS") );
-
-  if ( i ) {
-    doc = i->createDocument( TRANSCODE( METHODS_XMLNS ), 
-			     TRANSCODE("methods"), NULL );
-
-    writer.reset( i->createDOMWriter() );
-
-    // Turn pretty-printing on.  (TODO: Make this optional.)
-    if ( writer->canSetFeature( XMLUni::fgDOMWRTFormatPrettyPrint, true ) )
-      writer->setFeature( XMLUni::fgDOMWRTFormatPrettyPrint, true );
-  }
-
-  if ( filename.size() > 1 || filename.size() == 1 && filename != "-" ) 
-    target.reset( new LocalFileFormatTarget(filename.c_str()) );
-  else
-    target.reset( new StdOutFormatTarget );
-
-  if ( !doc || !writer || !target )
-    throw runtime_error( "Failed to create an XML document" );
-
+  : doc( filename, dom_document::out, filetype(filename) ),
+    docelt( doc.create_document( METHODS_XMLNS, "methods" ) )
+{ 
 }
 
 void xmlout::impl::flush()
 {
-  if ( writer && target && doc ) {
-    writer->writeNode(target.get(), *doc);
-
-    // Safe against multiple flushes
-    doc->release(); doc = NULL;
-  }
+  doc.finalise();
 }
 
 xmlout::impl::~impl()
@@ -195,36 +98,30 @@ xmlout::impl::~impl()
   try { 
     flush();
   } catch(...) {}
-
-  if ( doc )
-    doc->release();
 }
 
-void xmlout::impl::add_peal( DOMElement* peal_elt, peal const& p )
+void xmlout::impl::add_peal( dom_element peal_elt, peal const& p )
 {
   // A date of {0,0,0} is used to mean 'unspecified'.
   if ( p.when().day ) {
     char buffer[32];
     snprintf( buffer, 32, "%4d-%02d-%02d", 
 	      p.when().year, p.when().month, p.when().day );
-    add_simple_elt( peal_elt, "date", buffer );
+    peal_elt.add_elt( METHODS_XMLNS, "date" ).add_content( buffer );
   }
 
   // TODO:  This is contrary to the methods XML schema, but I 
   // don't have the information in a structured format. This 
   // probably reflects a deficiency in the methods XML schema.
   if ( p.where().size() )
-    add_simple_elt( peal_elt, "location", p.where() );
+    peal_elt.add_elt( METHODS_XMLNS, "location" ).add_content( p.where() );
 }
 
 void xmlout::impl::append( library_entry const& entry ) 
 {
-  if ( !doc )
-    throw runtime_error( "No current document" ); 
-
   method meth( entry.meth() );
 
-  DOMElement* meth_elt = add_elt( doc->getDocumentElement(), "method" );
+  dom_element meth_elt = docelt.add_elt( METHODS_XMLNS, "method" );
 
   // TODO:  This framework doesn't allow for the distinction between 
   // methods that are known to be unnamed (which should have xsi:nil set)
@@ -232,33 +129,29 @@ void xmlout::impl::append( library_entry const& entry )
   // We play it safe and never set xsi:nil for unnamed methods.
   // Note that not having a name doesn't mean that a method has no name!
   // Remember Little Bob.
-  {
-    string name( meth.name() );
-    //    if ( name.size() ) {
-      add_simple_elt( meth_elt, "name", name );
-      add_simple_elt( meth_elt, "title", meth.fullname() );
-      //}
-  }
+  meth_elt.add_elt( METHODS_XMLNS, "name" ).add_content( meth.name() );
+  meth_elt.add_elt( METHODS_XMLNS, "title" ).add_content( meth.fullname() );
 
   { // We don't use make_sting because this file is LGPL'd.
     char buffer[32];
     snprintf( buffer, 32, "%d", meth.bells() );
-    add_simple_elt( meth_elt, "stage", buffer );
+    meth_elt.add_elt( METHODS_XMLNS, "stage" ).add_content( buffer );
   }
 
   // Classes doesn't include things like Little and Differential
   int methclass = meth.methclass();
-  add_simple_elt( meth_elt, "classes", 
-		  method::classname( methclass & method::M_MASK ) );
+  meth_elt.add_elt( METHODS_XMLNS, "classes") 
+    .add_content( method::classname( methclass & method::M_MASK ) );
 
-  {
-    DOMElement* pn_elt = add_elt( meth_elt, "pn" );
+  { // <pn>
+    dom_element pn_elt = meth_elt.add_elt( METHODS_XMLNS, "pn" );
 
     int const fmt_opts = method::M_LCROSS | method::M_EXTERNAL;
 
     int sp = meth.symmetry_point();
     if ( sp == -1 ) {
-      add_simple_elt( pn_elt, "block", meth.format(fmt_opts) );
+      pn_elt.add_elt( METHODS_XMLNS, "block" )
+        .add_content( meth.format(fmt_opts) );
     } else {
       method b1, b2; 
 
@@ -266,66 +159,65 @@ void xmlout::impl::append( library_entry const& entry )
       copy( meth.begin() + 2*sp+1, meth.begin() + (meth.length()/2 + sp+1), 
 	    back_inserter( b2 ) );
 
-      add_simple_elt( pn_elt, "symblock", b1.format(fmt_opts) );
-      add_simple_elt( pn_elt, "symblock", b2.format(fmt_opts) );
+      pn_elt.add_elt( METHODS_XMLNS, "symblock" )
+        .add_content( b1.format(fmt_opts) );
+      pn_elt.add_elt( METHODS_XMLNS, "symblock" )
+        .add_content( b2.format(fmt_opts) );
     }
-  }
+  } // </pn>
 
-  add_simple_elt( meth_elt, "lead-head", meth.lh().print() );
+  meth_elt.add_elt( METHODS_XMLNS, "lead-head" )
+    .add_content( meth.lh().print() );
 
-  {
-    DOMElement* cl_elt = add_elt( meth_elt, "classification" );
+  { // <classification>
+    dom_element cl_elt = meth_elt.add_elt( METHODS_XMLNS, "classification" );
 
-    DOMElement* cc_elt = add_elt( cl_elt, "cc-class");
-    if((methclass & method::M_MASK) != method::M_UNKNOWN)
-      cc_elt->setAttribute( TRANSCODE( "class" ), 
-			    TRANSCODE( txt_classes[methclass 
-						   & method::M_MASK] ) );
-    if(methclass & method::M_LITTLE)
-      cc_elt->setAttribute( TRANSCODE( "little" ),
-			    TRANSCODE( "true" ) );
-    if(methclass & method::M_DIFFERENTIAL)
-      cc_elt->setAttribute( TRANSCODE( "differential" ),
-			    TRANSCODE( "true" ) );
+    { // <cc-class>
+      dom_element cc_elt = cl_elt.add_elt( METHODS_XMLNS, "cc-class");
+      if((methclass & method::M_MASK) != method::M_UNKNOWN)
+        cc_elt.add_attr( NULL, "class", 
+                         txt_classes[methclass & method::M_MASK] );
+      if(methclass & method::M_LITTLE)
+        cc_elt.add_attr( NULL, "little", "true" );
+      if(methclass & method::M_DIFFERENTIAL)
+        cc_elt.add_attr( NULL, "differential", "true" );
+    } // </cc-class>
+    { // <lhcode>
+      dom_element lhcode_elt = cl_elt.add_elt( METHODS_XMLNS, "lhcode" );
+      const char *lhcode = meth.lhcode();
+      if(lhcode[0] =='\0' || lhcode[0] == 'z')
+        lhcode_elt.add_attr( XSI_XMLNS, "xsi:nil", "true" );
+      else
+        lhcode_elt.add_attr( NULL, "code", lhcode );
+    } // </lhcode>
+  } // </classification>
 
-    DOMElement* lhcode_elt = add_elt( cl_elt, "lhcode" );
-    const char *lhcode = meth.lhcode();
-    if(lhcode[0] =='\0' || lhcode[0] == 'z') {
-      lhcode_elt->setAttributeNS( TRANSCODE( XSI_XMLNS ),
-				  TRANSCODE( "xsi:nil" ),
-				  TRANSCODE( "true" ) );
-    } else {
-      lhcode_elt->setAttributeNS( TRANSCODE( METHODS_XMLNS ),
-				  TRANSCODE( "code" ),
-				  TRANSCODE( lhcode ));
-    }
-  }
-
-  {
-    DOMElement* performances_elt = NULL;
-
+  { // <performances>
+    dom_element perf_elt;
 
     if ( entry.has_facet< first_tower_peal >() ) {
-      if(!performances_elt) 
-	performances_elt = add_elt( meth_elt, "performances" );
-      add_peal( add_elt( performances_elt, "firsttower" ),
+      if (!perf_elt) 
+	perf_elt = meth_elt.add_elt( METHODS_XMLNS, "performances" );
+      add_peal( perf_elt.add_elt( METHODS_XMLNS, "firsttower" ),
 		entry.get_facet< first_tower_peal >() );
     }    
 
     if ( entry.has_facet< first_hand_peal >() ) {
-      if(!performances_elt) 
-	performances_elt = add_elt( meth_elt, "performances" );
-      add_peal( add_elt( performances_elt, "firsthand" ),
+      if (!perf_elt) 
+	perf_elt = meth_elt.add_elt( METHODS_XMLNS, "performances" );
+      add_peal( perf_elt.add_elt( METHODS_XMLNS, "firsthand" ),
 		entry.get_facet< first_hand_peal >() );  
     }
-  }
+  } // </performances>
 
   {
-    DOMElement* refs_elt = NULL;
+    dom_element refs_elt;
 
     if ( entry.has_facet< rw_ref >() ) {
-      if ( !refs_elt ) refs_elt = add_elt( meth_elt, "refs" );
-      add_simple_elt( refs_elt, "rwref", entry.get_facet< rw_ref >() );
+      if ( !refs_elt ) 
+        refs_elt = meth_elt.add_elt( METHODS_XMLNS, "refs" );
+      refs_elt.add_elt( METHODS_XMLNS, "rwref" )
+        .add_content( entry.get_facet< rw_ref >() );
     }
   }
 }
@@ -333,19 +225,5 @@ void xmlout::impl::append( library_entry const& entry )
 xmlout::xmlout( const string& filename )
   : libout( new impl(filename) )
 {}
-
-
-#else // Stub code if were not using xerces
-
-class xmlout::impl : public libout::interface {};
-
-xmlout::xmlout( const string& )
-{
-  throw runtime_error( "XML libraries not supported in this build" );
-}
-
-#endif // RINGING_USE_XERCES
-
-
 
 RINGING_END_NAMESPACE
