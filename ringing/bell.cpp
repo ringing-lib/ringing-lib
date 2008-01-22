@@ -1,5 +1,5 @@
 // -*- C++ -*- bell.cpp - A simple class representing a bell's position
-// Copyright (C) 2001 Martin Bright <martin@boojum.org.uk>
+// Copyright (C) 2001, 2008 Martin Bright <martin@boojum.org.uk>
 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -30,8 +30,18 @@ RINGING_USING_STD
   
 RINGING_START_NAMESPACE
 
-char bell::symbols[] = "1234567890ETABCDFGHJKLMNPQRSUVWYZ";
-const unsigned int bell::MAX_BELLS = 33;
+char* bell::symbols = "1234567890ETABCDFGHJKLMNPQRSUVWYZ";
+unsigned int bell::MAX_BELLS = 33;
+
+void bell::set_symbols( char* syms, size_t n ) {
+  if ( syms ) {
+    symbols = syms;
+    MAX_BELLS = n == size_t(-1) ? strlen(syms) : n;
+  } else {
+    symbols = "1234567890ETABCDFGHJKLMNPQRSUVWYZ";
+    MAX_BELLS = 33;
+  }
+}
     
 bell::invalid::invalid()
   : invalid_argument("The bell supplied was invalid") {}

@@ -1,5 +1,5 @@
 // -*- C++ -*- bell.h - A simple class representing a bell's position in a row
-// Copyright (C) 2001, 2007 Martin Bright <martin@boojum.org.uk> 
+// Copyright (C) 2001, 2007, 2008 Martin Bright <martin@boojum.org.uk> 
 // and Richard Smith <richard@ex-parrot.com>
 
 // This library is free software; you can redistribute it and/or
@@ -59,9 +59,11 @@
 #define RINGING_BELL_BITS  CHAR_BIT // defined in limits.h
 #endif
 
-#if RINGING_BELL_BITS != 8
+#if RINGING_BELL_BITS != CHAR_BIT
 // The header stdint.h does not exist on all older systems.
+#if defined(HAVE_STDINT_H) && HAVE_STDINT_H
 #include <stdint.h>
+#endif
 #endif
 
 
@@ -71,7 +73,7 @@ RINGING_USING_STD
 
 class RINGING_API bell {
 public:
-  static const unsigned int MAX_BELLS;
+  static unsigned int MAX_BELLS;
 
   bell() : x(0) {}
   bell(int i) : x(i) {}
@@ -99,20 +101,33 @@ public:
 
   char to_char() const { return (x < MAX_BELLS) ? symbols[x] : '*'; }
 
+  // Thrown when an invalid bell symbol is found
   struct invalid : public invalid_argument {
     invalid();
   };
 
+  // Supply an alternative set of symbols to print bells.
+  // E.g., lower-case letters for E & T.
+  static void set_symbols( char* syms, size_t num_syms = size_t(-1) );
+
 private:
 #if RINGING_BELL_BITS == CHAR_BIT
   typedef unsigned char underlying_type;
-#else
+#elif defined(HAVE_STDINT_H) && HAVE_STDINT_H
   typedef RINGING_CONCAT( uint, RINGING_CONCAT(RINGING_BELL_BITS, _t) ) 
     underlying_type;
+#elif RINGING_BELL_BITS == 16 && USHORT_MAX == 65535
+  typedef unsigned short underlying_type;
+#elif RINGING_BELL_BITS == 32 && UINT_MAX == 4294967295
+  typedef unsigned int underlying_type;
+#elif RINGING_BELL_BITS == 32 && ULONG_MAX == 4294967295
+  typedef unsigned int underlying_type;
+#else
+#error "Unable to locate a suitable size type for bell"
 #endif
 
   underlying_type x;
-  static char symbols[];        // Symbols for the individual bells
+  static char* symbols;        // Symbols for the individual bells
 };
 
 inline RINGING_API ostream& operator<<(ostream& o, const bell b)
