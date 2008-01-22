@@ -177,12 +177,12 @@ void arguments::bind( arg_parser &p )
 
   p.add( new boolean_opt
 	 ( 'e', "restricted-le",
-	   "Only allow 12 and 1N (or 1 and 12N lead ends)",
+	   "Only allow 12 and 1N (or 1 and 12N) lead ends",
 	   require_limited_le ) );
 
   p.add( new boolean_opt
 	 ( 'E', "prefer-restricted-le",
-	   "Prefer 12 and 1N (or 1 and 12N lead ends)",
+	   "Prefer 12 and 1N (or 1 and 12N) lead ends",
 	   prefer_limited_le ) );
 
   p.add( new boolean_opt

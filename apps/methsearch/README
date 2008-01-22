@@ -11,17 +11,16 @@ General Options
 ---------------
 
   -?, --help             Print this help message
-  -V, --version          Print this help message
-  -b, --bells=BELLS      The number of bells
+  -V, --version          Print the program version
+  -b, --bells=BELLS      The number of bells.  This option is required
   -c, --cyclic           Require cyclic lead ends
   -r, --regular          Require regular (P.B.) lead ends
   -A, --all-methods      Include differentials or differential hunters
   -p, --blows-per-place[=NUM] 
-                         At most NUM blows in one place (0 = unlimited,
-                         default = 2)
+                         At most NUM consecutive blows in one place (0 = 
+                         unlimited)
   -l, --places-per-change[=NUM]
-                         At most NUM places in one change (0 = unlimited,
-                         default = 2)
+                         At most NUM places in one change (0 = unlimited)
   -n, --changes-per-lead=NUM 
 			 Require NUM changes per lead (0 = automatic)
   -q, --quiet            Do not display methods when found
@@ -29,19 +28,20 @@ General Options
                          Count frequencies of different method properties
   -R, --format=FMT       Use FMT to format methods as found
   --require=EXPR         Require EXPR to be true (see below)
-  -e, --restricted-le    Only allow 12 and 1N (or 1 and 12N lead ends)
+  -e, --restricted-le    Only allow 12 and 1N (or 1 and 12N) lead ends
   -E, --prefer-restricted-le
-                         Prefer 12 and 1N (or 1 and 12N lead ends)
+                         Prefer 12 and 1N (or 1 and 12N) lead ends
   -w, --right-place      Require right place methods
   -f, --no-78s           Prohibit 78s (on 8 bells) in the place notation
 			 (except at the half-lead).
   -j, --max-adj-places[=NUM]
 			 Forbid methods with more than NUM adjacent places
-                         (0 = unlimited, default = 1)
-  -s, --symmetric        Look for (normally) symmetric methods (default)
+                         (0 = unlimited)
+  -s, --symmetric        Look for palindromically symmetric methods
   -k, --rotational       Look for rotationally symmteric methods 'Brave New
                          Worlds' symmetry
-  -d, --double           Look for double methods - 'Double Eastern' symmetry
+  -d, --double           Look for double methods - i.e. glide symmetry,
+                         or 'Double Eastern' symmetry
   -S, --surprise         Require an internal place between dodging positions
   -T, --treble-bob       Forbid an internal place between dodging positions
   -G, --treble-dodges=NUM 
@@ -53,6 +53,8 @@ General Options
   --count                Count the number of methods found
   --raw-count            Count the number of methods found and print it
                          without surrounding text
+  --filter               Act as a filter on standard input rather than
+                         searching
   -P, --parity-hack      Require an equal number of rows of each parity for
                          each place in the treble's path
   -L, --library=LIB      Look up method names in the library LIB
