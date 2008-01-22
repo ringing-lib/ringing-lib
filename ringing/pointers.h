@@ -1,5 +1,5 @@
 // -*- C++ -*- pointers.h - A few smart pointer classes
-// Copyright (C) 2001, 2002 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2001, 2002, 2008 Richard Smith <richard@ex-parrot.com>
 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -145,6 +145,7 @@ class shared_pointer : private RINGING_DETAILS_PREFIX safe_bool
 public:
   // Standard auto pointer typedefs
   typedef T element_type;
+  typedef void (*deletor_type)( element_type *& );
 
   // Accessors
   element_type *operator->() const { return ptr; }
@@ -152,24 +153,47 @@ public:
   element_type *get() const { return ptr; }
 
   // Construction and destruction
-  explicit shared_pointer( T *src = 0 ) 
-    : ptr( src )
-  { 
+  // 
+  // Note: there is some magic going on here to get it all working
+  // correctly in MSVC 5.  Normally, you can completely ignore the
+  // second argument to these constructors, however, in code that 
+  // needs to compile in MSVC 5, if the class is used on an incomplete 
+  // type (e.g. in the pimpl idiom), pass delete_helper<T>::fn
+  // as the second argument and ignore all the warnings
+  // 
+  shared_pointer( T *src, deletor_type d )
+    : ptr( src ), deletor(d)
+  {
 # if RINGING_USE_EXCEPTIONS
-    try { rc = new int(1); } 
-    catch (...) { delete ptr; throw; } 
+    try { rc = new int(1); }
+    catch (...) { deletor(ptr); throw; }
 # else
     rc = new int(1);
 # endif
   }
- ~shared_pointer() { if ( !--*rc ) { delete ptr; delete rc; } }
+  explicit shared_pointer( T *src )
+    : ptr( src ),
+      deletor( delete_helper<T>::fn )
+  {
+# if RINGING_USE_EXCEPTIONS
+    try { rc = new int(1); }
+    catch (...) { deletor(ptr); throw; }
+# else
+    rc = new int(1);
+# endif
+  }
+  shared_pointer() : ptr(0), deletor(0), rc(0) {}
+
+ ~shared_pointer() { if ( rc && !--*rc ) { deletor(ptr); delete rc; } }
   
   // Swapping, assignment and copying
   void swap( shared_pointer<T> &o )
     { RINGING_PREFIX_STD swap( ptr, o.ptr ); 
-      RINGING_PREFIX_STD swap( rc, o.rc ); }
+      RINGING_PREFIX_STD swap( rc, o.rc ); 
+      RINGING_PREFIX_STD swap( deletor, o.deletor ); }
   shared_pointer( const shared_pointer<T> &o )
-    : ptr( o.ptr ) { ++*( rc = o.rc ); }
+    : ptr( o.ptr ), deletor( o.deletor )
+    { if (o.rc) ++*( rc = o.rc ); else rc = 0;}
   shared_pointer &operator=( const shared_pointer<T> &o )
     { shared_pointer<T>( o ).swap(*this); return *this; }
 
@@ -177,15 +201,14 @@ public:
   void reset( T *src = 0 ) 
   { 
     if ( ptr == src ) return;
-    else if ( !--*rc ) { delete ptr; }
+    else if ( rc && !--*rc ) { deletor(ptr); }
 # if RINGING_USE_EXCEPTIONS
     else try { rc = new int(0); } 
     catch (...) { ++*rc; delete src; throw; } 
 # else
-    else rc = new int(0); 
+    else { rc = new int(0); }
 # endif
-    *rc = 1;
-    ptr = src;
+    *rc = 1; ptr = src; deletor = delete_helper<T>::fn;
   }
 
   // Safe boolean conversions
@@ -203,19 +226,9 @@ public:
 
 private:
   T *ptr;
+  void (*deletor)( element_type *& ptr );
   mutable int *rc;
 };
-
-
-RINGING_START_DETAILS_NAMESPACE
-
-// Never use this directly
-template <class T> 
-struct auto_delete_helper {
-  static void fn( T *&ptr ) { delete ptr; ptr = NULL; }
-};
-
-RINGING_END_DETAILS_NAMESPACE
 
 // A smart pointer that prohibits copying, but ensures the destructor
 // is correctly called.  Based on boost's scoped_ptr.
@@ -241,18 +254,24 @@ public:
   // type (e.g. in the pimpl idiom), pass delete_helper<T>::fn
   // as the second argument and ignore all the warnings
   // 
-  explicit scoped_pointer( T *src, deletor_type d )
+  scoped_pointer( T *src, deletor_type d )
     : ptr( src ), deletor(d) 
   {}
-  explicit scoped_pointer( T *src = 0 )
+  explicit scoped_pointer( T *src )
     : ptr( src ), 
-      deletor( RINGING_DETAILS_PREFIX auto_delete_helper<T>::fn )
+      deletor( delete_helper<T>::fn )
+  {}
+  scoped_pointer()
+    : ptr( 0 ), deletor( 0 )
   {}
 
- ~scoped_pointer() { deletor(ptr); }
+ ~scoped_pointer() { if (deletor) deletor(ptr); }
 
   // Reset the pointer
-  void reset( T *x = 0 ) { deletor(ptr); ptr = x; }
+  void reset( T *x = 0 ) { 
+    if (deletor) deletor(ptr); 
+    ptr = x; deletor = delete_helper<T>::fn;  
+  }
 
   // Release the pointer.  Deleting it is now the caller's responsibility.
   element_type *release() { T *tmp = ptr; ptr = 0; return tmp; }
