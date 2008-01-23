@@ -23,10 +23,6 @@
 #pragma implementation
 #endif
 
-#if ! RINGING_USE_XERCES
-#error "This file requires Xerces"
-#endif
-
 #if RINGING_OLD_INCLUDES
 #include <stdexcept.h>
 #else
@@ -236,11 +232,7 @@ string dom_element::get_content() const
 
   for ( DOMNode *t = pimpl->elt->getFirstChild(); t; t = t->getNextSibling() )
     if ( t->getNodeType() == DOMNode::TEXT_NODE )
-      {
-	DOMCharacterData *cd = static_cast<DOMCharacterData*>(t);
-	if (cd)
-	  value.append( TRANSCODE_I( cd->getData() ) );
-      }
+      value += TRANSCODE_I( static_cast<DOMCharacterData*>(t)->getData() );
 
   return value;
 }

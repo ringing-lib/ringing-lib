@@ -35,6 +35,7 @@ AC_PROG_CXX
 AC_LIBTOOL_WIN32_DLL
 AC_PROG_LIBTOOL
 AC_PROG_LN_S
+AC_PATH_PROG([PKGCONFIG], [pkg-config])
 
 dnl --------------------------------------------------------------------------
 dnl Checks for libraries.
@@ -48,9 +49,34 @@ AC_SUBST(USE_READLINE)
 AC_SUBST(READLINE_NEEDS_STDIO_H)
 AC_SUBST(READLINE_LIBS)
 
+
+dnl We only want one of gdome and xerces.  If the user has given a
+dnl --with-xerces option, honour that; otherwise try gdome first
+dnl (as that's more likely to exist on a modern *nix system).
+
+AC_ARG_WITH( [gdome],
+  AC_HELP_STRING([--with-gdome], [support XML libraries with Gdome]),
+  [ac_cv_use_gdome=$withval]
+)
+AC_ARG_WITH( [xerces],
+  AC_HELP_STRING([--with-xerces], [support XML libraries with Xerces]),
+  [echo "With xerces: $withval"; ac_cv_use_xerces=$withval]
+)
+
+if test "$ac_cv_use_xerces" = yes ; then 
+  ac_cv_use_gdome=no
+fi
+AC_USE_GDOME
+AM_CONDITIONAL(HAVE_GDOME, test "$USE_GDOME" = 1 )
+AC_SUBST(GDOME_LIBS)
+AC_SUBST(GDOME_LDFLAGS)
+AC_SUBST(GDOME_CFLAGS)
+
+if test "$USE_GDOME" = 1 ; then 
+  ac_cv_use_xerces=no
+fi
 AC_USE_XERCES
-AM_CONDITIONAL(HAVE_XERCES, test "$USE_XERCES" = 1 )
-AC_SUBST(USE_XERCES)
+AM_CONDITIONAL(HAVE_XERCES, test "$USE_GDOME" != 1 -a "$USE_XERCES" = 1 )
 AC_SUBST(XERCES_LIBS)
 
 dnl --------------------------------------------------------------------------

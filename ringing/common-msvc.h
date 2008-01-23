@@ -86,9 +86,4 @@
 // or to 0 otherwise
 #define RINGING_READLINE_NEEDS_STDIO_H 0
 
-
-// *** Define this to be 1 if want to include XML support via the 
-// Apache Xerces library, or to 0 otherwise.
-#define RINGING_USE_XERCES 0
-
 #endif // RINGING_COMMON_MSVC_H

@@ -2,7 +2,7 @@ dnl -*- M4 -*- acinclude.m4 - Tests for compiler functionality
 
 dnl Process this file with aclocal to produce aclocal.m4.
 
-dnl Copyright (C) 2001, 2002, 2003, 2004 Martin Bright <martin@boojum.org.uk>
+dnl Copyright (C) 2001, 2002, 2003, 2004, 2008 Martin Bright <martin@boojum.org.uk>
 dnl and Richard Smith <richard@ex-parrot.com>
 
 dnl This program is free software; you can redistribute it and/or modify
@@ -539,12 +539,7 @@ dnl
 dnl @author Richard Smith <richard@ex-parrot.com>
 dnl
 AC_DEFUN([AC_USE_XERCES],
- [AC_ARG_WITH(
-    xerces,
-    AC_HELP_STRING([--with-xerces], [support XML libraries with Xerces]),
-    ac_cv_use_xerces=$withval
-  )
-  if test -z "$ac_cv_use_xerces" ; then
+ [if test -z "$ac_cv_use_xerces" ; then
     AC_CACHE_CHECK(
       [for Apache xerces-c library],
       [ac_cv_use_xerces],
@@ -564,6 +559,41 @@ AC_DEFUN([AC_USE_XERCES],
   else
     XERCES_LIBS=[]
     USE_XERCES=0
+  fi
+])
+dnl --------------------------------------------------------------------------
+dnl @synopsis AC_USE_GDOME
+dnl
+dnl See whether we've got the Gnome DOM library installed
+dnl
+dnl @author Richard Smith <richard@ex-parrot.com>
+dnl
+AC_DEFUN([AC_USE_GDOME],
+ [if test -z "$ac_cv_use_gdome" ; then
+    AC_CACHE_CHECK(
+      [for Gnome DOM library],
+      [ac_cv_use_gdome],
+      [if test -n "$PKGCONFIG"; then
+        if $PKGCONFIG --exists gdome2; then 
+          ac_cv_use_gdome=yes
+        else
+          ac_cv_use_gdome=no
+        fi
+      else 
+        ac_cv_use_gdome=no
+      fi
+    ])
+  fi
+  if test "$ac_cv_use_gdome" = yes ; then
+    GDOME_LIBS=[$($PKGCONFIG --libs-only-l gdome2)]
+    GDOME_LDFLAGS=[$($PKGCONFIG --libs-only-L gdome2)]
+    GDOME_CFLAGS=[$($PKGCONFIG --cflags gdome2)]
+    USE_GDOME=1
+  else
+    GDOME_LIBS=[]
+    GDOME_LDFLAGS=[]
+    GDOME_CFLAGS=[]
+    USE_GDOME=0
   fi
 ])
 dnl --------------------------------------------------------------------------

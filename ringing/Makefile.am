@@ -7,20 +7,12 @@ INCLUDES = -I$(top_srcdir)
 
 lib_LTLIBRARIES = libringingcore.la libringing.la
 
-if HAVE_XERCES
-additional = dom_xerces.cpp 
-else
-additional = dom_stub.cpp
-endif
-
 # These source files are released under the LGPL
 libringingcore_la_SOURCES = bell.cpp change.cpp row.cpp mathutils.cpp \
 place_notation.cpp method.cpp \
 library.cpp libfacet.cpp libout.cpp litelib.cpp \
 xmllib.cpp xmlout.cpp peal.cpp \
-stl.cpp $(additional)
-
-EXTRA_libringingcore_la_SOURCES = dom_xerces.cpp dom_stub.cpp
+stl.cpp
 
 # These source files are released under the GPL
 libringing_la_SOURCES = \
@@ -29,8 +21,7 @@ falseness.cpp falseness.dat touch.cpp music.cpp \
 print.cpp print_ps.cpp dimension.cpp printm.cpp print_pdf.cpp pdf_fonts.cpp \
 search_base.cpp basic_search.cpp multtab.cpp table_search.cpp streamutils.cpp 
 
-# Link against our XML library
-libringingcore_la_LIBADD = @XERCES_LIBS@
+libringingcore_la_LIBADD =
 libringing_la_LIBADD = $(top_builddir)/ringing/libringingcore.la 
 
 # -no-undefined is needed for DLLs, and doesn't hurt elsewhere
@@ -40,6 +31,22 @@ libringing_la_LDFLAGS = -no-undefined
 # Preprocessor hooks to DLL export symbols
 libringingcore_la_CPPFLAGS = -DRINGING_EXPORTS
 libringing_la_CPPFLAGS = -DRINGING_EXPORTS
+
+# Select the right XML library
+if HAVE_GDOME
+libringingcore_la_SOURCES += dom_gdome.cpp
+libringingcore_la_LIBADD += @GDOME_LIBS@
+libringingcore_la_CPPFLAGS += @GDOME_CFLAGS@
+libringingcore_la_LDFLAGS += @GDOME_LDFLAGS@
+else 
+if HAVE_XERCES
+libringingcore_la_SOURCES += dom_xerces.cpp
+libringingcore_la_LIBADD += @XERCES_LIBS@
+else
+libringingcore_la_SOURCES += dom_stub.cpp
+endif
+endif
+
 
 # TODO: Split this into a list of GPL'd and LGPL'd files.
 myincludedir = $(includedir)/ringing
