@@ -65,6 +65,7 @@ public:
   virtual int dir(list<string>& result) const;
   virtual int mdir(list<method>& result) const;
 
+#if RINGING_BACKWARDS_COMPATIBLE(0,3,0)
   // Writing to the library
   virtual bool save(const method& m)	// Save a method
     { return false; }
@@ -72,6 +73,7 @@ public:
     { return false; }
   virtual bool remove(const string& name)
     { return false; }
+#endif
 
   // Library status
   virtual bool good (void) const = 0;	// Is it in a usable state?
@@ -219,11 +221,13 @@ public:
   int dir(list<string>& result) const { return lb->dir(result); }
   int mdir(list<method>& result ) const { return lb->mdir(result); }
 
+#if RINGING_BACKWARDS_COMPATIBLE(0,3,0)
   // Writing to the library
   bool save(const method& m) { return lb->save(m); }
   bool rename_method(const string& name1, const string& name2) 
     { return lb->rename_method(name1, name2); }
   bool remove(const string name) { return lb->remove(name); }
+#endif
 
   // Library status
   bool good() { return bool(lb) && lb->good(); }
