@@ -21,7 +21,6 @@ dnl Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 dnl $Id$
 
-
 AC_INIT(ringing/method.cpp)
 AC_CONFIG_AUX_DIR(config)
 AM_INIT_AUTOMAKE(ringing-lib, 0.3.0)
@@ -32,10 +31,25 @@ can_build=yes
 dnl --------------------------------------------------------------------------
 dnl Checks for programs.
 AC_PROG_CXX
+
+# If you are cross compiling but use binfmt_misc to run programs for
+# the host system, autoconf cannot tell that you are cross-compiling
+# and therefore sets $cross_compiling incorrectly.  This handles the
+# commonest case where Windows code is run under Wine.
+#
+AC_CANONICAL_BUILD
+AC_CANONICAL_HOST
+case "$build_os" in 
+  linux*)
+    case "$host_os" in 
+      mingw* | cygwin* | win*) cross_compiling=yes ;;
+    esac
+  ;;
+esac
+
 AC_LIBTOOL_WIN32_DLL
 AC_PROG_LIBTOOL
 AC_PROG_LN_S
-AC_PATH_PROG([PKGCONFIG], [pkg-config])
 
 dnl --------------------------------------------------------------------------
 dnl Checks for libraries.

@@ -2,8 +2,9 @@ dnl -*- M4 -*- acinclude.m4 - Tests for compiler functionality
 
 dnl Process this file with aclocal to produce aclocal.m4.
 
-dnl Copyright (C) 2001, 2002, 2003, 2004, 2008 Martin Bright <martin@boojum.org.uk>
-dnl and Richard Smith <richard@ex-parrot.com>
+dnl Copyright (C) 2001, 2002, 2003, 2004, 2008 
+dnl Martin Bright <martin@boojum.org.uk> and 
+dnl Richard Smith <richard@ex-parrot.com>
 
 dnl This program is free software; you can redistribute it and/or modify
 dnl it under the terms of the GNU General Public License as published by
@@ -570,6 +571,11 @@ dnl @author Richard Smith <richard@ex-parrot.com>
 dnl
 AC_DEFUN([AC_USE_GDOME],
  [if test -z "$ac_cv_use_gdome" ; then
+    if test "$cross_compiling" = "yes" ; then
+      AC_PATH_PROG([PKGCONFIG], [$host-pkg-config])
+    else
+      AC_PATH_PROG([PKGCONFIG], [pkg-config])
+    fi
     AC_CACHE_CHECK(
       [for Gnome DOM library],
       [ac_cv_use_gdome],
