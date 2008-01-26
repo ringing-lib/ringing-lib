@@ -45,7 +45,7 @@ RINGING_USING_STD
 //
 // Geneates a group from a set of generators 
 //
-class group
+class RINGING_API group
 {
 public:
   group() : b(0), v(1u) {} // The group containing just the identity

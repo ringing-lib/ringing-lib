@@ -102,7 +102,7 @@ public:
   char to_char() const { return (x < MAX_BELLS) ? symbols[x] : '*'; }
 
   // Thrown when an invalid bell symbol is found
-  struct invalid : public invalid_argument {
+  struct RINGING_API invalid : public invalid_argument {
     invalid();
   };
 

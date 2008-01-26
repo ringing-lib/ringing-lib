@@ -43,7 +43,7 @@ RINGING_START_NAMESPACE
 
 RINGING_USING_STD
 
-class dimension {
+class RINGING_API dimension {
 public:
   enum units {
     points, inches, cm, mm
@@ -85,7 +85,7 @@ private:
 
   void read_units(const char *s);
 
-  friend ostream& operator<<(ostream&, const dimension&);
+  friend RINGING_API ostream& operator<<(ostream&, const dimension&);
 };
 
 ostream& operator<<(ostream& o, const dimension& d);

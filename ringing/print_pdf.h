@@ -48,7 +48,7 @@ RINGING_START_NAMESPACE
 
 RINGING_USING_STD
 
-class counting_streambuf : public streambuf {
+class RINGING_API counting_streambuf : public streambuf {
 private:
   int c;
   streambuf& sb;
@@ -70,7 +70,7 @@ public:
 };
 
 // This represents a PDF file.
-class pdf_file {
+class RINGING_API pdf_file {
 private:
   counting_streambuf csb;
   ostream os;
@@ -109,10 +109,10 @@ public:
     { os << t; return *this; }
 };
 
-class printrow_pdf;
-class printpage_pdf;
+class RINGING_API printrow_pdf;
+class RINGING_API printpage_pdf;
 
-class drawline_pdf {
+class RINGING_API drawline_pdf {
 private:
   const printrow_pdf& p;
   bell bellno;
@@ -141,7 +141,7 @@ struct text_bit {
   RINGING_FAKE_COMPARATORS( text_bit )
 };
 
-class printrow_pdf : public printrow::base {
+class RINGING_API printrow_pdf : public printrow::base {
 private:
   printpage_pdf& pp;
   int currx, curry;
@@ -179,7 +179,7 @@ public:
 	    text_style::alignment al, bool between, bool right);
 };
 
-class printpage_pdf : public printpage {
+class RINGING_API printpage_pdf : public printpage {
 protected:
   pdf_file f;
 

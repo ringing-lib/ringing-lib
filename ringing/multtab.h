@@ -193,7 +193,7 @@ RINGING_END_DETAILS_NAMESPACE
 // 
 // The main multiplication table class
 //
-class multtab
+class RINGING_API multtab
 {
 public:
   // A swap function and assignment operator

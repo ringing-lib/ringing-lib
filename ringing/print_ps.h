@@ -52,7 +52,7 @@ RINGING_USING_STD
 class printrow_ps;
 class printpage_ps;
 
-class drawline_ps {
+class RINGING_API drawline_ps {
 private:
   const printrow_ps& p;
   bell bellno;
@@ -72,7 +72,7 @@ public:
   RINGING_FAKE_ASSIGNMENT( drawline_ps )
 };
 
-class printrow_ps : public printrow::base {
+class RINGING_API printrow_ps : public printrow::base {
 private:
   printpage_ps& pp;
   int currx, curry;
@@ -107,7 +107,7 @@ public:
 	    text_style::alignment al, bool between, bool right);
 };
 
-class printpage_ps : public printpage {
+class RINGING_API printpage_ps : public printpage {
 protected:
   ostream& os;
   bool eps, landscape;

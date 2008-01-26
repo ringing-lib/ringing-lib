@@ -106,7 +106,7 @@ inline libout::iterator libout::end() {
 
 
 // An adaptor to output simulatenously in multiple ways
-class multilibout : public libout {
+class RINGING_API multilibout : public libout {
 public:
   multilibout();
   
