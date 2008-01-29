@@ -74,7 +74,7 @@ struct arguments {
   int total_rows;
   int pages;
   printrow::options::line_style grid_style;
-  bool grid;
+  int grid;
 };
 
 arguments args;
@@ -208,10 +208,10 @@ void setup_args(arg_parser& p)
     " has a line drawn.  If no arguments are given, don't draw any lines."
     "  This option may be used multiple times.",
 		  "BELL[x][,COLOUR[,DIMENSION]]", true));
-  p.add(new myopt('G', "grid",
-    "Draw vertical grid lines in each bell position, with colour COLOUR"
-    " and thickness DIMENSION.",
-		  "COLOUR[,DIMENSION]]", true));
+  p.add(new myopt('G', "guides",
+    "Draw guides indicating bell positions, in style STYLE (currently"
+    " 1 or 2), with colour COLOUR and (for style 1) thickness DIMENSION.",
+		  "STYLE[,COLOUR[,DIMENSION]]", true));
   p.add(new myopt('n', "no-numbers", "Don't print numbers: print only lines"));
   p.add(new myopt('b', "place-bells", "Print place bells for"
     " BELL.  If BELL is not specified, print place bells for the first"
@@ -372,7 +372,9 @@ bool myopt::process(const string& arg, const arg_parser& ap) const
     case 'G' :
       if(!arg.empty()) {
 	s = arg.begin();
-	if(!parse_colour(next_bit(arg, s), args.grid_style.col)) return false;
+        if(!parse_int(next_bit(arg, s), args.grid)) return false;
+	if(s != arg.end() && !parse_colour(next_bit(arg, s), 
+					   args.grid_style.col)) return false;
 	if(s != arg.end() && !parse_dimension(next_bit(arg, s), 
 					      args.grid_style.width))
 	  return false;
@@ -380,8 +382,9 @@ bool myopt::process(const string& arg, const arg_parser& ap) const
 	  cerr << "Too many arguments: \"" << arg << "\"\n";
 	  return false;
 	}
+      } else {
+        args.grid = 1;
       }
-      args.grid = true;
       return true;
     case 'l' :
       args.custom_lines = true;
@@ -571,10 +574,10 @@ int main(int argc, char *argv[])
   args.pages = 0;
   args.custom_lines = false;
   args.custom_rules = false;
-  args.grid = false;
+  args.grid = 0;
   args.grid_style.width.n = 1; args.grid_style.width.d = 4; 
   args.grid_style.width.u = dimension::points;
-  args.grid_style.col.grey = true; args.grid_style.col.red = 0.7f;
+  args.grid_style.col.grey = true; args.grid_style.col.red = 0.9f;
 
   // Parse the arguments
   {
@@ -788,8 +791,8 @@ int main(int argc, char *argv[])
     if(args.hgap != 0) pm.hgap = args.hgap;
     if(args.vgap != 0) pm.vgap = args.vgap;
     pm.number_mode = args.number_mode;
-    if(args.grid) { 
-      pm.opt.flags |= printrow::options::grid;
+    if(args.grid > 0) { 
+      pm.opt.grid_type = args.grid;
       pm.opt.grid_style = args.grid_style;
     }
 

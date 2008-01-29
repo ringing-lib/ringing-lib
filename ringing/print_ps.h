@@ -79,6 +79,7 @@ private:
   bool in_column;
   row lastrow;
   int gapcount;
+  int count;
   printrow::options opt;
   
   list<drawline_ps> drawlines;

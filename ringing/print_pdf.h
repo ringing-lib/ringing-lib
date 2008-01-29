@@ -132,6 +132,38 @@ public:
   RINGING_FAKE_ASSIGNMENT( drawline_pdf )
 };
 
+class RINGING_API rule_pdf {
+private:
+  float x, y, l;
+
+public:
+  rule_pdf(float _x, float _y, float _l) : x(_x), y(_y), l(_l) {}
+  void output(pdf_file& f);
+
+  RINGING_FAKE_DEFAULT_CONSTRUCTOR( rule_pdf )
+  RINGING_FAKE_COMPARATORS( rule_pdf )
+  RINGING_FAKE_ASSIGNMENT( rule_pdf )
+};
+
+class RINGING_API circle_pdf {
+private:
+  float x, y, r;
+  char op;
+  bool set_colour;
+  colour c;
+
+public:
+  circle_pdf(float _x, float _y, float _r, char _op, colour _c) : 
+    x(_x), y(_y), r(_r), op(_op), set_colour(true), c(_c) {}
+  circle_pdf(float _x, float _y, float _r, char _op) : 
+    x(_x), y(_y), r(_r), op(_op), set_colour(false) {}
+  void output(printpage_pdf& pp);
+
+  RINGING_FAKE_DEFAULT_CONSTRUCTOR( circle_pdf )
+  RINGING_FAKE_COMPARATORS( circle_pdf )
+  RINGING_FAKE_ASSIGNMENT( circle_pdf )
+};
+
 struct text_bit {
   float x, y;
   text_style::alignment al;
@@ -153,6 +185,8 @@ private:
   charwidths cw;
   list<pair<string, int> > rows;
   list<text_bit> text_bits;
+  list<rule_pdf> rules;
+  list<circle_pdf> circles;
 
   list<drawline_pdf> drawlines;
   friend class drawline_pdf;
@@ -196,6 +230,7 @@ private:
   friend class printrow;
   friend class printrow_pdf;
   friend class drawline_pdf;
+  friend class circle_pdf;
   printrow::base* new_printrow(const printrow::options& o) 
     { return new printrow_pdf(*this, o); }
 
@@ -203,6 +238,8 @@ protected:
   void set_colour(const colour& c, bool nonstroke = false);
   void landscape_mode();
   void circle(float x, float y, float r, char op);
+  void gsave() { f << "q\n"; }
+  void grestore() {f << "Q\n"; }
 };
 
 RINGING_END_NAMESPACE

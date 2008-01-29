@@ -73,7 +73,7 @@ const string printpage_ps::def_string =
 // (pointsize / 20).
 "/PB {\n"
 "  dup 20 div setlinewidth\n"
-"  exch 1 add xspace mul xstart add ypos yspace add \n"
+"  exch 0.5 add xspace mul xstart add ypos yspace add \n"
 "  newpath 2 copy 5 -1 roll 2 mul 3 div 0 360 arc stroke\n"
 "  moveto\n"
 "} BD \n"
@@ -113,14 +113,23 @@ const string printpage_ps::def_string =
 // n G - leave n blank rows
 "/G {yspace mul ypos exch sub /ypos exch def} BD\n"
 
-// ystart n GD - draw vertical grid lines for n bells up to ystart
+// n m GD - draw vertical grid lines for n bells, m rows
 "/GD {\n"
 "  N\n"
-"  exch ypos sub\n"
+"  yspace mul\n"
 "  xstart ypos yspace 2 div add M\n"
 "  1 1 4 -1 roll\n"
-"  { pop dup 0 exch R dup neg xspace exch rmoveto } for\n"
+"  { pop dup neg 0 exch R dup xspace exch rmoveto } for\n"
 "  S pop\n"
+"} BD\n" 
+
+// n m GB - draw guide "boxes" for n bells, m rows
+"/GB {\n"
+"  yspace mul neg\n"
+"  exch 2 idiv 1 1 3 -1 roll\n"
+"  { 1 sub 2 mul xspace mul xstart add ypos yspace 2 div add\n"
+"    xspace 3 index rectfill } for\n"
+"  pop\n"
 "} BD\n" 
 
 "/X {/xstart exch def} BD\n"
@@ -284,6 +293,7 @@ void printrow_ps::print(const row& r)
     gapcount = 0;
   } else
     gapcount++;
+  count++;
   lastrow = r;
 
   // Add the various bits of lines to the end of the line
@@ -338,16 +348,20 @@ void printrow_ps::start_column()
   map<bell, printrow::options::line_style>::iterator i;
   for(i = opt.lines.begin(); i != opt.lines.end(); i++)
     drawlines.push_back(drawline_ps(*this, (*i).first, (*i).second));
-  pp.os << currx << " X " << curry << " Y\n";
+  pp.os << currx << " X " << curry << " Y\n"
+	<< "/docolumn {\n";
   in_column = true;
   gapcount = 0;
+  count = 0;
 }
 
 void printrow_ps::end_column()
 {
   fill_gap();
-  if(opt.flags & printrow::options::grid)
+  pp.os << "} def\n";
+  if(opt.grid_type > 0)
     grid();
+  pp.os << "docolumn\n";
   if(!drawlines.empty()) {
     list<drawline_ps>::iterator i;
     pp.os << "GS\n";
@@ -415,8 +429,16 @@ void printrow_ps::grid()
 {
   pp.os << "GS ";
   pp.set_colour(opt.grid_style.col);
-  pp.os << opt.grid_style.width.in_points() << " SL "
-	<< curry << ' ' << lastrow.bells() << " GD GR\n";
+  switch(opt.grid_type) {
+    case 1:
+      pp.os << opt.grid_style.width.in_points() << " SL "
+	    << lastrow.bells() << ' ' << count << " GD ";
+      break;
+    case 2:
+      pp.os << lastrow.bells() << ' ' << count << " GB ";
+      break;
+  }
+  pp.os << " GR\n";
 }
 
 void drawline_ps::add(const row& r)

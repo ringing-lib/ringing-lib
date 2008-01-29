@@ -65,8 +65,7 @@ public:
   struct options {
     enum o_flags {
       numbers = 0x01,		// Print rows
-      miss_numbers = 0x02,      // Miss out numbers underneath lines
-      grid = 0x04               // Draw lines showing the positions
+      miss_numbers = 0x02       // Miss out numbers underneath lines
     };
     unsigned int flags;		// Flags as above
     text_style style;           // Text style
@@ -78,7 +77,9 @@ public:
       bool crossing;
     };
     map<bell, line_style> lines; // What lines draw in what styles
+
     line_style grid_style;
+    int grid_type;
 
     void defaults();
   };

@@ -288,7 +288,7 @@ void printmethod::get_bbox(float& blx, float& bly, float& urx, float& ury)
   blx = -opt.xspace.in_points() 
     * (0.5 + ((pn_mode != pn_none) ? find_pnextra() : 0));
   urx = opt.xspace.in_points() * (m->bells() * columns - 0.5
-				  + ((placebells >= 0) ? 2.4 : 0))
+				  + ((placebells >= 0) ? 1.9 : 0))
     + (hgap.in_points() * (columns - 1));
  
   int columnsets = divu(total_rows, rows_per_column * columns);

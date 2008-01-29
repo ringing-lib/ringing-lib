@@ -322,10 +322,9 @@ void printrow_pdf::print(const row& r)
 void printrow_pdf::rule()
 {
   if(!in_column) return;
-  float y = curry - opt.yspace.in_points() * (count - 0.5f);
-  pp.f << currx - opt.xspace.in_points()/2 << ' ' << y << " m "
-       << currx + opt.xspace.in_points() * (lastrow.bells() - 0.5)
-       << ' ' << y << " l S\n";
+  rules.push_back(rule_pdf(currx - opt.xspace.in_points()/2, 
+			   curry - opt.yspace.in_points() * (count - 0.5f),
+			   opt.xspace.in_points() * lastrow.bells()));
 }
 
 void printrow_pdf::set_position(const dimension& x, const dimension& y)
@@ -363,7 +362,7 @@ void printrow_pdf::start_column()
 void printrow_pdf::end_column()
 {
   // Draw the grid if desired
-  if(opt.flags & printrow::options::grid)
+  if(opt.grid_type > 0)
     grid();
 
   float tx = 0, ty = 0;
@@ -431,6 +430,22 @@ void printrow_pdf::end_column()
   }
   pp.f << "ET\n";
 
+  // Draw rule-offs
+  {
+    list<rule_pdf>::iterator i;
+    for(i = rules.begin(); i != rules.end(); i++)
+      (*i).output(pp.f);
+    rules.clear();
+  }
+
+  // Draw circles
+  {
+    list<circle_pdf>::iterator i;
+    for(i = circles.begin(); i != circles.end(); i++)
+      (*i).output(pp);
+    circles.clear();
+  }
+
   // Draw the lines
   if(!drawlines.empty()) {
     list<drawline_pdf>::iterator i;
@@ -444,18 +459,32 @@ void printrow_pdf::end_column()
 
 void printrow_pdf::grid()
 {
-  pp.f << "q " << opt.grid_style.width.in_points() << " w ";
-  pp.set_colour(opt.grid_style.col);
   float y1 = curry - opt.yspace.in_points() * (count - 0.5f);
   float y2 = curry + opt.yspace.in_points() * 0.5f;
   int i;
-  for(i = 0; i < lastrow.bells(); ++i) {
-    pp.f << (currx + opt.xspace.in_points() * i) << ' '
-	 << y1 << " m "
-	 << (currx + opt.xspace.in_points() * i) << ' '
-	 << y2 << " l\n";
+  switch(opt.grid_type) {
+    case 1:
+      pp.f << "q " << opt.grid_style.width.in_points() << " w ";
+      pp.set_colour(opt.grid_style.col);
+      for(i = 0; i < lastrow.bells(); ++i) {
+	pp.f << (currx + opt.xspace.in_points() * i) << ' '
+	     << y1 << " m "
+	     << (currx + opt.xspace.in_points() * i) << ' '
+	     << y2 << " l\n";
+      }
+      pp.f << "S Q\n";
+      break;
+    case 2:
+      pp.f << "q ";
+      pp.set_colour(opt.grid_style.col, true);
+      for(i = 0; i < lastrow.bells() - 1; i += 2) {
+	pp.f << (currx + opt.xspace.in_points() * i) << ' '
+	     << y1 << ' ' << opt.xspace.in_points() << ' '
+	     << y2-y1 << " re\n";
+      }
+      pp.f << " f Q\n";
+      break;
   }
-  pp.f << "S Q\n";
 }
 
 void printrow_pdf::dot(int i)
@@ -471,12 +500,10 @@ void printrow_pdf::dot(int i)
       map<bell, printrow::options::line_style>::const_iterator k;
       k = opt.lines.find(i);
       if(k != opt.lines.end()) {
-	pp.f << "q ";
-	pp.set_colour((*k).second.col, true);
-	pp.circle(currx + j * opt.xspace.in_points(),
-		  curry - (count - 1) * opt.yspace.in_points(),
-		  (*k).second.width.in_points() * 2, 'f');
-	pp.f << "Q\n";
+	circles.push_back(circle_pdf(currx + j * opt.xspace.in_points(),
+				     curry - (count - 1) * opt.yspace.in_points(),
+				     (*k).second.width.in_points() * 2, 'f',
+				     (*k).second.col));
       }
     }
   }
@@ -487,11 +514,13 @@ void printrow_pdf::placebell(int i)
   int j = 0;
   while(j < lastrow.bells() && lastrow[j] != i) j++;
   if(j < lastrow.bells()) {
-    pp.circle(currx + (lastrow.bells() + 1) * opt.xspace.in_points(),
-	      curry - (count - 1) * opt.yspace.in_points(),
-	      opt.style.size * 0.07f, 'S');
+    circles.push_back(circle_pdf(currx + (lastrow.bells() + 0.5) 
+				 * opt.xspace.in_points(),
+				 curry - (count - 1) 
+				 * opt.yspace.in_points(),
+				 opt.style.size * 0.07f, 'S'));
     text_bit tb;
-    tb.x = (lastrow.bells() + 1) * opt.xspace.in_points();
+    tb.x = (lastrow.bells() + 0.5) * opt.xspace.in_points();
     tb.y = (count - 1) * opt.yspace.in_points();
     tb.al = text_style::centre;
     tb.squash = (j >= 10);
@@ -560,6 +589,19 @@ void drawline_pdf::output(pdf_file& f)
     count = 0;
   }
   f << "S\n";
+}
+
+void rule_pdf::output(pdf_file& f)
+{
+  f << x << ' ' << y << " m " << x+l << ' ' << y << " l S\n";
+}
+
+void circle_pdf::output(printpage_pdf& pp)
+{
+  pp.gsave();
+  if(set_colour) pp.set_colour(c, (op == 'f'));
+  pp.circle(x, y, r, op);
+  pp.grestore();
 }
 
 RINGING_END_NAMESPACE
