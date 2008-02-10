@@ -255,10 +255,8 @@ public:
   row_iterator end_rows() const   { return row_iterator(size()); }
 
   // Operators to do optimised multiplication of rows:
-  friend row_t RINGING_DETAILS_PREFIX operator*( row_t r, post_col_t c )
-    { return c.t->table[ r.index() ][ c.n ]; }
-  friend row_t RINGING_DETAILS_PREFIX operator*( pre_col_t c, row_t r )
-    { return c.t->table[ r.index() ][ c.n ]; }
+  friend row_t RINGING_DETAILS_PREFIX operator*( row_t r, post_col_t c );
+  friend row_t RINGING_DETAILS_PREFIX operator*( pre_col_t c, row_t r );
 
 private:
   // A helper to do what the templated constructor of vector does
@@ -285,6 +283,17 @@ private:
   enum pre_or_post { pre_mult, post_mult };
   vector< pair< row, pre_or_post > > cols;
 };
+
+RINGING_START_DETAILS_NAMESPACE
+
+// Operators to do optimised multiplication of rows:
+inline multtab_row_t operator*( multtab_row_t r, multtab_post_col_t c )
+{ return c.t->table[ r.index() ][ c.n ]; }
+
+inline multtab_row_t operator*( multtab_pre_col_t c, multtab_row_t r )
+{ return c.t->table[ r.index() ][ c.n ]; }
+
+RINGING_END_DETAILS_NAMESPACE
 
 RINGING_END_NAMESPACE
 
