@@ -1,5 +1,5 @@
 // method.cpp - routines for methods, positions and calls
-// Copyright (C) 2001, 2004 Martin Bright <martin@boojum.org.uk>
+// Copyright (C) 2001, 2004, 2008 Martin Bright <martin@boojum.org.uk>
 // and Richard Smith <richard@ex-parrot.com>
 
 // This library is free software; you can redistribute it and/or
@@ -38,6 +38,15 @@
 #include <ringing/method.h>
 #include <ringing/place_notation.h>
 #include <ringing/row.h>
+
+#ifdef _MSC_VER
+// Microsoft have unilaterally deprecated snprintf in favour of a non-standard
+// extension, snprintf_s.  4996 is the warning about it being deprecated.
+// (This is also true of strcat, though in that case the warning is to some 
+// extent justifiablable.)
+#pragma warning (disable: 4996)
+#define snprintf _snprintf
+#endif
 
 RINGING_USING_STD
 
@@ -326,15 +335,17 @@ int method::methclass(void) const
 // stagename : Return the name of a stage
 const char *method::stagename(int n)
 {
-  static char buff[4];
+  static const size_t bufsize = 8;
+  static char buff[bufsize];
   if ((n >= 3) && (n <= 22))
     return txt_stages[n-3];
   else {
-    sprintf(buff,"%d",n);
+    snprintf(buff,bufsize,"%d",n);
     return buff;
   }
 }
 
+#if RINGING_BACKWARDS_COMPATIBLE(0,3,0)
 // fullname : Return the full name of the method
 char *method::fullname(char *c) const
 {
@@ -342,6 +353,7 @@ char *method::fullname(char *c) const
   strcat(c, fullname().c_str());
   return c;
 }
+#endif
 
 string method::fullname() const
 {
@@ -369,7 +381,8 @@ string method::fullname() const
 // Return the lead head code for this method
 char *method::lhcode(void) const
 {
-  static char buff[32];
+  static const size_t bufsize = 32;
+  static char buff[bufsize];
   int lhplace = 0;
 
   buff[0] = 'z'; buff[1] = '\0';
@@ -425,7 +438,7 @@ char *method::lhcode(void) const
 
   // Do we need a number too?
   if(m > p)
-    sprintf(buff+1, "%d", m-p);
+    snprintf(buff+1, bufsize-1, "%d", m-p);
 
   // Turn a-c into d-f, p into q if we need to
   if(m != n) {

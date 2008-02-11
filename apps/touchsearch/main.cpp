@@ -104,7 +104,7 @@ public:
   bool operator()( const touch& )
   {
     // Abort when we reach the --limit
-    return ++*i >= args.search_limit 
+    return args.search_limit != -1 && ++*i >= (size_t)args.search_limit 
       // Or after the first one for a --filter search
       || args.filter_mode;
   }

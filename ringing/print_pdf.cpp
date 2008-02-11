@@ -514,13 +514,13 @@ void printrow_pdf::placebell(int i)
   int j = 0;
   while(j < lastrow.bells() && lastrow[j] != i) j++;
   if(j < lastrow.bells()) {
-    circles.push_back(circle_pdf(currx + (lastrow.bells() + 0.5) 
+    circles.push_back(circle_pdf(currx + (lastrow.bells() + 0.5f) 
 				 * opt.xspace.in_points(),
 				 curry - (count - 1) 
 				 * opt.yspace.in_points(),
 				 opt.style.size * 0.07f, 'S'));
     text_bit tb;
-    tb.x = (lastrow.bells() + 0.5) * opt.xspace.in_points();
+    tb.x = (lastrow.bells() + 0.5f) * opt.xspace.in_points();
     tb.y = (count - 1) * opt.yspace.in_points();
     tb.al = text_style::centre;
     tb.squash = (j >= 10);

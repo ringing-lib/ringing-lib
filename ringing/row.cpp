@@ -37,6 +37,11 @@
 #include <ringing/row.h>
 #include <ringing/mathutils.h>
 
+#if RINGING_BACKWARDS_COMPATIBLE(0,3,0) && defined(_MSC_VER)
+// Microsoft have deprecated strcpy in favour of a non-standard
+// extension, strcpy_s.  4996 is the warning about it being deprecated.
+#pragma warning (disable: 4996)
+#endif
 
 RINGING_USING_STD
 
@@ -203,10 +208,12 @@ string row::print() const
   return s;
 }
 
+#if RINGING_BACKWARDS_COMPATIBLE(0,3,0)
 char *row::print(char *s) const
 {
   return strcpy( s, print().c_str() );
 }
+#endif
 
 // Set it to rounds
 row& row::rounds(void)
@@ -398,11 +405,13 @@ string row::cycles() const
   return result;
 }
 
+#if RINGING_BACKWARDS_COMPATIBLE(0,3,0)
 // Express it as a product of disjoint cycles
 char *row::cycles(char *result) const
 {
   return strcpy( result, cycles().c_str() );
 }
+#endif
 
 // Return the order of a row
 int row::order(void) const

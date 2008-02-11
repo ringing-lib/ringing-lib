@@ -41,6 +41,12 @@
 #include <ringing/bell.h>
 #include <ringing/change.h>
 
+#if RINGING_BACKWARDS_COMPATIBLE(0,3,0) && defined(_MSC_VER)
+// Microsoft have deprecated strcpy in favour of a non-standard
+// extension, strcpy_s.  4996 is the warning about it being deprecated.
+#pragma warning (disable: 4996)
+#endif
+
 RINGING_USING_STD
 
 RINGING_START_NAMESPACE
@@ -133,10 +139,12 @@ string change::print() const
   return p;
 }
 
+#if RINGING_BACKWARDS_COMPATIBLE(0,3,0) 
 char *change::print(char *pn) const
 {
   return strcpy( pn, print().c_str() );
 }
+#endif
 
 
 

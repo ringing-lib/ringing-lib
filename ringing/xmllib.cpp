@@ -33,6 +33,12 @@
 // Important note:  DO NOT include <ringing/streamutils.h> from here.  That
 // file includes GPL'd content and this file is only LGPL'd.
 
+#ifdef _MSC_VER
+// Microsoft have unilaterally deprecated sscanf in favour of a non-standard
+// extension, sscanf_s.  4996 is the warning about it being deprecated.
+#pragma warning (disable: 4996)
+#endif
+
 RINGING_START_NAMESPACE
 
 RINGING_USING_STD

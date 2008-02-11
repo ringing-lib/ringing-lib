@@ -312,7 +312,7 @@ my %actions = (
        {
 	   if (/^\-I/) 
 	   {
-	       s!^-I(.*)$!/I "$1"!;
+	       s{^-I(.*)$}{/I "$1"};
 	       safe_push $vptr, INCLUDES, $_;
 	   }
        }
@@ -380,12 +380,12 @@ sub process_makefile($)
 	s/ \$\( ([a-zA-Z\-\_0-9]+) \) / $vars{$1} /xeg;
 
 	# Is it a variable assignment
-	if (/^\s*([A-Za-z0-9_-]+)\s*=\s*(.*)$/)
+	if (/^\s*([A-Za-z0-9_-]+)\s*(\+?=)\s*(.*)$/)
 	{
 	    # Are we conditionally compiled out?
 	    next if scalar(@if_stack) and !$if_stack[$#if_stack];
 
-	    my ($var, $val) = ($1, $2);
+	    my ($var, $op, $val) = ($1, $2, $3);
 
 	    if ($var eq "SUBDIRS")
 	    {

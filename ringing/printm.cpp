@@ -286,19 +286,19 @@ void printmethod::get_bbox(float& blx, float& bly, float& urx, float& ury)
   int columns = divu(total_rows, rows_per_column);
   if(columns_per_set < columns) columns = columns_per_set;
   blx = -opt.xspace.in_points() 
-    * (0.5 + ((pn_mode != pn_none) ? find_pnextra() : 0));
-  urx = opt.xspace.in_points() * (m->bells() * columns - 0.5
-				  + ((placebells >= 0) ? 1.9 : 0))
+    * (0.5f + ((pn_mode != pn_none) ? find_pnextra() : 0));
+  urx = opt.xspace.in_points() * (m->bells() * columns - 0.5f
+				  + ((placebells >= 0) ? 1.9f : 0))
     + (hgap.in_points() * (columns - 1));
  
   int columnsets = divu(total_rows, rows_per_column * columns);
   if(sets_per_page && (sets_per_page < columnsets)) 
     columnsets = sets_per_page;
-  bly = -(opt.yspace.in_points() * ((rows_per_column + 1) * columnsets - 0.5))
+  bly = -(opt.yspace.in_points() * ((rows_per_column + 1) * columnsets - 0.5f))
     - (vgap.in_points() * (columnsets - 1));
   ury = ((placebells >= 0) ? opt.style.size * 0.07f : 0);
-  if(ury < opt.yspace.in_points() * 0.5)
-    ury = opt.yspace.in_points() * 0.5;
+  if(ury < opt.yspace.in_points() * 0.5f)
+    ury = opt.yspace.in_points() * 0.5f;
 }
 
 RINGING_END_NAMESPACE

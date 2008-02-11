@@ -84,7 +84,6 @@ public:
     { myname = n; }
   void name(const string& n)
     { myname = n; }
-  char *fullname(char *c) const; // Return the full name
   string fullname() const;
 
   static const char *stagename(int n); // Get the name of this stage
@@ -138,6 +137,10 @@ public:
   };
 
   string format( int flags = 0 ) const; // Format the place notation for output
+
+#if RINGING_BACKWARDS_COMPATIBLE(0,3,0)
+  char *fullname(char *c) const; // Return the full name
+#endif
 };
 
 RINGING_END_NAMESPACE

@@ -18,6 +18,7 @@
 // $Id$
 
 #include <ringing/extent.h>
+#include <ringing/mathutils.h>
 #include "test-base.h"
 
 RINGING_START_NAMESPACE

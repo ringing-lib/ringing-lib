@@ -98,7 +98,6 @@ public:
   row operator*(const change& c) const;	
   row inverse(void) const;	// Find the inverse
 
-  char *print(char *s) const;	// This overload is deprecated.
   string print() const;		// Print the row into a string
   int bells(void) const { return data.size(); } // How many bells?
   row& rounds(void);		// Set it to rounds
@@ -119,7 +118,6 @@ public:
   int ispblh(int h) const;	// Which plain bob lh (with h hunts) is it?
   int sign(void) const;         // Return whether it's odd or even
   string cycles() const;        // Express it as a product of disjoint cycles
-  char *cycles(char *result) const; // This overload is deprecated.
   int order(void) const;	    // Return the order
   friend RINGING_API ostream& operator<<(ostream&, const row&);
   void swap(row &other) { data.swap(other.data); }
@@ -137,6 +135,11 @@ public:
   bool operator>(const row& r) const { return data > r.data; }
   bool operator<=(const row& r) const { return data <= r.data; }
   bool operator>=(const row& r) const { return data >= r.data; }
+
+#if RINGING_BACKWARDS_COMPATIBLE(0,3,0)
+  char *print(char *s) const;   // This overload is deprecated.
+  char *cycles(char *result) const; // This overload is deprecated.
+#endif
 
 private:
   void validate() const;

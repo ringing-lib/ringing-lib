@@ -57,6 +57,11 @@
 #endif
 #include <ringing/streamutils.h>
 
+#ifdef _MSC_VER
+// Microsoft have deprecated getenv in favour of a non-standard
+// extension, getenv_s.
+#pragma warning (disable: 4996)
+#endif
 
 RINGING_USING_NAMESPACE
 RINGING_USING_STD
@@ -307,7 +312,8 @@ string exec_command( const string& str )
     argv[0] = "CMD.EXE";
     argv[1] = "/C";
   } else {
-    //
+    // Assume a POSIX-like shell that takes the -c option.
+    // E.g. bash under Cygwin
     argv[1] = "-c";
   }
   argv[2] = str.c_str();

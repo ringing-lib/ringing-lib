@@ -29,6 +29,9 @@
 #include <ringing/dom.h>
 
 #ifdef _MSC_VER
+// Microsoft have unilaterally deprecated snprintf in favour of a non-standard
+// extension, snprintf_s.  4996 is the warning about it being deprecated.
+#pragma warning (disable: 4996)
 #define snprintf _snprintf
 #endif
 

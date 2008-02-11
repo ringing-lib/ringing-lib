@@ -84,7 +84,6 @@ public:
   friend RINGING_API bell& operator*=(bell& i, const change& c);
 
   string print() const;         // Print place notation to a string
-  char *print(char *pn) const;  // This overload is deprecated.
   int bells(void) const { return n; } // Return number of bells
   int sign(void) const;         // Return whether it's odd or even
   bool findswap(bell which) const; // Check whether a particular swap is done
@@ -113,6 +112,10 @@ public:
     invalid();
     invalid(const string& s);
   };
+
+#if RINGING_BACKWARDS_COMPATIBLE(0,3,0) 
+  char *print(char *pn) const;  // This overload is deprecated.
+#endif
 };
 
 inline RINGING_API ostream& operator<<(ostream& o, const change& c) {
