@@ -1,3 +1,320 @@
+2008-02-10 23:46  ras52
+
+	* ringing/multtab.h: Attempt to fix bug reported by GACJ.
+
+2008-01-29 21:10  mjb47
+
+	* INSTALL, apps/psline/psline.cpp, config/config.guess,
+	  config/config.sub, config/depcomp, config/install-sh,
+	  config/missing, config/mkinstalldirs, config/texinfo.tex,
+	  ringing/print.cpp, ringing/print.h, ringing/print_pdf.cpp,
+	  ringing/print_pdf.h, ringing/print_ps.cpp, ringing/print_ps.h,
+	  ringing/printm.cpp: Add option for printing guides
+
+2008-01-26 22:56  ras52
+
+	* acinclude.m4, configure.ac: Support for cross-compiling.
+
+2008-01-26 22:55  ras52
+
+	* ringing/: bell.h, dimension.h, group.h, libout.h, multtab.h,
+	  print.h, print_pdf.h, print_ps.h, printm.h: Fixing Windows DLLs.
+
+2008-01-23 11:28  ras52
+
+	* acinclude.m4, configure.ac, ringing/Makefile.am,
+	  ringing/common-am.h.in, ringing/common-msvc.h,
+	  ringing/dom_gdome.cpp, ringing/dom_xerces.cpp: Added support for
+	  gdome as an alternative XML backend
+
+2008-01-23 11:27  ras52
+
+	* ringing/: library.h, mslib.cpp: Remove dead, ifdef'd out code
+	  from mslib for writing to libraries.	Mark library writing code
+	  as a backwards compatibility feature only.
+
+2008-01-22 23:02  ras52
+
+	* configure.ac, ringing/Makefile.am, ringing/dom.h,
+	  ringing/dom_stub.cpp, ringing/dom_xerces.cpp, ringing/xmllib.cpp,
+	  ringing/xmlout.cpp: Refactored XML code to allow an alternative
+	  XML library to be used.
+
+2008-01-22 23:00  ras52
+
+	* apps/methsearch/: README, prog_args.cpp: Minor documentation fix
+
+2008-01-22 22:39  ras52
+
+	* ringing/pointers.h: Shared pointers now work on incomplete types.
+
+2008-01-22 22:39  ras52
+
+	* ringing/: bell.cpp, bell.h: Improved support for wide bells.
+	  Also added ability to change bell symbols.
+
+2007-10-20 16:39  ras52
+
+	* apps/methsearch/prog_args.cpp, apps/touchsearch/main.cpp,
+	  apps/touchsearch/prog_args.cpp, apps/touchsearch/prog_args.h,
+	  ringing/multtab.cpp, ringing/multtab.h, ringing/row.h,
+	  ringing/table_search.cpp, ringing/table_search.h: Distinguish
+	  n-part touches that join all of their parts from those that are
+	  merely sets of mutually true blocks
+
+2007-10-19 23:14  ras52
+
+	* apps/methsearch/prog_args.cpp: Some diagnostic improvements
+
+2007-10-19 19:58  ras52
+
+	* apps/methsearch/main.cpp, apps/methsearch/prog_args.cpp,
+	  apps/methsearch/prog_args.h, apps/methsearch/search.cpp,
+	  apps/methsearch/search.h, apps/touchsearch/Makefile.am,
+	  apps/touchsearch/main.cpp, apps/touchsearch/prog_args.cpp,
+	  apps/touchsearch/prog_args.h, ringing/Makefile.am,
+	  ringing/litelib.cpp, ringing/litelib.h: Methsearch and
+	  touchsearch can now act as filters on their outputs
+
+2007-10-15 22:04  ras52
+
+	* apps/touchsearch/main.cpp: Give the default (14) bob a symbol (b)
+
+2007-10-11 18:45  ras52
+
+	* apps/touchsearch/main.cpp, ringing/table_search.cpp,
+	  ringing/table_search.h: Beginning of support for multipart
+	  searches
+
+2007-10-11 16:42  ras52
+
+	* configure.ac, apps/Makefile.am, apps/gsiril/Makefile.am,
+	  apps/gsiril/prog_args.h, apps/touchsearch/Makefile.am,
+	  apps/touchsearch/iteratorutils.h, apps/touchsearch/main.cpp,
+	  apps/touchsearch/prog_args.h, apps/utils/args.cpp,
+	  ringing/search_base.h, ringing/table_search.cpp: Table search
+	  program
+
+2007-10-11 12:53  ras52
+
+	* acinclude.m4, configure.ac, apps/gsiril/Makefile.am,
+	  apps/gsiril/execution_context.cpp,
+	  apps/gsiril/execution_context.h, apps/gsiril/main.cpp,
+	  apps/gsiril/proof_context.cpp, ringing/Makefile.am,
+	  ringing/common-am.h.in, ringing/common-msvc.h, ringing/macros.h:
+	  Better termcap support; minor Windows DLL tweaks; removing error
+	  in gsiril
+
+2007-09-27 09:23  ras52
+
+	* ringing/streamutils.h: Fixes to make streamutils compile as a
+	  DLL.
+
+2007-09-26 19:21  ras52
+
+	* config.h.in, configure.ac: Removing config.h (it has never been
+	  used).
+
+2007-09-26 19:13  ras52
+
+	* INSTALL, config/config.guess, config/config.sub, config/depcomp,
+	  config/install-sh, config/ltmain.sh, config/mdate-sh,
+	  config/missing, config/mkinstalldirs, config/texinfo.tex:
+	  Updating various files in config/
+
+2007-09-17 16:39  ras52
+
+	* tests/extent-test.cpp: Test for extent indexing.
+
+2007-09-17 16:37  ras52
+
+	* apps/gsiril/proof_context.cpp: Fixed to initialize terminfo even
+	  if running non-interactively.
+
+2007-09-17 16:15  ras52
+
+	* apps/gsiril/: Makefile.am, main.cpp, parser.cpp, prog_args.h,
+	  proof_context.cpp, proof_context.h: Underlining
+
+2007-09-17 16:15  ras52
+
+	* ringing/: extent.cpp, extent.h: Algorithm for efficiently
+	  determining the parity of the nth row of the extent.
+
+2007-06-21 14:51  ras52
+
+	* apps/extent/extent.cc: Extra errors
+
+2007-06-21 14:24  ras52
+
+	* configure.ac, apps/Makefile.am, apps/extent/Makefile.am,
+	  apps/extent/extent.cc, ringing/extent.h: A utility command-line
+	  program to print an extent.
+
+2007-06-21 12:39  ras52
+
+	* ringing/extent.cpp: Bug fixes
+
+2007-06-21 11:18  ras52
+
+	* ringing/: Makefile.am, extent.h, falseness.dat: Minor tidying up.
+
+2007-06-21 00:43  ras52
+
+	* ringing/extent.cpp, ringing/extent.h, tests/Makefile.am,
+	  tests/extent-test.cpp, tests/test-main.cpp: More refactoring in
+	  extent
+
+2007-06-20 21:15  ras52
+
+	* ringing/: bell.h, change.cpp, method.cpp, printm.cpp: More
+	  increment / decrement of bells
+
+2007-06-20 20:16  ras52
+
+	* ringing/: extent.cpp, extent.h: Finding nth rows of extents;
+	  finding position of a row in an extent.
+
+2007-06-20 20:15  ras52
+
+	* ringing/: row.cpp, row.h: Construction of rows from vector<bell>s
+
+2007-06-20 20:14  ras52
+
+	* ringing/bell.h: Increment a bell.
+
+2007-06-20 18:56  ras52
+
+	* ringing/bell.h: Updated copyright.
+
+2007-06-20 18:54  ras52
+
+	* ringing/: bell.h, macros.h: Introduced RINGING_BELL_BITS to allow
+	  customisation of bits-per-bell.
+
+2007-03-21 16:35  ras52
+
+	* COPYING: Updated copying
+
+2007-03-21 16:29  ras52
+
+	* COPYING, apps/gsiril/expression.cpp, apps/methsearch/format.cpp,
+	  apps/methsearch/mask.cpp, apps/methsearch/methodutils.cpp,
+	  apps/methsearch/prog_args.cpp, examples/testbase.cpp,
+	  ringing/Makefile.am, ringing/extent.h, ringing/macros.h,
+	  ringing/method.cpp, ringing/method.h, ringing/place_notation.cpp,
+	  ringing/place_notation.h, ringing/print_ps.cpp, ringing/printm.h,
+	  ringing/row.cpp, ringing/row.h, ringing/touch.h,
+	  tests/change-test.cpp: Refactored place notation code out of
+	  method.h
+
+2007-03-21 15:23  ras52
+
+	* ringing/pointers.h: grammar in comment
+
+2007-03-21 15:23  ras52
+
+	* ringing/: streamutils.cpp, streamutils.h: Comments
+
+2007-03-21 15:22  ras52
+
+	* ringing/: print_pdf.cpp, print_pdf.h: Moved constructor out of
+	  line
+
+2007-02-09 17:29  ras52
+
+	* ringing/: Makefile.am, bell.cpp, bell.h, change.cpp, change.h,
+	  row.cpp, row.h: Split bell and change classes out of row.h
+
+2007-02-09 14:58  ras52
+
+	* apps/fextent/fextent.cpp, apps/methsearch/mask.cpp,
+	  apps/methsearch/search.cpp, ringing/Makefile.am,
+	  ringing/extent.cpp, ringing/extent.h, ringing/group.cpp,
+	  ringing/mathutils.cpp, ringing/mathutils.h, ringing/method.cpp,
+	  ringing/row.cpp, ringing/row.h, tests/row-test.cpp: Made a
+	  separate header for maths utility functions
+
+2006-12-07 12:04  ras52
+
+	* ringing/: basic_search.h, cclib.h, dimension.h, extent.h,
+	  falseness.h, group.h, libfacet.h, libout.h, library.h, macros.h,
+	  method.h, mslib.h, multtab.h, music.h, pdf_fonts.h, peal.h,
+	  pointers.h, print.h, print_pdf.h, print_ps.h, printm.h, proof.h,
+	  row.h, search_base.h, streamutils.h, table_search.h, touch.h,
+	  xmllib.h, xmlout.h: Added #pragma once support, primarily for
+	  Visual C++
+
+2006-12-06 17:40  ras52
+
+	* config/: config.guess, config.sub, ltmain.sh: Updated to libtool
+	  1.5.22.
+
+2006-06-01 11:19  ras52
+
+	* ringing/xmllib.cpp: Attempting to read a non-existent file no
+	  longer seg-faults.
+
+2006-04-05 16:24  mjb47
+
+	* apps/psline/psline.cpp, ringing/print_ps.cpp, ringing/printm.cpp,
+	  ringing/printm.h: Fix bounding boxes properly; fix text
+	  positioning
+
+2006-02-13 15:40  ras52
+
+	* ringing/: music.cpp, music.h: Made music::process_row public.
+
+2006-02-13 14:30  ras52
+
+	* ringing/macros.h: Gcc 4.0.2 has subtle bugs in pragma interface /
+	  implementation.
+
+2006-01-23 17:15  ras52
+
+	* apps/gsiril/: expression.cpp, expression.h, parser.cpp: A new
+	  rounds pattern test.
+
+2006-01-23 17:14  ras52
+
+	* apps/gsiril/: proof_context.cpp, proof_context.h: Vastly more
+	  efficient conditionals (e.g. {/*8/:ch} type constructs).
+
+2006-01-23 17:12  ras52
+
+	* ringing/: proof.cpp, proof.h: Replaced the old proof class'
+	  implementation with a clearer and more efficient one.  Also added
+	  code for chaining provers together to give a more efficient way
+	  of exploring a branch during proof.
+
+2006-01-23 17:10  ras52
+
+	* ringing/method.h: Added a swap() function.
+
+2005-09-21 13:26  ras52
+
+	* ringing/: libout.h, library.h, macros.h, multtab.h, proof.h,
+	  touch.h: Fixes for gcc 4.0.1.
+
+2005-09-13 11:44  mjb47
+
+	* apps/psline/psline.cpp: Fix bug with finding working bells (Roy
+	  Lemarechal)
+
+2005-06-01 12:59  ras52
+
+	* apps/methsearch/search.cpp: Fixed bug in searching for double
+	  methods.
+
+2005-05-12 13:56  mjb47
+
+	* doc/ringing-lib.texi, ringing/xmlout.cpp: * Output peals
+	  correctly in XML * Change wording in manual
+
+2005-05-11 20:52  mjb47
+
+	* ChangeLog, NEWS: Update change log for 0.3.0
+
 2005-05-11 20:27  mjb47
 
 	* doc/ringing-lib.texi: Draw attention to PDF version of manual
