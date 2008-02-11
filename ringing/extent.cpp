@@ -92,7 +92,7 @@ bool extent_iterator::operator<( const extent_iterator& i ) const
 {
   if (i.end_) return !end_;
   else if (end_) return false;
-  else r < i.r; 
+  else return r < i.r; 
 }
 
 extent_iterator extent_iterator::end( unsigned nw, unsigned nh, unsigned nt )

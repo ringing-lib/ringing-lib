@@ -90,10 +90,9 @@ int main()
     cout << (r1 * r2) << " / " << r2 << " = " << ((r1 * r2) / r2) << endl;
     cout << r1 << "^-1 = " << r1.inverse() << endl;
     cout << r3 << "^-1 = " << r3.inverse() << endl;
-    char s[20];
-    cout << r1 << " contains the cycles " << r1.cycles(s) << endl;
+    cout << r1 << " contains the cycles " << r1.cycles() << endl;
     cout << r1 << " has order " << r1.order() << endl;
-    cout << r2 << " contains the cycles " << r2.cycles(s) << endl;
+    cout << r2 << " contains the cycles " << r2.cycles() << endl;
     cout << r2 << " has order " << r2.order() << endl;
     cout << r3 << " contains the cycles " << r3.cycles() << endl;
     cout << r3 << " has order " << r3.order() << endl;
@@ -122,10 +121,9 @@ int main()
     method m("&-5-4.5-5.36.4-4.5-4-1,1",8,"Bristol");
 
     cout << "This should be a lead of Bristol Major...\n";
-    print_row_block((row_block)m);
+    print_row_block(row_block(m));
 
-    char s[40];
-    cout << "Full name: " << m.fullname(s) << endl;
+    cout << "Full name: " << m.fullname() << endl;
     cout << "Lead head code: " << m.lhcode() << endl;
   }
 

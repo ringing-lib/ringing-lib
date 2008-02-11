@@ -330,6 +330,19 @@ my %actions = (
 	   }
        }
    },
+
+   LIBADD => sub
+   {
+       my ($vptr, $val, $path) = @_;
+
+       for (split /[ \t]+/, $val)
+       {
+           if (/\.(?:\/.*)*\/(?:lib)?(.*)\.(l?)a/)
+           {
+               safe_push $vptr, LIBDEPS, $1;
+           }
+       }
+   },
 );
 
 

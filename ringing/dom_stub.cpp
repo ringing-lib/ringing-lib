@@ -35,11 +35,11 @@ RINGING_START_NAMESPACE
 
 RINGING_USING_STD
 
-struct dom_document::impl 
+class dom_document::impl 
 {
 };
 
-struct dom_element::impl 
+class dom_element::impl 
 {
 };
 
