@@ -75,6 +75,8 @@ struct arguments {
   int pages;
   printrow::options::line_style grid_style;
   int grid;
+  string calls;
+  string rounds;
 };
 
 arguments args;
@@ -231,6 +233,8 @@ void setup_args(arg_parser& p)
     " except at lead heads, or except at the beginning and end of a column."
     " If no argument is given, the default is `lead'.", 
 		  "always|never|lead|column", true));
+  p.add(new myopt('q', "calls", "Calling positions for each lead.","CALLS"));
+  p.add(new myopt('R', "rounds", "Starting row.","ROUNDS"));
   p.add(new myopt("Layout options:"));
   p.add(new myopt('L', "landscape",
     "Print in landscape orientation instead of portrait (not for EPS files)"));
@@ -511,6 +515,12 @@ bool myopt::process(const string& arg, const arg_parser& ap) const
       } else
 	args.number_mode = printmethod::miss_lead;
       break;	     
+	case 'q' :
+		args.calls = arg;
+		break;
+	case 'R' :
+		args.rounds = arg;
+		break;
     case 'p' :
       if(!arg.empty()) {
 	if(arg == "none")
@@ -710,6 +720,11 @@ int main(int argc, char *argv[])
       pm.pn_mode = printmethod::pn_first;
     else
       pm.pn_mode = static_cast<printmethod::pn_mode_t>(args.pn_mode);
+	pm.calls = args.calls;
+	if (args.rounds.length()==m.bells())
+	{
+		pm.startrow(args.rounds);
+	}
     
     // Set the space to fit to
     if(args.fit && args.fitwidth == 0) {

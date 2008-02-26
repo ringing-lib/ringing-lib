@@ -40,6 +40,7 @@ RINGING_START_NAMESPACE
 class RINGING_API printmethod {
 private:
   const method* m;
+  row rounds;
 
 public:
   printrow::options opt;
@@ -56,6 +57,7 @@ public:
   enum pn_mode_t { pn_none, pn_first, pn_all };
   pn_mode_t pn_mode;
   int placebells;
+  string calls;
     
   void defaults(); 
 
@@ -78,6 +80,10 @@ public:
 
   void fit_to_space(const dimension& width, const dimension& height, 
 		    bool vgap_mode, float aspect);
+
+  char call(size_t l) const;
+
+  void startrow(const row& r) { rounds=r; }
 
 private:
   bool needrule(int i);

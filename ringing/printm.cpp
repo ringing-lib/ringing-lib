@@ -98,9 +98,15 @@ void printmethod::print(printpage& pp)
 {
   if(!m) return;
 
-  row_block b(*m);
+  if (rounds.bells()!=m->bells())
+  {
+	  rounds=row::rounds(m->bells());
+  }
+
+  row_block b(*m,rounds);
   int i = 0;
   int total_row_count = 0;
+  int ic = 0; // calling position count
   int column, columnset, row_count;
   bool sym = m->issym();
   bool pn;
@@ -122,6 +128,7 @@ void printmethod::print(printpage& pp)
       printrow pr(pp, opt);
       // Move to the beginning of this set of columns
       pr.set_position(xoffset, yoffset);
+      if(pn_mode != pn_none) pr.move_position(opt.xspace * pnextra, 0);
       pr.move_position(0, -opt.yspace * columnset * (rows_per_column + 1));
       pr.move_position(0, -vgap * columnset);
       for(column = 0; column < columns_per_set 
@@ -154,7 +161,14 @@ void printmethod::print(printpage& pp)
 	      pr.placebell(placebells);
 	    if(!(opt.flags & printrow::options::numbers))
 	      pr.dot(-1);
-	  } else if(i == (int) (b.size() - 1)) {
+	  } else if(i == (int) (b.size() - 2)) {
+		  // print calling positions
+		  if (char pos=call(ic++)) {
+			  pr.text(string("-")+pos,opt.xspace/2,text_style::left,false,true);
+//			  pr.text(string("-")+pos,0,text_style::left,false,true);
+		  }
+	  }
+	  else if(i == (int) (b.size() - 1)) {
 	    if(number_mode == miss_lead) {
 	      // Lead head - print the numbers
 	      opt.flags &= ~printrow::options::miss_numbers;
@@ -299,6 +313,13 @@ void printmethod::get_bbox(float& blx, float& bly, float& urx, float& ury)
   ury = ((placebells >= 0) ? opt.style.size * 0.07f : 0);
   if(ury < opt.yspace.in_points() * 0.5f)
     ury = opt.yspace.in_points() * 0.5f;
+}
+
+char printmethod::call(size_t l) const {
+	if (l<calls.length()&&calls[l]!=' ')
+		return calls[l];
+	else
+		return 0;
 }
 
 RINGING_END_NAMESPACE
