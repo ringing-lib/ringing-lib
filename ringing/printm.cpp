@@ -116,7 +116,7 @@ void printmethod::print(printpage& pp)
     opt.flags |= printrow::options::miss_numbers;
   else
     opt.flags &= ~printrow::options::miss_numbers;
-  pn = (pn_mode != pn_none);
+  pn = ((pn_mode & pn_mask) != pn_none);
   if(pn) pnextra = find_pnextra();
 
   for(columnset = 0; total_row_count < total_rows; columnset++) {
@@ -128,7 +128,6 @@ void printmethod::print(printpage& pp)
       printrow pr(pp, opt);
       // Move to the beginning of this set of columns
       pr.set_position(xoffset, yoffset);
-      if(pn_mode != pn_none) pr.move_position(opt.xspace * pnextra, 0);
       pr.move_position(0, -opt.yspace * columnset * (rows_per_column + 1));
       pr.move_position(0, -vgap * columnset);
       for(column = 0; column < columns_per_set 
@@ -149,7 +148,7 @@ void printmethod::print(printpage& pp)
 	    // Miss the first row of the lead - we've already printed it
 	    // at the end of the previous lead.
 	    i = 1;
-	    if(pn_mode == pn_first) pn = false;
+	    if((pn_mode & pn_mask) == pn_first) pn = false;
 	  }
 	  if(i == 1) {
 	    // Turn number-missing back on
@@ -180,8 +179,9 @@ void printmethod::print(printpage& pp)
 	    opt.flags &= ~printrow::options::miss_numbers;
 	    pr.set_options(opt);
 	  }
-	  if(pn && (pn_mode == pn_all 
-		    || (!sym || (i <= (m->length()+1)/2) || i == m->length()))) 
+	  if(pn && ((pn_mode & pn_mask) == pn_all 
+		    || (!sym || (i <= (m->length()+1)/2) || i == m->length()))
+	     && !((pn_mode & pn_nox) && (*m)[i-1].count_places() == 0)) 
 	    pr.text((*m)[i-1].print(), opt.xspace,text_style::right, 
 		    true, false);
 	  pr << b[i];
@@ -217,18 +217,19 @@ void printmethod::scale_to_space(const dimension& width,
 {
   float new_xspace, vlimit;
 
-  if(pn_mode != pn_none && pnextra == -1) pnextra = find_pnextra();
+  if((pn_mode & pn_mask) != pn_none && pnextra == -1) 
+    pnextra = find_pnextra();
   new_xspace = width.in_points() 
     / (columns_per_set * (m->bells() + ((placebells >= 0) ? 3 : 1)
-		  + ((pn_mode == pn_all) ? pnextra : 0)) 
-       + ((pn_mode == pn_first) ? pnextra : 0) - 1);
+			  + (((pn_mode & pn_mask) == pn_all) ? pnextra : 0)) 
+       + (((pn_mode & pn_mask) == pn_first) ? pnextra : 0) - 1);
   vlimit = height.in_points() * aspect / 
     ((rows_per_column + 3) * sets_per_page - 2);
   if(vlimit < new_xspace) new_xspace = vlimit;
   opt.xspace.set_float(new_xspace, 100);
   opt.yspace.set_float(new_xspace / aspect, 100);
   hgap = opt.xspace * (((placebells >= 0) ? 3 : 1) + 
-		       ((pn_mode == pn_all) ? pnextra : 0));
+		       (((pn_mode & pn_mask) == pn_all) ? pnextra : 0));
   vgap = opt.yspace * 2;
   opt.style.size = static_cast<int>(opt.yspace.in_points() * 9);
 }  
@@ -244,7 +245,7 @@ void printmethod::fit_to_space(const dimension& width,
  
   // Work out how many bells' worth of space to leave for place notation
   int pnextra = -1;
-  if(pn_mode != pn_none) pnextra = find_pnextra();
+  if((pn_mode & pn_mask) != pn_none) pnextra = find_pnextra();
 
   int lead = m->length();
   // We try each possible number of leads per column until
@@ -279,7 +280,8 @@ float printmethod::total_width() {
   int columns = divu(total_rows, rows_per_column);
   if(columns_per_set < columns) columns = columns_per_set;
   return (opt.xspace.in_points() * (m->bells() * columns + 
-				    ((pn_mode != pn_none) ? find_pnextra():0)))
+				    (((pn_mode & pn_mask) != pn_none) 
+				     ? find_pnextra() : 0)))
 	  + (hgap.in_points() * (columns - 1))
 	  + ((placebells >= 0) ? opt.style.size * 0.035f : 0);
 }
@@ -300,7 +302,7 @@ void printmethod::get_bbox(float& blx, float& bly, float& urx, float& ury)
   int columns = divu(total_rows, rows_per_column);
   if(columns_per_set < columns) columns = columns_per_set;
   blx = -opt.xspace.in_points() 
-    * (0.5f + ((pn_mode != pn_none) ? find_pnextra() : 0));
+    * (0.5f + (((pn_mode & pn_mask) != pn_none) ? find_pnextra() : 0));
   urx = opt.xspace.in_points() * (m->bells() * columns - 0.5f
 				  + ((placebells >= 0) ? 1.9f : 0))
     + (hgap.in_points() * (columns - 1));
