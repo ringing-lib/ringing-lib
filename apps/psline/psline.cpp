@@ -221,7 +221,8 @@ void setup_args(arg_parser& p)
 		  " place bells.", "BELL|x", true));
   p.add(new myopt('p', "place-notation", "Print place"
     " notation for the first lead, every lead, or no leads.  The default is"
-    " to print place notation for the first lead.", "first|all|none",
+    " to print place notation for the first lead.  Append ,nox to omit `X'"
+    " for cross changes.", "first|all|none[,nox]",
 		  true));
   p.add(new myopt('r', "rule", "Print rule-offs"
     " (thin horizontal lines) after the Ath change in each lead, and every B"
@@ -523,15 +524,25 @@ bool myopt::process(const string& arg, const arg_parser& ap) const
 		break;
     case 'p' :
       if(!arg.empty()) {
-	if(arg == "none")
+	s = arg.begin();
+        string a = next_bit(arg, s);
+	if(a == "none")
 	  args.pn_mode = printmethod::pn_none;
-	else if(arg == "first")
+	else if(a == "first")
 	  args.pn_mode = printmethod::pn_first;
-	else if(arg == "all")
+	else if(a == "all")
 	  args.pn_mode = printmethod::pn_all;
 	else {
 	  cerr << "Unrecognised argument: \"" << arg << "\"\n";
 	  return false;
+	}
+	if(s != arg.end()) {
+	  if(next_bit(arg, s) == "nox")
+	    args.pn_mode |= printmethod::pn_nox;
+	  else {
+	    cerr << "Unrecognised argument: \"" << arg << "\"\n";
+	    return false;
+	  }
 	}
       } else
 	args.pn_mode = printmethod::pn_all;
