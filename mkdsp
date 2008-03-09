@@ -364,7 +364,7 @@ sub process_configure()
 
     while (<FILE>) 
     {
-	chomp; s/\#.*$//; 
+	chomp; s/\#.*$//; s/\bdnl\b.*$//;
 
 	$use_dll = 1 if /AC_LIBTOOL_WIN32_DLL/;
     }

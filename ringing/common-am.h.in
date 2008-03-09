@@ -93,5 +93,8 @@
 // or to 0 otherwise
 #define RINGING_READLINE_NEEDS_STDIO_H @READLINE_NEEDS_STDIO_H@
 
+// *** Define this to be 1 if you want to support Windows DLLs
+#define RINGING_AS_DLL @DLL_SUPPORT@
+
 #endif
 

@@ -24,13 +24,21 @@ search_base.cpp basic_search.cpp multtab.cpp table_search.cpp streamutils.cpp
 libringingcore_la_LIBADD =
 libringing_la_LIBADD = $(top_builddir)/ringing/libringingcore.la 
 
-# -no-undefined is needed for DLLs, and doesn't hurt elsewhere
-libringingcore_la_LDFLAGS = -no-undefined
-libringing_la_LDFLAGS = -no-undefined
+libringingcore_la_LDFLAGS =
+libringing_la_LDFLAGS =
+
+libringingcore_la_CPPFLAGS =
+libringing_la_CPPFLAGS =
+
+if DLL_SUPPORT
+# -no-undefined is needed for DLLs
+libringingcore_la_LDFLAGS += -no-undefined
+libringing_la_LDFLAGS += -no-undefined
 
 # Preprocessor hooks to DLL export symbols
-libringingcore_la_CPPFLAGS = -DRINGING_EXPORTS
-libringing_la_CPPFLAGS = -DRINGING_EXPORTS
+libringingcore_la_CPPFLAGS += -DRINGING_EXPORTS
+libringing_la_CPPFLAGS += -DRINGING_EXPORTS
+endif
 
 # Select the right XML library
 if HAVE_GDOME

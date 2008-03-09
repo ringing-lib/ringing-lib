@@ -137,7 +137,7 @@ RINGING_START_NAMESPACE RINGING_USING_STD RINGING_END_NAMESPACE
 #endif
 
 // Macros ready for Windows DLL support.
-#if DLL_EXPORT
+#if DLL_EXPORT && RINGING_AS_DLL
 #  // Symbols exported from the dll:
 #  if RINGING_EXPORTS
 #   define RINGING_API __declspec(dllexport)

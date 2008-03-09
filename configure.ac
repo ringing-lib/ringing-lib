@@ -47,7 +47,9 @@ case "$build_os" in
   ;;
 esac
 
-# AC_LIBTOOL_WIN32_DLL
+AM_CONDITIONAL(DLL_SUPPORT, false)
+AC_SUBST(DLL_SUPPORT, 0)
+
 AC_PROG_LIBTOOL
 AC_PROG_LN_S
 
