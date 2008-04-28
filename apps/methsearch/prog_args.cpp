@@ -102,7 +102,24 @@ bool falseness_opt::process( const string &arg, const arg_parser & ) const
     }
   else if ( arg.size() && arg[0] == ':' )
     {
-      args.allowed_falseness = arg.substr(1, string::npos);
+      string fgs = arg.substr(1, string::npos);
+      while (true) { 
+        size_t i = fgs.find('-');  
+        if ( i == string::npos ) 
+          break;
+        else if ( i == 0 || i >= fgs.size() - 1 ||
+                  fgs[i-1] >= fgs[i+1] ||
+                  // Need both lower case, or both upper case
+                  ! ( islower( fgs[i-1] ) && islower( fgs[i+1] ) ||
+                      isupper( fgs[i-1] ) && isupper( fgs[i+1] ) ) ) { 
+          cerr << "Unable to parse falseness group range in -F option: \""
+               << fgs << "\"\n";
+          return false;
+        } 
+        string range; for ( char c=fgs[i-1]; c != fgs[i+1]; ++c ) range += c;
+        fgs.replace( i, 1, range );
+      }
+      args.allowed_falseness = fgs;
     }
   else
     {

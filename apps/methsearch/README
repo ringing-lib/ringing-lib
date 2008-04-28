@@ -99,6 +99,7 @@ in, say, the Plain Minor Collection.
 When outputting to a file using -o, only the list of methods is sent to the
 file.   Output resulting from --status, -H or --count is still sent to the
 console as usual.  The currently supported output formats are "fmt" and "xml".
+(Note that in some builds of methsearch, XML support may have been disabled.)
 The -Ofmt option is the default and means apply the formatting given in
 the -R option.  The -Oxml option can be used to generate an XML method 
 library.  The format of this XML is documented as part of the "Methods
@@ -111,6 +112,12 @@ pages are of use
 The generated XML will contain method names if the method is listed in a 
 library referenced by a -L option.  Libraries generated with -Oxml can be
 read with -L.
+
+When acting as a filter, i.e. with --filter, the input should be one method
+per line.  Everything up to the first space on the line is treated as place 
+notation, and the remainder of the line is ignored.  This can be useful for
+generating a list of methods once with an expensive invocation of methsearch,
+and then repeatedly filtering the output looking for interesting methods.
 
 
 
@@ -161,7 +168,9 @@ to find methods with at most B, D and E falseness but nothing else.  Note
 that this will exclude all methods with the out-of-course only falseness
 groups (a-f) or (on eight bells only) the split tenors groups (X, Y, Z).
 The trivial falseness (A) is included automatically, but it is acceptable
-to repeat it.
+to repeat it.  To include arbitrary out-of-course falseness groups, the 
+range notation may be used:  for example, -F:a-fX-Z will look for CPS methods.
+
 
 
 Format Specifiers
