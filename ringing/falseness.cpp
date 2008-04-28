@@ -1,5 +1,6 @@
 // -*- C++ -*- falseness.cpp - Class for falseness table
-// Copyright (C) 2001, 2002, 2003, 2005 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2001, 2002, 2003, 2005, 2008 
+// Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -28,6 +29,7 @@
 #include <ringing/falseness.h>
 #include <ringing/streamutils.h>
 #include <ringing/pointers.h>
+#include <ringing/group.h>
 #if RINGING_OLD_INCLUDES
 #include <algo.h>
 #include <iterator.h>
@@ -45,6 +47,7 @@
 #include <cassert>
 #endif
 
+#include <iostream>
 RINGING_START_NAMESPACE
 
 RINGING_USING_STD
@@ -206,6 +209,29 @@ static shared_pointer< map<row, string> > make_table(int bells)
   return table;
 }
 
+string lookup_one_symbol( map<row, string> const& table, int b, row r )
+{
+  if ( are_tenors_together( r, 6 ) ) {
+    map<row, string>::const_iterator i = table.find(r);
+    if (i == table.end()) return string();
+    assert( b != 8 || i->second.size() == 1 );
+    return i->second;
+  }
+
+  // This is a hack to get X, Y and Z falseness to work on 8 bells
+  if (b == 8) {
+    row rounds(b);
+    if ( r == rounds * "17623548" )
+      return string( "X" );
+    else if ( r == rounds * "17645328" )
+      return string( "Y" );
+    else if ( r == rounds * "17632458" )
+      return string( "Z" );
+  }
+
+  return string();
+}
+
 RINGING_END_ANON_NAMESPACE
 
 void false_courses::optimise(int bells)
@@ -240,16 +266,11 @@ string false_courses::symbols() const
   set<string> syms;
 
   const row rounds(b);  
-  for ( const_iterator i(begin()), e(end()); i<e; ++i )
-    if ( are_tenors_together( *i, 6 ) ) 
-      syms.insert( (*table)[*i] );
-    // This is a hack to get X, Y and Z falseness to work on 8 bells
-    else if ( b == 8 && *i == rounds * "17623548" )
-      syms.insert( "X" );
-    else if ( b == 8 && *i == rounds * "17645328" )
-      syms.insert( "Y" );
-    else if ( b == 8 && *i == rounds * "17632458" )
-      syms.insert( "Z" );
+  for ( const_iterator i(begin()), e(end()); i<e; ++i ) {
+    string sym( lookup_one_symbol( *table, b, *i ) );
+    if ( ! sym.empty() )
+      syms.insert(sym); 
+  } 
 
   make_string ms;
   copy( syms.begin(), syms.end(), 
@@ -257,5 +278,32 @@ string false_courses::symbols() const
   return ms;
 }
 
+string false_courses::lookup_symbol( row const& r )
+{
+  // *NOT* a reference to optimised_table
+  shared_pointer< map<row, string> > table = make_table(r.bells());
+  const size_t b = r.bells();
+
+  row const pblh( row::pblh(b) );
+  row lhc; lhc *= change(b, "12"); // either 12 or 1N are fine
+
+  group g( pblh, lhc );
+
+  for ( group::const_iterator i = g.begin(), e = g.end(); i != e; ++i )
+    for ( group::const_iterator j = g.begin(); j != e; ++j )
+    {
+      row const fch( *i * r * *j );
+
+      string sym( lookup_one_symbol( *table, b, fch ) );
+      if ( ! sym.empty() )
+        return sym;
+      sym = lookup_one_symbol( *table, b, fch.inverse() );
+      if ( ! sym.empty() )
+        return sym;
+    }
+
+  assert( r.bells() != 8 || r[0] != 0 );
+  return string();
+}
 
 RINGING_END_NAMESPACE

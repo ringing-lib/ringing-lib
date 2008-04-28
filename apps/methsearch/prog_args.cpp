@@ -1,5 +1,5 @@
 // -*- C++ -*- prog_args.cpp - handle program arguments
-// Copyright (C) 2002, 2003, 2004, 2005, 2007
+// Copyright (C) 2002, 2003, 2004, 2005, 2007, 2008
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -99,6 +99,10 @@ bool falseness_opt::process( const string &arg, const arg_parser & ) const
     {
       args.true_trivial = args.true_half_lead
 	= args.true_lead = args.true_course = args.true_extent  = false;
+    }
+  else if ( arg.size() && arg[0] == ':' )
+    {
+      args.allowed_falseness = arg.substr(1, string::npos);
     }
   else
     {
@@ -609,5 +613,24 @@ bool arguments::validate( arg_parser &ap )
       return false;
     }
 
+  if ( allowed_falseness.size() )
+    {
+      if ( hunt_bells != 1 ) 
+        {
+          ap.error( "Can only specify falseness for single-hunt methods" );
+          return false;
+        }
+      if ( treble_dodges != 1 )
+        {
+          ap.error( "Can only specify falseness for 'normal' treble-dodging "
+                    "methods (i.e. G1)" );
+          return false;
+        }
+      if ( ! require_pbles )
+        {
+          ap.error( "Can only specify falseness for regular methods" );
+          return false;
+        }
+    }
   return true;
 }

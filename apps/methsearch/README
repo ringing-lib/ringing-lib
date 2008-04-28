@@ -130,6 +130,7 @@ has a long form and a short form.  If no -F option is given, -Fl is assumed.
   h, half-lead        Only require a half-lead to be true
   n, none             No requirements on the truth of the method
   x, really-none      As 'n' but even allowing 'trivial' falseness (see below)
+  :GROUPS             Only allow the listed falseness groups (see below)
 
 With the exception of -Fe each option implies all of the options below, and
 should not be used with any lower options.  -Fe and -Fc are orthogonal and
@@ -155,6 +156,12 @@ does the same but only for the in-course lead-heads / -ends, thus for a
 treble-dodging minor method it will check whether there are 30 true in-course
 leads.
 
+When searching for methods with particular falseness groups, use e.g. -F:BDE
+to find methods with at most B, D and E falseness but nothing else.  Note
+that this will exclude all methods with the out-of-course only falseness
+groups (a-f) or (on eight bells only) the split tenors groups (X, Y, Z).
+The trivial falseness (A) is included automatically, but it is acceptable
+to repeat it.
 
 
 Format Specifiers

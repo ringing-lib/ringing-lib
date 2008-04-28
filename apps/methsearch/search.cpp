@@ -1,5 +1,5 @@
 // -*- C++ -*- search.cpp - the actual search algorithm
-// Copyright (C) 2002, 2003, 2004, 2005, 2007 
+// Copyright (C) 2002, 2003, 2004, 2005, 2007, 2008
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -52,6 +52,7 @@
 #include <ringing/proof.h>
 #include <ringing/mathutils.h>
 #include <ringing/litelib.h>
+#include <ringing/falseness.h>
 
 
 RINGING_USING_NAMESPACE
@@ -93,6 +94,7 @@ private:
   void found_method();
 
   bool is_acceptable_leadhead( const row &lh );
+  bool is_falseness_acceptable( const change& ch );
 
 private:
   const arguments &args; 
@@ -623,8 +625,32 @@ bool searcher::try_midlead_change( const change &ch )
        && division_bad_parity_hack( m, ch, div_len ) )
     return false;
 
+  if ( args.allowed_falseness.size() && depth % 4 >= 1 && depth % 4 != 3
+       && ! is_falseness_acceptable( ch ) )
+    return false;
+
   return true;
 }
+
+bool searcher::is_falseness_acceptable( const change& ch )
+{
+  row r( args.bells ); for_each( m.begin(), m.end() - 1, permute(r) );
+  row c; c *= m.back(); c *= ch;
+
+  // 1 contains 1.r and 1.r.c
+  // x contains 1.r.c and 1.r.c.c
+  // so x.r = 1.r.c  =>  x = r.c.r^{-1}
+
+  row x = r * c * r.inverse();
+
+  assert( x[0] == 0 );
+  string sym( false_courses::lookup_symbol(x) );
+  assert( args.bells != 8 || sym.size() );
+  if ( sym == "A" || sym.empty() ) return true;
+  if ( args.allowed_falseness.find(sym) != string::npos ) return true;
+  return false;
+}
+
 
 bool searcher::try_quarterlead_change( const change &ch )
 {

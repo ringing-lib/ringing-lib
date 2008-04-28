@@ -1,5 +1,6 @@
 // -*- C++ -*- prog_args.h - program arguments
-// Copyright (C) 2002, 2003, 2004, 2007 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003, 2004, 2007, 2008
+// Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -95,6 +96,7 @@ struct arguments
   init_val<bool,false> true_course;
   init_val<bool,false> true_extent;
   init_val<bool,false> true_positive_extent;
+  string               allowed_falseness;
 
   init_val<bool,false> require_CPS;
 
