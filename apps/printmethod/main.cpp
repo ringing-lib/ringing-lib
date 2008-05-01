@@ -187,11 +187,8 @@ int main(int argc, char* argv[])
   }
 
 # if RINGING_USE_TERMCAP
-  static bool terminfo_initialized = false;
-  if ( !terminfo_initialized ) {
+  if ( !args.colours.empty() )
     setupterm(NULL, 1, NULL);
-    terminfo_initialized = true;
-  }
 # endif
 
   row r(args.bells);
