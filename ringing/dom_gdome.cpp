@@ -1,4 +1,4 @@
-// -*- C++ -*- dom_stub.cpp - Stub DOM wrapper
+// -*- C++ -*- dom_gdome.cpp - DOM wrapper for Gdome
 // Copyright (C) 2008 Richard Smith <richard@ex-parrot.com>.
 
 // This library is free software; you can redistribute it and/or

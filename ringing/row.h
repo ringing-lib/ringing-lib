@@ -141,6 +141,10 @@ public:
   char *cycles(char *result) const; // This overload is deprecated.
 #endif
 
+  typedef vector<bell>::const_iterator const_iterator;
+  const_iterator begin() const { return data.begin(); }
+  const_iterator end() const { return data.end(); }
+
 private:
   void validate() const;
 };

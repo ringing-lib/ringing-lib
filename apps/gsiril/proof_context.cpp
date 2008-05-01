@@ -1,5 +1,5 @@
 // proof_context.cpp - Environment to evaluate expressions
-// Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007
+// Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -31,9 +31,9 @@
 #   undef bell
 # endif
 # define RINGING_TERMINFO_VAR( name ) \
-    ( cur_term && (name) != (char const*)-1 ? (name) : 0 )
+    ( cur_term && (name) != (char const*)-1 ? (name) : NULL )
 #else
-# define RINGING_TERMINFO_VAR( name ) 0
+# define RINGING_TERMINFO_VAR( name ) NULL
 #endif
 
 
