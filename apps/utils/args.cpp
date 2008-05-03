@@ -1,5 +1,6 @@
 // -*- C++ -*- args.cpp - argument-parsing things
-// Copyright (C) 2001, 2002, 2003, 2004, 2005 Martin Bright <martin@boojum.org.uk>
+// Copyright (C) 2001, 2002, 2003, 2004, 2005, 2008
+// Martin Bright <martin@boojum.org.uk>
 // and Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -21,6 +22,7 @@
 #include <ringing/common.h>
 #include "args.h"
 
+#include <ringing/row.h>
 #include <ringing/streamutils.h>
 
 #if RINGING_OLD_C_INCLUDES
@@ -441,3 +443,25 @@ bool version_opt::process( const string &, const arg_parser &ap ) const
   exit(0);
   return true; // To keep MSVC 5 happy
 }
+
+row_opt::row_opt( char c, const string &l, const string &d, const string& a,
+	          row& opt )
+  : option(c, l, d, a), opt(opt)
+{}
+
+bool row_opt::process( const string& arg, const arg_parser& ap ) const 
+{
+  try {
+    opt = arg;
+  } 
+  catch ( bell::invalid const& ) {
+    ap.error(make_string() << "Invalid bell in row '" << arg << "'");
+    return false;
+  }
+  catch ( row::invalid const& ex ) {
+    ap.error(make_string() << "Invalid row '" << arg << "'");
+    return false;
+  }
+  return true;
+}
+

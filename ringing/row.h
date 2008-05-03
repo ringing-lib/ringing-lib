@@ -1,5 +1,5 @@
 // -*- C++ -*- row.h - Classes for rows and changes
-// Copyright (C) 2001, 2007 Martin Bright <martin@boojum.org.uk>
+// Copyright (C) 2001, 2007, 2008 Martin Bright <martin@boojum.org.uk>
 // and Richard Smith <richard@ex-parrot.com>
 
 // This library is free software; you can redistribute it and/or

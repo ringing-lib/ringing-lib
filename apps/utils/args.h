@@ -1,6 +1,6 @@
 // -*- C++ -*- args.h - argument-parsing things
-// Copyright (C) 2001, 2002, 2003 Martin Bright <martin@boojum.org.uk> and
-// Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2001, 2002, 2003, 2008 Martin Bright <martin@boojum.org.uk>
+// and Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -33,6 +33,11 @@
 #endif
 #include <string>
 #include "init_val.h"
+
+RINGING_START_NAMESPACE
+class row;
+RINGING_END_NAMESPACE
+
 
 RINGING_USING_STD
 
@@ -235,5 +240,15 @@ private:
   virtual bool process( const string &, const arg_parser & ) const;
 };
 
+class row_opt : public option {
+public:
+  row_opt( char c, const string &l, const string &d, const string& a,
+	   RINGING_PREFIX row& opt );
+
+private:
+  // Sets opt = val
+  virtual bool process( const string& val, const arg_parser& ap ) const;
+  RINGING_PREFIX row &opt;
+};
 
 #endif

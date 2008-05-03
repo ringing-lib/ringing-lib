@@ -56,6 +56,8 @@ struct arguments
 
   string methstr;
   method meth;
+  
+  row startrow;
 
   string           rstr, gstr, bstr;
   map< bell, int > colours;
@@ -81,6 +83,11 @@ void arguments::bind( arg_parser& p )
          ( 'c', "course",
            "Print a whole course",
            whole_course ) );
+
+  p.add( new row_opt
+         ( 's', "start", 
+           "Starting from ROW", "ROW",
+           startrow ) );
 
 #if RINGING_USE_TERMCAP
   p.add( new string_opt
@@ -115,8 +122,16 @@ bool arguments::validate( arg_parser &ap )
     return false;
   }
 
+  if ( startrow.bells() == 0 ) {
+    startrow = row(bells);
+  }
+  else if ( startrow.bells() != bells ) {
+    ap.error( "Starting row is on wrong number of bells" );
+    return false;
+  }
+
 #if RINGING_USE_TERMCAP
-  // The are defined in ncurses.h
+  // The COLOR_ macros are defined in ncurses.h
   if ( !handle_colour( ap, rstr, COLOR_RED   ) ) return false;
   if ( !handle_colour( ap, gstr, COLOR_GREEN ) ) return false;
   if ( !handle_colour( ap, bstr, COLOR_BLUE  ) ) return false;
@@ -141,6 +156,7 @@ void print_row( arguments const& args, row const& r )
 {
   if (args.colours.empty()) 
     cout << r;
+
   else {
     bool coloured = false;
     for (row::const_iterator i=r.begin(), e=r.end(); i!=e; ++i) {
@@ -191,7 +207,7 @@ int main(int argc, char* argv[])
     setupterm(NULL, 1, NULL);
 # endif
 
-  row r(args.bells);
+  row r( args.startrow );
   print_row(args, r); // TeX: cout << "\\\\";
   do for ( method::const_iterator i=args.meth.begin(), e=args.meth.end(); 
            i!=e; ++i )  
@@ -199,7 +215,7 @@ int main(int argc, char* argv[])
     r *= *i;
     // TeX: if ( r.isrounds() ) cout << "\\hline"; 
     cout << "\n"; print_row(args, r); // TeX: cout << "\\\\";
-  } while ( not r.isrounds() && args.whole_course );
+  } while ( r != args.startrow && args.whole_course );
 
   cout << "\n";
 }

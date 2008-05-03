@@ -1,5 +1,6 @@
 // main.cpp - Entry point for gsiril
-// Copyright (C) 2002, 2003, 2004, 2007 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003, 2004, 2007, 2008
+// Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -96,26 +97,6 @@ void arguments::set_sirilic_compatible()
   set_msiril_compatible();
   sirilic_syntax = true;
 }
-
-class row_opt : public option {
-public:
-  row_opt( char c, const string &l, const string &d, const string& a,
-	   row& opt )
-    : option(c, l, d, a), opt(opt)
-  {}
-
-private:
-  virtual bool process( const string& arg, const arg_parser& ap ) const {
-    try {
-      opt = arg;
-    } catch ( exception const& ex ) {
-      ap.error(make_string() << "Invalid row '" << arg << "': " << ex.what());
-      return false;
-    }
-    return true;
-  }
-  row &opt;
-};
 
 class function_opt : public option {
 public:
