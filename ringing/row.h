@@ -36,10 +36,12 @@
 #include <ostream.h>
 #include <vector.h>
 #include <stdexcept.h>
+#include <utility.h>
 #else
 #include <ostream>
 #include <vector>
 #include <stdexcept>
+#include <utility>
 #endif
 #if RINGING_OLD_C_INCLUDES
 #include <ctype.h>
@@ -122,6 +124,7 @@ public:
   friend RINGING_API ostream& operator<<(ostream&, const row&);
   void swap(row &other) { data.swap(other.data); }
   void swap(vector<bell>& other) { data.swap(other); validate(); }
+  size_t hash() const;
 
   int find(bell const& b) const;// Finds the bell
   
@@ -208,7 +211,8 @@ public:
       
 RINGING_END_NAMESPACE
 
-// specialise std::swap
+// specialise std::swap and std::hash if it exists
 RINGING_DELEGATE_STD_SWAP( row )
+RINGING_DELEGATE_STD_HASH( row )
 
 #endif

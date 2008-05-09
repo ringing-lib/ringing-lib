@@ -1,6 +1,6 @@
 // -*- C++ -*- common-msvc.h.in - Common #defines for the MSVC compiler.
 //
-// Copyright (C) 2001, 2002, 2003 Martin Bright <martin@boojum.org.uk> 
+// Copyright (C) 2001, 2002, 2003, 2008 Martin Bright <martin@boojum.org.uk> 
 // and Richard Smith <richard@ex-parrot.com>
 
 // This library is free software; you can redistribute it and/or
@@ -85,5 +85,8 @@
 // headers requiring <stdio.h> to be included before <readline/readline.h>
 // or to 0 otherwise
 #define RINGING_READLINE_NEEDS_STDIO_H 0
+
+// *** Define this to be 1 if you have std::hash
+#define RINGING_HAS_STD_HASH 0
 
 #endif // RINGING_COMMON_MSVC_H

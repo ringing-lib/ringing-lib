@@ -1,5 +1,5 @@
 // -*- C++ -*- common-am.h.in - Common macros and so on.
-// Copyright (C) 2001, 2002, 2003 Martin Bright <martin@boojum.org.uk>
+// Copyright (C) 2001, 2002, 2003, 2008 Martin Bright <martin@boojum.org.uk>
 // and Richard Smith <richard@ex-parrot.com>
 
 // This library is free software; you can redistribute it and/or
@@ -95,6 +95,9 @@
 
 // *** Define this to be 1 if you want to support Windows DLLs
 #define RINGING_AS_DLL @DLL_SUPPORT@
+
+// *** Define this to be 1 if you have std::hash
+#define RINGING_HAS_STD_HASH 0 //@HAS_STD_HASH@
 
 #endif
 

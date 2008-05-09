@@ -1,5 +1,6 @@
 // row.cpp - Classes for row and changes
-// Copyright (C) 2001 Martin Bright <martin@boojum.org.uk>
+// Copyright (C) 2001, 2008 Martin Bright <martin@boojum.org.uk>
+// and Richard Smith <richard@ex-parrot.com>
 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -446,6 +447,21 @@ int row::sign(void) const
   // Express it in cycles and take the length of the string
   if ( bells() == 0 ) return 1;
   return ( cycles().length() & 1 ) ? 1 : -1;
+}
+
+size_t row::hash() const
+{
+  // The standard FNV hash algorithm.
+
+  // We use 31 as the FNV prime because it is a Mersenne prime: the FNV 
+  // algorithm requires a prime, and being of the form 2^n-1 means that the
+  // compiler / processor microcode can optimise the multiplication to a 
+  // shift and subtract.
+
+  size_t h = bells();
+  for ( int i=0, n=bells(); i != n; ++i )
+    h = 31*h + data[i];
+  return h;
 }
 
 int row::find(bell const& b) const

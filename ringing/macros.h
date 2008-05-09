@@ -1,6 +1,6 @@
 // -*- C++ -*- macros.h.in - Macros to hide system specific constructs
 //
-// Copyright (C) 2001, 2002, 2003, 2006, 2007 
+// Copyright (C) 2001, 2002, 2003, 2006, 2007, 2008
 // Martin Bright <martin@boojum.org.uk> and
 // Richard Smith <richard@ex-parrot.com>
 
@@ -173,7 +173,21 @@ RINGING_START_NAMESPACE_STD						\
   { a.swap(b); }							\
 RINGING_END_NAMESPACE_STD
 #else
-#define RINGING_DELEGATE_STD_SWAP(type)
+#define RINGING_DELEGATE_STD_SWAP(T)
+#endif
+
+// Shorthand macro for doing a delegating std::hash specialisation:
+#if RINGING_HAS_STD_HASH
+#define RINGING_DELEGATE_STD_SWAP(T)                                    \
+RINGING_START_NAMESPACE_STD                                             \
+  template <> struct RINGING_API hash<RINGING_PREFIX T>			\
+    : public unary_function<T, size_t> 					\
+  {									\
+    size_t operator()(T const& val) const { return val.hash(); }	\
+  };									\
+RINGING_END_NAMESPACE_STD
+#else
+#define RINGING_DELEGATE_STD_HASH(T)
 #endif
 
 // The following construct doesn't work in all compilers:
