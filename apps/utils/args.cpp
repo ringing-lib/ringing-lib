@@ -176,7 +176,7 @@ void arg_parser::wrap(const string& s, int l, int r, int c) const
       c = l;
     }
     while(j != k) { cout << *j++; ++c; }
-    ++k;
+    if (k != s.end()) ++k;
   }
 }
 
