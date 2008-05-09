@@ -268,7 +268,11 @@ public:
  ~scoped_pointer() { if (deletor) deletor(ptr); }
 
   // Reset the pointer
-  void reset( T *x = 0 ) { 
+  void reset() {
+    if (deletor) deletor(ptr);
+    ptr = 0; deletor = 0;
+  }
+  void reset( T *x ) { 
     if (deletor) deletor(ptr); 
     ptr = x; deletor = delete_helper<T>::fn;  
   }
