@@ -173,19 +173,14 @@ row row::inverse(void) const
 // Apply a change to a row
 row& operator*=(row& r, const change& c)
 {
-  while(r.bells() < c.bells())
+  while (r.bells() < c.bells())
     r.data.push_back(r.bells());
 
-  char t;
+  if (c.n != 0 && !r.data.empty())
+    for ( vector<bell>::const_iterator s = c.swaps.begin(), e = c.swaps.end(); 
+          s != e && *s < (r.bells() - 1); ++s )
+      RINGING_PREFIX_STD swap( r.data[*s], r.data[*s + 1] );
 
-  if(c.n != 0 && !r.data.empty()) {
-    vector<bell>::const_iterator s;
-    for(s = c.swaps.begin(); s != c.swaps.end() && *s < (r.bells() - 1); s++) {
-      t = r.data[*s];
-      r.data[*s] = r.data[*s + 1];
-      r.data[*s + 1] = t;
-    }
-  }
   return r;
 }
 
