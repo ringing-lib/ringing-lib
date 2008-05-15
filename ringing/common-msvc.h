@@ -89,4 +89,7 @@
 // *** Define this to be 1 if you have std::hash
 #define RINGING_HAS_STD_HASH 0
 
+// *** Define this to be 1 if you have long long
+#define RINGING_HAVE_LONG_LONG 1
+
 #endif // RINGING_COMMON_MSVC_H

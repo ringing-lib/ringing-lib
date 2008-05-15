@@ -134,6 +134,9 @@ AC_SUBST(HAVE_STD_ITERATOR)
 AC_CXX_USE_STRINGSTREAM
 AC_SUBST(USE_STRINGSTREAM)
 
+AC_C_LONG_LONG
+AC_SUBST(HAVE_LONG_LONG)
+
 dnl --------------------------------------------------------------------------
 dnl Report any fatal errors
 if test "$can_build" = no; then

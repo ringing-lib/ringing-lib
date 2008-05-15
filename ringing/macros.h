@@ -1,4 +1,4 @@
-// -*- C++ -*- macros.h.in - Macros to hide system specific constructs
+// -*- C++ -*- macros.h - Macros to hide system specific constructs
 //
 // Copyright (C) 2001, 2002, 2003, 2006, 2007, 2008
 // Martin Bright <martin@boojum.org.uk> and
@@ -178,7 +178,7 @@ RINGING_END_NAMESPACE_STD
 
 // Shorthand macro for doing a delegating std::hash specialisation:
 #if RINGING_HAS_STD_HASH
-#define RINGING_DELEGATE_STD_SWAP(T)                                    \
+#define RINGING_DELEGATE_STD_HASH(T)                                    \
 RINGING_START_NAMESPACE_STD                                             \
   template <> struct RINGING_API hash<RINGING_PREFIX T>			\
     : public unary_function<T, size_t> 					\
@@ -316,6 +316,15 @@ RINGING_END_NAMESPACE_STD
 #else
 # define RINGING_CONCAT_I(a, b) RINGING_CONCAT_II(a ## b)
 # define RINGING_CONCAT_II(res) res
+#endif
+
+// Long long support
+#if RINGING_HAVE_LONG_LONG
+# define RINGING_LLONG  long long
+# define RINGING_ULLONG unsigned long long
+#else
+# define RINGING_LLONG  long
+# define RINGING_ULLONG unsigned long
 #endif
 
 #endif // RINGING_MACROS_H

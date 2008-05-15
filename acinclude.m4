@@ -627,4 +627,30 @@ AC_DEFUN([AC_IS_MSVC],
     IS_MSVC=0
   fi
 ])
+dnl --------------------------------------------------------------------------
+dnl @synopsis AC_C_LONG_LONG
+dnl
+dnl Provides a test for the existence of the long long int type and defines 
+dnl HAVE_LONG_LONG if it is found.
+dnl
+dnl @author Caolan McNamara <caolan@skynet.ie>
+dnl
+dnl http://autoconf-archive.cryp.to/ac_c_long_long.html
+dnl 
+AC_DEFUN([AC_C_LONG_LONG],
+[AC_CACHE_CHECK(for long long int, ac_cv_c_long_long,
+[if test "$GCC" = yes; then
+  ac_cv_c_long_long=yes
+  else
+        AC_TRY_COMPILE(,[long long int i;],
+   ac_cv_c_long_long=yes,
+   ac_cv_c_long_long=no)
+   fi])
+   if test $ac_cv_c_long_long = yes; then
+     HAVE_LONG_LONG=1
+   else
+     HAVE_LONG_LONG=0
+   fi
+])
+
 
