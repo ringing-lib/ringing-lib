@@ -77,17 +77,7 @@ public:
 
   bell() : x(0) {}
   bell(int i) : x(i) {}
-  bell& from_char(char c) {
-    c = toupper(c);
-    for(x = 0; x < MAX_BELLS && symbols[x] != c; x++);
-    if(x == MAX_BELLS)
-#if RINGING_USE_EXCEPTIONS
-      throw invalid();
-#else
-      x = MAX_BELLS + 1;
-#endif
-      return *this;
-  }
+
   operator int() const    { return x; }
   bell& operator=(int i)  { x = i; return *this; }
 
@@ -99,6 +89,12 @@ public:
   bell& operator+=(int i) { x+=i; return *this;}
   bell& operator-=(int i) { x-=i; return *this;}
 
+  // The prefered interface for converting a character into a bell
+  static bell read_char(char c);
+
+  // The function above should be used instead of this.
+  bell& from_char(char c) { return *this = read_char(c); }
+
   char to_char() const { return (x < MAX_BELLS) ? symbols[x] : '*'; }
 
   // Thrown when an invalid bell symbol is found
@@ -108,7 +104,7 @@ public:
 
   // Supply an alternative set of symbols to print bells.
   // E.g., lower-case letters for E & T.
-  static void set_symbols( char* syms, size_t num_syms = size_t(-1) );
+  static void set_symbols( char const* syms, size_t num_syms = size_t(-1) );
 
 private:
 #if RINGING_BELL_BITS == CHAR_BIT
@@ -127,7 +123,7 @@ private:
 #endif
 
   underlying_type x;
-  static char* symbols;        // Symbols for the individual bells
+  static char const* symbols;        // Symbols for the individual bells
 };
 
 inline RINGING_API ostream& operator<<(ostream& o, const bell b)

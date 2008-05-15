@@ -30,10 +30,10 @@ RINGING_USING_STD
   
 RINGING_START_NAMESPACE
 
-char* bell::symbols = "1234567890ETABCDFGHJKLMNPQRSUVWYZ";
+char const* bell::symbols = "1234567890ETABCDFGHJKLMNPQRSUVWYZ";
 unsigned int bell::MAX_BELLS = 33;
 
-void bell::set_symbols( char* syms, size_t n ) {
+void bell::set_symbols( char const* syms, size_t n ) {
   if ( syms ) {
     symbols = syms;
     MAX_BELLS = n == size_t(-1) ? strlen(syms) : n;
@@ -45,5 +45,20 @@ void bell::set_symbols( char* syms, size_t n ) {
     
 bell::invalid::invalid()
   : invalid_argument("The bell supplied was invalid") {}
+
+bell bell::read_char(char c) 
+{
+  c = toupper(c);
+  bell b;
+  for ( ; b.x < MAX_BELLS && symbols[b.x] != c; ++b.x)
+    ;
+  if (b.x == MAX_BELLS)
+#if RINGING_USE_EXCEPTIONS
+    throw invalid();
+#else
+    b.x = MAX_BELLS + 1;
+#endif
+  return b;
+}
 
 RINGING_END_NAMESPACE

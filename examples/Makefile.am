@@ -6,7 +6,8 @@ INCLUDES = -I$(top_srcdir)
 noinst_PROGRAMS = testbase testprint testtouch testlibrary testproof \
 testmusic testsearch
 
-LDADD = $(top_builddir)/ringing/libringing.la
+LDADD = $(top_builddir)/ringing/libringing.la \
+        $(top_builddir)/ringing/libringingcore.la
 
 testbase_SOURCES = testbase.cpp
 testprint_SOURCES = testprint.cpp

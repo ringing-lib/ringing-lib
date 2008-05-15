@@ -27,7 +27,9 @@ bin_PROGRAMS = methsearch
 INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/apps/utils
 
 methsearch_LDADD = $(top_builddir)/apps/utils/libstuff.a \
-$(top_builddir)/ringing/libringing.la @XERCES_LIBS@
+$(top_builddir)/ringing/libringing.la \
+$(top_builddir)/ringing/libringingcore.la \
+@XERCES_LIBS@
 
 methsearch_SOURCES = prog_args.cpp falseness.cpp format.cpp expression.cpp \
 libraries.cpp main.cpp mask.cpp methodutils.cpp music.cpp search.cpp exec.cpp \

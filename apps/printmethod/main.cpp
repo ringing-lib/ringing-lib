@@ -142,9 +142,8 @@ bool arguments::handle_colour( arg_parser& ap, string const& str, int val )
 {
   for (string::const_iterator i=str.begin(), e=str.end(); i!=e; ++i)
     try {
-      bell b; b.from_char(*i);
-      colours[b] = val;
-    } catch (bell::invalid) {
+      colours[ bell::read_char(*i) ] = val;
+    } catch (bell::invalid const&) {
       ap.error( make_string()  
                 << "Invalid bell: '" << *i << "' in colour specification" );
       return false;

@@ -27,7 +27,9 @@ bin_PROGRAMS = printmethod
 INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/apps/utils
 
 printmethod_LDADD = $(top_builddir)/apps/utils/libstuff.a \
-$(top_builddir)/ringing/libringing.la @READLINE_LIBS@ @TERMCAP_LIBS@
+$(top_builddir)/ringing/libringing.la \
+$(top_builddir)/ringing/libringingcore.la \
+@READLINE_LIBS@ @TERMCAP_LIBS@
 
 printmethod_SOURCES = main.cpp
 

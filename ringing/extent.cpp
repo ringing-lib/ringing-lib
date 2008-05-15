@@ -43,14 +43,9 @@ RINGING_START_NAMESPACE
 
 RINGING_USING_STD
 
-struct extent_iterator::bellsym_cmp
-{
-  bool operator()( char a, char b )
-  {
-    bell aa, bb;
-    aa.from_char(a);
-    bb.from_char(b);
-    return aa < bb;
+struct extent_iterator::bellsym_cmp {
+  bool operator()( char a, char b ) const {
+    return bell::read_char(a) < bell::read_char(b);
   }
 };
 

@@ -65,8 +65,8 @@ void change::init( const string &pn )
   if( pn.size() == 1 && (*p == 'X' || *p == 'x' || *p == '-') )
     c = 0;
   else {
-    bell b;
-    b.from_char(*p); if(b > 0 && b & 1) c = 1; else c = 0;
+    bell b( bell::read_char(*p) );
+    if(b > 0 && b & 1) c = 1; else c = 0;
     while(p != pn.end()) {
       b.from_char(*p);
 #if RINGING_USE_EXCEPTIONS

@@ -28,7 +28,9 @@ bin_PROGRAMS = gsiril
 INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/apps/utils
 
 gsiril_LDADD = $(top_builddir)/apps/utils/libstuff.a \
-$(top_builddir)/ringing/libringing.la @READLINE_LIBS@ @TERMCAP_LIBS@
+$(top_builddir)/ringing/libringing.la \
+$(top_builddir)/ringing/libringingcore.la \
+@READLINE_LIBS@ @TERMCAP_LIBS@
 
 if HAVE_READLINE
 additional =  rlstream.cpp rlstream.h
