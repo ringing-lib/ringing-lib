@@ -116,7 +116,8 @@ size_t parse_requirement( const string& str );
 void clear_status();
 void output_status( const method &m );
 
-void output_count( ostream& out, unsigned long count );
-void output_raw_count( ostream& out, unsigned long count );
+void output_count( ostream& out, RINGING_ULLONG count );
+void output_raw_count( ostream& out, RINGING_ULLONG count );
+void output_node_count( ostream& out, RINGING_ULLONG count );
 
 #endif // METHSEARCH_FORMAT_INCLUDED

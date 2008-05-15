@@ -280,6 +280,11 @@ void arguments::bind( arg_parser &p )
 	   raw_count ) );
 
   p.add( new boolean_opt
+         ( '\0', "node-count",
+           "Count the number of search nodes visited",
+           node_count ) );
+
+  p.add( new boolean_opt
          ( '\0', "filter",
            "Act as a filter on standard input rather than searching",
            filter_mode ) );

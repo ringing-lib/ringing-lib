@@ -102,7 +102,8 @@ private:
   const size_t div_len;
   const size_t hl_len;
 
-  unsigned long search_count;
+  RINGING_ULLONG search_count;
+  RINGING_ULLONG node_count;
 
   vector<change> startmeth;
   method filter_method;
@@ -114,7 +115,7 @@ searcher::searcher( const arguments &args )
     bells( args.bells ),
     div_len( (1 + args.treble_dodges) * 2 ),
     hl_len( args.lead_len / 2 ),
-    search_count( 0ul )
+    search_count( 0ul ), node_count( 0ul )
 {
   m.reserve( 2 * hl_len );
 
@@ -165,6 +166,7 @@ void run_search( const arguments &args )
       if ( !args.quiet ) cout << "\n";
       if ( args.raw_count ) output_raw_count( cout, s.search_count );
       else if ( args.count ) output_count( cout, s.search_count );
+      if ( args.node_count ) output_node_count( cout, s.node_count );
     }
 
   if ( args.status ) clear_status();
@@ -865,14 +867,9 @@ void searcher::general_recurse()
     return;
 
   // Status message
-  if ( args.status )
-    {
-      static int count = 0;
-      if ( count % 10000 == 0 )
-	output_status( m );
-      ++count;
-    }
-
+  if ( args.status && node_count % 10000 == 0 )
+    output_status( m );
+  ++node_count;
 
   // Found something
   if ( depth == size_t(args.lead_len) )

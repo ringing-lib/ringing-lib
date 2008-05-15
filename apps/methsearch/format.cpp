@@ -635,12 +635,17 @@ void output_status( const method &m )
   cerr << "Trying " << s << flush;
 }
 
-void output_raw_count( ostream& out, unsigned long c )
+void output_raw_count( ostream& out, RINGING_ULLONG c )
 {
   out << c << "\n";
 }
 
-void output_count( ostream& out, unsigned long c )
+void output_count( ostream& out, RINGING_ULLONG c )
 {
   out << "Found " << c << " methods\n";
+}
+
+void output_node_count( ostream& out, RINGING_ULLONG c )
+{
+  out << "Searched " << c << " nodes\n";
 }
