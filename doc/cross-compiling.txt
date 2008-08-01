@@ -1,0 +1,138 @@
+How to compile the Ringing Class Library on Linux to run on Windows
+-------------------------------------------------------------------
+
+This isn't intended as a full introduction to the subject of cross compiling:
+some familiarity with the subject is assumed.  Also, the instructions are,
+in places, specific to the Debian family of distributions (including e.g.
+Ubuntu).
+
+First, you need to decide how the class library is going to run on Windows.
+Is it going to run in Cygwin (which provides a Unix-like emulation layer)
+or directly on Windows?  The former is easier, but the latter is more 
+useful if you want to distribute the class library (and associated programs)
+without shipping a large part of Cygwin with it.  This document assumes you 
+do not wish to use Cygwin.
+
+Next, you need a suitable cross tool chain (compiler, assembler, linker, 
+DLL import libraries etc.).  You probably also want to install wine so that 
+you can have a means of testing the programs.
+
+  apt-get install mingw32 mingw32-binutils mingw32-runtime wine
+
+This will provide you with tools with names of the form i586-mingw32msvc-*.
+At the time of writing, in Ubuntu 7.10 (Gutsy Gibbon), this will give
+you a 3.4.5 compiler and 2.17.50 binutils.  These are both quite dated.
+However, this should give you enough to compile a "hello world" program:
+
+  cat > hello.c <<EOF
+  #include <stdio.h>
+  int main() { 
+    printf("Hello, world!\n"); 
+  }
+  EOF
+  i586-mingw32msvc-gcc hello.c -o hello.exe
+  wine hello.exe
+
+... whereupon it should print "Hello, world!".
+
+Although this produces a huge file (582 kB on my system), this will decrease
+hugely once you've stripped the file (either via -s on the compiler command
+line, or using i586-mingw32msvc-strip).  On my system, the stripped binary
+is 5.5 kB -- which is perfectly respectable.
+
+You can use the winedump utility to inspect what DLLs it is using and 
+which functions it is importing from them.
+
+  winedump -j import dump ./hello.exe | less
+
+It should just be using kernel32.dll and msvcrt.dll.  The former is part of
+the Windows operating system, so you can be certain that a Windows system
+will have it.  With msvcrt.dll, however, it is less certain -- this is the 
+C runtime library from Visual Studio 6.0.  Apparently all modern versions
+of Windows come with it, though it is not clear how recently "modern" is:
+certainly Windows 95 didn't have it.  However, if not, the file seems to be 
+legally redistributable, and can be downloaded from various legal DLL 
+download sites, such as <http://www.dll-files.com/>.
+
+Of course the Ringing Class Library is written in C++, not C.  
+
+  cat > hello.cc <<EOF
+  #include <iostream>
+  int main() {
+    std::cout << "Hello, world\n";
+  }
+  EOF
+  i586-mingw32msvc-g++ hello.cc -o hello.exe
+  wine hello.exe
+
+Again, it produces a huge file (2.2 MB here), but this time it doesn't reduce
+all that much on stripping -- on my system it only reduces to 237 kB.  The
+reason for this can be seen from the import table -- it is linking against
+the C runtime library (msvcrt.dll), but not against a C++ runtime library.
+In fact, it is statically linking again libstdc++.
+
+Whether you regard this as a problem depends on what you want to do with
+the executables.  If you have several programs and want to redistribute,
+perhaps with the Ringing Class Library as a DLL too, then statically linking
+everything with libstdc++ will be a problem.  If you just have one program
+it may well be a good idea.
+
+Unfortunately, systems very rarely come with a DLL version of libstdc++ --
+this is due to differences in understanding of whether it is legal to 
+redistribute libstdc++.dll with non-GPLed code -- even LGPLed code.
+(The issue seems to be that on a Unix-based system, libstdc++.so is 
+reasonably assumed part of the base operating system and isn't included 
+with software.  On Windows it would need to be; however, it's not clear that
+libstdc++'s "GPL plus runtime exception" licence allows the distribution of
+the whole library as part of a non-GPLed project.  Because of this clearly
+unintended subtlety, many distributions, particularly those with a 
+Debian-like ideology, don't include a DLL at all.)
+
+You can create your own libstdc++ DLL as follows:
+
+  i586-mingw32msvc-dlltool --output-def libstdc++.def --export-all \
+    /usr/lib/gcc/i586-mingw32msvc/3.4.5/libstdc++.a
+  i586-mingw32msvc-gcc -shared -olibstdc++-6.0.3.dll \
+    -Wl,--out-implib,libstdc++-6.0.3.dll.a libstdc++.def \
+    /usr/lib/gcc/i586-mingw32msvc/3.4.5/libstdc++.a
+  ln -s libstdc++-6.0.3.dll.a libstdc++.dll.a
+  rm libstdc++.def
+
+The path to libstdc++.a may vary.  Appending the libstdc++ version number, 
+6.0.3, to the names in this way is a good idea if you propose to distribute
+the code.  The version number can generally be found in libstdc++.la, in 
+the same directory as libstdc++.a.  
+
+If you want to install them somewhere other than the current directory
+(e.g into some prefix $PREFIX, such as /usr/local or $HOME), usual practice 
+is to install the DLL itself into $PREFIX/bin and the import library (the 
+.dll.a) into $PREFIX/lib.  To link against the DLL, simply pass a -L option 
+to the compiler naming the directory containing the import library, and make 
+sure that the $WINEDLLPATH environment variable includes directory containing
+the DLL.
+
+  i586-mingw32msvc-g++ hello.cc -o hello.exe -L$PREFIX/lib
+  WINEDLLPATH=$PREFIX/bin wine hello.exe
+
+Stripped, the size of hello.exe is now back down to a sensible size (6 kB),
+and the bulk of the content has moved to libstdc++ (463 kB).
+
+Cross compiling the Ringing Class Library is relative easy as autoconf has
+support for cross compiling. 
+
+  LDFLAGS=-L$PREFIX/lib ./configure --host=i586-mingw32msvc
+
+The LDFLAGS environment variable tells it where to find libstdc++.dll.a.
+The configure script writes the LDFLAGS variable into the Makefile so
+it doesn't need specifying when running make.
+
+If you are linking against any C++ as DLLs (whether the Ringing Class Library 
+or libstdc++), you'll likely see a lot of informational notices from the 
+linker about auto-imported variables.  I think these are simply warning that
+the code isn't backwards compatible with older linkers.  These can be 
+suppressed with the linker command-line option --enable-auto-import:
+
+  LDFLAGS="-L$PREFIX/lib -Wl,--enable-auto-import" \
+    ./configure --host=i586-mingw32msvc
+
+
