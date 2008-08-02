@@ -1,5 +1,5 @@
 // -*- C++ -*- expression.h - Code to execute different types of expression
-// Copyright (C) 2003, 2004, 2005 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2003, 2004, 2005, 2008 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -35,6 +35,12 @@
 #include <string>
 #include <ringing/row.h>
 #include <ringing/music.h>
+
+// Forward declare ringing::method and ringing::change
+RINGING_START_NAMESPACE
+class method;
+class change;
+RINGING_END_NAMESPACE
 
 RINGING_USING_NAMESPACE
 
@@ -97,6 +103,9 @@ class pn_node : public expression::node
 {
 public:
   pn_node( int bells, const string &pn );
+
+  pn_node( method const& m );
+  pn_node( change const& ch );
 
 protected:
   virtual void debug_print( ostream &os ) const;

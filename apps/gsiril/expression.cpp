@@ -1,5 +1,6 @@
 // expression.cpp - Nodes and factory function for expressions
-// Copyright (C) 2002, 2003, 2004, 2005 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003, 2004, 2005, 2008 
+// Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -28,6 +29,7 @@
 #include "expression.h"
 #include "proof_context.h"
 #include <ringing/streamutils.h>
+#include <ringing/method.h>
 #include <ringing/music.h>
 #include <ringing/place_notation.h>
 
@@ -115,6 +117,16 @@ pn_node::pn_node( int bells, const string &pn )
 			 "place notation" );
   
   interpret_pn( bells, pn.begin(), pn.end(), back_inserter( changes ) );
+}
+
+pn_node::pn_node( const change& ch )
+  : changes( 1, ch )
+{
+}
+
+pn_node::pn_node( const method& m )
+  : changes( m )
+{
 }
 
 void pn_node::debug_print( ostream &os ) const

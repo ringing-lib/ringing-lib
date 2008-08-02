@@ -49,7 +49,8 @@ RINGING_USING_NAMESPACE
 proof_context::proof_context( const execution_context &ectx ) 
   : ectx(ectx), p( new prover(ectx.get_args().num_extents) ), 
     output( &ectx.output() ),
-    silent( ectx.get_args().everyrow_only ), underline( false )
+    silent( ectx.get_args().everyrow_only || ectx.get_args().filter ), 
+    underline( false )
 {
 # if RINGING_USE_TERMCAP
   static bool terminfo_initialized = false;
@@ -102,7 +103,8 @@ void proof_context::execute_everyrow()
 {
   // Temporarily disable silent flag if running with -E
   bool s = silent;
-  if ( ectx.get_args().everyrow_only ) silent = false;
+  if ( ectx.get_args().everyrow_only && !ectx.get_args().filter ) 
+    silent = false;
   execute_symbol("everyrow");
   silent = s;
 }

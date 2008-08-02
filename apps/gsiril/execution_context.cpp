@@ -48,9 +48,11 @@ int execution_context::bells( int b )
   return b;
 }
 
-execution_context::execution_context( ostream& os, const arguments& args )
-  : args(args), os(&os)
+execution_context::execution_context( ostream& os, const arguments& a )
+  : args(a), os(&os), failed(false)
 {
+  if ( !args.rounds.bells() )
+    args.rounds = row(args.bells);
 }
 
 execution_context::~execution_context() 

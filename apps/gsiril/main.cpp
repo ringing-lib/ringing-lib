@@ -26,12 +26,16 @@
 
 #include <ringing/pointers.h>
 #include <ringing/streamutils.h>
+#include <ringing/library.h>
+#include <ringing/litelib.h>
+#include <ringing/method.h>
 #include "console_stream.h"
 #include "parser.h"
 #include "execution_context.h"
 #include "args.h"
 #include "util.h"
 #include "expr_base.h"
+#include "expression.h"
 #include "prog_args.h"
 #if RINGING_OLD_INCLUDES
 #include <stdexcept.h>
@@ -63,6 +67,8 @@ RINGING_USING_NAMESPACE
 
 
 arguments::arguments( int argc, char** argv ) 
+  : lead_symbol( "m" ),
+    lh_symbol( "lh" )
 {
   arg_parser ap( argv[0], "gsiril -- proves touches.",
 		 "OPTIONS" );
@@ -183,6 +189,31 @@ void arguments::bind( arg_parser& p )
          ( '\0', "sirilic",
            "Run in sirilic compatibile mode",
            *this, &arguments::set_sirilic_compatible ) );
+
+  p.add( new string_opt
+         ( 'e', "expression",
+           "Execute EXPR", "EXPR", 
+           expression ) );
+
+  p.add( new string_opt
+         ( 'f', "script-file", 
+           "Execute file FILENAME", "FILENAME",
+           filename ) );
+
+  p.add( new boolean_opt
+         ( '\0', "filter",
+           "Run as a filter on a method library",
+           filter ) );
+
+  p.add( new string_opt
+         ( '\0', "lead-symbol",
+           "Assign lead place-notation (excluding l.h.) to SYM; default 'm'",
+           "SYM", lead_symbol ) );
+
+  p.add( new string_opt
+         ( '\0', "lh-symbol", 
+           "Assign lead end change to SYM; default 'lh'",
+           "SYM", lh_symbol ) );
 }
 
 bool arguments::validate( arg_parser& ap )
@@ -209,6 +240,24 @@ bool arguments::validate( arg_parser& ap )
   if ( rounds.bells() && rounds.bells() != bells )
     {
       ap.error( "Rounds is on the wrong number of bells" );
+      return false;
+    }
+
+  if ( !expression.empty() && !filename.empty() )
+    {
+      ap.error( "Only one of -e and -f may be used" );
+      return false;
+    }
+
+  if ( filter && expression.empty() && filename.empty() )
+    {
+      ap.error( "When running in filter mode, either -e or -f is required");
+      return false;
+    }
+
+  if ( filter && bells == 0 )
+    {
+      ap.error( "When running in filter mode, the number of bells is required" );
       return false;
     }
 
@@ -289,11 +338,7 @@ void initialise( execution_context& ex, const arguments& args )
 
   // Prepopulate symbol table
   {
-#if RINGING_USE_STRINGSTREAM
-    istringstream in(init_string);
-#else
-    istrstream in(init_string);
-#endif
+    RINGING_ISTRINGSTREAM in(init_string);
 
     parse_all(ex, make_default_parser(in, args),
 	      "Error initialising", true);
@@ -318,11 +363,7 @@ void initialise( execution_context& ex, const arguments& args )
 	  i(args.definitions.begin()), e( args.definitions.end());
 	i != e; ++i ) 
     {
-#if RINGING_USE_STRINGSTREAM
-      istringstream in(*i);
-#else
-      istrstream in(*i);
-#endif
+      RINGING_ISTRINGSTREAM in(*i);
       
       parse_all(ex, make_default_parser(in, args),
 		make_string() << "Error parsing definition '" << *i << "'", 
@@ -357,6 +398,89 @@ bool prove_final_symbol( execution_context& e, const arguments& args )
     }
 }
 
+bool prove_stream( execution_context& e, istream& in, const arguments& args )
+{
+  e.set_failure(false); // unset failure state
+
+  bool read_anything 
+    = parse_all( e, make_default_parser(in, args), 
+                 "Error", !args.interactive );
+
+  if ( read_anything && args.prove_symbol.size() )
+    // Return directly from here:  this means that with -P and additional
+    // prove statements are allowed to fail.
+    return prove_final_symbol( e, args );
+      
+  // Failure will be set if any prove statement has failed 
+  return !e.failure();
+}
+
+bool run( execution_context& e, const arguments& args )
+{
+  if (args.interactive) welcome();
+
+  scoped_pointer<istream> in;
+
+  if ( !args.expression.empty() ) {
+    in.reset( new RINGING_ISTRINGSTREAM( args.expression ) );
+  }
+  else if ( !args.filename.empty() ) {
+    in.reset( new fstream( args.filename.c_str() ) );
+    if ( !*in ) { 
+      cerr << "Error opening file: " << args.filename << "\n";
+      exit(1);
+    }
+  }
+  else {
+    in.reset( new console_istream( args.interactive ) );
+    static_cast<console_istream*>( in.get() )->set_prompt( "> " );
+  }
+
+  return prove_stream( e, *in, args );
+}
+
+void filter( execution_context& e, const arguments& args )
+{
+  litelib in( args.bells, cin );
+  for ( library::const_iterator i=in.begin(), ei=in.end(); i!=ei; ++i )
+    {
+      method m;
+      try {
+        m = i->meth();
+      }
+      catch ( exception const& ex ) {
+        cerr << "Error reading method from input stream: "
+             << ex.what() << "\n";
+        string pn;  try { pn = i->pn(); } catch (...) {}
+        if ( pn.size() ) cerr << "Place notation: '" << pn << "'\n";
+        cerr << flush;
+
+        continue;
+      }
+
+      if ( m.size() == 0 ) {
+        cerr << "Error: empty method found\n";
+        continue;
+      }
+
+      // Define the lead head and lead
+      if ( args.lh_symbol.size() )
+        e.define_symbol
+          ( make_pair( args.lh_symbol, 
+                       expression( new pn_node( m.back() ) ) ) );
+
+      m.pop_back();
+      if ( args.lead_symbol.size() )
+        e.define_symbol
+          ( make_pair( args.lead_symbol, 
+                       expression( new pn_node( m ) ) ) );
+
+      if ( run( e, args ) ) 
+        cout << i->meth().format( method::M_DASH | method::M_SYMMETRY )
+             << endl;
+    }
+}
+
 int main( int argc, char *argv[] )
 {
   try
@@ -369,18 +493,11 @@ int main( int argc, char *argv[] )
       execution_context e( cout, args );
       initialise(e, args);
 
-      if (args.interactive) welcome();
-
-      console_istream cin( args.interactive );
-      cin.set_prompt( "> " );
-
-      bool read_anything 
-	= parse_all(e, make_default_parser(cin, args), 
-		    "Error", !args.interactive);
-
-      if ( read_anything && args.prove_symbol.size() )  
-	if ( !prove_final_symbol( e, args ) )
-	  exit(1);
+      if ( args.filter )
+        filter( e, args );
+      else
+        if ( !run( e, args ) )
+          exit(1);
     }
   catch ( const exception &ex )
     {

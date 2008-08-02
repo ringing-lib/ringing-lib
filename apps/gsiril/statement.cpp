@@ -85,8 +85,10 @@ void prove_stmt::execute( execution_context& e ) const
       	} 
       catch( const script_exception& ex ) 
 	{
-	  if ( ex.t == script_exception::do_abort )
+	  if ( ex.t == script_exception::do_abort ) {
 	    p.execute_symbol( "abort" );
+            e.set_failure();
+          }
 	  return;
 	}
     
@@ -96,10 +98,12 @@ void prove_stmt::execute( execution_context& e ) const
 	  p.execute_symbol( "true" ); 
 	  break;
 	case proof_context::notround:
-	  p.execute_symbol( "notround" ); 
+	  p.execute_symbol( "notround" );
+          e.set_failure();
 	  break;
 	case proof_context::isfalse:
 	  p.execute_symbol( "false" ); 
+          e.set_failure();
 	  break;
 	}
     } 

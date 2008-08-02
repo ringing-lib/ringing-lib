@@ -327,4 +327,11 @@ RINGING_END_NAMESPACE_STD
 # define RINGING_ULLONG unsigned long
 #endif
 
+// istringstream / istrstream support
+#if RINGING_USE_STRINGSTREAM
+# define RINGING_ISTRINGSTREAM istringstream
+#else
+# define RINGING_ISTRINGSTREAM istrstream
+#endif
+
 #endif // RINGING_MACROS_H

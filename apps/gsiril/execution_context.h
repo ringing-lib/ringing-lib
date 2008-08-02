@@ -85,10 +85,14 @@ public:
 
   const arguments& get_args() const { return args; }
 
+  void set_failure( bool f = true ) { failed = f; }
+  bool failure() const { return failed; }
+
 private:
   arguments args;
   ostream* os;
   symbol_table sym_table;
+  bool failed;
 };
 
 #endif // GSIRIL_EXECUTION_CONTEXT_INCLUDED
