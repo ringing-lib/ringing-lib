@@ -532,7 +532,7 @@ msparser::make_expr( vector< token >::const_iterator first,
 		       make_expr( split+1, last ) ) );
     }
 
-  // Logical operators -- And (||) is next lowest precedence
+  // Logical operators -- And (&&) is next lowest precedence
   if ( find_first( first, last, tok_types::logic_and, split ) )
     {
       if ( first == split )
