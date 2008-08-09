@@ -2,7 +2,7 @@
 
 # Process this file with automake to produce Makefile.in
 
-# Copyright (C) 2002, 2003, 2004, 2005, 2007 
+# Copyright (C) 2002, 2003, 2004, 2005, 2007, 2008
 # Richard Smith <richard@ex-parrot.com>
 
 # This program is free software; you can redistribute it and/or modify
@@ -40,19 +40,22 @@ gsiril_SOURCES = main.cpp console_stream.cpp console_stream.h \
 execution_context.cpp execution_context.h expr_base.cpp expr_base.h \
 proof_context.cpp proof_context.h symbol_table.cpp symbol_table.h \
 expression.h expression.cpp statement.h statement.cpp \
-parser.cpp parser.h util.cpp util.h prog_args.h $(additional)
+parser.cpp parser.h util.cpp util.h prog_args.h prog_args.cpp $(additional)
 
 EXTRA_gsiril_SOURCES = rlstream.cpp rlstream.h
 
-# When gsiril is run under the name msiril, it automatically
-# runs in MicroSiril compatibility mode.  Create a symlink to 
-# assist in this.  Similarly for sirilic.
+# When gsiril is run under the name msiril, it automatically runs
+# in MicroSiril compatibility mode.  Create a symlink to assist
+# with this.  Similarly for sirilic and Sirilic compatibility mode.
+gsiril_SYMLINKS = msiril gsirilic
+
 install-exec-hook:
-	for link in msiril gsirilic; do \
+	for link in $(gsiril_SYMLINKS); do \
 	  cd $(DESTDIR)$(bindir) && $(RM) $$link$(EXEEXT) && \
 	    $(LN_S) gsiril$(EXEEXT) $$link$(EXEEXT); \
 	done
 
 uninstall-hook:
-	cd $(DESTDIR)$(bindir) && \
-	  $(RM) gsiril$(EXEEXT) msiril$(EXEEXT) gsirilic$(EXEEXT)
+	for link in $(gsiril_SYMLINKS); do \
+	  cd $(DESTDIR)$(bindir) && $(RM) $$link$(EXEEXT); \
+	done
