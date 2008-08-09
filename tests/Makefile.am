@@ -3,7 +3,7 @@
 MAINTAINERCLEANFILES = Makefile.in
 INCLUDES = -I$(top_srcdir)
 
-noinst_PROGRAMS = test
+check_PROGRAMS = test
 
 TESTS = test
 
