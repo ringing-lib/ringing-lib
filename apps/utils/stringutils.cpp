@@ -1,5 +1,5 @@
-// util.cpp - Various utility functions needed in gsiril
-// Copyright (C) 2002 Richard Smith <richard@ex-parrot.com>
+// util.cpp - Various string utility functions
+// Copyright (C) 2002, 2008 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -23,7 +23,7 @@
 #pragma implementation
 #endif
 
-#include "util.h"
+#include "stringutils.h"
 #include <string>
 #include <ringing/streamutils.h>
 #if RINGING_OLD_C_INCLUDES

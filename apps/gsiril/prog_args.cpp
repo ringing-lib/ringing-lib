@@ -26,7 +26,7 @@
 
 #include <ringing/streamutils.h>
 #include "args.h"
-#include "util.h"
+#include "stringutils.h"
 #include "prog_args.h"
 
 RINGING_USING_NAMESPACE
@@ -40,7 +40,8 @@ arguments::arguments( int argc, char** argv )
 		 "OPTIONS" );
 
   // If the program is called msiril or microsiril, go into microsiril
-  // compatibility mode.
+  // compatibility mode.  Do this first so that command line arguments
+  // can override them.
   if ( ap.program_name() ==  "msiril" || ap.program_name() ==  "microsiril" ||
        ap.program_name() == "gmsiril" || ap.program_name() == "gmicrosiril" )
     set_msiril_compatible();

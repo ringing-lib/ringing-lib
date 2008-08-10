@@ -1,8 +1,6 @@
-# -*- Makefile -*- 
+# Dejagnu testsuite for gsiril
 
-# Process this file with automake to produce Makefile.in
-
-# Copyright (C) 2002 Martin Bright <martin@boojum.org.uk>
+# Copyright (C) 2008 Richard Smith <richard@ex-parrot.com>
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,13 +18,26 @@
 
 # $Id$
 
-MAINTAINERCLEANFILES = Makefile.in
+set test "version"
+send "version\n"
+expect {
+  -re "Version:.*$"    { pass "$test" }
+}
 
-noinst_LIBRARIES = libstuff.a
-INCLUDES = -I$(top_srcdir)
+# 
+#  These three are to test that our test suite is working.
+# 
+set test "cross"
+send "6 bells\n"
+send "prove +x\n"
+gsiril_not_rounds 1 214365
 
-libstuff_a_SOURCES = args.cpp args.h tokeniser.cpp tokeniser.h init_val.h \
-stringutils.h stringutils.cpp
+set test "cross-2"
+send "6 bells\n"
+send "prove +x.x\n"
+gsiril_true 2 123456
 
-
-
+set test "cross-3"
+send "6 bells\n"
+send "prove +x.x.x\n"
+gsiril_false 3 214365

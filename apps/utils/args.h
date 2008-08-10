@@ -22,6 +22,11 @@
 #define RINGING_ARGS_INCLUDED
 
 #include <ringing/common.h>
+
+#if RINGING_HAS_PRAGMA_INTERFACE
+#pragma interface
+#endif
+
 #if RINGING_OLD_INCLUDES
 #include <map.h>
 #include <list.h>

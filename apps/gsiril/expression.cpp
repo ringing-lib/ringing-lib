@@ -137,8 +137,7 @@ void pn_node::debug_print( ostream &os ) const
 
 void pn_node::execute( proof_context &ctx )
 {
-  for_each( changes.begin(), changes.end(), 
-	    ctx.permute_and_prove() );
+  for_each( changes.begin(), changes.end(), ctx.permute_and_prove() );
 }
 
 transp_node::transp_node( int bells, const string &r )
@@ -333,4 +332,23 @@ void exception_node::debug_print( ostream &os ) const
 void exception_node::execute( proof_context& ctx )
 {
   throw script_exception( t );
+}
+
+void load_method_node::debug_print( ostream& os ) const
+{
+  os << "load(\"" << name << "\")";
+}
+
+void load_method_node::execute( proof_context& ctx )
+{
+  if (!read) {
+//    meth = load_method(name);
+//    read = true;
+  }
+
+  if (meth.empty())
+    throw runtime_error
+      ( make_string() << "Unable to load method \"" << name << "\"" );
+
+  for_each( meth.begin(), meth.end(), ctx.permute_and_prove() );
 }

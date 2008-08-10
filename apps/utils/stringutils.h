@@ -16,8 +16,9 @@
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 // $Id$
-#ifndef GSIRIL_UTIL_INCLUDED
-#define GSIRIL_UTIL_INCLUDED
+
+#ifndef RINGING_STRINGUTILS_INCLUDED
+#define RINGING_STRINGUTILS_INCLUDED
 
 #include <ringing/common.h>
 
@@ -36,4 +37,4 @@ void trim_trailing_whitespace( string &line );
 
 string lower_case( const string& str );
 
-#endif // GSIRIL_UTIL_INCLUDED
+#endif // RINGING_STRINGUTILS_INCLUDED

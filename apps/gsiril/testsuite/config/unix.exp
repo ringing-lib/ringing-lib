@@ -1,0 +1,98 @@
+# Dejagnu testsuite for gsiril
+
+# Copyright (C) 2008 Richard Smith <richard@ex-parrot.com>
+
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+# $Id$
+
+proc gsiril_not_rounds { length row } {
+  global test
+  expect {
+    -ex "$length rows ending in $row" { }
+    -re "rows ending in.*$" { fail "$test" ; return }
+  }
+  expect {
+    -ex "Is this OK?" { pass "$test" }
+    -ex "Touch is true" { fail "$test"; return }
+    -ex "Touch not completed due to false row" { fail "$test"; return }
+  }
+}
+
+proc gsiril_true { length row } {
+  global test
+  expect {
+    -ex "$length rows ending in $row" { }
+    -re "rows ending in.*$" { fail "$test" ; return }
+  }
+  expect {
+    -ex "Touch is true" { pass "$test" }
+    -ex "Is this OK?" { fail "$test"; return }
+    -ex "Touch not completed due to false row" { fail "$test"; return }
+  }
+}
+
+proc gsiril_false { length row } {
+  global test
+  expect {
+    -ex "$length rows ending in $row" { }
+    -re "rows ending in.*$" { fail "$test" ; return }
+  }
+  expect {
+    -ex "Touch not completed due to false row" { pass "$test" }
+    -ex "Is this OK?" { fail "$test"; return }
+    -ex "Touch is true" { fail "$test"; return }
+  }
+}
+
+#
+# gsiril_exit -- quit and cleanup
+#
+proc gsiril_exit {} {
+    send "quit\n"
+}
+
+#
+# gsiril_start -- start gsiril running
+#
+proc gsiril_start {} {
+    global GSIRIL
+    global spawn_id
+    global verbose
+
+    if { $verbose > 1 } {
+	send_user "starting $GSIRIL\n"
+    }
+    spawn $GSIRIL
+    send "version\n"
+    expect {
+        -re "Version: .*" {}
+	-re "No such file.*" { perror "Can't start $GSIRIL"; exit 1 }
+	timeout { perror "Failed to spawn $GSIRIL (timeout)"; exit 1 }
+    }
+}
+
+gsiril_start
+
+set timeout 3
+
+expect_after {
+  timeout {
+    fail "$test (timeout)"
+  }
+}
+
+
+

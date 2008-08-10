@@ -1,5 +1,5 @@
 // parser.cpp - Tokenise and parse lines of input
-// Copyright (C) 2002, 2003, 2004, 2005, 2007 
+// Copyright (C) 2002, 2003, 2004, 2005, 2007, 2008
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -26,7 +26,7 @@
 
 #include "parser.h"
 #include "tokeniser.h"
-#include "util.h"
+#include "stringutils.h"
 #include "expr_base.h"
 #include "expression.h"
 #include "statement.h"
@@ -282,6 +282,14 @@ statement msparser::parse()
        ( cmd[0] == "end" || cmd[0] == "quit" || cmd[0] == "exit" ) )
     return statement( NULL );
 
+  // Version directive
+  if ( cmd.size() == 1 && cmd[0].type() == tok_types::name
+       && cmd[0] == "version" )
+    {
+      cout << "Version: " RINGING_VERSION "\n";
+      return statement( new null_stmt );
+    }
+
   // Bells directive
   if ( cmd.size() == 2 && cmd[0].type() == tok_types::num_lit
        && cmd[1].type() == tok_types::name && cmd[1] == "bells" )
@@ -313,7 +321,10 @@ statement msparser::parse()
 
   // Prove command
   if ( cmd.size() > 1 && cmd[0].type() == tok_types::name
-       && cmd[0] == "prove" )
+       && cmd[0] == "prove" 
+       // Make a half-hearted attempt to support a variable called 'prove':
+       && cmd[1].type() != tok_types::assignment
+       && cmd[1].type() != tok_types::def_assign )
     return statement
       ( new prove_stmt( make_expr( cmd.begin() + 1, cmd.end() ) ) );
 

@@ -21,6 +21,8 @@
 
 # $Id$
 
+AUTOMAKE_OPTIONS = dejagnu
+
 MAINTAINERCLEANFILES = Makefile.in
 
 bin_PROGRAMS = gsiril
@@ -40,7 +42,7 @@ gsiril_SOURCES = main.cpp console_stream.cpp console_stream.h \
 execution_context.cpp execution_context.h expr_base.cpp expr_base.h \
 proof_context.cpp proof_context.h symbol_table.cpp symbol_table.h \
 expression.h expression.cpp statement.h statement.cpp \
-parser.cpp parser.h util.cpp util.h prog_args.h prog_args.cpp $(additional)
+parser.cpp parser.h prog_args.h prog_args.cpp $(additional)
 
 EXTRA_gsiril_SOURCES = rlstream.cpp rlstream.h
 
@@ -59,3 +61,9 @@ uninstall-hook:
 	for link in $(gsiril_SYMLINKS); do \
 	  cd $(DESTDIR)$(bindir) && $(RM) $$link$(EXEEXT); \
 	done
+
+# Configuration for dejagnu
+EXTRA_DIST = testsuite/config/unix.exp testsuite/gsiril/basic.exp
+DEJATOOL = gsiril
+RUNTESTDEFAULTFLAGS = --tool $$tool --srcdir=$$srcdir/testsuite \
+   GSIRIL=`pwd`/$$tool

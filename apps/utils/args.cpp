@@ -20,7 +20,13 @@
 // $Id$
 
 #include <ringing/common.h>
+
+#if RINGING_HAS_PRAGMA_INTERFACE
+#pragma implementation
+#endif
+
 #include "args.h"
+#include "stringutils.h"
 
 #include <ringing/row.h>
 #include <ringing/streamutils.h>
@@ -70,6 +76,10 @@ arg_parser::arg_parser(const string& n, const string& d,
   i = progname.find("lt-");
   if ( i == 0 )
     progname.erase( 0, 3 );
+
+#if RINGING_WINDOWS
+  progname = lower_case( progname );
+#endif
 }
 
 arg_parser::~arg_parser()

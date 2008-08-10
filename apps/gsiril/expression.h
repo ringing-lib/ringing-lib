@@ -35,6 +35,7 @@
 #include <string>
 #include <ringing/row.h>
 #include <ringing/music.h>
+#include <ringing/method.h>
 
 // Forward declare ringing::method and ringing::change
 RINGING_START_NAMESPACE
@@ -230,6 +231,26 @@ protected:
 
 private:
   script_exception::type t;
+};
+
+class load_method_node : public expression::node
+{
+public:
+  load_method_node( string const& name )
+    : name(name), read(false) {}
+
+protected:
+  virtual void debug_print( ostream &os ) const;
+  virtual void execute( proof_context &ctx );
+
+private:
+  string name;
+
+  // Reading the method is expensive; we don't want to re-read it every
+  // time the node is evaluated.  Set read=true when it has been read.
+  // If meth is sill empty, we'll throw an exception.
+  bool read;
+  method meth;
 };
 
 #endif // GSIRIL_EXPRESSION_INCLUDED

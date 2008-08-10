@@ -71,10 +71,10 @@ struct arguments
 
   arguments( int argc, char** argv );
 
+private:
   void set_msiril_compatible();
   void set_sirilic_compatible();
 
-private:
   void bind( arg_parser& p );
   bool validate( arg_parser& p );
 };
