@@ -23,6 +23,7 @@
 #include "music.h"
 #include "format.h"
 #include "search.h"
+#include "prog_args.h"
 
 
 RINGING_USING_NAMESPACE
