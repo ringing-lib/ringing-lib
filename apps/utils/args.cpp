@@ -192,8 +192,7 @@ void arg_parser::wrap(const string& s, int l, int r, int c) const
 
 void arg_parser::version() const
 {
-  cout << progname << " is from the Ringing Class Library "
-                      "version " RINGING_VERSION ".\n";
+  cout << progname << " (Ringing Class Library) " RINGING_VERSION "\n";
   exit(0);
 }
 
@@ -448,9 +447,7 @@ version_opt::version_opt()
 
 bool version_opt::process( const string &, const arg_parser &ap ) const
 {
-  cout << "psline is from the Ringing Class Library version "
-    RINGING_VERSION ".\n";
-  exit(0);
+  ap.version();
   return true; // To keep MSVC 5 happy
 }
 
