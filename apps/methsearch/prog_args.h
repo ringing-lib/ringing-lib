@@ -124,8 +124,9 @@ struct arguments
   string require_str;
   size_t require_expr_idx;
 
-  arguments();
+  arguments( int argc, char* argv[] );
 
+private:
   void bind( arg_parser &p );
   bool validate( arg_parser &p );
 };

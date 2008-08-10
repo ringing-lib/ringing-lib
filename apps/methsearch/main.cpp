@@ -1,5 +1,5 @@
 // -*- C++ -*- main.cpp - the entry point for methsearch 
-// Copyright (C) 2002, 2007 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2007, 2008 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -18,16 +18,7 @@
 // $Id$
 
 #include <ringing/common.h>
-#include <ringing/row.h>
-#include <ringing/method.h>
 #include <ringing/falseness.h>
-#if RINGING_HAVE_OLD_IOSTREAMS
-#include <iostream.h>
-#else
-#include <iostream>
-#endif
-#include "args.h"
-#include "prog_args.h"
 #include "libraries.h"
 #include "music.h"
 #include "format.h"
@@ -39,24 +30,7 @@ RINGING_USING_STD
 
 int main( int argc, char *argv[] )
 {
-  arguments args;
-
-  {
-    arg_parser ap(argv[0],
-      "methsearch -- finds methods with particular properties.", 
-		  "OPTIONS" );
-    
-    args.bind( ap );
-    
-    if ( !ap.parse(argc, argv) ) 
-      {
-	ap.usage();
-	return 1;
-      }
-
-    if ( !args.validate( ap ) ) 
-      return 1;
-  }
+  arguments args( argc, argv );
 
   method_libraries::init();
 

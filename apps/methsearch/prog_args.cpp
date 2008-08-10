@@ -131,9 +131,22 @@ bool falseness_opt::process( const string &arg, const arg_parser & ) const
 }
 
 
-arguments::arguments()
+arguments::arguments( int argc, char* argv[] )
  :  require_expr_idx( static_cast<size_t>(-1) )
 {
+  arg_parser ap(argv[0],
+    "methsearch -- find methods with particular properties.", 
+		  "OPTIONS" );
+    
+  bind( ap );
+    
+  if ( !ap.parse(argc, argv) ) {
+    ap.usage();
+    exit(1);
+  }
+
+  if ( !validate( ap ) ) 
+    exit(1);
 }
 
 void arguments::bind( arg_parser &p )
