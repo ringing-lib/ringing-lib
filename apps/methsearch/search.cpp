@@ -140,6 +140,14 @@ void searcher::filter()
 
         continue;
       }
+
+      // Status message (when in filter mode)
+      if ( args.status ) {
+        if ( node_count % 10000 == 0 )
+          output_status( filter_method );
+        ++node_count;
+      }
+
       general_recurse();
       assert( m.length() == 0 );
     } 
@@ -866,10 +874,12 @@ void searcher::general_recurse()
   if ( args.search_limit && search_count == (unsigned long)args.search_limit )
     return;
 
-  // Status message
-  if ( args.status && node_count % 10000 == 0 )
-    output_status( m );
-  ++node_count;
+  // Status message (when in search mode)
+  if ( args.status && !args.filter_mode ) {
+    if ( node_count % 10000 == 0 )
+      output_status( m );
+    ++node_count;
+  }
 
   // Found something
   if ( depth == size_t(args.lead_len) )
