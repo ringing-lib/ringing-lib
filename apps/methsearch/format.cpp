@@ -1,5 +1,6 @@
 // -*- C++ -*- format.cpp - classes to handle format specifiers
-// Copyright (C) 2002, 2003, 2004, 2005 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003, 2004, 2005, 2008
+// Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -14,6 +15,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+// $Id$
 
 #include <ringing/common.h>
 
@@ -512,12 +515,14 @@ format_string::format_string( const string &infmt,
       else if ( *iter == '(' && in_expr )
 	{
 	  parens.push(*iter);
+          *outfmts.top() << *iter;
 	}
       else if ( *iter == ')' && in_expr )
 	{
 	  if ( parens.top() != '(' )
 	    throw argument_error( "Unmatched parenthesis in $[ ] expression" );
 	  parens.pop();
+          *outfmts.top() << *iter;
 	}
       else if ( *iter == ']' && in_expr )
 	{
