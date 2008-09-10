@@ -385,7 +385,6 @@ format_string::format_string( const string &infmt,
 	      break;
 
 	    case 'p': case 'q': case 'Q': case 'n': case 'N': 
-	    case 'P': 
 	      if ( type != normal_type && type != require_type 
 		   && parens.empty() )
 		throw argument_error( make_string() << "The `$" << *iter << "'"
@@ -396,6 +395,7 @@ format_string::format_string( const string &infmt,
 	    case 'C': case 'S': case 'M': case 'h': case 'F':
 	    case 'o': case 'd': case 'u': case '[': case '(':
 	    case 'y': case 'O': case ')': case 'L': case 'D':
+            case 'P':
 	      // Can be used in either
 	      break;
 
