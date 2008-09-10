@@ -23,6 +23,9 @@
 #pragma implementation
 #endif
 
+// Turn this on for parser debugging:
+#define RINGING_DEBUG_FILE 0
+
 #include "expression.h"
 #include "output.h"
 #include "format.h" // for argument_error
@@ -43,13 +46,51 @@
 #include <iostream.h>
 #include <iomanip.h>
 #else
+#if RINGING_DEBUG_FILE
+#include <iostream> // for cout
+#endif
 #include <istream>
 #include <iomanip>
 #endif
 #include <ringing/streamutils.h> // Takes care of <sstream>
 
+#if RINGING_DEBUG_FILE
+#define DEBUG( expr ) (void)((cout << expr) << endl)
+#else
+#define DEBUG( expr ) (void)(false)
+#endif
+
+
 RINGING_USING_NAMESPACE
 RINGING_USING_STD
+
+// A helper class to dump the whole of a range (e.g. of tokens)
+#if RINGING_DEBUG_FILE
+RINGING_START_ANON_NAMESPACE
+
+template <class It>
+class output_range_t {
+public:
+  output_range_t(It first, It last) : first(first), last(last) {}
+  
+  friend ostream& operator<<( ostream& os, output_range_t const& r ) {
+    copy( r.first, r.last, 
+          ostream_iterator< typename iterator_traits<It>::value_type >
+            ( os, " " ) );
+    return os;
+  }
+
+private:
+  It first, last;
+};
+
+template <class It>
+output_range_t<It> output_range(It first, It last) {
+  return output_range_t<It>( first, last );
+}
+
+RINGING_END_ANON_NAMESPACE
+#endif
 
 // ---------------------------------------------------------------------
 
@@ -70,7 +111,7 @@ string expression::i_node::s_evaluate( const method_properties& m ) const
 RINGING_START_ANON_NAMESPACE
 
 // Class for a binary operator taking two strings and returning
-// an integer.
+// a string.
 template <class BinaryOperator>
 class s_binary_s_node : public expression::s_node {
 public:
@@ -377,9 +418,10 @@ expression::parser::split_expr( vector<token>::const_iterator first,
 
   switch (middle->type())
     {
-# define CASE( label, tmpl )  \
-    case label:		      \
-      return ptr_t	      \
+# define CASE( label, tmpl )  			\
+    case label:		     			\
+      DEBUG( "Splitting node at " #tmpl );	\
+      return ptr_t	      			\
 	( new i_binary_i_node< RINGING_PREFIX_STD tmpl<long> >(arg1, arg2) )
 
       CASE( plus,       plus          );
@@ -395,9 +437,10 @@ expression::parser::split_expr( vector<token>::const_iterator first,
       CASE( inoteq,     not_equal_to  );
 
 # undef CASE
-# define CASE( label, tmpl ) \
-    case label:		      \
-      return ptr_t	      \
+# define CASE( label, tmpl )			\
+    case label:		      			\
+      DEBUG( "Splitting node at " #tmpl );	\
+      return ptr_t	      			\
 	( new s_binary_i_node< RINGING_PREFIX_STD tmpl<string> >(arg1, arg2) )
 
       CASE( sless,      less          );
@@ -408,9 +451,10 @@ expression::parser::split_expr( vector<token>::const_iterator first,
       CASE( snoteq,     not_equal_to  );
 
 # undef CASE
-# define CASE( label, tmpl ) \
-    case label:               \
-      return ptr_t            \
+# define CASE( label, tmpl ) 			\
+    case label:               			\
+      DEBUG( "Splitting node at " #tmpl );	\
+      return ptr_t            			\
 	( new s_binary_s_node< RINGING_PREFIX_STD tmpl<string> >(arg1, arg2) )
 
       CASE( concat,     plus          );
@@ -418,11 +462,12 @@ expression::parser::split_expr( vector<token>::const_iterator first,
 #undef CASE
 
     case logand:
+      DEBUG( "Splitting node at &&" );
       return ptr_t( new logand_node(arg1, arg2) );
 
     case logor:
+      DEBUG( "Splitting node at ||" );
       return ptr_t( new logor_node(arg1, arg2) );
-
     }
 
   throw logic_error( "Attempted to split expression at an illegal token" );
@@ -449,8 +494,10 @@ expression::parser::handle_left_infix
       else if ( depth == 0 )
 	for ( vector< tok_types >::const_iterator
 		pi(toks.begin()), pe(toks.end()); pi != pe; ++pi )
-	  if ( i->type() == *pi )
+	  if ( i->type() == *pi ) {
+            DEBUG( "Lowest precedent operator is tok_type " << (int)*pi );
 	    return split_expr( first, i, last );
+          }
       
       if (i == first) break; --i;
     }
@@ -464,6 +511,8 @@ expression::parser::make_node( vector<token>::const_iterator first,
 {
   typedef vector< token >::const_iterator iter_t;
   typedef shared_pointer<expression::node> ptr_t;
+
+  DEBUG( "Parsing token sequence: " << output_range(first, last) );
 
   if ( first == last ) 
     throw argument_error( "Expression expected" );
@@ -484,6 +533,10 @@ expression::parser::make_node( vector<token>::const_iterator first,
 	    ok = false;
 	}
 
+      // If the open_paren at the start of the sequence is not paired
+      // with the close_paren at the end of the sequence, e.g. if we have
+      //   ( $a == 0 ) && ( $b == 0 )
+      // then ok will be false.
       if (ok)
 	{
 	  if (depth) 
@@ -492,6 +545,7 @@ expression::parser::make_node( vector<token>::const_iterator first,
 	  if (first+1 == last-1 )
 	    throw argument_error( "Empty parentheses" );
 
+          DEBUG( "Striping outer parentheses" );
 	  return make_node( first+1, last-1 );
 	}
 
@@ -523,6 +577,7 @@ expression::parser::make_node( vector<token>::const_iterator first,
 	if (++i == last) break;
       }
 
+    // We have a ?, now look for a :
     if ( i != last )
       {
 	for (;;)
@@ -541,6 +596,7 @@ expression::parser::make_node( vector<token>::const_iterator first,
 		  throw argument_error
 		    ( "Ternary operator \"?:\" needs third argument" );
 
+                DEBUG( "Lowest precedence operator is ?:" );
 		return ptr_t( new ifelse_node( make_node( first,   qmark ),
 					       make_node( qmark+1, i ),
 					       make_node( i+1,     last ) ) );
@@ -570,18 +626,23 @@ expression::parser::make_node( vector<token>::const_iterator first,
   switch ( first->type() )
     {
     case num_lit:
+      DEBUG( "Literal integer" );
       return ptr_t( new integer_node(*first) );
 
     case variable:
+      DEBUG( "Variable reference" );
       return ptr_t( new variable_node(*first) );
 
     case string_lit:
+      DEBUG( "String literal" );
       return ptr_t( new string_node(*first) );
 
     case kwd_abort:
+      DEBUG( "Keyword: abort" );
       return ptr_t( new exception_node( script_exception::abort_search ) );
 
     case kwd_suppress:
+      DEBUG( "Keyword: suppress" );
       return ptr_t( new exception_node( script_exception::suppress_output ) );
 
     default:
@@ -694,6 +755,7 @@ expression::parser::tokenise( string str ) // Not by reference
 expression::expression( const string& str ) 
 {
   parser p;
+  DEBUG( "Parsing string: " << str );
   vector<token> toks( parser::tokenise(str) );
   pimpl = p.make_node( toks.begin(), toks.end() ); 
 }
