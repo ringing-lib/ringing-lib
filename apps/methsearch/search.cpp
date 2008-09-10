@@ -362,9 +362,11 @@ bool searcher::is_acceptable_method()
     return false;
 
   // Leave this one last as --requires is very expensive
-  if ( args.require_expr_idx != static_cast<size_t>(-1) ) {
+  for ( vector<size_t>::const_iterator 
+          i = args.require_expr_idxs.begin(), e = args.require_expr_idxs.end(); 
+        i != e; ++i ) {
     method_properties props(m);
-    if ( !expression_cache::b_evaluate( args.require_expr_idx, props ) )
+    if ( !expression_cache::b_evaluate( *i, props ) )
       return false;
   }
 

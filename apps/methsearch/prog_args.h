@@ -121,8 +121,8 @@ struct arguments
   // TODO:  Isn't really part of this struct
   mutable multilibout outputs;
 
-  string require_str;
-  size_t require_expr_idx;
+  vector<string> require_strs;
+  vector<size_t> require_expr_idxs;
 
   arguments( int argc, char* argv[] );
 

@@ -132,7 +132,6 @@ bool falseness_opt::process( const string &arg, const arg_parser & ) const
 
 
 arguments::arguments( int argc, char* argv[] )
- :  require_expr_idx( static_cast<size_t>(-1) )
 {
   arg_parser ap(argv[0],
     "methsearch -- find methods with particular properties.", 
@@ -204,10 +203,10 @@ void arguments::bind( arg_parser &p )
 	   "Use FMT to format methods as found", "FMT",
 	   R_fmt_str ) );
 
-  p.add( new string_opt
+  p.add( new strings_opt
 	 ( '\0', "require", 
 	   "Require EXPR to be true", "EXPR",
-	   require_str ) );
+	   require_strs ) );
 
   p.add( new boolean_opt
 	 ( 'e', "restricted-le",
@@ -555,11 +554,12 @@ bool arguments::validate( arg_parser &ap )
     }
 
 
-  if ( require_str.size() ) 
+  for ( vector<string>::const_iterator 
+          i = require_strs.begin(), e = require_strs.end(); i != e; ++i )
     {
       try
 	{
-	  require_expr_idx = format_string::parse_requirement( require_str );
+	  require_expr_idxs.push_back( format_string::parse_requirement(*i) );
 	}
       catch ( const argument_error &error )
 	{
