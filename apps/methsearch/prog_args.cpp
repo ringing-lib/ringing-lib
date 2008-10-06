@@ -281,7 +281,7 @@ void arguments::bind( arg_parser &p )
 	   search_limit ) );
 
   p.add( new boolean_opt
-	 ( '\0', "count",
+	 ( 'C', "count",
 	   "Count the number of methods found",
 	   count ) );
 

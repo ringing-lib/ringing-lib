@@ -50,7 +50,7 @@ General Options
   -U, --hunts=NUM        Look for methods with NUM hunt bells
   -u, --status           Display the current search status
   --limit=NUM            Limit the search to the first NUM methods
-  --count                Count the number of methods found
+  -C, --count            Count the number of methods found
   --raw-count            Count the number of methods found and print it
                          without surrounding text
   --filter               Act as a filter on standard input rather than
