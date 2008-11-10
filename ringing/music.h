@@ -163,7 +163,7 @@ public:
   typedef vector<music_details>::const_iterator const_iterator;
   typedef vector<music_details>::size_type size_type;
 
-  music(const unsigned int &b = 0);         // Default Constructor
+  music(unsigned int b = 0);         // Default Constructor
 
   void push_back(const music_details&); // "Specify items" to end of vector
   //  void pop_back(); // Remove items from end of vector
@@ -204,6 +204,9 @@ public:
   // Total Possible Score
   int get_possible_score();
 
+  // Reset the music information
+  void reset_music(void);
+
 private:
   music(const music&) {}
   // The music specification details
@@ -212,9 +215,6 @@ private:
   music_node TopNode;
 
   unsigned int bells;
-
-  // Reset the music information
-  void reset_music(void);
 };
 
 RINGING_END_NAMESPACE

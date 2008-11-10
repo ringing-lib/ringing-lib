@@ -574,7 +574,7 @@ void music_node::match(const row &r, const unsigned int &pos, vector<music_detai
 // ********************************************************
 
 // default constructor.
-music::music(const unsigned int &b) : TopNode(b), bells(b)
+music::music(unsigned int b) : TopNode(b), bells(b)
 {
   // Reset the music
   reset_music();
@@ -630,10 +630,7 @@ void music::reset_music(void)
 // and increments or changes the appriopriate variable.
 void music::process_row(const row &r, const bool back)
 {
-  if (back)
-    TopNode.match(r, 0, MusicInfo, eBackstroke);
-  else
-    TopNode.match(r, 0, MusicInfo, eHandstroke);
+  TopNode.match(r, 0, MusicInfo, back ? eBackstroke : eHandstroke);
 }
 
 // Return the total score for all items
