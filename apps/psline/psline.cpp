@@ -45,8 +45,10 @@ enum format_t { ps, eps, pdf };
 
 struct arguments {
   string output_file;
-  string library_name;
-  string method_name;
+  string library_name;   // Contains the first arg -- either library name or 
+                         // number of bells : place notation.
+  string method_name;    // Contains the second arg -- only present if 
+                         // library_name really is a library name
   int bells;
   format_t format;
   string title; text_style title_style;
