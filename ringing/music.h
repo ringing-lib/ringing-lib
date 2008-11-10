@@ -1,5 +1,6 @@
 // -*- C++ -*- music.h - Musical Analysis
-// Copyright (C) 2001 Mark Banner <mark@standard8.co.uk>
+// Copyright (C) 2001, 2008 Mark Banner <mark@standard8.co.uk> and
+// Richard Smith <richard@ex-parrot.com>.
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -119,40 +120,6 @@ private:
   int _score;
 };
 
-class RINGING_API music_node
-{
-public:
-  // bell -> node map
-  typedef map<unsigned int, music_node*> BellNodeMap;
-  typedef BellNodeMap::iterator BellNodeMapIterator;
-  // Music Details that finish at this node
-  typedef vector<unsigned int> DetailsVector;
-  typedef DetailsVector::iterator DetailsVectorIterator;
-
-  // Have to know how many bells there are
-  music_node();
-  music_node(const unsigned int &b);
-  ~music_node();
-
-  void set_bells(const unsigned int &b);
-
-  void add(const music_details &md, const unsigned int &i, const unsigned int &key, const unsigned int &pos);
-
-  void match(const row &r, const unsigned int &pos, vector<music_details> &results, const EStroke &stroke);
-
-#if RINGING_USE_EXCEPTIONS
-  struct memory_error : public overflow_error {
-    memory_error();
-  };
-#endif
-private:
-  BellNodeMap subnodes;
-  DetailsVector detailsmatch;
-  unsigned int bells;
-
-  void add_to_subtree(const unsigned int &place, const music_details &md, const unsigned int &i, const unsigned int &key, const unsigned int &pos, const bool &process_star);
-};
-
 // Main class definition
 class RINGING_API music
 {
@@ -164,6 +131,7 @@ public:
   typedef vector<music_details>::size_type size_type;
 
   music(unsigned int b = 0);         // Default Constructor
+ ~music();
 
   void push_back(const music_details&); // "Specify items" to end of vector
   //  void pop_back(); // Remove items from end of vector
@@ -208,11 +176,13 @@ public:
   void reset_music(void);
 
 private:
-  music(const music&) {}
+  music(const music&);
+  music& operator=(const music&);
+
   // The music specification details
-  mdvector MusicInfo;
+  mdvector info;
   // The tree containing the structure for matching rows
-  music_node TopNode;
+  music_node* top_node;
 
   unsigned int bells;
 };

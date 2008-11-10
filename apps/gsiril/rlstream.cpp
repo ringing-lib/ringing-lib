@@ -39,9 +39,11 @@
 #if RINGING_OLD_C_INCLUDES
 #include <string.h>
 #include <ctype.h>
+#include <stdlib.h>
 #else
 #include <cstring>
 #include <cctype>
+#include <cstdlib>
 #endif
 
 RINGING_USING_NAMESPACE

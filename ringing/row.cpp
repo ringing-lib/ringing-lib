@@ -27,9 +27,11 @@
 #if RINGING_OLD_C_INCLUDES
 #include <ctype.h>
 #include <stdlib.h>
+#include <string.h>
 #else
 #include <cctype>
 #include <cstdlib>
+#include <cstring>
 #endif
 #if RINGING_OLD_INCLUDES
 #include <bvector.h>

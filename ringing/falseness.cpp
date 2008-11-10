@@ -43,11 +43,12 @@
 #endif
 #if RINGING_OLD_C_INCLUDES
 #include <assert.h>
+#include <string.h>
 #else
 #include <cassert>
+#include <cstring>
 #endif
 
-#include <iostream>
 RINGING_START_NAMESPACE
 
 RINGING_USING_STD

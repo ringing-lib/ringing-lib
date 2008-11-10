@@ -1,5 +1,6 @@
 // -*- C++ -*- music.cpp - Musical Analysis
-// Copyright (C) 2001 Mark Banner <mark@standard8.co.uk>
+// Copyright (C) 2001, 2008 Mark Banner <mark@standard8.co.uk> and
+// Richard Smith <richard@ex-parrot.com>.
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -24,8 +25,15 @@
 #endif
 
 #include <ringing/music.h>
+#if RINGING_OLD_C_INCLUDES
 #include <ctype.h>
 #include <stdio.h>
+#include <string.h>
+#else
+#include <cctype>
+#include <cstdio>
+#include <cstring>
+#endif   
 
 RINGING_START_NAMESPACE
 
@@ -54,6 +62,41 @@ bool is_bell(const char &c, bell &b)
 #endif
   return isbell;
 }
+
+// No need to mark this as RINGING_API as it is not visible outside of here
+class music_node
+{
+public:
+  // bell -> node map
+  typedef map<unsigned int, music_node*> BellNodeMap;
+  typedef BellNodeMap::iterator BellNodeMapIterator;
+  // Music Details that finish at this node
+  typedef vector<unsigned int> DetailsVector;
+  typedef DetailsVector::iterator DetailsVectorIterator;
+
+  // Have to know how many bells there are
+  music_node();
+  music_node(const unsigned int &b);
+ ~music_node();
+
+  void set_bells(const unsigned int &b);
+
+  void add(const music_details &md, const unsigned int &i, const unsigned int &key, const unsigned int &pos);
+
+  void match(const row &r, const unsigned int &pos, vector<music_details> &results, const EStroke &stroke);
+
+#if RINGING_USE_EXCEPTIONS
+  struct memory_error : public overflow_error {
+    memory_error();
+  };
+#endif
+private:
+  BellNodeMap subnodes;
+  DetailsVector detailsmatch;
+  unsigned int bells;
+
+  void add_to_subtree(const unsigned int &place, const music_details &md, const unsigned int &i, const unsigned int &key, const unsigned int &pos, const bool &process_star);
+};
 
 unsigned int count_bells(const string &s)
 {
@@ -574,47 +617,57 @@ void music_node::match(const row &r, const unsigned int &pos, vector<music_detai
 // ********************************************************
 
 // default constructor.
-music::music(unsigned int b) : TopNode(b), bells(b)
+music::music(unsigned int b) : top_node( new music_node(b) ), bells(b)
 {
-  // Reset the music
-  reset_music();
+  try {
+    // Reset the music
+    reset_music();
+  } catch (...) {
+    delete top_node;
+    throw;
+  }
+}
+
+music::~music() 
+{
+  delete top_node;
 }
 
 // Specify the music and add it into the search structure
 void music::push_back(const music_details &md)
 {
-  MusicInfo.push_back(md);
-  TopNode.add(md, 0, MusicInfo.size() - 1, 0);
+  info.push_back(md);
+  top_node->add(md, 0, info.size() - 1, 0);
 }
 
 music::iterator music::begin()
 {
-  return MusicInfo.begin();
+  return info.begin();
 }
 
 music::const_iterator music::begin() const
 {
-  return MusicInfo.begin();
+  return info.begin();
 }
 
 music::iterator music::end()
 {
-  return MusicInfo.end();
+  return info.end();
 }
 
 music::const_iterator music::end() const
 {
-  return MusicInfo.end();
+  return info.end();
 }
 
 music::size_type music::size() const
 {
-  return MusicInfo.size();
+  return info.size();
 }
 
 void music::set_bells(const unsigned int &b)
 {
-  TopNode.set_bells(b);
+  top_node->set_bells(b);
   bells = b;
 }
 
@@ -630,7 +683,7 @@ void music::reset_music(void)
 // and increments or changes the appriopriate variable.
 void music::process_row(const row &r, const bool back)
 {
-  TopNode.match(r, 0, MusicInfo, back ? eBackstroke : eHandstroke);
+  top_node->match(r, 0, info, back ? eBackstroke : eHandstroke);
 }
 
 // Return the total score for all items

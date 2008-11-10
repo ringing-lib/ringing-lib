@@ -24,6 +24,12 @@
 #pragma implementation
 #endif
 
+#if RINGING_OLD_C_INCLUDES
+#include <string.h>
+#else
+#include <cstring>
+#endif
+
 #include <ringing/bell.h>
 
 RINGING_USING_STD

@@ -1,5 +1,5 @@
 // -*- C++ -*- music.cpp - things to analyse music
-// Copyright (C) 2002, 2003 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003, 2008 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -24,6 +24,11 @@
 #endif
 
 #include "music.h"
+#if RINGING_OLD_C_INCLUDES
+#include <string.h>
+#else
+#include <cstring>
+#endif
 #if RINGING_OLD_INCLUDES
 #include <vector.h>
 #else

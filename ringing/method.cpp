@@ -26,8 +26,10 @@
 
 #if RINGING_OLD_C_INCLUDES
 #include <stdio.h>
+#include <string.h>
 #else
 #include <cstdio>
+#include <cstring>
 #endif
 #if RINGING_OLD_INCLUDES
 #include <bvector.h>

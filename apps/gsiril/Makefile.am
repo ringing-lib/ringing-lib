@@ -67,3 +67,12 @@ EXTRA_DIST = testsuite/config/unix.exp testsuite/gsiril/basic.exp
 DEJATOOL = gsiril
 RUNTESTDEFAULTFLAGS = --tool $$tool --srcdir=$$srcdir/testsuite \
    GSIRIL=`pwd`/$$tool
+
+
+dist_man_MANS = gsiril.1
+
+# Man page.  (See documentation for distcleancheck in automake manual
+# for the reasons for not making gsiril.1 depend on gsiril$(EXEEXT).)
+gsiril.1: $(srcdir)/prog_args.cpp $(srcdir)/Makefile.am
+	$(MAKE) $(AM_MAKEFLAGS) gsiril$(EXEEXT)
+	help2man -N --output=gsiril.1 ./gsiril$(EXEEXT)
