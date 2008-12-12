@@ -1,5 +1,6 @@
 // -*- C++ -*- execution_context.h - Global environment
-// Copyright (C) 2002, 2003, 2004, 2007 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003, 2004, 2007, 2008
+// Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -70,6 +71,7 @@ public:
   void prove_symbol( const string& str ); 
  
   void extents( int n ) { args.num_extents = n; }
+  int  extents() const { return args.num_extents; }
 
   int bells( int b );
   int bells() const  { return args.bells; }

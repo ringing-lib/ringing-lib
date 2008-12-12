@@ -1,5 +1,5 @@
 // -*- C++ -*- proof.h - Proving Stuff
-// Copyright (C) 2001, 2002, 2006 Mark Banner <mark@standard8.co.uk>
+// Copyright (C) 2001, 2002, 2006, 2008 Mark Banner <mark@standard8.co.uk>
 // and Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -86,6 +86,9 @@ public:
   // more than max_occurs times into the failinfo structure (if one was 
   // supplied).
   bool add_row( const row &r );
+
+  // Returns the number of instances of 'r' in the touch.
+  size_t count_row( const row& r ) const;
 
   // The length of the touch
   size_t size() const { return m.size(); }

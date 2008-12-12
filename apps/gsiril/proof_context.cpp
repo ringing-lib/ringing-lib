@@ -141,7 +141,7 @@ proof_context::permute_and_prove()
 
 bool proof_context::isrounds() const 
 {
-  return r == ectx.rounds(); 
+  return r == ectx.rounds() && p->count_row(r) == ectx.extents(); 
 }
 
 void proof_context::execute_symbol( const string &sym ) 

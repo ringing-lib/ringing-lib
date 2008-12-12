@@ -1,5 +1,5 @@
 // proof.cpp - Proving Stuff
-// Copyright (C) 2001, 2002, 2006 Mark Banner <mark@standard8.co.uk>
+// Copyright (C) 2001, 2002, 2006, 2008 Mark Banner <mark@standard8.co.uk>
 // and Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -54,7 +54,18 @@ inline T prior(T x) { return --x; }
 
 RINGING_END_ANON_NAMESPACE
 
+size_t prover::count_row( const row& r ) const
+{
+  size_t n(0);
 
+  for ( prover const* p = this; p; p = p->chain.get() ) {
+    pair< mmap::const_iterator, mmap::const_iterator > rng 
+      = p->m.equal_range(r);
+    n += distance( rng.first, rng.second );
+  }
+
+  return n;
+}
 
 // Returns false if the touch is false
 bool prover::add_row( const row &r )
