@@ -43,18 +43,6 @@ RINGING_START_NAMESPACE
 
 RINGING_USING_STD
 
-RINGING_START_ANON_NAMESPACE
-
-static dom_element next_sibling_element( dom_element start, const string& name )
-{
-  while ( start && start.get_name() != name )
-    start = start.get_next_sibling();
-  return start;
-}  
-
-RINGING_END_ANON_NAMESPACE
-
-
 class xmllib::impl : public library_base {
 public:
   impl( xmllib::file_arg_type type, const string& url );
@@ -88,6 +76,9 @@ xmllib::impl::impl( xmllib::file_arg_type type, const string& url )
     case xmllib::url:
       ftype = dom_document::url; filename += url;
       break;
+
+    default:
+      abort();
   }
       
   doc.reset( new dom_document( filename, dom_document::in, ftype ) );
