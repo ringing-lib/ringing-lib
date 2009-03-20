@@ -136,6 +136,8 @@ bool arguments::validate( arg_parser &ap )
   if ( !handle_colour( ap, gstr, COLOR_GREEN ) ) return false;
   if ( !handle_colour( ap, bstr, COLOR_BLUE  ) ) return false;
 #endif
+
+  return true;
 }
 
 bool arguments::handle_colour( arg_parser& ap, string const& str, int val )
@@ -148,6 +150,8 @@ bool arguments::handle_colour( arg_parser& ap, string const& str, int val )
                 << "Invalid bell: '" << *i << "' in colour specification" );
       return false;
     }
+
+  return true;
 }
 
 // Print a row in colour
