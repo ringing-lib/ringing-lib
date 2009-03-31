@@ -103,7 +103,8 @@ public:
     t.push_back( tl = new touch_child_list );    
     t.set_head( tl );
 
-    init_falseness( s->meth );
+    init_falseness( s->meth, is_fixed_treble(s) ? 0 
+			     : falseness_table::no_fixed_treble );
     DEBUG( "Initialised " << falsenesses.size() << " flhs" );
   }
 
@@ -125,23 +126,24 @@ private:
 
   static multtab make_table( const table_search *s )
   {
-    if ( is_fixed_treble(s) )
+    if ( is_fixed_treble(s) ) {
+      DEBUG( "Fixed treble" );
       return multtab( extent_iterator( s->meth.bells() - 1, 1),
 		      extent_iterator(), s->partends );
-    else
+    }
+    else {
+      DEBUG( "No fixed treble" );
       return multtab( extent_iterator( s->meth.bells() ),
 		      extent_iterator(), s->partends );
+   }
   }
 
-  void init_falseness( const method &meth )
+  void init_falseness( const method &meth, int ft_flags )
   {
-    falseness_table ft( meth, meth.lh()[0] == 0 ? 0 
-			: falseness_table::no_fixed_treble );
+    falseness_table ft( meth, ft_flags );
     
     for ( falseness_table::const_iterator i( ft.begin() ); i != ft.end(); ++i )
-      {
-	falsenesses.push_back( table.compute_post_mult( *i ) );
-      }
+      falsenesses.push_back( table.compute_post_mult( *i ) );
   }
 
   void init_call( const row &le, const change &ch )
