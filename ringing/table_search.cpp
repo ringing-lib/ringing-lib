@@ -1,5 +1,5 @@
 // -*- C++ -*- table_search.cpp - A search class using a multiplication table
-// Copyright (C) 2001, 2002, 2007 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2001, 2002, 2007, 2009 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -81,7 +81,7 @@ class table_search::context : public search_base::context_base
 {
 public:
   context( const table_search *s ) 
-    : lenrange( s->lenrange ), 
+    : lenrange( s->lenrange ),  impossible( false ),
       table( make_table( s ) ),
       f( s->f )
   {
@@ -143,7 +143,20 @@ private:
     falseness_table ft( meth, ft_flags );
     
     for ( falseness_table::const_iterator i( ft.begin() ); i != ft.end(); ++i )
+    {
+      // If the lead is false against the part-end then we can never
+      // get a touch on this plan.  This is not just an efficiency hack
+      // -- our proof algorithm doesn't check when a lead is false against
+      // itself, and for an n-part touch a lead being false against the
+      // part end is a form of that.
+      if ( !i->isrounds() && 
+           find( table.partends().begin(), table.partends().end(), *i )
+             != table.partends().end() )
+        impossible = true;
+
+      DEBUG( "FLH: " << *i );
       falsenesses.push_back( table.compute_post_mult( *i ) );
+    }
   }
 
   void init_call( const row &le, const change &ch )
@@ -163,9 +176,14 @@ private:
   // Keep looking for touches, pushing them down the outputer.
   virtual void run( outputer &output ) 
   {
-    force_halt = false;
-    vector<bool>( table.size() ).swap( leads );
-    run_recursive( output, row_t(), 0, 0 );
+    // We might have already determined that the search cannot find anything
+    // If so, we need to abort because the search may otherwise fail (i.e.
+    // list false touches).
+    if ( !impossible ) {
+      force_halt = false;
+      vector<bool>( table.size() ).swap( leads );
+      run_recursive( output, row_t(), 0, 0 );
+    }
   }
 
   // Is the row false against a row that we've already had?
@@ -236,7 +254,8 @@ private:
   // is_possibly_canonical() returns true is a canonical complete touch.
   bool is_really_canonical()
   {
-    // Multipart comps are always canonical
+    // Multipart comps are always canonical (because we don't prue rotations
+    // from multi-part searches)
     if ( table.partends().size() > 1 ) return true;
 
     for ( vector< size_t >::const_iterator i( calls.begin() ); 
@@ -279,11 +298,12 @@ private:
 	leads[r.index()] = false;
       }
   }
-  
+ 
 private:
   // Data members
   pair< size_t, size_t > lenrange;	// The min & max lengths (in leads)
   bool force_halt;			// Are we terminating the search?
+  bool impossible;                      // Whether the search cannot succeed
   vector< size_t > calls;		// The calls we've had so far
   touch t;				// The current touch
   touch_child_list *tl;
