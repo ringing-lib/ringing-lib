@@ -1,5 +1,6 @@
 // -*- C++ -*- xmllib.cpp - Access to the online XML method library
-// Copyright (C) 2003, 2004, 2006, 2008 Richard Smith <richard@ex-parrot.com>.
+// Copyright (C) 2003, 2004, 2006, 2008, 2009 
+// Richard Smith <richard@ex-parrot.com>.
 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -23,6 +24,11 @@
 #pragma implementation
 #endif
 
+#if RINGING_OLD_C_INCLUDES
+#include <stdio.h>
+#else
+#include <cstdio>
+#endif
 #include <ringing/xmllib.h>
 #include <ringing/pointers.h>
 #include <ringing/library.h>

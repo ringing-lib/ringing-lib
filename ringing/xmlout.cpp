@@ -1,5 +1,5 @@
 // -*- C++ -*- xmlout.cpp - Output of xml libraries
-// Copyright (C) 2004, 2008 Richard Smith <richard@ex-parrot.com>.
+// Copyright (C) 2004, 2008, 2009 Richard Smith <richard@ex-parrot.com>.
 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -23,6 +23,11 @@
 #pragma implementation
 #endif
 
+#if RINGING_OLD_C_INCLUDES
+#include <stdio.h>
+#else
+#include <cstdio>
+#endif
 #include <ringing/xmlout.h>
 #include <ringing/library.h>
 #include <ringing/peal.h>

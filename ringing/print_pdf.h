@@ -30,6 +30,11 @@
 #pragma interface
 #endif
 
+#if RINGING_OLD_C_INCLUDES
+#include <stdio.h>
+#else
+#include <cstdio>
+#endif
 #if RINGING_OLD_INCLUDES
 #include <list.h>
 #include <map.h>
