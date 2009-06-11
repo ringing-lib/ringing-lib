@@ -1,5 +1,5 @@
 // -*- C++ -*- bell.h - A simple class representing a bell's position in a row
-// Copyright (C) 2001, 2007, 2008 Martin Bright <martin@boojum.org.uk> 
+// Copyright (C) 2001, 2007, 2008, 2009 Martin Bright <martin@boojum.org.uk> 
 // and Richard Smith <richard@ex-parrot.com>
 
 // This library is free software; you can redistribute it and/or
@@ -96,6 +96,9 @@ public:
   bell& from_char(char c) { return *this = read_char(c); }
 
   char to_char() const { return (x < MAX_BELLS) ? symbols[x] : '*'; }
+
+  // Test whether c is a bell symbol
+  static bool is_symbol(char c);
 
   // Thrown when an invalid bell symbol is found
   struct RINGING_API invalid : public invalid_argument {

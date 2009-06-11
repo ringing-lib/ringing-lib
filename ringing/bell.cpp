@@ -1,5 +1,6 @@
 // -*- C++ -*- bell.cpp - A simple class representing a bell's position
-// Copyright (C) 2001, 2008 Martin Bright <martin@boojum.org.uk>
+// Copyright (C) 2001, 2008, 2009 Martin Bright <martin@boojum.org.uk>
+// and Richard Smith <richard@ex-parrot.com>
 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -51,6 +52,15 @@ void bell::set_symbols( char const* syms, size_t n ) {
     
 bell::invalid::invalid()
   : invalid_argument("The bell supplied was invalid") {}
+
+bool bell::is_symbol(char c)
+{
+  c = toupper(c);
+  bell b;
+  for ( ; b.x < MAX_BELLS && symbols[b.x] != c; ++b.x)
+    ;
+  return b.x != MAX_BELLS;
+}
 
 bell bell::read_char(char c) 
 {
