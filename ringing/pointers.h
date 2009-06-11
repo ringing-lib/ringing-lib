@@ -1,5 +1,5 @@
 // -*- C++ -*- pointers.h - A few smart pointer classes
-// Copyright (C) 2001, 2002, 2008 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2001, 2002, 2008, 2009 Richard Smith <richard@ex-parrot.com>
 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -84,6 +84,11 @@ struct delete_helper {
   static void fn( T *&ptr ) { delete ptr; ptr = NULL; }
 };
 
+template <class T> 
+struct clone_helper {
+  static T* fn( T *ptr ) { return ptr->clone(); }
+};
+
 // A smart pointer that calls a clone member function to perform a deep copy
 // This class has value semantics and has separate const and non-const 
 // accessors to propogates constness to its held pointer.
@@ -93,6 +98,8 @@ class cloning_pointer : private RINGING_DETAILS_PREFIX safe_bool
 public:
   // Standard auto pointer typedefs
   typedef T element_type;
+  typedef void (*deletor_type)( element_type *& );
+  typedef element_type* (*cloner_type)( element_type * );
     
   // Accessors
   const element_type *operator->() const { return ptr; }
@@ -105,19 +112,54 @@ public:
   element_type *get() { return ptr; }
     
   // Construction and destruction
-  explicit cloning_pointer( T *src = 0 ) : ptr(src) {}
- ~cloning_pointer() { delete ptr; }
+  // 
+  // Note: there is some magic going on here to get it all working
+  // correctly in MSVC 5.  Normally, you can completely ignore the
+  // second argument to these constructors, however, in code that 
+  // needs to compile in MSVC 5, if the class is used on an incomplete 
+  // type (e.g. in the pimpl idiom), pass delete_helper<T>::fn
+  // as the second argument and clone_helper<T>::fn as the third 
+  // argument, and ignore all the warnings
+  // 
+  cloning_pointer( T *src, deletor_type d, cloner_type c )
+    : ptr( src ), deletor(d), cloner(c)
+  {}
+  explicit cloning_pointer( T *src )
+    : ptr(src),
+      deletor( delete_helper<T>::fn ),
+      cloner( clone_helper<T>::fn )
+  {}
+  cloning_pointer()
+    : ptr( 0 ), deletor( 0 ), cloner( 0 )
+  {}
+
+ ~cloning_pointer() { if (deletor) deletor(ptr); }
 
   // Swapping, assignment and copying
   void swap( cloning_pointer &o ) 
-    { RINGING_PREFIX_STD swap( ptr, o.ptr ); }
+    { RINGING_PREFIX_STD swap( ptr, o.ptr );
+      RINGING_PREFIX_STD swap( deletor, o.deletor );
+      RINGING_PREFIX_STD swap( cloner, o.cloner ); }
   cloning_pointer( const cloning_pointer &o ) 
-    : ptr( o.ptr ? o.ptr->clone() : 0 ) {}
+    : ptr( o.cloner ? o.cloner(o.ptr) : 0 ),
+      deletor( o.deletor ), cloner( o.cloner ) 
+  {}
   cloning_pointer &operator=( const cloning_pointer &o )
     { cloning_pointer<T>( o ).swap(*this); return *this; }
 
   // Reset the pointer
-  void reset( T *x = 0 ) { delete ptr; ptr = x; } 
+  void reset() {
+    if (deletor) deletor(ptr);
+    ptr = 0; deletor = 0; cloner = 0;
+  }
+  void reset( T *x ) { 
+    if (deletor) deletor(ptr); 
+    ptr = x; deletor = delete_helper<T>::fn; cloner = clone_helper<T>::fn;
+  } 
+
+  // Release the pointer.  Deleting it is now the caller's responsibility.
+  element_type *release() 
+    { T *tmp = ptr; ptr = 0; deletor = 0; cloner = 0; return tmp; }
 
   // Safe boolean conversions
   operator safe_bool_t() const { return make_safe_bool( ptr ); }
@@ -134,6 +176,8 @@ public:
 
 private:
   T *ptr;
+  deletor_type deletor;
+  cloner_type cloner;
 };
 
 // A smart pointer that reference counts its pointee and provides handle
@@ -278,7 +322,8 @@ public:
   }
 
   // Release the pointer.  Deleting it is now the caller's responsibility.
-  element_type *release() { T *tmp = ptr; ptr = 0; return tmp; }
+  element_type *release() 
+    { T *tmp = ptr; ptr = 0; deletor = 0; return tmp; }
 
   // Safe boolean conversions
   operator safe_bool_t() const { return make_safe_bool( ptr ); }
