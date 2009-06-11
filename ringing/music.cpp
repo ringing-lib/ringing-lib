@@ -1,5 +1,5 @@
 // -*- C++ -*- music.cpp - Musical Analysis
-// Copyright (C) 2001, 2008 Mark Banner <mark@standard8.co.uk> and
+// Copyright (C) 2001, 2008, 2009 Mark Banner <mark@standard8.co.uk> and
 // Richard Smith <richard@ex-parrot.com>.
 
 // This program is free software; you can redistribute it and/or modify
@@ -39,70 +39,36 @@ RINGING_START_NAMESPACE
 
 RINGING_USING_STD
 
-// General function to work out if it's a bell or not
-// according to exceptions or not.
-bool is_bell(const char &c, bell &b)
-{
-  bool isbell = true;
-#if RINGING_USE_EXCEPTIONS
-  try
-    {
-      b.from_char(c);
-    }
-  catch (const bell::invalid &)
-    {
-      isbell = false;
-    }
-#else
-  b.from_char(c);
-  if (b > bell::MAX_BELLS)
-    {
-      isbell = false;
-    }
-#endif
-  return isbell;
-}
-
 // No need to mark this as RINGING_API as it is not visible outside of here
 class music_node
 {
 public:
   // bell -> node map
-  typedef map<unsigned int, music_node*> BellNodeMap;
-  typedef BellNodeMap::iterator BellNodeMapIterator;
-  // Music Details that finish at this node
-  typedef vector<unsigned int> DetailsVector;
-  typedef DetailsVector::iterator DetailsVectorIterator;
+  typedef map<unsigned int, cloning_pointer<music_node> > BellNodeMap;
 
   // Have to know how many bells there are
-  music_node();
-  music_node(const unsigned int &b);
- ~music_node();
+  music_node(unsigned int b);
+  void set_bells(unsigned int b);
 
-  void set_bells(const unsigned int &b);
+  void add(const music_details &md, unsigned int i, unsigned int key, unsigned int pos);
 
-  void add(const music_details &md, const unsigned int &i, const unsigned int &key, const unsigned int &pos);
+  void match(const row &r, unsigned int pos, vector<music_details> &results, const EStroke &stroke) const;
 
-  void match(const row &r, const unsigned int &pos, vector<music_details> &results, const EStroke &stroke);
+  // Helper function to work with cloning_pointer.
+  music_node* clone() const { return new music_node(*this); }
 
-#if RINGING_USE_EXCEPTIONS
-  struct memory_error : public overflow_error {
-    memory_error();
-  };
-#endif
 private:
   BellNodeMap subnodes;
-  DetailsVector detailsmatch;
+  vector<unsigned int>  detailsmatch;
   unsigned int bells;
 
-  void add_to_subtree(const unsigned int &place, const music_details &md, const unsigned int &i, const unsigned int &key, const unsigned int &pos, const bool &process_star);
+  void add_to_subtree(unsigned int place, const music_details &md, unsigned int i, unsigned int key, unsigned int pos, bool process_star);
 };
 
 unsigned int count_bells(const string &s)
 {
   unsigned int total = 0;
   string::const_iterator i;
-  bell b;
   int brackets = 0;
   for (i = s.begin(); i != s.end(); i++)
     {
@@ -119,7 +85,7 @@ unsigned int count_bells(const string &s)
 	  total++; // [] = 1 bell.
 	  brackets = 0;
 	}
-      else if ((brackets == 0) && (is_bell(*i, b)))
+      else if ((brackets == 0) && bell::is_symbol(*i))
 	{
 	  total++;
 	}
@@ -138,28 +104,28 @@ music_details::invalid_regex::invalid_regex()
 
 music_details::music_details(const string &e, const int &s) : string(e)
 {
-  if ((e != "") && (!check_expression()))
+  if (e != "" && !check_expression())
     {
       // Can't do match if we don't use exceptions, so
       // just set the expression to "", hopefully the user will catch this.
       *this = "";
     }
-  _score = s;
-  _count_handstroke = 0;
-  _count_backstroke = 0;
+  score = s;
+  count_handstroke = 0;
+  count_backstroke = 0;
 }
 
 music_details::music_details(const char *e, const int &s) : string(e)
 {
-  if ((string(e) != "") && (!check_expression()))
+  if (string(e) != "" && !check_expression())
     {
       // Can't do match if we don't use exceptions, so
       // just set the expression to "", hopefully the user will catch this.
       *this = "";
     }
-  _score = s;
-  _count_handstroke = 0;
-  _count_backstroke = 0;
+  score = s;
+  count_handstroke = 0;
+  count_backstroke = 0;
 }
 
 music_details::~music_details()
@@ -169,34 +135,34 @@ music_details::~music_details()
 bool music_details::set(const string &e, const int &s)
 {
   *this = e;
-  _score = s;
+  score = s;
   // Should reset this here as we have changed the expression
-  _count_handstroke = 0;
-  _count_backstroke = 0;
+  count_handstroke = 0;
+  count_backstroke = 0;
+
   bool isvalid = check_expression();
-  if (!isvalid)
-    {
-      // Can't do match if we don't use exceptions, so
-      // just set the expression to "", hopefully the user will catch this.
-      *this = "";
-    }
+#if !RINGING_USE_EXCEPTIONS
+  // Can't do match if we don't use exceptions, so
+  // just set the expression to "", hopefully the user will catch this.
+  if (!isvalid) *this = "";
+#endif
   return isvalid;
 }
 
 bool music_details::set(const char *e, const int &s)
 {
   *this = (string) e;
-  _score = s;
+  score = s;
   // Should reset this here as we have changed the expression
-  _count_handstroke = 0;
-  _count_backstroke = 0;
+  count_handstroke = 0;
+  count_backstroke = 0;
+
   bool isvalid = check_expression();
-  if (!isvalid)
-    {
-      // Can't do match if we don't use exceptions, so
-      // just set the expression to "", hopefully the user will catch this.
-      *this = "";
-    }
+#if !RINGING_USE_EXCEPTIONS
+  // Can't do match if we don't use exceptions, so
+  // just set the expression to "", hopefully the user will catch this.
+  if (!isvalid) *this = "";
+#endif
   return isvalid;
 }
 
@@ -205,18 +171,18 @@ string music_details::get() const
   return *this;
 }
 
-int music_details::possible_score(const unsigned int &bells) const
+int music_details::possible_score(unsigned int bells) const
 {
-  return possible_matches(bells) * _score;
+  return possible_matches(bells) * score;
 }
 
-unsigned int music_details::possible_matches(const unsigned int &bells) const
+unsigned int music_details::possible_matches(unsigned int bells) const
 {
   int q = 1;
   return possible_matches(bells, 0, *this, q);
 }
 
-unsigned int music_details::possible_matches(const unsigned int &bells, const unsigned int &pos, const string &s, int &q) const
+unsigned int music_details::possible_matches(unsigned int bells, unsigned int pos, const string &s, int &q) const
 {
   if (pos >= s.size()) // was >= bells
     {
@@ -224,8 +190,7 @@ unsigned int music_details::possible_matches(const unsigned int &bells, const un
     }
   else
     {
-      bell b;
-      if (is_bell(s[pos], b))
+      if (bell::is_symbol(s[pos]))
 	{
 	  return possible_matches(bells, pos + 1, s, q);
 	}
@@ -300,10 +265,7 @@ unsigned int music_details::possible_matches(const unsigned int &bells, const un
 	}
       else
 	{
-#if RINGING_USE_EXCEPTIONS
-	  throw invalid_regex();
-#endif
-	  return 0;
+          RINGING_THROW_OR_RETURN( invalid_regex(), 0 );
 	}
     }
 }
@@ -314,16 +276,11 @@ unsigned int music_details::count(const EStroke &stroke) const
   switch (stroke)
     {
     case eHandstroke:
-      return _count_handstroke;
-      break;
+      return count_handstroke;
     case eBackstroke:
-      return _count_backstroke;
-      break;
+      return count_backstroke;
     case eBoth:
-      return _count_handstroke + _count_backstroke;
-      break;
-    default:
-      return 0;
+      return count_handstroke + count_backstroke;
     }
   return 0;
 }
@@ -331,45 +288,40 @@ unsigned int music_details::count(const EStroke &stroke) const
 // Return the calculated score
 int music_details::total(const EStroke &stroke) const
 {
-  return count(stroke) * _score;
+  return count(stroke) * score;
 }
 
 int music_details::raw_score() const
 {
-  return _score;
+  return score;
 }
 
 // Clear the Current counts
 void music_details::clear()
 {
-  _count_backstroke = 0;
-  _count_handstroke = 0;
+  count_backstroke = 0;
+  count_handstroke = 0;
 }
 
 // Which count to increment
 void music_details::increment(const EStroke &stroke)
 {
   if (stroke == eBackstroke)
-    {
-      _count_backstroke++;
-    }
+    count_backstroke++;
+    
   else if (stroke == eHandstroke)
-    {
-      _count_handstroke++;
-    }
+    count_handstroke++;
 }
 
 // Function to provide a brief check if an expression is valid/invalid.
 bool music_details::check_expression()
 {
   // check all items are valid.
-  std::string::iterator i;
-  bell b;
   bool valid = true;
   int sqbrackets = 0;
-  for (i = this->begin(); i != this->end(); i++)
+  for (std::string::iterator i = this->begin(); i != this->end(); i++)
     {
-      if (!is_bell(*i, b))
+      if (!bell::is_symbol(*i))
 	{
 	  // Check it is not another valid character
 	  switch (*i)
@@ -377,58 +329,27 @@ bool music_details::check_expression()
 	    case '?':
 	    case '*':
 	      if (sqbrackets != 0)
-		{
-#if RINGING_USE_EXCEPTIONS
-		  throw invalid_regex();
-#else
-		  return false;
-#endif
-		}
+                RINGING_THROW_OR_RETURN( invalid_regex(), false );
 	      break;
 	    case '[':
 	      if (sqbrackets != 0)
-		{
-#if RINGING_USE_EXCEPTIONS
-		  throw invalid_regex();
-#else
-		  return false;
-#endif
-		}
+                RINGING_THROW_OR_RETURN( invalid_regex(), false );
 	      sqbrackets = 1;
 	      break;
 	    case ']':
 	      if (sqbrackets != 1)
-		{
-#if RINGING_USE_EXCEPTIONS
-		  throw invalid_regex();
-#else
-		  return false;
-#endif
-		}
+                RINGING_THROW_OR_RETURN( invalid_regex(), false );
 	      sqbrackets = 0;
 	      break;
 	    default:
 	      valid = false;
 	    }
 	  if (!valid)
-	    {
-#if RINGING_USE_EXCEPTIONS
-	      throw invalid_regex();
-#else
-	      return false;
-#endif
-	      break;
-	    }
+            RINGING_THROW_OR_RETURN( invalid_regex(), false );
 	}
     }
   if (sqbrackets != 0)
-    {
-#if RINGING_USE_EXCEPTIONS
-      throw invalid_regex();
-#else
-      return false;
-#endif
-    }
+    RINGING_THROW_OR_RETURN( invalid_regex(), false );
   return valid;
 }
 
@@ -436,46 +357,22 @@ bool music_details::check_expression()
 // function definitions for MUSIC_NODE
 // ********************************************************
 
-#if RINGING_USE_EXCEPTIONS
-music_node::memory_error::memory_error() 
-  : overflow_error("Not enough memory to allocate to music_node item") {}
-#endif
-
-music_node::music_node()
-{
-  bells = 0;
-}
-
-music_node::music_node(const unsigned int &b)
+music_node::music_node(unsigned int b)
 {
   bells = b;
 }
 
-music_node::~music_node()
-{
-  BellNodeMapIterator i;
-  for (i = subnodes.begin(); i != subnodes.end(); i++)
-    {
-      if (i->second != NULL)
-	{
-	  delete i->second;
-	}
-    }
-}
-
-void music_node::set_bells(const unsigned int &b)
+void music_node::set_bells(unsigned int b)
 {
   bells = b;
-  // for each subnode
-  BellNodeMapIterator i;
-  for (i = subnodes.begin(); i != subnodes.end(); i++)
-    {
-      if (i->second != NULL)
-	i->second->set_bells(b);
-    }
+
+  // and iterate over each subnode setting it there
+  for (BellNodeMap::iterator i=subnodes.begin(), e=subnodes.end(); i!=e; ++i)
+    if (i->second)
+      i->second->set_bells(b);
 }
 
-void music_node::add(const music_details &md, const unsigned int &i, const unsigned int &key, const unsigned int &pos)
+void music_node::add(const music_details &md, unsigned int i, unsigned int key, unsigned int pos)
 {
   // Does this item end here?
   if (i >= md.size())
@@ -484,11 +381,10 @@ void music_node::add(const music_details &md, const unsigned int &i, const unsig
     }
   else if (pos <= bells)
     {
-      bell b;
-      if (is_bell(md[i], b))
+      if (bell::is_symbol(md[i]))
 	{
 	  // Simple bell, add it and move on.
-	  add_to_subtree(b + 1, md, i, key,  pos, false);
+	  add_to_subtree(bell::read_char(md[i]) + 1, md, i, key,  pos, false);
 	}
       else
 	{
@@ -505,9 +401,10 @@ void music_node::add(const music_details &md, const unsigned int &i, const unsig
 	      // We have an option, so add to each tree until ] occurs.
 	      while (md[j] != ']')
 		{
-		  if (is_bell(md[j], b))
+		  if (bell::is_symbol(md[j]))
 		    {
-		      add_to_subtree(b + 1, md, newpos, key, pos, false);
+		      add_to_subtree(bell::read_char(md[j]) + 1, md,  
+                                     newpos, key, pos, false);
 		    }
 		  // else ignore it for now...
 		  j++;
@@ -550,66 +447,46 @@ void music_node::add(const music_details &md, const unsigned int &i, const unsig
     }
 }
 
-void music_node::add_to_subtree(const unsigned int &place, const music_details &md, const unsigned int &i, const unsigned int &key, const unsigned int &pos, const bool &process_star)
+void music_node::add_to_subtree(unsigned int place, const music_details &md, unsigned int i, unsigned int key, unsigned int pos, bool process_star)
 {
-  BellNodeMap::iterator j = subnodes.find(place);
-  if (j == subnodes.end())
-    {
-      music_node *mn = new music_node(bells);
-      if (mn != NULL)
-	j = (subnodes.insert(make_pair(place, mn))).first;
-      else
-	{
-#if RINGING_USE_EXCEPTIONS
-	  throw memory_error();
-	  return;
-#else
-	  cerr << "Not enough memory to allocate to new music_node\n";
-	  return;
-#endif
-	}
-    }
+  cloning_pointer<music_node>& j = subnodes[place];
+  if (!j) j.reset( new music_node(bells) );
+
   if (process_star)
     {
       // We are to process star data star.
-      if ((bells - pos == count_bells(md.substr(i, md.size() - i)) + 1) &&
-	  (md.find('*', i + 1) >= md.size()))
-	{
-	  // There are now only numbers to go.
-	  j->second->add(md, i + 1, key, pos + 1);
-	}
+      if (bells - pos == count_bells(md.substr(i, md.size() - i)) + 1 &&
+	  md.find('*', i + 1) >= md.size())
+	// There are now only numbers to go.
+	j->add(md, i + 1, key, pos + 1);
       else
-	{
-	  // We haven't got to the last * position yet, so carry on.
-	  j->second->add(md, i, key, pos + 1);
-	}
+	// We haven't got to the last * position yet, so carry on.
+	j->add(md, i, key, pos + 1);
     }
   else
     {
       // Not a star, so move on as normal.
-      j->second->add(md, i + 1, key, pos + 1);
+      j->add(md, i + 1, key, pos + 1);
     }
 }
 
-void music_node::match(const row &r, const unsigned int &pos, vector<music_details> &results, const EStroke &stroke)
+void music_node::match(const row &r, unsigned int pos, 
+                       vector<music_details> &results, 
+                       const EStroke &stroke) const
 {
-  DetailsVectorIterator i;
-  for (i = detailsmatch.begin(); i < detailsmatch.end(); i++)
-    {
-      results[*i].increment(stroke);
-    }
+  for ( vector<unsigned int>::const_iterator 
+          i = detailsmatch.begin(), e = detailsmatch.end();  i != e;  ++i ) 
+    results[*i].increment(stroke);
+
   // Try all against ? or *
-  BellNodeMapIterator j = subnodes.find(0);
+  BellNodeMap::const_iterator j = subnodes.find(0);
   if (j != subnodes.end())
-    {
-      j->second->match(r, pos + 1, results, stroke);
-    }
+    j->second->match(r, pos + 1, results, stroke);
+    
   // Now try the actual number
   j = subnodes.find(r[pos] + 1);
   if (j != subnodes.end())
-    {
-      j->second->match(r, pos + 1, results, stroke);
-    }
+    j->second->match(r, pos + 1, results, stroke);
 }
 
 // ********************************************************
@@ -619,18 +496,8 @@ void music_node::match(const row &r, const unsigned int &pos, vector<music_detai
 // default constructor.
 music::music(unsigned int b) : top_node( new music_node(b) ), bells(b)
 {
-  try {
-    // Reset the music
-    reset_music();
-  } catch (...) {
-    delete top_node;
-    throw;
-  }
-}
-
-music::~music() 
-{
-  delete top_node;
+  // Reset the music
+  reset_music();
 }
 
 // Specify the music and add it into the search structure
@@ -665,7 +532,7 @@ music::size_type music::size() const
   return info.size();
 }
 
-void music::set_bells(const unsigned int &b)
+void music::set_bells(unsigned int b)
 {
   top_node->set_bells(b);
   bells = b;
@@ -681,7 +548,7 @@ void music::reset_music(void)
 
 // process_row - works out if a certain row is considered musical,
 // and increments or changes the appriopriate variable.
-void music::process_row(const row &r, const bool back)
+void music::process_row(const row &r, bool back)
 {
   top_node->match(r, 0, info, back ? eBackstroke : eHandstroke);
 }

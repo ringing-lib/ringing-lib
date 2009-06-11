@@ -1,5 +1,5 @@
 // -*- C++ -*- music.h - Musical Analysis
-// Copyright (C) 2001, 2008 Mark Banner <mark@standard8.co.uk> and
+// Copyright (C) 2001, 2008, 2009 Mark Banner <mark@standard8.co.uk> and
 // Richard Smith <richard@ex-parrot.com>.
 
 // This program is free software; you can redistribute it and/or modify
@@ -20,7 +20,6 @@
 
 /********************************************************************
  * Description:
- *    This class provides analysis for music within a set of rows.
  * The analysis is done when the constructor is called, or when
  * change_rows is called. In whichever case, it always resets the
  * totals.
@@ -52,6 +51,7 @@
 #endif
 #include <string>
 #include <ringing/row.h>
+#include <ringing/pointers.h>
 
 RINGING_START_NAMESPACE
 
@@ -73,7 +73,7 @@ class RINGING_API music_details : private string
 public:
   music_details(const string& = "", const int& = 1);
   music_details(const char *, const int& = 1);
-  ~music_details();
+ ~music_details();
   
   // Set the expression and score
   // From String
@@ -85,8 +85,8 @@ public:
   string get() const;
 
   // Return the number of possible matches
-  unsigned int possible_matches(const unsigned int &bells) const;
-  int possible_score(const unsigned int &bells) const;
+  unsigned int possible_matches(unsigned int bells) const;
+  int possible_score(unsigned int bells) const;
 
   // Return the count
   unsigned int count(const EStroke& = eBoth) const;
@@ -113,11 +113,11 @@ private:
   // Which count to increment
   void increment(const EStroke& = eBackstroke);
   bool check_expression();
-  unsigned int possible_matches(const unsigned int &bells, const unsigned int& pos, const string &s, int &q) const;
+  unsigned int possible_matches(unsigned int bells, unsigned int pos, const string &s, int &q) const;
   
-  unsigned int _count_handstroke;
-  unsigned int _count_backstroke;
-  int _score;
+  unsigned int count_handstroke;
+  unsigned int count_backstroke;
+  int score;
 };
 
 // Main class definition
@@ -131,7 +131,6 @@ public:
   typedef vector<music_details>::size_type size_type;
 
   music(unsigned int b = 0);         // Default Constructor
- ~music();
 
   void push_back(const music_details&); // "Specify items" to end of vector
   //  void pop_back(); // Remove items from end of vector
@@ -143,7 +142,7 @@ public:
 
   size_type size() const; // number of music_details stored
 
-  void set_bells(const unsigned int &b); // set the number of bells to match
+  void set_bells(unsigned int b); // set the number of bells to match
 
   // Main Processing function
   template <class RowIterator>
@@ -176,13 +175,10 @@ public:
   void reset_music(void);
 
 private:
-  music(const music&);
-  music& operator=(const music&);
-
   // The music specification details
   mdvector info;
   // The tree containing the structure for matching rows
-  music_node* top_node;
+  cloning_pointer<music_node> top_node;
 
   unsigned int bells;
 };
