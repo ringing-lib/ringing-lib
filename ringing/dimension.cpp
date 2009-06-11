@@ -1,5 +1,5 @@
 // dimension.cpp
-// Copyright (C) 2001-2 Martin Bright <martin@boojum.org.uk>
+// Copyright (C) 2001, 2002, 2009 Martin Bright <martin@boojum.org.uk>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -86,13 +86,6 @@ string& dimension::write(string& s) const
   return s = make_string() << *this << ends;
 }
 
-#if RINGING_USE_EXCEPTIONS
-#  define THROW_OR_RETURN(obj_to_throw, obj_to_return) throw obj_to_throw
-#  define THROW_OR_RETURN_VOID(obj_to_throw) throw obj_to_throw
-#else
-#  define THROW_OR_RETURN(obj_to_throw, obj_to_return) return obj_to_return
-#  define THROW_OR_RETURN_VOID(obj_to_throw) return
-#endif
 
 void dimension::read(const char *s)
 {
@@ -105,7 +98,7 @@ void dimension::read(const char *s)
 
   // Now a number
   while(isspace(*s)) s++;
-  if(!isdigit(*s)) THROW_OR_RETURN_VOID( bad_format() );
+  if(!isdigit(*s)) RINGING_THROW_OR_RETURN_VOID( bad_format() );
   a = *s++ - '0';
   while(isdigit(*s)) a = 10*a + (*s++ - '0');
   if(*s == '.') { // We have a number in decimal format
@@ -120,9 +113,9 @@ void dimension::read(const char *s)
       b = *s++ - '0';
       while(isdigit(*s)) b = 10*b + (*s++ - '0');
       while(isspace(*s)) s++;
-      if(*s++ != '/') THROW_OR_RETURN_VOID( bad_format() );
+      if(*s++ != '/') RINGING_THROW_OR_RETURN_VOID( bad_format() );
       while(isspace(*s)) s++;
-      if(!isdigit(*s)) THROW_OR_RETURN_VOID( bad_format() );
+      if(!isdigit(*s)) RINGING_THROW_OR_RETURN_VOID( bad_format() );
       c = *s++ - '0';
       while(isdigit(*s)) c = 10*c + (*s++ - '0');
       read_units(s);
@@ -131,7 +124,7 @@ void dimension::read(const char *s)
     } else if(*s == '/') { // Just a fractional part
       s++;
       while(isspace(*s)) s++;
-      if(!isdigit(*s)) THROW_OR_RETURN_VOID( bad_format() );
+      if(!isdigit(*s)) RINGING_THROW_OR_RETURN_VOID( bad_format() );
       c = *s++ - '0';
       while(isdigit(*s)) c = 10*c + (*s++ - '0');
       read_units(s);
@@ -152,7 +145,7 @@ void dimension::read_units(const char *s)
   if(i != unit_names.end())
     u = (*i).second;
   else
-    THROW_OR_RETURN_VOID( bad_format() );
+    RINGING_THROW_OR_RETURN_VOID( bad_format() );
 }
 
 RINGING_END_NAMESPACE

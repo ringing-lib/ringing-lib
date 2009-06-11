@@ -1,6 +1,6 @@
 // -*- C++ -*- macros.h - Macros to hide system specific constructs
 //
-// Copyright (C) 2001, 2002, 2003, 2006, 2007, 2008
+// Copyright (C) 2001, 2002, 2003, 2006, 2007, 2008, 2009
 // Martin Bright <martin@boojum.org.uk> and
 // Richard Smith <richard@ex-parrot.com>
 
@@ -332,6 +332,15 @@ RINGING_END_NAMESPACE_STD
 # define RINGING_ISTRINGSTREAM istringstream
 #else
 # define RINGING_ISTRINGSTREAM istrstream
+#endif
+
+// Abstract throwing versus returning an error value
+#if RINGING_USE_EXCEPTIONS
+#  define RINGING_THROW_OR_RETURN(t, r) throw t
+#  define RINGING_THROW_OR_RETURN_VOID(t) throw t
+#else
+#  define RINGING_THROW_OR_RETURN(t, r) return r
+#  define RINGING_THROW_OR_RETURN_VOID(t) return
 #endif
 
 #endif // RINGING_MACROS_H
