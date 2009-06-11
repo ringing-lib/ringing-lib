@@ -386,6 +386,21 @@ to be specifed.  For example,
 scores 96 particularly pleasing <4-runs> from the total 1200 with five times
 the weight (five not four as they were counted once by -M<4-runs> anyway).
 
+The -M option can also be used to evaluate music in other courses.  To do
+this use the -Mcourse option,
+
+  -Mcourse=COURSE
+
+where COURSE is the course head.  The treble can be omitted from the course
+head (in which case it is assumed to be leading); if the tenors are together
+at the back, they can be omitted too.  The -Mcourse option only applies to 
+-M options after it on the command line.  This means that multiple -Mcourse
+options can be used to measure the music in several courses.  For example,
+
+  -M'<CRUs>' -Mcourse=342 -M'<CRUs>' -Mcourse=423 -M'<CRUs>'
+
+will calculate the music in the courses reached by calling 3 bobs at Home.
+
 
 
 Method Masks

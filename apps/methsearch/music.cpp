@@ -1,5 +1,5 @@
 // -*- C++ -*- music.cpp - things to analyse music
-// Copyright (C) 2002, 2003, 2008 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003, 2008, 2009 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -31,8 +31,10 @@
 #endif
 #if RINGING_OLD_INCLUDES
 #include <vector.h>
+#include <map.h>
 #else
 #include <vector>
+#include <map>
 #endif
 #include <ringing/row.h>
 #include <ringing/method.h>
@@ -73,10 +75,10 @@ public:
   static analyser &instance( int bells ) 
   { static analyser tmp( bells ); return tmp; }
 
-  void init_crus( int score );
-  void init_n_runs( int n, int score );
-  void init_front_n_runs( int n, int score );
-  void init_back_n_runs( int n, int score );
+  void init_crus( music& m, int score );
+  void init_n_runs( music& m, int n, int score );
+  void init_front_n_runs( music& m, int n, int score );
+  void init_back_n_runs( music& m, int n, int score );
 
   friend class patterns;
     
@@ -84,7 +86,7 @@ public:
 
   // Data members
   int bells;
-  music mu;
+  map< row, music > mu;
 };
 
 void musical_analysis::analyser::check_n( int n )
@@ -102,7 +104,8 @@ void musical_analysis::analyser::check_n( int n )
 }
 
 
-void musical_analysis::analyser::init_front_n_runs( int n, int score )
+void musical_analysis::analyser
+  ::init_front_n_runs( music& m, int n, int score )
 {
   check_n(n);
 
@@ -112,7 +115,7 @@ void musical_analysis::analyser::init_front_n_runs( int n, int score )
 	make_string os;
 	for ( int j=0; j<n; ++j ) os << bell( i+j );
 	os << '*';
-	mu.push_back(music_details(os, score));
+	m.push_back(music_details(os, score));
       }
   }
   {
@@ -121,12 +124,13 @@ void musical_analysis::analyser::init_front_n_runs( int n, int score )
 	make_string os;
 	for ( int j=n-1; j>=0; --j ) os << bell( i+j );
 	os << '*';
-	mu.push_back(music_details(os, score));
+	m.push_back(music_details(os, score));
       }
   }
 }
 
-void musical_analysis::analyser::init_back_n_runs( int n, int score )
+void musical_analysis::analyser
+  ::init_back_n_runs( music& m, int n, int score )
 {
   check_n(n);
 
@@ -136,7 +140,7 @@ void musical_analysis::analyser::init_back_n_runs( int n, int score )
 	make_string os;
 	os << '*';
 	for ( int j=0; j<n; ++j ) os << bell( i+j );
-	mu.push_back(music_details(os, score));
+	m.push_back(music_details(os, score));
       }
   }
   {
@@ -145,12 +149,13 @@ void musical_analysis::analyser::init_back_n_runs( int n, int score )
 	make_string os;
 	os << '*';
 	for ( int j=n-1; j>=0; --j ) os << bell( i+j );
-	mu.push_back(music_details(os, score));
+	m.push_back(music_details(os, score));
       }
   }
 }
 
-void musical_analysis::analyser::init_n_runs( int n, int score )
+void musical_analysis::analyser
+  ::init_n_runs( music& m, int n, int score )
 {
   check_n(n);
 
@@ -161,7 +166,7 @@ void musical_analysis::analyser::init_n_runs( int n, int score )
 	os << '*';
 	for ( int j=0; j<n; ++j ) os << bell( i+j );
 	os << '*';
-	mu.push_back(music_details(os, score));
+	m.push_back(music_details(os, score));
       }
   }
   {
@@ -171,12 +176,12 @@ void musical_analysis::analyser::init_n_runs( int n, int score )
 	os << '*';
 	for ( int j=n-1; j>=0; --j ) os << bell( i+j );
 	os << '*';
-	mu.push_back(music_details(os, score));
+	m.push_back(music_details(os, score));
       }
   }
 }
 
-void musical_analysis::analyser::init_crus( int score )
+void musical_analysis::analyser::init_crus( music& m, int score )
 {
   for ( int i = 3; i < 6; ++i ) 
     for ( int j = 3; j < 6; ++j )
@@ -189,115 +194,141 @@ void musical_analysis::analyser::init_crus( int score )
 	for ( int k = 6; k < bells; ++k )
 	  os << bell(k);
 	
-	mu.push_back(music_details(os, score));
+	m.push_back(music_details(os, score));
       }
 }
 
 musical_analysis::analyser::analyser( int bells )
-  : bells(bells), mu(bells)
+  : bells(bells)
 {
   const vector<string> &p = patterns::instance().p;
+  row ch(bells); // Course head -- plain course by default
 
-  if ( p.empty() )
-    init_crus(1);   // By default we count the CRUs in the plain course.
-  else
-    {
-      for ( vector<string>::const_iterator i( p.begin() ), e( p.end() );
+  for ( vector<string>::const_iterator i( p.begin() ), e( p.end() );
 	    i != e; ++i )
-	{
-	  int score( 1 );
-	  string pattern( *i );
-	  if ( pattern.size() > 2 && isdigit( pattern[0] ) )
-	    {
-	      for ( unsigned int j = 0; j < pattern.size(); ++j )
-		if ( pattern[j] == ':' )
-		  {
-		    score = atoi( pattern.c_str() );
-		    pattern = pattern.substr(j+1);
-		    break;
-		  }
-		else if ( !isdigit( pattern[j] ) )
-		  break;
-	    }
+    {
+      int score( 1 );
+      string pattern( *i );
 
-	  if ( pattern.size() > 2 
-	       && pattern[0] == '<' && pattern[ pattern.size()-1 ] == '>' )
-	    {
-	      string n( pattern.substr( 1, pattern.size()-2 ) );
+      string::size_type eq = pattern.find('=');
+      if ( eq == 6 && pattern.substr(0,6) == "course" ) 
+        {
+          string chstr = pattern.substr(7);
+          // Allow treble to be omitted
+          if ( chstr.find( bell(0).to_char() ) == string::npos ) 
+            chstr = bell(0).to_char() + chstr;
 
-	      if ( n == "queens" )
-		mu.push_back
-		  ( music_details( row::queens( bells ).print(), score ) );
+          try {          
+            ch = row(chstr);
+          } catch ( exception const& e ) {
+            cerr << "Unable to parse music course head: " << e.what() << endl;
+            exit(1);
+          }
 
-	      else if ( n == "kings" )
-		mu.push_back
-		  ( music_details( row::kings( bells ).print(), score ) );
+          ch *= row(bells);
 
-	      else if ( n == "tittums" )
-		mu.push_back
-		  ( music_details( row::tittums( bells ).print(), score ) );
+          continue;
+        }
+
+      if ( pattern.size() > 2 && isdigit( pattern[0] ) )
+        {
+          for ( unsigned int j = 0; j < pattern.size(); ++j )
+            if ( pattern[j] == ':' )
+              {
+                score = atoi( pattern.c_str() );
+                pattern = pattern.substr(j+1);
+                break;
+              }
+            else if ( !isdigit( pattern[j] ) )
+              break;
+        }
+
+      mu[ch].set_bells(bells);
+
+      if ( pattern.size() > 2 
+           && pattern[0] == '<' && pattern[ pattern.size()-1 ] == '>' )
+        {
+          string n( pattern.substr( 1, pattern.size()-2 ) );
+
+          if ( n == "queens" )
+            mu[ch].push_back
+              ( music_details( row::queens( bells ).print(), score ) );
+
+          else if ( n == "kings" )
+            mu[ch].push_back
+              ( music_details( row::kings( bells ).print(), score ) );
+
+          else if ( n == "tittums" )
+            mu[ch].push_back
+              ( music_details( row::tittums( bells ).print(), score ) );
 
 
-	      else if ( n == "reverse-rounds" )
-		mu.push_back
-		  ( music_details( row::reverse_rounds( bells ).print(), 
-				   score ) );
+          else if ( n == "reverse-rounds" )
+            mu[ch].push_back
+              ( music_details( row::reverse_rounds( bells ).print(), 
+                           score ) );
 
-	      else if ( n == "CRUs" )
-		init_crus( score );
-	      
-	      else if ( n.length() > 11 && n.substr(0,6) == "front-" 
-			&& n.find("-runs") != string::npos )
-		{
-		  char *endp;
-		  int l = strtol( n.c_str() + 6, &endp, 10 );
-		  if ( strcmp(endp, "-runs") )
-		    {
-		      cerr << "Unknown type of front-run: " << n << endl;
-		      exit(1);
-		    }
+          else if ( n == "CRUs" )
+            init_crus( mu[ch], score );
+          
+          else if ( n.length() > 11 && n.substr(0,6) == "front-" 
+                    && n.find("-runs") != string::npos )
+            {
+              char *endp;
+              int l = strtol( n.c_str() + 6, &endp, 10 );
+              if ( strcmp(endp, "-runs") )
+                {
+                  cerr << "Unknown type of front-run: " << n << endl;
+                  exit(1);
+                }
 
-		  init_front_n_runs( l, score );
-		}
+              init_front_n_runs( mu[ch], l, score );
+            }
 
-	      else if ( n.length() > 10 && n.substr(0,5) == "back-" 
-			&& n.find("-runs") != string::npos )
-		{
-		  char *endp;
-		  int l = strtol( n.c_str() + 5, &endp, 10 );
-		  if ( strcmp(endp, "-runs") )
-		    {
-		      cerr << "Unknown type of back-run: " << n << endl;
-		      exit(1);
-		    }
+          else if ( n.length() > 10 && n.substr(0,5) == "back-" 
+                    && n.find("-runs") != string::npos )
+            {
+              char *endp;
+              int l = strtol( n.c_str() + 5, &endp, 10 );
+              if ( strcmp(endp, "-runs") )
+                {
+                  cerr << "Unknown type of back-run: " << n << endl;
+                  exit(1);
+                }
 
-		  init_back_n_runs( l, score );
-		}
+              init_back_n_runs( mu[ch], l, score );
+            }
 
-	      else if ( n.length() > 5 && n.find("-runs") != string::npos )
-		{
-		  char *endp;
-		  int l = strtol( n.c_str(), &endp, 10 );
-		  if ( strcmp(endp, "-runs") )
-		    {
-		      cerr << "Unknown type of run: " << n << endl;
-		      exit(1);
-		    }
+          else if ( n.length() > 5 && n.find("-runs") != string::npos )
+            {
+              char *endp;
+              int l = strtol( n.c_str(), &endp, 10 );
+              if ( strcmp(endp, "-runs") )
+                {
+                  cerr << "Unknown type of run: " << n << endl;
+                  exit(1);
+                }
 
-		  init_n_runs( l, score );
-		}
+              init_n_runs( mu[ch], l, score );
+            }
 
-	      else 
-		{
-		  cerr << "Unknown named music type: " << n << endl;
-		  exit(1);
-		}
-	    }
-	  else
-	    {
-	      mu.push_back( music_details( pattern, score ) );
-	    }
-	}
+          else 
+            {
+              cerr << "Unknown named music type: " << n << endl;
+              exit(1);
+            }
+        }
+      else
+        {
+          mu[ch].push_back( music_details( pattern, score ) );
+        }
+    }
+
+  // By default we count the CRUs in the plain course.
+  if ( mu.empty() ) 
+    {
+      mu[ch].set_bells(bells);
+      init_crus( mu[ch], 1 ); 
     }
 }
 
@@ -308,21 +339,27 @@ void musical_analysis::add_pattern( const string &str )
 
 int musical_analysis::analyse( const method &m )
 {
- vector< row > course;
-  row r( m.bells() );
+  int score = 0;
 
-  do for ( method::const_iterator i( m.begin() ), e( m.end() ); 
-	   i != e; ++i )
+  map<row, music>& mu = analyser::instance( m.bells() ).mu;
+  for ( map<row,music>::iterator mi=mu.begin(), me=mu.end(); mi!=me; ++mi) 
     {
-      r *= *i;
-      course.push_back( r );
+      vector< row > course;
+      row r = mi->first; // Set to the course head
+
+      do for ( method::const_iterator i( m.begin() ), e( m.end() ); 
+               i != e; ++i )
+        {
+          r *= *i;
+          course.push_back( r );
+        }
+      while ( r != mi->first );
+
+      mi->second.process_rows( course.begin(), course.end() );  
+      score += mi->second.get_score();
     }
-  while ( !r.isrounds() );
 
-  music &mu = analyser::instance( m.bells() ).mu;
-
-  mu.process_rows( course.begin(), course.end() );  
-  return mu.get_score();
+  return score;
 }
 
 void musical_analysis::force_init( int bells )
