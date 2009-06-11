@@ -1,5 +1,5 @@
 // row.cpp - Classes for row and changes
-// Copyright (C) 2001, 2008 Martin Bright <martin@boojum.org.uk>
+// Copyright (C) 2001, 2008, 2009 Martin Bright <martin@boojum.org.uk>
 // and Richard Smith <richard@ex-parrot.com>
 
 // This library is free software; you can redistribute it and/or
@@ -472,6 +472,23 @@ int row::find(bell const& b) const
   return b;
 }
 
+row row::power( int n ) const
+{
+  size_t const b = bells();
+  if (n == 0)
+    return row(b);
+  else if (n < 0)
+    return inverse().power( -n );
+  else if (n > b*b) 
+    // Only do this optimisation if n is large as order() is expensive
+    return power( n % order() );
+  else if (n % 2)
+    return *this * power( n-1 );
+  else {
+    row temp = power( n/2 );
+    return temp * temp;
+  }
+}
 
 
 // *********************************************************************

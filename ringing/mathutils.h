@@ -1,5 +1,6 @@
 // -*- C++ -*- mathutils.h - Mathematical utility functions
-// Copyright (C) 2001, 2002, 2005, 2007 Martin Bright <martin@boojum.org.uk>
+// Copyright (C) 2001, 2002, 2005, 2007, 2009 
+// Martin Bright <martin@boojum.org.uk>
 // and Richard Smith <richard@ex-parrot.com>
 
 // This library is free software; you can redistribute it and/or
@@ -59,6 +60,8 @@ RINGING_API bool random_bool( double ptrue = 0.5 );
 // If rand is NULL, then just return the existing one
 RINGING_API pair<int (*)(), int> random_fn( int (*randfn)(), int max_rand );
 
+// Return base raised to the power of exp
+RINGING_API RINGING_LLONG ipower( int base, int exp );
 
 RINGING_END_NAMESPACE
 

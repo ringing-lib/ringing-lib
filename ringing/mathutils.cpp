@@ -1,7 +1,7 @@
 // mathutils.cpp - Mathematical utility function
-// Copyright (C) 2001, 2002, 2003, 2005, 2007 
-// Martin Bright <martin@boojum.org.uk> and 
-// Richard Smith <richard@ex-parrot.com>.
+// Copyright (C) 2001, 2002, 2003, 2005, 2007, 2009
+// Martin Bright <martin@boojum.org.uk> 
+// and Richard Smith <richard@ex-parrot.com>.
 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -120,6 +120,21 @@ bool random_bool( double ptrue )
 {
   assert( ptrue <= 1 );
   return rand_fn() < rand_max * ptrue;
+}
+
+// Use a recursive implementaion which is O(ln n) in both space and size
+RINGING_LLONG ipower( int base, int exp )
+{
+  if (exp == 0)
+    return 1;
+  else if (exp < 0)
+    return 0;  // inevitably rounds to zero
+  else if (exp % 2)
+    return base * ipower(base, exp - 1);
+  else {
+    int temp = ipower(base, exp / 2);
+    return temp * temp;
+  }
 }
 
 RINGING_END_NAMESPACE

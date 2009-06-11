@@ -1,5 +1,5 @@
 // -*- C++ -*- row.h - Classes for rows and changes
-// Copyright (C) 2001, 2007, 2008 Martin Bright <martin@boojum.org.uk>
+// Copyright (C) 2001, 2007, 2008, 2009 Martin Bright <martin@boojum.org.uk>
 // and Richard Smith <richard@ex-parrot.com>
 
 // This library is free software; you can redistribute it and/or
@@ -99,6 +99,7 @@ public:
   friend RINGING_API row& operator*=(row& r, const change& c); // Apply a change to a row
   row operator*(const change& c) const;	
   row inverse(void) const;	// Find the inverse
+  row power(int n) const;       // Fidn the nth power of the row
 
   string print() const;		// Print the row into a string
   int bells(void) const { return data.size(); } // How many bells?
