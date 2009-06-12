@@ -386,20 +386,29 @@ to be specifed.  For example,
 scores 96 particularly pleasing <4-runs> from the total 1200 with five times
 the weight (five not four as they were counted once by -M<4-runs> anyway).
 
-The -M option can also be used to evaluate music in other courses.  To do
-this use the -Mcourse option,
+The -M option can also be used to evaluate music in other leads or courses.  
+To do this, use the -Mcourse or -Mlead option,
 
-  -Mcourse=COURSE
+  -Mcourse[=ROW]
+  -Mlead[=ROW]
 
-where COURSE is the course head.  The treble can be omitted from the course
-head (in which case it is assumed to be leading); if the tenors are together
-at the back, they can be omitted too.  The -Mcourse option only applies to 
--M options after it on the command line.  This means that multiple -Mcourse
-options can be used to measure the music in several courses.  For example,
+where ROW is the course or lead head.  The treble can be omitted from the 
+course head (in which case it is assumed to be leading); if the tenors are 
+together at the back, they can be omitted too.  These options say that all 
+subsequent -M options refer to the music in the course or lead specified.  
+Note that order of -M options is important.  For example,
 
-  -M'<CRUs>' -Mcourse=342 -M'<CRUs>' -Mcourse=423 -M'<CRUs>'
+  --M'<4-runs>' -Mcourse=342 -M'<4-runs>' -Mcourse=423 -M'<4-runs>'
 
-will calculate the music in the courses reached by calling 3 bobs at Home.
+adds together the number of 4-runs in the three courses: 123456, 134256 
+and 142356.  If no argument is specified, then the previous value is used, 
+perhaps switching between course and lead mode if necessary.  For example,
+
+  -b6 -M'<4-runs>' -Mlead -M'<4-runs>'
+
+counts 4-runs in plain course, double counting those in the first lead of 
+the plain course.  The order of -M options relative to $M in any format 
+specifier is unimportant.
 
 
 

@@ -86,7 +86,9 @@ public:
 
   // Data members
   int bells;
-  map< row, music > mu;
+  map< pair<row,bool>, music > musv;  // This bool is for whether 
+                                      // we want the whole course (true)
+                                      // or just one lead (false)
 };
 
 void musical_analysis::analyser::check_n( int n )
@@ -202,7 +204,8 @@ musical_analysis::analyser::analyser( int bells )
   : bells(bells)
 {
   const vector<string> &p = patterns::instance().p;
-  row ch(bells); // Course head -- plain course by default
+  row lh(bells); // Course or lead head -- plain course by default
+  bool course = true;  // Look at whole course?
 
   for ( vector<string>::const_iterator i( p.begin() ), e( p.end() );
 	    i != e; ++i )
@@ -211,21 +214,28 @@ musical_analysis::analyser::analyser( int bells )
       string pattern( *i );
 
       string::size_type eq = pattern.find('=');
-      if ( eq == 6 && pattern.substr(0,6) == "course" ) 
+      if (eq == string::npos) eq = pattern.size();
+
+      if ( eq == 6 && pattern.substr(0,6) == "course" ||
+           eq == 4 && pattern.substr(0,4) == "lead" ) 
         {
-          string chstr = pattern.substr(7);
+          course = (eq == 6);
+
+          if (eq == pattern.size()) continue; // No argument given
+
+          string chstr = pattern.substr(eq+1);
           // Allow treble to be omitted
           if ( chstr.find( bell(0).to_char() ) == string::npos ) 
             chstr = bell(0).to_char() + chstr;
 
           try {          
-            ch = row(chstr);
+            lh = row(lhstr);
           } catch ( exception const& e ) {
             cerr << "Unable to parse music course head: " << e.what() << endl;
             exit(1);
           }
 
-          ch *= row(bells);
+          lh *= row(bells); // Pad to correct number of bels
 
           continue;
         }
@@ -243,7 +253,8 @@ musical_analysis::analyser::analyser( int bells )
               break;
         }
 
-      mu[ch].set_bells(bells);
+      music& mu = musv[ make_pair(lh, course) ];
+      mu.set_bells(bells);
 
       if ( pattern.size() > 2 
            && pattern[0] == '<' && pattern[ pattern.size()-1 ] == '>' )
@@ -251,25 +262,25 @@ musical_analysis::analyser::analyser( int bells )
           string n( pattern.substr( 1, pattern.size()-2 ) );
 
           if ( n == "queens" )
-            mu[ch].push_back
+            mu.push_back
               ( music_details( row::queens( bells ).print(), score ) );
 
           else if ( n == "kings" )
-            mu[ch].push_back
+            mu.push_back
               ( music_details( row::kings( bells ).print(), score ) );
 
           else if ( n == "tittums" )
-            mu[ch].push_back
+            mu.push_back
               ( music_details( row::tittums( bells ).print(), score ) );
 
 
           else if ( n == "reverse-rounds" )
-            mu[ch].push_back
+            mu.push_back
               ( music_details( row::reverse_rounds( bells ).print(), 
                            score ) );
 
           else if ( n == "CRUs" )
-            init_crus( mu[ch], score );
+            init_crus( mu, score );
           
           else if ( n.length() > 11 && n.substr(0,6) == "front-" 
                     && n.find("-runs") != string::npos )
@@ -282,7 +293,7 @@ musical_analysis::analyser::analyser( int bells )
                   exit(1);
                 }
 
-              init_front_n_runs( mu[ch], l, score );
+              init_front_n_runs( mu, l, score );
             }
 
           else if ( n.length() > 10 && n.substr(0,5) == "back-" 
@@ -296,7 +307,7 @@ musical_analysis::analyser::analyser( int bells )
                   exit(1);
                 }
 
-              init_back_n_runs( mu[ch], l, score );
+              init_back_n_runs( mu, l, score );
             }
 
           else if ( n.length() > 5 && n.find("-runs") != string::npos )
@@ -309,7 +320,7 @@ musical_analysis::analyser::analyser( int bells )
                   exit(1);
                 }
 
-              init_n_runs( mu[ch], l, score );
+              init_n_runs( mu, l, score );
             }
 
           else 
@@ -320,15 +331,16 @@ musical_analysis::analyser::analyser( int bells )
         }
       else
         {
-          mu[ch].push_back( music_details( pattern, score ) );
+          mu.push_back( music_details( pattern, score ) );
         }
     }
 
   // By default we count the CRUs in the plain course.
-  if ( mu.empty() ) 
+  if ( musv.empty() ) 
     {
-      mu[ch].set_bells(bells);
-      init_crus( mu[ch], 1 ); 
+      music& mu = musv[ make_pair(lh, course) ];
+      mu.set_bells(bells);
+      init_crus( mu, 1 ); 
     }
 }
 
@@ -341,11 +353,12 @@ int musical_analysis::analyse( const method &m )
 {
   int score = 0;
 
-  map<row, music>& mu = analyser::instance( m.bells() ).mu;
-  for ( map<row,music>::iterator mi=mu.begin(), me=mu.end(); mi!=me; ++mi) 
+  typedef map< pair<row,bool>, music > musv_t;
+  musv_t& musv = analyser::instance( m.bells() ).musv;
+  for ( musv_t::iterator mi=musv.begin(), me=musv.end(); mi!=me; ++mi)
     {
       vector< row > course;
-      row r = mi->first; // Set to the course head
+      row r = mi->first.first; // Set to the course head
 
       do for ( method::const_iterator i( m.begin() ), e( m.end() ); 
                i != e; ++i )
@@ -353,7 +366,7 @@ int musical_analysis::analyse( const method &m )
           r *= *i;
           course.push_back( r );
         }
-      while ( r != mi->first );
+      while ( r != mi->first.first && mi->first.second );
 
       mi->second.process_rows( course.begin(), course.end() );  
       score += mi->second.get_score();
