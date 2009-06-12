@@ -363,8 +363,8 @@ int musical_analysis::analyse( const method &m )
       do for ( method::const_iterator i( m.begin() ), e( m.end() ); 
                i != e; ++i )
         {
-          r *= *i;
           course.push_back( r );
+          r *= *i;
         }
       while ( r != mi->first.first && mi->first.second );
 
