@@ -332,15 +332,16 @@ pattern is a simple type of regular expression.
   *			  Match any number of unspecified bells, including 
 			  none.
   ?			  Matches exactly one unspecified bell.
+  [BELLS]                 Match exactly one from BELLS
   <name>		  Matches some special named sort of music (see below)
 
+For example, -M*[456][456]78 is the pattern for a CRU on eight bells.
 Various named rows can be searched for using the -M'<name>' syntax:
 
   queens		  Searches for queens
   kings			  Searches for kings
   tittums		  Searches for tittums
   reverse-rounds	  Searches for reverse-rounds
-
 
 The -M<name> syntax also provides short-hands for counting CRUs with,
 
@@ -366,7 +367,6 @@ characters to prevent the shell from using them for redirection.  One of the
 following styles will probably work in most shells:
 
   -M'<queens>'  -M"<queens>"  -M\<queens\>  "-M<queens>"  '-M<queens>'
-
 
 The * and ? metacharacters can be used to describe other types of music, 
 for example, -M'*5678' searches for roll-ups, and -M'8765*' searches for a 
@@ -478,7 +478,6 @@ etc...
 
   methsearch -b6 -p2 -srfS -p2 -LPLAIN6.TXT -R '$n  [$q]'
 
-
 This lists the twelve minor methods from the above list that have Court places
 around the treble (-S works for plain methods too), and which have no 56s in 
 the place notation (other than at the half lead).
@@ -545,8 +544,7 @@ The following functionality does not exist in the methsearch program.
 
   * Music.  There's still a long way to go with the code to evaluate the
     musical potential of a method.  In the long run I'd like to be able to 
-    write -M"*{4+}*" to find runs of four or more bells in descending pitch,
-    or -M"*[456][456]78" to find CRUs.
+    write -M"*{4+}*" to find runs of four or more bells in descending pitch.
 
   * Falseness.  There are some serious opportunities for optimization in 
     the handling of -Fc, -Fl and -Fe options.
