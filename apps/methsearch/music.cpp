@@ -223,10 +223,10 @@ musical_analysis::analyser::analyser( int bells )
 
           if (eq == pattern.size()) continue; // No argument given
 
-          string chstr = pattern.substr(eq+1);
+          string lhstr = pattern.substr(eq+1);
           // Allow treble to be omitted
-          if ( chstr.find( bell(0).to_char() ) == string::npos ) 
-            chstr = bell(0).to_char() + chstr;
+          if ( lhstr.find( bell(0).to_char() ) == string::npos ) 
+            lhstr = bell(0).to_char() + lhstr;
 
           try {          
             lh = row(lhstr);
