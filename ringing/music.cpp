@@ -98,43 +98,29 @@ unsigned int count_bells(const string &s)
 // ********************************************************
 
 #if RINGING_USE_EXCEPTIONS
-music_details::invalid_regex::invalid_regex() 
-  : invalid_argument("Invalid musical expression supplied.") {}
+music_details::invalid_regex::invalid_regex( string const& pat, 
+                                             string const& msg ) 
+  : invalid_argument( "The pattern '" + pat + "' was invalid: " + msg )
+{}
 #endif
 
-music_details::music_details(const string &e, const int &s) : string(e)
+music_details::music_details(const string &e, int s)
 {
-  if (e != "" && !check_expression())
-    {
-      // Can't do match if we don't use exceptions, so
-      // just set the expression to "", hopefully the user will catch this.
-      *this = "";
-    }
-  score = s;
-  count_handstroke = 0;
-  count_backstroke = 0;
+  set(e, s);
 }
 
-music_details::music_details(const char *e, const int &s) : string(e)
+music_details::music_details(const char *e, int s) : string(e)
 {
-  if (string(e) != "" && !check_expression())
-    {
-      // Can't do match if we don't use exceptions, so
-      // just set the expression to "", hopefully the user will catch this.
-      *this = "";
-    }
-  score = s;
-  count_handstroke = 0;
-  count_backstroke = 0;
+  set(e, s);
 }
 
 music_details::~music_details()
 {
 }
 
-bool music_details::set(const string &e, const int &s)
+bool music_details::set(const string &e, int s)
 {
-  *this = e;
+  static_cast<string&>(*this) = e;
   score = s;
   // Should reset this here as we have changed the expression
   count_handstroke = 0;
@@ -144,26 +130,14 @@ bool music_details::set(const string &e, const int &s)
 #if !RINGING_USE_EXCEPTIONS
   // Can't do match if we don't use exceptions, so
   // just set the expression to "", hopefully the user will catch this.
-  if (!isvalid) *this = "";
+  if (!isvalid) this->clear();
 #endif
   return isvalid;
 }
 
-bool music_details::set(const char *e, const int &s)
+bool music_details::set(const char *e, int s)
 {
-  *this = (string) e;
-  score = s;
-  // Should reset this here as we have changed the expression
-  count_handstroke = 0;
-  count_backstroke = 0;
-
-  bool isvalid = check_expression();
-#if !RINGING_USE_EXCEPTIONS
-  // Can't do match if we don't use exceptions, so
-  // just set the expression to "", hopefully the user will catch this.
-  if (!isvalid) *this = "";
-#endif
-  return isvalid;
+  return set(string(e), s);
 }
 
 string music_details::get() const
@@ -265,7 +239,8 @@ unsigned int music_details::possible_matches(unsigned int bells, unsigned int po
 	}
       else
 	{
-          RINGING_THROW_OR_RETURN( invalid_regex(), 0 );
+          RINGING_THROW_OR_RETURN( 
+            invalid_regex(*this, string("Unknown character: ") + s[pos]), 0 );
 	}
     }
 }
@@ -313,13 +288,22 @@ void music_details::increment(const EStroke &stroke)
     count_handstroke++;
 }
 
+void music_details::check_bells(unsigned int b) const
+{
+#if RINGING_USE_EXCEPTIONS
+  for (string::const_iterator i = this->begin(); i != this->end(); i++)
+    if (bell::is_symbol(*i) && bell::read_char(*i) >= b )
+      RINGING_THROW_OR_RETURN_VOID( 
+        invalid_regex(*this, string("Bell out of range: ") + *i ) );
+#endif
+}
+
 // Function to provide a brief check if an expression is valid/invalid.
-bool music_details::check_expression()
+bool music_details::check_expression() const
 {
   // check all items are valid.
-  bool valid = true;
   int sqbrackets = 0;
-  for (std::string::iterator i = this->begin(); i != this->end(); i++)
+  for (string::const_iterator i = this->begin(); i != this->end(); i++)
     {
       if (!bell::is_symbol(*i))
 	{
@@ -328,29 +312,35 @@ bool music_details::check_expression()
 	    {
 	    case '?':
 	    case '*':
-	      if (sqbrackets != 0)
-                RINGING_THROW_OR_RETURN( invalid_regex(), false );
+	      if (sqbrackets)
+                RINGING_THROW_OR_RETURN( 
+                  invalid_regex(*this, 
+                    string("A ") + *i + " is not permitted in []s"), 
+                  false );
 	      break;
 	    case '[':
-	      if (sqbrackets != 0)
-                RINGING_THROW_OR_RETURN( invalid_regex(), false );
+	      if (sqbrackets)
+                RINGING_THROW_OR_RETURN( 
+                  invalid_regex(*this, "Nested [s"), false );
 	      sqbrackets = 1;
 	      break;
 	    case ']':
 	      if (sqbrackets != 1)
-                RINGING_THROW_OR_RETURN( invalid_regex(), false );
+                RINGING_THROW_OR_RETURN( 
+                  invalid_regex(*this, "Unexpected ']'"), false );
 	      sqbrackets = 0;
 	      break;
 	    default:
-	      valid = false;
+              RINGING_THROW_OR_RETURN( 
+                invalid_regex(*this, string("Unknown character: ") + *i),
+                false );
 	    }
-	  if (!valid)
-            RINGING_THROW_OR_RETURN( invalid_regex(), false );
 	}
     }
   if (sqbrackets != 0)
-    RINGING_THROW_OR_RETURN( invalid_regex(), false );
-  return valid;
+    RINGING_THROW_OR_RETURN( 
+      invalid_regex(*this, "Unterminated '['" ), false );
+  return true;
 }
 
 // ********************************************************
@@ -503,6 +493,9 @@ music::music(unsigned int b) : top_node( new music_node(b) ), bells(b)
 // Specify the music and add it into the search structure
 void music::push_back(const music_details &md)
 {
+  if (bells)
+    md.check_bells(bells);
+
   info.push_back(md);
   top_node->add(md, 0, info.size() - 1, 0);
 }
@@ -534,8 +527,13 @@ music::size_type music::size() const
 
 void music::set_bells(unsigned int b)
 {
-  top_node->set_bells(b);
-  bells = b;
+  if (bells != b) {
+    for (iterator i=info.begin(), e=info.end(); i!=e; ++i)
+      i->check_bells(b);
+
+    top_node->set_bells(b);
+    bells = b;
+  }
 }
 
 // reset_music - clears all the music information entries.

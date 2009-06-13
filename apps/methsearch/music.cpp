@@ -331,7 +331,12 @@ musical_analysis::analyser::analyser( int bells )
         }
       else
         {
-          mu.push_back( music_details( pattern, score ) );
+          try {
+            mu.push_back( music_details( pattern, score ) );
+          } catch ( exception const& e ) {
+            cerr << "Error parsing music pattern: " << e.what() << endl;
+            exit(1);
+          }           
         }
     }
 

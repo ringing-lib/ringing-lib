@@ -71,15 +71,15 @@ enum EStroke
 class RINGING_API music_details : private string
 {
 public:
-  music_details(const string& = "", const int& = 1);
-  music_details(const char *, const int& = 1);
+  music_details(const string& pattern = "", int score = 1);
+  music_details(const char* pattern, int score = 1);
  ~music_details();
   
   // Set the expression and score
   // From String
-  bool set(const string&, const int& = 1);
+  bool set(const string& pattern, int score = 1);
   // From Character String
-  bool set(const char *, const int& = 1);
+  bool set(const char* pattern, int score = 1);
 
   // Return the expression
   string get() const;
@@ -101,7 +101,7 @@ public:
 
 #if RINGING_USE_EXCEPTIONS
   struct invalid_regex : public invalid_argument {
-    invalid_regex();
+    invalid_regex( string const& pat, string const& msg );
   };
 #endif
 
@@ -112,7 +112,8 @@ private:
   void clear();
   // Which count to increment
   void increment(const EStroke& = eBackstroke);
-  bool check_expression();
+  bool check_expression() const;
+  void check_bells(unsigned int bells) const;
   unsigned int possible_matches(unsigned int bells, unsigned int pos, const string &s, int &q) const;
   
   unsigned int count_handstroke;
