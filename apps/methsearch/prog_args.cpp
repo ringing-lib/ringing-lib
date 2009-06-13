@@ -638,6 +638,7 @@ bool arguments::validate( arg_parser &ap )
 
   try
     {
+      // TODO:  This should be folded into the -m method mask 
       prefix = method( prefixstr, bells );
     }
   catch ( const exception &e )
