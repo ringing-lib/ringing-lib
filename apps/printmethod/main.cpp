@@ -53,6 +53,7 @@ struct arguments
   init_val<int,0>      bells;
 
   init_val<bool,false> whole_course;
+  init_val<bool,false> omit_final;
 
   string methstr;
   method meth;
@@ -83,6 +84,12 @@ void arguments::bind( arg_parser& p )
          ( 'c', "course",
            "Print a whole course",
            whole_course ) );
+
+  p.add( new boolean_opt
+         ( 'F', "omit-final",
+           "Omit the final row to avoid duplication of the lead- or "
+           "course-head",
+           omit_final ) );
 
   p.add( new row_opt
          ( 's', "start", 
@@ -211,16 +218,17 @@ int main(int argc, char* argv[])
 # endif
 
   row r( args.startrow );
-  print_row(args, r); // TeX: cout << "\\\\";
   do for ( method::const_iterator i=args.meth.begin(), e=args.meth.end(); 
            i!=e; ++i )  
   {
+    print_row(args, r); cout << "\n";
     r *= *i;
-    // TeX: if ( r.isrounds() ) cout << "\\hline"; 
-    cout << "\n"; print_row(args, r); // TeX: cout << "\\\\";
   } while ( r != args.startrow && args.whole_course );
 
-  cout << "\n";
+  if (!args.omit_final) {
+    print_row(args, r);
+    cout << "\n";
+  }
 }
 
 
