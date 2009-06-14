@@ -1,5 +1,5 @@
 // -*- C++ -*- place_notation.h - Functions for parsing placenotation
-// Copyright (C) 2001 Martin Bright <martin@boojum.org.uk>
+// Copyright (C) 2001, 2009 Martin Bright <martin@boojum.org.uk>
 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -112,7 +112,7 @@ void interpret_pn(int num, ForwardIterator first, ForwardIterator last,
       copy(block.rbegin(), block.rend(), out);
     }
     if(first != last) {
-      if (*first != ',') throw place_notation::invalid();
+      if (*first != ',') throw place_notation::invalid( string(1u, *first) );
       ++first; // Skip a ',' separator
       while(first != last && isspace(*first)) ++first; // Skip whitespace
     }
