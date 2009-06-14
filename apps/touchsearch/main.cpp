@@ -1,5 +1,5 @@
 // main.cpp - Entry point for touchsearch
-// Copyright (C) 2002, 2003, 2007 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003, 2007, 2009 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -47,6 +47,8 @@
 
 RINGING_USING_NAMESPACE
 
+RINGING_ULLONG touch_count = 0ul;
+
 // NB.  Once ostream &operator<<( ostream &, const touch & ) has
 // been defined, there will be no need for this.
 
@@ -64,6 +66,9 @@ public:
     
   void operator()( const touch &t ) const
   {
+    ++touch_count;
+    if (args.quiet) return;
+
     if (args.filter_mode)
       cout << filter_line << "\t";
 
@@ -167,6 +172,13 @@ int main( int argc, char *argv[] )
         filter( args );
       else
         search( args, args.meth, string() );
+
+      if (!args.quiet && (args.count || args.raw_count))
+        cout << "\n";
+      if (args.raw_count)
+        cout << touch_count << "\n";
+      else if (args.count)
+        cout << "Found " << touch_count << " touches\n";
     }
   catch ( const exception &ex )
     {

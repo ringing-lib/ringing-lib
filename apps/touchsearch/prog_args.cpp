@@ -1,5 +1,5 @@
 // prog_args.cpp - Program argument parsing
-// Copyright (C) 2002, 2003, 2007 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003, 2007, 2009 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -94,6 +94,22 @@ void arguments::bind( arg_parser& p )
          ( 'm', "mutually-true-parts",
            "Only require mutually true parts with requiring them to be joined",
            mutually_true_parts ) );
+
+  p.add( new boolean_opt
+         ( 'q', "quiet",
+           "Don't output the touches",
+           quiet ) );
+
+  p.add( new boolean_opt
+         ( '\0', "count",
+           "Count the number of touches found",
+           count ) );
+
+  p.add( new boolean_opt
+         ( '\0', "raw-count", 
+           "Count the number of touches found, "
+           "and print it without surrounding text",
+           raw_count ) );
 
   p.add( new integer_opt
          ( '\0', "limit",
