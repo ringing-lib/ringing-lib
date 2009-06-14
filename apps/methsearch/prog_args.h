@@ -1,5 +1,5 @@
 // -*- C++ -*- prog_args.h - program arguments
-// Copyright (C) 2002, 2003, 2004, 2007, 2008
+// Copyright (C) 2002, 2003, 2004, 2007, 2008, 2009
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -30,8 +30,10 @@
 #include "init_val.h"
 #include <string>
 #if RINGING_OLD_INCLUDES
+#include <set.h>
 #include <vector.h>
 #else
+#include <set>
 #include <vector>
 #endif
 #if RINGING_OLD_INCLUDES
@@ -123,6 +125,8 @@ struct arguments
 
   vector<string> require_strs;
   vector<size_t> require_expr_idxs;
+
+  set<row> avoid_rows;
 
   arguments( int argc, char* argv[] );
 

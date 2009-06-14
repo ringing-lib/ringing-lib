@@ -1,5 +1,5 @@
 // -*- C++ -*- prog_args.cpp - handle program arguments
-// Copyright (C) 2002, 2003, 2004, 2005, 2007, 2008
+// Copyright (C) 2002, 2003, 2004, 2005, 2007, 2008, 2009
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -34,6 +34,14 @@
 #include "format.h"
 #include "music.h"
 #include "methodutils.h"
+#include "row_calc.h"
+#if RINGING_OLD_INCLUDES
+#include <algorithm.h>
+#include <iterator.h>
+#else
+#include <algorithm>
+#include <iterator>
+#endif
 #if RINGING_OLD_C_INCLUDES
 #include <assert.h>
 #else
@@ -120,6 +128,19 @@ bool falseness_opt::process( const string &arg, const arg_parser & ) const
         fgs.replace( i, 1, range );
       }
       args.allowed_falseness = fgs;
+    }
+  else if ( arg.size() > 2 && arg[0] == 'r' && arg[1] == '=' )
+    {
+      scoped_pointer<row_calc> rc;
+      try {
+        rc.reset( new row_calc( arg.substr(2) ) );
+      } 
+      catch ( exception const& e ) { 
+        cerr << "Error parsing row in -Fr option: " << e.what() << "\n";
+        return false;
+      }
+      for ( row_calc::const_iterator i=rc->begin(), e=rc->end(); i!=e; ++i )
+        args.avoid_rows.insert( *i );
     }
   else
     {

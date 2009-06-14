@@ -68,6 +68,7 @@ private:
   void filter();
   void general_recurse();
 
+  inline bool push_change( const change& ch);
   inline void call_recurse( const change &ch );
   inline int get_posn();
 
@@ -110,6 +111,8 @@ private:
   vector<change> startmeth;
   method filter_method;
   method m;
+  row r;
+  bool maintain_r;   // Whether r is valid
 };
 
 searcher::searcher( const arguments &args )
@@ -117,7 +120,8 @@ searcher::searcher( const arguments &args )
     bells( args.bells ),
     div_len( (1 + args.treble_dodges) * 2 ),
     hl_len( args.lead_len / 2 ),
-    search_count( 0ul ), node_count( 0ul )
+    search_count( 0ul ), node_count( 0ul ),
+    r( bells ), maintain_r( args.avoid_rows.size() )
 {
   m.reserve( 2 * hl_len );
 
@@ -219,6 +223,10 @@ bool searcher::try_principle_symmetry()
 
 bool searcher::try_with_limited_le( const change& ch )
 {
+  // Don't bother maintaining r in this function.  
+  // We don't want want the -F options to modify the behaviour of -E, 
+  // so nothing here should test falseness, and so nothing here will test r.
+
   change orig( m.back() );
   m.pop_back();
 
@@ -246,7 +254,11 @@ bool searcher::try_with_limited_le( const change& ch )
       }
 
   m.push_back(ch);
-  bool ok = is_acceptable_method();
+
+  // This used to call is_acceptable_method.  This was bad because
+  // we don't want things like --start-at, --require, and the falseness
+  // options to effect -E.  At least, I don't think we do.
+  bool ok = is_acceptable_leadhead( m.lh() );
   m.back() = orig;
   return ok;
 }
@@ -364,11 +376,31 @@ bool searcher::is_acceptable_method()
   return true;
 }
 
-inline void searcher::call_recurse( const change &ch )
+inline bool searcher::push_change( const change& ch )
 {
   m.push_back( ch );
-  general_recurse();
+  if ( maintain_r ) {
+    r *= ch;
+    // We don't care about the lead head row.
+    if ( m.size() != 2 * hl_len && 
+         args.avoid_rows.find(r) != args.avoid_rows.end() )
+      return false;
+  }
+  return true;
+}
+
+inline void searcher::call_recurse( const change &ch )
+{
+  // Store old value of r -- this is considerably cheaper than calling
+  // m.lh() and still a little better than restoring with r *= ch.
+  row old;
+  if ( maintain_r ) old = r;
+
+  if ( push_change( ch ) )
+    general_recurse();
+
   m.pop_back();
+  if ( maintain_r ) r = old;
 }
 
 // 0 = treble in 1-2
@@ -536,6 +568,9 @@ bool searcher::try_offset_start_change( const change &ch)
 
 bool searcher::try_leadend_change( const change &ch )
 {
+  // Don't test falseness (except -Fn) here because it is called with from
+  // try_with_limited_le which handles -E.
+
   if ( args.max_consec_blows )
     for ( int i=0; i<bells; ++i )
       if ( ch.findplace(i) )
@@ -568,6 +603,9 @@ bool searcher::try_leadend_change( const change &ch )
 
 bool searcher::try_leadend_sym_change( const change &ch )
 {
+  // Don't test falseness (except -Fn) here because it is called with from
+  // try_with_limited_le which handles -E.
+
   if ( args.true_trivial 
        && ch.count_places() == bells )
     return false;
@@ -587,6 +625,9 @@ bool searcher::try_leadend_sym_change( const change &ch )
 
 bool searcher::try_midlead_change( const change &ch )
 {
+  // Don't test falseness (except -Fn) here because it is called with from
+  // try_with_limited_le which handles -E.
+
   size_t depth = m.size();
 
   if ( args.true_trivial && (args.treble_dodges || !args.hunt_bells) 
@@ -625,6 +666,8 @@ bool searcher::try_midlead_change( const change &ch )
   // an individual section being internally false.  (With a single 
   // dodge, this can only happen with a repeated change which is eliminated
   // by the default -Fn.)
+  // This test doesn't effect the -E handling noted above as if the base
+  // method passes this, so will the variant with a 12 or 1N lh.
   if ( args.true_half_lead && args.treble_dodges > 1 && posn % 2 == 0
        && is_division_false( m, ch, div_len ) )
     return false;
@@ -804,8 +847,9 @@ void searcher::double_existing()
   
   assert( size_t(m.length()) == hl_len );
 
+  // Note: this loop does not add the lead-end change
   for ( size_t depth = m.length(); depth < 2*hl_len-1; ++depth )
-    m.push_back( m[ depth-hl_len ].reverse() );
+    push_change( m[ depth-hl_len ].reverse() ); // XXX: Update r
 
   change ch( m[ hl_len-1 ].reverse() );
   
@@ -827,14 +871,16 @@ void searcher::double_existing()
           if ( count > args.max_consec_blows )
             goto end_of_function;
         }
-  
-  m.push_back( ch );
-
-  general_recurse();
+ 
+  // This is the lead-head change 
+  if ( push_change( ch ) )
+    general_recurse();
 
  end_of_function:
   while ( size_t(m.length()) > hl_len )
     m.pop_back();
+  if (maintain_r)
+    r = m.lh();
 }
 
 // -----------------------------------------
@@ -885,12 +931,6 @@ void searcher::general_recurse()
     {
       if ( filter_method.size() && filter_method != m )
         ;
-      // This test can't go in the is_acceptable_method or it
-      // would break -E searches
-      else if ( lexicographical_compare( m.begin(), m.end(), 
-                    args.startmeth.begin(), args.startmeth.end(),
-                    compare_changes ) )
-        ;
       else if ( is_acceptable_method() )
         found_method();
     }
@@ -917,16 +957,17 @@ void searcher::general_recurse()
   else if ( args.skewsym && args.doubsym && args.sym 
             && depth == hl_len/2 + 1 - args.hunt_bells % 2 )
     {
+      // This loop will add up to the half-lead
       while ( size_t(m.length()) <= hl_len - 1 - args.hunt_bells % 2 )
-        {
-          m.push_back( m[ hl_len - args.hunt_bells % 2 * 2 
-                          - m.length() ].reverse() );
-        }
+        push_change( m[ hl_len - args.hunt_bells % 2 * 2
+                          - m.length() ].reverse() ); // XXX: Update r
 
       general_recurse();
 
       while ( size_t(m.length()) > depth )
         m.pop_back();
+      if (maintain_r)
+        r = m.lh();
     }
 
 
@@ -935,27 +976,28 @@ void searcher::general_recurse()
     {
       assert( !args.doubsym && !args.sym );
 
+      // This loop will add up to the half-lead
       while ( size_t(m.length()) <= hl_len - args.hunt_bells % 2 * 2 )
-        {
-          m.push_back( m[ hl_len - args.hunt_bells % 2 * 2 
-                          - m.length() ].reverse() );
-        }
+        push_change( m[ hl_len - args.hunt_bells % 2 * 2
+                        - m.length() ].reverse() ); // XXX: Update r
 
       general_recurse();
 
       while ( size_t(m.length()) > depth )
         m.pop_back();
+      if (maintain_r)
+        r = m.lh();
     }
 
 
-  // Double symmetry (with or without others)
+  // Double (glide) symmetry (with or without others)
   else if ( args.doubsym && depth == hl_len )
     {
       double_existing();
     }
 
 
-  // Only conventional symmetry
+  // Only conventional (palindromic) symmetry
   else if ( args.sym && depth == hl_len + 
             ( args.hunt_bells % 2 ? 0 : args.treble_dodges + 1 ) )
     {
@@ -969,6 +1011,8 @@ void searcher::general_recurse()
 
       while ( size_t(m.length()) > depth )
         m.pop_back();
+      if (maintain_r)
+        r = m.lh();
     }
 
 
@@ -983,6 +1027,8 @@ void searcher::general_recurse()
 
       while ( size_t(m.length()) > depth )
         m.pop_back();
+      if (maintain_r)
+        r = m.lh();
     }
 
   // Only rotational symmetry
@@ -990,16 +1036,17 @@ void searcher::general_recurse()
     {
       assert( !args.doubsym && !args.sym );
 
+      // This loop *will* add the lead end change.
       while ( size_t(m.length()) < 2*hl_len )
-        {
-          m.push_back( m[ 3*hl_len - args.hunt_bells % 2 * 2
-                          - m.length() ].reverse() );
-        }
+        push_change( m[ 3*hl_len - args.hunt_bells % 2 * 2
+                          - m.length() ].reverse() ); // XXX: Update r
 
       general_recurse();
 
       while ( size_t(m.length()) > depth )
         m.pop_back();
+      if (maintain_r) 
+        r = m.lh();
     }
 
   // Need a new change

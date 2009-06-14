@@ -108,8 +108,8 @@ class tokeniser::const_iterator
 public:
   typedef input_iterator_tag iterator_category;
   typedef token              value_type;
-  typedef const token&       reference_type;
-  typedef const token*       pointer_type;
+  typedef const token&       reference;
+  typedef const token*       pointer;
   typedef ptrdiff_t          difference_type;
   
   const value_type& operator* () const { return  val; }
