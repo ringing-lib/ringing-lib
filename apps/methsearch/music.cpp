@@ -185,19 +185,20 @@ void musical_analysis::analyser
 
 void musical_analysis::analyser::init_crus( music& m, int score )
 {
-  for ( int i = 3; i < 6; ++i ) 
-    for ( int j = 3; j < 6; ++j )
-      {
-	if ( i == j ) 
-	  continue;
-	
-	make_string os;
-	os << '*' << bell(i) << bell(j) ;
-	for ( int k = 6; k < bells; ++k )
-	  os << bell(k);
-	
-	m.push_back(music_details(os, score));
-      }
+  if (bells >= 6)
+    for ( int i = 3; i < 6; ++i ) 
+      for ( int j = 3; j < 6; ++j )
+        {
+  	if ( i == j ) 
+  	  continue;
+  	
+  	make_string os;
+  	os << '*' << bell(i) << bell(j) ;
+  	for ( int k = 6; k < bells; ++k )
+  	  os << bell(k);
+  	
+  	m.push_back(music_details(os, score));
+        }
 }
 
 musical_analysis::analyser::analyser( int bells )
