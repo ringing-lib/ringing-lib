@@ -224,6 +224,16 @@ private:
       }
       if (!*in) throw runtime_error( "Unable to open file: '" + file + "'" );
     }
+    // Handle UTF-8 BOM: EF BB BF
+    if ( *in && in->peek() == 0xEF ) {
+      in->get();
+      if ( *in && in->peek() != 0xBB ) 
+        throw runtime_error("Unexpected bytes at start of file");
+      in->get();
+      if ( *in && in->peek() != 0xBF ) 
+        throw runtime_error("Unexpected bytes at start of file");
+      in->get();
+    }
 
     char const seps[] = " ,;:\t\r\n";
     while ( *in && strchr( seps, in->peek() ) ) in->get();
