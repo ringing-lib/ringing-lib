@@ -71,9 +71,33 @@ namespace tok_types
     power       = '^',
     minus       = '-',
     exec        = tokeniser::first_token,
-    read
+    read,
+    row_lit  // Rows on more than 10 bells are not handled in row_or_int
   };
 }
+
+class rowlit_impl : public tokeniser::basic_token
+{
+public:
+  rowlit_impl() : basic_token( "", tok_types::row_lit ) {}
+
+private:
+  virtual parse_result parse( string::const_iterator& i,
+                              string::const_iterator e,
+                              token& tok ) const
+  {
+    bool had_letter = false;
+    string::const_iterator j = i;
+    for ( ; j != e && bell::is_symbol(*j); ++j ) 
+      if ( !isdigit(*j) ) 
+        had_letter = true;
+    if ( j == e ) return more; 
+    if ( !had_letter ) return failed; // Want row_or_int to handle this case
+    tok = string(i, j); tok.type( type() );
+    i = j;
+    return done;
+  }
+};
 
 class rowgen_impl : public tokeniser::basic_token
 {
@@ -107,7 +131,7 @@ public:
       exec_impl( "$(", tok_types::exec ),
       read_impl( "<(", tok_types::read )
   {
-    add_qtype(&exec_impl); add_qtype(&read_impl);
+    add_qtype(&exec_impl); add_qtype(&read_impl); add_qtype(&row_impl);
   }
 
   virtual void validate( const token& t ) const
@@ -115,7 +139,7 @@ public:
     using namespace tok_types;
 
     switch ( t.type() ) {
-      case row_or_int: case open_paren: case close_paren: 
+      case row_or_int: case row_lit: case open_paren: case close_paren: 
       case times: case divide: case ldivide: case power: case minus:
         return;
     }
@@ -124,6 +148,7 @@ public:
   }
 
   rowgen_impl exec_impl, read_impl;
+  rowlit_impl row_impl;
 };
 
 class mult_node : public row_calc::expr::node {
@@ -421,7 +446,8 @@ row_calc::expr rc_parser::parse_expr( iter_t first, iter_t last )
     } 
 
   if ( first+1 == last ) {
-    if ( first->type() == tok_types::row_or_int )
+    if ( first->type() == tok_types::row_or_int ||
+         first->type() == tok_types::row_lit )
       return row_calc::expr( new row_node( row( *first ) ) );
 
     if ( first->type() == tok_types::exec || 
