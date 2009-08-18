@@ -36,6 +36,11 @@
 #if RINGING_OLD_INCLUDES
 #include <bvector.h>
 #endif
+#if RINGING_OLD_IOSTREAMS
+#include <istream.h>
+#else
+#include <istream>
+#endif
 
 #include <ringing/row.h>
 #include <ringing/mathutils.h>
@@ -490,6 +495,27 @@ row row::power( int n ) const
   }
 }
 
+RINGING_API istream& operator>>(istream& i, row& r)
+{
+  istream::sentry cerberus(i, false);
+  if ( cerberus ) {
+    string s;
+    while ( i && bell::is_symbol( i.peek() ) )
+      s += (char) i.get();
+#if RINGING_USE_EXCEPTIONS 
+    try {
+#endif
+      r = s;
+#if RINGING_USE_EXCEPTIONS 
+    } 
+    catch ( ... ) { 
+      try { i.setstate( ios_base::badbit ); } catch(...) {}
+      if ( i.exceptions() & ios_base::badbit ) throw;
+    } 
+#endif
+  }
+  return i;
+}
 
 // *********************************************************************
 // *                    Functions for class row_block                  *

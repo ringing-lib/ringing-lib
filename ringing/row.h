@@ -123,6 +123,7 @@ public:
   string cycles() const;        // Express it as a product of disjoint cycles
   int order(void) const;	    // Return the order
   friend RINGING_API ostream& operator<<(ostream&, const row&);
+  friend RINGING_API istream& operator>>(istream&, row&);
   void swap(row &other) { data.swap(other.data); }
   void swap(vector<bell>& other) { data.swap(other); validate(); }
   size_t hash() const;
@@ -156,6 +157,7 @@ private:
 inline ostream& operator<<(ostream& o, const row& r) {
   return o << r.print();
 }
+RINGING_API istream& operator>>(istream& i, row& r);
 
 // An operator which has to be here
 RINGING_API row& operator*=(row& r, const change& c);
