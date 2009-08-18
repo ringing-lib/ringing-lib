@@ -274,6 +274,7 @@ void filter( execution_context& e, const arguments& args )
 
       if ( run( e, args ) ) 
         cout << i->meth().format( method::M_DASH | method::M_SYMMETRY )
+             << '\t' << i->get_facet<litelib::payload>()
              << endl;
     }
 }
