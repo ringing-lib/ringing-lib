@@ -161,7 +161,7 @@ public:
   }
 
   // As above, but for a single row
-  void process_row( row const& r, bool backstroke = false);
+  bool process_row( row const& r, bool backstroke = false);
 
   // Get the total score - individual scores now obtained from accessing
   // the items within the music_details vector.
@@ -175,14 +175,24 @@ public:
   // Reset the music information
   void reset_music(void);
 
+  unsigned int bells() const { return b; }
+  
 private:
   // The music specification details
   mdvector info;
   // The tree containing the structure for matching rows
   cloning_pointer<music_node> top_node;
 
-  unsigned int bells;
+  unsigned int b;
 };
+
+#if RINGING_USE_EXCEPTIONS
+struct invalid_named_music : public invalid_argument {
+  invalid_named_music( string const& n, string const& msg );
+};
+#endif
+
+RINGING_API void add_named_music( music& m, string const& n, int score = 1 );
 
 RINGING_END_NAMESPACE
 

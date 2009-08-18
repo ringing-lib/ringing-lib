@@ -75,11 +75,6 @@ public:
   static analyser &instance( int bells ) 
   { static analyser tmp( bells ); return tmp; }
 
-  void init_crus( music& m, int score );
-  void init_n_runs( music& m, int n, int score );
-  void init_front_n_runs( music& m, int n, int score );
-  void init_back_n_runs( music& m, int n, int score );
-
   friend class patterns;
     
   void check_n( int n );
@@ -91,115 +86,6 @@ public:
   map< pair<row,length>, music > musv;
 };
 
-void musical_analysis::analyser::check_n( int n )
-{
-  if ( n > bells )
-    {
-      cerr << "Cannot have runs longer than the total number of bells\n";
-      exit(1);
-    }
-  else if ( n < 3 )
-    {
-      cerr << "Can only search for runs of three or more bells\n";
-      exit(1);
-    }
-}
-
-
-void musical_analysis::analyser
-  ::init_front_n_runs( music& m, int n, int score )
-{
-  check_n(n);
-
-  {
-    for ( int i=0; i<=bells-n; ++i )
-      {
-	make_string os;
-	for ( int j=0; j<n; ++j ) os << bell( i+j );
-	os << '*';
-	m.push_back(music_details(os, score));
-      }
-  }
-  {
-    for ( int i=0; i<=bells-n; ++i )
-      {
-	make_string os;
-	for ( int j=n-1; j>=0; --j ) os << bell( i+j );
-	os << '*';
-	m.push_back(music_details(os, score));
-      }
-  }
-}
-
-void musical_analysis::analyser
-  ::init_back_n_runs( music& m, int n, int score )
-{
-  check_n(n);
-
-  {
-    for ( int i=0; i<=bells-n; ++i )
-      {
-	make_string os;
-	os << '*';
-	for ( int j=0; j<n; ++j ) os << bell( i+j );
-	m.push_back(music_details(os, score));
-      }
-  }
-  {
-    for ( int i=0; i<=bells-n; ++i )
-      {
-	make_string os;
-	os << '*';
-	for ( int j=n-1; j>=0; --j ) os << bell( i+j );
-	m.push_back(music_details(os, score));
-      }
-  }
-}
-
-void musical_analysis::analyser
-  ::init_n_runs( music& m, int n, int score )
-{
-  check_n(n);
-
-  {
-    for ( int i=0; i<=bells-n; ++i )
-      {
-	make_string os;
-	os << '*';
-	for ( int j=0; j<n; ++j ) os << bell( i+j );
-	os << '*';
-	m.push_back(music_details(os, score));
-      }
-  }
-  {
-    for ( int i=0; i<=bells-n; ++i )
-      {
-	make_string os;
-	os << '*';
-	for ( int j=n-1; j>=0; --j ) os << bell( i+j );
-	os << '*';
-	m.push_back(music_details(os, score));
-      }
-  }
-}
-
-void musical_analysis::analyser::init_crus( music& m, int score )
-{
-  if (bells >= 6)
-    for ( int i = 3; i < 6; ++i ) 
-      for ( int j = 3; j < 6; ++j )
-        {
-  	if ( i == j ) 
-  	  continue;
-  	
-  	make_string os;
-  	os << '*' << bell(i) << bell(j) ;
-  	for ( int k = 6; k < bells; ++k )
-  	  os << bell(k);
-  	
-  	m.push_back(music_details(os, score));
-        }
-}
 
 musical_analysis::analyser::analyser( int bells )
   : bells(bells)
@@ -258,88 +144,18 @@ musical_analysis::analyser::analyser( int bells )
       music& mu = musv[ make_pair(lh, len) ];
       mu.set_bells(bells);
 
-      if ( pattern.size() > 2 
-           && pattern[0] == '<' && pattern[ pattern.size()-1 ] == '>' )
-        {
-          string n( pattern.substr( 1, pattern.size()-2 ) );
+      try {
+        if ( pattern.size() > 2 
+             && pattern[0] == '<' && pattern[ pattern.size()-1 ] == '>' )
+          add_named_music( mu, pattern.substr( 1, pattern.size()-2 ), score );
 
-          if ( n == "queens" )
-            mu.push_back
-              ( music_details( row::queens( bells ).print(), score ) );
-
-          else if ( n == "kings" )
-            mu.push_back
-              ( music_details( row::kings( bells ).print(), score ) );
-
-          else if ( n == "tittums" )
-            mu.push_back
-              ( music_details( row::tittums( bells ).print(), score ) );
-
-
-          else if ( n == "reverse-rounds" )
-            mu.push_back
-              ( music_details( row::reverse_rounds( bells ).print(), 
-                           score ) );
-
-          else if ( n == "CRUs" )
-            init_crus( mu, score );
-          
-          else if ( n.length() > 11 && n.substr(0,6) == "front-" 
-                    && n.find("-runs") != string::npos )
-            {
-              char *endp;
-              int l = strtol( n.c_str() + 6, &endp, 10 );
-              if ( strcmp(endp, "-runs") )
-                {
-                  cerr << "Unknown type of front-run: " << n << endl;
-                  exit(1);
-                }
-
-              init_front_n_runs( mu, l, score );
-            }
-
-          else if ( n.length() > 10 && n.substr(0,5) == "back-" 
-                    && n.find("-runs") != string::npos )
-            {
-              char *endp;
-              int l = strtol( n.c_str() + 5, &endp, 10 );
-              if ( strcmp(endp, "-runs") )
-                {
-                  cerr << "Unknown type of back-run: " << n << endl;
-                  exit(1);
-                }
-
-              init_back_n_runs( mu, l, score );
-            }
-
-          else if ( n.length() > 5 && n.find("-runs") != string::npos )
-            {
-              char *endp;
-              int l = strtol( n.c_str(), &endp, 10 );
-              if ( strcmp(endp, "-runs") )
-                {
-                  cerr << "Unknown type of run: " << n << endl;
-                  exit(1);
-                }
-
-              init_n_runs( mu, l, score );
-            }
-
-          else 
-            {
-              cerr << "Unknown named music type: " << n << endl;
-              exit(1);
-            }
-        }
-      else
-        {
-          try {
-            mu.push_back( music_details( pattern, score ) );
-          } catch ( exception const& e ) {
-            cerr << "Error parsing music pattern: " << e.what() << endl;
-            exit(1);
-          }           
-        }
+        else
+          mu.push_back( music_details( pattern, score ) );
+      } 
+      catch ( exception const& e ) {
+        cerr << "Error parsing music pattern: " << e.what() << endl;
+        exit(1);
+      }           
     }
 
   // By default we count the CRUs in the plain course.
@@ -347,7 +163,7 @@ musical_analysis::analyser::analyser( int bells )
     {
       music& mu = musv[ make_pair(lh, len) ];
       mu.set_bells(bells);
-      init_crus( mu, 1 ); 
+      add_named_music( mu, "CRUs", 1 ); 
     }
 }
 

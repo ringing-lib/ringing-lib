@@ -25,6 +25,7 @@
 #endif
 
 #include <ringing/music.h>
+#include <ringing/streamutils.h>
 #if RINGING_OLD_C_INCLUDES
 #include <ctype.h>
 #include <stdio.h>
@@ -52,7 +53,7 @@ public:
 
   void add(const music_details &md, unsigned int i, unsigned int key, unsigned int pos);
 
-  void match(const row &r, unsigned int pos, vector<music_details> &results, const EStroke &stroke) const;
+  bool match(const row &r, unsigned int pos, vector<music_details> &results, const EStroke &stroke) const;
 
   // Helper function to work with cloning_pointer.
   music_node* clone() const { return new music_node(*this); }
@@ -101,6 +102,10 @@ unsigned int count_bells(const string &s)
 music_details::invalid_regex::invalid_regex( string const& pat, 
                                              string const& msg ) 
   : invalid_argument( "The pattern '" + pat + "' was invalid: " + msg )
+{}
+
+invalid_named_music::invalid_named_music( string const& n, string const& msg )
+  :  invalid_argument( "The named music '" + n + "' was invalid: " + msg )
 {}
 #endif
 
@@ -460,23 +465,29 @@ void music_node::add_to_subtree(unsigned int place, const music_details &md, uns
     }
 }
 
-void music_node::match(const row &r, unsigned int pos, 
+bool music_node::match(const row &r, unsigned int pos, 
                        vector<music_details> &results, 
                        const EStroke &stroke) const
 {
+  bool matched = false;
+
   for ( vector<unsigned int>::const_iterator 
-          i = detailsmatch.begin(), e = detailsmatch.end();  i != e;  ++i ) 
+          i = detailsmatch.begin(), e = detailsmatch.end();  i != e;  ++i ) {
     results[*i].increment(stroke);
+    matched = true;
+  }
 
   // Try all against ? or *
   BellNodeMap::const_iterator j = subnodes.find(0);
   if (j != subnodes.end())
-    j->second->match(r, pos + 1, results, stroke);
+    matched = j->second->match(r, pos + 1, results, stroke) || matched;
     
   // Now try the actual number
   j = subnodes.find(r[pos] + 1);
   if (j != subnodes.end())
-    j->second->match(r, pos + 1, results, stroke);
+    matched = j->second->match(r, pos + 1, results, stroke) || matched;
+
+  return matched;
 }
 
 // ********************************************************
@@ -484,7 +495,7 @@ void music_node::match(const row &r, unsigned int pos,
 // ********************************************************
 
 // default constructor.
-music::music(unsigned int b) : top_node( new music_node(b) ), bells(b)
+music::music(unsigned int b) : top_node( new music_node(b) ), b(b)
 {
   // Reset the music
   reset_music();
@@ -493,8 +504,8 @@ music::music(unsigned int b) : top_node( new music_node(b) ), bells(b)
 // Specify the music and add it into the search structure
 void music::push_back(const music_details &md)
 {
-  if (bells)
-    md.check_bells(bells);
+  if (b)
+    md.check_bells(b);
 
   info.push_back(md);
   top_node->add(md, 0, info.size() - 1, 0);
@@ -525,14 +536,14 @@ music::size_type music::size() const
   return info.size();
 }
 
-void music::set_bells(unsigned int b)
+void music::set_bells(unsigned int new_b)
 {
-  if (bells != b) {
+  if (b != new_b) {
     for (iterator i=info.begin(), e=info.end(); i!=e; ++i)
-      i->check_bells(b);
+      i->check_bells(new_b);
 
-    top_node->set_bells(b);
-    bells = b;
+    top_node->set_bells(new_b);
+    b = new_b;
   }
 }
 
@@ -546,9 +557,9 @@ void music::reset_music(void)
 
 // process_row - works out if a certain row is considered musical,
 // and increments or changes the appriopriate variable.
-void music::process_row(const row &r, bool back)
+bool music::process_row(const row &r, bool back)
 {
-  top_node->match(r, 0, info, back ? eBackstroke : eHandstroke);
+  return top_node->match(r, 0, info, back ? eBackstroke : eHandstroke);
 }
 
 // Return the total score for all items
@@ -576,8 +587,185 @@ int music::get_possible_score()
   int total = 0;
   music::const_iterator i;
   for (i = begin(); i != end(); i++)
-    total += i->possible_score(bells);
+    total += i->possible_score(b);
   return total;
 }
+
+RINGING_START_ANON_NAMESPACE
+
+static void check_n( int bells, int n, string const& name )
+{
+  if ( n > bells )
+    {
+      RINGING_THROW_OR_RETURN_VOID( 
+        invalid_named_music( name,
+          "Cannot have runs longer than the total number of bells" ) );
+    }
+  else if ( n < 3 )
+    {
+      RINGING_THROW_OR_RETURN_VOID( 
+        invalid_named_music( name,
+          "Can only search for runs of three or more bells" ) );
+    }
+}
+
+
+static void init_front_n_runs( music& m, int n, int score, string const& name )
+{
+  const int bells = m.bells();
+  check_n(bells, n, name);
+
+  for ( int i=0; i<=bells-n; ++i )
+    {
+      make_string os;
+      for ( int j=0; j<n; ++j ) os << bell( i+j );
+      os << '*';
+      m.push_back(music_details(os, score));
+    }
+
+  for ( int i=0; i<=bells-n; ++i )
+    {
+      make_string os;
+      for ( int j=n-1; j>=0; --j ) os << bell( i+j );
+      os << '*';
+      m.push_back(music_details(os, score));
+    }
+}
+
+static void init_back_n_runs( music& m, int n, int score, string const& name )
+{
+  const int bells = m.bells();
+  check_n(bells, n, name);
+
+  for ( int i=0; i<=bells-n; ++i )
+    {
+      make_string os;
+      os << '*';
+      for ( int j=0; j<n; ++j ) os << bell( i+j );
+      m.push_back(music_details(os, score));
+    }
+
+  for ( int i=0; i<=bells-n; ++i )
+    {
+      make_string os;
+      os << '*';
+      for ( int j=n-1; j>=0; --j ) os << bell( i+j );
+      m.push_back(music_details(os, score));
+    }
+}
+
+static void init_n_runs( music& m, int n, int score, string const& name )
+{
+  const int bells = m.bells();
+  check_n(bells, n, name);
+
+  for ( int i=0; i<=bells-n; ++i )
+    {
+      make_string os;
+      os << '*';
+      for ( int j=0; j<n; ++j ) os << bell( i+j );
+      os << '*';
+      m.push_back(music_details(os, score));
+    }
+
+  for ( int i=0; i<=bells-n; ++i )
+    {
+      make_string os;
+      os << '*';
+      for ( int j=n-1; j>=0; --j ) os << bell( i+j );
+      os << '*';
+      m.push_back(music_details(os, score));
+    }
+}
+
+static void init_crus( music& m, int score )
+{
+  const int bells = m.bells();
+
+  if (bells >= 6)
+    for ( int i = 3; i < 6; ++i ) 
+      for ( int j = 3; j < 6; ++j )
+      {
+  	if ( i == j ) 
+  	  continue;
+  	
+  	make_string os;
+  	os << '*' << bell(i) << bell(j) ;
+  	for ( int k = 6; k < bells; ++k )
+  	  os << bell(k);
+  	
+  	m.push_back(music_details(os, score));
+      }
+}
+
+RINGING_END_ANON_NAMESPACE
+
+RINGING_API void add_named_music( music& mu, string const& n, int score )
+{
+  const int bells = mu.bells();
+
+  if ( n == "queens" )
+    mu.push_back
+      ( music_details( row::queens( bells ).print(), score ) );
+
+  else if ( n == "kings" )
+    mu.push_back
+      ( music_details( row::kings( bells ).print(), score ) );
+
+  else if ( n == "tittums" )
+    mu.push_back
+      ( music_details( row::tittums( bells ).print(), score ) );
+
+
+  else if ( n == "reverse-rounds" )
+    mu.push_back
+      ( music_details( row::reverse_rounds( bells ).print(), 
+                   score ) );
+
+  else if ( n == "CRUs" )
+    init_crus( mu, score );
+  
+  else if ( n.length() > 11 && n.substr(0,6) == "front-" 
+            && n.find("-runs") != string::npos )
+    {
+      char *endp;
+      int l = strtol( n.c_str() + 6, &endp, 10 );
+      if ( strcmp(endp, "-runs") )
+        RINGING_THROW_OR_RETURN_VOID(
+          invalid_named_music( n, "Unknown type of front-run" ) );
+
+      init_front_n_runs( mu, l, score, n );
+    }
+
+  else if ( n.length() > 10 && n.substr(0,5) == "back-" 
+            && n.find("-runs") != string::npos )
+    {
+      char *endp;
+      int l = strtol( n.c_str() + 5, &endp, 10 );
+      if ( strcmp(endp, "-runs") )
+        RINGING_THROW_OR_RETURN_VOID(
+          invalid_named_music( n, "Unknown type of back-run" ) );
+
+      init_back_n_runs( mu, l, score, n );
+    }
+
+  else if ( n.length() > 5 && n.find("-runs") != string::npos )
+    {
+      char *endp;
+      int l = strtol( n.c_str(), &endp, 10 );
+      if ( strcmp(endp, "-runs") )
+        RINGING_THROW_OR_RETURN_VOID(
+          invalid_named_music( n, "Unknown type of run" ) );
+
+      init_n_runs( mu, l, score, n );
+    }
+
+  else 
+    {
+      RINGING_THROW_OR_RETURN_VOID(
+        invalid_named_music( n, "Unknown named music type" ) );
+    }
+}
+
 
 RINGING_END_NAMESPACE
