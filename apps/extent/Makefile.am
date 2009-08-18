@@ -30,5 +30,5 @@ extent_LDADD = $(top_builddir)/apps/utils/libstuff.a \
 $(top_builddir)/ringing/libringing.la \
 $(top_builddir)/ringing/libringingcore.la
 
-extent_SOURCES = extent.cc
+extent_SOURCES = extent.cpp
 
