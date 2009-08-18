@@ -331,9 +331,9 @@ bool searcher::is_acceptable_method()
   if ( args.true_course || args.true_lead )
     {
       // This is a bit of a hack to allow -Fl to be used with TD Minimus
-      int const n_extents 
-        = (int) ceil( (double) (bells - args.hunt_bells) * args.lead_len
-                    / (double) factorial(bells) );
+      int const n_extents = 1; 
+//        = (int) ceil( (double) (bells - args.hunt_bells) * args.lead_len
+//                    / (double) factorial(bells) );
 
       prover p( n_extents );
       row r(bells);  

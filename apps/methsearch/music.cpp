@@ -86,9 +86,9 @@ public:
 
   // Data members
   int bells;
-  map< pair<row,bool>, music > musv;  // This bool is for whether 
-                                      // we want the whole course (true)
-                                      // or just one lead (false)
+
+  enum length { half_lead, lead, course };
+  map< pair<row,length>, music > musv;
 };
 
 void musical_analysis::analyser::check_n( int n )
@@ -206,7 +206,7 @@ musical_analysis::analyser::analyser( int bells )
 {
   const vector<string> &p = patterns::instance().p;
   row lh(bells); // Course or lead head -- plain course by default
-  bool course = true;  // Look at whole course?
+  length len = course; // Look at whole course by default  
 
   for ( vector<string>::const_iterator i( p.begin() ), e( p.end() );
 	    i != e; ++i )
@@ -218,9 +218,10 @@ musical_analysis::analyser::analyser( int bells )
       if (eq == string::npos) eq = pattern.size();
 
       if ( eq == 6 && pattern.substr(0,6) == "course" ||
-           eq == 4 && pattern.substr(0,4) == "lead" ) 
+           eq == 4 && pattern.substr(0,4) == "lead"   ||
+           eq == 8 && pattern.substr(0,8) == "halflead" ) 
         {
-          course = (eq == 6);
+          len = eq == 6 ? course : eq == 4 ? lead : half_lead;
 
           if (eq == pattern.size()) continue; // No argument given
 
@@ -254,7 +255,7 @@ musical_analysis::analyser::analyser( int bells )
               break;
         }
 
-      music& mu = musv[ make_pair(lh, course) ];
+      music& mu = musv[ make_pair(lh, len) ];
       mu.set_bells(bells);
 
       if ( pattern.size() > 2 
@@ -344,7 +345,7 @@ musical_analysis::analyser::analyser( int bells )
   // By default we count the CRUs in the plain course.
   if ( musv.empty() ) 
     {
-      music& mu = musv[ make_pair(lh, course) ];
+      music& mu = musv[ make_pair(lh, len) ];
       mu.set_bells(bells);
       init_crus( mu, 1 ); 
     }
@@ -359,22 +360,25 @@ int musical_analysis::analyse( const method &m )
 {
   int score = 0;
 
-  typedef map< pair<row,bool>, music > musv_t;
+  typedef map< pair<row,analyser::length>, music > musv_t;
   musv_t& musv = analyser::instance( m.bells() ).musv;
   for ( musv_t::iterator mi=musv.begin(), me=musv.end(); mi!=me; ++mi)
     {
-      vector< row > course;
+      vector< row > rows;
       row r = mi->first.first; // Set to the course head
 
       do for ( method::const_iterator i( m.begin() ), e( m.end() ); 
                i != e; ++i )
         {
-          course.push_back( r );
+          rows.push_back( r );
           r *= *i;
+          if ( i - m.begin() == m.length()/2 &&
+               mi->first.second == analyser::half_lead )
+            break;
         }
-      while ( r != mi->first.first && mi->first.second );
+      while ( r != mi->first.first && mi->first.second == analyser::course );
 
-      mi->second.process_rows( course.begin(), course.end() );  
+      mi->second.process_rows( rows.begin(), rows.end() );  
       score += mi->second.get_score();
     }
 
