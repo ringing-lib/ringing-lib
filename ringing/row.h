@@ -191,6 +191,37 @@ private:
 inline RINGING_API permuter permute(unsigned n) { return permuter(n); }
 inline RINGING_API row_permuter permute(row &r) { return row_permuter(r); }
 
+struct RINGING_API post_permuter
+{
+  typedef row result_type;
+  explicit post_permuter(unsigned n) : r(row::rounds(n)) {}
+
+  row operator()(const change &c) { row tmp(r); r *= c; return tmp; }
+  row operator()(const row &c) { row tmp(r); r *= c; return tmp; }
+
+  row const& get() const { return r; }
+
+private:
+  row r;
+};
+
+struct RINGING_API row_post_permuter
+{
+  typedef row result_type;
+  explicit row_post_permuter(row &r) : r(r) {}  
+
+  row operator()(const change &c) { row tmp(r); r *= c; return tmp; }
+  row operator()(const row &c) { row tmp(r); r *= c; return tmp; }
+
+private:
+  row &r;
+};
+
+inline RINGING_API 
+post_permuter post_permute(unsigned n) { return post_permuter(n); }
+inline RINGING_API 
+row_post_permuter post_permute(row &r) { return row_post_permuter(r); }
+
 #if RINGING_AS_DLL
 RINGING_EXPLICIT_STL_TEMPLATE vector<row>;
 #endif

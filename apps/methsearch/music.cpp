@@ -26,8 +26,10 @@
 #include "music.h"
 #if RINGING_OLD_C_INCLUDES
 #include <string.h>
+#include <assert.h>
 #else
 #include <cstring>
+#include <cassert>
 #endif
 #if RINGING_OLD_INCLUDES
 #include <vector.h>
@@ -82,7 +84,8 @@ public:
   // Data members
   int bells;
 
-  enum length { half_lead, lead, course };
+  enum length { half_lead, half_lead_2, half_lead_r, half_lead_2r, 
+                lead, course };
   map< pair<row,length>, music > musv;
 };
 
@@ -103,11 +106,17 @@ musical_analysis::analyser::analyser( int bells )
       string::size_type eq = pattern.find('=');
       if (eq == string::npos) eq = pattern.size();
 
-      if ( eq == 6 && pattern.substr(0,6) == "course" ||
-           eq == 4 && pattern.substr(0,4) == "lead"   ||
-           eq == 8 && pattern.substr(0,8) == "halflead" ) 
+      string const opt = pattern.substr(0,eq);
+
+      if ( opt == "course" || opt == "lead" || opt == "halflead" ||
+           opt == "2halflead" || opt == "2rhalflead" || opt == "rhalflead" )
         {
-          len = eq == 6 ? course : eq == 4 ? lead : half_lead;
+          if (opt == "course") len = course;
+          else if (opt == "lead") len = lead;
+          else if (opt == "halflead") len = half_lead;
+          else if (opt == "2halflead") len = half_lead_2;
+          else if (opt == "2rhalflead") len = half_lead_2r;
+          else if (opt == "rhalflead") len = half_lead_r;
 
           if (eq == pattern.size()) continue; // No argument given
 
@@ -183,16 +192,41 @@ int musical_analysis::analyse( const method &m )
       vector< row > rows;
       row r = mi->first.first; // Set to the course head
 
-      do for ( method::const_iterator i( m.begin() ), e( m.end() ); 
-               i != e; ++i )
-        {
-          rows.push_back( r );
-          r *= *i;
-          if ( i - m.begin() == m.length()/2 &&
-               mi->first.second == analyser::half_lead )
-            break;
-        }
-      while ( r != mi->first.first && mi->first.second == analyser::course );
+      switch ( mi->first.second ) {
+        case analyser::course:
+          do 
+            transform( m.begin(), m.end(), back_inserter(rows), permute(r) );
+          while ( r != mi->first.first );
+          break;
+
+        case analyser::lead:
+          transform( m.begin(), m.end(), 
+                     back_inserter(rows), post_permute(r) );
+          break;
+
+        case analyser::half_lead:
+          transform( m.begin(), m.begin() + m.size()/2, 
+                     back_inserter(rows), post_permute(r) );
+          break;
+
+        case analyser::half_lead_2:
+          transform( m.begin() + m.size()/2, m.end(),
+                     back_inserter(rows), post_permute(r) );
+          break;
+
+        case analyser::half_lead_r:
+	  transform( m.rbegin() + m.size()/2, m.rend(),
+                     back_inserter(rows), post_permute(r) );
+          break;
+
+        case analyser::half_lead_2r:
+          transform( m.rbegin(), m.rbegin() + m.size()/2,
+                     back_inserter(rows), post_permute(r) );
+          break;
+
+        default:
+          assert(false);
+      }
 
       mi->second.process_rows( rows.begin(), rows.end() );  
       score += mi->second.get_score();
