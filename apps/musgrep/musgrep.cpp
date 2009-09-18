@@ -33,6 +33,15 @@
 #include <string>
 #include <vector>
 
+// Find isatty()
+#ifdef _MSC_VER
+#include <io.h>
+#elif defined(_POSIX_C_SOURCE)
+#include <unistd.h>
+#else
+#define isatty(n) false
+#endif
+
 #if RINGING_USE_TERMCAP
 # include <curses.h>
 # include <term.h>
@@ -154,6 +163,12 @@ int main( int argc, char *argv[] )
     setupterm(NULL, 1, NULL);
 # endif
 
+  char const* seq1 = RINGING_TERMINFO_VAR( enter_standout_mode );
+  char const* seq2 = RINGING_TERMINFO_VAR( exit_standout_mode );
+
+  // Let's use an asterisk to allow 'highlighting' on platforms that 
+  // don't support termcap on when stdout is not a tty.
+  if (!seq2 || !isatty(1)) seq1 = NULL, seq2 = " *";
 
   // NB: Don't use args.mus.get_count() -- that will double count 5-runs
   // when 4-runs are selected, for example.
@@ -168,13 +183,6 @@ int main( int argc, char *argv[] )
       ++count;
       if ( !args.count && !args.score )
       {
-        char const* seq1 = RINGING_TERMINFO_VAR( enter_standout_mode );
-        char const* seq2 = RINGING_TERMINFO_VAR( exit_standout_mode );
-
-        // Let's use an asterisk to allow 'highlighting' 
-        // on platforms that don't support TERMCAP
-        if (!seq2) seq1 = NULL, seq2 = " *";
-
         if (args.hilight && seq1) cout << seq1;
         cout << r;
         if (args.hilight && seq2) cout << seq2;
