@@ -1,5 +1,5 @@
 // main.cpp - Entry point for printmethod
-// Copyright (C) 2008 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2008, 2009 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -54,6 +54,7 @@ struct arguments
 
   init_val<bool,false> whole_course;
   init_val<bool,false> omit_final;
+  init_val<bool,false> omit_start;
 
   string methstr;
   method meth;
@@ -91,6 +92,12 @@ void arguments::bind( arg_parser& p )
            "course-head",
            omit_final ) );
 
+  p.add( new boolean_opt
+         ( 'S', "omit-start",
+           "Omit the starting row to avoid duplication of the lead- or "
+           "course-head",
+           omit_start ) );
+
   p.add( new row_opt
          ( 's', "start", 
            "Starting from ROW", "ROW",
@@ -113,6 +120,12 @@ bool arguments::validate( arg_parser &ap )
   if ( bells == 0 ) 
     {
       ap.error( "Must specify the number of bells" );
+      return false;
+    }
+
+  if ( omit_start && omit_final ) 
+    {
+      ap.error( "Must not specify both -S and -F" );
       return false;
     }
 
@@ -217,12 +230,14 @@ int main(int argc, char* argv[])
     setupterm(NULL, 1, NULL);
 # endif
 
-  row r( args.startrow );
+  row r( args.startrow );  bool first = true;
   do for ( method::const_iterator i=args.meth.begin(), e=args.meth.end(); 
            i!=e; ++i )  
   {
-    print_row(args, r); cout << "\n";
-    r *= *i;
+    if ( !first || !args.omit_start ) 
+      print_row(args, r), cout << "\n";
+
+    r *= *i;  first = false;
   } while ( r != args.startrow && args.whole_course );
 
   if (!args.omit_final) {
