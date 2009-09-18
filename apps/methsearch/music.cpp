@@ -215,12 +215,13 @@ int musical_analysis::analyse( const method &m )
           break;
 
         case analyser::half_lead_r:
-	  transform( m.rbegin() + m.size()/2, m.rend(),
+	  transform( m.rbegin() + m.size()/2 + 1, m.rend(),
                      back_inserter(rows), post_permute(r) );
+          rows.push_back(r);
           break;
 
         case analyser::half_lead_2r:
-          transform( m.rbegin(), m.rbegin() + m.size()/2,
+          transform( m.rbegin() + 1, m.rbegin() + m.size()/2 + 1,
                      back_inserter(rows), post_permute(r) );
           break;
 
