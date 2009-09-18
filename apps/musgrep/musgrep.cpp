@@ -83,11 +83,9 @@ void arguments::bind( arg_parser& p )
          ( 's', "score",
            "Print the score for matching rows", score ) );
 
-#if RINGING_USE_TERMCAP
   p.add( new boolean_opt
          ( 'H', "highlight",
            "Highlight matching rows", hilight ) );
-#endif
 
   p.set_default( new strings_opt( '\0', "", "", "", musstrs ) ); 
 }
@@ -172,6 +170,10 @@ int main( int argc, char *argv[] )
       {
         char const* seq1 = RINGING_TERMINFO_VAR( enter_standout_mode );
         char const* seq2 = RINGING_TERMINFO_VAR( exit_standout_mode );
+
+        // Let's use an asterisk to allow 'highlighting' 
+        // on platforms that don't support TERMCAP
+        if (!seq2) seq1 = NULL, seq2 = " *";
 
         if (args.hilight && seq1) cout << seq1;
         cout << r;
