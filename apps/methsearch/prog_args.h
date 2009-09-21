@@ -45,6 +45,7 @@
 #include <ringing/pointers.h>
 #include <ringing/libout.h>
 #include <ringing/method.h>
+#include <ringing/group.h>
 
 class arg_parser;
 
@@ -99,7 +100,10 @@ struct arguments
   init_val<bool,false> true_course;
   init_val<bool,false> true_extent;
   init_val<bool,false> true_positive_extent;
-  string               allowed_falseness;
+  string               allowed_falseness; 
+
+  vector<row>          pends_generators;
+  group                pends;
 
   init_val<bool,false> require_CPS;
 

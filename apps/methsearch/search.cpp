@@ -90,6 +90,8 @@ private:
   bool try_with_limited_le( const change& ch );
   bool try_principle_symmetry();
 
+  row canonical_coset_member( row const& r );
+
   bool is_acceptable_method();
   void found_method();
 
@@ -263,6 +265,23 @@ bool searcher::try_with_limited_le( const change& ch )
   return ok;
 }
 
+row searcher::canonical_coset_member( row const& r )
+{
+  // Streamline the normal case
+  if ( args.pends.size() == 1 ) return r;
+
+  row best;
+  for ( group::const_iterator i=args.pends.begin(), e=args.pends.end(); 
+        i != e; ++i ) 
+  {
+    row const ir = *i * r;
+    if (best.bells() == 0 || ir < best) 
+      best = ir;
+  }
+
+  return best;
+}
+
 bool searcher::is_acceptable_method()
 {
   if ( lexicographical_compare( m.begin(), m.end(), 
@@ -337,15 +356,32 @@ bool searcher::is_acceptable_method()
 
       prover p( n_extents );
       row r(bells);  
- 
+
       do for ( method::const_iterator i(m.begin()), e(m.end()); 
-               p.truth() && i != e; ++i )
-        p.add_row( r *= *i );
+               p.truth() && i != e; ++i ) {
+        p.add_row( canonical_coset_member( r ) );
+        r *= *i;
+      }
       while ( args.true_course && !r.isrounds() && p.truth() );
 
       if ( !p.truth() ) 
         return false;
-     }
+    }
+  // TODO: Merge with above code
+  if ( args.pends.size() > 1 && args.true_half_lead )
+    {
+      prover p( 1 );
+      row r(bells);
+
+      for ( method::const_iterator i(m.begin()), e(m.begin()+m.size()/2);
+               p.truth() && i != e; ++i ) {
+        p.add_row( canonical_coset_member( r ) );
+        r *= *i;
+      }
+
+      if ( !p.truth() )
+        return false;
+    }
 
   if ( args.require_CPS && !is_cps( m ) )
     return false;

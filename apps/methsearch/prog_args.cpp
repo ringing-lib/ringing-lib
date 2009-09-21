@@ -142,6 +142,18 @@ bool falseness_opt::process( const string &arg, const arg_parser & ) const
       for ( row_calc::const_iterator i=rc->begin(), e=rc->end(); i!=e; ++i )
         args.avoid_rows.insert( *i );
     }
+  else if ( arg.size() > 2 && arg[0] == 'P' && arg[1] == '=' )
+    {
+      row r;
+      try { 
+        r = row( arg.substr(2) );
+      } 
+      catch ( exception const& e ) {
+        cerr << "Error parsing row in -FP option: " << e.what() << "\n";
+        return false;
+      }
+      args.pends_generators.push_back(r); 
+    }
   else
     {
       cerr << "Unknown -F option: \"" << arg << "\"\n";
@@ -625,6 +637,9 @@ bool arguments::validate( arg_parser &ap )
 	  return false;
 	}
     }
+
+  if (pends_generators.size()) 
+    pends = group( pends_generators );
 
   if (mask.empty()) mask = "*";
       
