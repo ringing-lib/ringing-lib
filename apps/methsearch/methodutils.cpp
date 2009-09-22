@@ -1,5 +1,6 @@
 // -*- C++ -*- methodutils.h - utility functions missing from the ringing-lib
-// Copyright (C) 2002, 2003, 2004, 2005 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003, 2004, 2005, 2009
+// Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -357,7 +358,10 @@ bool compare_changes( change const& a, change const& b )
 
   // TODO:  This coule be much more efficient
   const string sa(a.print()), sb(b.print());
-  return sa < sb;
+  vector<bell> pa, pb; 
+  transform( sa.begin(), sa.end(), back_inserter(pa), bell::read_char );
+  transform( sb.begin(), sb.end(), back_inserter(pb), bell::read_char );
+  return pa < pb;
 }
 
 char old_lhcode( method const& m ) 
