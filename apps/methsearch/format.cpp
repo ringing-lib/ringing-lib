@@ -1,5 +1,5 @@
 // -*- C++ -*- format.cpp - classes to handle format specifiers
-// Copyright (C) 2002, 2003, 2004, 2005, 2008
+// Copyright (C) 2002, 2003, 2004, 2005, 2008, 2009
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -623,18 +623,15 @@ void statistics::add_entry( const histogram_entry &entry )
 
 void clear_status()
 {
-  cerr << '\r' << string( 60, ' ' ) << '\r';
+  cerr << '\r' << string( 75, ' ' ) << '\r';
 }
 
 void output_status( const method &m )
 {
-  make_string tmp;
-  for ( method::const_iterator i(m.begin()), e(m.end()); i!=e; ++i )
-    tmp << *i << ".";
-  string s = tmp;
+  string s = m.format(method::M_DASH);
 
-  if ( s.size() > 45 ) 
-    s = s.substr(0, 45) + "...";
+  if ( s.size() > 65 ) 
+    s = s.substr(0, 65) + "...";
   
   clear_status();
   cerr << "Trying " << s << flush;
