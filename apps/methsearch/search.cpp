@@ -544,7 +544,7 @@ bool searcher::try_halflead_change( const change &ch )
       else if ( args.require_reg_hls && 
                 is_regular_hl(hlh) && is_regular_hl(hle) )
         ; // OK
-
+      
       else
         return false;
     }

@@ -469,16 +469,27 @@ bool arguments::validate( arg_parser &ap )
       return false;
     }
 
+  if ( surprise && treble_bob ) 
+    {
+      ap.error( "The surprise and treble bob options are mututally exclusive");
+      return false;
+    }
   if ( (surprise || treble_bob) && ! hunt_bells )
     {
       ap.error( "Surprise and/or treble bob methods require at least one "
 		"hunt bell"  );
       return false;
     }
+  if ( (surprise || treble_bob) && bells % 2 == 1 )
+    {
+      ap.error( "Surprise and/or treble bob methods can only be found on an "
+		"even number of bells"  );
+      return false;
+    }
 
   if ( treble_dodges && bells % 2 == 1 )
     {
-      ap.error( "Treble dodging methods can only be be found on an"
+      ap.error( "Treble dodging methods can only be found on an"
 		" even number of bells" );
       return false;
     }
