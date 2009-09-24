@@ -150,11 +150,9 @@ void searcher::filter()
       }
 
       // Status message (when in filter mode)
-      if ( args.status ) {
-        if ( node_count % 10000 == 0 )
-          output_status( filter_method );
-        ++node_count;
-      }
+      if ( args.status && node_count % 10000 == 0 )
+        output_status( filter_method );
+      ++node_count;
 
       general_recurse();
       assert( m.length() == 0 );
@@ -184,7 +182,7 @@ void run_search( const arguments &args )
     args.outputs.flush();
   }
 
-  if ( args.count || args.raw_count )
+  if ( args.count || args.raw_count || args.node_count )
     {
       if ( s.search_count && ( !args.quiet || args.H_fmt_str.size() ) ) 
         cout << "\n";
@@ -961,8 +959,8 @@ void searcher::general_recurse()
     return;
 
   // Status message (when in search mode)
-  if ( args.status && !args.filter_mode ) {
-    if ( node_count % 10000 == 0 )
+  if ( !args.filter_mode ) {
+    if ( args.status && node_count % 10000 == 0 )
       output_status( m );
     ++node_count;
   }

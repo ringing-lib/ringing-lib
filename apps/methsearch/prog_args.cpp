@@ -573,7 +573,12 @@ bool arguments::validate( arg_parser &ap )
 	if ( R_fmt_str.empty() ) R_fmt_str = "$p\t$l";
 	outputs.add( new fmtout( R_fmt_str, outfile ) );
       } 
-      else if ( outfmt == "xml" ) 
+      else if ( outfmt == "xml" ) {
+        if ( outfile.empty() ) { 
+          ap.error( make_string() << "XML output cannot be specified without "
+                    "an output file name (with -o)" );
+          return false;
+        }
         try {
 	  outputs.add( new xmlout( outfile ) );
         } 
@@ -582,6 +587,7 @@ bool arguments::validate( arg_parser &ap )
                     << ex.what() ); 
           return false;
         }
+      }
       else {
 	ap.error( "Unknown -O format: must be either `xml' or `fmt'" );
 	return false;
