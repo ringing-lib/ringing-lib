@@ -1,5 +1,5 @@
 // -*- C++ -*- mask.cpp - handle method masks
-// Copyright (C) 2002, 2003 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003, 2009 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -621,7 +621,8 @@ bool parse_mask( arguments &args, const arg_parser &ap )
 		  change below(*j); 
 		  
 		  // Handle -kf or -df
-		  if ( (args.skewsym || args.doubsym) && args.no_78_pns 
+		  if ( (args.skewsym || args.doubsym || args.mirrorsym) 
+                       && args.no_78_pns 
 		       && posn.first > 1 && below.findplace(1) )
 		    continue;
 		  
@@ -648,6 +649,10 @@ bool parse_mask( arguments &args, const arg_parser &ap )
 		if ( args.max_consec_places
 		     && has_consec_places( ch, args.max_consec_places ) )
 		  continue;
+
+                // Handle --mirror
+                if ( args.mirrorsym && ch != ch.reverse() )
+                  continue;
 		
 		changes_to_try.push_back(ch);
 	      }
@@ -682,6 +687,10 @@ bool parse_mask( arguments &args, const arg_parser &ap )
 		  if ( args.max_consec_places
 		       && has_consec_places( ch, args.max_consec_places ) )
 		    continue;
+
+                  // Handle --mirror
+                  if ( args.mirrorsym && ch != ch.reverse() )
+                    continue;
 
 		  changes_to_try.push_back(ch);
 		}

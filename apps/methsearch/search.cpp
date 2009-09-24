@@ -176,18 +176,23 @@ void run_search( const arguments &args )
   } 
   catch ( const exit_exception& ) {}
 
+  if ( args.status && args.outfile.empty() ) clear_status();
+
+  // Causes the stats to be emittted
+  if ( args.H_fmt_str.size() ) {
+    if ( !args.quiet && s.search_count ) cout << "\n";
+    args.outputs.flush();
+  }
+
   if ( args.count || args.raw_count )
     {
-      if ( args.status && args.outfile.empty() ) clear_status();
-      if ( !args.quiet ) cout << "\n";
+      if ( s.search_count && ( !args.quiet || args.H_fmt_str.size() ) ) 
+        cout << "\n";
+
       if ( args.raw_count ) output_raw_count( cout, s.search_count );
       else if ( args.count ) output_count( cout, s.search_count );
       if ( args.node_count ) output_node_count( cout, s.node_count );
     }
-
-  if ( args.status ) clear_status();
-
-  args.outputs.flush(); // Causes stats to be emitted.
 }
 
 void searcher::found_method()

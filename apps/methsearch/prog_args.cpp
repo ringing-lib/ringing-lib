@@ -283,6 +283,11 @@ void arguments::bind( arg_parser &p )
 	   doubsym ) );
 
   p.add( new boolean_opt
+         ( '\0', "mirror",
+           "Look for methods with mirror symmetry", 
+           mirrorsym ) );
+
+  p.add( new boolean_opt
 	 ( 'S', "surprise", 
 	   "Require an internal place between dodging positions",
 	   surprise ) );

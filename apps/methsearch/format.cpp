@@ -129,8 +129,7 @@ private:
   }
 
   virtual void flush() {
-    size_t c = statistics::output( os );
-    if ( c ) os << endl;
+    statistics::output( os );
   }
 
   format_string fs;
