@@ -181,6 +181,8 @@ arguments::arguments( int argc, char* argv[] )
     exit(1);
 }
 
+// Unused letters: -aghitvxyzBDEIJKNQWXYZ.  Plunder with caution
+
 void arguments::bind( arg_parser &p )
 {
   p.add( new help_opt );
