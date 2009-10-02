@@ -234,7 +234,7 @@ string method_properties::impl2::get_property( int num_opt,
 
 	case '#': {
 	  static int n=0;
-	  os << ++n;
+	  os << setw(num_opt) << ++n;
 	} break;
 
 	default:

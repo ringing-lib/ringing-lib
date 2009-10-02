@@ -648,16 +648,10 @@ bool arguments::validate( arg_parser &ap )
 
   if ( formats_have_old_lhcodes() )
     {
-      if ( bells != 6 || hunt_bells != 1 || show_all_meths )
+      if ( bells != 6 & bells != 5 || hunt_bells != 1)
 	{
 	  ap.error( "Old-style lead end codes are only supported for "
-		    "non-differential single-hunt minor methods" );
-	  return false;
-	}
-      else if ( !require_limited_le && !require_pbles ) 
-	{
-	  ap.error( "Old-style lead end codes only apply to 12 or 16 lead "
-		    "heads: -e or -r must be used" );
+		    "single-hunt doubles or minor methods" );
 	  return false;
 	}
     }

@@ -364,15 +364,17 @@ bool compare_changes( change const& a, change const& b )
   return pa < pb;
 }
 
-char old_lhcode( method const& m ) 
+namespace {
+char old_lhcode_6( method const& m )
 {
   row const lh( m.lh() );
-  change const c12( m.bells(), "12" ), c1N( m.bells(), "1" );
-
-  if ( m.bells() != 6 ) 
-    return '?';
+  change const c12( m.bells(), "12" );
 
   bool const seconds( m.back() == c12 );
+
+  // Only handle seconds and sixth place methods
+  if ( !seconds && m.back() != change( m.bells(), "1" ) )
+    return '?';
 
   switch (lh[1])
     {
@@ -402,33 +404,56 @@ char old_lhcode( method const& m )
     }
 
   return '?';
+}
 
-  /*  TODO:  On 5 bells:
+char old_lhcode_5( method const& m )
+{
+  row const lh( m.lh() );
+  change const c1(m.bells(), "1"), c2(m.bells(), "12"), c3(m.bells(), "123");
 
-125 lead heads
+  bool const b1(m.back() == c1), b2(m.back() == c2), b3(m.back() == c3);
 
-A = 13524 (reg)
-B = 14253 (reg)
-G = 12534 (SC)
-H = 13425 (5)
-J = 14235 (5)
-K = 12453 (SC)
+  // Only handle seconds and sixth place methods
+  if ( !b1 && !b2 && !b3 ) 
+    return '?';
 
-1 lead heads
+  switch (lh[1])
+    {
+    case 1:
+      if ( lh == "12534" ) return b2 ? 'G' : b3 ? 'T' : '?';
+      if ( lh == "12453" ) return b2 ? 'K' : b3 ? 'S' : '?';
+      break;
+ 
+    case 2:
+      if ( lh == "13524" ) return b2 ? 'A' : b3 ? '?' : 'C';
+      if ( lh == "13425" ) return b2 ? 'H' : '?';
+      if ( lh == "13452" ) return b1 ? 'F' : '?';
+      break;
+ 
+    case 3:
+      if ( lh == "14253" ) return b2 ? 'B' : b3 ? ' ' : 'D';
+      if ( lh == "14235" ) return b2 ? 'J' : '?';
+      if ( lh == "14352" ) return b3 ? 'U' : '?';
+      if ( lh == "14532" ) return b3 ? 'R' : '?';
+      break;
 
-C = 13524 (reg)
-D = 14253 (reg)
-E = 15234
-F = 13452
+    case 4:
+      if ( lh == "15234" ) return b1 ? 'E' : '?';
+      if ( lh == "15423" ) return b3 ? 'Q' : '?';
+      if ( lh == "15324" ) return b3 ? 'V' : '?';
+      break;
+    }
 
-123 lead heads
+  return '?';
+}
+}
 
-Q = 15423
-R = 14532
-S = 12453 (SC)
-T = 12534 (SC)
-U = 14352 (3)
-V = 15324 (3)
-
-  */
+char old_lhcode( method const& m ) 
+{
+  if ( m.bells() == 6 ) 
+    return old_lhcode_6(m);
+  else if ( m.bells() == 5 ) 
+    return old_lhcode_5(m);
+  else
+    return '?';
 }
