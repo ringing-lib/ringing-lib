@@ -1,5 +1,5 @@
 // -*- C++ -*- litelib.cpp - Lightweight library format
-// Copyright (C) 2007 Richard Smith <richard@ex-parrot.com>.
+// Copyright (C) 2007, 2009 Richard Smith <richard@ex-parrot.com>.
 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -44,11 +44,11 @@ class litelib::impl : public library_base {
 public:
   impl(int b, const string& filename)
     : b(b), f_owner( new ifstream(filename.c_str()) ), f(*f_owner)
-  { ok = f.good(); }
+  { ok = f.good(); skip_bom(); }
 
   impl(int b, istream& is)
     : b(b), f(is)
-  { ok = f.good(); }
+  { ok = f.good(); skip_bom(); }
 
   // Is this file in the right format?
   // static library_base *canread(const string& filename);
@@ -59,6 +59,8 @@ public:
   virtual const_iterator begin() const;
 
 private:
+  void skip_bom();
+
   virtual bool good(void) const { return f; }
 
 private:
@@ -68,6 +70,22 @@ private:
   bool ok;
 };
 
+void litelib::impl::skip_bom()
+{
+  // Handle UTF-8 BOM: EF BB BF
+  if ( f && f.peek() == 0xEF ) {
+    f.get();
+    if ( f && f.peek() != 0xBB ) 
+      ok = false;
+    else { 
+      f.get();
+      if ( f && f.peek() != 0xBF ) 
+        ok = false;
+      else
+        f.get();
+    }
+  }
+}
 
 //void litelib::registerlib(void)
 //{
