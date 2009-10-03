@@ -425,13 +425,13 @@ format_string::format_string( const string &infmt,
 	  switch ( *iter )
 	    {
 	    case '%': case '$': case 'c': case 'b': case 'M': 
-	    case 'o': case 'u': case ')': case 'L':
+	    case 'o': case 'u': case ')': case 'L': case '#':
 	      // Option may but needn't have a number
 	      break;
 
 	    case 'n': case 'N': case 'p': case 'q': case 'Q': case 'l': 
 	    case 'C': case 'S': case 'F': case 'd': case '[': case '(':
-	    case 'y': case 'O': case 'D': case '#':
+	    case 'y': case 'O': case 'D':
 	      if ( got_num_opt )
 		throw argument_error
 		  ( make_string() << "The `$" << *iter << "' "
