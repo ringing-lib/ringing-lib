@@ -86,8 +86,15 @@ library_base::invalid_name::invalid_name()
 library::library(const string& filename)
 {
   char const sep = RINGING_WINDOWS ? '\\' : '/';
-  if ( filename.size() && !try_load_lib( lb, libtypes, filename ) 
-       && filename[0] != sep ) 
+
+  bool isabs = false;
+  if ( filename[0] == sep ) isabs = true;
+#if RINGING_WINDOWS
+  if ( filename.size() >= 3 && filename[1] == ':' && filename[2] == sep )
+    isabs = true;
+#endif
+
+  if ( filename.size() && !try_load_lib( lb, libtypes, filename ) && !isabs )
   {
     list<string> locs( split_path(libpath) );
     for (list<string>::const_iterator i=locs.begin(), e=locs.end(); i!=e; ++i)
