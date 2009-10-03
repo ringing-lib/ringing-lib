@@ -295,6 +295,20 @@ void format_string::add_method_to_stats( const method_properties &props ) const
   statistics::add_entry( histogram_entry( *this, props ) );
 }
 
+RINGING_START_ANON_NAMESPACE
+static int parse_xdigit(char c)
+{
+  if (c >= '0' && c <= '9') 
+    return c-'0';
+  else if ( c >= 'A' && c <= 'F' )
+    return 0xA + c-'A';
+  else if ( c >= 'a' && c <= 'f' )
+    return 0xA + c-'a';
+  else
+    throw argument_error("Invalid \\xNN character escape sequence");
+}
+RINGING_END_ANON_NAMESPACE
+
 void format_string::print_method( const method_properties &props, 
 				  ostream &os ) const
 {
@@ -472,10 +486,21 @@ format_string::format_string( const string &infmt,
 	  }
 	  else switch ( *++iter ) {
 	    // Handle escaping at this stage
-	    case 't': *outfmts.top() << '\t';  break;
+            case 'a': *outfmts.top() << '\a';  break;
+            case 'b': *outfmts.top() << '\b';  break;
+            case 'f': *outfmts.top() << '\f';  break;
 	    case 'n': *outfmts.top() << '\n';  break;
+	    case 'r': *outfmts.top() << '\r';  break;
+	    case 't': *outfmts.top() << '\t';  break;
+	    case 'v': *outfmts.top() << '\v';  break;
 	    // Escape '$' from the next stage
 	    case '$': *outfmts.top() << "$$";  break;
+            case 'x': {
+              unsigned char value = 0x00;
+              value += parse_xdigit(*++iter) * 0x10;
+              value += parse_xdigit(*++iter);
+              *outfmts.top() << char(value);
+            } break;
 	    // For everything else, \x -> literal x
 	    default:  *outfmts.top() << *iter; break;
 	  }
