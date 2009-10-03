@@ -1,5 +1,5 @@
 // library.cpp : Libraryish things
-// Copyright (C) 2001, 2002, 2004 Martin Bright <martin@boojum.org.uk>
+// Copyright (C) 2001, 2002, 2004, 2009 Martin Bright <martin@boojum.org.uk>
 // and Richard Smith <richard@ex-parrot.com>
 
 // This library is free software; you can redistribute it and/or
@@ -36,6 +36,47 @@ RINGING_START_NAMESPACE
 RINGING_USING_STD
 
 list<library::init_function> library::libtypes;
+string library::libpath;
+
+void library::addtype(init_function lt) 
+{ 
+  libtypes.push_back(lt); 
+}
+
+void library::setpath(string const& p)
+{
+  libpath = p;
+}
+
+RINGING_START_ANON_NAMESPACE
+list<string> split_path( string const& p )
+{
+  list<string> pp;
+  string::size_type i=0;
+  while (true) {
+    string::size_type j = p.find(':', i);
+    if ( j == string::npos ) {
+      if ( p.size() ) pp.push_back( p.substr(i) );
+      break;
+    }
+    
+    pp.push_back( p.substr(i, j-i) );
+    i = j+1;
+  }
+  return pp;
+}
+
+bool try_load_lib( shared_pointer<library_base>& lb,
+                   list<library::init_function> const& lts, 
+                   string const& filename )
+{
+  typedef list<library::init_function>::const_iterator iterator;
+  for ( iterator i=lts.begin(), e=lts.end(); !lb && i!=e; ++i )
+    lb.reset( (**i)(filename) );
+  return (bool)lb;
+}
+
+RINGING_END_ANON_NAMESPACE
 
 #if RINGING_USE_EXCEPTIONS
 library_base::invalid_name::invalid_name() 
@@ -44,9 +85,15 @@ library_base::invalid_name::invalid_name()
 
 library::library(const string& filename)
 {
-  typedef list<init_function>::const_iterator iterator;
-  for ( iterator i=libtypes.begin(), e=libtypes.end(); !lb && i!=e; ++i )
-    lb.reset( (**i)(filename) );
+  char const sep = RINGING_WINDOWS ? '\\' : '/';
+  if ( filename.size() && !try_load_lib( lb, libtypes, filename ) 
+       && filename[0] != sep ) 
+  {
+    list<string> locs( split_path(libpath) );
+    for (list<string>::const_iterator i=locs.begin(), e=locs.end(); i!=e; ++i)
+      if ( try_load_lib( lb, libtypes, *i + sep + filename ) )
+        break;
+  }
 }
 
 

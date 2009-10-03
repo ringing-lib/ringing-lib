@@ -1,5 +1,5 @@
 // -*- C++ -*- dom_gdome.cpp - DOM wrapper for Gdome
-// Copyright (C) 2008 Richard Smith <richard@ex-parrot.com>.
+// Copyright (C) 2008, 2009 Richard Smith <richard@ex-parrot.com>.
 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -32,6 +32,9 @@
 #include <ringing/dom.h>
 
 #include <gdome.h>
+
+// Needed to hook into error handling in the underlying library
+#include <libxml/xmlerror.h>
 
 RINGING_START_NAMESPACE
 
@@ -68,18 +71,47 @@ public:
     : data(src)
   {}
 
- ~transcode_input() { gdome_str_unref( const_cast<GdomeDOMString*>(data) ); }
+ ~transcode_input() 
+  { if (data) gdome_str_unref( const_cast<GdomeDOMString*>(data) ); }
 
-  char const* to_string() const { return data->str; }
+  char const* to_string() const { return data ? data->str : NULL; }
 
 private:
-  transcode_input( const transcode_output& ); // Unimplemented 
-  transcode_input& operator=( const transcode_output& ); // Unimplemented 
+  transcode_input( const transcode_input& ); // Unimplemented 
+  transcode_input& operator=( const transcode_input& ); // Unimplemented 
 
   GdomeDOMString const* data;
 };
 
 #define TRANSCODE_I(str) transcode_input(str).to_string()
+
+struct scoped_libxml2_err
+{
+public:
+  scoped_libxml2_err() : errs(false) {
+    xmlSetStructuredErrorFunc(&errs, flag_xml_error);
+  }
+
+  void test() {
+    if (errs) throw runtime_error("Unable to load XML document");
+  }
+
+ ~scoped_libxml2_err() { 
+    xmlSetStructuredErrorFunc(NULL, NULL);
+  }
+
+private:
+  scoped_libxml2_err( const scoped_libxml2_err& ); // Unimplemented 
+  scoped_libxml2_err& operator=( const scoped_libxml2_err& ); // Unimplemented 
+ 
+  // Function prototype matches libxml's xmlStructuredErrorFunc
+  static void flag_xml_error( void* userData, xmlErrorPtr error )
+  {
+    *(bool*)userData = true;
+  }
+
+  bool errs;
+};
 
 RINGING_END_ANON_NAMESPACE
 
@@ -87,9 +119,9 @@ struct dom_document::impl
 {
   impl() : domimpl(NULL), doc(NULL), ofilename(NULL) {}
  ~impl() {
-    if (domimpl) gdome_di_unref(domimpl, &exc);
-    if (doc) gdome_doc_unref(doc, &exc);
-    if (ofilename) gdome_str_unref(ofilename);
+    if (domimpl) gdome_di_unref(domimpl, &exc), domimpl=NULL;
+    if (doc) gdome_doc_unref(doc, &exc), doc=NULL;
+    if (ofilename) gdome_str_unref(ofilename), ofilename=NULL;
   }
 
   GdomeException exc;
@@ -112,6 +144,7 @@ struct dom_element::impl
   GdomeElement* elt;
 };
 
+
 dom_document::dom_document( string const& filename, io mode, filetype type )
   : pimpl( new impl )
 {
@@ -121,8 +154,12 @@ dom_document::dom_document( string const& filename, io mode, filetype type )
     pimpl->ofilename = gdome_str_mkref(filename.c_str());
   }
   else if (mode == in) {
+    // We want errors by exceptions because otherwise they're 
+    // reported on stdout
+    scoped_libxml2_err do_throw_error;
     pimpl->doc = gdome_di_createDocFromURI
       ( pimpl->domimpl, filename.c_str(), GDOME_LOAD_PARSING, &pimpl->exc );
+    do_throw_error.test();
   }
 }
 

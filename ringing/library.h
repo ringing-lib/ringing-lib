@@ -1,5 +1,5 @@
 // -*- C++ -*- library.h - Things for method libraries
-// Copyright (C) 2001, 2002, 2004 Martin Bright <martin@boojum.org.uk>
+// Copyright (C) 2001, 2002, 2004, 2009 Martin Bright <martin@boojum.org.uk>
 // and Richard Smith <richard@ex-parrot.com>.
 
 // This library is free software; you can redistribute it and/or
@@ -240,11 +240,15 @@ public:
 
   // Register a new type of library
   typedef library_base *(*init_function)( const string & );
-  static void addtype(init_function lt) { libtypes.push_back(lt); }
+  static void addtype(init_function lt);
+
+  // Set the path (a colon delimited string) in which we look for libraries
+  static void setpath(string const& p);
 
 private:
   shared_pointer<library_base> lb;
   static list<init_function> libtypes;
+  static string libpath;
 };
 
 

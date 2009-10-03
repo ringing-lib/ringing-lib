@@ -32,7 +32,6 @@
 #include <ringing/xmllib.h>
 #include <ringing/pointers.h>
 #include <ringing/library.h>
-#include <ringing/xmllib.h>
 #include <ringing/peal.h>
 #include <ringing/dom.h>
 
