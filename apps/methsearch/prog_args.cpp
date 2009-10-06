@@ -269,6 +269,11 @@ void arguments::bind( arg_parser &p )
 	   max_consec_places, /* default = */ 1 ) );
 
   p.add( new boolean_opt
+	 ( 'y', "symmetric-sections",
+	   "Require each section to be symmetric", 
+	   sym_sects, /* default = */ 1 ) );
+
+  p.add( new boolean_opt
 	 ( 's', "symmetric", 
 	   "Look for palindromically symmetric methods (default)",
 	   sym ) );

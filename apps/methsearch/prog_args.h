@@ -86,6 +86,7 @@ struct arguments
   init_val<bool,false> filter_mode;
 
   init_val<bool,false> no_78_pns;
+  init_val<bool,false> sym_sects;
 
   init_val<bool,false> skewsym;
   init_val<bool,false> sym;

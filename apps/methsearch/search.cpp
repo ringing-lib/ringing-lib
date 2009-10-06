@@ -684,7 +684,16 @@ bool searcher::try_midlead_change( const change &ch )
       if ( args.treble_bob && ch.internal() )
         return false;
     }
-  
+ 
+  if ( args.sym_sects && posn % 2 == 0 && depth % div_len >= div_len/2 )
+    {
+      int i = depth/div_len*div_len + div_len - 2 - (depth % div_len);
+      assert( i < (int)m.size() && i >= 0 );
+      if ( ch != m[i] )
+        return false;
+    }
+
+ 
   if ( args.same_place_parity && args.treble_dodges == 1
        && m.length() % div_len && depth % div_len != div_len - 1 
        && ch.sign() == m.back().sign() )
