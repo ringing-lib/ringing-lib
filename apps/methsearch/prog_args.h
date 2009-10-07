@@ -84,6 +84,7 @@ struct arguments
   init_val<bool,false> raw_count;
   init_val<bool,false> node_count;
   init_val<bool,false> filter_mode;
+  init_val<bool,false> filter_lib_mode;
 
   init_val<bool,false> no_78_pns;
   init_val<bool,false> sym_sects;

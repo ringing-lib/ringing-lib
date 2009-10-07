@@ -1,5 +1,5 @@
 // -*- C++ -*- libout.h - general classes for output of a method library
-// Copyright (C) 2004 Richard Smith <richard@ex-parrot.com>.
+// Copyright (C) 2004, 2009 Richard Smith <richard@ex-parrot.com>.
 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -30,7 +30,7 @@
 #pragma interface
 #endif
 
-#include <ringing/pointers.h>
+#include <ringing/libbase.h>
 
 RINGING_START_NAMESPACE
 
@@ -38,13 +38,13 @@ RINGING_USING_STD
 
 class library_entry;
 
-// TODO: Merge this with library
-class libout {
+class libout : public virtual libbase {
 public:
   libout() {}
 
-  void flush() { pimpl->flush(); }
-  void append( library_entry const& entry ) { pimpl->append(entry); }
+  void flush();
+  void append( library_entry const& entry );
+  void push_back( library_entry const& entry );
 
   class iterator;
 
@@ -52,28 +52,17 @@ public:
   iterator end();
 
 RINGING_PROTECTED_IMPL:
-  class interface {
+  class interface : public virtual libbase::interface {
   public:
-    virtual ~interface() {}
     virtual void append( library_entry const& entry ) = 0;
     virtual void flush() {}
   };
 
-  explicit libout( interface* p ) : pimpl(p) {}
-
-  template <class ImplType> ImplType* get_impl( ImplType* = 0 ) {
-    return static_cast<ImplType*>(pimpl.get()); 
-  }
-
-  template <class ImplType> ImplType const* get_impl( ImplType* = 0 ) const { 
-    return static_cast<ImplType const*>(pimpl.get()); 
-  }
+ explicit libout( interface* p ) { this->set_impl(p); }
 
 private:
-  libout( const libout& ); // Unimplemented
-  libout& operator=( const libout& ); // Unimplemented
-
-  scoped_pointer<interface> pimpl;
+  libout( libout const& ); // Unimplemented
+  void operator=( libout const& ); // Unimplemented
 };
 
 class libout::iterator 
@@ -95,14 +84,6 @@ private:
   // Data members
   interface* pimpl;
 };
-
-inline libout::iterator libout::begin() { 
-  return iterator( pimpl.get() ); 
-}
-
-inline libout::iterator libout::end() { 
-  return iterator(); 
-}
 
 
 // An adaptor to output simulatenously in multiple ways

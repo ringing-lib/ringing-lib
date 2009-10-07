@@ -16,7 +16,7 @@ stl.cpp
 
 # These source files are released under the GPL
 libringing_la_SOURCES = \
-mslib.cpp cclib.cpp extent.cpp group.cpp proof.cpp \
+mslib.cpp cclib.cpp methodset.cpp extent.cpp group.cpp proof.cpp \
 falseness.cpp falseness.dat touch.cpp music.cpp \
 print.cpp print_ps.cpp dimension.cpp printm.cpp print_pdf.cpp pdf_fonts.cpp \
 search_base.cpp basic_search.cpp multtab.cpp table_search.cpp streamutils.cpp 
@@ -63,7 +63,7 @@ music.h print.h print_ps.h dimension.h common.h common-am.h common-msvc.h \
 touch.h printm.h print_pdf.h pdf_fonts.h pointers.h extent.h falseness.h \
 search_base.h basic_search.h multtab.h table_search.h streamutils.h \
 xmllib.h group.h libfacet.h peal.h xmlout.h libout.h mathutils.h bell.h \
-change.h place_notation.h litelib.h dom.h
+change.h place_notation.h litelib.h dom.h libbase.h
 
 # Delete common-am.h before packaging up the distribution
 dist-hook:

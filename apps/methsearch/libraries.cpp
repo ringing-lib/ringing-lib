@@ -27,12 +27,8 @@
 #include <string>
 #if RINGING_OLD_INCLUDES
 #include <vector.h>
-#include <set.h>
-#include <list.h>
 #else
 #include <vector>
-#include <set>
-#include <list>
 #endif
 #if RINGING_HAVE_OLD_IOSTREAMS
 #include <iostream.h>
@@ -49,37 +45,20 @@
 #include <ringing/cclib.h>
 #include <ringing/mslib.h>
 #include <ringing/xmllib.h>
+#include <ringing/methodset.h>
 
 
 RINGING_USING_NAMESPACE
 RINGING_USING_STD
 
-struct method_libraries::impl
-{
-  // Helper functions
-  void read_library( const string &name );
-
-  // Data members
-  bool init;
-  vector< string > library_names;
-  set< method > named_methods;
-};
-
-method_libraries::impl &method_libraries::instance()
+method_libraries &method_libraries::instance()
 {
   static method_libraries tmp;
-  return *tmp.pimpl;
+  return tmp;
 }
 
 method_libraries::method_libraries()
-  // Passing the second argument here is a work-around for an MSVC 5
-  // bug.   See the comment on the constructor for more details.
-  : pimpl( new impl, delete_helper<impl>::fn )
-{
-  pimpl->init = false;
-}
-
-method_libraries::~method_libraries()
+  : done_init(false)
 {
 }
 
@@ -88,13 +67,13 @@ bool method_libraries::has_libraries()
   return !instance().library_names.empty();
 }
 
-void method_libraries::add_new_library( const string &name )
+void method_libraries::add_new_library( const string &filename )
 {
-  instance().library_names.push_back( name );
-  instance().init = false;
+  instance().library_names.push_back( filename );
+  instance().done_init = false;
 }
 
-void method_libraries::impl::read_library( const string &filename )
+void method_libraries::read_library( const string &filename )
 {
   try
     {
@@ -106,18 +85,13 @@ void method_libraries::impl::read_library( const string &filename )
 	  exit(1);
 	}
 
-      // TODO -- this can now use library iterators
-
-      list< method > ms;
-      int count = l.mdir( ms );
-      if ( count == 0 )
+      if ( l.empty() )
 	{
 	  cerr << "The library " << filename << " appears to be empty\n";
 	  exit(1);
 	}
-
-      copy( ms.begin(), ms.end(), 
-	    inserter( named_methods, named_methods.begin() ) );
+ 
+      copy( l.begin(), l.end(), back_inserter( instance() ) );
     }
   catch ( const exception &e )
     {
@@ -130,7 +104,7 @@ void method_libraries::impl::read_library( const string &filename )
 
 void method_libraries::init()
 {
-  if ( !instance().init && has_libraries() )
+  if ( !instance().done_init && has_libraries() )
     {
       cclib::registerlib();
       mslib::registerlib();
@@ -139,7 +113,7 @@ void method_libraries::init()
       if ( char const* const methlibpath = getenv("METHLIBPATH") )
         library::setpath( methlibpath );
       
-      instance().named_methods.clear();
+      instance().clear();
 
       for ( vector< string >::const_iterator 
 	      i( instance().library_names.begin() ), 
@@ -149,15 +123,15 @@ void method_libraries::init()
 	  instance().read_library( *i );
 	}
 
-      instance().init = true;
+      instance().done_init = true;
     }
 }
 
-const method &method_libraries::lookup_method( const method &m )
+method method_libraries::lookup_method( const method &m )
 {
-  set<method>::const_iterator i( instance().named_methods.find( m ) );
-  if ( i != instance().named_methods.end() )
-    return *i;
+  library_entry i( instance().find( m ) );
+  if ( ! i.null() )
+    return i.meth();
   else 
     return m;
 }

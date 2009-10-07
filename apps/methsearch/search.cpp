@@ -32,6 +32,7 @@
 #include "prog_args.h"
 #include "format.h" // for clear_status
 #include "output.h"
+#include "libraries.h" // for filter_lib code
 #if RINGING_OLD_INCLUDES
 #include <vector.h>
 #include <algo.h>
@@ -65,7 +66,7 @@ private:
 
   searcher( const arguments &args );
 
-  void filter();
+  void filter( library const& );
   void general_recurse();
 
   inline bool push_change( const change& ch);
@@ -131,9 +132,8 @@ searcher::searcher( const arguments &args )
         back_inserter(startmeth) );
 }
 
-void searcher::filter()
+void searcher::filter( library const& in )
 {
-  litelib in( args.bells, std::cin );
   for ( library::const_iterator i=in.begin(), e=in.end(); i!=e; ++i ) 
     {
       try {
@@ -166,7 +166,10 @@ void run_search( const arguments &args )
   try 
   {
     if ( args.filter_mode ) {
-      s.filter();
+      litelib in( args.bells, std::cin );
+      s.filter(in);
+    } else if ( args.filter_lib_mode ) { 
+      s.filter( method_libraries::instance() );
     } else {
       s.general_recurse();
       assert( s.m.length() == 0 );

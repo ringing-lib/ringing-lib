@@ -1,5 +1,5 @@
 // -*- C++ -*- libraries.h - singleton containing the method libraries
-// Copyright (C) 2002 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2009 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -27,7 +27,7 @@
 #pragma interface
 #endif
 
-#include <ringing/pointers.h>
+#include <ringing/methodset.h>
 #include <string>
 
 // Forward declare ringing::method
@@ -38,24 +38,22 @@ RINGING_END_NAMESPACE
 RINGING_USING_NAMESPACE
 RINGING_USING_STD
 
-class method_libraries
+class method_libraries : public methodset
 {
 public:
   static void add_new_library( const string &name );
   static void init();
   static bool has_libraries();
-  static const method &lookup_method( const method &m );
+  static method lookup_method( const method &m );
 
-  // Public to avoid MSVC compilation errors
- ~method_libraries();
+  static method_libraries &instance();
 
 private:
-  struct impl;
-  scoped_pointer< impl > pimpl;
-
-  static impl &instance();
-
+  void read_library( const string& );
   method_libraries();
+
+  bool done_init;
+  vector<string> library_names;
 };
 
 #endif // METHSEARCH_LIBRARIES_INCLUDED

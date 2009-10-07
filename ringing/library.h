@@ -32,12 +32,10 @@
 #endif
 
 #if RINGING_OLD_INCLUDES
-#include <iosfwd.h>
 #include <list.h>
 #include <stdexcept.h>
 #include <iterator.h>
 #else
-#include <iosfwd>
 #include <list>
 #include <stdexcept>
 #include <iterator>
@@ -45,7 +43,7 @@
 #include <string>
 #include <ringing/method.h>
 #include <ringing/pointers.h>
-#include <ringing/libfacet.h>
+#include <ringing/libbase.h>
 
 RINGING_START_NAMESPACE
 
@@ -56,12 +54,13 @@ class library_base;
 class library_entry;
 
 // library_base : A base class for method libraries
-class RINGING_API library_base {
+class RINGING_API library_base : public virtual libbase::interface {
 public:
   virtual ~library_base() {}		// Got to have a virtual destructor
 
   // Reading the library.
   virtual method load(const string& s, int stage) const; // Load a method
+  virtual library_entry find(const method& pn) const; // Load by pn
   virtual int dir(list<string>& result) const;
   virtual int mdir(list<method>& result) const;
 
@@ -93,78 +92,17 @@ public:
 };
 
 #if RINGING_AS_DLL
-RINGING_EXPLICIT_STL_TEMPLATE list< library_base *(*)( ifstream &, 
-						       const string & ) >;
-RINGING_EXPLICIT_RINGING_TEMPLATE shared_pointer<library_base>;
-RINGING_EXPLICIT_RINGING_TEMPLATE cloning_pointer<library_entry>;
+RINGING_EXPLICIT_STL_TEMPLATE list< library_base *(*)( const string & ) >;
 #endif
 
-// library_entry : A base class for entries from libraries
-class RINGING_API library_entry {
-public:
-  library_entry() {}
-
-  // Library implementations should subclass this
-  class RINGING_API impl {
-  public:
-    virtual ~impl() {}
-    virtual impl *clone() const = 0;
-
-    virtual string name() const = 0;
-    virtual string base_name() const = 0;
-    virtual string pn() const = 0;
-    virtual int bells() const = 0;
-    virtual method meth() const;
-    
-    virtual bool readentry( library_base &lb ) = 0;
-
-    virtual bool has_facet( const library_facet_id& id ) const;
-
-    virtual shared_pointer< library_facet_base > 
-      get_facet( const library_facet_id& id ) const;
-
-  };
-
-  // Public accessor functions
-  string name() const      { return pimpl->name(); }
-  string base_name() const { return pimpl->base_name(); }
-  string pn() const        { return pimpl->pn(); }
-  int bells() const        { return pimpl->bells(); }
-  method meth() const      { return pimpl->meth(); }
-
-  // Get an extended property of the method 
-  template <class Facet>
-  typename Facet::type get_facet( Facet const* = NULL ) const 
-  {
-    shared_pointer< library_facet_base > f( pimpl->get_facet( Facet::id ) );
-    if ( !f.get() ) throw runtime_error( "No such facet" );
-	typedef typename Facet::type facet_type;
-    return facet_type( static_cast< const Facet& >( *f ) );
+RINGING_START_DETAILS_NAMESPACE
+struct call_readentry {
+  static inline bool fn( library_entry& le, library_base &lb ) {
+    return le.pimpl->readentry(lb);
   }
-
-  template <class Facet>
-  bool has_facet( Facet const* = NULL ) const 
-  {
-    return pimpl->has_facet( Facet::id );
-  }
-
-  library_entry( impl *pimpl ) : pimpl(pimpl) {}
-
-protected:
-  template <class ImplType> ImplType* get_impl( ImplType* = 0 ) {
-    return static_cast<ImplType*>(pimpl.get()); 
-  }
-
-  template <class ImplType> ImplType const* get_impl( ImplType* = 0 ) const { 
-    return static_cast<ImplType const*>(pimpl.get()); 
-  }
-
-private:
-  friend class library_base::const_iterator;
-
-  cow_pointer< impl > pimpl;
 };
-
+RINGING_END_DETAILS_NAMESPACE
+ 
 
 class RINGING_API library_base::const_iterator 
   : public RINGING_STD_CONST_ITERATOR( input_iterator_tag, library_entry )
@@ -182,7 +120,9 @@ public:
     : lb(NULL), ok(false)
   {}
   const_iterator( library_base *lb, library_entry::impl *val ) 
-    : lb(lb), val(val), ok( lb && val && val->readentry(*lb) ) 
+    : lb(lb), val(val), 
+      ok( lb && val && 
+          RINGING_DETAILS_PREFIX call_readentry::fn(this->val, *lb) ) 
   {}
 
   // Equality Comparable requirements
@@ -197,7 +137,7 @@ public:
 
   // Input Iterator requirements
   const_iterator &operator++() 
-    { ok = val.pimpl->readentry(*lb); return *this; }
+    { ok = RINGING_DETAILS_PREFIX call_readentry::fn(val, *lb); return *this; }
   const_iterator operator++(int) 
     { const_iterator tmp(*this); ++*this; return tmp; }
 
@@ -208,35 +148,40 @@ private:
   bool ok;
 };
 
-class RINGING_API library {
+class RINGING_API library : public virtual libbase {
 public:
   // Construction
   library() {}
   library(const string& filename);
-  library(library_base* lb) : lb(lb) {}
+  library(library_base* i) { this->set_impl(i); }
 
   // Reading the library.
   method load(const string& name, int stage=0) const
-    { return lb->load(name, stage); }
-  int dir(list<string>& result) const { return lb->dir(result); }
-  int mdir(list<method>& result ) const { return lb->mdir(result); }
+    { return lb()->load(name, stage); }
+  library_entry find(const method& pn) const { return lb()->find(pn); }
+  int dir(list<string>& result) const { return lb()->dir(result); }
+  int mdir(list<method>& result ) const { return lb()->mdir(result); }
 
 #if RINGING_BACKWARDS_COMPATIBLE(0,3,0)
   // Writing to the library
-  bool save(const method& m) { return lb->save(m); }
+  bool save(const method& m) { return lb()->save(m); }
   bool rename_method(const string& name1, const string& name2) 
-    { return lb->rename_method(name1, name2); }
-  bool remove(const string name) { return lb->remove(name); }
+    { return lb()->rename_method(name1, name2); }
+  bool remove(const string name) { return lb()->remove(name); }
 #endif
 
   // Library status
-  bool good() { return bool(lb) && lb->good(); }
-  bool writeable() { return bool(lb) && lb->writeable(); }
+  bool good() { return bool(lb()) && lb()->good(); }
+  bool writeable() { return bool(lb()) && lb()->writeable(); }
 
   // New style, iterator based interface
   typedef library_base::const_iterator const_iterator;
-  const_iterator begin() const { return lb ? lb->begin() : const_iterator(); }
-  const_iterator end() const { return lb ? lb->end() : const_iterator(); }
+  const_iterator begin() const 
+    { return lb() ? lb()->begin() : const_iterator(); }
+  const_iterator end() const 
+    { return lb() ? lb()->end() : const_iterator(); }
+
+  bool empty() const { return begin() == end(); }
 
   // Register a new type of library
   typedef library_base *(*init_function)( const string & );
@@ -246,7 +191,13 @@ public:
   static void setpath(string const& p);
 
 private:
-  shared_pointer<library_base> lb;
+  library_base* lb()
+    { return this->libbase::get_impl<library_base>(); }
+  library_base const* lb() const 
+    { return this->libbase::get_impl<library_base>(); }
+
+  bool try_load_lib( string const& filename );
+
   static list<init_function> libtypes;
   static string libpath;
 };

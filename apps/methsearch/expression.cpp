@@ -295,7 +295,6 @@ private:
   script_exception::type_t t;
 };
 
-
 RINGING_END_ANON_NAMESPACE
 
 // ---------------------------------------------------------------------

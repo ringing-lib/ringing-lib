@@ -66,22 +66,20 @@ list<string> split_path( string const& p )
   return pp;
 }
 
-bool try_load_lib( shared_pointer<library_base>& lb,
-                   list<library::init_function> const& lts, 
-                   string const& filename )
-{
-  typedef list<library::init_function>::const_iterator iterator;
-  for ( iterator i=lts.begin(), e=lts.end(); !lb && i!=e; ++i )
-    lb.reset( (**i)(filename) );
-  return (bool)lb;
-}
-
 RINGING_END_ANON_NAMESPACE
 
 #if RINGING_USE_EXCEPTIONS
 library_base::invalid_name::invalid_name() 
   : invalid_argument("The method name supplied could not be found in the library file") {}
 #endif
+
+bool library::try_load_lib( string const& filename )
+{
+  typedef list<library::init_function>::const_iterator iterator;
+  for ( iterator i=libtypes.begin(), e=libtypes.end(); !lb() && i!=e; ++i )
+    this->set_impl( (**i)(filename) );
+  return (bool)lb();
+}
 
 library::library(const string& filename)
 {
@@ -94,11 +92,11 @@ library::library(const string& filename)
     isabs = true;
 #endif
 
-  if ( filename.size() && !try_load_lib( lb, libtypes, filename ) && !isabs )
+  if ( filename.size() && !try_load_lib( filename ) && !isabs )
   {
     list<string> locs( split_path(libpath) );
     for (list<string>::const_iterator i=locs.begin(), e=locs.end(); i!=e; ++i)
-      if ( try_load_lib( lb, libtypes, *i + sep + filename ) )
+      if ( try_load_lib( *i + sep + filename ) )
         break;
   }
 }
@@ -179,6 +177,14 @@ method library_base::load(const string& name, int stage) const
   // make up something strange. Give it a name so it can always be checked
   // against.
   return method( 0, 0, "Not Found" );
+}
+
+library_entry library_base::find( method const& pn ) const
+{
+  for ( const_iterator i(begin()); i != end(); ++i )
+    if ( i->meth() == pn )
+      return *i;
+  return library_entry();
 }
 
 method library_entry::impl::meth() const

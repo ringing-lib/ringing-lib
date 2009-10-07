@@ -1,6 +1,7 @@
 // cclib.cpp - Read and write the Central Council Method libraries
-// Copyright (C) 2001, 2002, 2003, 2004 Mark Banner <mark@standard8.co.uk>
-// and Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2001, 2002, 2003, 2004, 2009
+// Mark Banner <mark@standard8.co.uk> and
+// Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -57,7 +58,6 @@ RINGING_DEFINE_LIBRARY_FACET( cclib::ref );
 class cclib::impl : public library_base {
 private:
   ifstream f;                   // The file stream we're using
-  int wr;                       // Is it open for writing?
   int _good;                    // If we have a good filename or not.
 
 public:
@@ -77,9 +77,6 @@ private:
 
   // Is the library in a usable state?
   virtual bool good(void) const { return _good; }
-
-  // Is this library writeable?
-  virtual bool writeable(void) const { return wr; }
 };
 
 void cclib::registerlib(void) 
@@ -516,7 +513,7 @@ string cclib::impl::entry_type::pn() const
 // ---------------------------------------------------------------------
 
 cclib::impl::impl(const string& filename)
-  : f(filename.c_str()), wr(0), _good(0)
+  : f(filename.c_str()), _good(0)
 {
   if(f.good()) {
     string s;

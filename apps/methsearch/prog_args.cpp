@@ -347,6 +347,11 @@ void arguments::bind( arg_parser &p )
            filter_mode ) );
 
   p.add( new boolean_opt
+         ( '\0', "filter-lib",
+           "Act as a filter on specified libraries rather than searching",
+           filter_lib_mode ) );
+
+  p.add( new boolean_opt
 	 ( 'P', "parity-hack",
 	   "Require an equal number of rows of each parity for each place "
 	   "in the treble's path",
@@ -648,6 +653,18 @@ bool arguments::validate( arg_parser &ap )
   if ( formats_have_names() && ! method_libraries::has_libraries() )
     {
       ap.error( "The -L option must be used if either $n or $N is used" );
+      return false;
+    }
+
+  if ( filter_lib_mode && filter_mode )
+    {
+      ap.error( "--filter and --filter-lib are mutually exclusive" );
+      return false;
+    }
+
+  if ( filter_lib_mode && ! method_libraries::has_libraries() )
+    {
+      ap.error( "--filter-lib specified, but no libaries specified" );
       return false;
     }
 
