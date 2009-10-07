@@ -97,6 +97,9 @@ struct format_string
   void print_method( const method_properties &m, ostream &os ) const;
   void add_method_to_stats( const method_properties &m ) const;
 
+  // List of variables in use.  This is solely used for statistics,
+  // and does not include variables used inside expressions (this 
+  // is because the expression itself, via $N*, is also included).
   vector< pair< int, string > > vars;
 
   bool has_name;

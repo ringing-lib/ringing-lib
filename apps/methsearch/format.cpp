@@ -475,7 +475,8 @@ format_string::format_string( const string &infmt,
 	    *outfmts.top() << *iter;
 
 	    // Mark the option as used
-	    vars.push_back( make_pair( num_opt, string(1, *iter) ) );
+            if ( !in_expr && !in_exec_expr ) 
+	      vars.push_back( make_pair( num_opt, string(1, *iter) ) );
 	  }
 	}
       else if ( *iter == '\\' )
@@ -523,10 +524,11 @@ format_string::format_string( const string &infmt,
 
 	  try 
 	    {
+              int const n = store_exec_expression( expr );
 	      // $[N]* is magic.  It means look up pre-parsed expression N.
-	      *outfmts.top() << '$' 
-			     << store_exec_expression( expr ) 
-			     << '*';
+	      *outfmts.top() << '$' << n << '*';
+              if ( !in_expr && !in_exec_expr )
+                vars.push_back( make_pair( n, "*" ) );
 	    } 
 	  catch ( const argument_error& e ) 
 	    {
@@ -566,10 +568,11 @@ format_string::format_string( const string &infmt,
 
 	  try 
 	    {
+              int const n = expression_cache::store( expression(expr) );
 	      // $[N]* is magic.  It means look up pre-parsed expression N.
-	      *outfmts.top() << '$' 
-			     << expression_cache::store( expression(expr) ) 
-			     << '*';
+	      *outfmts.top() << '$' << n << '*';
+              if ( !in_expr && !in_exec_expr )
+                 vars.push_back( make_pair( n, "*" ) );
 	    } 
 	  catch ( const argument_error& e ) 
 	    {
@@ -640,7 +643,7 @@ size_t statistics::output( ostream &os )
 void statistics::add_entry( const histogram_entry &entry )
 {
   // Grrr... This is needed because I've got a bug in the code somewhere
-  { make_string ms; entry.print( ms.out_stream(), 0 ); }
+  // { make_string ms; entry.print( ms.out_stream(), 0 ); }
 
   ++instance().histogram[entry];
 }
