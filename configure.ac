@@ -53,6 +53,9 @@ AC_SUBST(DLL_SUPPORT, 0)
 AC_PROG_LIBTOOL
 AC_PROG_LN_S
 
+AC_CHECK_PROG(HAVE_HELP2MAN, help2man, 1, 0)
+AM_CONDITIONAL(HAVE_HELP2MAN, test "$HAVE_HELP2MAN" = 1)
+
 dnl --------------------------------------------------------------------------
 dnl Checks for libraries.
 AC_USE_TERMCAP

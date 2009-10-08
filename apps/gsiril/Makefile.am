@@ -2,7 +2,7 @@
 
 # Process this file with automake to produce Makefile.in
 
-# Copyright (C) 2002, 2003, 2004, 2005, 2007, 2008
+# Copyright (C) 2002, 2003, 2004, 2005, 2007, 2008, 2009
 # Richard Smith <richard@ex-parrot.com>
 
 # This program is free software; you can redistribute it and/or modify
@@ -68,7 +68,7 @@ DEJATOOL = gsiril
 RUNTESTDEFAULTFLAGS = --tool $$tool --srcdir=$$srcdir/testsuite \
    GSIRIL=`pwd`/$$tool
 
-
+if HAVE_HELP2MAN
 dist_man_MANS = gsiril.1
 
 # Man page.  (See documentation for distcleancheck in automake manual
@@ -76,3 +76,4 @@ dist_man_MANS = gsiril.1
 gsiril.1: $(srcdir)/prog_args.cpp $(srcdir)/Makefile.am
 	$(MAKE) $(AM_MAKEFLAGS) gsiril$(EXEEXT)
 	help2man -N --output=gsiril.1 ./gsiril$(EXEEXT)
+endif
