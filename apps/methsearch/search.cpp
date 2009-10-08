@@ -353,7 +353,8 @@ bool searcher::is_acceptable_method()
     }
 
   // --- Falseness requirements ---
-  if ( args.true_course || args.true_lead )
+  if ( ( args.pends.size() > 1 || !args.sym || args.hunt_bells == 0 
+         || args.treble_dodges ) && args.true_lead )
     {
       // This is a bit of a hack to allow -Fl to be used with TD Minimus
       int const n_extents = 1; 
@@ -374,19 +375,41 @@ bool searcher::is_acceptable_method()
         return false;
     }
   // TODO: Merge with above code
-  if ( args.pends.size() > 1 && args.true_half_lead )
+  if ( args.pends.size() > 1 && args.true_half_lead && !args.true_lead ) 
     {
-      prover p( 1 );
-      row r(bells);
+      // This is a bit of a hack to allow -Fl to be used with TD Minimus
+      int const n_extents = 1; 
+//        = (int) ceil( (double) (bells - args.hunt_bells) * args.lead_len
+//                    / (double) factorial(bells) );
 
-      for ( method::const_iterator i(m.begin()), e(m.begin()+m.size()/2);
-               p.truth() && i != e; ++i ) {
-        p.add_row( canonical_coset_member( r ) );
-        r *= *i;
+      {
+        prover p( n_extents );
+        row r(bells);
+  
+        for ( method::const_iterator i(m.begin()), e(m.begin()+m.size()/2);
+                 p.truth() && i != e; ++i ) {
+          p.add_row( canonical_coset_member( r ) );
+          r *= *i;
+        }
+   
+        if ( !p.truth() )
+          return false;
       }
+      if ( !args.sym && !args.doubsym )
+      {
+        prover p( n_extents );
+        row r(bells);
+  
+        for ( method::const_iterator i(m.begin()+m.size()/2), e(m.end());
+                 p.truth() && i != e; ++i ) {
+          p.add_row( canonical_coset_member( r ) );
+          r *= *i;
+        }
+   
+        if ( !p.truth() )
+          return false;
 
-      if ( !p.truth() )
-        return false;
+      }
     }
 
   if ( args.require_CPS && !is_cps( m ) )
