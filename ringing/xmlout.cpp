@@ -32,6 +32,7 @@
 #include <ringing/library.h>
 #include <ringing/peal.h>
 #include <ringing/dom.h>
+#include <ringing/row.h>
 
 #ifdef _MSC_VER
 // Microsoft have unilaterally deprecated snprintf in favour of a non-standard

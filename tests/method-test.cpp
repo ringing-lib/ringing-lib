@@ -18,6 +18,7 @@
 // $Id$
 
 #include <ringing/method.h>
+#include <ringing/row.h>
 #include "test-base.h"
 
 

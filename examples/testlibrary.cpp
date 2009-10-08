@@ -34,6 +34,7 @@
 #include <iostream>
 #include <stdexcept>
 #endif
+#include <ringing/row.h>
 #include <ringing/method.h>
 #include <ringing/cclib.h>
 #include <ringing/mslib.h>

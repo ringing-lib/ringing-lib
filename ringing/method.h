@@ -38,7 +38,10 @@
 #include <string>
 
 #include <ringing/change.h>
+
+#if RINGING_BACKWARDS_COMPATIBLE(0,3,0)
 #include <ringing/row.h>
+#endif
 
 RINGING_START_NAMESPACE
 
@@ -113,11 +116,9 @@ public:
   row lh() const;
   bool issym(void) const;	// Is it symmetrical?
   bool isdouble(void) const;	// Is it double?
-  bool isregular(void) const 	// Is it regular?
-    { return !!lh().ispblh(); }
+  bool isregular(void) const;	// Is it regular?
   int huntbells(void) const;	// Number of hunt bells
-  int leads(void) const 	// Number of leads in a plain course
-    { return lh().order(); }
+  int leads(void) const;	// Number of leads in a plain course
   bool issym(bell b) const;	// Is this bell's path symmetrical?
   bool isplain(bell b=0) const;	// Does this bell plain hunt?
   bool hasdodges(bell b) const;	// Does this bell ever dodge?

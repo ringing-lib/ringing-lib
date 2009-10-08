@@ -43,6 +43,7 @@ static inline char* tparm( char const*, ... ) { return NULL; }
 #include <ringing/bell.h>
 #include <ringing/row.h>
 #include <ringing/method.h>
+#include <ringing/place_notation.h>
 #include <ringing/streamutils.h>
 
 RINGING_USING_NAMESPACE

@@ -125,6 +125,16 @@ row method::lh() const
   return r;
 }
 
+int method::leads(void) const
+{ 
+  return lh().order(); 
+}
+
+bool method::isregular(void) const
+{ 
+  return lh().ispblh(); 
+}
+
 string method::classname(int cl)
 {
   string s;      //  12345678901234567890123456789012
