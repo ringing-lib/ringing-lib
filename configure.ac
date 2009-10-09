@@ -21,7 +21,9 @@ dnl Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 dnl $Id$
 
-AC_INIT(ringing/method.cpp)
+AC_INIT
+AC_CONFIG_MACRO_DIR([m4])
+AC_CONFIG_SRCDIR([ringing/method.cpp])
 AC_CONFIG_AUX_DIR(config)
 AM_INIT_AUTOMAKE(ringing-lib, 0.4.0-pre)
 AC_SUBST(ac_aux_dir)
@@ -74,11 +76,11 @@ dnl --with-xerces option, honour that; otherwise try gdome first
 dnl (as that's more likely to exist on a modern *nix system).
 
 AC_ARG_WITH( [gdome],
-  AC_HELP_STRING([--with-gdome], [support XML libraries with Gdome]),
+  AS_HELP_STRING([--with-gdome],[support XML libraries with Gdome]),
   [ac_cv_use_gdome=$withval]
 )
 AC_ARG_WITH( [xerces],
-  AC_HELP_STRING([--with-xerces], [support XML libraries with Xerces]),
+  AS_HELP_STRING([--with-xerces],[support XML libraries with Xerces]),
   [echo "With xerces: $withval"; ac_cv_use_xerces=$withval]
 )
 
@@ -159,8 +161,9 @@ AM_CONDITIONAL(USING_MSVC, test "$IS_MSVC" = 1)
 
 dnl --------------------------------------------------------------------------
 
-AC_OUTPUT(Makefile ringing/Makefile apps/Makefile apps/gsiril/Makefile
+AC_CONFIG_FILES([Makefile ringing/Makefile apps/Makefile apps/gsiril/Makefile
   apps/utils/Makefile apps/psline/Makefile apps/methsearch/Makefile
   apps/fextent/Makefile apps/extent/Makefile apps/touchsearch/Makefile
   apps/printmethod/Makefile apps/musgrep/Makefile
-  doc/Makefile examples/Makefile tests/Makefile ringing/common-am.h)
+  doc/Makefile examples/Makefile tests/Makefile ringing/common-am.h])
+AC_OUTPUT
