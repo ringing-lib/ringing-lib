@@ -353,8 +353,17 @@ bool searcher::is_acceptable_method()
     }
 
   // --- Falseness requirements ---
-  if ( ( args.pends.size() > 1 || !args.sym || args.hunt_bells == 0 
-         || args.treble_dodges ) && args.true_lead )
+  // Plain methods cannot be false in the half-lead, and if symmetric
+  // cannot be false in the plain course.  Therefore we only need this 
+  // test if (i) we have part ends; or (ii) we're not a symmetric plain 
+  // method.
+  // As a further optimisation, we could (but don't) move symmetric 
+  // into the following block by folding the actual lhs and les into the
+  // part end group.
+  if ( args.true_lead 
+         && ( args.pends.size() > 1 
+              || !( args.sym && args.hunt_bells && !args.treble_dodges ) ) )
+      // && !args.sym )
     {
       // This is a bit of a hack to allow -Fl to be used with TD Minimus
       int const n_extents = 1; 
@@ -374,9 +383,18 @@ bool searcher::is_acceptable_method()
       if ( !p.truth() ) 
         return false;
     }
-  // TODO: Merge with above code
-  if ( args.pends.size() > 1 && args.true_half_lead && !args.true_lead ) 
+  // Although treble-dodging methods with more than one dodge can run
+  // false within a half lead, this is handled by the is_division_false
+  // function.  We only care if (i) we have part ends; or (ii) we're 
+  // looking for hunt-dominated method.  And as this test is a subset
+  // of the previous one, we don't want to do them both.
+  // If we adopt the above further optimisation, we need to also test
+  // -Fl/-Fc for symmetric methods
+  else if ( args.true_half_lead 
+            && ( args.pends.size() > 1 || args.hunt_bells == 0 )  )
     {
+      // TODO: Merge with the above test
+
       // This is a bit of a hack to allow -Fl to be used with TD Minimus
       int const n_extents = 1; 
 //        = (int) ceil( (double) (bells - args.hunt_bells) * args.lead_len
