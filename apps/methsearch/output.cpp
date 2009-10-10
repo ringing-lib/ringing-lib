@@ -79,7 +79,7 @@ private:
 
   // Data members
   mutable method m;
-  mutable bool named;
+  mutable bool named; // Have we looked up the name; not whether it is named
   mutable map< pair< int, string >, string > cache;
 };
 
@@ -92,7 +92,6 @@ string method_properties::impl2::pn() const
 void method_properties::impl2::lookup() const
 {
   if ( !named ) {
-    m.name("");
     m = method_libraries::lookup_method( m );
     named = true;
   }
@@ -200,11 +199,11 @@ string method_properties::impl2::get_property( int num_opt,
 	  break;
 
 	case 'n':
-	  os << (base_name().empty() ? "Untitled" : base_name());
+	  os << base_name();
 	  break;
 
 	case 'N':
-	  os << (base_name().empty() ? "Untitled " : "") << name();
+	  os << name();
 	  break;
 
 	case 'C': 
