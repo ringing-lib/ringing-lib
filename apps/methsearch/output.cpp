@@ -232,6 +232,10 @@ string method_properties::impl2::get_property( int num_opt,
 	  os << tenors_together_coursing_order(m);
 	  break;
 
+        case 's':
+          os << setw(num_opt) << staticity(m);
+          break;
+
 	case '#': {
 	  static int n=0;
 	  os << setw(num_opt) << ++n;

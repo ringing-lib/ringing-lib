@@ -43,6 +43,7 @@
 #include <ringing/row.h>
 #include <ringing/method.h>
 #include <ringing/streamutils.h>
+#include <ringing/mathutils.h>
 
 
 RINGING_USING_NAMESPACE
@@ -456,4 +457,31 @@ char old_lhcode( method const& m )
     return old_lhcode_5(m);
   else
     return '?';
+}
+
+unsigned long staticity( method const& m )
+{
+  unsigned long s = 0ul; //1ul;
+  for ( int i=0, b=m.bells(); i!=b-1; ++i)
+  {
+    int j=0, l=m.size();
+    while ( j!=l && ( m[j].findswap(i) || 
+                      m[j].findplace(i) && m[j].findplace(i+1) ) ) 
+      ++j;
+    if (j==l) 
+      return static_cast<unsigned long>(-1);
+
+    for ( int k=j; k<j+l; ++k )
+    {
+      int k0=k;
+      while ( k!=j+l && ( m[k%l].findswap(i) || 
+                          m[k%l].findplace(i) && m[k%l].findplace(i+1) ) )
+        ++k;
+      if (k!=k0) {
+        // s *= ipower( 2, k-k0-1 );
+        s += k-k0-1;
+      }
+    }
+  }
+  return s;
 }

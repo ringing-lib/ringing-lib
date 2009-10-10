@@ -70,4 +70,6 @@ bool compare_changes( change const& a, change const& b );
 
 char old_lhcode( method const& m );
 
+unsigned long staticity( method const& m );
+
 #endif // METHSEARCH_METHODUTILS_INCLUDED
