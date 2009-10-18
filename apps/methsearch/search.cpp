@@ -1097,11 +1097,13 @@ void searcher::general_recurse()
     {
       assert( !args.skewsym && !args.doubsym );
 
-      copy( m.rbegin() + 1, 
-            m.rend() - ( args.hunt_bells % 2 ? 0 : 2*args.treble_dodges + 1 ),
-            back_inserter(m) );
-
-      general_recurse();
+      bool ok = true;
+      for (method::reverse_iterator i = m.rbegin() + 1,
+             e = m.rend() - (args.hunt_bells % 2 ? 0 : 2*args.treble_dodges+1);
+             i != e; ++i)
+        ok = ok && push_change(*i);
+          
+      if (ok) general_recurse();
 
       while ( size_t(m.length()) > depth )
         m.pop_back();
@@ -1115,9 +1117,12 @@ void searcher::general_recurse()
   else if ( args.sym && args.hunt_bells % 2 == 0 && args.treble_dodges &&
             depth == size_t(args.treble_dodges + 1) )
     {
-      copy( m.rbegin() + 1, m.rend(), back_inserter(m) );
+      bool ok = true;
+      for (method::reverse_iterator i = m.rbegin() + 1, e = m.rend(); 
+             i!=e; ++i)
+        ok = ok && push_change(*i);
 
-      general_recurse();
+      if (ok) general_recurse();
 
       while ( size_t(m.length()) > depth )
         m.pop_back();
