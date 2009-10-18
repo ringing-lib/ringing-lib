@@ -43,9 +43,11 @@
 #if RINGING_OLD_C_INCLUDES
 #include <assert.h>
 #include <math.h>
+#include <string.h>
 #else
 #include <cassert>
 #include <cmath>
+#include <cstring>
 #endif
 #include <ringing/row.h>
 #include <ringing/method.h>
@@ -771,7 +773,8 @@ bool searcher::try_midlead_change( const change &ch )
        && division_bad_parity_hack( m, ch, div_len ) )
     return false;
 
-  if ( args.allowed_falseness.size() && depth % 4 >= 1 && depth % 4 != 3
+  if ( ( args.allowed_falseness.size() || args.require_CPS ) 
+       && depth % 4 >= 1 && depth % 4 != 3
        && ! is_falseness_acceptable( ch ) )
     return false;
 
@@ -792,9 +795,18 @@ bool searcher::is_falseness_acceptable( const change& ch )
   assert( x[0] == 0 );
   string sym( false_courses::lookup_symbol(x) );
   assert( args.bells != 8 || sym.size() );
-  if ( sym == "A" || sym.empty() ) return true;
-  if ( args.allowed_falseness.find(sym) != string::npos ) return true;
-  return false;
+  if ( args.allowed_falseness.size() ) {
+    if ( sym == "A" || sym.empty() ) return true;
+    if ( args.allowed_falseness.find(sym) == string::npos ) return false;
+  } 
+  if ( args.require_CPS ) {
+    if ( sym.empty() || strchr("AabcdefXYZ", sym[0]) ||
+         sym[1] == '2' && strchr("BCDEFHKNOT", sym[0]) ||
+         sym[1] == '3' && strchr("KN", sym[0])  )
+      return true;
+    else return false;
+  }
+  return true;
 }
 
 
