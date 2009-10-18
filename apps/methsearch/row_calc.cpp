@@ -40,9 +40,11 @@
 #if RINGING_OLD_INCLUDES
 #include <stdexcept.h>
 #include <vector.h>
+#include <list.h>
 #else
 #include <stdexcept>
 #include <vector>
+#include <list>
 #endif
 #if RINGING_OLD_C_INCLUDES
 #include <assert.h>
@@ -70,6 +72,9 @@ namespace tok_types
     ldivide     = '\\', 
     power       = '^',
     minus       = '-',
+    open_set    = '{', 
+    close_set   = '}',
+    set_sep     = ',',
     exec        = tokeniser::first_token,
     read,
     row_lit  // Rows on more than 10 bells are not handled in row_or_int
@@ -141,6 +146,7 @@ public:
     switch ( t.type() ) {
       case row_or_int: case row_lit: case open_paren: case close_paren: 
       case times: case divide: case ldivide: case power: case minus:
+      case open_set: case close_set: case set_sep:
         return;
     }
     throw runtime_error
@@ -151,6 +157,8 @@ public:
   rowlit_impl row_impl;
 };
 
+class vector_end {};
+
 class mult_node : public row_calc::expr::node {
 public:
   mult_node( row_calc::expr const& lhs, row_calc::expr const& rhs, 
@@ -159,19 +167,40 @@ public:
   {}
 
 private:
+  virtual void restart() { lhs.restart(); rhs.restart(); }
+  virtual int count_vectors() const
+    { return lhs.count_vectors() + rhs.count_vectors(); }
+
   virtual row evaluate() {
+    row r;
+    if ( lhs.count_vectors() == 0 || rhs.count_vectors() == 0 ) {
+      l = lhs.evaluate();
+      r = rhs.evaluate();
+    }
+    else do {
+      if (l.bells() == 0 )
+        l = lhs.evaluate();
+      try { 
+        r = rhs.evaluate();
+      } catch (vector_end) {
+        rhs.restart();
+        l = row();
+      }
+    } while (l.bells() == 0);
+
     switch ( op ) {
       case tok_types::times:   
-        return lhs.evaluate() * rhs.evaluate();
+        return l * r;
       case tok_types::divide:  
-        return lhs.evaluate() * rhs.evaluate().inverse();
+        return l * r.inverse();
       case tok_types::ldivide: 
-        return lhs.evaluate().inverse() * rhs.evaluate();
+        return l.inverse() * r;
       default: abort();
     }
   }
 
   row_calc::expr lhs, rhs;
+  row l;
   tok_types::enum_t op;
 };
 
@@ -182,6 +211,9 @@ public:
   {}
 
 private:
+  virtual void restart() { lhs.restart(); }
+  virtual int count_vectors() const { return lhs.count_vectors(); }
+
   virtual row evaluate() { return lhs.evaluate().power(rhs); }
 
   row_calc::expr lhs;
@@ -193,18 +225,54 @@ public:
   row_node( row const& r ) : r(r)  {}
 
 private:
+  virtual void restart() { }
+  virtual int count_vectors() const { return 0; }
   virtual row evaluate() { return r; }
 
   row r;
 };
 
-class vector_end {};
+class set_node : public row_calc::expr::node {
+public:
+  set_node( list<row_calc::expr> const& l ) : l(l), started(false) {}
+
+private:
+  virtual void restart() { started = false; }
+  virtual int count_vectors() const { return 1; }
+
+  virtual row evaluate()
+  {
+    if (!started) {
+      i = l.begin(); started = true; 
+    } 
+ 
+    while ( i != l.end() ) { 
+      if (i->count_vectors()) 
+        try {
+          return i->evaluate();
+        } catch (vector_end) {
+          ++i; break;
+        }
+      else
+        return i++->evaluate();
+    }
+
+    throw vector_end();
+  }
+
+  list<row_calc::expr> l;
+  bool started;
+  list<row_calc::expr>::iterator i;
+};
 
 class exec_node : public row_calc::expr::node {
 public:
   exec_node( string const& cmd ) : cmd(cmd), invoked(false) {}
 
 private:
+  virtual void restart() { idx = 0; }
+  virtual int count_vectors() const { return 1; }
+
   virtual row evaluate() 
   {
     if (!invoked) {
@@ -239,6 +307,9 @@ public:
   }
 
 private:
+  virtual void restart() { in = NULL; }
+  virtual int count_vectors() const { return 1; }
+
   row evaluate()
   { 
     if (!in) {
@@ -279,17 +350,18 @@ class rc_parser
 {
 public:
   rc_parser( string const& str )
-    : is(str), tok( is ), tokens( tok.begin(), tok.end() ), vec(false)
+    : is(str), tok( is ), tokens( tok.begin(), tok.end() ), vec(0)
   {}
 
   row_calc::expr parse() { return parse_expr( tokens.begin(), tokens.end() ); }
 
-  bool is_vector() const { return vec; }
+  int count_vectors() const { return vec; }
 
 private:
   typedef vector<token>::const_iterator iter_t;
 
   row_calc::expr parse_expr( iter_t first, iter_t last );
+  list<row_calc::expr> parse_set( iter_t first, iter_t last );
   int parse_int( iter_t first, iter_t last );
 
   template <size_t N>
@@ -311,7 +383,7 @@ private:
   RINGING_ISTRINGSTREAM is;
   rc_tokeniser tok;
   vector<token> tokens;
-  bool vec;
+  int vec;
 };
 
 void
@@ -413,6 +485,22 @@ int rc_parser::parse_int( iter_t first, iter_t last )
   throw runtime_error( "Unable to parse expression as integer" );
 }
 
+list<row_calc::expr> rc_parser::parse_set(  iter_t first, iter_t last )
+{
+  list<row_calc::expr> cdr;
+
+  iter_t split;
+  tok_types::enum_t sep[1] = { tok_types::set_sep };
+  if ( find_first( first, last, sep, split ) ) {
+    check_binary_expr( first, split, last, string(1, (char)split->type()) );
+    cdr = parse_set( split+1, last );
+  }
+  else split = last;
+  
+  cdr.push_front( parse_expr( first, split ) );
+  return cdr;
+}
+
 row_calc::expr rc_parser::parse_expr( iter_t first, iter_t last )
 {
   if ( first == last )
@@ -422,6 +510,13 @@ row_calc::expr rc_parser::parse_expr( iter_t first, iter_t last )
   if ( is_enclosed( first, last, tok_types::open_paren,
                     tok_types::close_paren, "parentheses" ) )
     return parse_expr( first+1, last-1 );
+
+  if ( is_enclosed( first, last, tok_types::open_set,
+                    tok_types::close_set, "braces" ) ) {
+    ++vec;
+    return row_calc::expr(
+      ( new set_node( parse_set( first+1, last-1 ) ) ) );
+  }
 
   iter_t split;
   tok_types::enum_t multops[3] 
@@ -453,10 +548,7 @@ row_calc::expr rc_parser::parse_expr( iter_t first, iter_t last )
     if ( first->type() == tok_types::exec || 
          first->type() == tok_types::read ) 
       {
-        if (vec) 
-          throw runtime_error( "Only one row generator $() or <() allowed" ); 
-
-        vec = true;
+        vec++;
 
         if ( first->type() == tok_types::exec )
           return row_calc::expr( new exec_node(*first) );
@@ -474,7 +566,8 @@ row_calc::row_calc( string const& str )
 {
   rc_parser p(str);
   e = p.parse();
-  v = p.is_vector();
+  v = p.count_vectors();
+  assert( e.count_vectors() == v );
 }
 
 

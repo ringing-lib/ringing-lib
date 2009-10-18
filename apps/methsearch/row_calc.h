@@ -55,6 +55,8 @@ public:
     public:
       virtual ~node() {}
       virtual row evaluate() = 0;
+      virtual void restart() = 0;
+      virtual int count_vectors() const = 0;
 
     protected:
       node() {}
@@ -65,6 +67,8 @@ public:
   
     explicit expr( node* n = NULL ) : n(n) {}
     row evaluate() { return n->evaluate(); }
+    void restart() { n->restart(); }
+    int count_vectors() const { return n->count_vectors(); }
 
   private:
     shared_pointer<node> n;
@@ -72,7 +76,7 @@ public:
 
 private:
   expr e;  
-  bool v;
+  int v;
 };
 
 
