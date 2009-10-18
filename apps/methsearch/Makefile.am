@@ -35,5 +35,4 @@ methsearch_SOURCES = prog_args.cpp falseness.cpp format.cpp expression.cpp \
 libraries.cpp main.cpp mask.cpp methodutils.cpp music.cpp search.cpp exec.cpp \
 output.cpp row_calc.cpp \
 prog_args.h falseness.h format.h expression.h libraries.h mask.h exec.h \
-methodutils.h music.h search.h output.h row_calc.h \
-bnw-init reg-init
+methodutils.h music.h search.h output.h row_calc.h 
