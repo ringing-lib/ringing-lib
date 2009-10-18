@@ -88,7 +88,7 @@ public:
   const value_type& operator* () const { return  val; }
   const value_type* operator->() const { return &val; }
 
-  const_iterator() {}
+  const_iterator() : rc(0) {}
 
   const_iterator& operator++()
     { increment(); return *this; }

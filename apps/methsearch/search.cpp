@@ -163,21 +163,23 @@ void run_search( const arguments &args )
 {
   searcher s( args );
 
-  try 
-  {
-    if ( args.filter_mode ) {
-      litelib in( args.bells, std::cin );
-      s.filter(in);
-    } else if ( args.filter_lib_mode ) { 
-      s.filter( method_libraries::instance() );
-    } else {
-      s.general_recurse();
-      assert( s.m.length() == 0 );
-    }
-  } 
-  catch ( const exit_exception& ) {}
-
-  if ( args.status && args.outfile.empty() ) clear_status();
+  if ( args.avoid_rows.find(row(args.bells)) == args.avoid_rows.end() ) {
+    try 
+    {
+      if ( args.filter_mode ) {
+        litelib in( args.bells, std::cin );
+        s.filter(in);
+      } else if ( args.filter_lib_mode ) { 
+        s.filter( method_libraries::instance() );
+      } else {
+        s.general_recurse();
+        assert( s.m.length() == 0 );
+      }
+    } 
+    catch ( const exit_exception& ) {}
+ 
+    if ( args.status && args.outfile.empty() ) clear_status();
+  }
 
   // Causes the stats to be emittted
   if ( args.H_fmt_str.size() ) {
