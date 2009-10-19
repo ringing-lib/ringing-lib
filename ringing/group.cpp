@@ -1,5 +1,5 @@
 // -*- C++ -*- group.cpp - Class representing a permutation group
-// Copyright (C) 2003 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2003, 2009 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -159,5 +159,30 @@ bool operator>( const group& a, const group& b )
 {
   return a.b > b.b || a.b == b.b && a.v > b.v;
 }
+
+row group::rcoset_label( row const& r ) const
+{
+  row label;
+  for ( const_iterator i=v.begin(), e=v.end(); i != e; ++i ) 
+  {
+    row const ir = *i * r;
+    if (label.bells() == 0 || ir < label) 
+      label = ir;
+  }
+  return label;
+}
+
+row group::lcoset_label( row const& r ) const
+{
+  row label;
+  for ( const_iterator i=v.begin(), e=v.end(); i != e; ++i ) 
+  {
+    row const ir = r * *i;
+    if (label.bells() == 0 || ir < label) 
+      label = ir;
+  }
+  return label;
+}
+
 
 RINGING_END_NAMESPACE

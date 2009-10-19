@@ -1,5 +1,5 @@
 // -*- C++ -*- group.h - Class representing a group
-// Copyright (C) 2003 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2003, 2009 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -77,6 +77,13 @@ public:
   friend bool operator!=( const group& a, const group& b ) { return !(a==b); }
   friend bool operator<=( const group& a, const group& b ) { return !(a>b); }
   friend bool operator>=( const group& a, const group& b ) { return !(a<b); }
+
+  // Choose a element of the left coset rG or right coset Gr as a canonical 
+  // label for it.  The element chosen is the lexicographically least element; 
+  // thus if r \in G the label is rounds.  For part end groups, you typically
+  // want right cosets.
+  row rcoset_label( row const& r ) const;
+  row lcoset_label( row const& r ) const;
 
 private:
   size_t b;

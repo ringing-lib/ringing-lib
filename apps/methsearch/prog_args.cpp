@@ -678,9 +678,15 @@ bool arguments::validate( arg_parser &ap )
 	}
     }
 
-  if (pends_generators.size()) 
+  if (pends_generators.size()) {
     pends = group( pends_generators );
-
+    set<row> x;
+    for ( set<row>::const_iterator i=avoid_rows.begin(), e=avoid_rows.end();
+            i != e; ++i )
+      x.insert( pends.rcoset_label(*i) );
+    avoid_rows = x;
+  }
+ 
   if (mask.empty()) mask = "*";
       
   try

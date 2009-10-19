@@ -165,6 +165,8 @@ void run_search( const arguments &args )
 {
   searcher s( args );
 
+  // We do want to handle the trivial case of a -Fr12345678... because
+  // this might get generated as part of a more complicated expression
   if ( args.avoid_rows.find(row(args.bells)) == args.avoid_rows.end() ) {
     try 
     {
@@ -275,21 +277,12 @@ bool searcher::try_with_limited_le( const change& ch )
   return ok;
 }
 
-row searcher::canonical_coset_member( row const& r )
+// NB: Rounds is by necessarily canonical
+inline row searcher::canonical_coset_member( row const& r )
 {
   // Streamline the normal case
   if ( args.pends.size() == 1 ) return r;
-
-  row best;
-  for ( group::const_iterator i=args.pends.begin(), e=args.pends.end(); 
-        i != e; ++i ) 
-  {
-    row const ir = *i * r;
-    if (best.bells() == 0 || ir < best) 
-      best = ir;
-  }
-
-  return best;
+  else return args.pends.rcoset_label(r);
 }
 
 bool searcher::is_acceptable_method()
@@ -467,7 +460,7 @@ inline bool searcher::push_change( const change& ch )
 {
   m.push_back( ch );
   if ( maintain_r ) {
-    r *= ch;
+    r = canonical_coset_member( r * ch );
     // We don't care about the lead head row.
     if ( m.size() != 2 * hl_len && 
          args.avoid_rows.find(r) != args.avoid_rows.end() )
