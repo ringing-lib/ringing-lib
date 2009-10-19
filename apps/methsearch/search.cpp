@@ -126,7 +126,8 @@ searcher::searcher( const arguments &args )
     div_len( (1 + args.treble_dodges) * 2 ),
     hl_len( args.lead_len / 2 ),
     search_count( 0ul ), node_count( 0ul ),
-    r( bells ), maintain_r( args.avoid_rows.size() )
+    r( canonical_coset_member( args.start_row ) ),
+    maintain_r( args.avoid_rows.size() )
 {
   m.reserve( 2 * hl_len );
 
@@ -165,10 +166,7 @@ void run_search( const arguments &args )
 {
   searcher s( args );
 
-  // We do want to handle the trivial case of a -Fr12345678... because
-  // this might get generated as part of a more complicated expression
-  if ( args.avoid_rows.find(row(args.bells)) == args.avoid_rows.end() ) {
-    try 
+  try 
     {
       if ( args.filter_mode ) {
         litelib in( args.bells, std::cin );
@@ -180,10 +178,9 @@ void run_search( const arguments &args )
         assert( s.m.length() == 0 );
       }
     } 
-    catch ( const exit_exception& ) {}
+  catch ( const exit_exception& ) {}
  
-    if ( args.status && args.outfile.empty() ) clear_status();
-  }
+  if ( args.status && args.outfile.empty() ) clear_status();
 
   // Causes the stats to be emittted
   if ( args.H_fmt_str.size() ) {
@@ -368,14 +365,19 @@ bool searcher::is_acceptable_method()
 //                    / (double) factorial(bells) );
 
       prover p( n_extents );
-      row r(bells);  
+      for ( set<row>::const_iterator 
+              i=args.avoid_rows.begin(), e=args.avoid_rows.end(); i != e; ++i )
+        p.add_row(*i);
+      assert( p.truth() );
+  
+      row r( args.start_row );
 
       do for ( method::const_iterator i(m.begin()), e(m.end()); 
                p.truth() && i != e; ++i ) {
         p.add_row( canonical_coset_member( r ) );
         r *= *i;
       }
-      while ( args.true_course && !r.isrounds() && p.truth() );
+      while ( args.true_course && r != args.start_row && p.truth() );
 
       if ( !p.truth() ) 
         return false;
@@ -399,7 +401,13 @@ bool searcher::is_acceptable_method()
 
       {
         prover p( n_extents );
-        row r(bells);
+        for ( set<row>::const_iterator 
+                i=args.avoid_rows.begin(), e=args.avoid_rows.end();
+                i != e; ++i )
+          p.add_row(*i);
+        assert( p.truth() );
+
+        row r( args.start_row );
   
         for ( method::const_iterator i(m.begin()), e(m.begin()+m.size()/2);
                  p.truth() && i != e; ++i ) {
@@ -413,7 +421,7 @@ bool searcher::is_acceptable_method()
       if ( !args.sym && !args.doubsym )
       {
         prover p( n_extents );
-        row r(bells);
+        row r(bells); // not start_row, and no avoid_rows.
   
         for ( method::const_iterator i(m.begin()+m.size()/2), e(m.end());
                  p.truth() && i != e; ++i ) {

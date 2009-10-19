@@ -129,6 +129,20 @@ bool falseness_opt::process( const string &arg, const arg_parser & ) const
       }
       args.allowed_falseness = fgs;
     }
+  else if ( arg.size() > 2 && arg[0] == 's' && arg[1] == '=' )
+    {
+      if ( args.start_row.bells() ) {
+        cerr << "Multiple -Fs options are not currently supported\n";
+        return false;
+      }
+      try {
+        args.start_row = row( arg.substr(2) );
+      }
+      catch ( exception const& e ) { 
+        cerr << "Error parsing row in -Fs option: " << e.what() << "\n";
+        return false;
+      }
+    }
   else if ( arg.size() > 2 && arg[0] == 'r' && arg[1] == '=' )
     {
       scoped_pointer<row_calc> rc;
@@ -678,13 +692,27 @@ bool arguments::validate( arg_parser &ap )
 	}
     }
 
-  if (pends_generators.size()) {
+  if ( start_row.bells() == 0 )
+    start_row = row(bells);
+  else if ( start_row.bells() != bells )
+    {
+      ap.error( "Starting row is on the wrong numebr of bells" );
+      return false;
+    }
+
+
+  if ( pends_generators.size() ) 
+  {
     pends = group( pends_generators );
     set<row> x;
     for ( set<row>::const_iterator i=avoid_rows.begin(), e=avoid_rows.end();
             i != e; ++i )
       x.insert( pends.rcoset_label(*i) );
     avoid_rows = x;
+  }
+  if ( avoid_rows.find( pends.rcoset_label(start_row) ) != avoid_rows.end() ) {
+     ap.error( "The start row conflicts with avoided row" );
+     return false;
   }
  
   if (mask.empty()) mask = "*";

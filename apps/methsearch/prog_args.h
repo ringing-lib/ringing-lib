@@ -105,6 +105,7 @@ struct arguments
   init_val<bool,false> true_positive_extent;
   string               allowed_falseness; 
 
+  row                  start_row;
   vector<row>          pends_generators;
   group                pends;
 
