@@ -32,6 +32,4 @@ RINGING_USING_STD
 
 string exec_command( const string& str );
 
-size_t store_exec_expression( const string& expr );
-
 #endif // METHSEARCH_EXEC_INCLUDED

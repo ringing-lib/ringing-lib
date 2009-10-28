@@ -1,5 +1,5 @@
 // -*- C++ -*- expression.h - classes to handle expressions
-// Copyright (C) 2003 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2003, 2009 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -102,6 +102,9 @@ public:
 private:
   static vector<expression>& exprs();
 };
+
+size_t store_exec_expression( const string& expr );
+
 
 #endif // METHSEARCH_EXPRESSION_INCLUDED
 

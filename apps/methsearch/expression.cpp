@@ -1,5 +1,5 @@
 // -*- C++ -*- expression.cpp - classes to handle expressions
-// Copyright (C) 2002, 2003, 2004, 2005, 2008
+// Copyright (C) 2002, 2003, 2004, 2005, 2008, 2009
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -28,6 +28,7 @@
 #define RINGING_DEBUG_FILE 0
 
 #include "expression.h"
+#include "exec.h"   // for exec_command
 #include "output.h"
 #include "format.h" // for argument_error
 #include "tokeniser.h"
@@ -295,7 +296,28 @@ private:
   script_exception::type_t t;
 };
 
+class exec_expr_node : public expression::s_node {
+public:
+  exec_expr_node( const string& expr ) 
+    : fs(expr, format_string::preparsed_type) 
+  {}
+
+private:
+  virtual string s_evaluate( const method_properties& m ) const {
+    make_string ms;
+    fs.print_method( m, ms.out_stream() );
+    return exec_command( ms );
+  }
+
+  format_string fs;
+};
+
 RINGING_END_ANON_NAMESPACE
+
+size_t store_exec_expression( const string& expr ) 
+{
+  return expression_cache::store( expression( new exec_expr_node( expr ) ) );
+}
 
 // ---------------------------------------------------------------------
 //

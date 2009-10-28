@@ -1,5 +1,5 @@
 // -*- C++ -*- exec.cpp - execute sub-processes
-// Copyright (C) 2003, 2004, 2008 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2003, 2004, 2008, 2009 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -524,23 +524,3 @@ string exec_command( const string& str )
 
 #endif // RINGING_WINDOWS
 
-class exec_expr_node : public expression::s_node {
-public:
-  exec_expr_node( const string& expr ) 
-    : fs(expr, format_string::preparsed_type) 
-  {}
-
-private:
-  virtual string s_evaluate( const method_properties& m ) const {
-    make_string ms;
-    fs.print_method( m, ms.out_stream() );
-    return exec_command( ms );
-  }
-
-  format_string fs;
-};
-
-size_t store_exec_expression( const string& expr ) 
-{
-  return expression_cache::store( expression( new exec_expr_node( expr ) ) );
-}
