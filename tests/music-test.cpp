@@ -130,11 +130,13 @@ void test_music_details_possible_matches(void)
 
 void test_music_details_score(void)
 {
+#if RINGING_BACKWARDS_COMPATIBLE(0,3,0)
   // Test the setting of the score.
   music_details md; RINGING_TEST( md.raw_score() == 1);
   music_details md1("12345", 2); RINGING_TEST( md1.raw_score() == 2 );
   md.set("12345", 4); RINGING_TEST( md.raw_score() == 4);
-  
+#endif
+
   // Score testing can't be done here, as it requires music/music_node
   // to set it - or hacking into the music_details private functions.
 }
