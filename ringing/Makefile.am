@@ -3,13 +3,15 @@
 EXTRA_DIST = common-am.h.in
 DISTCLEANFILES = common-am.h
 MAINTAINERCLEANFILES = Makefile.in
-INCLUDES = -I$(top_srcdir)
+
+# Need both top_srcdir and top_builddir so that we can find common-am.h
+INCLUDES = -I$(top_srcdir) -I$(top_builddir)
 
 lib_LTLIBRARIES = libringingcore.la libringing.la
 
 # These source files are released under the LGPL
 libringingcore_la_SOURCES = bell.cpp change.cpp row.cpp mathutils.cpp \
-place_notation.cpp method.cpp \
+place_notation.cpp method.cpp methodset.cpp \
 library.cpp libfacet.cpp libout.cpp litelib.cpp \
 xmllib.cpp xmlout.cpp peal.cpp \
 stl.cpp
@@ -63,7 +65,11 @@ music.h print.h print_ps.h dimension.h common.h common-am.h common-msvc.h \
 touch.h printm.h print_pdf.h pdf_fonts.h pointers.h extent.h falseness.h \
 search_base.h basic_search.h multtab.h table_search.h streamutils.h \
 xmllib.h group.h libfacet.h peal.h xmlout.h libout.h mathutils.h bell.h \
-change.h place_notation.h litelib.h dom.h libbase.h
+change.h place_notation.h litelib.h dom.h libbase.h methodset.h
+
+# Support for Doxygen
+include $(top_srcdir)/config/doxygen.am
+MOSTLYCLEANFILES = $(DX_CLEANFILES)
 
 # Delete common-am.h before packaging up the distribution
 dist-hook:

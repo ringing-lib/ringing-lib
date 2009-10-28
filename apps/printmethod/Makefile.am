@@ -2,7 +2,7 @@
 
 # Process this file with automake to produce Makefile.in
 
-# Copyright (C) 2008 Richard Smith <richard@ex-parrot.com>
+# Copyright (C) 2008, 2009 Richard Smith <richard@ex-parrot.com>
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -24,7 +24,8 @@ MAINTAINERCLEANFILES = Makefile.in
 
 bin_PROGRAMS = printmethod
 
-INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/apps/utils
+# Need both top_srcdir and top_builddir so that we can find common-am.h
+INCLUDES = -I$(top_srcdir) -I$(top_builddir) -I$(top_srcdir)/apps/utils
 
 printmethod_LDADD = $(top_builddir)/apps/utils/libstuff.a \
 $(top_builddir)/ringing/libringing.la \

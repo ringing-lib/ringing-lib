@@ -24,7 +24,8 @@ MAINTAINERCLEANFILES = Makefile.in
 
 bin_PROGRAMS = methsearch
 
-INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/apps/utils
+# Need both top_srcdir and top_builddir so that we can find common-am.h
+INCLUDES = -I$(top_srcdir) -I$(top_builddir) -I$(top_srcdir)/apps/utils
 
 methsearch_LDADD = $(top_builddir)/apps/utils/libstuff.a \
 $(top_builddir)/ringing/libringing.la \
@@ -35,4 +36,4 @@ methsearch_SOURCES = prog_args.cpp falseness.cpp format.cpp expression.cpp \
 libraries.cpp main.cpp mask.cpp methodutils.cpp music.cpp search.cpp exec.cpp \
 output.cpp row_calc.cpp \
 prog_args.h falseness.h format.h expression.h libraries.h mask.h exec.h \
-methodutils.h music.h search.h output.h row_calc.h 
+methodutils.h music.h search.h output.h row_calc.h

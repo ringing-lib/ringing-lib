@@ -1,7 +1,9 @@
 ## Process this file with automake to produce Makefile.in
 
 MAINTAINERCLEANFILES = Makefile.in
-INCLUDES = -I$(top_srcdir)
+
+# Need both top_srcdir and top_builddir so that we can find common-am.h
+INCLUDES = -I$(top_srcdir) -I$(top_builddir) 
 
 check_PROGRAMS = test
 

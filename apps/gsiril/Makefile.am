@@ -27,7 +27,8 @@ MAINTAINERCLEANFILES = Makefile.in
 
 bin_PROGRAMS = gsiril
 
-INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/apps/utils
+# Need both top_srcdir and top_builddir so that we can find common-am.h
+INCLUDES = -I$(top_srcdir) -I$(top_builddir) -I$(top_srcdir)/apps/utils
 
 gsiril_LDADD = $(top_builddir)/apps/utils/libstuff.a \
 $(top_builddir)/ringing/libringing.la \
@@ -75,5 +76,7 @@ dist_man_MANS = gsiril.1
 # for the reasons for not making gsiril.1 depend on gsiril$(EXEEXT).)
 gsiril.1: $(srcdir)/prog_args.cpp $(srcdir)/Makefile.am
 	$(MAKE) $(AM_MAKEFLAGS) gsiril$(EXEEXT)
-	help2man -N --output=gsiril.1 ./gsiril$(EXEEXT)
+	$(HELP2MAN) -N --output=gsiril.1 ./gsiril$(EXEEXT)
+
+CLEANFILES = gsiril.1
 endif
