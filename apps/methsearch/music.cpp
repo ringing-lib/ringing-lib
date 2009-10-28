@@ -100,7 +100,7 @@ musical_analysis::analyser::analyser( int bells )
   for ( vector<string>::const_iterator i( p.begin() ), e( p.end() );
 	    i != e; ++i )
     {
-      int score( 1 );
+      int scoreh = 1, scoreb = 1;
       string pattern( *i );
 
       string::size_type eq = pattern.find('=');
@@ -139,14 +139,26 @@ musical_analysis::analyser::analyser( int bells )
 
       if ( pattern.size() > 2 && isdigit( pattern[0] ) )
         {
-          for ( unsigned int j = 0; j < pattern.size(); ++j )
+          string::size_type comma = string::npos;
+          for ( string::size_type j = 0; j < pattern.size(); ++j )
             if ( pattern[j] == ':' )
               {
-                score = atoi( pattern.c_str() );
+                if (comma == string::npos) 
+                  scoreh = scoreb = atoi( pattern.c_str() );
+                else
+                  scoreb = atoi( pattern.substr(comma+1, j-comma-1).c_str() );
                 pattern = pattern.substr(j+1);
                 break;
               }
-            else if ( !isdigit( pattern[j] ) )
+            else if ( pattern[j] == ',' )
+              {
+                if (comma != string::npos) {
+                  cerr << "Multiple commas in music score" << endl; exit(1);
+                }
+                scoreh = atoi( pattern.c_str() );
+                comma = j;
+              }
+            else if ( !isdigit( pattern[j] ) && pattern[j] != '-' )
               break;
         }
 
@@ -156,10 +168,11 @@ musical_analysis::analyser::analyser( int bells )
       try {
         if ( pattern.size() > 2 
              && pattern[0] == '<' && pattern[ pattern.size()-1 ] == '>' )
-          add_named_music( mu, pattern.substr( 1, pattern.size()-2 ), score );
+          add_named_music( mu, pattern.substr( 1, pattern.size()-2 ), 
+                           scoreh, scoreb );
 
         else
-          mu.push_back( music_details( pattern, score ) );
+          mu.push_back( music_details( pattern, scoreh, scoreb ) );
       } 
       catch ( exception const& e ) {
         cerr << "Error parsing music pattern: " << e.what() << endl;
