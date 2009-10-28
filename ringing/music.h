@@ -71,20 +71,18 @@ enum EStroke
 class RINGING_API music_details : private string
 {
 public:
+  music_details(const string& pattern, int scoreh, int scoreb);
   music_details(const string& pattern = "", int score = 1);
-  music_details(const char* pattern, int score = 1);
  ~music_details();
   
   // Set the expression and score
-  // From String
+  bool set(const string& pattern, int scoreh, int scoreb);
   bool set(const string& pattern, int score = 1);
-  // From Character String
-  bool set(const char* pattern, int score = 1);
 
   // Return the expression
   string get() const;
 
-  // Return the number of possible matches
+  // Return the maximum number of possible matches
   unsigned int possible_matches(unsigned int bells) const;
   int possible_score(unsigned int bells) const;
 
@@ -93,8 +91,10 @@ public:
   // Return the calculated score
   int total(const EStroke& = eBoth) const;
 
+#if RINGING_BACKWARDS_COMPATIBLE(0,3,0)
   // Return the uncalculated score
   int raw_score() const;
+#endif
 
   friend class music;
   friend class music_node;
@@ -116,9 +116,8 @@ private:
   void check_bells(unsigned int bells) const;
   unsigned int possible_matches(unsigned int bells, unsigned int pos, const string &s, int &q) const;
   
-  unsigned int count_handstroke;
-  unsigned int count_backstroke;
-  int score;
+  unsigned int counth, countb;
+  int scoreh, scoreb;
 };
 
 // Main class definition
@@ -193,6 +192,7 @@ struct invalid_named_music : public invalid_argument {
 #endif
 
 RINGING_API void add_named_music( music& m, string const& n, int score = 1 );
+RINGING_API void add_named_music( music& m, string const& n, int sh, int sb );
 
 RINGING_END_NAMESPACE
 
