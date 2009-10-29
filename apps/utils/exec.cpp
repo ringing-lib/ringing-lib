@@ -31,8 +31,6 @@
 #endif
 
 #include "exec.h"
-#include "expression.h"
-#include "format.h"
 #if RINGING_OLD_INCLUDES
 #include <stdexcept.h>
 #else

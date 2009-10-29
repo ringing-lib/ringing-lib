@@ -27,7 +27,6 @@
 #include "format.h"
 #include "expression.h"
 #include "tokeniser.h"
-#include "exec.h"
 #include "output.h"
 #if RINGING_OLD_INCLUDES
 #include <iterator.h>

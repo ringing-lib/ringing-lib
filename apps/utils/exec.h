@@ -30,6 +30,7 @@
 
 RINGING_USING_STD
 
+// Execute a command and return what it prints on stdout.
 string exec_command( const string& str );
 
 #endif // METHSEARCH_EXEC_INCLUDED
