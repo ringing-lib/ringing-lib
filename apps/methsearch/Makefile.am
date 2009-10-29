@@ -37,3 +37,29 @@ libraries.cpp main.cpp mask.cpp methodutils.cpp music.cpp search.cpp exec.cpp \
 output.cpp row_calc.cpp \
 prog_args.h falseness.h format.h expression.h libraries.h mask.h exec.h \
 methodutils.h music.h search.h output.h row_calc.h
+
+EXTRA_DIST = doc/methsearch.tex
+
+if HAVE_XELATEX
+EXTRA_DIST += doc/methsearch.pdf
+
+pdf:	doc/methsearch.pdf
+
+doc/methsearch.pdf:	$(srcdir)/doc/methsearch.tex
+	$(MKDIR_P) doc	# In case $(srcdir) != $(builddir)
+	$(XELATEX) --halt-on-error -output-directory doc $<
+	cd doc && $(MAKEINDEX) methsearch
+	$(XELATEX) --halt-on-error -output-directory doc $<
+
+install-pdf:	pdf
+	$(MKDIR_P) ${docdir}
+	$(INSTALL_DATA) doc/methsearch.pdf ${docdir}/methsearch.pdf
+
+CLEANFILES = doc/methsearch.aux doc/methsearch.idx doc/methsearch.ilg \
+             doc/methsearch.ind doc/methsearch.log doc/methsearch.out \
+             doc/methsearch.pdf doc/methsearch.toc
+
+install:	pdf
+
+.PHONY: pdf install-pdf install
+endif
