@@ -67,10 +67,6 @@ search_base.h basic_search.h multtab.h table_search.h streamutils.h \
 xmllib.h group.h libfacet.h peal.h xmlout.h libout.h mathutils.h bell.h \
 change.h place_notation.h litelib.h dom.h libbase.h methodset.h
 
-# Support for Doxygen
-include $(top_srcdir)/config/doxygen.am
-MOSTLYCLEANFILES = $(DX_CLEANFILES)
-
 # Delete common-am.h before packaging up the distribution
 dist-hook:
 	rm -f $(distdir)/common-am.h
