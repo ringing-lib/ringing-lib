@@ -1,5 +1,6 @@
 // -*- C++ -*- expr_base.h - Expression and statement interfaces
-// Copyright (C) 2002, 2003, 2004, 2005 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003, 2004, 2005, 2009
+// Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -31,6 +32,7 @@
 #else
 #include <iosfwd>
 #endif
+#include <string>
 #include <ringing/pointers.h>
 
 RINGING_USING_NAMESPACE
@@ -65,48 +67,69 @@ class expression
 public:
   enum type_t {
     boolean,
+    integer,
     no_type
   };
+
+  typedef long integer_t;
 
   class node
   {
   public:
     virtual ~node() {}
-    virtual void debug_print( ostream &os ) const = 0;
+    virtual void debug_print( proof_context const&, ostream & ) const = 0;
     virtual void execute( proof_context &ctx ) = 0;
     virtual bool evaluate( proof_context &ctx ); // throws
-    virtual bool isnop() const { return false; }
-    virtual type_t type() const { return no_type; }
+    virtual integer_t ievaluate( proof_context &ctx ); // throws
+    virtual string lvalue( proof_context const& ctx ) const; // throws
+    virtual bool isnop( proof_context const& ) const { return false; }
+    virtual type_t type( proof_context const& ) const { return no_type; }
   };
 
   class bnode : public node
   {
   public:
-    virtual void execute( proof_context &ctx ) { evaluate(ctx); }
+    virtual void execute( proof_context &ctx ); // throws
     virtual bool evaluate( proof_context &ctx ) = 0;
-    virtual type_t type() const { return boolean; }
+    virtual type_t type( proof_context const& ) const { return boolean; }
+  };
+
+  class inode : public bnode
+  {
+  public:
+    typedef expression::integer_t integer_t;
+    virtual bool evaluate( proof_context &ctx ) { return ievaluate(ctx); }
+    virtual integer_t ievaluate( proof_context &ctx ) = 0;
+    virtual type_t type( proof_context const& ) const { return integer; }
   };
 
   // Create an expression handle
   expression( node* impl ) : impl(impl) {}
 
-  bool isnull() const { return !impl; }
-  bool isnop() const { return !impl || impl->isnop(); }
-  type_t type() const { return impl ? impl->type() : no_type; }
+  bool isnull() const 
+    { return !impl; }
+  bool isnop( proof_context const& ctx ) const 
+    { return !impl || impl->isnop(ctx); }
+  type_t type( proof_context const& ctx ) const 
+    { return impl ? impl->type(ctx) : no_type; }
 
 
-  void debug_print( ostream &os ) const    { impl->debug_print(os); }
+  void debug_print( proof_context const& ctx, ostream &os ) const
+    { impl->debug_print(ctx, os); }
 
   // execute an expression, possibly adding to the current proof
   void execute( proof_context &ctx ) const { impl->execute(ctx); }
 
-  // Evaluate a const expression in boolean context.
-  // If evaluation requires execution of an expression, a silent clone
-  // of the proof_context is made and discarded at the end of the 
-  // evaluation.
-  bool evaluate( proof_context& ctx ) const { return impl->evaluate(ctx); }
+  // Evaluate a const expression in boolean or integer context.
+  bool evaluate( proof_context& ctx ) const 
+    { return impl->evaluate(ctx); }
+  integer_t ievaluate( proof_context& ctx ) const 
+    { return impl->ievaluate(ctx); }
 
-
+  // If the expression is an lvalue, get the name of the underlying variable
+  string lvalue( proof_context const& ctx ) const
+    { return impl->lvalue(ctx); }
+  
   RINGING_FAKE_DEFAULT_CONSTRUCTOR(expression);
 
 private:
@@ -118,7 +141,6 @@ struct script_exception
 {
   enum type {
     do_abort,
-    do_stop,
     do_break
   };
   

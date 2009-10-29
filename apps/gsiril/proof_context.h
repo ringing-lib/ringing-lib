@@ -1,5 +1,5 @@
 // -*- C++ -*- proof_context.h - Environment to evaluate expressions
-// Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007
+// Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2009
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -65,16 +65,19 @@ public:
 
   explicit proof_context( const execution_context & );
  ~proof_context();
-  
+ 
+  void prove( const expression& );
+ 
   permute_and_prove_t permute_and_prove();
 
   row current_row() const { return r; }
   bool isrounds() const;
 
+  expression lookup_symbol( const string &sym ) const;
   void execute_symbol( const string &sym );
   void define_symbol( const pair< const string, expression > &defn );
 
-  enum proof_state { rounds, notround, isfalse };
+  enum proof_state { rounds, notround, isfalse, aborted };
   proof_state state() const;
   string substitute_string( const string &str, bool &do_exit );
 
@@ -90,6 +93,7 @@ private:
   symbol_table dsym_table; // dynamic symbol table
   row r;
   shared_pointer<prover> p;
+  bool has_aborted;
 
   ostream* output;
   bool silent;

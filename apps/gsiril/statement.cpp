@@ -1,5 +1,6 @@
 // statement.cpp - Code to execute different types of statement
-// Copyright (C) 2002, 2003, 2004, 2005 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003, 2004, 2005, 2009
+// Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -29,8 +30,10 @@
 #include "proof_context.h"
 #if RINGING_OLD_IOSTREAMS
 #include <fstream.h>
+#include <iomanip.h>
 #else
 #include <fstream>
+#include <iomanip> // For boolalpha
 #endif
 #include <ringing/streamutils.h>
 
@@ -39,7 +42,8 @@ void definition_stmt::execute( execution_context& e ) const
   if ( e.define_symbol( defn ) )
     {
       if ( e.verbose() ) {
-	if ( defn.second.isnop() )
+        proof_context const pctx(e);
+	if ( defn.second.isnop(pctx) )
 	  e.output() << "Definition of '" << defn.first << "' cleared." << endl;
 	else
 	  e.output() << "Redefinition of '" << defn.first << "'." << endl;
@@ -48,7 +52,8 @@ void definition_stmt::execute( execution_context& e ) const
   else
     {
       if ( e.verbose() ) {
-	if ( ! defn.second.isnop() )
+        proof_context const pctx(e);
+	if ( ! defn.second.isnop(pctx) )
 	  e.output() << "Definition of '" << defn.first << "' added." << endl;
       }
     }
@@ -59,7 +64,8 @@ void default_defn_stmt::execute( execution_context& e ) const
   if ( e.default_define_symbol( defn ) )
     {
       if ( e.verbose() ) {
-	if ( ! defn.second.isnop() )
+        proof_context const pctx(e);
+	if ( ! defn.second.isnop(pctx) )
 	  e.output() << "Definition of '" << defn.first << "' added." << endl;
       }
     }
@@ -77,20 +83,7 @@ void prove_stmt::execute( execution_context& e ) const
     {
       proof_context p(e);
 
-      try
-	{
-	  p.execute_symbol( "start" );
-	  expr.execute(p);
-	  p.execute_symbol( "finish" );
-      	} 
-      catch( const script_exception& ex ) 
-	{
-	  if ( ex.t == script_exception::do_abort ) {
-	    p.execute_symbol( "abort" );
-            e.set_failure();
-          }
-	  return;
-	}
+      p.prove(expr);
     
       switch ( p.state() )
 	{
@@ -105,10 +98,41 @@ void prove_stmt::execute( execution_context& e ) const
 	  p.execute_symbol( "false" ); 
           e.set_failure();
 	  break;
+        case proof_context::aborted:
+          p.execute_symbol( "abort" );
+          e.set_failure();
+          break;
 	}
     } 
   catch ( const script_exception& ) 
     {
+    }
+}
+
+void print_stmt::execute( execution_context& e ) const
+{
+  try
+    {
+      proof_context p(e);
+      switch ( expr.type(p) ) {
+        case expression::boolean: 
+          e.output() << boolalpha << expr.evaluate(p) << endl;
+          break;
+        case expression::integer:
+          e.output() << expr.ievaluate(p) << endl;
+          break;
+        default:
+          p.prove(expr);
+          e.output() << "Expression has no value" << endl;
+      }
+    }
+  catch ( const script_exception& ex )
+    {
+      // This can be triggered by, for example:  print "$$", 42
+      if ( ex.t == script_exception::do_abort )
+        e.output() << "Execution aborted" << endl;
+      else 
+        e.output() << "Execution ended due to a break" << endl;
     }
 }
 

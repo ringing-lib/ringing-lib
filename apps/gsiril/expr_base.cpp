@@ -1,5 +1,5 @@
 // expr_base.cpp - Base classes, nodes and factory function for expressions
-// Copyright (C) 2005 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2005, 2009 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -37,8 +37,41 @@ bool expression::node::evaluate( proof_context& ctx )
 {
   make_string os;
   os << "Unable to evaluate expression as a boolean: '";
-  debug_print( os.out_stream() );
+  debug_print( ctx, os.out_stream() );
   os << "'";
 
   throw runtime_error( os );
+}
+
+expression::integer_t expression::node::ievaluate( proof_context& ctx )
+{
+  make_string os;
+  os << "Unable to evaluate expression as an integer: '";
+  debug_print( ctx, os.out_stream() );
+  os << "'";
+
+  throw runtime_error( os );
+}
+
+void expression::bnode::execute( proof_context& ctx )
+{
+  make_string os;
+  if ( type(ctx) == boolean ) os << "Boolean expression ";
+  else if ( type(ctx) == integer ) os << "Integer expression ";
+  else os << "Expression ";
+  os << "used in void context: '";
+  debug_print( ctx, os.out_stream() );
+  os << "'";
+    
+  throw runtime_error( os );  
+}
+
+string expression::node::lvalue( proof_context const& ctx ) const
+{
+  make_string os;
+  os << "Attempt to modify the value of an expression: '";
+  debug_print( ctx, os.out_stream() );
+  os << "'";
+
+  throw runtime_error( os );  
 }

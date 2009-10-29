@@ -1,5 +1,5 @@
 // proof_context.cpp - Environment to evaluate expressions
-// Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008
+// Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -48,6 +48,7 @@ RINGING_USING_NAMESPACE
 
 proof_context::proof_context( const execution_context &ectx ) 
   : ectx(ectx), p( new prover(ectx.get_args().num_extents) ), 
+    has_aborted(false),
     output( &ectx.output() ),
     silent( ectx.get_args().everyrow_only || ectx.get_args().filter ), 
     underline( false )
@@ -127,6 +128,21 @@ bool proof_context::permute_and_prove_t::operator()( const row &c )
   return rv;
 }
 
+void proof_context::prove( const expression& expr )
+{
+  try
+    {
+      execute_symbol( "start" );
+      expr.execute(*this);
+      execute_symbol( "finish" );
+    } 
+  catch( const script_exception& ex ) 
+    {
+      if ( ex.t == script_exception::do_abort )
+        has_aborted = true;
+    }
+}
+
 proof_context::permute_and_prove_t::
 permute_and_prove_t( row &r, prover &p, proof_context &pctx ) 
   : r(r), p(p), pctx(pctx)
@@ -144,11 +160,16 @@ bool proof_context::isrounds() const
   return r == ectx.rounds() && p->count_row(r) == ectx.extents(); 
 }
 
-void proof_context::execute_symbol( const string &sym ) 
+expression proof_context::lookup_symbol( const string &sym ) const
 {
   expression e( dsym_table.lookup(sym) );
   if ( e.isnull() ) e = ectx.lookup_symbol(sym);
-  e.execute( *this );
+  return e;
+}
+
+void proof_context::execute_symbol( const string &sym ) 
+{
+  lookup_symbol( sym ).execute( *this );
 }
 
 void proof_context::define_symbol( const pair<const string, expression>& defn )
@@ -158,7 +179,9 @@ void proof_context::define_symbol( const pair<const string, expression>& defn )
 
 proof_context::proof_state proof_context::state() const
 {
-  if ( p->truth() && isrounds() ) 
+  if ( has_aborted )
+    return aborted;
+  else if ( p->truth() && isrounds() ) 
     return rounds;
   else if ( p->truth() )
     return notround;

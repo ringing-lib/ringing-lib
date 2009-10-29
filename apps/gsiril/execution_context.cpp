@@ -1,5 +1,6 @@
 // execution_context.cpp - Global environment
-// Copyright (C) 2002, 2003, 2004, 2007 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003, 2004, 2007, 2009 
+// Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -27,6 +28,7 @@
 #include "expression.h"
 #include "statement.h"
 #include "execution_context.h"
+#include "proof_context.h"
 
 #include <ringing/streamutils.h>
 
@@ -79,8 +81,11 @@ void execution_context::undefine_symbol( const string& sym )
 
 bool execution_context::default_define_symbol( const pair< const string, expression > &defn )
 {
-  if ( ! sym_table.lookup(defn.first).isnop() ) 
-    return false;
+  {
+    proof_context const pctx(*this);
+    if ( ! sym_table.lookup(defn.first).isnop(pctx) ) 
+      return false;
+  }
 
   sym_table.define(defn);
 
