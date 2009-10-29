@@ -306,7 +306,7 @@ RINGING_END_NAMESPACE_STD
     RINGING_MAKE_VERSION(major,minor,patch) >= RINGING_COMPATIBLE_WITH )
 
 // Edit this line to enable/disable compatibility
-#define RINGING_COMPATIBLE_WITH RINGING_MAKE_VERSION(0,3,0)
+#define RINGING_COMPATIBLE_WITH RINGING_MAKE_VERSION(0,4,0)
 
 // RINGING_CONCAT -- concatenate two preprocessor tokens
 #define RINGING_CONCAT(a, b) RINGING_CONCAT_I(a, b)
