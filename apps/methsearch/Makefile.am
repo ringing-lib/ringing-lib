@@ -33,10 +33,10 @@ $(top_builddir)/ringing/libringingcore.la \
 @XERCES_LIBS@
 
 methsearch_SOURCES = prog_args.cpp falseness.cpp format.cpp expression.cpp \
-libraries.cpp main.cpp mask.cpp methodutils.cpp music.cpp search.cpp exec.cpp \
-output.cpp row_calc.cpp \
-prog_args.h falseness.h format.h expression.h libraries.h mask.h exec.h \
-methodutils.h music.h search.h output.h row_calc.h
+libraries.cpp main.cpp mask.cpp methodutils.cpp music.cpp search.cpp \
+output.cpp \
+prog_args.h falseness.h format.h expression.h libraries.h mask.h \
+methodutils.h music.h search.h output.h
 
 EXTRA_DIST = doc/methsearch.tex
 
@@ -59,7 +59,7 @@ CLEANFILES = doc/methsearch.aux doc/methsearch.idx doc/methsearch.ilg \
              doc/methsearch.ind doc/methsearch.log doc/methsearch.out \
              doc/methsearch.pdf doc/methsearch.toc
 
-install:	pdf
+install:	install-pdf
 
 .PHONY: pdf install-pdf install
 endif

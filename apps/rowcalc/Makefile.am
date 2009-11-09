@@ -1,9 +1,8 @@
-# -*- Makefile -*- 
+# -*- Makefile -*-
 
 # Process this file with automake to produce Makefile.in
 
-# Copyright (C) 2002, 2009 Martin Bright <martin@boojum.org.uk> and
-# Richard Smith <richard@ex-parrot.com>
+# Copyright (C) 2009 Richard Smith <richard@ex-parrot.com>
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -23,13 +22,14 @@
 
 MAINTAINERCLEANFILES = Makefile.in
 
-noinst_LIBRARIES = libstuff.a
+bin_PROGRAMS = rowcalc
 
 # Need both top_srcdir and top_builddir so that we can find common-am.h
-INCLUDES = -I$(top_srcdir) -I$(top_builddir)
+INCLUDES = -I$(top_srcdir) -I$(top_builddir) -I$(top_srcdir)/apps/utils
 
-libstuff_a_SOURCES = args.cpp args.h tokeniser.cpp tokeniser.h init_val.h \
-stringutils.h stringutils.cpp exec.cpp exec.h row_calc.cpp row_calc.h
+rowcalc_LDADD = $(top_builddir)/apps/utils/libstuff.a \
+$(top_builddir)/ringing/libringing.la \
+$(top_builddir)/ringing/libringingcore.la
 
-
+rowcalc_SOURCES = rowcalc.cpp
 
