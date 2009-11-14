@@ -12,23 +12,22 @@ to read XML method libraries to be linked into commercial applications
 without placing any restrictions on the licence used in such applications 
 as a whole.
 
-At the time of writing the following files are licenced under the LGPL:
+At the time of writing the following files, all in the ringing/ subdirectory,
+are licenced under the LGPL:
 
-  ringing/bell.cpp                ringing/mathutils.h
-  ringing/bell.h                  ringing/method.cpp
-  ringing/change.cpp              ringing/method.h
-  ringing/change.h                ringing/peal.cpp
-  ringing/common-am.h             ringing/peal.h
-  ringing/common.h                ringing/place_notation.cpp
-  ringing/common-msvc.h           ringing/place_notation.h
-  ringing/libfacet.cpp            ringing/pointers.h
-  ringing/libfacet.h              ringing/row.cpp
-  ringing/libout.cpp              ringing/row.h
-  ringing/libout.h                ringing/stl.cpp
-  ringing/library.cpp             ringing/xmllib.cpp
-  ringing/library.h               ringing/xmllib.h
-  ringing/macros.h                ringing/xmlout.cpp
-  ringing/mathutils.cpp           ringing/xmlout.h
+  bell.cpp                libfacet.h              peal.h
+  bell.h                  libout.cpp              place_notation.cpp
+  change.cpp              libout.h                place_notation.h
+  change.h                library.cpp             pointers.h
+  common-am.h             library.h               row.cpp
+  common.h                litelib.cpp             row.h
+  common-msvc.h           litelib.h               stl.cpp
+  dom_gdome.cpp           macros.h                xmllib.cpp
+  dom.h                   mathutils.cpp           xmllib.h
+  dom_stub.cpp            mathutils.h             xmlout.cpp
+  dom_xerces.cpp          method.cpp              xmlout.h
+  libbase.h               method.h
+  libfacet.cpp            peal.cpp
 
 For an up-to-date list, the licences on the individual files should be 
 consulted.
