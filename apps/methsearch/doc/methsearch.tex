@@ -1325,7 +1325,7 @@ is the method found.  Many other options can also be rewritten as a
 \verb+--require+ option; almost invariably this results in a loss of 
 efficency, sometimes spectacularly so.
 
-The \verb+-M+\oid{M}{music} and \verb+-F+\oi{F} options 
+The \verb+-M+\oi{M} and \verb+-F+\oi{F} options 
 configure how methsearch analyses the musicality and 
 falseness of a method, respectively.  Music is discussed in further detail in 
 \sref{music}, while falseness is covered in \sref{falseness}.
@@ -2481,7 +2481,116 @@ of some perceived similarity with a major method of that name.}
 
 \index{falseness|)}
 
-\chapter{Music}\label{music}
+\chapter{Music}\label{music}\index{music|(}
+
+\methsearch\ is able to analyse the music present in a method.  
+This is controlled by the \verb+-M+\oid{M}{music} option and is used to
+generate a musical score which is displayed by the \verb+$M+\fspec{M}
+variable.
+
+\section{Music patterns}
+
+At its simplest, \methsearch\ simply counts the number of rows in
+the plain course matching a particular \textitidx{music pattern}.  
+Each pattern is specified with an option of the form 
+\verb+-M+\textit{pattern}.  A pattern may contain literal bell symbols 
+(using the bell symbols listed in \sref{pn}) or \textitidx{wildcards} that 
+can match various bells.  Three forms of wildcard are supported:
+a \verb+?+ represents any single bell, a \verb+*+ represents any number
+(including zero) arbitrary bells, and \verb+[+\textit{list}\verb+]+ matches
+exactly one bell from the list of symbols.
+
+For example, on eight bells, \verb+-M????5678+ matches a roll-up\index{roll-up} 
+at the back; this can be written more succinctly as \verb+-M*5678+.  A 
+combination roll-up (CRU)\index{CRU|see{combination roll-up}}%
+\index{combination roll-up} on eight
+has two of \verb+4+, \verb+5+ and \verb+6+ rolling-up followed by \verb+78+.
+This can be written \verb+-M*[456][456]78+.
+
+If a pattern is shorter than the row and contains no \verb+*+ to match the
+surplus bells, then it matches at the start of the row.  For example,
+\verb+-M5678+ matches the row \verb+56781234+ but not \verb+12345678+.  To
+match a sequence of bells at any place in the row, place a \verb+*+ on
+both sides of the pattern: \verb+-M*5678*+.
+
+\subsection{Named music patterns}
+
+There is also a shorthand notation for matching particular commonly requested
+patterns such as queens, CRUs, or four-bell runs.  This is written
+\verb+-M<+\textit{name}\verb+>+.  Note that it will generally be necessary to 
+enclose the \verb+<+ and \verb+>+ signs (and, for convenience, everything 
+between them in quotes): \verb+-M"<+\textit{name}\verb+>"+.%
+\index{shell!quotation}
+At present, the following named patterns are supported.
+
+\begin{tabularx}{\textwidth}{lX}
+\texttt{rounds}\index{rounds}
+  &The bells in order; e.g.\ \texttt{1234567} on seven bells.\\
+\texttt{queens}\index{queens}
+  &The odd bells in order, followed by the even bells in order;
+  e.g.\ \texttt{1357246} on seven bells.%
+  \footnote{The examples are given on an odd number of bells because these
+  named rows are ambiguous at odd stages.  The particular choice of queens
+  as \texttt{1357246} instead of \texttt{2461357} is because odd bell methods
+  are more usually rung with a tenor covering.}\\
+\texttt{kings}\index{kings}
+  &The odd bells in reverse, followed by the even bells in order;
+  e.g.\ \texttt{7531246} on seven bells.\\
+\texttt{tittums}\index{tittums}
+  &The front bells in sequence, alternating with the back bells
+  in order; e.g.\ \texttt{1526374} on seven bells.\\
+\texttt{reverse-rounds}\index{reverse rounds}&
+  The bells in reverse order; e.g.\ \texttt{7654321} on 
+  seven bells.\\
+\texttt{CRUs}\index{combination roll-up}&
+  Any four bells, followed by two of $\{ \hbox{\tt4}, \hbox{\tt5}, 
+  \hbox{\tt6}\}$, followed by the back bells in order.\\
+\texttt{front-}$n$\texttt{-runs}\index{runs}&
+  A run of $n$ bells in sequence 
+  (forwards or backwards) off the front of the row.\\
+\texttt{back-}$n$\texttt{-runs}&A run of $n$ bells in sequence
+  (forwards or backwards) at the back of the row.\\
+$n$\texttt{-runs}&A run of $n$ bells in sequence (forwards or backwards) at
+  an arbitrary position in the row.\\
+\end{tabularx}
+
+With the $n$\verb+-runs+ named pattern, it is possible for a row to match
+the pattern more than once.  For example, the row \verb+32145678+ matches
+\verb+-M<4-runs>+ twice because it has a five-bell run and both of its 
+constituent four-bell runs (\verb+4567+ and \verb+5678+) match.  This means
+a longer run scores more than a shorter run.
+
+\subsection{Customising scores}
+
+By default, each match adds 1 to the music score.  Multiple patterns
+may be specified, in which case each row is matched against each pattern
+allowing rows to match multiple times.  It is possible to change the score
+awarded to each match of a pattern.  The syntax for this is 
+\verb+-M+\textit{score}\verb+:+\textit{pattern}, where \textit{pattern}
+may be a simple pattern or a named pattern enclosed in \verb+<+\ldots\verb+>+.
+
+This allows you to specify the relative merits of particular rows.  For 
+example, \verb+-M<4-runs>+\hfill\verb+-M5:*7568+\hfill\verb+-M5:*5678+\hfill%
+\verb+-M5:8765+\hfill\verb+-M5:5678+\hfill\verb+-M10:<queens>+\\
+will award ten points to queens,
+five points to each of four particularly musical types of runs, and one point
+for other four-bell runs.  (As a result, rounds would score 10 --- one each
+for the five four-bell runs in \verb+12345678+, and a further five for 
+the \verb+5678+ at the back.)
+
+It is also possible to score rows at handstroke and backstroke differently.
+This can be useful for excluding 87s at backstroke (on eight bells, or 
+equivalent on other stages).  The syntax is 
+\verb+-M+$h$\verb+,+$b$\verb+:+\textit{pattern} where $h$ is the score
+to award if the pattern matches at handstroke\index{handstroke} and 
+$b$ the score to award for a match at backstroke\index{backstroke}.%
+\footnote{\methsearch\ assumes that the method is rung with the first 
+non-rounds change being a handstroke.}
+By setting $h=0$ and $b$ to a large negative number, it makes it easy to locate
+and reject methods with a particular row at backstroke.  E.g.
+\verb+-M0,-1000:*87+.
+
+\index{music|)}
 
 \chapter{Interoperability}
 
@@ -2548,7 +2657,9 @@ The main font used is Linux Libertine, an open source OpenType font designed
 by Philipp Poll.  The sans serif font used in chapter and section headings
 is Linux Biolinum, also designed by Philipp Poll.  Despite their names,
 neither font is specific to Linux.  Equations are set using Donald Knuth's 
-Computer Modern font.\index{fonts}
+Computer Modern font.  The monospaced font used for code fragments and
+row literals is the Computer Modern Teletype font, again by Donald Knuth.%
+\index{fonts}
 
 All of the software described in this manual (except certain passing
 references to a certain product gestated in Redmont) are themselves open
@@ -2556,7 +2667,8 @@ source software.  All of the ringing-related programs are available as
 part of the Ringing Class Library project.\index{Ringing Class Library}
 
 The source code for this manual is available from the Ringing Class Library
-CVS repository and is itself open source.\index{open source}
+CVS repository and is itself open source.  Any additions or corrections 
+to the manual will be gratefully received.\index{open source}
 
 \vfil
 \footnotesize
