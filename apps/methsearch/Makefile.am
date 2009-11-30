@@ -59,7 +59,7 @@ CLEANFILES = doc/methsearch.aux doc/methsearch.idx doc/methsearch.ilg \
              doc/methsearch.ind doc/methsearch.log doc/methsearch.out \
              doc/methsearch.pdf doc/methsearch.toc
 
-install:	install-pdf
+install-data-hook:	install-pdf
 
 .PHONY: pdf install-pdf install
 endif
