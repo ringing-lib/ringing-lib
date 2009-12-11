@@ -712,7 +712,11 @@ RINGING_API void add_named_music( music& mu, string const& n, int sh, int sb )
 {
   const int bells = mu.bells();
 
-  if ( n == "queens" )
+  if ( n == "rounds" )
+    mu.push_back
+      ( music_details( row( bells ).print(), sh, sb ) );
+
+  else if ( n == "queens" )
     mu.push_back
       ( music_details( row::queens( bells ).print(), sh, sb ) );
 
