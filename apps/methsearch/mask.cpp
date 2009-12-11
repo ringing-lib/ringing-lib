@@ -623,7 +623,7 @@ bool is_mask_consistent( arguments &args,
 			 const vector<vector<change> > &above,
 			 const vector<vector<change> > &below )
 {
-  const int hl_len = args.bells * (1 + args.treble_dodges);
+  const int hl_len = args.lead_len / 2;
 
   for ( int depth=0; depth < 2*hl_len; ++depth )
     {
@@ -679,6 +679,7 @@ bool is_mask_consistent( arguments &args,
 	    continue;
 
 	  int other_index( 2 * (hl_len - args.hunt_bells % 2) - depth );
+          assert( other_index >= 0 ); assert( other_index <= above.size() );
 
 	  const vector<change> &ch1a = above[depth];
 	  const vector<change> &ch1b = below[depth];

@@ -455,9 +455,9 @@ bool arguments::validate( arg_parser &ap )
       return false;
     }
 
-  if ( bells < 3 || bells >= int(bell::MAX_BELLS) ) 
+  if ( bells < 2 || bells >= int(bell::MAX_BELLS) ) 
     {
-      ap.error( make_string() << "The number of bells must be between 3 and " 
+      ap.error( make_string() << "The number of bells must be between 2 and " 
 		<< bell::MAX_BELLS-1 << " (inclusive)" );
       return false;
     }
@@ -485,6 +485,13 @@ bool arguments::validate( arg_parser &ap )
     {
       ap.error( "Must not specify the lead length when searching for methods "
 		"with a hunt bell" );
+      return false;
+    }
+
+
+  if ( treble_path.size() && !hunt_bells ) 
+    {
+      ap.error( "Cannot specify a treble path without no hunts" );
       return false;
     }
 
@@ -594,6 +601,21 @@ bool arguments::validate( arg_parser &ap )
 		"implemented for single hunt methods" );
       return false;
     }
+  if ( (require_cyclic_hlh || require_cyclic_hle ||
+        require_rev_cyclic_hlh || require_rev_cyclic_hle ||
+        require_reg_hls) && (treble_front != 1 || treble_back != bells) )
+    {
+      ap.error( "Half leads cannot be restricted for little methods" );
+      return false;
+    }
+
+  if ( (require_cyclic_les || require_pbles) 
+       && (treble_front != 1 || treble_back != bells) )
+    {
+      ap.error( "Lead-ends cannot be restricted if the treble is not the "
+                "hunt bell" );
+      return false;
+    }
 
   if ( same_place_parity && treble_dodges % 2 == 0 )
     {
@@ -693,6 +715,14 @@ bool arguments::validate( arg_parser &ap )
 
   if ( skewsym + sym + doubsym >= 2 )
     skewsym = sym = doubsym = true;
+
+  if ( (skewsym || doubsym || mirrorsym) 
+       && (bells - treble_back != treble_front-1) )
+    {
+      ap.error( "Double, rotational or mirror symmetry require the treble "
+                "path to invariant under this symmetry" );
+      return false;
+    }
 
   if ( formats_have_falseness_groups() )
     {

@@ -379,6 +379,15 @@ bool searcher::is_acceptable_method()
       }
       while ( args.true_course && r != args.start_row && p.truth() );
 
+      // There doesn't seem any idea solution as to what to do with the 
+      // lead head row.  Arguably we shouldn't prove it as it's not 
+      // part of the lead.  But that leads to odd things in -AU0 searches
+      // where we're just looking for a block of rows.  So lets require that 
+      // either it is true or it is the first row again.
+      if ( !args.true_course && r != args.start_row ) {
+        p.add_row(r);
+      }
+
       if ( !p.truth() ) 
         return false;
     }
@@ -1073,7 +1082,7 @@ void searcher::general_recurse()
 
   // Maximum symmetry
   else if ( args.skewsym && args.doubsym && args.sym 
-            && depth == hl_len/2 + 1 - args.hunt_bells % 2 )
+            && depth == hl_len/2 + 1 - args.hunt_bells % 2 && hl_len > 2 )
     {
       // This loop will add up to the half-lead
       while ( size_t(m.length()) <= hl_len - 1 - args.hunt_bells % 2 )
@@ -1090,7 +1099,8 @@ void searcher::general_recurse()
 
 
   // Only rotational symmetry
-  else if ( args.skewsym && depth == hl_len/2 + 1 - args.hunt_bells % 2 )
+  else if ( args.skewsym 
+            && depth == hl_len/2 + 1 - args.hunt_bells % 2 && hl_len > 2 )
     {
       assert( !args.doubsym && !args.sym );
 
@@ -1117,7 +1127,7 @@ void searcher::general_recurse()
 
   // Only conventional (palindromic) symmetry
   else if ( args.sym && depth == hl_len + 
-            ( args.hunt_bells % 2 ? 0 : args.treble_dodges + 1 ) )
+            ( args.hunt_bells % 2 ? 0 : args.treble_dodges + 1 ) && hl_len > 1 )
     {
       assert( !args.skewsym && !args.doubsym );
 
@@ -1155,7 +1165,8 @@ void searcher::general_recurse()
     }
 
   // Only rotational symmetry
-  else if ( args.skewsym && depth == 3*hl_len / 2 + 1 - args.hunt_bells % 2 )
+  else if ( args.skewsym 
+            && depth == 3*hl_len/2 + 1 - args.hunt_bells % 2 && hl_len > 2 )
     {
       assert( !args.doubsym && !args.sym );
 
