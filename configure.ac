@@ -64,6 +64,9 @@ AC_PATH_PROG(XELATEX, xelatex)
 AC_PATH_PROG(MAKEINDEX, makeindex)
 AM_CONDITIONAL(HAVE_XELATEX, test -n "$XELATEX" -a -n "$MAKEINDEX")
 
+AC_PATH_PROG(MAKEINFO, makeinfo)
+AM_CONDITIONAL(HAVE_MAKEINFO, test -n "$MAKEINFO")
+
 dnl --------------------------------------------------------------------------
 dnl Checks for libraries.
 AC_USE_TERMCAP
