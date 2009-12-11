@@ -62,7 +62,11 @@ struct arguments
   init_val<int,0>  treble_dodges;
   init_val<int,1>  hunt_bells;
   init_val<int,0>  lead_len;
-  init_val<int,0>  max_consec_places; 
+  init_val<int,0>  max_consec_places;
+
+  init_val<int,-1> treble_front;
+  init_val<int,-1> treble_back;
+  string           treble_path;
 
   init_val<bool,false> require_limited_le;
   init_val<bool,false> prefer_limited_le;

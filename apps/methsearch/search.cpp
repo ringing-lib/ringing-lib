@@ -129,7 +129,7 @@ searcher::searcher( const arguments &args )
     r( canonical_coset_member( args.start_row ) ),
     maintain_r( args.avoid_rows.size() )
 {
-  m.reserve( 2 * hl_len );
+  m.reserve( args.lead_len );
 
   copy( args.startmeth.rbegin(), args.startmeth.rend(), 
         back_inserter(startmeth) );
@@ -470,7 +470,7 @@ inline bool searcher::push_change( const change& ch )
   if ( maintain_r ) {
     r = canonical_coset_member( r * ch );
     // We don't care about the lead head row.
-    if ( m.size() != 2 * hl_len && 
+    if ( m.size() != args.lead_len && 
          args.avoid_rows.find(r) != args.avoid_rows.end() )
       return false;
   }
@@ -504,16 +504,16 @@ inline int searcher::get_posn()
   size_t posn = depth >= hl_len ? 2*hl_len - depth - 2 : depth;
   
   if ( posn % div_len == div_len - 1 )
-    return posn / div_len * 2 + 1;
+    return args.treble_front-1 + posn / div_len * 2 + 1;
   else
-    return posn / div_len * 2;
+    return args.treble_front-1 + posn / div_len * 2;
 }
 
 inline bool searcher::is_cyclic_hl( const row& hl )
 {
   assert( hl[ bells-1 ] == 0 );
   
-  for (int i=0; i<bells-2; ++i)
+  for (int i=1; i<bells-1; ++i)
     if ( hl[i-1] % (bells-1) + 1 != hl[i] )
       return false;
   
@@ -566,11 +566,8 @@ bool searcher::try_halflead_change( const change &ch )
       row hl;
       for_each( m.begin(), m.end(), permute(hl) );
 
-      assert( hl[ bells-1 ] == 0 );
-
-      for (int i=1; i<bells-1; ++i)
-        if ( hl[i-1] % (bells-1) + 1 != hl[i] )
-          return false;
+      if ( ! is_cyclic_hl(hl) )
+        return false;
     }
 
   if ( args.require_rev_cyclic_hlh || args.require_rev_cyclic_hle ||
@@ -722,10 +719,11 @@ bool searcher::try_midlead_change( const change &ch )
        && m.size() && m.back() == ch )
     return false;
 
-  size_t posn = args.hunt_bells ? get_posn() : 0;
+  size_t const posn = args.hunt_bells ? get_posn() : 0;
+  bool const intersection = ( posn % 2 == args.treble_front % 2 );
 
   // Is the treble moving between dodging positions (i.e. is posn odd)?
-  if (posn % 2 && depth % hl_len != hl_len-1) 
+  if ( intersection && depth % hl_len != hl_len-1 ) 
     {
       if ( args.surprise && !ch.internal() )
         return false;
@@ -734,7 +732,7 @@ bool searcher::try_midlead_change( const change &ch )
         return false;
     }
  
-  if ( args.sym_sects && posn % 2 == 0 && depth % div_len >= div_len/2 )
+  if ( args.sym_sects && !intersection && depth % div_len >= div_len/2 )
     {
       int i = depth/div_len*div_len + div_len - 2 - (depth % div_len);
       assert( i < (int)m.size() && i >= 0 );
@@ -765,7 +763,7 @@ bool searcher::try_midlead_change( const change &ch )
   // by the default -Fn.)
   // This test doesn't effect the -E handling noted above as if the base
   // method passes this, so will the variant with a 12 or 1N lh.
-  if ( args.true_half_lead && args.treble_dodges > 1 && posn % 2 == 0
+  if ( args.true_half_lead && args.treble_dodges > 1 && !intersection
        && is_division_false( m, ch, div_len ) )
     return false;
   
@@ -775,7 +773,7 @@ bool searcher::try_midlead_change( const change &ch )
     return false;
 
   if ( ( args.allowed_falseness.size() || args.require_CPS ) 
-       && depth % 4 >= 1 && depth % 4 != 3
+       && depth % div_len >= 1 && depth % div_len != div_len - 1
        && ! is_falseness_acceptable( ch ) )
     return false;
 
@@ -995,26 +993,39 @@ void searcher::double_existing()
 
 bool searcher::is_acceptable_leadhead( const row &lh )
 {
-
-  if ( ( args.show_all_meths 
-         || lh.cycles().substr( args.hunt_bells * 2 ).find(',')
-         == string::npos ) )
+  if ( ! args.show_all_meths )
     {
-      if ( args.require_pbles ) 
-        {
-          if ( lh.ispblh(args.hunt_bells) )
-            return true;
+      string cycles = lh.cycles();
+      string::size_type i = 0;
+      while (true) {
+        string::size_type j = cycles.find( ',', i );
+        if ( j == string::npos ) break;
+        else if ( j == i+1 ) {
+          bell h = bell::read_char(cycles[i]);
+          if ( h < args.treble_front-1 
+              || h >= args.treble_front-1+args.hunt_bells )
+            return false;
         }
-      else if ( args.require_cyclic_les )
-        {
-          if ( is_cyclic_le(lh, args.hunt_bells) )
-            return true;
-        }
-      else
-        {
-          return true;
-        } 
+        else if ( j != i+args.bells-args.hunt_bells )
+          return false;
+        i = j+1;
+      }
     }
+
+  if ( args.require_pbles ) 
+    {
+      if ( lh.ispblh(args.hunt_bells) )
+        return true;
+    }
+  else if ( args.require_cyclic_les )
+    {
+      if ( is_cyclic_le(lh, args.hunt_bells) )
+        return true;
+    }
+  else
+    {
+      return true;
+    } 
 
   return false;
 }

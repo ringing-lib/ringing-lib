@@ -329,6 +329,11 @@ void arguments::bind( arg_parser &p )
 	   "Look for methods with NUM hunt bells", "NUM",
 	   hunt_bells ) );
 
+  p.add( new string_opt
+         ( 'Z', "treble-path",
+           "Look for methods with the specified path", "PATH",
+            treble_path ) );
+
   p.add( new boolean_opt
 	 ( 'u', "status",
 	   "Display the current status",
@@ -483,9 +488,43 @@ bool arguments::validate( arg_parser &ap )
       return false;
     }
 
+  {
+    treble_front = 1;
+    treble_back  = bells;
+
+    string::size_type i = treble_path.find('-');
+    if ( i == string::npos ) 
+      { 
+        if ( treble_path.size() )
+          {
+            ap.error( "Treble path must be a range: FRONT-BACK" );
+            return false;
+          }
+      }
+    else
+      {
+        if ( i != 0u )
+          treble_front = lexical_cast<int>( treble_path.substr(0,i) ); 
+
+        if ( i != treble_path.size()-1 )
+          treble_back  = lexical_cast<int>( treble_path.substr(i+1) );
+
+        if ( treble_back > bells || treble_front > bells ||
+             treble_back < 0 || treble_front < 0 ) 
+          { 
+            ap.error( "Treble path out of range" );
+            return false;
+          }
+        else if ( treble_back < treble_front )
+          {
+            ap.error( "Treble path range is of negative size" );
+            return false;
+          }
+      }
+  }
 
   if ( ! lead_len )
-    lead_len = (1 + treble_dodges) * bells * 2;
+    lead_len = (1 + treble_dodges) * (treble_back - treble_front + 1) * 2;
 
   if ( hunt_bells >= bells ) 
     {
@@ -511,17 +550,19 @@ bool arguments::validate( arg_parser &ap )
 		"hunt bell"  );
       return false;
     }
-  if ( (surprise || treble_bob) && bells % 2 == 1 )
+  if ( (surprise || treble_bob) && (treble_back-treble_front+1) % 2 == 1 )
     {
-      ap.error( "Surprise and/or treble bob methods can only be found on an "
-		"even number of bells"  );
+      ap.error( "Surprise and/or treble bob methods can only be found when "
+		"the treble hunts an even number of places (typically an "
+                "even-bell method)"  );
       return false;
     }
 
-  if ( treble_dodges && bells % 2 == 1 )
+  if ( treble_dodges && (treble_back-treble_front+1) % 2 == 1 )
     {
-      ap.error( "Treble dodging methods can only be found on an"
-		" even number of bells" );
+      ap.error( "Treble dodging methods can only be found when "
+		"the treble hunts an even number of places (typically an "
+                "even-bell method)"  );
       return false;
     }
 
@@ -621,7 +662,7 @@ bool arguments::validate( arg_parser &ap )
       ap.error( make_string() << "Error parsing -R format: " << error.what() );
       return false;
     }
-  }
+  }  // end if (quiet)
 
   try
     {
@@ -778,5 +819,6 @@ bool arguments::validate( arg_parser &ap )
           return false;
         }
     }
+
   return true;
 }

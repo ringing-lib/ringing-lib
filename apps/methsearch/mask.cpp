@@ -49,13 +49,15 @@
 #include <ringing/mathutils.h>
 #include <ringing/place_notation.h>
 
-
 RINGING_USING_NAMESPACE
 RINGING_USING_STD
 
 RINGING_START_ANON_NAMESPACE
 
-pair< int, int > get_posn2( arguments &args, int depth )
+// return positions of the (lowest, highest) hunt bells
+// 0 = moving 1-2
+// 1 = moving 2-3 ...
+pair< int, int > get_posn2( const arguments &args, int depth )
 {
   int div_len( (1 + args.treble_dodges) * 2 );
   int hl_len( args.lead_len / 2 );
@@ -201,6 +203,7 @@ shared_pointer<block> read_block( const int num,
   return rv;
 }
 
+// Convert a '*' to a sequences of '?'s
 void expand_block( vector< vector< change > >& block1, 
 		   bool star_sym, size_t star_index, size_t expand_by )
 {
@@ -265,142 +268,20 @@ void expand_block( vector< vector< change > >& block1,
     }
 }
 
-change merge_changes( const change& a, const change& b, 
-		      const pair<int, int>& posn ) 
-{
-  change c( a.bells() );
-
-  {
-    for ( int i=0; i< (posn.first == -1 ? 1 : posn.first) - 1; ++i )
-      if ( b.findswap(i) )
-	c.swappair(i);
-  }
-  {
-    for ( int i=(posn.first == -1 ? 1 : posn.first); 
-	  i <= posn.second && i < a.bells()-1; i+=2 )
-      c.swappair(i);
-  }
-  {
-    for ( int i=posn.second+2; i < a.bells()-1; ++i )
-      if ( a.findswap(i) )
-	c.swappair(i);
-  }
-
-  return c;
-}
-
-vector<change> reverse_allowed( const vector<change>& ch )
-{
-  vector<change> rv; rv.reserve(ch.size());
-  for ( vector<change>::const_iterator i(ch.begin()), e(ch.end());
-	i != e;  ++i )
-    rv.push_back( i->reverse() );
-  sort( rv.begin(), rv.end() );
-  return rv;
-}
-
-bool unordered_equal( const vector<change>& a, const vector<change>& b )
-{
-  for ( vector<change>::const_iterator i(a.begin()), e(a.end());
-	i != e;  ++i )
-    if ( find( b.begin(), b.end(), *i ) == b.end() )
-      return false;
-  return true;
-}
-
-bool is_mask_consistent( arguments &args, 
-			 const vector<vector<change> > &above,
-			 const vector<vector<change> > &below )
-{
-  const int hl_len = args.bells * (1 + args.treble_dodges);
-
-  for ( int depth=0; depth < 2*hl_len; ++depth )
-    {
-      if ( args.skewsym )
-	{
-	  const int depth2( ( depth > hl_len ? 3 : 1 ) * hl_len
-			    - args.hunt_bells % 2 * 2 - depth );
-
-	  if ( depth2 < 0 || depth2 >= hl_len*2 || depth2 == depth )
-	      continue;
-
-	  // FIXME Quarter-lead change
-
-	  int other_index( ( depth > hl_len ? 3 : 1 ) * hl_len 
-			   - args.hunt_bells % 2 * 2 - depth );
-
-	  const vector<change> &ch1a = above[depth];
-	  const vector<change> &ch1b = below[depth];
-	  const vector<change> &ch2a = above[other_index];
-	  const vector<change> &ch2b = below[other_index];
-
-	  if ( ch1a.size() && ch2b.size() &&
-	       !unordered_equal( ch1a, reverse_allowed(ch2b) ) )
-	    return false;
-
-	  if ( ch1b.size() && ch2a.size() &&
-	       !unordered_equal( ch1b, reverse_allowed(ch2a) ) )
-	    return false;
-	}
-
-      if ( args.doubsym )
-	{
-	  int other_index( (depth + hl_len) % (2 * hl_len) );
-
-	  const vector<change> &ch1a = above[depth];
-	  const vector<change> &ch1b = below[depth];
-	  const vector<change> &ch2a = above[other_index];
-	  const vector<change> &ch2b = below[other_index];
-
-	  if ( ch1a.size() && ch2b.size() &&
-	       !unordered_equal( ch1a, reverse_allowed(ch2b) ) )
-	    return false;
-
-	  if ( ch1b.size() && ch2a.size() &&
-	       !unordered_equal( ch1b, reverse_allowed(ch2a) ) )
-	    return false;
-	}
-
-      if ( args.sym )
-	{
-	  if ( 2 * (hl_len - args.hunt_bells % 2) - depth < 0 || 
-	       2 * (hl_len - args.hunt_bells % 2) - depth >= 2 * hl_len )
-	    continue;
-
-	  int other_index( 2 * (hl_len - args.hunt_bells % 2) - depth );
-
-	  const vector<change> &ch1a = above[depth];
-	  const vector<change> &ch1b = below[depth];
-	  const vector<change> &ch2a = above[other_index];
-	  const vector<change> &ch2b = below[other_index];
-
-	  if ( ch1a.size() && ch2a.size() &&
-	       !unordered_equal( ch1a, ch2a ) )
-	    return false;
-
-	  if ( ch1b.size() && ch2b.size() &&
-	       !unordered_equal( ch1b, ch2b ) )
-	    return false;
-	}
-    }
-
-  return true;
-}
-
-RINGING_END_ANON_NAMESPACE
-
-bool parse_mask( arguments &args, const arg_parser &ap )
+bool read_and_expand_blocks( arguments& args, const arg_parser& ap,
+                             vector< vector<change> >& above, 
+                             vector< vector<change> >& below )
 {
   // Block0 are those sections before the section containing a star
   // Block1 is the section containing a star
   // Block2 are those sections after the section containing a star
   // 'b' blocks are below works for above/below sections
-  vector< vector<change> > block0a, block0b;
-  vector< vector<change> > block1a, block1b;
-  vector< vector<change> > block2a, block2b;
+  vector< vector<change> > &block0a = above, &block0b = below;
+  vector< vector<change> >  block1a,          block1b;
+  vector< vector<change> >  block2a,          block2b;
 
-  size_t star_index_a(0u), star_index_b(0u);
-  bool   star_sym_a(false),   star_sym_b(false);
+  size_t star_index_a(0u),  star_index_b(0u);
+  bool   star_sym_a(false), star_sym_b(false);
 
   // ----------------------------------
   // Parse the mask
@@ -540,7 +421,293 @@ bool parse_mask( arguments &args, const arg_parser &ap )
   copy( block2a.begin(), block2a.end(), back_inserter( block0a ) );
   copy( block2b.begin(), block2b.end(), back_inserter( block0b ) );
 
-  if (!is_mask_consistent(args, block0a, block0b))
+  return true;
+}
+
+void select_changes_above( const arguments& args, vector<change>& changesa,
+                           int i )
+{
+  int active_above;
+  {
+    const pair< int, int > posn( get_posn2(args, i) );
+    if ( posn.second == args.treble_back - args.treble_front )
+      active_above = args.bells - args.treble_back;
+    else
+      active_above = args.bells-2 - (posn.second + args.treble_front-1);
+    if (active_above < 0) active_above=0;
+  }
+
+  changesa.reserve( fibonacci(active_above) );
+
+  // Choose the work above the treble
+  for ( changes_iterator 
+          j(active_above, args.bells-active_above, args.bells), e; 
+        j != e; ++j )
+    {
+      change a(*j); 
+      
+      // Handle -w
+      if ( args.right_place && i % 2 == args.bells % 2
+           && args.bells - a.count_places() != active_above )
+        continue;
+      
+      // Handle -f
+      if ( args.no_78_pns && active_above > 1 && a.findplace(args.bells-2) )
+        continue;
+
+      changesa.push_back(a);
+    }
+}
+
+void select_changes_below( const arguments& args, vector<change>& changesb,
+                           int i )
+{
+  int active_below = args.treble_front-1;
+  {
+    const pair< int, int > posn( get_posn2(args, i) );
+    active_below += posn.first == -1 ? 0 : posn.first;
+  }
+
+  changesb.reserve( fibonacci(active_below) );
+    
+  for ( changes_iterator j(active_below, 0, args.bells), e; j != e; ++j )
+    {
+      change b(*j); 
+      
+      // Handle -w
+      if ( args.right_place && i % 2 == 0
+           && args.bells - b.count_places() != active_below )
+        continue;
+
+      // Handle -kf or -df
+      if ( (args.skewsym || args.doubsym || args.mirrorsym) 
+           && args.no_78_pns 
+           && active_below > 1 && b.findplace(1) )
+        continue;
+      
+      changesb.push_back(b);
+    }
+}
+
+void select_changes_prin( const arguments& args, vector<change>& changes, 
+                          int i )
+{
+  if ( args.right_place && args.bells % 2 == 0 && i % 2 == 0 )
+    {
+      // Handle -w
+      changes.push_back( change( args.bells, "-" ) );
+    }
+
+  else 
+    {
+      changes.reserve( fibonacci( args.bells ) );
+    
+      for ( changes_iterator j(args.bells), e; j != e; ++j )
+        {
+          change ch(*j);;
+    
+          // Handle -f
+          if ( args.no_78_pns && ch.findplace(args.bells-2) )
+            continue;
+    
+          // Handle -kf or -df
+          if ( (args.skewsym || args.doubsym) && args.no_78_pns 
+               && ch.findplace(1) )
+            continue;
+    
+          // Handle -l
+          if ( args.max_places_per_change 
+               && ch.count_places() > args.max_places_per_change )
+            continue;
+    
+          // Handle -j
+          if ( args.max_consec_places
+               && has_consec_places( ch, args.max_consec_places ) )
+            continue;
+    
+          // Handle --mirror
+          if ( args.mirrorsym && ch != ch.reverse() )
+            continue;
+    
+          changes.push_back(ch);
+        }
+   }
+}
+
+change merge_changes( const arguments& args,
+                      const change& a, const change& b, 
+		      const pair<int, int>& posn ) 
+{
+  change c( a.bells() );
+
+  for ( int i=0; i<posn.first && i < a.bells()-1; ++i )
+    if ( b.findswap(i) )
+      c.swappair(i++);
+
+  {
+    // If we're leading or lying, then handle that.
+    pair<int,int> p = posn;
+    if ( (p.second - p.first) % 2 == 0 ) {
+      if ( p.first == args.treble_front-1 ) p.first++;
+      if ( p.second == args.treble_back-1 ) p.second--;
+    }
+    for ( int i=p.first; i<p.second && i < a.bells()-1; ++i )
+      c.swappair(i++);
+  }
+
+  for ( int i=posn.second; i < a.bells()-1; ++i )
+    if ( a.findswap(i) )
+      c.swappair(i++);
+
+  return c;
+}
+
+void merge_changes( const arguments& args, vector<change>& result,
+                    const vector<change>& above, const vector<change>& below,
+                    int i )
+{
+  result.reserve( above.size() * below.size() );
+  pair< int, int > posn( get_posn2(args, i) );
+  if ( posn.first == -1 ) { posn.first = 0; }
+  if ( posn.second == args.treble_back - args.treble_front ) --posn.second;
+  posn.first  += args.treble_front - 1;
+  posn.second += args.treble_front;
+  // POSN now contains the position of the lowest and highest hunts
+  // For example, in twin-hunt doubles, we have:
+  // (0,1), (0,2), (0,3), (1,4), (2,4), (3,4), (2,4), (1,4), (0,3), (0,2)
+
+  for ( int ia=0, na=above.size(); ia < na; ++ia )
+    for ( int ib=0, nb=below.size(); ib < nb; ++ib )
+      {
+	const change ch( merge_changes( args, above[ia], below[ib], posn ) );
+	
+	// Handle -l
+	if ( args.max_places_per_change 
+	     && ch.count_places() > args.max_places_per_change )
+	  continue;
+
+	// Handle -j
+	if ( args.max_consec_places
+	     && has_consec_places( ch, args.max_consec_places ) )
+	  continue;
+
+        // Handle --mirror
+        if ( args.mirrorsym && ch != ch.reverse() )
+          continue;
+	
+	result.push_back(ch);
+      }
+}
+                         
+
+vector<change> reverse_allowed( const vector<change>& ch )
+{
+  vector<change> rv; rv.reserve(ch.size());
+  for ( vector<change>::const_iterator i(ch.begin()), e(ch.end());
+	i != e;  ++i )
+    rv.push_back( i->reverse() );
+  sort( rv.begin(), rv.end() );
+  return rv;
+}
+
+bool unordered_equal( const vector<change>& a, const vector<change>& b )
+{
+  for ( vector<change>::const_iterator i(a.begin()), e(a.end());
+	i != e;  ++i )
+    if ( find( b.begin(), b.end(), *i ) == b.end() )
+      return false;
+  return true;
+}
+
+bool is_mask_consistent( arguments &args, 
+			 const vector<vector<change> > &above,
+			 const vector<vector<change> > &below )
+{
+  const int hl_len = args.bells * (1 + args.treble_dodges);
+
+  for ( int depth=0; depth < 2*hl_len; ++depth )
+    {
+      if ( args.skewsym )
+	{
+	  const int depth2( ( depth > hl_len ? 3 : 1 ) * hl_len
+			    - args.hunt_bells % 2 * 2 - depth );
+
+	  if ( depth2 < 0 || depth2 >= hl_len*2 || depth2 == depth )
+	      continue;
+
+	  // FIXME Quarter-lead change
+
+	  int other_index( ( depth > hl_len ? 3 : 1 ) * hl_len 
+			   - args.hunt_bells % 2 * 2 - depth );
+
+	  const vector<change> &ch1a = above[depth];
+	  const vector<change> &ch1b = below[depth];
+	  const vector<change> &ch2a = above[other_index];
+	  const vector<change> &ch2b = below[other_index];
+
+	  if ( ch1a.size() && ch2b.size() &&
+	       !unordered_equal( ch1a, reverse_allowed(ch2b) ) )
+	    return false;
+
+	  if ( ch1b.size() && ch2a.size() &&
+	       !unordered_equal( ch1b, reverse_allowed(ch2a) ) )
+	    return false;
+	}
+
+      if ( args.doubsym )
+	{
+	  int other_index( (depth + hl_len) % (2 * hl_len) );
+
+	  const vector<change> &ch1a = above[depth];
+	  const vector<change> &ch1b = below[depth];
+	  const vector<change> &ch2a = above[other_index];
+	  const vector<change> &ch2b = below[other_index];
+
+	  if ( ch1a.size() && ch2b.size() &&
+	       !unordered_equal( ch1a, reverse_allowed(ch2b) ) )
+	    return false;
+
+	  if ( ch1b.size() && ch2a.size() &&
+	       !unordered_equal( ch1b, reverse_allowed(ch2a) ) )
+	    return false;
+	}
+
+      if ( args.sym )
+	{
+	  if ( 2 * (hl_len - args.hunt_bells % 2) - depth < 0 || 
+	       2 * (hl_len - args.hunt_bells % 2) - depth >= 2 * hl_len )
+	    continue;
+
+	  int other_index( 2 * (hl_len - args.hunt_bells % 2) - depth );
+
+	  const vector<change> &ch1a = above[depth];
+	  const vector<change> &ch1b = below[depth];
+	  const vector<change> &ch2a = above[other_index];
+	  const vector<change> &ch2b = below[other_index];
+
+	  if ( ch1a.size() && ch2a.size() &&
+	       !unordered_equal( ch1a, ch2a ) )
+	    return false;
+
+	  if ( ch1b.size() && ch2b.size() &&
+	       !unordered_equal( ch1b, ch2b ) )
+	    return false;
+	}
+    }
+
+  return true;
+}
+
+RINGING_END_ANON_NAMESPACE
+
+bool parse_mask( arguments &args, const arg_parser &ap )
+{
+  vector< vector<change> > above, below;
+
+  if ( !read_and_expand_blocks( args, ap, above, below ) )
+    return false;
+
+  if ( !is_mask_consistent(args, above, below) )
     throw mask_error
       ( "Some of the required changes specified are inconsistent "
 	"with the specified symmetries" );
@@ -548,8 +715,8 @@ bool parse_mask( arguments &args, const arg_parser &ap )
   // ----------------------------------
   // Expand ? to appropriate alternative lists
 
-  assert( block0a.size() == size_t(args.lead_len) );
-  assert( block0b.size() == size_t(args.lead_len) );
+  assert( above.size() == size_t(args.lead_len) );
+  assert( below.size() == size_t(args.lead_len) );
 
 
   for ( int i=0, n=args.lead_len; i<n; ++i )
@@ -559,147 +726,24 @@ bool parse_mask( arguments &args, const arg_parser &ap )
 
       if ( args.hunt_bells )
 	{
-	  const pair< int, int > posn( get_posn2(args, i) );
-      
-	  vector<change>& changesa = block0a[i];
-	  vector<change>& changesb = block0b[i];
-
-	  // A ? above the treble
-	  if ( changesa.empty() ) 
-	    {
-	      int active_above( posn.second == args.bells-1 
-				? 0 : args.bells-2 - posn.second );
-	      
-	      changesa.reserve( fibonacci(active_above) );
-	      
-
-	      if ( args.right_place && args.bells % 2 == 0 && i % 2 == 0 )
-		{
-		  changesa.push_back( change( args.bells, "-" ) );
-		}
-
-	      // Choose the work above the treble
-	      else for ( changes_iterator 
-		      j(active_above, args.bells-active_above, args.bells), e; 
-		    j != e; ++j )
-		{
-		  // Handle -w
-		  if ( args.right_place && 
-		       ( args.bells % 2 == 1 && posn.second % 2 == 1
-			 || args.bells % 2 == 0 && i % 2 == 0 )
-		       && args.bells - j->count_places() != active_above )
-		    continue;
-		  
-		  change above(*j); 
-		  
-		  // Handle -f
-		  if ( args.no_78_pns && posn.second < args.bells-3 && 
-		       above.findplace(args.bells-2) )
-		    continue;
-		  
-		  changesa.push_back(above);
-		}
-	    }
-
-	  // A ? below the treble
-	  if ( changesb.empty() )
-	    {
-	      int active_below( posn.first == -1 ? 0 : posn.first );
-	      
-	      changesb.reserve( fibonacci(active_below) );
-		
-              for ( changes_iterator j(active_below, 0, args.bells), e; 
-		    j != e; ++j )
-		{
-		  // Handle -w
-		  if ( args.right_place && 
-		       ( args.bells % 2 == 1 && posn.second % 2 == 0 
-			 || args.bells % 2 == 0 && i % 2 == 0 )
-		       && args.bells - j->count_places() != active_below )
-		    continue;
-		  
-		  change below(*j); 
-		  
-		  // Handle -kf or -df
-		  if ( (args.skewsym || args.doubsym || args.mirrorsym) 
-                       && args.no_78_pns 
-		       && posn.first > 1 && below.findplace(1) )
-		    continue;
-		  
-		  changesb.push_back(below);
-		}
-	    }
-
-	  // Merge changes, and push onto args.allowed_changes
-  
-	  changes_to_try.reserve( changesa.size() * changesb.size() );
-
-	  for ( int ia=0, na=changesa.size(); ia < na; ++ia )
-	    for ( int ib=0, nb=changesb.size(); ib < nb; ++ib )
-	      {
-		const change ch( merge_changes( changesa[ia], 
-						changesb[ib], posn ) );
-		
-		// Handle -l
-		if ( args.max_places_per_change 
-		     && ch.count_places() > args.max_places_per_change )
-		  continue;
-
-		// Handle -j
-		if ( args.max_consec_places
-		     && has_consec_places( ch, args.max_consec_places ) )
-		  continue;
-
-                // Handle --mirror
-                if ( args.mirrorsym && ch != ch.reverse() )
-                  continue;
-		
-		changes_to_try.push_back(ch);
-	      }
+	  vector<change>& changesa = above[i];
+	  vector<change>& changesb = below[i];
+ 
+          // A ? above or below the treble
+          if ( changesa.empty() ) 
+            select_changes_above( args, changesa, i );
+          if ( changesb.empty() ) 
+            select_changes_below( args, changesb, i );
+ 
+          merge_changes( args, changes_to_try, changesa, changesb, i );
 	}
       else // principles
 	{
-	  vector<change>& changes = block0a[i];
-
-	  if ( changes.empty() )
-	    {
-	      changes.reserve( fibonacci( args.bells ) );
-
-	      for ( changes_iterator j(args.bells), e; j != e; ++j )
-		{
-		  change ch(*j);;
-
-		  // Handle -f
-		  if ( args.no_78_pns && ch.findplace(args.bells-2) )
-		    continue;
-
-		  // Handle -kf or -df
-		  if ( (args.skewsym || args.doubsym) && args.no_78_pns 
-		       && ch.findplace(1) )
-		    continue;
-
-		  // Handle -l
-		  if ( args.max_places_per_change 
-		       && ch.count_places() > args.max_places_per_change )
-		    continue;
-
-		  // Handle -j
-		  if ( args.max_consec_places
-		       && has_consec_places( ch, args.max_consec_places ) )
-		    continue;
-
-                  // Handle --mirror
-                  if ( args.mirrorsym && ch != ch.reverse() )
-                    continue;
-
-		  changes_to_try.push_back(ch);
-		}
-	    }
+	  if ( above[i].empty() )
+	    select_changes_prin( args, changes_to_try, i );
 	  else
-	    {
-	      copy( changes.begin(), changes.end(), 
-		    back_inserter( changes_to_try ) ); 
-	    }
+	    copy( above[i].begin(), above[i].end(), 
+	          back_inserter( changes_to_try ) ); 
 	}
 
       sort( changes_to_try.begin(), changes_to_try.end(), &compare_changes );
