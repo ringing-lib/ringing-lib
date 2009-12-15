@@ -1043,7 +1043,8 @@ void searcher::general_recurse()
 {
   const size_t depth = m.length();
 
-  if ( args.search_limit && search_count == (unsigned long)args.search_limit )
+  if ( args.search_limit && args.search_limit != -1 && 
+       search_count == (unsigned long)args.search_limit )
     return;
 
   // Status message (when in search mode)
