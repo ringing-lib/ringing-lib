@@ -54,6 +54,8 @@ struct arguments
   init_val<int,0>      bells;
 
   init_val<bool,false> whole_course;
+
+  init_val<int,0>      init_rounds;
   init_val<bool,false> omit_final;
   init_val<bool,false> omit_start;
 
@@ -99,6 +101,11 @@ void arguments::bind( arg_parser& p )
            "course-head",
            omit_start ) );
 
+  p.add( new integer_opt
+         ( 'r', "init-rounds",
+           "Start with NUM whole blows of rounds", "NUM",
+            init_rounds ) );
+
   p.add( new row_opt
          ( 's', "start", 
            "Starting from ROW", "ROW",
@@ -121,12 +128,6 @@ bool arguments::validate( arg_parser &ap )
   if ( bells == 0 ) 
     {
       ap.error( "Must specify the number of bells" );
-      return false;
-    }
-
-  if ( omit_start && omit_final ) 
-    {
-      ap.error( "Must not specify both -S and -F" );
       return false;
     }
 
@@ -205,6 +206,8 @@ void print_row( arguments const& args, row const& r )
       if ( char const* seq = RINGING_TERMINFO_VAR( orig_pair ) )
         cout << seq;
   }
+
+  cout << "\n";
 }
 
 int main(int argc, char* argv[]) 
@@ -232,19 +235,21 @@ int main(int argc, char* argv[])
 # endif
 
   row r( args.startrow );  bool first = true;
+
+  for ( int i=0; i<args.init_rounds*2; ++i)
+    print_row(args, r);
+
   do for ( method::const_iterator i=args.meth.begin(), e=args.meth.end(); 
            i!=e; ++i )  
   {
-    if ( !first || !args.omit_start ) 
-      print_row(args, r), cout << "\n";
+    if ( !( first && (args.omit_start || args.init_rounds) ) ) 
+      print_row(args, r);
 
     r *= *i;  first = false;
   } while ( r != args.startrow && args.whole_course );
 
-  if (!args.omit_final) {
+  if (!args.omit_final)
     print_row(args, r);
-    cout << "\n";
-  }
 }
 
 
