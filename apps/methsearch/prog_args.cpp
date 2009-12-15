@@ -510,11 +510,17 @@ bool arguments::validate( arg_parser &ap )
       }
     else
       {
-        if ( i != 0u )
-          treble_front = lexical_cast<int>( treble_path.substr(0,i) ); 
+        try {
+          if ( i != 0u )
+            treble_front = lexical_cast<bell>( treble_path.substr(0,i) ) + 1; 
 
-        if ( i != treble_path.size()-1 )
-          treble_back  = lexical_cast<int>( treble_path.substr(i+1) );
+          if ( i != treble_path.size()-1 )
+            treble_back  = lexical_cast<bell>( treble_path.substr(i+1) ) + 1;
+        } 
+        catch ( bad_lexical_cast const& ) {
+          ap.error( "Unable to parse arguments to -Z range as bell symbols" );
+          return false;
+        }
 
         if ( treble_back > bells || treble_front > bells ||
              treble_back < 0 || treble_front < 0 ) 

@@ -132,6 +132,8 @@ private:
 inline RINGING_API ostream& operator<<(ostream& o, const bell b)
   { return o << b.to_char(); }
 
+RINGING_API istream& operator>>(istream& i, bell& b);
+
 #if RINGING_AS_DLL
 RINGING_EXPLICIT_STL_TEMPLATE vector<bell>;
 #endif

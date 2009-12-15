@@ -30,6 +30,11 @@
 #else
 #include <cstring>
 #endif
+#if RINGING_OLD_IOSTREAMS
+#include <istream.h>
+#else
+#include <istream>
+#endif
 
 #include <ringing/bell.h>
 
@@ -75,6 +80,25 @@ bell bell::read_char(char c)
     b.x = MAX_BELLS + 1;
 #endif
   return b;
+}
+
+RINGING_API istream& operator>>(istream& i, bell& b)
+{
+  istream::sentry cerberus(i, false);
+  if ( cerberus ) {
+#if RINGING_USE_EXCEPTIONS
+    try {
+#endif
+      b.from_char( (char) i.get() );
+#if RINGING_USE_EXCEPTIONS 
+    }
+    catch ( ... ) {
+      try { i.setstate( ios_base::badbit ); } catch(...) {}
+      if ( i.exceptions() & ios_base::badbit ) throw;
+    }
+#endif
+  }
+  return i;
 }
 
 RINGING_END_NAMESPACE
