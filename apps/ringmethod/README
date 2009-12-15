@@ -1,0 +1,9 @@
+Reads rows from standard input and writes them to standard output in a 
+16-bit signed raw audio format.
+
+Typical usage:
+
+  printmethod -b12 -r4 -c '&-5-4.5-5.36.4-7.58.6-9.70.8-8.9-8-1,1'  \
+    | ringmethod -b12 -s200 | play -b16 -s -c1 -r 22050 -t raw -
+
+where 'play' is from the SoX package.
