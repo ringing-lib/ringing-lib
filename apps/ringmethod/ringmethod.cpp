@@ -49,25 +49,31 @@ private:
   double freq;
   double decay;
   int sample_rate;
+  double phase;
 
   double cos_omega_dt;
   double decay_multiple;
+
+  double x1_init, x2_init;
 
   double x[3];
 };
 
 harmonic::harmonic( double freq, double decay, int sample_rate )
   : freq(freq), decay(decay), sample_rate(sample_rate),
+    phase( pi/2 ),
     cos_omega_dt( cos( 2*pi*freq/sample_rate ) ),
-    decay_multiple( exp( - decay/sample_rate ) )
+    decay_multiple( exp( - decay/sample_rate ) ),
+    x1_init( cos( phase + 2*pi*freq/sample_rate ) ),
+    x2_init( cos( phase ) )
 {
   x[0] = x[1] = x[2] = 0;
 }
 
 void harmonic::strike() 
 {
-  x[1] = cos_omega_dt;
-  x[2] = 1;
+  x[1] = x1_init;
+  x[2] = x2_init;
 }
 
 double harmonic::sample()
@@ -136,7 +142,7 @@ tower_sounds::tower_sounds( double tenor_freq, int num, int sample_rate )
   tenor_freq *= pow( 2, num / 7 );
   bellv.reserve(num);
   int n = num % 7;
-  while (n <= num) {
+  while (n < num) {
     switch (n) {
     default:
       bellv.push_back( bell_sound( tenor_freq * pow(2,11/12.), srate ) );
