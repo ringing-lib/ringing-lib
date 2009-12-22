@@ -142,7 +142,8 @@ tower_sounds::tower_sounds( double tenor_freq, int num, int sample_rate )
   tenor_freq *= pow( 2, num / 7 );
   bellv.reserve(num);
   int n = num % 7;
-  while (n < num) {
+  if (n == 0) n = 7;
+  while (n <= num) {
     switch (n) {
     default:
       bellv.push_back( bell_sound( tenor_freq * pow(2,11/12.), srate ) );
@@ -204,14 +205,17 @@ private:
     RowIterator first, last;
   };
 
-  void do_ring( shared_pointer<row_reader_base> const& r );
+  void do_ring( shared_pointer<row_reader_base> const& r, ostream& os );
 
 public:
+  void header( ostream& os );
+
   template <class RowIterator>
-  void ring( RowIterator first, RowIterator last ) {
+  void ring( RowIterator first, RowIterator last, ostream& os ) {
     return do_ring(
       shared_pointer<row_reader_base>( 
-        new row_reader<RowIterator>( first, last ) ) );
+        new row_reader<RowIterator>( first, last ) ),
+      os );
   }
 
 private:
@@ -225,9 +229,57 @@ row_player::row_player( tower_sounds& tower, int peal_speed )
   assert( bell_sep * tower.sample_rate() > 2.0 );
 }
 
-void row_player::do_ring( shared_pointer<row_reader_base> const& rr )
+
+
+void row_player::header( ostream& os )
+{
+  char buf[] = "RIFF"             // Chunk ID
+               "\xFF\xFF\xFF\xFF" // Chunk length (36 is just header length
+                                  // -- this is wrong, but if we're streaming
+                                  // out in a single pass, we cannot know
+                                  // the actual value; -1 seems de facto std.
+                                  // unknown length)
+               "WAVE"             // Format
+
+               "fmt "             // Subchunk 1 ID
+               "\x10\0\0\0"       // Subchunk 1 length (16 bytes)
+               "\1\0"             // Audio format (1 is PCM)
+               "\1\0"             // Number of channels (1 is mono)
+               "\0\0\0\0"         // Sample rate -- overwritten below
+               "\0\0\0\0"         // Byte rate   -- overwritten below
+               "\2\0"             // Block align
+               "\x10\0"           // Bit rate (16 bits)
+
+               "data"             // Subchunk 2 ID
+               "\xFF\xFF\xFF\xFF";// Subchunk 2 length (-1 is wrong, but 
+                                  // apparently de facto standard when
+                                  // streaming output)
+     
+
+  assert( sizeof(buf) == 44 + 1 );  // For final null
+
+  // Write sample_rate as a little endian number
+  // Don't use sprintf because that doesn't handle endianness
+  uint32_t val = tower.sample_rate();
+  buf[24] = (val & 0x000000FF) >> 0x0;
+  buf[25] = (val & 0x0000FF00) >> 0x4;
+  buf[26] = (val & 0x00FF0000) >> 0x8;
+  buf[27] = (val & 0xFF000000) >> 0xC;
+
+  val *= 1 * 16/8;  // Num Channels * Bit rate / Bits per byte
+  buf[28] = (val & 0x000000FF) >> 0x0;
+  buf[29] = (val & 0x0000FF00) >> 0x4;
+  buf[30] = (val & 0x00FF0000) >> 0x8;
+  buf[31] = (val & 0xFF000000) >> 0xC;
+ 
+  os.write( buf, 44 );
+}
+
+void row_player::do_ring( shared_pointer<row_reader_base> const& rr,
+                          ostream& os )
 {
   row r = rr->next();  
+  if (r.bells() < tower.bells()) r *= row(tower.bells());
 
   size_t bell_idx = 0, row_idx = 0;
   bool have_queued_bell = false;
@@ -263,7 +315,7 @@ void row_player::do_ring( shared_pointer<row_reader_base> const& rr )
     ++data_idx;  ++t;
 
     if (data_idx == datasz) {
-      cout.write( (char const*)data, 2*datasz );
+      os.write( (char const*)data, 2*datasz );
       data_idx = 0;
     }
   }
@@ -356,6 +408,7 @@ int main(int argc, char* argv[])
 
   tower_sounds tower( args.tenor_nominal, args.bells, args.sample_rate ); 
   row_player player( tower, args.peal_speed );
-  player.ring( istream_iterator<row>(cin), istream_iterator<row>() );
+  player.header( cout );
+  player.ring( istream_iterator<row>(cin), istream_iterator<row>(), cout );
 }
 
