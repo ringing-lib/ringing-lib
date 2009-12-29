@@ -24,6 +24,9 @@
 #pragma implementation
 #endif
 
+// Turn this on for mask debugging:
+#define RINGING_DEBUG_FILE 0
+
 #include "args.h"
 #include "prog_args.h"
 #include "methodutils.h"
@@ -35,6 +38,13 @@
 #else
 #include <vector>
 #include <algorithm>
+#endif
+#if RINGING_DEBUG_FILE
+#if RINGING_HAVE_OLD_IOSTREAMS
+#include <iostream.h>
+#else
+#include <iostream> // for cout
+#endif
 #endif
 #if RINGING_OLD_C_INCLUDES
 #include <ctype.h>
@@ -48,6 +58,12 @@
 #include <ringing/streamutils.h>
 #include <ringing/mathutils.h>
 #include <ringing/place_notation.h>
+
+#if RINGING_DEBUG_FILE
+#define DEBUG( expr ) (void)((cout << expr) << endl)
+#else
+#define DEBUG( expr ) (void)(false)
+#endif
 
 RINGING_USING_NAMESPACE
 RINGING_USING_STD
@@ -80,7 +96,7 @@ pair< int, int > get_posn2( const arguments &args, int depth )
   int b = posn - ( args.hunt_bells - (first_hl ? 0 : 1) ) / 2 * 2;
 
 
-  if ( a > args.bells-1 ) a = -2 + 2 * args.bells - a;
+  if ( a > args.bells-1 ) a = args.bells-1;
   if ( b < -1 ) b = -2 - b;
 
   // Can this happen?
@@ -436,6 +452,7 @@ void select_changes_above( const arguments& args, vector<change>& changesa,
       active_above = args.bells-2 - (posn.second + args.treble_front-1);
     if (active_above < 0) active_above=0;
   }
+  DEBUG("At position " << i << ", " << active_above << " bells active above");
 
   changesa.reserve( fibonacci(active_above) );
 
@@ -467,6 +484,7 @@ void select_changes_below( const arguments& args, vector<change>& changesb,
     const pair< int, int > posn( get_posn2(args, i) );
     active_below += posn.first == -1 ? 0 : posn.first;
   }
+  DEBUG("At position " << i << ", " << active_below << " bells active below");
 
   changesb.reserve( fibonacci(active_below) );
     
@@ -544,16 +562,8 @@ change merge_changes( const arguments& args,
     if ( b.findswap(i) )
       c.swappair(i++);
 
-  {
-    // If we're leading or lying, then handle that.
-    pair<int,int> p = posn;
-    if ( (p.second - p.first) % 2 == 0 ) {
-      if ( p.first == args.treble_front-1 ) p.first++;
-      if ( p.second == args.treble_back-1 ) p.second--;
-    }
-    for ( int i=p.first; i<p.second && i < a.bells()-1; ++i )
-      c.swappair(i++);
-  }
+  for ( int i=posn.first; i<posn.second && i < a.bells()-1; ++i )
+    c.swappair(i++);
 
   for ( int i=posn.second; i < a.bells()-1; ++i )
     if ( a.findswap(i) )
@@ -572,14 +582,34 @@ void merge_changes( const arguments& args, vector<change>& result,
   if ( posn.second == args.treble_back - args.treble_front ) --posn.second;
   posn.first  += args.treble_front - 1;
   posn.second += args.treble_front;
+
   // POSN now contains the position of the lowest and highest hunts
   // For example, in twin-hunt doubles, we have:
   // (0,1), (0,2), (0,3), (1,4), (2,4), (3,4), (2,4), (1,4), (0,3), (0,2)
+
+  // If we're leading or lying, then handle that.
+  // XXX:  This doesn't work when number of hunts > 1/2 number of bells
+  if ( posn.first == args.treble_front-1
+       && i % (2 * args.treble_dodges + 2) == 2 * args.treble_dodges + 1 ) 
+    posn.first++;
+
+  if ( posn.second == args.treble_back-1 
+       && (    (args.treble_back - args.treble_front) % 2 == 1
+            && i % (2 * args.treble_dodges + 2) == 2 * args.treble_dodges + 1 
+            || (args.treble_back - args.treble_front) % 2 == 0
+            && i % 2 == 0 ) ) 
+    posn.second--;
+
+  // POSN now contains the position of the lowest and highest moving hunts
+  DEBUG( "At position " << i << " hunts in range " 
+           << posn.first << "-" << posn.second );
 
   for ( int ia=0, na=above.size(); ia < na; ++ia )
     for ( int ib=0, nb=below.size(); ib < nb; ++ib )
       {
 	const change ch( merge_changes( args, above[ia], below[ib], posn ) );
+        DEBUG( "Merging " << below[ib] << " and " << above[ia] << " gives "
+                 << ch );
 	
 	// Handle -l
 	if ( args.max_places_per_change 
