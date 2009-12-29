@@ -28,6 +28,7 @@
 #include <ringing/row.h>
 #include <ringing/pointers.h>
 #include <ringing/streamutils.h>
+#include <ringing/mathutils.h>
 
 #include "args.h"
 #include "init_val.h"
@@ -139,7 +140,7 @@ private:
 tower_sounds::tower_sounds( double tenor_freq, int num, int sample_rate )
   : srate(sample_rate)
 {
-  tenor_freq *= pow( 2, num / 7 );
+  tenor_freq *= ipower( 2, num / 7 );
   bellv.reserve(num);
   int n = num % 7;
   if (n == 0) n = 7;
@@ -294,8 +295,9 @@ void row_player::do_ring( shared_pointer<row_reader_base> const& rr,
   while (r.bells() || t < eof_timestep)
   {
     if (!have_queued_bell && r.bells()) {
-      queued_timestep = (bell_idx + row_idx * tower.bells() + row_idx/2)
-                       * bell_sep * tower.sample_rate();
+      queued_timestep 
+        = (int)( (bell_idx + row_idx * tower.bells() + row_idx/2)
+                 * bell_sep * tower.sample_rate() );
       queued_bell = r[bell_idx++];
       if (bell_idx == tower.bells()) {
         bell_idx = 0, row_idx++; // get next row

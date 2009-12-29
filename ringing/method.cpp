@@ -530,25 +530,32 @@ void do_single_compressed_pn( string &out, const change &ch,
   first = false;
 }
 
+void do_compressed_section( string& out, method const& m, 
+                            unsigned int begin, unsigned int end,
+                            int flags )
+{
+  bool might_need_dot(false), first(true);
+  for ( unsigned int i=begin; i<end; ++i )
+    do_single_compressed_pn( out, m[i], flags, might_need_dot, first );
+}
+
 RINGING_END_ANON_NAMESPACE
 
 string method::format( int flags ) const
 {
   string out;
-  bool might_need_dot(false), first(true);
 
-  if ( (flags & M_SYMMETRY) && issym() && !empty() ) {
-    out += '&';
-    for ( unsigned int i=0; i<size() / 2; ++i )
-      do_single_compressed_pn( out, (*this)[i], flags, might_need_dot, first );
-
-    out += ','; 
-    might_need_dot = false; first = true;
-    do_single_compressed_pn( out, back(), flags, might_need_dot, first );
-
+  int sym = size() / 2 - 1;
+  if ( (flags & M_SYMMETRY) && size() > 2 
+       && ( issym() || (flags & M_FULL_SYMMETRY) 
+                       && (sym = symmetry_point()) != -1 ) ) {
+    if (sym != 0) out += '&'; 
+    do_compressed_section( out, *this, 0, sym+1, flags );
+    out += ',';
+    if (sym != size()/2 - 1) out += '&';
+    do_compressed_section( out, *this, 2*sym+1, size()/2+sym+1, flags );
   } else {
-    for ( unsigned int i=0; i<size(); ++i )
-      do_single_compressed_pn( out, (*this)[i], flags, might_need_dot, first );
+    do_compressed_section( out, *this, 0, size(), flags );
   }
 
   return out;

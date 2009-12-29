@@ -149,7 +149,7 @@ string method_properties::impl2::get_property( int num_opt,
 	  break;
 
 	case 'q': 
-	  os << m.format( method::M_DASH | method::M_SYMMETRY );
+	  os << m.format( method::M_DASH | method::M_FULL_SYMMETRY );
 	  break;
 
 	case 'Q': 

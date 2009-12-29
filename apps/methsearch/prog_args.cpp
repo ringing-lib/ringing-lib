@@ -615,8 +615,7 @@ bool arguments::validate( arg_parser &ap )
       return false;
     }
 
-  if ( (require_cyclic_les || require_pbles) 
-       && (treble_front != 1 || treble_back != bells) )
+  if ( (require_cyclic_les || require_pbles) && treble_front != 1 )
     {
       ap.error( "Lead-ends cannot be restricted if the treble is not the "
                 "hunt bell" );
