@@ -91,6 +91,7 @@ public:
 
   // The prefered interface for converting a character into a bell
   static bell read_char(char c);
+  static bell read_extended(char const* str, char const** endp = NULL);
 
   // The function above should be used instead of this.
   bell& from_char(char c) { return *this = read_char(c); }
@@ -129,9 +130,7 @@ private:
   static char const* symbols;        // Symbols for the individual bells
 };
 
-inline RINGING_API ostream& operator<<(ostream& o, const bell b)
-  { return o << b.to_char(); }
-
+RINGING_API ostream& operator<<(ostream& o, const bell& b);
 RINGING_API istream& operator>>(istream& i, bell& b);
 
 #if RINGING_AS_DLL

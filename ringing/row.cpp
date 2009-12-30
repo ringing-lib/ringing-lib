@@ -35,15 +35,23 @@
 #endif
 #if RINGING_OLD_INCLUDES
 #include <bvector.h>
+#include <iterator.h>
+#include <algo.h>
+#else
+#include <iterator>
+#include <algorithm>
 #endif
 #if RINGING_OLD_IOSTREAMS
 #include <istream.h>
+#include <iomanip.h>
 #else
 #include <istream>
+#include <iomanip>
 #endif
 
 #include <ringing/row.h>
 #include <ringing/mathutils.h>
+#include <ringing/istream_impl.h>
 
 #if RINGING_BACKWARDS_COMPATIBLE(0,3,0) && defined(_MSC_VER)
 // Microsoft have deprecated strcpy in favour of a non-standard
@@ -68,10 +76,19 @@ row::row(int num)
  
 // Construct a row from a string
 row::row(const char *s)
-  : data(strlen(s))
 {
-  for(const char *t = s; *t != '\0'; t++)
-    data[t - s].from_char(*t);
+  data.reserve(strlen(s));
+  while (*s)
+    data.push_back( bell::read_extended(s, &s) );
+  validate();
+}
+
+row::row(const string &str)
+{
+  data.reserve(str.size());
+  char const* s = str.c_str();
+  while (*s)
+    data.push_back( bell::read_extended(s, &s) );
   validate();
 }
 
@@ -79,22 +96,13 @@ void row::validate() const
 {
 #if RINGING_USE_EXCEPTIONS
   vector<bool> found(bells());
-  int i;
-  for(i=0; i<bells(); ++i) found[i] = false;
-  for(i=0; i<bells(); ++i) 
+  for(int i=0; i<bells(); ++i) found[i] = false;
+  for(int i=0; i<bells(); ++i) 
     if (data[i] < 0 || data[i] >= (int) data.size() || found[data[i]])
       throw invalid(print());
     else
       found[data[i]] = true;
 #endif
-}
-
-row::row(const string &s)
-  : data(s.size())
-{
-  for(size_t i = 0, n = s.size(); i != n; ++i )
-    data[i].from_char(s[i]);
-  validate();
 }
 
 row::row(vector<bell> const& d)
@@ -234,25 +242,16 @@ row row::queens(const int n)
 
   int half = 0;
   if (n % 2 == 1)
-    {
-      half = (n + 1) / 2;
-    }
+    half = (n + 1) / 2;
   else
-    {
-      half = n / 2;
-    }
-  {
-    for (int i = 0; i <= half; i++)
-      {
-	r.data[i] = (i * 2);
-      }
-  }
-  {
-    for (int i = 0; i < (n / 2); i++)
-      {
-	r.data[i + half] = (i * 2) + 1;
-      }
-  }
+    half = n / 2;
+  
+  for (int i = 0; i <= half; i++)
+    r.data[i] = (i * 2);
+  
+  for (int i = 0; i < (n / 2); i++)
+    r.data[i + half] = (i * 2) + 1;
+  
   return r;
 }
 
@@ -264,25 +263,15 @@ row row::kings(const int n)
 
   int half = 0;
   if (n % 2 == 1)
-    {
-      half = (n + 1) / 2;
-    }
+    half = (n + 1) / 2;
   else
-    {
-      half = n / 2;
-    }
-  {
-    for (int i = 0; i <= half; i++)
-      {
-	r.data[i] = (half * 2) - (i * 2) - 2;
-      }
-  }
-  {
-    for (int i = 0; i < (n / 2); i++)
-      {
-	r.data[i + half] = (i * 2) + 1;
-      }
-  }
+    half = n / 2;
+  
+  for (int i = 0; i <= half; i++)
+    r.data[i] = (half * 2) - (i * 2) - 2;
+  
+  for (int i = 0; i < (n / 2); i++)
+    r.data[i + half] = (i * 2) + 1;
 
   return r;
 }
@@ -291,16 +280,14 @@ row row::kings(const int n)
 row row::tittums(const int n)
 {
   row r(n);
-  int i;
   int j = 0;
-  for (i = 0; i < n; i += 2)
-    {
-      r.data[i] = j++;
-    }
-  for (i = 1; i < n; i += 2)
-    {
-      r.data[i] = j++;
-    }
+
+  for (int i = 0; i < n; i += 2)
+    r.data[i] = j++;
+
+  for (int i = 1; i < n; i += 2)
+    r.data[i] = j++;
+
   return r;
 }
 
@@ -309,9 +296,8 @@ row row::reverse_rounds(const int n)
 {
   row r(n);
   for (int i = 0; i < n; i++)
-    {
-      r.data[i] = n - i - 1;
-    }
+    r.data[i] = n - i - 1;
+    
   return r;
 }
 
@@ -495,24 +481,40 @@ row row::power( int n ) const
   }
 }
 
+RINGING_API ostream& operator<<(ostream& o, row const& r)
+{
+  copy( r.begin(), r.end(), ostream_iterator<bell>(o) );
+  return o;
+}
+
 RINGING_API istream& operator>>(istream& i, row& r)
 {
-  istream::sentry cerberus(i, false);
+  istream_flag_sentry cerberus(i);
   if ( cerberus ) {
-    string s;
-    while ( i && bell::is_symbol( i.peek() ) )
-      s += (char) i.get();
+    vector<bell> bells;  
+    bells.reserve(r.bells()); // The only hint we might have available
+
+    while ( i && ( bell::is_symbol( i.peek() ) || i.peek() == '{' ) ) {
+      bell b;  
+      i >> noskipws >> b;
+      bells.push_back(b);
+    }
+
+    if ( bells.empty() )
+      i.setstate( ios_base::failbit ); 
+    else {
 #if RINGING_USE_EXCEPTIONS 
-    try {
+      try {
 #endif
-      r = s;
+        r = row(bells);
 #if RINGING_USE_EXCEPTIONS 
-    } 
-    catch ( ... ) { 
-      try { i.setstate( ios_base::badbit ); } catch(...) {}
-      if ( i.exceptions() & ios_base::badbit ) throw;
-    } 
+      } 
+      catch ( ... ) { 
+        try { i.setstate( ios_base::badbit ); } catch(...) {}
+        if ( i.exceptions() & ios_base::badbit ) throw;
+      } 
 #endif
+    }
   }
   return i;
 }

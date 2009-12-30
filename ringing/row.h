@@ -154,9 +154,7 @@ private:
   void validate() const;
 };
 
-inline ostream& operator<<(ostream& o, const row& r) {
-  return o << r.print();
-}
+RINGING_API ostream& operator<<(ostream& o, const row& r);
 RINGING_API istream& operator>>(istream& i, row& r);
 
 // An operator which has to be here

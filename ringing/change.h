@@ -1,5 +1,6 @@
 // -*- C++ -*- chage.h - Class representing a change
-// Copyright (C) 2001 Martin Bright <martin@boojum.org.uk>
+// Copyright (C) 2001, 2009 Martin Bright <martin@boojum.org.uk>
+// and Richard Smith <richard@ex-parrot.com>
 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -54,11 +55,6 @@ class row;
 
 // change : This stores one change
 class RINGING_API change {
-private:
-  int n;                        // Number of bells
-  vector<bell> swaps;           // List of pairs to swap
-
-  void init( const string & );
 public:
   change() : n(0) {}            //
   explicit change(int num) : n(num) {}   // Construct an empty change
@@ -116,6 +112,12 @@ public:
 #if RINGING_BACKWARDS_COMPATIBLE(0,3,0) 
   char *print(char *pn) const;  // This overload is deprecated.
 #endif
+
+private:
+  void init( char const* p, size_t sz );
+
+  int n;                        // Number of bells
+  vector<bell> swaps;           // List of pairs to swap
 };
 
 inline RINGING_API ostream& operator<<(ostream& o, const change& c) {

@@ -27,16 +27,23 @@
 
 #if RINGING_OLD_C_INCLUDES
 #include <string.h>
+#include <stdlib.h>
+#include <limits.hh>
 #else
 #include <cstring>
+#include <cstdlib>
+#include <climits>
 #endif
 #if RINGING_OLD_IOSTREAMS
 #include <istream.h>
+#include <iomanip.h> // For noskipws
 #else
 #include <istream>
+#include <iomanip>
 #endif
 
 #include <ringing/bell.h>
+#include <ringing/istream_impl.h>
 
 RINGING_USING_STD
   
@@ -82,14 +89,62 @@ bell bell::read_char(char c)
   return b;
 }
 
+bell bell::read_extended(char const* str, char const** endp)
+{
+  char const* dummy;
+  if (!endp) endp = &dummy;
+
+  if ( *str != '{' ) {
+    bell b( read_char(*str) ); 
+    *endp = ++str;
+    return b;
+  } else {
+    unsigned long val = strtoul(++str, const_cast<char**&>(endp), 10);
+    if ( *str == '-' || **endp != '}' ||
+         RINGING_BELL_BITS < sizeof(unsigned long) * CHAR_BIT
+         && val > (1ul<<RINGING_BELL_BITS) )
+#if RINGING_USE_EXCEPTIONS
+      throw invalid();
+#else
+      return bell(-1);  // MAX_BELLS+1 would be a bad choice.
+#endif
+    ++*endp; 
+    return bell( val-1 );
+  }
+}
+
+RINGING_API ostream& operator<<(ostream& o, bell const& b)
+{
+  if (b < bell::MAX_BELLS)
+    o << b.to_char();
+  else
+    o << '{' << ( (unsigned long)b + 1 ) << '}';
+  return o;
+}
+
 RINGING_API istream& operator>>(istream& i, bell& b)
 {
-  istream::sentry cerberus(i, false);
+  istream_flag_sentry cerberus(i);
   if ( cerberus ) {
 #if RINGING_USE_EXCEPTIONS
     try {
 #endif
-      b.from_char( (char) i.get() );
+      if (i.peek() != '{') 
+        b.from_char( (char) i.get() );
+      else {
+        i.get(); // drop the '{'
+        unsigned long val;  i >> noskipws >> val;
+        if ( i.get() != '}' ||
+             RINGING_BELL_BITS < sizeof(unsigned long) * CHAR_BIT
+             && val > (1ul<<RINGING_BELL_BITS) )
+#if RINGING_USE_EXCEPTIONS
+          throw bell::invalid();
+#else
+          i.setstate( ios_base::badbit );
+#endif
+        b = bell( val-1 );
+      }
+
 #if RINGING_USE_EXCEPTIONS 
     }
     catch ( ... ) {

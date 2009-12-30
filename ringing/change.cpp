@@ -1,5 +1,6 @@
 // change.cpp - Class representing a change
-// Copyright (C) 2001 Martin Bright <martin@boojum.org.uk>
+// Copyright (C) 2001, 2009 Martin Bright <martin@boojum.org.uk>
+// and Richard Smith <richard@ex-parrot.com>
 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -51,36 +52,34 @@ RINGING_USING_STD
 
 RINGING_START_NAMESPACE
 
-void change::init( const string &pn )
+void change::init( char const* p, size_t sz )
 {
-  string::const_iterator p = pn.begin();
   swaps.erase(swaps.begin(), swaps.end());
-  if(pn.empty()) {
+  if (sz == 0) {
 #if RINGING_USE_EXCEPTIONS
     if (n != 0) throw invalid();
 #endif
     return;
   }
   bell c;
-  if( pn.size() == 1 && (*p == 'X' || *p == 'x' || *p == '-') )
+  if ( sz == 1 && (*p == 'X' || *p == 'x' || *p == '-') )
     c = 0;
   else {
-    bell b( bell::read_char(*p) );
+    bell b( bell::read_extended(p) );
     if(b > 0 && b & 1) c = 1; else c = 0;
-    while(p != pn.end()) {
-      b.from_char(*p);
+    for (char const* q = p; *q; ) {
+      b = bell::read_extended(q, &q);
 #if RINGING_USE_EXCEPTIONS
-      if(b >= n || b <= c-1) throw invalid(pn);
+      if(b >= n || b <= c-1) throw invalid(p);
 #endif
       if(b >= c) {
         bell d;
         for(d = c; d < b-1; d += 2) swaps.push_back(d);
 #if RINGING_USE_EXCEPTIONS
-        if ( d == b-1 ) throw invalid(pn);
+        if ( d == b-1 ) throw invalid(p);
 #endif
         c = b + 1;
       }
-      ++p;
     }
   }
   for(bell d = c; d < n-1; d += 2) swaps.push_back(d);
@@ -90,14 +89,14 @@ void change::init( const string &pn )
 change::change(int num, const char *pn)
   : n( num )
 {
-  init( pn );
+  init( pn, strlen(pn) );
 }
 
 // Construct from place notation to a change
 change::change(int num, const string& pn)
   : n( num )
 {
-  init( pn );
+  init( pn.c_str(), pn.size() );
 }
 
 change::invalid::invalid()

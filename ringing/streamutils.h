@@ -1,5 +1,6 @@
 // -*- C++ -*- streamutils.h - Utilities to cope with old iostream libraries
-// Copyright (C) 2002, 2003, 2005, 2007 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003, 2005, 2007, 2009 
+// Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -42,103 +43,14 @@
 #pragma interface
 #endif
 
-#if RINGING_USE_STRINGSTREAM
 #if RINGING_OLD_INCLUDES
-#include <sstream.h>
+#include <istream.h>
 #else
-#include <sstream>
-#endif
-#else // RINGING_USE_STRINGSTREAM
-#if RINGING_OLD_INCLUDES
-#include <strstream.h>
-#else
-#include <strstream>
-#endif
-#endif // RINGING_USE_STRINGSTREAM
-#if RINGING_OLD_INCLUDES
-#include <typeinfo.h>
-#include <ostream.h>
-#else
-#include <typeinfo> // for bad_cast
-#include <ostream>
+#include <istream>
 #endif
 #include <string>
 
-RINGING_START_NAMESPACE
-
-RINGING_USING_STD
-
-// 
-// Example usage:
-//
-// void fn( const string & );
-//
-// int main()
-// {
-//   fn( make_string() << "Hello world " << 42 << "!" );
-// }
-//
-class make_string
-{
-public:
-  template <class T> 
-  make_string &operator<<( const T &val )
-  { 
-    os << val; 
-    return *this; 
-  }
-
-  // Some versions of EGCS have problems deducing the template
-  // parameter correctly for this, so we provide a specific
-  // overload to do it.
-  make_string &operator<<( ostream &(*manip)(ostream &) )
-  {
-    manip( os );
-    return *this;
-  }
-
-  RINGING_API operator string();
-
-  ostream& out_stream() { return os; }
-
-private:
-#if RINGING_USE_STRINGSTREAM
-  ostringstream os;
-#else
-  ostrstream os;
-#endif
-};
-
-
-// exception used to indicate runtime lexical_cast failure
-class RINGING_API bad_lexical_cast : public bad_cast
-{
-public:
-  virtual const char* what() const throw();
-};
-
-// Last function argument is to make MSVC happy.
-// This is important as omitting it does not give a compile time error
-template<typename Target, typename Source>
-Target lexical_cast(Source arg, Target* = 0)
-{
-#if RINGING_USE_STRINGSTREAM
-  stringstream interpreter;
-#else
-  strstream interpreter; // for out-of-the-box g++ 2.95.2
-# endif
-  Target result;
-  
-  if(!(interpreter << arg) || !(interpreter >> result) ||
-     !(interpreter >> ws).eof())
-    throw bad_lexical_cast();
-  
-  return result;
-}
-
-
-RINGING_END_NAMESPACE
-
+#include <ringing/lexical_cast.h>
 
 // This exists because Visual Studio 6's default STL (an old version of the
 // Dinkumware STL) has a bug in it's implementation of istream<>::getline.
