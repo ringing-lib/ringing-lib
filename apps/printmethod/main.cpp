@@ -248,7 +248,7 @@ int main(int argc, char* argv[])
     r *= *i;  first = false;
   } while ( r != args.startrow && args.whole_course );
 
-  if (!args.omit_final)
+  if (!args.omit_final && args.meth.size())
     print_row(args, r);
 }
 
