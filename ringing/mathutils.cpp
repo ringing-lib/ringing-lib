@@ -122,7 +122,7 @@ bool random_bool( double ptrue )
   return rand_fn() < rand_max * ptrue;
 }
 
-// Use a recursive implementaion which is O(ln n) in both space and size
+// Use a recursive implemention which is O(ln n) in both space and size
 RINGING_LLONG ipower( int base, int exp )
 {
   if (exp == 0)
@@ -132,7 +132,7 @@ RINGING_LLONG ipower( int base, int exp )
   else if (exp % 2)
     return base * ipower(base, exp - 1);
   else {
-    int temp = ipower(base, exp / 2);
+    RINGING_LLONG temp = ipower(base, exp / 2);
     return temp * temp;
   }
 }
