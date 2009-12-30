@@ -15,19 +15,20 @@ as a whole.
 At the time of writing the following files, all in the ringing/ subdirectory,
 are licenced under the LGPL:
 
-  bell.cpp                libfacet.h              peal.h
-  bell.h                  libout.cpp              place_notation.cpp
-  change.cpp              libout.h                place_notation.h
-  change.h                library.cpp             pointers.h
-  common-am.h             library.h               row.cpp
-  common.h                litelib.cpp             row.h
-  common-msvc.h           litelib.h               stl.cpp
-  dom_gdome.cpp           macros.h                xmllib.cpp
-  dom.h                   mathutils.cpp           xmllib.h
-  dom_stub.cpp            mathutils.h             xmlout.cpp
-  dom_xerces.cpp          method.cpp              xmlout.h
-  libbase.h               method.h
-  libfacet.cpp            peal.cpp
-
+  bell.h                  mathutils.h             libfacet.cpp
+  change.h                method.h                libout.cpp
+  common-am.h             peal.h                  library.cpp
+  common.h                place_notation.h        litelib.cpp
+  common-msvc.h           pointers.h              mathutils.cpp
+  dom.h                   row.h                   method.cpp
+  istream_impl.h          xmllib.h                peal.cpp
+  lexical_cast.h          xmlout.h                place_notation.cpp
+  libbase.h               bell.cpp                row.cpp
+  libfacet.h              change.cpp              stl.cpp
+  libout.h                dom_gdome.cpp           xmllib.cpp
+  library.h               dom_stub.cpp            xmlout.cpp
+  litelib.h               dom_xerces.cpp
+  macros.h                lexical_cast.cpp
+  
 For an up-to-date list, the licences on the individual files should be 
 consulted.
