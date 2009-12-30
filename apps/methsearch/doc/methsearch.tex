@@ -592,8 +592,8 @@ It does not presently not support every possible type of method,
 or allow methods to be filtered in every possible way.
 Generally speaking, new functionality gets added as and when I want it
 or someone requests it.  For example, at present it has very poor support 
-of little, alliance, hybrid or treble place methods,\index{hybrid methods}%
-\index{little methods}\index{alliance methods}\index{treble place methods}
+of alliance, hybrid or treble place methods,\index{hybrid methods}%
+\index{alliance methods}\index{treble place methods}
 and its support for principles\index{principles}
 is quite limited.
 If there is missing functionality that you would particularly like to use, 
@@ -640,6 +640,7 @@ miscellaneous options (\sref{misc_opt}).
   treble dodges in each position\\
 \texttt{-S}&\texttt{--surprise}&Require a surprise method\\
 \texttt{-T}&\texttt{--treble-bob}&Require a treble bob method\\
+\texttt{-Z}&\texttt{--treble-path=PATH}&Require the specified treble path\\
 \texttt{-U}&\texttt{--hunts=N}&The number of hunt bells\\
 \texttt{-n}&\texttt{--changes-per-lead=N}&The lead length\\
 \end{tabularx}
@@ -711,6 +712,27 @@ This combination is not especially well
 optimised in the code, nor is it particularly well tested.%
 \optdesc{n}{lead length!specifying}
 
+The \verb+-Z+ option is used to specify the path of the treble (or
+whichever bell is the primary hunt bell in methods with unusual treble paths).%
+\oid{Z}{treble-path}\index{little methods|(}
+At present, the only treble paths supported by this option are little versions
+of other supported treble paths --- i.e.\ little plain or treble dodging.
+The syntax \verb+-Z+$x$\verb+-+$y$ specifies the 
+range of places that the treble passes through --- i.e. that the treble hunts
+(or treble-dodges if \verb+-G+ is specified) from place $x$ to place $y$.
+The places should be specified by bell symbol (see \sref{pn}).  If the lowest
+place, $x$, is lead, it can be omitted; likewise, if the highest place, $y$,
+is the back, it can be omitted.  Thus \verb+-Z-4+ is a traditional treble to
+fourths place little method, and \verb+-Z-+ is equivalent to no \verb+-Z+ 
+option as it means front to back.
+
+\methsearch\ supports little methods in which the primary hunt bell does not
+reach lead.  For example methods such as Very Little Bob Minor (in which the 
+third hunts between thirds place and fourths) can be found with \verb+-Z3-4+, 
+and Double Bishopstoke Little Surprise Major (in which the treble treble-dodges
+between thirds and sixths) can be found with \verb+-G1+ \verb+-Z3-6+.
+
+\index{little methods|)}
 \index{class|)}
 \index{class|seealso{\textit{specific class names}}}
 
