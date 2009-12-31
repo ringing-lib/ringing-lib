@@ -84,6 +84,7 @@
 \newcommand{\fspec}[1]{\index{#1@{\hspace*{-\fspecwidth}\texttt{\$#1}}}}
 % symbol index
 \newcommand{\symidx}[2]{} %{\index{{#1}@{\texttt{#1}}|see{#2}}}
+\newcommand{\ttcmdidx}[1]{\texttt{#1}\index{#1@{\texttt{#1}}}}
 
 % \methsearch -- the program name
 \def\methsearch{\texttt{meth\-search}}
@@ -366,12 +367,12 @@ and saving the list of methods into a file called
 favourite text editor (for example, Notepad on Windows).%
 \index{shell!redirection|)} 
 Another strategy
-is to use a \textitidx{pager} such as \verb+more+\index{more@{\texttt{more}}}
+is to use a \textitidx{pager} such as \ttcmdidx{more}
 to allow you to scroll through the output
 without saving it.%
 \footnote{\verb+more+ only allows you to scroll forwards through the output,
 however it has the advantage of being present on most systems, including
-Windows.  Other pagers, such as \verb+less+\index{less@{\texttt{less}}}
+Windows.  Other pagers, such as \ttcmdidx{less}
 allow you to scroll backwards too.
 \verb+less+ is present on many Unix systems, and a Windows version can be
 downloaded from \url{http://www.greenwoodsoftware.com/less/}.}  
@@ -2198,7 +2199,8 @@ methods with \verb+X+, \verb+Y+ or \verb+Z+ falseness unless these are
 explicitly allowed.
 
 \methsearch\ has a short hand notation for searching for \textitidx{clear
-proof scale} methods.  These are methods with no in-course tenors-together
+proof scale} methods.\index{CPS|see{clear proof scale}}
+These are methods with no in-course tenors-together
 falseness, but allowing arbitrary other falseness.  This is written
 \verb+-FCPS+\oidx{FCPS}{\texttt{FCPS}}\oi{F} and on eight bells is 
 equivalent to \verb+-F:a-fXYZ+.  (It is a fairly common misconception that
@@ -2310,8 +2312,10 @@ The details of this syntax are explained in \sref{rowexpr}.
 
 The argument to \verb+-Fr+ is actually an expression%
 \index{expression|seealso{row expression}} that evaluates to a row
-or to a set of rows.  Row expressions are considerably simpler than 
-the more general expressions in \sref{expr}; 
+or to a set of rows.  Row expressions also occur in the \verb+-Mlead+
+family of options discussed in \sref{muswhere}.
+These row expressions are considerably simpler than the more general 
+expressions in \sref{expr}; 
 valid expressions are formed from the following operators, 
 arranged in precedence\index{operators!precedence} levels from 
 highest to lowest.  The operators associativity\index{operators!associativity}
@@ -2356,7 +2360,7 @@ further so \verb+345+ is not a valid row literal.  Rows may also have
 an arbitrary number of tenors omitted, thus the two preceding examples
 are equivalent to \verb+123+ or even just \verb+1+.
 
-\subsection{Multiple rows}
+\subsection{Multiple rows}\label{rowexprmulti}
 
 However, most of the time, there isn't just one row that you wish to avoid.
 The obvious use is when you have a particular composition in mind and have
@@ -2629,7 +2633,7 @@ By setting $h=0$ and $b$ to a large negative number, it makes it easy to locate
 and reject methods with a particular row at backstroke.  E.g.
 \verb+-M0,-1000:*87+.
 
-\section{Music outside the plain course}
+\section{Music outside the plain course}\label{muswhere}
 
 Sometimes we are interested in music other than in the plain course
 and \methsearch\ can accommodate this via the 
@@ -2759,9 +2763,146 @@ version of \methsearch\ might address.
 
 \chapter{Interoperability}
 
-\section{Command invocations}\label{cmdinv}
-%  $( )  with $) to escape ) 
-% also $() in -Fr and -Mtype=
+As mentioned in \sref{unixphil}, the Unix paradigm\index{Unix philosophy} 
+is not one of huge monolithic programs.  Instead, it favours separate
+small programs that do one thing and do it well.  This tends to result in
+greater flexibility, allowing programs to be used in novel combinations to
+achieve things that their original authors hadn't considered.  This is
+the approach that \methsearch\ attempts to take.
+
+\methsearch\ interacts with external programs in several main ways.  First, it
+can filter input (in the form of a list of methods) from another source;
+this behaviour is activated by the \verb+--filter+\loi{filter} option was 
+discussed in \sref{misc_opt}.  Secondly, it can output a list of methods
+which is parsed by another program; an example of this was also given in
+the discussion of filtering \sref{misc_opt}.  The final ways are when 
+\methsearch\ invokes an external program via a \textit{command invocation}
+(\sref{cmdinv}).  
+
+\section{Command invocations}\label{cmdinv}\index{command invocation|(}
+
+External commands can be invoked by \methsearch\ in three situations.
+First, a command invocation may be embedded directly in a format string
+(\sref{fmtstr}); second, it may be inside an expression (\sref{expr}),
+which itself will either be in a format string or as the argument to a 
+\verb+--require+\loi{require} option; and third, it can be used to 
+generate a list of rows within a row expression 
+(\sref{rowexpr}--\ref{rowexprmulti}).  
+
+In the first case, the command is invoked once per method found.
+In the second case, the command is invoked once per method under consideration
+(as the output of the command invocation is used to determine whether the
+method is satisfactory).  But in the third case, the command is only
+invoked once, at program start up.
+
+In each case, the syntax is the same: 
+\verb+$(+\textit{command line\ldots}\verb+ )+.  Here, \textit{command line}
+is a command (or sequence of commands, such as a pipe line\index{pipe})  
+that can be executed by the shell\index{shell}.%
+\footnote{The particular shell that is used to handle command invocations is
+governed by the \verb+$SHELL+\fspecd{SHELL} \textitidx{environment variable}.
+If this is set, then the command line is passed as a single argument to a
+\verb+$SHELL -c+ process.  If it is not set, on Unix-type systems, the 
+default is to use \ttcmdidx{sh}\verb+ -c+,
+and on Windows, the default is to use \ttcmdidx{cmd.exe}\verb+ /c+.%
+In most situations, the default behaviour
+should be fine as the \verb+$SHELL+ environment variable is normally set 
+correctly by the shell.}
+A straightforward example is 
+when it just invokes a single command, for example:
+\begin{Verbatim}
+-Fr='$(printmethod -b8 -s 13578264 -F "&-3-4-5-6-2-3-4-7,2")'
+\end{Verbatim}
+This invokes the \ttcmdidx{printmethod} command to enumerate all of the rows
+in a lead of Yorkshire starting from the lead head \verb+13578264+.  This 
+would be useful when trying to find a method for a composition of spliced
+that already contains this lead.
+
+When a command is invoked from a (normal, non-row) expression (\sref{expr}) 
+or format string, \methsearch\ will substitute any method variables 
+(\sref{variables}) or nested expressions (enclosed in \verb+$[+\ldots\verb+]+)
+that it finds on the command line.  (For obvious reasons this
+does not apply when evaluating row expression --- there is no method
+under consideration, so the method variables would have an undefined value.)
+For example, the \ttcmdidx{touchsearch} program could be invoked by a 
+\verb+--require+ option to check that a touch of the method is actually 
+possible:
+\begin{Verbatim}[commandchars=@~~]
+--require='$(touchsearch -b8 -r -l720 @hfill\
+               -Cb=4 -Cs=$[$12h eq "12" ? "234" : "456"] @hfill\
+               -q --raw-count --limit=1 $p)'
+\end{Verbatim}
+This command invocation contains both a variable 
+(the place notation, \verb+$p+) and a more complicated expression used to
+determine whether the method is a seconds place one, in which a \verb+234+ 
+single is standard, or a sixths place one, in which case \verb+456+ single
+is required.
+
+In practice, this example can be handled more efficiently using the 
+\verb+--filter+ option to \texttt{touchsearch} and using this to filter
+the output of \methsearch.
+
+Within format strings or non-row expressions, \methsearch\ also accepts
+the sequence \verb+$)+ as a way of escaping a parenthesis so it can be 
+included in the command to be executed.\index{parentheses!escaping}%
+\index{escape character}  This is necessary because otherwise 
+\methsearch\ would interpret the \verb+)+ as terminating the command 
+invocation.  The same does not apply to command invocations in row
+expressions, a deficiency that will likely be addressed in a future 
+version of \methsearch.
+
+
+\subsection{Efficency}
+
+Overuse of per-method command invocation can have a severe impact on 
+efficiency.  A good example of this is with music analysis (\sref{music}).
+It is possible to get all of the power of the various \verb+-M+ options (and
+more beyond) by invoking various external programs to analyse the music.
+For example, the following search for musical double surprise major methods
+\begin{Verbatim}
+methsearch -b8 -SG1 -srdk -p2 -R'$q $M' -M'<4-runs>'
+\end{Verbatim}
+can be rewritten to invoke the external \ttcmdidx{printmethod}
+(\sref{printmethod}) and \ttcmdidx{musgrep} (\sref{musgrep}) programs 
+as follows:%
+\footnote{Both of these examples are presented here
+with Unix-style quoting.\index{shell!quotation}  
+On Windows, the outer single quotes will need replacing with double quotes.}
+\begin{Verbatim}[commandchars=@~~]
+methsearch -b8 -SG1 -srdk -p2 @hfill\
+  -R'$q $(printmethod -b8 -cS $p | musgrep -b8 -s \"<4-runs>\")'
+\end{Verbatim}
+However, doing so slows the search dramatically.\index{efficiency}
+Timing the two commands on a 1.5\ GHz laptop running Linux shows the former
+to take about 6.4\ s, and the latter, 71.2\ s --- a factor of 11 slower.%
+\footnote{This is due to the overhead of \textit{forking}%
+\index{forking, overhead of} (that is, creating) a new process to evaluate 
+the music.  
+In this particular example, three processes are created for every one of 
+the 4408 methods evaluated --- one shell\index{shell} process, 
+one \texttt{printmethod} process, and one \texttt{musgrep} process.}
+
+Examples with falseness can be even more extreme as \methsearch\ is able to
+use knowledge of the falseness to prune large branches of the search tree
+in one go.  A good instance of this is searching for 
+CPS\index{clear proof scale} treble doding major methods.
+\begin{Verbatim}
+methsearch -b8 -G1 -srfp2 -FCPS
+\end{Verbatim}
+On the same laptop, this command took 77.7\ s to complete.  If instead the
+methods were filtered using an external program, as in the previous example,
+it is likely that this search would take days, if not weeks, to complete.
+
+These examples illustrate that following the Unix philosophy%
+\index{Unix philosophy} of separate programs to its logical conclusion 
+can sometimes have unfortunate consequences for efficiency.  \methsearch\ 
+attempts to adopt a pragmatic solution to such situations.
+
+\index{command invocation|)}
+
+\section{Printing methods: \texttt{printmethod}}\label{printmethod}
+\section{Analysing music: \texttt{musgrep}}\label{musgrep}
+\section{Searching for touches: \texttt{touchsearch}}\label{touchsearch}
 
 \chapter{Some longer examples}
 
