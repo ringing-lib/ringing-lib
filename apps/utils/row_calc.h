@@ -42,7 +42,9 @@ RINGING_USING_STD
 class row_calc
 {
 public:
-  row_calc( string const& str );
+  row_calc( int b, string const& str );
+
+  int bells() const { return b; }
 
   class const_iterator;
   const_iterator begin() const;
@@ -75,6 +77,7 @@ public:
   };
 
 private:
+  int b;
   expr e;  
   int v;
 };

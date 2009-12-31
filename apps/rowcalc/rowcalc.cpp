@@ -67,7 +67,7 @@ int main( int argc, char *argv[] )
 
   scoped_pointer<row_calc> rc;
   try {
-    rc.reset( new row_calc( args.expr ) );
+    rc.reset( new row_calc( args.bells, args.expr ) );
   } 
   catch ( exception const& e ) { 
     cerr << "Error parsing expression: " << e.what() << "\n";

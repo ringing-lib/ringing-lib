@@ -54,6 +54,7 @@
 #include <cstring>
 #endif
 #include <ringing/row.h>
+#include <ringing/group.h>
 #include <ringing/streamutils.h>
 
 RINGING_USING_NAMESPACE
@@ -74,6 +75,8 @@ namespace tok_types
     minus       = '-',
     open_set    = '{', 
     close_set   = '}',
+    open_group  = '<',
+    close_group = '>',
     set_sep     = ',',
     exec        = tokeniser::first_token,
     read,
@@ -146,7 +149,8 @@ public:
     switch ( t.type() ) {
       case row_or_int: case row_lit: case open_paren: case close_paren: 
       case times: case divide: case ldivide: case power: case minus:
-      case open_set: case close_set: case set_sep:
+      case open_set: case close_set: case set_sep: 
+      case open_group: case close_group:
         return;
     }
     throw runtime_error
@@ -264,6 +268,42 @@ private:
   bool started;
   list<row_calc::expr>::iterator i;
 };
+
+class group_node : public row_calc::expr::node {
+public:
+  group_node( list<row_calc::expr> const& gens ) 
+    : gens( new set_node(gens) ), started(false) {}
+
+private:
+  virtual void restart() { started = false; }
+  virtual int count_vectors() const { return 1; }
+
+  virtual row evaluate()
+  {
+    if (!started) {
+      vector<row> gvec;
+      try {
+        while (true) 
+          gvec.push_back( gens.evaluate() ); 
+      } 
+      catch (vector_end) {}
+           
+      g = group( gvec );
+      i = g.begin(); started = true; 
+    } 
+ 
+    while ( i != g.end() ) 
+      return *i++;
+
+    throw vector_end();
+  }
+
+  row_calc::expr gens;
+  bool started;
+  group g;
+  group::const_iterator i;
+};
+ 
 
 class exec_node : public row_calc::expr::node {
 public:
@@ -506,16 +546,22 @@ row_calc::expr rc_parser::parse_expr( iter_t first, iter_t last )
   if ( first == last )
     throw runtime_error( "Expression expected" );
 
-  // Parentheses first
+  // Parentheses first, braces and group generator brackets first:
   if ( is_enclosed( first, last, tok_types::open_paren,
-                    tok_types::close_paren, "parentheses" ) )
+                    tok_types::close_paren, "parentheses" ) ) {
     return parse_expr( first+1, last-1 );
-
+  }
   if ( is_enclosed( first, last, tok_types::open_set,
                     tok_types::close_set, "braces" ) ) {
     ++vec;
     return row_calc::expr(
       ( new set_node( parse_set( first+1, last-1 ) ) ) );
+  }
+  if ( is_enclosed( first, last, tok_types::open_group,
+                    tok_types::close_group, "angle brackets" ) ) {
+    ++vec;
+    return row_calc::expr(
+      ( new group_node( parse_set( first+1, last-1 ) ) ) );
   }
 
   iter_t split;
@@ -542,8 +588,13 @@ row_calc::expr rc_parser::parse_expr( iter_t first, iter_t last )
 
   if ( first+1 == last ) {
     if ( first->type() == tok_types::row_or_int ||
-         first->type() == tok_types::row_lit )
-      return row_calc::expr( new row_node( row( *first ) ) );
+         first->type() == tok_types::row_lit ) {
+      string rstr = *first;
+      // Allow treble to be omitted
+      if (rstr.find( bell(0).to_char() ) == string::npos)
+        rstr = bell(0).to_char() + rstr;
+      return row_calc::expr( new row_node( row( rstr ) ) );
+    }
 
     if ( first->type() == tok_types::exec || 
          first->type() == tok_types::read ) 
@@ -562,7 +613,8 @@ row_calc::expr rc_parser::parse_expr( iter_t first, iter_t last )
 
 RINGING_END_ANON_NAMESPACE
 
-row_calc::row_calc( string const& str )
+row_calc::row_calc( int b, string const& str )
+  : b(b)
 {
   rc_parser p(str);
   e = p.parse();
@@ -576,7 +628,7 @@ void row_calc::const_iterator::increment()
   if ( !rc->v && val.bells() )
     rc = 0;
   else try {
-    val = rc->e.evaluate(); 
+    val = rc->e.evaluate() * row(rc->bells()); 
   } catch ( vector_end ) {
     rc = 0;
   }

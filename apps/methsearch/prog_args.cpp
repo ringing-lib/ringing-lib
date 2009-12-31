@@ -147,7 +147,7 @@ bool falseness_opt::process( const string &arg, const arg_parser & ) const
     {
       scoped_pointer<row_calc> rc;
       try {
-        rc.reset( new row_calc( arg.substr(2) ) );
+        rc.reset( new row_calc( 0, arg.substr(2) ) );
       } 
       catch ( exception const& e ) { 
         cerr << "Error parsing row in -Fr option: " << e.what() << "\n";
@@ -776,6 +776,14 @@ bool arguments::validate( arg_parser &ap )
       return false;
     }
 
+  if ( avoid_rows.size() )
+  {
+    set<row> x;
+    for ( set<row>::const_iterator i=avoid_rows.begin(), e=avoid_rows.end();
+            i != e; ++i )
+      x.insert( *i * row(bells) );
+    avoid_rows = x;
+  }
 
   if ( pends_generators.size() ) 
   {

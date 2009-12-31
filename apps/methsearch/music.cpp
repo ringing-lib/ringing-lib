@@ -24,6 +24,7 @@
 #endif
 
 #include "music.h"
+#include "row_calc.h"
 #if RINGING_OLD_C_INCLUDES
 #include <string.h>
 #include <assert.h>
@@ -94,9 +95,18 @@ musical_analysis::analyser::analyser( int bells )
   : bells(bells)
 {
   const vector<string> &p = patterns::instance().p;
-  row lh(bells); // Course or lead head -- plain course by default
-  length len = course; // Look at whole course by default  
 
+  vector< pair< row, length > > blocks;
+
+  blocks.push_back( 
+    make_pair( row(bells), // Course or lead head -- plain course by default
+               course ) ); // Look at the whole course by default
+
+  // We set this to true even though we haven't had any patterns.
+  // This is because we want the first -Mtype=row option to reset
+  // the default block (above) rather than augment it.
+  bool had_patterns = true;  
+  
   for ( vector<string>::const_iterator i( p.begin() ), e( p.end() );
 	    i != e; ++i )
     {
@@ -111,6 +121,7 @@ musical_analysis::analyser::analyser( int bells )
       if ( opt == "course" || opt == "lead" || opt == "halflead" ||
            opt == "2halflead" || opt == "2rhalflead" || opt == "rhalflead" )
         {
+          length len = blocks.back().second;
           if (opt == "course") len = course;
           else if (opt == "lead") len = lead;
           else if (opt == "halflead") len = half_lead;
@@ -118,21 +129,27 @@ musical_analysis::analyser::analyser( int bells )
           else if (opt == "2rhalflead") len = half_lead_2r;
           else if (opt == "rhalflead") len = half_lead_r;
 
-          if (eq == pattern.size()) continue; // No argument given
-
-          string lhstr = pattern.substr(eq+1);
-          // Allow treble to be omitted
-          if ( lhstr.find( bell(0).to_char() ) == string::npos ) 
-            lhstr = bell(0).to_char() + lhstr;
-
-          try {          
-            lh = row(lhstr);
-          } catch ( exception const& e ) {
-            cerr << "Unable to parse music course head: " << e.what() << endl;
-            exit(1);
+          row lh = blocks.back().first;
+          scoped_pointer<row_calc> rc;
+          if (eq != pattern.size()) {
+            try {
+              rc.reset( new row_calc( bells, pattern.substr(eq+1) ) );
+            } catch ( exception const& e ) {
+              cerr << "Unable to parse music course head: " << e.what() << endl;
+              exit(1);
+            }
           }
 
-          lh *= row(bells); // Pad to correct number of bels
+          if (had_patterns) {
+            blocks.clear();
+            had_patterns = false;
+          }
+          if (rc)
+            for ( row_calc::const_iterator i=rc->begin(), e=rc->end(); 
+                    i!=e; ++i )
+              blocks.push_back( make_pair( *i * row(bells), len ) );
+          else
+            blocks.push_back( make_pair( lh, len ) );
 
           continue;
         }
@@ -162,30 +179,39 @@ musical_analysis::analyser::analyser( int bells )
               break;
         }
 
-      music& mu = musv[ make_pair(lh, len) ];
-      mu.set_bells(bells);
-
-      try {
-        if ( pattern.size() > 2 
-             && pattern[0] == '<' && pattern[ pattern.size()-1 ] == '>' )
-          add_named_music( mu, pattern.substr( 1, pattern.size()-2 ), 
-                           scoreh, scoreb );
-
-        else
-          mu.push_back( music_details( pattern, scoreh, scoreb ) );
-      } 
-      catch ( exception const& e ) {
-        cerr << "Error parsing music pattern: " << e.what() << endl;
-        exit(1);
-      }           
+      had_patterns = true;
+      for ( vector< pair<row,length> >::const_iterator 
+              i = blocks.begin(), e = blocks.end(); i != e; ++i )
+        {
+          music& mu = musv[*i];
+          mu.set_bells(bells);
+    
+          try {
+            if ( pattern.size() > 2 
+                 && pattern[0] == '<' && pattern[ pattern.size()-1 ] == '>' )
+              add_named_music( mu, pattern.substr( 1, pattern.size()-2 ), 
+                               scoreh, scoreb );
+    
+            else
+              mu.push_back( music_details( pattern, scoreh, scoreb ) );
+          } 
+          catch ( exception const& e ) {
+            cerr << "Error parsing music pattern: " << e.what() << endl;
+            exit(1);
+          }           
+        }
     }
 
   // By default we count the CRUs in the plain course.
-  if ( musv.empty() ) 
+  if ( musv.empty() || !had_patterns ) 
     {
-      music& mu = musv[ make_pair(lh, len) ];
-      mu.set_bells(bells);
-      add_named_music( mu, "CRUs", 1 ); 
+      for ( vector< pair<row,length> >::const_iterator
+              i = blocks.begin(), e = blocks.end(); i != e; ++i )
+        {
+          music& mu = musv[*i];
+          mu.set_bells(bells);
+          add_named_music( mu, "CRUs", 1 ); 
+        }
     }
 }
 

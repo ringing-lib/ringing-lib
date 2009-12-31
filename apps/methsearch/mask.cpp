@@ -49,9 +49,11 @@
 #if RINGING_OLD_C_INCLUDES
 #include <ctype.h>
 #include <assert.h>
+#include <string.h>
 #else
 #include <cctype>
 #include <cassert>
+#include <cstring> // for strchr
 #endif
 #include <ringing/row.h>
 #include <ringing/extent.h>
@@ -143,8 +145,7 @@ shared_pointer<block> read_block( const int num,
       while ( i != e && isspace( *i ) ) ++i; // Skip whitespace
     }
 
-  while ( i != e && ( isalnum(*i) || *i == '-' 
-		      || *i == '?' || *i == '*' || *i == '(' ) )
+  while ( i != e && ( bell::is_symbol(*i) || strchr("Xx-?*(", *i) ) )
     {
       switch (*i)
 	{
@@ -194,7 +195,7 @@ shared_pointer<block> read_block( const int num,
 	default:
 	  {
 	    std::string::const_iterator j( i );
-	    while ( j != e && ( isalnum(*j) && *j != 'X' && *j != 'x' ) ) 
+	    while ( j!=e && ( bell::is_symbol(*j) && *j != 'X' && *j != 'x' ) ) 
 	      ++j; // Pass over one change.
 	    if ( i != j ) 
 	      rv->data.push_back
@@ -205,7 +206,7 @@ shared_pointer<block> read_block( const int num,
 	}
 	
       while ( i != e && isspace( *i ) ) ++i; // Skip whitespace
-      if ( i != e && *i == '.' ) ++i;	 // Skip a "." separator
+      if ( i != e && *i == '.' ) ++i;	     // Skip a "." separator
       while ( i != e && isspace( *i ) ) ++i; // Skip whitespace
     }
    

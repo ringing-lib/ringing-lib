@@ -74,6 +74,7 @@
   \index{#2@{\hspace*{-\loptwidth}\texttt{--#2}}|see{\texttt{-#1}}}}
 \newcommand{\oidF}[2]{\oidx{F#1}{\texttt{F#1}}%
   \index{F#2@{\hspace*{-\optwidth}\texttt{-F#2}}|see{\texttt{-F#1}}}}
+\newcommand{\oidM}[1]{\oidx{M#1}{\texttt{M#1}}}
 \newcommand{\oi}[1]{\index{#1@{\hspace*{-\optwidth}\texttt{-}\texttt{#1}}}}
 \newcommand{\loid}[1]{\index{#1@{\hspace*{-\loptwidth}\texttt{--#1}}|ulink}}
 \newcommand{\loi}[1]{\index{#1@{\hspace*{-\loptwidth}\texttt{--#1}}}}
@@ -1076,10 +1077,12 @@ explicitly or left implicit, the cross change can be denoted \verb+x+,
 \index{cross change}\symidx{-}{cross change}%
 \footnote{Part 1 of the Central Council's \textit{Doubles Collection}
 uses \verb+x+ in a non-standard way to denote any single change in which only
-the treble moves.  This use is not supported in \methsearch.}
+the treble moves.  For example, it gives the place notation of the first 
+half-lead of Huntley Place Doubles as \texttt{x.1.x.x.5}. 
+This use is not supported in \methsearch.}
 and changes are separated using a \verb+.+\symidx{.}{place notation} 
 which may be omitted next to cross
-changes.  Symmetric blocks of place notation are be prefixed with a 
+changes.  Symmetric blocks of place notation are prefixed with a 
 \verb+&+\symidx{\&}{place notation} to save repetition, asymmetric blocks 
 may (though needn't) be prefixed with a \verb-+-,\symidx{+}{place notation} 
 and blocks are separated by a \verb+,+.\symidx{,}{place notation}  For example,
@@ -1206,7 +1209,7 @@ specified by the \verb+-R+ option; and \verb+xml+ which tells
 \index{XML|(}%
 \footnote{The XML conforms to the \textit{schema} published by the 
 online method database project which is documented at
-\url{http://methods.ringing.org/xml.html}.  This schema not the one 
+\url{http://methods.ringing.org/xml.html}.  This schema is not the one 
 current used by the Central Council who are using gratuitously bastardised
 version of it.}
 It is possible to produce builds of \methsearch\ without XML support,
@@ -1762,7 +1765,8 @@ The \verb+%+ operator is the modulus operator\index{modulus operator}.
 It returns the remainder left from the integer division of its arguments.
 For example, \verb+8%3+ evaluates to 2.  It can be defined more mathematically
 in terms of integer division by the equation:
-\[ a / b * b + a \,\%\, b = a \]
+\[ a \mathop{\verb+/+} b \mathop{\verb+*+} b 
+   \;\mathop{\verb-+-}\; a \mathop{\verb+%+} b = a \]
 Because integer division rounds towards zero rather than down, this means that
 when $a$ is negative, the result of the modulus operator is also negative.%
 \footnote{To those familiar with modular arithmetic, this may be surprising.
@@ -1879,7 +1883,7 @@ its value is set to \verb+<ERROR>+; and if it was in a \verb+--require+ option,
 it is considered to have evaluated to false.  It is not possible to recover
 from an expression error within the expression.  For example, 
 \verb+"a"-1 > 42 ? "b" : "c"+ does not evaluate to either 
-\verb+"a"+ or \verb+"b"+.
+\verb+"b"+ or \verb+"c"+.
 
 There is no specific boolean type\index{boolean type} --- any non-zero
 integer is considered to mean true.  The comparison operators and logical 
@@ -2198,7 +2202,7 @@ proof scale} methods.  These are methods with no in-course tenors-together
 falseness, but allowing arbitrary other falseness.  This is written
 \verb+-FCPS+\oidx{FCPS}{\texttt{FCPS}}\oi{F} and on eight bells is 
 equivalent to \verb+-F:a-fXYZ+.  (It is a fairly common misconception that
-clear proof scale methods and only clear proog scale methods can produce an 
+clear proof scale methods and only clear proof scale methods can produce an 
 extent.  Neither is, in general, the case.)
 
 \index{falseness groups|)}
@@ -2346,6 +2350,12 @@ to prevent the shell from trying to interpret them.  As usual, on Windows,
 double quotes should be used; and on Unix-like systems, single quotes will 
 be necessary.
 
+Row literals\index{literals} may have the treble omitted --- for example,
+\verb+2345+ is equivalent to \verb+12345+.  This does not generalise
+further so \verb+345+ is not a valid row literal.  Rows may also have 
+an arbitrary number of tenors omitted, thus the two preceding examples
+are equivalent to \verb+123+ or even just \verb+1+.
+
 \subsection{Multiple rows}
 
 However, most of the time, there isn't just one row that you wish to avoid.
@@ -2357,18 +2367,25 @@ If so, listing them all on the command-line is likely to be unsatisfactory.
 you can automate the process, but there are technical reasons for not
 wanting the command line to grow too long.)
 
-\methsearch\ has three short-hand notations for sets of rows in \verb+-Fr+ 
+\methsearch\ has four short-hand notations for sets of rows in \verb+-Fr+ 
 options.  
 First, a \textitidx{set literal} can be specified by enclosing a list of rows 
 (or row expressions) in braces and separating the rows with columns --- thus, 
 \verb+-Fr="{+$a$\verb+,+$b$\verb+,+$c$\verb+}"+ is a set literal equivalent 
 to three  separate options, one each for each row in the set $\{a, b, c\}$.
-Second, rows can be read from a file --- the 
+Secondly, a \textitidx{group generator list} can be specified by enclosing
+a list of rows (or row expressions) in angle brackets; these are used to
+generate a group\index{group!generators}.  For example, \verb+-Fr="<34562>"+
+generates the cyclic group\index{group!cyclic, $C_n$} on the five working 
+bells, and \verb+-Fr="<342,23465>"+ generates a group of order six isomorphic
+to $C_3 \times C_2$.
+
+Thirdly, rows can be read from a file --- the 
 syntax for this is \verb+-Fr="<(+\textit{filename}\verb+)"+.  
 The file format is quite flexible.  A list of rows separated by some
 combination of spaces, tabs, new lines, commas, semicolons or colons,
 though one row per line is recommended.
-The third way is with a command invocation:
+The fourth way is with a command invocation:
 \verb+-Fr="$(+\textit{command line}\verb+)"+.  This form is dealt with
 in \sref{cmdinv}.
 
@@ -2510,7 +2527,7 @@ This is controlled by the \verb+-M+\oid{M}{music} option and is used to
 generate a musical score which is displayed by the \verb+$M+\fspec{M}
 variable.
 
-\section{Music patterns}
+\section{Music patterns}\label{muspattern}
 
 At its simplest, \methsearch\ simply counts the number of rows in
 the plain course matching a particular \textitidx{music pattern}.  
@@ -2612,13 +2629,139 @@ By setting $h=0$ and $b$ to a large negative number, it makes it easy to locate
 and reject methods with a particular row at backstroke.  E.g.
 \verb+-M0,-1000:*87+.
 
+\section{Music outside the plain course}
+
+Sometimes we are interested in music other than in the plain course
+and \methsearch\ can accommodate this via the 
+\verb+-M+\textit{type}\verb+=+\textit{row} options.  The possible
+values of \textit{type} are as follows:
+
+\begin{tabularx}{\textwidth}{lX}
+\texttt{course}\oidM{course}
+  &Analyse a whole course starting from course head \textit{row}.\\
+\texttt{lead}\oidM{lead}
+  &Analyse one lead starting from lead head \textit{row}, 
+  excluding the closing lead head row.\\
+\texttt{halflead}\oidM{halflead}
+  &The first half of the lead starting from lead head \textit{row}\\
+\texttt{2halflead}\oidM{2halflead}
+  &The second half of the lead, starting with \textit{row} as the 
+  half lead head row.\\
+\texttt{2rhalflead}\oidM{2rhalflead}
+  &The second half of the lead, ending with \textit{row} as the
+  lead end row.\\
+\texttt{rhalflead}\oidM{rhalflead}
+  &The first half of the lead, ending with \textit{row} as the 
+  the half lead end row.%
+  \footnote{This option is largely included for completeness.  It is not 
+  anticipated that \texttt{rhalflead} will often be used.}\\
+\end{tabularx}
+
+Multiple \verb+-M+\textit{type}\verb+=+\textit{row} options may be provided.
+The \verb+=+\textit{row} component of these options may be omitted,
+in which case it defaults to the \textit{row} option to the previous
+such option if there is one, or to rounds if no such previous option exists.  
+For example,
+\texttt{-Mlead -Mlead=13426578 -Mlead} is equivalent to
+\texttt{-Mlead=12345678 -Mlead=13426578 -Mlead=13426578}.
+
+(Note that there is a potential, though highly improbable, ambiguity between
+these options and the \verb+-M+\textit{pattern} options described
+in \sref{muspattern}.  This only applies on 22 or more bells and is because
+\verb+-Mlead+, for example, is also a pattern matching a row with the bells
+22, 11, 13, 16{} in order at the front.  In the case of such an ambiguity, 
+the meaning described in this section is chosen.  If this is of concern 
+--- for example, if you are automatically generating patterns for some purpose
+other than conventional musical analysis --- a pattern that does not already
+contain a \verb+*+ can always have one appended without changing its meaning, 
+and this will force the option to be interpreted as a pattern.  Similarly,
+a pattern can always have the implicit \verb+1:+ scoring prefix stated 
+explicitly which will also force interpretation as a pattern.)
+
+These \verb+-M+\textit{type} options do not, of themselves, specify what
+music to look for --- they need using in conjunction with the 
+music pattern options of \sref{muspattern}.  In the simplest usage, a single
+\verb+-M+\textit{type} option will be followed by a \verb+-M+\textit{pattern}
+option which will apply to the block specified.  For example,
+\texttt{-Mlead=15634827 -M"<queens>"} will look for queens in the row 
+starting with \verb+15634827+.
+
+\subsection{Batches of music patterns}\index{music!batches|(}
+
+In more complicated scenarios, it can be desirable to search for 
+multiple types of music in different places.  This is possible too.
+The \verb+-M+ options from the command line are considered in sequence.%
+\footnote{This is one of the few places where the order of command line 
+options is important.}
+In general, \methsearch\ divides the \verb+-M+ options into a sequence of 
+batches, each of which consists of one or more \verb+-M+\textit{type} option 
+followed by one or more \verb+-M+\textit{pattern} option.  
+Optionally, the first batch may have no \verb+-M+\textit{type} options 
+specified, in which case \verb+-Mcourse+ is assumed;
+similarly, the last batch may have no \verb+-M+\textit{pattern} options
+specified, in which case \verb+-M<CRU>+ is assumed.  (Thus, if no \verb+-M+
+options are given at all, \methsearch\ looks for CRUs in the plain course.)
+
+Within each batch of \verb+-M+ options, each of the music pattern options
+(whether named patterns with \verb+-M<+\textit{name}\verb+>+ or 
+regex-style patterns with \verb+-M+\textit{pattern}) 
+applies to all of the \verb+-M+\textit{type} options within that 
+batch of \verb+-M+ options.  Some examples may make this clearer.
+
+\begin{Verbatim}
+-M"<4-runs>" -Mlead -M2:"<4-runs>" -M10:"<reverse-rounds>"
+\end{Verbatim}
+This example contains two batches of \verb+-M+ options.  The first batch
+looks will score one point for each four-bell run in the plain course.
+The second batch re-analyses just the first lead, scoring another two points 
+for each four-bell run in that lead, and another further ten points if back 
+rounds occurs in the first lead.  
+Because rows can match multiple patterns, an eight bell method such as
+Plain Bob which has reverse rounds at the first lead will score 
+$\textrm{1}\times\textrm{5} + \textrm{2}\times\textrm{5} 
+  + \textrm{10}\times\textrm{1} = \textrm{25}$ points for this row alone.%
+\footnote{Reverse rounds on $n$ bells matches the \texttt{<$m$-run>} pattern 
+$n-m+1$ times, once for each of the separate $m$ bell runs.}
+
+\begin{Verbatim}[commandchars=@~~]
+-Mlead=15634827 -Mlead=16745238 -Mlead=17856342 @hfill\
+-Mlead=18267453 -Mlead=12378564 -Mlead=13482675 @hfill\
+-Mlead=14523786 -M"<4-runs>" -M10:"<queens>"
+\end{Verbatim}
+This contains a single batch of \verb+-M+ options.  It scores four-bell runs
+with an extra bonus for queens.%
+\footnote{This example will be of particular interest to anyone
+who wishes to replace Stonebow\index{Stonebow, replacing} in David Hull's
+cyclic 23-spliced composition.\index{Hull, David!23 spliced}}
+
+In practice, however, such a circumlocution is unnecessary as the \textit{row}
+argument to the \verb+-M+\textit{type}\verb+=+\textit{row} options is
+actually a \textit{row expression} (\sref{rowexpr}).\index{row expression}  
+This means that the group generator\index{group!generators} syntax can be used 
+to write this example as just:
+\begin{Verbatim}
+-Mlead="<8234567>*5634827" -M"<4-runs>" -M10:"<queens>"
+\end{Verbatim}
+
+\section{Falseness and music}
+
+The \verb+-M+ options are entirely independent from the \verb+-F+ options.
+This the unfortunate result that for many real-world searches, it will be
+necessary to duplicate information between \verb+-Fr+ options and
+\verb+-Mlead+ options so that both the falseness engine and the music
+analysis engine know which leads to look at.  This is something that a future
+version of \methsearch\ might address.
+
+
+
+\index{music!batches|)}
 \index{music|)}
 
 \chapter{Interoperability}
 
 \section{Command invocations}\label{cmdinv}
 %  $( )  with $) to escape ) 
-% also $() in -Fr
+% also $() in -Fr and -Mtype=
 
 \chapter{Some longer examples}
 
