@@ -398,11 +398,12 @@ methsearch --help
 
 This users' guide aims to provide more extensive documentation as 
 well as some worked examples of how it can be used in real world situations.
-Finally, don't be afraid to experiment.  If you're unlucky, you might
+Don't be afraid to experiment.  If you're unlucky, you might
 ask \methsearch\ to perform a search that will never complete.  
 The \verb+-u+ option provides a good way of monitoring how quickly 
 the search is progressing.  If the search looks like it is going to take
 too long, press Ctrl-C to abort it, and try again with additional constraints.
+Finally, if you're stuck, drop me an email.  My address is on the title page.
 
 \section{An example — doubles methods}\label{eg_doubles}
 \index{example!doubles, plain|(}
@@ -854,7 +855,8 @@ In this documentation, the \textit{lead end} refers is used exclusively for
 the first, \textit{lead head} for the second, 
 and \textit{lead end change} for the third.
 
-The \verb+-r+ option\oid{r}{regular} 
+The \verb+-r+ option\oid{r}{regular}%
+\index{Plain Bob lead ends|seealso{\texttt{-r}}}
 tells \methsearch\ to only look at methods which have
 regular lead heads.  For a \verb+-U+$n$ search this means that the lead head
 (the backstroke when the treble is leading) must be a row that appears at
@@ -1368,11 +1370,14 @@ This option is discussed further in \sref{extent}.
 \index{output|(}
 
 The options that control output were listed in \sref{output_opt}.  
-This chapter discusses the details of the \verb+-R+\oi{R} and \verb+-H+\oi{H} 
-options which provide \methsearch's main way of communicating 
-information about the methods it finds back to the user.  
-The \verb+--require+\loi{require} option is also documented here as it shares
-much in common with the syntax of the the \verb+-R+ and \verb+-H+ options.
+This chapter starts by discussing the format strings (\sref{fmtstr}) 
+that occur in the arguments to the \verb+-R+\oi{R} and \verb+-H+\oi{H} 
+options and provide \methsearch's main way of communicating 
+information about the methods back to the user.  
+The expression syntax (\sref{expr}) used by the \verb+--require+\loi{require} 
+option is also documented here as it shares much in common with format strings.
+Finally, \sref{stats} looks specifically at the \verb+-H+ option for 
+statistical output.
 
 \section{Format strings}\label{fmtstr}
 
@@ -1705,7 +1710,8 @@ in \verb+$[+\ldots\verb+]+.  In this case, the expression is evaluated and
 its value printed.  For example, to normalise the music of
 methods with different length plain courses, the
 average music score per lead in the plain course could be printed with
-\verb+-R"$[$M / $o]"+.
+\verb+-R"$[$M / $o]"+.\footnote{But note that because the \verb+/+ operator
+performs integer division, this will be rounded to the nearest integer.}
 
 Expressions are built up from operators (\sref{oper}) which can act 
 on literals (\sref{lits}), variables (\sref{variables}) and 
@@ -2010,7 +2016,13 @@ functionality.
 
 By default \methsearch\ only finds methods that are true within a lead.
 The \verb+-F+ option\oid{F}{falseness} provides a way of changing this 
-behaviour.
+behaviour.  The basic options governing whether the method should have 
+a true plain course, true leads, etc., are documented in \sref{basic_false}.
+Analysis of false course heads is discussed in \sref{fch}, and ways of 
+checking that an extent is possible is covered ni \sref{extent}.
+The final two sections (\sref{avoidrow}--\ref{pends}) discuss using 
+\methsearch\ to find methods that are true against other methods.
+
 
 \section{Basic falseness levels}\label{basic_false}
 
@@ -2046,7 +2058,7 @@ guaranteed by symmetry.)
 in the most common cases.  For example, it knows that in a palindromic 
 plain method, there is no possibility of internal falseness.
 
-\section{False course heads}
+\section{False course heads}\label{fch}
 \subsection{A digression — the theory of falseness}%
 \label{falsetheo}\index{falseness!theory of|(}
 
@@ -2096,11 +2108,14 @@ The rows in the plain course of the method can thus be expressed in terms of
 the rows, $H$, in the first half lead of the methods, $C = LH$, thus allowing
 the falseness set to be expressed as 
 \[ F(C) = L H \bar{H} \bar{L} = L\; F(H)\; L. \]
-(Note that $L=\bar{L}$ because $L$ is a group --- in other words, 
-$r\in L \iff r^{-1} \in L$.)  This partitions the falseness set (and the 
+(Note that $L=\bar{L}$ because $L$ is a group.%
+\footnote{Specifically a set of rows, $X$, is a group if and only if
+$X=\bar{X}$ and $XX=X$.\index{group!definition}  
+These follow from the inverse element and closure group axioms.})
+This partitions the falseness set (and the 
 set of all possible course heads) into \textitidx{double cosets} of $L$:
 if $r$ is a false course head, then so are all of $LrL$.  However, it has
-already been noted that it $r$ is a false course head, so is $r^{-1}$.  
+already been noted that if $r$ is a false course head, so is $r^{-1}$.  
 Combining these two results pairs certain double cosets such that if
 one occurs so must the other.  These sets have the form $L\{r,r^{-1}\}L$ 
 and are known as \textit{falseness groups}\index{falseness groups|(}.%
@@ -2115,7 +2130,7 @@ The falseness groups for a method are useful because they can be used to
 locate compositions that are true to that method.  A composition is described
 as \textitidx{universally true} to certain falseness groups if it is 
 necessarily true to all methods having at most those falseness groups.%
-\footnote{The advent of computer programs that allowing people to search for 
+\footnote{The advent of computer programs that allow people to search for 
 compositions particularly tailored to a specific method has somewhat 
 reduced the use  for falseness groups.  
 However not everyone has access to or the inclination
@@ -2130,7 +2145,8 @@ For compositions that are \textitidx{tenors-together} (generally defined as
 meaning bells 7 and higher remain coursing throughout), it is only necessary
 to look at falseness groups that include tenors-together course heads;
 similarly, a bobs-only composition only requires falseness groups including
-in-course course heads to be considered.
+in-course\index{in-course|see{parity}}\index{parity} 
+course heads to be considered.
 
 On eight bells (assuming a fixed treble and a seven-lead course), 
 there are 28 such falseness groups of which 25 include tenors-together courses.
@@ -2140,9 +2156,9 @@ bell ones.
 For regular major methods, these have 
 conventional names using the letters \verb+A+--\verb+U+ (except \verb+J+
 and \verb+Q+) to denote the tenors-together groups containing in-course rows,
-\verb+a+--\verb+f+ for out-of-course tenors-together groups and
-\verb+X+, \verb+Y+ and \verb+Z+ for the three remaining groups which have
-no tenors-together rows.  
+\verb+a+--\verb+f+ for out-of-course\index{out-of-course|see{parity}} 
+tenors-together groups and \verb+X+, \verb+Y+ and \verb+Z+ for the three 
+remaining groups which have no tenors-together rows.  
 
 On ten or more bells, certain tenors-together groups split.  This is 
 indicated by a numeric suffix on the falseness group code.  The only 
@@ -2209,7 +2225,7 @@ extent.  Neither is, in general, the case.)
 
 \index{falseness groups|)}
 
-\section{Extent viability}\label{extent}\index{extents, viablity of|(}
+\section{Extent viability}\label{extent}\index{extents, viability of|(}
 
 On lower stages (particularly on seven or fewer bells) it is common to
 want methods which are capable of producing an extent.  Testing this is, 
@@ -2219,11 +2235,11 @@ to check for certain special cases of this.
 
 The \verb+-Fe+ option,\oi{F} also spelt \verb+-Fextent+,\oidF{e}{extent}
 checks the $(n-1)!$ possible fixed-treble lead heads on $n$ bells to see 
-whether a mutually true set of $\half(n-1)!$ leads exist.
+whether a mutually true set of $\half(n-1)!$ leads exists.
 The \verb^-Fe+^ option, also spelt \verb+-Fpositive-extent+,%
 \oidF{e+}{positive-extent} checks the $\half(n-1)!$ possible in-course 
 fixed-treble lead heads to see whether a mututally true set of 
-$\quarter(n-1)!$ leads exist.
+$\quarter(n-1)!$ leads exists.
 
 In practice, \verb+-Fe+ should be used for non-palindromic plain methods 
 where it ensures that sufficient true leads exist for an extent to be possible.
@@ -2238,7 +2254,7 @@ whose vertices are the possible lead heads and edges exist between each pair
 of mutually false leads.  Mathematically, this is the Cayley graph%
 \index{Cayley graph} $\Gamma(S_{n-1}, F(M))$ where $S_{n-1}$%
 \index{group!symmetric, $S_n$} is the set of
-possible fixed-treble lead heads on $n-1$ bells.  An example of the 
+possible fixed-treble lead heads on $n$ bells.  An example of the 
 largest possible set of mutually true leads corresponds to a \textitidx{maximal
 independent set} of this graph.  In the general case, finding the size of this 
 is NP-complete;\index{NP-complete}\footnote{Actually, while the case of
@@ -2251,10 +2267,6 @@ half the size of the graph by testing whether the graph is
 option does; the \verb^-Fe+^ option does the same for the in-course lead heads,
 $A_{n-1}$\index{group!alternating, $A_n$}.
 
-% $(touchsearch)
-
-% methsearch -b6 -G1 -fwe -qCu -Fe+ --require='$y eq "" && $(touchsearch -b6 $p -Cb=4 -Cx=$[$24h eq "12" ? "6" : "2"] -r -l720 --limit=1 --raw-count --quiet)'
-
 For palindromic treble-dodging minor methods that have a double change at 
 the half lead (as all five-lead ones will), the \verb^-Fe+^ option is a
 overkill.  A better strategy is to require that in each half lead, there 
@@ -2265,7 +2277,11 @@ parity structures $+{}+{}-{}-$ or $+{}-{}-{}+$ respectively;
 but a \verb+-3456-+ start has only even parity rows when the treble leads, 
 and only odd parity rows when it is in seconds place: $+{}-{}+{}-$.
 
-\index{extents, viablity of|)}
+If you wish to check whether an extent actually does exist, you can 
+get \methsearch\ to invoke the \texttt{touchsearch} program on each 
+method.  See \sref{touchsearch} for more details.
+
+\index{extents, viability of|)}
 
 \section{Avoiding specific rows}\label{avoidrow}
 
@@ -2297,7 +2313,7 @@ or you can work out the corresponding row to be avoided in the opening lead.
 The syntax of the \verb+-Fs+\oidx{Fs}{\texttt{Fs}} option for specifying
 the starting row is similar to that of \verb+-Fr+ except that the
 argument to \verb+-Fs+ must be a literal row (row expressions are not 
-permitted), and (ii) multiple \verb+-Fr+ options are not allowed.
+permitted), and multiple \verb+-Fr+ options are not allowed.
 
 Suppose you want to ring the method being searched for starting at lead-head 
 $s$, and you want that lead not to contain the row $r$, then this is 
@@ -2328,10 +2344,11 @@ explicit.\index{parentheses}
 \end{tabular}
 
 The exponentiation\index{exponentiation} operator is only defined when its 
-left-hand argument is a row and its right-hand argument is an integer 
-(which may be negative).%
+left-hand argument is a row and its right-hand argument is an integer.%
 \footnote{As it yields a row, this means that, although it is 
 right-associative, an expression cannot have more than one \verb+^+ operator.}
+The right-hand argument may be a negative integer in which case it denotes
+an inverse in the obvious way: $\hbox{$a$\verb+^-1+} = a^{-1}$.
 The three multiplicative-type operators are only defined when both their
 arguments are rows.\index{multiplication}
 
@@ -2372,26 +2389,40 @@ you can automate the process, but there are technical reasons for not
 wanting the command line to grow too long.)
 
 \methsearch\ has four short-hand notations for sets of rows in \verb+-Fr+ 
-options.  
-First, a \textitidx{set literal} can be specified by enclosing a list of rows 
+options: \textit{set literals}, \textit{group generator lists},
+\textit{file inputs} and \textit{command invocations}.
+
+A \textitidx{set literal} is specified by enclosing a list of rows 
 (or row expressions) in braces and separating the rows with columns --- thus, 
 \verb+-Fr="{+$a$\verb+,+$b$\verb+,+$c$\verb+}"+ is a set literal equivalent 
 to three  separate options, one each for each row in the set $\{a, b, c\}$.
-Secondly, a \textitidx{group generator list} can be specified by enclosing
+A \textitidx{group generator list} is specified by enclosing
 a list of rows (or row expressions) in angle brackets; these are used to
 generate a group\index{group!generators}.  For example, \verb+-Fr="<34562>"+
 generates the cyclic group\index{group!cyclic, $C_n$} on the five working 
 bells, and \verb+-Fr="<342,23465>"+ generates a group of order six isomorphic
 to $C_3 \times C_2$.
 
-Thirdly, rows can be read from a file --- the 
+A \textitidx{file input} reads rows from a file --- the 
 syntax for this is \verb+-Fr="<(+\textit{filename}\verb+)"+.  
-The file format is quite flexible.  A list of rows separated by some
-combination of spaces, tabs, new lines, commas, semicolons or colons,
-though one row per line is recommended.
-The fourth way is with a command invocation:
-\verb+-Fr="$(+\textit{command line}\verb+)"+.  This form is dealt with
+The file format is quite flexible: a sequence of rows separated by some
+combination of spaces, tabs, new lines, commas, semicolons or colons;
+however a standard \textit{row stream}\index{row stream} (\sref{rowstream}) 
+with one row per line is recommended.  As a special case, if \textit{filename}
+is \verb+-+, instead of reading from a file, \methsearch\ reads from standard
+input.  If you do this, you must ensure that nothing else is also reading
+from standard input or you will end up with a bizarre undefined behaviour.
+In particular, you can only have one \verb+<(-)+ in anywhere, and you cannot
+use this in conjunction with \verb+--filter+\loi{filter}.
+
+A \textit{command invocation} has the syntax 
+\verb+-Fr="$(+\textit{command line}\verb+)"+ and is dealt with
 in \sref{cmdinv}.
+
+Note that the sequence \verb+<(+ is always treated as the start of a file
+input even if this results in a parse error.  
+If you wish to put parentheses inside a group generator list, 
+you should put a space between the \verb+<+ and \verb+(+.
 
 An \verb+-Fr+ option may contain two (or more) sets of rows separated by
 the multiplica\-tion-type operators: \verb+*+, \verb+/+ and \verb+\+.  Using
@@ -2409,6 +2440,10 @@ set literal, read from a file, or generated by a command invocation.
 Using these set products, it's easy to generate very large row sets.  
 \methsearch\ needs to be able to hold all the distinct \verb+-Fr+ rows 
 in memory at one time.
+
+The \ttcmdidx{rowcalc} utility (\sref{rowcalc}) provides a handy way 
+of checking that any complicated expressions passed to \verb+-Fr+
+are producing the correct output.
 
 \subsection{An example — course splices}
 \index{example!minor, treble-dodging, course splices}
@@ -2529,7 +2564,9 @@ of some perceived similarity with a major method of that name.}
 \methsearch\ is able to analyse the music present in a method.  
 This is controlled by the \verb+-M+\oid{M}{music} option and is used to
 generate a musical score which is displayed by the \verb+$M+\fspec{M}
-variable.
+variable.  The first section (\sref{muspattern}) documents how to 
+analyse music in the plain course; more general analysis is discussed
+in \sref{muswhere}.
 
 \section{Music patterns}\label{muspattern}
 
@@ -2556,7 +2593,7 @@ surplus bells, then it matches at the start of the row.  For example,
 match a sequence of bells at any place in the row, place a \verb+*+ on
 both sides of the pattern: \verb+-M*5678*+.
 
-\subsection{Named music patterns}
+\subsection{Named music patterns}\label{musnamed}
 
 There is also a shorthand notation for matching particular commonly requested
 patterns such as queens, CRUs, or four-bell runs.  This is written
@@ -2603,7 +2640,7 @@ the pattern more than once.  For example, the row \verb+32145678+ matches
 constituent four-bell runs (\verb+4567+ and \verb+5678+) match.  This means
 a longer run scores more than a shorter run.
 
-\subsection{Customising scores}
+\subsection{Customising scores}\label{musscore}
 
 By default, each match adds 1 to the music score.  Multiple patterns
 may be specified, in which case each row is matched against each pattern
@@ -2779,6 +2816,20 @@ the discussion of filtering \sref{misc_opt}.  The final ways are when
 \methsearch\ invokes an external program via a \textit{command invocation}
 (\sref{cmdinv}).  
 
+In order that programs can pass information between each other, 
+it is necessary that they share common way of representing the information.  
+\methsearch, and the other utilities in the Ringing Class Library%
+\index{Ringing Class Library}, have two main interchange formats:
+\textit{row streams}\index{row stream} (\sref{rowstream}) 
+for passing lists of rows about, and 
+\textit{method streams}\index{method stream} (\sref{methstream}) 
+for passing lists of methods.%
+\index{stream|see{row stream \textit{and} method stream}}
+
+Also discussed in this chapter are some of more useful utility programs
+that can generate or parse these streams, however this document does not
+aim to fully document these utilities.
+
 \section{Command invocations}\label{cmdinv}\index{command invocation|(}
 
 External commands can be invoked by \methsearch\ in three situations.
@@ -2808,6 +2859,15 @@ and on Windows, the default is to use \ttcmdidx{cmd.exe}\verb+ /c+.%
 In most situations, the default behaviour
 should be fine as the \verb+$SHELL+ environment variable is normally set 
 correctly by the shell.}
+Standard output\index{standard output} from the command is read by 
+\methsearch.\footnote{Anything written to standard error\index{standard error} 
+is ignored by \methsearch, but will be displayed to the user.  It is 
+therefore recommended that if the program would routinely write to
+standard error this is discarded, for example on a Linux system
+by appending \verb+2> /dev/null+ to the command.  The exit status of the 
+command being invoked is currently ignored.  This is likely to change.}
+In a row expression this is expected to yield a row stream
+as documented in \sref{rowexprmulti} and \sref{rowstream}.  
 A straightforward example is 
 when it just invokes a single command, for example:
 \begin{Verbatim}
@@ -2824,6 +2884,9 @@ or format string, \methsearch\ will substitute any method variables
 that it finds on the command line.  (For obvious reasons this
 does not apply when evaluating row expression --- there is no method
 under consideration, so the method variables would have an undefined value.)
+The command can generate arbitrary output which is like string literal 
+(\sref{lits}).  However in most practical situations the string will 
+subsequently be converted to an integer.
 For example, the \ttcmdidx{touchsearch} program could be invoked by a 
 \verb+--require+ option to check that a touch of the method is actually 
 possible:
@@ -2836,7 +2899,10 @@ This command invocation contains both a variable
 (the place notation, \verb+$p+) and a more complicated expression used to
 determine whether the method is a seconds place one, in which a \verb+234+ 
 single is standard, or a sixths place one, in which case \verb+456+ single
-is required.
+is required.  The \verb+--raw-count+ option ensures that the command
+only prints the number of matching touches without surrounding text, and
+the \verb+--limit=1+ option halts the search after the first touch is found
+as we do not care about the number of matching touches.
 
 In practice, this example can be handled more efficiently using the 
 \verb+--filter+ option to \texttt{touchsearch} and using this to filter
@@ -2852,7 +2918,7 @@ expressions, a deficiency that will likely be addressed in a future
 version of \methsearch.
 
 
-\subsection{Efficency}
+\subsection{Efficency}\label{efficency}
 
 Overuse of per-method command invocation can have a severe impact on 
 efficiency.  A good example of this is with music analysis (\sref{music}).
@@ -2874,7 +2940,7 @@ methsearch -b8 -SG1 -srdk -p2 @hfill\
 \end{Verbatim}
 However, doing so slows the search dramatically.\index{efficiency}
 Timing the two commands on a 1.5\ GHz laptop running Linux shows the former
-to take about 6.4\ s, and the latter, 71.2\ s --- a factor of 11 slower.%
+to take about 6.4\ s, and the latter, 71.2\ s --- a factor of 11 times slower.%
 \footnote{This is due to the overhead of \textit{forking}%
 \index{forking, overhead of} (that is, creating) a new process to evaluate 
 the music.  
@@ -2900,9 +2966,211 @@ attempts to adopt a pragmatic solution to such situations.
 
 \index{command invocation|)}
 
-\section{Printing methods: \texttt{printmethod}}\label{printmethod}
-\section{Analysing music: \texttt{musgrep}}\label{musgrep}
-\section{Searching for touches: \texttt{touchsearch}}\label{touchsearch}
+\section{Row streams}\label{rowstream}\index{row stream|(}
+
+Row streams are used to stream a list of rows between programs.  
+The standard syntax is very straightforward: one row per line.%
+\footnote{Some programs will accept permissive formats: for example
+by allowing (and ignoring) anotations after the row, 
+by allowing multiple rows per line, or by accepting alternative separators.
+You should consult the documentation for the specific program before using 
+these.}
+The only place where \methsearch\ uses row streams is when reading the output 
+from command invocations in row expressions, for example in \verb+-Fr+ options.
+
+The \ttcmdidx{extent} (\sref{extentutil}), 
+\ttcmdidx{rowcalc} (\sref{rowcalc}),
+\ttcmdidx{printmethod} (\sref{printmethod}) and 
+\ttcmdidx{gsiril} (\sref{gsirilrow}) programs can
+be used to generate row streams.  
+The \ttcmdidx{musgrep} (\sref{musgrep}) program acts upon a row stream.
+Both \texttt{rowcalc} and \texttt{musgrep} can be optionally be used as a 
+row filter --- that is, a program that takes one row stream and uses it to 
+generate another.
+
+\subsection{Enumerating rows — \texttt{extent}}\label{extentutil}
+
+The \ttcmdidx{extent} program is a very simple utility for listing all
+of the rows on a given number of bells.  It accepts the following options:
+
+\begin{tabularx}{\textwidth}{llX}
+\texttt{-b}&\texttt{--bells=N}&The total number of bells\\
+\texttt{-h}&\texttt{--hunts=N}&The number of fixed hunt bells at the front
+  of each row\\
+\texttt{-t}&\texttt{--tenors=N}&The number of fixed tenors at the back 
+  of each row\\
+\texttt{-i}&\texttt{--in-course}&Only list in-course (even parity) rows\\
+\end{tabularx}
+
+For example, \verb+extent -b8 -h1 -t2 -i+ lists the 60{} 
+in-course\index{parity} tenors-together\index{tenors-together} lead heads
+of the form \verb+1.....78+.  The rows are listed in lexicographic order%
+\index{lexicographic order}: \verb+12345678+, \verb+12346578+, 
+\verb+12354678+, \ldots, \verb+16543278+.
+
+It is rare to want to use this program in conjunction with \methsearch.
+However, one use for this program is, in conjuction with \texttt{musgrep}, for
+calculating the maximum possible musical score.  Assuming no rows 
+have been given a negative score and that the stroke on which rows occur
+is irrelevant then the full extent must have the maximum score possible
+in a true touch.
+For example, the following command will confirm that the maximum 4-run score
+is 1200:\footnote{This has lead to a surprising degree of confusion.  These
+runs are contained within 1002 rows, but because of the multiple counting of
+longer runs, some rows score more than once.}
+\begin{Verbatim}
+extent -b8 | musgrep -b8 -s "<4-runs>" 
+\end{Verbatim}
+
+
+\subsection{Calculating rows – \texttt{rowcalc}}\label{rowcalc}
+
+The \ttcmdidx{rowcalc} program is a stand-alone calculator for evaluating
+row expressions (\sref{rowexpr}).  Its only
+command line option is the \verb+-b+ option which specifies the number
+of bells.\footnote{A future version of \texttt{rowcalc} will likely 
+make this option optional, however at present it is required.}
+In addition to the \verb+-b+ option, the command line must contain a 
+row expression.  For example, the following command generates a list
+of the seven Plain Bob lead ends\index{Plain Bob lead ends} on eight bells:
+\begin{Verbatim}
+rowcalc -b8 "<13254768*12436587>"
+\end{Verbatim}
+
+If the row expression contains the special \verb+<(-)+ file input 
+(\sref{rowexprmulti}), it will read a row stream from standard input
+and apply the calculation to each row in turn.  A interesting example of 
+this might be calculating which leads of Cambridge Surprise Major contain
+reverse rounds.  If $l$ is a lead head and $M$ is the set of rows in the 
+first lead, then $\hbox{\texttt{87654321}} \in lM$ implies that lead $l$
+contains reverse rounds.  This can be expressed as follows:
+\begin{Verbatim}[commandchars=@~~]
+printmethod -b8 -F "&-3-4-25-36-4-5-6-7,2" @hfill\
+  | rowcalc -b8 "87654321 / <(-)" | musgrep -b8 1 
+\end{Verbatim}
+The final \texttt{musgrep} command is there to restrict the list of lead ends
+to those that have the treble leading.
+
+\subsection{Printing methods — \texttt{printmethod}}\label{printmethod}
+
+The \ttcmdidx{printmethod} program takes a method place notation and uses
+it to generate a list of rows in a lead or course.
+The following options are of particular relevance:%
+\footnote{For a full list of options, run \verb+printmethod --help+.}
+
+\begin{tabularx}{\textwidth}{llX}
+\texttt{-b}&\texttt{--bells=N}&The total number of bells\\
+\texttt{-c}&\texttt{--course}&Print a whole course instead of just a lead\\
+\texttt{-F}&\texttt{--omit-final}&Omit the final row 
+  to avoid duplication of the lead head or course head\\
+\texttt{-S}&\texttt{--omit-start}&Omit the starting row 
+  to avoid duplication of the lead head or course head\\
+\texttt{-s}&\texttt{--start=ROW}&Start from \texttt{ROW} instead of rounds\\
+\end{tabularx}
+
+The \verb+-F+ option is of especial importance.  By default 
+\texttt{printmethod} will print the rows in a lead from lead head 
+to lead head, inclusive.  For many applications this behaviour is not
+what is wanted and the \verb+-F+ option suppresses the final lead head.
+
+This program is of particular use in command invocations in 
+\verb+--require+\loi{require} or \verb+-R+\oi{R} options.
+A example of this was given in \sref{efficency} as an illustration
+of the degree to which unnecessary command invocations slow \methsearch\ down.
+Nevertheless, if \methsearch's built-in falseness or music analysis isn't 
+sufficiently powerful, this can be a useful technique.
+
+
+\subsection{Printing a touch — \texttt{gsiril}}\label{gsirilrow}
+
+\ttcmdidx{gsiril} is a tool for proving and printing compositions.  
+It is designed to be familiar to anyone who has used other peal
+proving software such as MicroSiril\index{MicroSiril} or 
+Sirilic\index{Sirilic}.  It also offers a significant
+number of additional features.
+
+The composition must be specified in the \texttt{gsiril} language.
+It is beyond a scope of this manual to document \texttt{gsiril}.%
+\footnote{Currently the most detailed source of documentation for 
+\texttt{gsiril}, and in particular its language, can be found at 
+\url{http://ex-parrot.com/~richard/gsiril/}.  In the future, a manual
+similar to this will probably be produced.}
+By default this is read from standard input, however the \verb+-f+ option
+can be used to specify a file to read the composition from, or the \verb+-e+ 
+option can be used to specify the composition on the command line.
+
+If the \verb+-E+ option is passed to \texttt{gsiril}, then instead of 
+proving the composition, the rows in it are printed without being proved.
+This row stream can then be processed by other programs.  For example,
+Charles Middleton's\index{Middleton, Charles!Cambridge} 5600 Cambridge Surprise Major can be defined as 
+follows:
+\begin{Verbatim}
+8 bells
+
+m = &-3-4-25-36-4-5-6-7
+p = m, +2
+b = m, +4
+
+M  = 2p,b,4p
+MW = 2p,2b,3p
+WH = 3p,b,2p,b
+H  = 6p,b
+
+prove 5(M,MW,WH,H,H)
+\end{Verbatim}
+If this is stored in a file named \texttt{middletons.gsir}, then the 
+following command will count the CRUs in it:
+\begin{Verbatim}
+gsiril -E -f middletons.gsir | musgrep -b8 -c "<CRUs>"
+\end{Verbatim}
+
+It is sometimes useful to invoke this from within \methsearch\ --- for 
+example, to see which method is most musical for a given composition.  As
+it stands, the file contains the place notation of
+Cambridge hard-coded into it.  This can easily be resolved by removing
+the definition of \verb+m+ from the file and putting it on the command line
+instead.  This allows it to be subsituted by \verb+$Q+\fspec{Q} in a
+command invocation, such as:
+\begin{Verbatim}[commandchars=@~~]
+-R'$q  $(gsiril -b8 -Dm="$Q" -E -f middletons.gsir @hfill\
+            | musgrep -b8 -c "<CRUs>")'
+\end{Verbatim}
+
+It is important to note, however, that this does not prove the composition
+--- it just prints it.  For details on how to use \texttt{gsiril} to 
+prove compositions, see \sref{gsirilmeth}.
+
+\subsection{Analysing music — \texttt{musgrep}}\label{musgrep}
+\index{music|(}
+
+The \ttcmdidx{musgrep} program reads a row stream and analyses the
+music in it.  The following options are of relevance:
+
+\begin{tabularx}{\textwidth}{llX}
+\texttt{-b}&\texttt{--bells=N}&The total number of bells\\
+\texttt{-c}&\texttt{--count}&Print the number of matching rows\\
+\texttt{-s}&\texttt{--score}&Print the score for matching rows\\
+\end{tabularx}
+
+In addition, the command line should contain one or more music pattern.
+These may be basic patterns (\sref{muspattern}) or named patterns 
+(\sref{musnamed}).  Customised music scores (\sref{musscore}) are not 
+permitted.  The syntax for these is as given in chapter \ref{music},
+except without the leading \verb+-M+.  As examples of \texttt{musgrep}
+have been given throughout this chapter, no further ones are given here.
+
+\index{music|)}
+\index{row stream|)}
+
+\section{Method streams}\label{methstream}
+
+\subsection{Proving a touch — \texttt{gsiril}}\label{gsirilmeth}
+
+\subsection{Searching for touches — \texttt{touchsearch}}\label{touchsearch}
+% $(touchsearch)
+
+% methsearch -b6 -G1 -fwe -qCu -Fe+ --require='$y eq "" && $(touchsearch -b6 $p -Cb=4 -Cx=$[$24h eq "12" ? "6" : "2"] -r -l720 --limit=1 --raw-count --quiet)'
+
 
 \chapter{Some longer examples}
 
