@@ -59,7 +59,7 @@ void arguments::bind( arg_parser& p )
 
   p.add( new integer_opt
          ( 'b', "bells",
-           "The number of bells.  This option is required", "BELLS",
+           "The total number of bells.  This option is required", "BELLS",
            bells ) );
 
   p.add( new integer_opt
