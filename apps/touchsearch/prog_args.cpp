@@ -101,7 +101,7 @@ void arguments::bind( arg_parser& p )
            quiet ) );
 
   p.add( new boolean_opt
-         ( '\0', "count",
+         ( 'c', "count",
            "Count the number of touches found",
            count ) );
 
