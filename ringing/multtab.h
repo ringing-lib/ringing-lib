@@ -1,5 +1,6 @@
 // -*- C++ -*- multtab.h - A precomputed multiplication table of rows
-// Copyright (C) 2002, 2003, 2004, 2008 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003, 2004, 2008, 2010 
+// Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -209,7 +210,7 @@ public:
   // range [first, last).
   template < class InputIterator >
   multtab( InputIterator first, InputIterator last )
-    : rows( make_vector( first, last ) ), table( rows.size() )
+    : rows( make_vector( first, last ) )
   {}
 
   // As above but use factor out some part-end.
@@ -249,7 +250,7 @@ public:
   row   find( const row_t &r ) const;
 
   // The number of rows in the table
-  size_t size() const { return table.size(); }
+  size_t size() const { return rows.size(); }
 
   const group& partends() const { return pends; }
   size_t group_size() const { return pends.size(); }
@@ -283,7 +284,7 @@ private:
 
   // Data members
   vector< row > rows;
-  vector< vector< row_t > > table;
+  vector< row_t > table;
   group pends, postgroup;
   enum pre_or_post { pre_mult, post_mult };
   vector< pair< row, pre_or_post > > cols;
@@ -293,10 +294,10 @@ RINGING_START_DETAILS_NAMESPACE
 
 // Operators to do optimised multiplication of rows:
 inline multtab_row_t operator*( multtab_row_t r, multtab_post_col_t c )
-{ return c.t->table[ r.index() ][ c.n ]; }
+{ return c.t->table[ c.n * c.t->size() + r.index() ]; }
 
 inline multtab_row_t operator*( multtab_pre_col_t c, multtab_row_t r )
-{ return c.t->table[ r.index() ][ c.n ]; }
+{ return c.t->table[ c.n * c.t->size() + r.index() ]; }
 
 RINGING_END_DETAILS_NAMESPACE
 
