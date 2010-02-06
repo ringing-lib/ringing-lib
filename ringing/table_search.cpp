@@ -1,5 +1,6 @@
 // -*- C++ -*- table_search.cpp - A search class using a multiplication table
-// Copyright (C) 2001, 2002, 2007, 2009 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2001, 2002, 2007, 2009, 2010 
+// Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -37,7 +38,7 @@
 #include <ringing/touch.h>
 #include <ringing/group.h>
 
-#define DEBUG_LEVEL 0
+#define DEBUG_LEVEL 1
 
 #if DEBUG_LEVEL
 #include <iostream>
@@ -181,8 +182,10 @@ private:
     // list false touches).
     if ( !impossible ) {
       force_halt = false;
-      vector<bool>( table.size() ).swap( leads );
+      nodes = 0ul;
+      lead_vector_t( table.size(), false ).swap( leads );
       run_recursive( output, row_t(), 0, 0 );
+      DEBUG( "Searched " << nodes << " nodes" );
     }
   }
 
@@ -269,8 +272,12 @@ private:
   void run_recursive( outputer &output, const row_t &r, 
                       size_t depth, size_t cur )
   {
+#if 0
     IF_DEBUG( copy( calls.begin(), calls.end(), ostream_iterator<int>(cout) ));
     DEBUG( " at depth " << depth );
+#endif
+
+    IF_DEBUG( (++nodes % 1000000 == 0) && (cout << "Node: " << nodes << "\n") );
 
     // Is the touch lexicographically no greater than any of it's rotations?
     if ( !is_possibly_canonical( cur ) )
@@ -309,8 +316,14 @@ private:
   touch_child_list *tl;
   multtab table;			// A precomputed multiplication table
   flags f;	                        // Are we to ignore rotations, etc.
+  RINGING_ULLONG nodes;                 // Node count
 
-  vector< bool > leads;			// The leads had so far
+  // Logically this is a vector<bool>, but the C++ standard mandates 
+  // that that should be a packed structure.  Changing to vector<char>
+  // makes a substantial speed improvement.
+  typedef vector<char> lead_vector_t; 
+
+  lead_vector_t leads;			// The leads had so far
   vector< post_col_t > call_lhs;	// The effect of each call (inc. Pl.)
   vector< post_col_t > falsenesses;	// The falsenesses of the method
 };
