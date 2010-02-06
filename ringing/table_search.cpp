@@ -320,7 +320,7 @@ private:
 
   // Logically this is a vector<bool>, but the C++ standard mandates 
   // that that should be a packed structure.  Changing to vector<char>
-  // makes a substantial speed improvement.
+  // makes a small but significant speed improvement.
   typedef vector<char> lead_vector_t; 
 
   lead_vector_t leads;			// The leads had so far

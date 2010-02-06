@@ -76,7 +76,7 @@ public:
   struct cmp : binary_function<multtab_row_t, multtab_row_t, bool> 
   {
     bool operator()( multtab_row_t const& x, 
-		     multtab_row_t const& y ) const
+                     multtab_row_t const& y ) const
     { return x.n < y.n; }
   };
 
@@ -145,7 +145,7 @@ public:
   struct cmp : binary_function<multtab_post_col_t, multtab_post_col_t, bool>  
   {
     bool operator()( multtab_post_col_t const& x, 
-		     multtab_post_col_t const& y ) const
+                     multtab_post_col_t const& y ) const
     { return x.n < y.n; }
   };
 
@@ -182,7 +182,7 @@ public:
   struct cmp : binary_function<multtab_pre_col_t, multtab_pre_col_t, bool>
   {
     bool operator()( multtab_pre_col_t const& x, 
-		     multtab_pre_col_t const& y ) const
+                     multtab_pre_col_t const& y ) const
     { return x.n < y.n; }
   };
 
@@ -228,7 +228,7 @@ public:
   // ... And a group at the other end (e.g. for whole-course comps)
   template < class InputIterator >
   multtab( InputIterator first, InputIterator last, const group& partends, 
-	   const group& postgroup )
+           const group& postgroup )
     : pends( partends ), postgroup( postgroup )
   { init( make_vector( first, last ) ); }
 
@@ -250,7 +250,7 @@ public:
   row   find( const row_t &r ) const;
 
   // The number of rows in the table
-  size_t size() const { return rows.size(); }
+  size_t size() const { return table.size(); }
 
   const group& partends() const { return pends; }
   size_t group_size() const { return pends.size(); }
@@ -283,8 +283,13 @@ private:
   void init( const vector< row > &r );
 
   // Data members
+  //
+  // See CVS on 2010-02-06 for an implementation using single indirection
+  // (i.e. with a vector<row_t> and indexing via table[c*N+r] instead of 
+  // table[r][c]).  The version with a single indirection turned out to
+  // perform marginally worse than this version with a double indirection.
+  vector< vector< row_t > > table;
   vector< row > rows;
-  vector< row_t > table;
   group pends, postgroup;
   enum pre_or_post { pre_mult, post_mult };
   vector< pair< row, pre_or_post > > cols;
@@ -294,10 +299,10 @@ RINGING_START_DETAILS_NAMESPACE
 
 // Operators to do optimised multiplication of rows:
 inline multtab_row_t operator*( multtab_row_t r, multtab_post_col_t c )
-{ return c.t->table[ c.n * c.t->size() + r.index() ]; }
+{ return c.t->table[ r.index() ][ c.n ]; }
 
 inline multtab_row_t operator*( multtab_pre_col_t c, multtab_row_t r )
-{ return c.t->table[ c.n * c.t->size() + r.index() ]; }
+{ return c.t->table[ r.index() ][ c.n ]; }
 
 RINGING_END_DETAILS_NAMESPACE
 

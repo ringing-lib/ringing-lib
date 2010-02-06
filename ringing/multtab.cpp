@@ -1,5 +1,5 @@
 // -*- C++ -*- multtab.cpp - A precomputed multiplication table of rows
-// Copyright (C) 2002, 2003, 2004, 2005, 2010
+// Copyright (C) 2002, 2003, 2004, 2005, 2010 
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -75,14 +75,14 @@ row multtab::make_post_representative( const row& r ) const
   row res;
 
   for ( group::const_iterator i( postgroup.begin() ), e( postgroup.end() ); 
-	i != e; ++i )
+        i != e; ++i )
     {
       row const x( r * *i );
       if ( (res.bells() == 0 || x < res) && 
-	   // Handle case where pends and postgroup are not subsets of rows
-	   RINGING_PREFIX_STD find( rows.begin(), rows.end(), 
-				    x ) != rows.end() )
-	res = x;
+           // Handle case where pends and postgroup are not subsets of rows
+           RINGING_PREFIX_STD find( rows.begin(), rows.end(), 
+                                    x ) != rows.end() )
+        res = x;
     }
 
   return res;
@@ -93,11 +93,11 @@ row multtab::make_representative( const row& r ) const
   row res(r);
 
   for ( group::const_iterator i( pends.begin() ), e( pends.end() ); 
-	i != e; ++i )
+        i != e; ++i )
     {
       row const x( make_post_representative( *i * r ) );
       if ( x.bells() && x < res )
-	res = x;
+        res = x;
     }
 
   return res;
@@ -117,7 +117,7 @@ void multtab::init( const vector< row >& r )
   set<row> rows2;
 
   for ( vector<row>::const_iterator i( r.begin() ), e( r.end() ); 
-	i != e; ++i ) 
+        i != e; ++i ) 
     rows2.insert( make_representative(*i) );
 
   // TODO:  Better error checking for this:
@@ -129,26 +129,31 @@ void multtab::init( const vector< row >& r )
   rows.reserve( r.size() / pends.size() );
 
   copy( rows2.begin(), rows2.end(), back_inserter(rows) );
+
+  table.resize( rows.size() );
 }
 
-void multtab::dump( ostream &os ) const // FIXME
+void multtab::dump( ostream &os ) const
 {
-  const int width( (int)ceil( log10( (float)size() ) ) );
+  const int width( (int)ceil( log10( (float)table.size() ) ) );
 
   // Column headings
-  if ( size() )
+  if ( table.size() )
     {
       os << string( width + 5 + rows[0].bells(), ' ' );
-      for ( size_t j = 0, n = table.size() / size(); j < n; ++j )
-	os << setw(width) << j << " ";
+      for ( size_t j = 0; j < table[0].size(); ++j )
+        os << setw(width) << j << " ";
       os << "\n";
     }
 
-  for ( size_t i = 0, n = size(); i != n; ++i )
+  for ( row_t i; i.n != table.size(); ++i.n )
     {
-      os << setw(width) << i << ")  " << rows[i] << "  ";
-      for ( size_t j = 0, cols = table.size() / size(); j < cols; ++j )
-        os << setw(width) << table[j*n + i].n << " ";
+      os << setw(width) << i.n << ")  " << rows[i.n] << "  ";
+      for ( vector< row_t >::const_iterator j( table[i.n].begin() );
+            j != table[i.n].end(); ++j )
+        {
+          os << setw(width) << j->n << " ";
+        }
       os << "\n";
     }
 
@@ -160,44 +165,41 @@ multtab::compute_pre_mult( const row &r )
 {
   // This only makes sense if r commutes with the partends
   for ( vector<row>::const_iterator i( pends.begin() ), e( pends.end() ); 
-	  i != e; ++i )
+          i != e; ++i )
     if ( r * *i != *i * r )
-	throw logic_error
-	  ( "Attempted to add a precomputed premultiplication to the "
-	    "multiplication table that does not commute with the part ends" );
+      throw logic_error
+        ( "Attempted to add a precomputed premultiplication to the "
+          "multiplication table that does not commute with the part ends" );
 
   for ( size_t i(0); i < cols.size(); ++i )
     if ( cols[i].second == pre_mult && cols[i].first == r )
-	return pre_col_t( i, this );
+      return pre_col_t( i, this );
 
   // Build up a map in O(n) to get O(ln n) lookups.
   // The alternative -- doing direct lookups -- is
   // O(n ln n).  For a 1-part table on 8 bells, this
   // improves speed a factor of over 100.
   map< row, row_t > finder;
-  for ( size_t i(0), n(size()); i < n; ++i )
+  for ( size_t i(0); i < table.size(); ++i )
     finder[ rows[i] ] = row_t::from_index(i);
 
-  table.reserve( table.size() + size() );
-  for ( size_t i(0), n(size()); i < n; ++i )
-    table.push_back( finder[ make_representative( r * rows[i] ) ] );
-
+  for ( size_t i(0); i < table.size(); ++i )
+    table[i].push_back( finder[ make_representative( r * rows[i] ) ] );
+  
   cols.push_back( make_pair( r, pre_mult ) );
-  assert( table.size() == cols.size() * size() );
-
   return pre_col_t( cols.size() - 1, this );
 }
 
 multtab::post_col_t 
 multtab::compute_post_mult( const row &r )
 {
-  // This only makes sense if r commutes with the postgroup
+  // This only makes sense if r commutes with the partends
   for ( vector<row>::const_iterator i(postgroup.begin()), e(postgroup.end()); 
-	  i != e; ++i )
+          i != e; ++i )
     if ( r * *i != *i * r )
-	throw logic_error
-	  ( "Attempted to add a precomputed postmultiplication to the "
-	    "multiplication table that does not commute with the post group" );
+      throw logic_error
+        ( "Attempted to add a precomputed postmultiplication to the "
+          "multiplication table that does not commute with the post group" );
 
   for ( size_t i(0); i < cols.size(); ++i )
     if ( cols[i].second == post_mult && cols[i].first == r )
@@ -208,16 +210,13 @@ multtab::compute_post_mult( const row &r )
   // O(n ln n).  For a 1-part table on 8 bells, this
   // improves speed a factor of over 100.
   map< row, row_t > finder;
-  for ( size_t i(0), n(size()); i < n; ++i )
+  for ( size_t i(0); i < table.size(); ++i )
     finder[ rows[i] ] = row_t::from_index(i);
 
-  table.reserve( table.size() + size() );
-  for ( size_t i(0), n(size()); i < n; ++i )
-    table.push_back( finder[ make_representative( rows[i] * r ) ] );
+  for ( size_t i(0); i < table.size(); ++i )
+    table[i].push_back( finder[ make_representative( rows[i] * r ) ] );
 
   cols.push_back( make_pair( r, post_mult ) );
-  assert( table.size() == cols.size() * size() );
-
   return post_col_t( cols.size() - 1, this );
 }
 
