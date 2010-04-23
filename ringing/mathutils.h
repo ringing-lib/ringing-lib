@@ -1,5 +1,5 @@
 // -*- C++ -*- mathutils.h - Mathematical utility functions
-// Copyright (C) 2001, 2002, 2005, 2007, 2009 
+// Copyright (C) 2001, 2002, 2005, 2007, 2009, 2010
 // Martin Bright <martin@boojum.org.uk>
 // and Richard Smith <richard@ex-parrot.com>
 
@@ -55,6 +55,13 @@ RINGING_API unsigned random_int(unsigned max);
 
 // Returns true with probability ptrue
 RINGING_API bool random_bool( double ptrue = 0.5 );
+
+// Uniformally distributed between min and max, exclusive of end points.
+RINGING_API double random_uniform_deviate( double min, double max );
+RINGING_API double random_uniform_deviate( double max = 1.0 ); // min = 0
+
+// Normally distributed with given mean and standard deviation
+RINGING_API double random_normal_deviate( double mean, double stddev );
 
 // Supply an alternative random number generator
 // If rand is NULL, then just return the existing one

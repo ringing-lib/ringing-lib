@@ -1,5 +1,5 @@
 // mathutils.cpp - Mathematical utility function
-// Copyright (C) 2001, 2002, 2003, 2005, 2007, 2009
+// Copyright (C) 2001, 2002, 2003, 2005, 2007, 2009, 2010
 // Martin Bright <martin@boojum.org.uk> 
 // and Richard Smith <richard@ex-parrot.com>.
 
@@ -28,9 +28,11 @@
 #if RINGING_OLD_C_INCLUDES
 #include <stdlib.h>
 #include <assert.h>
+#include <math.h>
 #else
 #include <cstdlib>
 #include <cassert>
+#include <cmath>
 #endif
 
 #if RINGING_OLD_INCLUDES
@@ -121,6 +123,35 @@ bool random_bool( double ptrue )
   assert( ptrue <= 1 );
   return rand_fn() < rand_max * ptrue;
 }
+
+double random_uniform_deviate( double max )
+{
+  assert( max > 0 );
+  return max * rand_fn() / (rand_max + 1.0); 
+}
+
+double random_uniform_deviate( double min, double max )
+{
+  assert( min < max );
+  return min + random_uniform_deviate( max-min );
+}
+
+// This follows the Box-Muller method to generate pairs of random numbers 
+// avoiding any complex trig functions.  See p289-90 of Press et al (2nd ed.).
+double random_normal_deviate( double mean, double stddev )
+{
+  assert( variance >= 0 );
+  double r, x, y;
+  do {
+    x = random_uniform_deviate(-1.0, 1.0);
+    y = random_uniform_deviate(-1.0, 1.0);
+    r = x*x + y*y;
+  } while ( r >= 1.0 || r == 0.0 );
+  double f = sqrt( -2.0*log(r)/r );
+  // XXX: We could save x*f as a second normal deviate from N(0,1).
+  return mean + stddev * y*f;
+}
+
 
 // Use a recursive implemention which is O(ln n) in both space and size
 RINGING_LLONG ipower( int base, int exp )
