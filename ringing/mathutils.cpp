@@ -140,7 +140,7 @@ double random_uniform_deviate( double min, double max )
 // avoiding any complex trig functions.  See p289-90 of Press et al (2nd ed.).
 double random_normal_deviate( double mean, double stddev )
 {
-  assert( variance >= 0 );
+  assert( stddev >= 0 );
   double r, x, y;
   do {
     x = random_uniform_deviate(-1.0, 1.0);
