@@ -1,5 +1,5 @@
 // ringmethod.cpp - Create audio output of ringing.
-// Copyright (C) 2009 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2009, 2010 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -183,7 +183,7 @@ double tower_sounds::sample()
 
 class row_player {
 public:
-  row_player( tower_sounds& tower, int peal_speed );
+  row_player( tower_sounds& tower, int peal_speed, double stddev );
 
 private:
   class row_reader_base {
@@ -221,16 +221,26 @@ public:
 
 private:
   tower_sounds tower;
+  map< bell, pair<double,double> > striking;  // mean, stddev
   double bell_sep;
 };
 
-row_player::row_player( tower_sounds& tower, int peal_speed )
+row_player::row_player( tower_sounds& tower, int peal_speed, double stddev )
   : tower(tower), bell_sep(peal_speed * 60 / 2500.0 / (tower.bells()*2+1))
 {
+  for (bell i=0; i<tower.bells(); ++i) 
+    striking[i] = make_pair( 0.0, stddev );
+  
   assert( bell_sep * tower.sample_rate() > 2.0 );
 }
 
-
+static void sprintf_uint32le( char* pbuf, uint32_t val )
+{
+  pbuf[0] = (val & 0x000000FF) >> 0x0;
+  pbuf[1] = (val & 0x0000FF00) >> 0x4;
+  pbuf[2] = (val & 0x00FF0000) >> 0x8;
+  pbuf[3] = (val & 0xFF000000) >> 0xC;
+}
 
 void row_player::header( ostream& os )
 {
@@ -261,17 +271,10 @@ void row_player::header( ostream& os )
 
   // Write sample_rate as a little endian number
   // Don't use sprintf because that doesn't handle endianness
-  uint32_t val = tower.sample_rate();
-  buf[24] = (val & 0x000000FF) >> 0x0;
-  buf[25] = (val & 0x0000FF00) >> 0x4;
-  buf[26] = (val & 0x00FF0000) >> 0x8;
-  buf[27] = (val & 0xFF000000) >> 0xC;
+  sprintf_uint32le( &buf[24], tower.sample_rate() );
 
-  val *= 1 * 16/8;  // Num Channels * Bit rate / Bits per byte
-  buf[28] = (val & 0x000000FF) >> 0x0;
-  buf[29] = (val & 0x0000FF00) >> 0x4;
-  buf[30] = (val & 0x00FF0000) >> 0x8;
-  buf[31] = (val & 0xFF000000) >> 0xC;
+  // 1 * 16 / 8  ==  Num Channels * Bit rate / Bits per byte
+  sprintf_uint32le( &buf[28], tower.sample_rate() * 1 * 16 / 8 );
  
   os.write( buf, 44 );
 }
@@ -283,9 +286,13 @@ void row_player::do_ring( shared_pointer<row_reader_base> const& rr,
   if (r.bells() < tower.bells()) r *= row(tower.bells());
 
   size_t bell_idx = 0, row_idx = 0;
-  bool have_queued_bell = false;
-  bell queued_bell;
-  int queued_timestep;
+
+  vector< pair<bell, int> > queued_bells;
+  int queued_timestamp = 0;
+
+  //bool have_queued_bell = false;
+  //bell queued_bell;
+  //int queued_timestep;
   int eof_timestep;
 
   size_t t = 0;
@@ -294,23 +301,38 @@ void row_player::do_ring( shared_pointer<row_reader_base> const& rr,
   int16_t data_idx = 0, data[datasz];
   while (r.bells() || t < eof_timestep)
   {
-    if (!have_queued_bell && r.bells()) {
-      queued_timestep 
-        = (int)( (bell_idx + row_idx * tower.bells() + row_idx/2)
-                 * bell_sep * tower.sample_rate() );
-      queued_bell = r[bell_idx++];
-      if (bell_idx == tower.bells()) {
-        bell_idx = 0, row_idx++; // get next row
-        r = rr->next();  
-        if (r.bells() == 0) 
-          eof_timestep = t + 5 * tower.sample_rate();
+    if (queued_bells.empty() && r.bells()) {
+      int ts;  // timestamp of last bell in row
+      for (int i = 0; i<r.bells(); ++i) {
+        double offset = random_normal_deviate( striking[ r[i] ].first, 
+                                               striking[ r[i] ].second );
+        double posn = i + row_idx * tower.bells() + row_idx/2 + offset;
+        ts = (int)( posn * bell_sep * tower.sample_rate() );
+        if (ts<0) ts = 0;
+        if (ts<queued_timestamp) queued_timestamp = ts;
+        queued_bells.push_back( make_pair( r[i], ts ) );
       }
-      have_queued_bell = true;
-    }
 
-    if (have_queued_bell && queued_timestep == t) {
-      tower.strike( queued_bell );
-      have_queued_bell = false;
+      row_idx++; // get next row
+      r = rr->next();  
+      if (r.bells() == 0) 
+        eof_timestep = ts + 5 * tower.sample_rate();
+      else if (r.bells() < tower.bells()) 
+        r *= row(tower.bells());
+    }
+ 
+    if (queued_bells.size() && queued_timestamp == t) {
+      queued_timestamp = INT_MAX;
+      for (int i=0; i < queued_bells.size(); ) {
+        if (queued_bells[i].second == t) {
+          tower.strike( queued_bells[i].first );
+          queued_bells.erase( queued_bells.begin() + i );
+        } else {
+          if (queued_bells[i].second < queued_timestamp) 
+            queued_timestamp = queued_bells[i].second;
+          ++i;
+        }
+      }
     }
 
     data[data_idx] = (int16_t)( tower.sample() * 1000 );
@@ -321,6 +343,31 @@ void row_player::do_ring( shared_pointer<row_reader_base> const& rr,
       data_idx = 0;
     }
   }
+}
+
+class double_opt : public option
+{
+public:
+  double_opt( char c, const string& l, const string& d, const string& a,
+             double& opt )
+    : option(c, l, d, a), opt(opt)
+  {}
+
+  bool process( const string& arg, const arg_parser& ap ) const;
+
+public:
+  double& opt;
+};
+
+bool double_opt::process( const string& arg, const arg_parser& ap ) const
+{
+  try {
+    opt = lexical_cast<double>(arg);
+  } catch ( bad_lexical_cast const& ) {
+    ap.error( make_string() << "Invalid argument: \"" << arg << "\"" );
+    return false;
+  }
+  return true;
 }
 
 class time_opt : public option
@@ -357,12 +404,15 @@ bool time_opt::process( const string& arg, const arg_parser& ap ) const
 
 class arguments {
 public:
+  arguments() : default_deviation() {}
+
   void bind( arg_parser& p );
 
   init_val<int, 0>     bells;
   init_val<int, 22050> sample_rate;
   init_val<int, 180>   peal_speed;
   init_val<int, 587>   tenor_nominal;
+  double               default_deviation;
 };
 
 void arguments::bind( arg_parser& p )
@@ -389,6 +439,11 @@ void arguments::bind( arg_parser& p )
          ( 'f', "frequency", 
            "The frequency of the tenor nominal in Hertz (default: 587 = D)",
            "FREQ", tenor_nominal ) );
+
+  p.add( new double_opt
+         ( 'd', "deviation",
+           "Standard deviation of bells within the row in multiples of "
+           "the inter-bell spacing", "VAL", default_deviation ) );
 }
 
 int main(int argc, char* argv[])
@@ -409,7 +464,7 @@ int main(int argc, char* argv[])
   }
 
   tower_sounds tower( args.tenor_nominal, args.bells, args.sample_rate ); 
-  row_player player( tower, args.peal_speed );
+  row_player player( tower, args.peal_speed, args.default_deviation );
   player.header( cout );
   player.ring( istream_iterator<row>(cin), istream_iterator<row>(), cout );
 }
