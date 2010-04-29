@@ -1,5 +1,5 @@
 // main.cpp - Entry point for printmethod
-// Copyright (C) 2008, 2009 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2008, 2009, 2010 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -49,6 +49,11 @@ static inline char* tparm( char const*, ... ) { return NULL; }
 RINGING_USING_NAMESPACE
 RINGING_USING_STD
 
+struct bellfmt { 
+  int colour;
+  bool bold;
+};
+
 struct arguments
 {
   init_val<int,0>      bells;
@@ -65,7 +70,8 @@ struct arguments
   row startrow;
 
   string           rstr, gstr, bstr;
-  map< bell, int > colours;
+
+  map< bell, bellfmt > colours;
  
   void bind( arg_parser& p );
   bool validate( arg_parser& p );
@@ -164,9 +170,14 @@ bool arguments::validate( arg_parser &ap )
 
 bool arguments::handle_colour( arg_parser& ap, string const& str, int val )
 {
+  bool bold = 0;
   for (string::const_iterator i=str.begin(), e=str.end(); i!=e; ++i)
     try {
-      colours[ bell::read_char(*i) ] = val;
+      if (*i == '*') bold = !bold;
+      else {
+        bellfmt fmt = { val, bold };
+        colours[ bell::read_char(*i) ] = fmt;
+      }
     } catch (bell::invalid const&) {
       ap.error( make_string()  
                 << "Invalid bell: '" << *i << "' in colour specification" );
@@ -183,22 +194,30 @@ void print_row( arguments const& args, row const& r )
     cout << r;
 
   else {
-    bool coloured = false;
+    bool coloured = false, bold = false;
     for (row::const_iterator i=r.begin(), e=r.end(); i!=e; ++i) {
-      map<bell, int>::const_iterator c = args.colours.find(*i);
+      map<bell, bellfmt>::const_iterator c = args.colours.find(*i);
       if ( c == args.colours.end() ) {
         if ( coloured )
           if ( char const* seq = RINGING_TERMINFO_VAR( orig_pair ) ) {
             cout << seq; coloured = false;
+          }
+        if ( bold ) 
+          if ( char const* seq = RINGING_TERMINFO_VAR( exit_attribute_mode ) ) {
+            cout << seq; bold = false;
           }
       }
       else {
         assert( c->first == *i );
         if ( char const* seq 
                = tparm( RINGING_TERMINFO_VAR( set_a_foreground ), 
-                        c->second ) ) {
+                        c->second.colour ) ) {
           cout << seq; coloured = true;
         }
+        if ( c->second.bold )
+          if ( char const* seq = RINGING_TERMINFO_VAR( enter_bold_mode ) ) {
+            cout << seq; bold = true;
+          }
       }
       cout << *i;
     }
