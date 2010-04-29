@@ -18,6 +18,7 @@
 // $Id$
 
 #include <cmath>
+#include <ctime>
 #include <stdint.h>
 #include <iostream>
 #include <cassert>
@@ -413,6 +414,7 @@ public:
   init_val<int, 180>   peal_speed;
   init_val<int, 587>   tenor_nominal;
   double               default_deviation;
+  init_val<int,-1>     seed;
 };
 
 void arguments::bind( arg_parser& p )
@@ -444,6 +446,11 @@ void arguments::bind( arg_parser& p )
          ( 'd', "deviation",
            "Standard deviation of bells within the row in multiples of "
            "the inter-bell spacing", "VAL", default_deviation ) );
+
+  p.add( new integer_opt
+         ( '\0', "seed",
+           "Seed the random number generator",  "NUM",
+           seed ) );
 }
 
 int main(int argc, char* argv[])
@@ -462,6 +469,11 @@ int main(int argc, char* argv[])
 	return 1;
       }
   }
+
+  if ( args.seed == -1 )
+    srand( args.seed = time(NULL) );
+  else if ( args.seed )
+    srand( args.seed );
 
   tower_sounds tower( args.tenor_nominal, args.bells, args.sample_rate ); 
   row_player player( tower, args.peal_speed, args.default_deviation );
