@@ -1,5 +1,5 @@
 // -*- C++ -*- litelib.cpp - Lightweight library format
-// Copyright (C) 2007, 2009 Richard Smith <richard@ex-parrot.com>.
+// Copyright (C) 2007, 2009, 2010 Richard Smith <richard@ex-parrot.com>.
 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -182,7 +182,9 @@ litelib::impl::entry_type::get_facet( const library_facet_id& id ) const
     string::size_type i = linebuf.find_first_of(" \t\r\n", linestart);
     i = linebuf.find_first_not_of(" \t\r\n", i);
 
-    result.reset( new litelib::payload( linebuf.substr(i) ) );
+    string val;  
+    if (i < linebuf.length()) val = linebuf.substr(i);
+    result.reset( new litelib::payload(val) );
   }
 
   return result;
