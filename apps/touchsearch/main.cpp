@@ -178,7 +178,8 @@ int main( int argc, char *argv[] )
       if (args.raw_count)
         cout << touch_count << "\n";
       else if (args.count)
-        cout << "Found " << touch_count << " touches\n";
+        cout << "Found " << touch_count 
+             << (args.filter_mode ? " methods\n" : " touches\n");
     }
   catch ( const exception &ex )
     {
