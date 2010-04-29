@@ -1,5 +1,6 @@
 // prog_args.cpp - Program argument parsing
-// Copyright (C) 2002, 2003, 2007, 2009 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003, 2007, 2009, 2010 
+// Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -77,7 +78,7 @@ void arguments::bind( arg_parser& p )
 
   p.add( new boolean_opt
          ( 'r', "ignore-rotations",
-           "Filter touches only differing by a rotation",
+           "Filter out touches only differing by a rotation",
            ignore_rotations ) );
  
   p.add( new range_opt
@@ -92,7 +93,8 @@ void arguments::bind( arg_parser& p )
 
   p.add( new boolean_opt
          ( 'm', "mutually-true-parts",
-           "Only require mutually true parts with requiring them to be joined",
+           "Only require mutually true parts "
+           "without requiring them to be joined",
            mutually_true_parts ) );
 
   p.add( new boolean_opt
