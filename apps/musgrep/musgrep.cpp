@@ -1,5 +1,5 @@
 // -*- C++ -*- musgrep.cpp - utility to grep for music in an extent
-// Copyright (C) 2009 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2009, 2010 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -65,6 +65,9 @@ struct arguments
   init_val<bool,false> count;
   init_val<bool,false> score;
 
+  init_val<bool,false> positive;
+  init_val<bool,false> negative;
+
   init_val<bool,false> hilight;
 
   vector<string> musstrs;
@@ -91,6 +94,14 @@ void arguments::bind( arg_parser& p )
   p.add( new boolean_opt
          ( 's', "score",
            "Print the score for matching rows", score ) );
+
+  p.add( new boolean_opt
+         ( 'p', "positive",
+           "Print the number of rows with a positive score", positive ) );
+
+  p.add( new boolean_opt
+         ( 'n', "negative",
+           "Print the number of rows with a negative score", negative ) );
 
   p.add( new boolean_opt
          ( 'H', "highlight",
@@ -120,22 +131,13 @@ bool arguments::validate( arg_parser& ap )
   {
     try 
     {
-      if ( i->size() > 2 && (*i)[0] == '<' && (*i)[i->size()-1] == '>' ) 
-        add_named_music( mus, i->substr(1, i->size()-2) );
-      else
-        mus.push_back( music_details(*i) );
+      add_scored_music_string( mus, *i );
     }
     catch ( exception const& e ) {
       ap.error( make_string() << "Error parsing music pattern: " << e.what() );
       return false;
     }
   }
-
-  if ( score && count )
-    { 
-      ap.error( "Only one of -s and -c should be supplied" );
-      return false;
-    }
 
   return true;
 }
@@ -170,18 +172,26 @@ int main( int argc, char *argv[] )
   // don't support termcap on when stdout is not a tty.
   if (!seq2 || !isatty(1)) seq1 = NULL, seq2 = " *";
 
+  const bool output_rows 
+    = !args.count && !args.score && !args.negative && !args.positive;
+
   // NB: Don't use args.mus.get_count() -- that will double count 5-runs
   // when 4-runs are selected, for example.
-  int count = 0;
+  int count = 0, countp = 0, countn = 0;
   while ( cin ) {
     row r; 
     cin >> r;
     if ( r.bells() != args.bells ) continue;
 
+    int old_score = args.mus.get_score();
     if ( args.mus.process_row(r) ) 
     {
       ++count;
-      if ( !args.count && !args.score )
+
+      int delta = args.mus.get_score() - old_score;
+      if (delta > 0) ++countp; else if (delta < 0) ++countn;
+
+      if (output_rows)
       {
         if (args.hilight && seq1) cout << seq1;
         cout << r;
@@ -189,11 +199,24 @@ int main( int argc, char *argv[] )
         cout << "\n";
       }
     }
-    else if ( !args.count && !args.score && args.hilight )
+    else if (output_rows && args.hilight)
       cout << r << "\n";
   }
 
-  if (args.count) cout << count << endl;
-  if (args.score) cout << args.mus.get_score() << endl;
+  bool need_sep = false;
+  if (args.positive) { 
+    cout << (need_sep ? "\t" : "") << countp;  need_sep = true;
+  }
+  if (args.negative) {
+    cout << (need_sep ? "\t" : "") << countn;  need_sep = true;
+  }
+  if (args.count) {
+    cout << (need_sep ? "\t" : "") << count;   need_sep = true;
+  }
+  if (args.score) {
+    cout << (need_sep ? "\t" : "") << args.mus.get_score();    
+    need_sep = true;
+  }
+  cout << endl;
 }
 
