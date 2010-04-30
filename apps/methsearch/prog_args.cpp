@@ -1,5 +1,5 @@
 // -*- C++ -*- prog_args.cpp - handle program arguments
-// Copyright (C) 2002, 2003, 2004, 2005, 2007, 2008, 2009
+// Copyright (C) 2002, 2003, 2004, 2005, 2007, 2008, 2009, 2010
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -345,6 +345,21 @@ void arguments::bind( arg_parser &p )
 	   search_limit ) );
 
   p.add( new boolean_opt
+	 ( '\0', "random",
+	   "Randomise the order in which methods are listed",
+	   random_order ) );
+
+  p.add( new integer_opt
+	 ( '\0', "random-count",
+	   "Repeatedly search for one random method NUM times", "NUM",
+	   random_count ) );
+
+  p.add( new integer_opt
+	 ( '\0', "seed",
+	   "Seed the random number generator with NUM", "NUM",
+	   random_seed ) );
+
+  p.add( new boolean_opt
 	 ( 'C', "count",
 	   "Count the number of methods found",
 	   count ) );
@@ -655,6 +670,18 @@ bool arguments::validate( arg_parser &ap )
       ap.error( "The -O option cannot be used with the -R option" );
       return false;
     }
+
+  if ( random_count > 0 ) 
+    random_order = true;
+
+  if ( random_order > 0 && ( filter_mode || filter_lib_mode ) ) {
+    ap.error( "--random cannot be used when filtering" );
+    return false;
+  }
+  if ( random_count > 0 && search_limit != -1 ) {
+    ap.error( "--random-count cannot be used with --limit" );
+    return false;
+  }
 
   if (!quiet) {
     if ( outfile == "-" ) outfile.erase();

@@ -1,5 +1,5 @@
 // -*- C++ -*- prog_args.h - program arguments
-// Copyright (C) 2002, 2003, 2004, 2007, 2008, 2009
+// Copyright (C) 2002, 2003, 2004, 2007, 2008, 2009, 2010
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -54,7 +54,10 @@ RINGING_USING_STD
 
 struct arguments
 {
-  init_val<int,-1> search_limit;
+  init_val<int,-1>     search_limit;
+  init_val<bool,false> random_order;
+  init_val<int,-1>     random_count;
+  init_val<int,-1>     random_seed;
 
   init_val<int,0>  bells;
   init_val<int,0>  max_consec_blows;

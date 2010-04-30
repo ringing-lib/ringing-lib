@@ -1,5 +1,5 @@
 // -*- C++ -*- search.cpp - the actual search algorithm
-// Copyright (C) 2002, 2003, 2004, 2005, 2007, 2008, 2009
+// Copyright (C) 2002, 2003, 2004, 2005, 2007, 2008, 2009, 2010
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -110,6 +110,7 @@ private:
 
   const size_t hl_len;   // Length of half a lead
 
+  RINGING_ULLONG search_limit;
   RINGING_ULLONG search_count;
   RINGING_ULLONG node_count;
 
@@ -125,6 +126,7 @@ searcher::searcher( const arguments &args )
     bells( args.bells ),
     div_len( (1 + args.treble_dodges) * 2 ),
     hl_len( args.lead_len / 2 ),
+    search_limit( args.search_limit ),
     search_count( 0ul ), node_count( 0ul ),
     r( canonical_coset_member( args.start_row ) ),
     maintain_r( args.avoid_rows.size() )
@@ -173,6 +175,12 @@ void run_search( const arguments &args )
         s.filter(in);
       } else if ( args.filter_lib_mode ) { 
         s.filter( method_libraries::instance() );
+      } else if ( args.random_count > 0 ) {
+        for ( int i=0; i<args.random_count; ++i ) {
+          s.search_limit = s.search_count + 1;
+          s.general_recurse();
+          assert( s.m.length() == 0 );
+        }
       } else {
         s.general_recurse();
         assert( s.m.length() == 0 );
@@ -856,8 +864,17 @@ void searcher::new_midlead_change()
 {
   const size_t depth( m.length() );
 
-  const vector< change >& changes_to_try = args.allowed_changes[depth];
+  vector< change > changes_to_try = args.allowed_changes[depth];
   assert( changes_to_try.size() );
+
+  // We explicitly use random_int_generator as we know how to seed that.
+  // There is no guarantee that the STL's two argument random_shuffle
+  // will use rand() and hence respect srand().
+  if ( args.random_order ) {
+    unsigned (*random_number_generator)(unsigned) = &random_int;
+    random_shuffle( changes_to_try.begin(), changes_to_try.end(), 
+                    random_number_generator );
+  }
 
   // If we're starting at a particular point (with --start), find out
   // what that change is.
@@ -1043,8 +1060,8 @@ void searcher::general_recurse()
 {
   const size_t depth = m.length();
 
-  if ( args.search_limit && args.search_limit != -1 && 
-       search_count == (unsigned long)args.search_limit )
+  if ( search_limit && search_limit != -1 && 
+       search_count == search_limit )
     return;
 
   // Status message (when in search mode)
