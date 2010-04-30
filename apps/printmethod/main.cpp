@@ -224,6 +224,9 @@ void print_row( arguments const& args, row const& r )
     if ( coloured )
       if ( char const* seq = RINGING_TERMINFO_VAR( orig_pair ) )
         cout << seq;
+    if ( bold ) 
+      if ( char const* seq = RINGING_TERMINFO_VAR( exit_attribute_mode ) ) 
+        cout << seq;
   }
 
   cout << "\n";
