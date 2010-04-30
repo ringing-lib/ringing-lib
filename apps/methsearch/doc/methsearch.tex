@@ -1317,9 +1317,9 @@ trivial underwork variants are underrepresented.}
 Used in conjunction with \verb+--limit=1+, this option is good way of selecting
 a method at random.
 
-The \verb+--random-count=+$N$ option\loid{random-count} is used to 
-searches for a single method chosen at random $N$ times.  There is no guarantee
-that the $N$ methods will be distinct (i.e.\ that there will be no repetition),
+The \verb+--random-count=+$n$ option\loid{random-count} is used to 
+searches for a single method chosen at random $n$ times.  There is no guarantee
+that the $n$ methods will be distinct (i.e.\ that there will be no repetition),
 but if the number of methods requested is much less than the total, it is 
 likely.
 
@@ -1329,6 +1329,22 @@ lots of times in a short period of time, it is important to use this because
 \methsearch\ simply uses the current time (in seconds) to seed the 
 random number generator.   Similarly, if you want the 
 methods to occur in an arbitrary yet reproducible order, this is helpful.
+
+When searching for random methods from a search space with large regions
+in which no valid methods can exist, for example asymmetric surprise major,
+it is worth using some external mechanism to restart the search if it 
+appears to be in such a region.  For example, on Unix-like platform one
+could use the following command to generate 23 utterly structureless random
+treble dodging major methods:%
+\index{perl@\texttt{perl}}\fspec{RANDOM}\index{alarm}\index{timeout}%
+\index{example!major, random structureless surprise}
+\begin{Verbatim}[commandchars=\%~~]
+for ((x=0; x<23; )); do if perl -e 'alarm 1; exec @ARGV' %hfill\ 
+  methsearch -b8 -G1 --random --seed=$RANDOM --limit=1 ; %hfill\
+then : $((++x)); fi; done | grep -Fv 'Alarm clock'
+\end{Verbatim}
+
+
 \index{output|)}
 
 \section{Miscellaneous options}\label{misc_opt}
@@ -2901,7 +2917,7 @@ In each case, the syntax is the same:
 is a command (or sequence of commands, such as a pipe line\index{pipe})  
 that can be executed by the shell\index{shell}.%
 \footnote{The particular shell that is used to handle command invocations is
-governed by the \verb+$SHELL+\fspecd{SHELL} \textitidx{environment variable}.
+governed by the \verb+$SHELL+\fspec{SHELL} \textitidx{environment variable}.
 If this is set, then the command line is passed as a single argument to a
 \verb+$SHELL -c+ process.  If it is not set, on Unix-type systems, the 
 default is to use \ttcmdidx{sh}\verb+ -c+,
