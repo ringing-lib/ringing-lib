@@ -1,5 +1,5 @@
 // -*- C++ -*- music.h - Musical Analysis
-// Copyright (C) 2001, 2008, 2009 Mark Banner <mark@standard8.co.uk> and
+// Copyright (C) 2001, 2008, 2009, 2010 Mark Banner <mark@standard8.co.uk> and
 // Richard Smith <richard@ex-parrot.com>.
 
 // This program is free software; you can redistribute it and/or modify
@@ -86,7 +86,7 @@ public:
   unsigned int possible_matches(unsigned int bells) const;
   int possible_score(unsigned int bells) const;
 
-  // Return the count
+  // Return the number of matching rows
   unsigned int count(const EStroke& = eBoth) const;
   // Return the calculated score
   int total(const EStroke& = eBoth) const;
@@ -146,26 +146,23 @@ public:
 
   // Main Processing function
   template <class RowIterator>
-  void process_rows(RowIterator first, RowIterator last, bool backstroke = false)
+  void process_rows(RowIterator first, RowIterator last, 
+                    bool backstroke = false)
   {
-    // reset row line information
     reset_music();
     
-    // Go through each row, noting hand and back.
-    for (; first != last; first++) 
-      {
+    for ( ; first != last; first++, backstroke = !backstroke) 
 	process_row(*first, backstroke);
-	backstroke = (backstroke ? false : true);
-      }
   }
 
-  // As above, but for a single row
+  // As above, but for a single row.
+  // Returns true if it matched a row.
   bool process_row( row const& r, bool backstroke = false);
 
   // Get the total score - individual scores now obtained from accessing
   // the items within the music_details vector.
   int get_score(const EStroke& = eBoth);
-  // Get the total matches.
+  // Get the total number of matching rows.
   unsigned int get_count(const EStroke& = eBoth);
 
   // Total Possible Score
@@ -191,8 +188,21 @@ struct invalid_named_music : public invalid_argument {
 };
 #endif
 
+// These take a string such as "rounds" or "4-runs" and convert it to
+// one or more pattern which is added to the music class.
 RINGING_API void add_named_music( music& m, string const& n, int score = 1 );
 RINGING_API void add_named_music( music& m, string const& n, int sh, int sb );
+
+// Take a string of the form 
+//
+//   [ scoreh ["," scoreb ] ":" ] { "<" name ">" | pattern }
+//
+// and adds it to the music class.  If scoreb is omitted, it defaults
+// to scoreh; if scoreh is omitted, it defaults to 1.  Scores must be 
+// integers (base 10) with an optional +/- sign.  Named music is parsed
+// using add_named_music.  Patterns are parsed using the music_details
+// class.
+RINGING_API void add_scored_music_string( music& m, string const& n );
 
 RINGING_END_NAMESPACE
 

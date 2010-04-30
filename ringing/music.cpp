@@ -1,5 +1,5 @@
 // -*- C++ -*- music.cpp - Musical Analysis
-// Copyright (C) 2001, 2008, 2009 Mark Banner <mark@standard8.co.uk> and
+// Copyright (C) 2001, 2008, 2009, 2010 Mark Banner <mark@standard8.co.uk> and
 // Richard Smith <richard@ex-parrot.com>.
 
 // This program is free software; you can redistribute it and/or modify
@@ -251,7 +251,6 @@ unsigned int music_details::possible_matches(unsigned int bells, unsigned int po
     }
 }
 
-// Return the count
 unsigned int music_details::count(const EStroke &stroke) const
 {
   switch (stroke) {
@@ -776,6 +775,45 @@ RINGING_API void add_named_music( music& mu, string const& n, int sh, int sb )
       RINGING_THROW_OR_RETURN_VOID(
         invalid_named_music( n, "Unknown named music type" ) );
     }
+}
+
+RINGING_API void add_scored_music_string( music& mu, string const& s )
+{
+  int scoreh = 1, scoreb = 1;
+  string pattern = s;
+
+  if ( pattern.size() > 2 && 
+       ( isdigit(pattern[0]) || pattern[0] == '+' || pattern[0] == '-' ) )
+    {
+      string::size_type comma = string::npos;
+      for ( string::size_type j = 0; j < pattern.size(); ++j )
+        if ( pattern[j] == ':' )
+          {
+            if (comma == string::npos) 
+              scoreh = scoreb = atoi( pattern.c_str() );
+            else
+              scoreb = atoi( pattern.substr(comma+1, j-comma-1).c_str() );
+            pattern = pattern.substr(j+1);
+            break;
+          }
+        else if ( pattern[j] == ',' )
+          {
+            if (comma != string::npos) 
+              throw runtime_error("Multiple commas in music score");
+            scoreh = atoi( pattern.c_str() );
+            comma = j;
+          }
+        else if ( !isdigit( pattern[j] ) && pattern[j] != '-' )
+          break;
+    }
+
+    if ( pattern.size() > 2 
+         && pattern[0] == '<' && pattern[ pattern.size()-1 ] == '>' )
+      add_named_music( mu, pattern.substr( 1, pattern.size()-2 ), 
+                       scoreh, scoreb );
+
+    else
+      mu.push_back( music_details( pattern, scoreh, scoreb ) );
 }
 
 
