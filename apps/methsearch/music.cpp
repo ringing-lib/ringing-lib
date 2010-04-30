@@ -1,5 +1,6 @@
 // -*- C++ -*- music.cpp - things to analyse music
-// Copyright (C) 2002, 2003, 2008, 2009 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003, 2008, 2009, 2010
+// Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -154,31 +155,6 @@ musical_analysis::analyser::analyser( int bells )
           continue;
         }
 
-      if ( pattern.size() > 2 && isdigit( pattern[0] ) )
-        {
-          string::size_type comma = string::npos;
-          for ( string::size_type j = 0; j < pattern.size(); ++j )
-            if ( pattern[j] == ':' )
-              {
-                if (comma == string::npos) 
-                  scoreh = scoreb = atoi( pattern.c_str() );
-                else
-                  scoreb = atoi( pattern.substr(comma+1, j-comma-1).c_str() );
-                pattern = pattern.substr(j+1);
-                break;
-              }
-            else if ( pattern[j] == ',' )
-              {
-                if (comma != string::npos) {
-                  cerr << "Multiple commas in music score" << endl; exit(1);
-                }
-                scoreh = atoi( pattern.c_str() );
-                comma = j;
-              }
-            else if ( !isdigit( pattern[j] ) && pattern[j] != '-' )
-              break;
-        }
-
       had_patterns = true;
       for ( vector< pair<row,length> >::const_iterator 
               i = blocks.begin(), e = blocks.end(); i != e; ++i )
@@ -187,13 +163,7 @@ musical_analysis::analyser::analyser( int bells )
           mu.set_bells(bells);
     
           try {
-            if ( pattern.size() > 2 
-                 && pattern[0] == '<' && pattern[ pattern.size()-1 ] == '>' )
-              add_named_music( mu, pattern.substr( 1, pattern.size()-2 ), 
-                               scoreh, scoreb );
-    
-            else
-              mu.push_back( music_details( pattern, scoreh, scoreb ) );
+            add_scored_music_string( mu, pattern );
           } 
           catch ( exception const& e ) {
             cerr << "Error parsing music pattern: " << e.what() << endl;
