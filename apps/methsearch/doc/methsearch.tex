@@ -1147,7 +1147,9 @@ satisfy both.
 The \verb+--start-at+ option\loid{start-at} allows a search to resumed 
 mid-way through.  This can be used to resume a search that was cancelled 
 earlier by passing the place notation of the last method found before the 
-search was cancelled.\index{resuming a search}
+search was cancelled.\index{resuming a search}  Restarting a random search
+is only meaningful if the same random seed is used throughout and passed
+to \verb+--seed+.
 
 \index{place notation|)}
 
@@ -1170,11 +1172,16 @@ what \methsearch\ does when it has found a method.
 &\texttt{--node-count}&Count the number of nodes visited in the search tree\\
 \texttt{-u}&\texttt{--status}&Keep a running status of progress\\
 &\texttt{--limit=N}&Terminate the search after finding \texttt{N} methods\\
+&\texttt{--random}&Randomise the order in which methods are listed\\
+&\texttt{--random-count=N}&
+  Repeatedly search for one random method \texttt{N} times\\
+&\texttt{--seed=NUM}&Seed the random number generator with \texttt{NUM}\\
 \end{tabularx}
 
 \methsearch\ has three main types of output: method output,
-statistical output, and counts.  If several types of output are produced
-each type is separated by a blank line.
+statistical output, and counts.  If several types of output are to be
+produced, they come in the order method, stats, counts, and each type
+is separated by a blank line.
 
 \textit{Method output} is when \methsearch\ prints details of each
 matching method as it is found.  This is enabled by default and 
@@ -1289,7 +1296,39 @@ whether any method exists with a particular set of properties.  In this
 context, the combination \verb+-q+ \verb+--limit=1+ \verb+--raw-count+ 
 can be useful when \methsearch\ is being invoked by a script.  
 The output is just a \verb+0+ or \verb+1+ 
-depending on whether the criteria can be satisified.
+depending on whether the criteria can be satisified.  The \verb+--limit+
+option cannot be used in conjunction with the \verb+--random-count+ option.
+
+The \verb+--random+ option\loid{random} tells \methsearch\ to randomise the 
+order in which it searches the search space.  It is important to note, however,
+that \methsearch\ still does a depth-first search and it is only the 
+order of the child nodes at each point in the search tree that is randomised.%
+\footnote{The reason for this choice of implemention is that a truly randomised
+search would require \methsearch\ to store every single method it finds,
+which in turn would used a large amount of memory.  If you wish to genuinely
+randomise the methods, the \verb+-R+ option to the standard \verb+sort+%
+\index{sort@\texttt{sort}} utility will do this.}
+This means that all methods beginning with a given place notation sequence
+will still be listed together, however the first method found will be fairly
+random.\footnote{Even the first method isn't selected with uniform probability
+from the set of possibles.  This is because methods in a part of the
+search space with few matches are more likely to turn up.  This means that
+trivial underwork variants are underrepresented.}  
+Used in conjunction with \verb+--limit=1+, this option is good way of selecting
+a method at random.
+
+The \verb+--random-count=+$N$ option\loid{random-count} is used to 
+searches for a single method chosen at random $N$ times.  There is no guarantee
+that the $N$ methods will be distinct (i.e.\ that there will be no repetition),
+but if the number of methods requested is much less than the total, it is 
+likely.
+
+The \verb+--seed+ option\loid{seed} seeds the random number generator with 
+the given value.  If you are invoking \methsearch\ with \verb+--random+ 
+lots of times in a short period of time, it is important to use this because 
+\methsearch\ simply uses the current time (in seconds) to seed the 
+random number generator.   Similarly, if you want the 
+methods to occur in an arbitrary yet reproducible order, this is helpful.
 \index{output|)}
 
 \section{Miscellaneous options}\label{misc_opt}
@@ -2935,7 +2974,8 @@ Overuse of per-method command invocation can have a severe impact on
 efficiency.  A good example of this is with music analysis (\sref{music}).
 It is possible to get all of the power of the various \verb+-M+ options (and
 more beyond) by invoking various external programs to analyse the music.
-For example, the following search for musical double surprise major methods
+For example, the following search for musical double surprise major methods%
+\index{example!major, musical double surprise|(}
 \begin{Verbatim}
 methsearch -b8 -SG1 -srdk -p2 -R'$q $M' -M'<4-runs>'
 \end{Verbatim}
@@ -2949,6 +2989,7 @@ On Windows, the outer single quotes will need replacing with double quotes.}
 methsearch -b8 -SG1 -srdk -p2 @hfill\
   -R'$q $(printmethod -b8 -cS $p | musgrep -b8 -s \"<4-runs>\")'
 \end{Verbatim}
+\index{example!major, musical double surprise|)}
 However, doing so slows the search dramatically.\index{efficiency}
 Timing the two commands on a 1.5\ GHz laptop running Linux shows the former
 to take about 6.4\ s, and the latter, 71.2\ s --- a factor of 11 times slower.%
@@ -2963,6 +3004,7 @@ Examples with falseness can be even more extreme as \methsearch\ is able to
 use knowledge of the falseness to prune large branches of the search tree
 in one go.  A good instance of this is searching for 
 CPS\index{clear proof scale} treble doding major methods.
+\index{example!major, treble dodging, CPS}
 \begin{Verbatim}
 methsearch -b8 -G1 -srfp2 -FCPS
 \end{Verbatim}
@@ -3160,7 +3202,7 @@ it stands, the file contains the place notation of
 Cambridge hard-coded into it.  This can easily be resolved by removing
 the definition of \verb+m+ from the file and putting it on the command line
 instead.  This allows it to be subsituted by \verb+$Q+\fspec{Q} in a
-command invocation, such as:
+command invocation, such as:\index{example!major, music to Middleton's}
 \begin{Verbatim}[commandchars=@~~]
 -R'$q  $(gsiril -b8 -Dm="$Q" -E -f middletons.gsir @hfill\
             | musgrep -b8 -c "<CRUs>")'
@@ -3178,16 +3220,39 @@ music in it.  The following options are of relevance:
 
 \begin{tabularx}{\textwidth}{llX}
 \texttt{-b}&\texttt{--bells=N}&The total number of bells\\
+\texttt{-p}&\texttt{--positive}
+   &Print the number of rows with a positive score\\
+\texttt{-n}&\texttt{--negative}
+  &Print the number of rows with a negative score\\
 \texttt{-c}&\texttt{--count}&Print the number of matching rows\\
 \texttt{-s}&\texttt{--score}&Print the score for matching rows\\
 \end{tabularx}
 
 In addition, the command line should contain one or more music pattern.
-These may be basic patterns (\sref{muspattern}) or named patterns 
-(\sref{musnamed}).  Customised music scores (\sref{musscore}) are not 
-permitted.  The syntax for these is as given in chapter \ref{music},
+These may be basic patterns (\sref{muspattern}), named patterns 
+(\sref{musnamed}) or customised music scores (\sref{musscore}). 
+The syntax for these is as given in chapter \ref{music},
 except without the leading \verb+-M+.  As examples of \texttt{musgrep}
 have been given throughout this chapter, no further ones are given here.
+
+If no \verb+-p+, \verb+-n+, \verb+-c+ or \verb+-s+ is supplied, 
+\texttt{musgrep} prints out all of the matching rows; 
+if any of these are supplied, only the request count or counts are printed 
+on a single line separated by tabs in the order 
+\verb+-p+, \verb+-n+, \verb+-c+, \verb+s+.
+
+The score, \verb+-s+, is the total number of points assigned to the piece
+of ringing as described in \sref{music}.  The count, \verb+-c+, is the 
+number of matching rows.  The two can be different because a row can match
+more than one pattern (e.g.\ \verb+42135678+ is both a CRU and a 4-run), 
+because a pattern can be assigned a score other than one 
+(e.g.\ with \verb+2:*5678+ to score \verb+5678+s at the back double),
+or because a pattern can match multiple times (e.g.\ \verb+21345678+ matche
+the 4-run pattern three times).
+
+It is also possible for the positive and negative counts, 
+\verb+-p+ and \verb+-n+, not to sum to count, \verb+-c+.  This can happen
+if a row matches a pattern but has zero net score.  
 
 \index{music|)}
 \index{row stream|)}
@@ -3203,11 +3268,9 @@ the first whitespace character on the line is ignored.\footnote{%
 to be whitespace.}\index{whitespace}
 When invoked with the \verb+--filter+ option (\sref{misc_opt}), 
 \methsearch requires a method stream on standard input.\index{standard input}
-Frequently, \methsearch's output is a method stream — specifically, 
+Frequently, \methsearch's output is a method stream — specifically
 whenever a \verb+-R+ option starting with \verb+$p+ or \verb+$q+ is given
-(or no \verb+-R+ is given)
-and none of the \verb+-q+, \verb+-o+, \verb+-O+, \verb+-H+, \verb+-C+, 
-\verb+--raw-count+ or \verb+--node-count+ options are present.%
+(or no \verb+-R+ is given) and no statistical output or counts are requested.%
 \footnote{A \verb+-u+ option is permitted as the status is written 
 to standard error rather than standard output.%
 \index{standard output}\index{standard error}}
@@ -3238,9 +3301,10 @@ touches in a single method.  It accepts the following options.
   &Only require mutually true parts without requiring them to be joined\\
 \texttt{-q}&\texttt{--quiet}&Don't output the touches\\
 \texttt{-c}&\texttt{--count}&Count the number of touches found\\
-           &\texttt{--raw-count}
-  &Count the number of touches found, and print it without surrounding text\\
-           &\texttt{--limit=N}&Limit the search to the first N touches\\
+           &\texttt{--raw-count}&
+  Count the number of touches found, and print it without surrounding text\\
+           &\texttt{--limit=N}&
+  Limit the search to the first \texttt{N} touches\\
            &\texttt{--filter}&Run as a filter on a method library\\
 \end{tabularx}
 
@@ -3255,8 +3319,8 @@ However it is \texttt{touchsearch}'s \verb+--filter+ option that is of
 interest here.  This allows a single invocation of \texttt{touchsearch} to
 search a series of methods for one that can produce a touch of the specified
 type.  For example, the following command searches for asymmetric plain minor
-methods that can actually produce an extent.
-
+methods that can actually produce an extent.%
+\index{example!minor, asymmetric extnts}
 \begin{Verbatim}[commandchars=@~~]
 methsearch -b6 -Fe --require='$y eq ""' -rf -m'*2' @hfill\
   | touchsearch -b6 --filter -r -l720 -Cb=4 -Cs=234 --limit=1
@@ -3291,49 +3355,110 @@ as a set of mutually true parts exist.
 
 \subsection{Proving a touch — \texttt{gsiril}}\label{gsirilmeth}
 
-\texttt{gsiril} has already been mentioned in \sref{gsirilrow}.  As
+\ttcmdidx{gsiril} has already been mentioned in \sref{gsirilrow}.  As
 mentioned there, it is also possible to use \texttt{gsiril} as a filter
-to discover which methods are true to a particular composition.
+to discover which methods are true to a particular composition.   This
+is achieved by using the \verb+--filter+ option to \texttt{gsiril}.
 
+In this mode, \texttt{gsiril} reads methods from its input stream
+and sets the \verb+m+ and \verb+lh+ variables%
+\footnote{The names of these symbols can be overridden with             
+\verb+--lead-symbol+ and \verb+--lh-symbol+ options, respectively.}
+to the method place notation excluding the lead-end change 
+(i.e.\ \methsearch's \verb+$Q+),  and the lead-end change respectively.
+A composition file in the \texttt{gsiril} language should be specified with 
+the \verb+-f+ option, and the number of bells specified with \verb+-b+.  
+(The latter requirement is likely to be removed in a future version of 
+\texttt{gsiril}.)
+
+For example, to find right place methods true to Middleton's 5600 of 
+Cambridge Surprise Major,\index{Middleton, Charles!5600 Cambridge S.\ Major}
+the following invocation could be used:%
+\index{example!major, music to Middleton's}
+\begin{Verbatim}[commandchars=@~~]
+methsearch -b8 -SG1 -p2 -l2 -srfw @hfill\
+  | gsiril -b8 --filter -f middletons.gsir
+\end{Verbatim}
+
+In this example, the file \verb+middletons.gsir+ needs to slightly different
+from the version used in the example in \sref{gsirilrow}.  First, it needs
+to accommodate arbitrary seconds place leads, and secondly, it shouldn't 
+define the place notation of the method (as this is passed via the \verb+m+
+symbol).  The following \texttt{gsiril} code will do the job.
+\begin{Verbatim}
+8 bells
+
+m ?= &-3-4-25-36-4-5-6-7
+lh ?= +12
+
+p = m,lh,"  @"
+b = m,+4,"- @"
+
+H = repeat( {b, /*8/:   b, break; p} )
+W = repeat( {b, /*8?/:  b, break; p} )
+M = repeat( {b, /*8??/: b, break; p} )
+
+finish = repeat({rounds: break}, p)
+
+prove 5(2M,2W,3H)
+\end{Verbatim}
+
+There are several things to note in this example.  First, \verb+m+ and
+\verb+lh+ are given conditional definitions via the \verb+?=+ operator.
+This means that the definitions from the file are only used if \texttt{gsiril}
+does not provide a definition.  This means that the file can be tested
+with the command:
+
+\begin{Verbatim}
+gsiril -f middletons.gsir
+\end{Verbatim}
+
+Secondly, more complex definitions of the middle\index{middle}, 
+wrong\index{wrong} and home\index{home} calling positions are needed
+to work with arbitrary lead ends including 8ths
+place methods.\footnote{A full explanation of how the these definitions work
+is beyond the scope of this document.  The \texttt{gsiril} 
+documentation found at \url{http://ex-parrot.com/~richard/gsiril/} contains 
+a similar example in the section entitled `Rule-based touches'.}
 
 \index{method streams|)}
 
-\chapter{Some longer examples}
-
-\section{Replacing Stonebow}
-
-David Hull's peal of 23 spliced surprise major is a moderately 
-popular composition.\index{Hull, David!23 spliced} It is given below.
-
-\begin{center}\scriptsize\begin{tabular}{ccl}
-\texttt{ }&\texttt{2345678}&Rutland\\
-\texttt{ }&\texttt{4263857}&Coney Street\\
-\texttt{ }&\texttt{6482735}&Weatheroak\\
-\texttt{-}&\texttt{3578264}&Yorkshire\\
-\texttt{ }&\texttt{8654327}&Ipswich\\
-\texttt{ }&\texttt{7325486}&Jersey\\
-\texttt{-}&\texttt{3586742}&Superlative\\
-\texttt{-}&\texttt{5642378}&Glasgow\\
-\texttt{ }&\texttt{6257483}&London\\
-\texttt{-}&\texttt{4562378}&Bristol\\
-\texttt{-}&\texttt{6452378}&Wembley\\
-\texttt{ }&\texttt{5634827}&Stonebow\\
-\texttt{ }&\texttt{8375264}&Brislington\\
-\texttt{-}&\texttt{2783456}&Cassiobury\\
-\texttt{-}&\texttt{3564782}&Double Dublin\\
-\texttt{-}&\texttt{6354782}&Little Shambles\\
-\texttt{-}&\texttt{5634782}&Cambridge\\
-\texttt{ }&\texttt{4862573}&Ashtead\\
-\texttt{ }&\texttt{3576248}&Ealing\\
-\texttt{ }&\texttt{7325864}&Peterborough\\
-\texttt{-}&\texttt{8273456}&Lincolnshire\\
-\texttt{ }&\texttt{3526847}&Lindum\\
-\texttt{ }&\texttt{2385764}&Falmouth\\\hline
-\texttt{-}&\texttt{7823456}&\\
-\end{tabular}\end{center}
-
-However one method in particular --- Stonebow --- is quite unpopular with 
-ringers because of its unmemorable line.
+%\chapter{Some longer examples}
+%
+%\section{Replacing Stonebow}
+%
+%David Hull's peal of 23 spliced surprise major is a moderately 
+%popular composition.\index{Hull, David!23 spliced} It is given below.
+%
+%\begin{center}\scriptsize\begin{tabular}{ccl}
+%\texttt{ }&\texttt{2345678}&Rutland\\
+%\texttt{ }&\texttt{4263857}&Coney Street\\
+%\texttt{ }&\texttt{6482735}&Weatheroak\\
+%\texttt{-}&\texttt{3578264}&Yorkshire\\
+%\texttt{ }&\texttt{8654327}&Ipswich\\
+%\texttt{ }&\texttt{7325486}&Jersey\\
+%\texttt{-}&\texttt{3586742}&Superlative\\
+%\texttt{-}&\texttt{5642378}&Glasgow\\
+%\texttt{ }&\texttt{6257483}&London\\
+%\texttt{-}&\texttt{4562378}&Bristol\\
+%\texttt{-}&\texttt{6452378}&Wembley\\
+%\texttt{ }&\texttt{5634827}&Stonebow\\
+%\texttt{ }&\texttt{8375264}&Brislington\\
+%\texttt{-}&\texttt{2783456}&Cassiobury\\
+%\texttt{-}&\texttt{3564782}&Double Dublin\\
+%\texttt{-}&\texttt{6354782}&Little Shambles\\
+%\texttt{-}&\texttt{5634782}&Cambridge\\
+%\texttt{ }&\texttt{4862573}&Ashtead\\
+%\texttt{ }&\texttt{3576248}&Ealing\\
+%\texttt{ }&\texttt{7325864}&Peterborough\\
+%\texttt{-}&\texttt{8273456}&Lincolnshire\\
+%\texttt{ }&\texttt{3526847}&Lindum\\
+%\texttt{ }&\texttt{2385764}&Falmouth\\\hline
+%\texttt{-}&\texttt{7823456}&\\
+%\end{tabular}\end{center}
+%
+%However one method in particular --- Stonebow --- is quite unpopular with 
+%ringers because of its unmemorable line.
 
 \clearpage
 \footnotesize
