@@ -37,6 +37,11 @@ RINGING_START_NAMESPACE
   
 RINGING_USING_STD
 
+// Return the sign of a number
+inline RINGING_API int sign(int a) {
+  return a > 0 ? +1 : a < 0 ? -1 : 0;
+}
+
 // Declare a couple of random functions for hcf and lcm
 RINGING_API int hcf(int a, int b);
 inline RINGING_API int lcm(int a, int b)
