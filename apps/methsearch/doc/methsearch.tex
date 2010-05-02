@@ -50,6 +50,10 @@
 
 \usepackage{footnote}
 
+% Don't use US-style dates
+\usepackage[nodayofweek]{datetime}
+\longdate
+
 % Coloured links, etc.
 \usepackage[xetex,%
             citecolor=black,filecolor=black,linkcolor=black,urlcolor=black,%
@@ -403,7 +407,8 @@ ask \methsearch\ to perform a search that will never complete.
 The \verb+-u+ option provides a good way of monitoring how quickly 
 the search is progressing.  If the search looks like it is going to take
 too long, press Ctrl-C to abort it, and try again with additional constraints.
-Finally, if you're stuck, drop me an email.  My address is on the title page.
+Finally, if you're stuck, drop me an email.  
+My email address is on the title page.
 
 \section{An example — doubles methods}\label{eg_doubles}
 \index{example!doubles, plain|(}
@@ -448,7 +453,10 @@ the \verb+>+ and \verb+|+ characters as redirection and a pipe as described
 in \sref{redirection}.\index{shell!quotation}.
 
 The \verb+-R"$q\t$D"+\oi{R} option controls what information is printed 
-about each method.  In this case, we request the place notation in a 
+about each method.  
+The argument to the \verb+-R+ option is called a \textitidx{format string} 
+and is described in detail in \sref{fmtstr}.
+In this case, we request the place notation in a 
 concise notation (\verb+$q+)\fspec{q} and the lead head code using the 
 older-style codes used in the 1980 collection (\verb+$D+)\fspec{D}.  
 The remaining part of the argument, \verb+\t+, instructs \methsearch\ to 
@@ -457,14 +465,16 @@ Most terminals display this as some (varying) number of spaces; however,
 it has the advantage that, if the output is saved to a file, it can 
 be loaded in a spreadsheet\index{spreadsheet} as 
 \textit{tab separated values} and the two values will appear in 
-separate spreadsheet columns.
+separate spreadsheet columns.  
 
 The \verb+--require="$o>=3"+ option states that the number of leads in
 the plain course (\verb+$o+)\fspec{o} must be at least three.  
 (Strictly speaking, the rubric stated ``three or four leads in the 
 plain course'' which we would write \verb+--require="$o==3 || $o==4"+, 
 but as plain courses with more than four leads are not possible, 
-this is unnecessarily pedantic.)
+this is unnecessarily pedantic.)  The argument to the \verb+--require+
+option is called an \textitidx{expression} and is described in detail
+in \sref{expr}.
 
 The final \verb+-m"*(1|2|23)"+\oi{m} specifies that the last change
 in the method must be a \verb+1+, \verb+125+ or \verb+123+ change.
@@ -541,18 +551,16 @@ binaries\index{Windows!binaries}%
 \subsection{Compiling from source on Linux}
 \index{compiling methsearch@compiling \methsearch}
 
-To compile from source, it is best to get the current version from CVS.
-Unlike the main releases, this does not come with a copy of the 
+To compile from source, it is best to get the current version from CVS.%
+\index{CVS} Unlike the main releases, this does not come with a copy of the 
 \verb+configure+ script; this can be generated using the \verb+autoreconf+
 command.  The package is then configured, compiled and installed in the
 standard way:
-
-\begin{Verbatim}[commentchar=~]
+\begin{Verbatim}
 U=:pserver:anonymous:
 H=ringing-lib.cvs.sourceforge.net
 P=/cvsroot/ringing-lib
 export CVSROOT=$U@$H:$P
-~ -- a comment to get vim's syntax highlighter back in sync:  $
 unset U H P
 cvs login
 cvs -z3 co -P ringing-lib
@@ -560,7 +568,6 @@ unset CVSROOT
 cd ringing-lib
 autoreconf
 ./configure --prefix=$HOME
-~ -- a comment to get vim's syntax highlighter back in sync:  $
 make
 make install
 \end{Verbatim}
@@ -570,11 +577,10 @@ This should have installed the Ringing Class Library%
 associated programs (including \methsearch) into your home directory.
 Depending how your system is configured, you may need to add this
 to your \textitidx{path}\index{path} so that the the shell can find
-methsearch.  If, when trying to run \methsearch, you see the error message
-`\texttt{bash: methsearch: command not found}', you 
+methsearch.  If, when trying to run \methsearch, you see an error message
+saying `\texttt{bash:\ methsearch:\ command not found}', you 
 probably need to run the following:\footnote{Or add it to your 
 \verb+~/.bashrc+ so they are always available.}
-
 \begin{Verbatim}
 export PATH=$PATH:$HOME/bin
 \end{Verbatim}
@@ -585,7 +591,7 @@ export PATH=$PATH:$HOME/bin
 \methsearch\ is a fairly mature piece of software and has been in active
 use since 2002, since which time a great many new features have been added.
 Some features will have been tested extensively in many different 
-combinations and are likely to be as bug-free.  However, it's quite possible 
+combinations and are likely to be bug-free.  However, it's quite possible 
 that some less-commonly used features may interact with each other in odd ways.
 If you ever find something which you believe to be a bug,%
 \index{bugs, reporting} do please email me.
@@ -618,6 +624,7 @@ freely available.%
 \footnote{Specifically, \methsearch\ is covered by the GNU General Public 
 License, version 2 or above,\index{licence} which can be viewed at
 \url{http://www.gnu.org/licenses/gpl.html}.}
+I'm always happy to add such contributions to the Ringing Class Library.
 
 \chapter{Command line options}
 
@@ -650,11 +657,13 @@ miscellaneous options (\sref{misc_opt}).
 
 The \verb+-b+ option is the only option that is always required.%
 \oid{b}{bells}\index{bells, number of}
-Its argument is the number of bells and must be a number between 3 and 33, 
-inclusive.  The lower limit
-is simply because there is so little possible on fewer than three bells
-that it is not worth coding all of the special cases required to make it work;
-the latter is not a fundamental limitation in \methsearch\ --- rather it 
+Its argument is the number of bells and must be an integer between 2 and 33, 
+inclusive.  
+The lower limit is simply because, trivially, there is only one possible
+piece of ringing of any given length on one bell,
+and I have not yet got around to coding all of the special cases required 
+to make \methsearch\ handle it.
+The upper limit is not a fundamental limitation in \methsearch\ --- rather it 
 is a limit on what place notations can be displayed.%
 \footnote{After 33 bells, the numbers 1--9, the symbols 0, E, T 
 and the letters A--Z, excluding E, I, O, T and X have all been used.}
@@ -696,14 +705,16 @@ The \verb+-U+ option\oid{U}{hunts} specifies the number of
 coursing hunt bells required.
 For example, \verb+-U2+ will find twin-hunt methods.\index{twin-hunt methods}
 All of the hunt bells
-will be required to follow the same path --- this means that Grandsire will
-be found with an appropriate \verb+-U2+ search, but a slow course method
+will be required to follow the same path --- this means that 
+Grandsire\index{Grandsire} will be found with an appropriate \verb+-U2+ search,
+but a slow course method\index{slow course methods}
 (which the Central Council also define as a twin-hunt method, albeit of 
 a different type) will not be.  With \verb+-U+$n$, the hunt bells will always 
-be the front $n$ bells --- 
-thus, New Grandsire (that is, Grandsire rotated so that 1 and 3 hunt) 
+be the front $n$ bells --- thus, New Grandsire\index{New Grandsire} 
+(that is, Grandsire rotated so that 1 and 3 hunt) 
 will never be found; nor will such peculiarities as 
-Bedfont Slow Course Doubles in which 1 and 5 plain hunt.  
+Bedfont Slow Course Doubles\index{Bedfont Slow Course Doubles} 
+in which 1 and 5 plain hunt.  
 The \verb+-U+ option can be used in conjunction with the \verb+-G+ option to
 find treble dodging methods with multiple hunt bells.
 
@@ -730,10 +741,13 @@ fourths place little method, and \verb+-Z-+ is equivalent to no \verb+-Z+
 option as it means front to back.
 
 \methsearch\ supports little methods in which the primary hunt bell does not
-reach lead.  For example methods such as Very Little Bob Minor (in which the 
-third hunts between thirds place and fourths) can be found with \verb+-Z3-4+, 
-and Double Bishopstoke Little Surprise Major (in which the treble treble-dodges
-between thirds and sixths) can be found with \verb+-G1+ \verb+-Z3-6+.
+reach lead.  For example methods such as 
+Very Little Bob Minor\index{Very Little Bob Minor} 
+(in which the third hunts between thirds place and fourths) 
+can be found with \verb+-Z3-4+, and Double Bishopstoke Little Surprise Major%
+\index{Double Bishopstoke Little Surprise Major} 
+(in which the treble treble-dodges between thirds and sixths) 
+can be found with \verb+-G1+ \verb+-Z3-6+.
 
 \index{little methods|)}
 \index{class|)}
@@ -1669,6 +1683,10 @@ together with their ASCII\index{ASCII} values and meanings.
 \verb+\%+& $0$x$25$&   &  a literal \verb+%+ character\\
 \end{tabular}
 
+A \verb+\+ at the very end of the format string end of the format 
+string is used to suppress the line feed that is implicitly
+added to the end of a format string.
+
 To print information spanning multiple lines, almost invariably the
 line feed (\verb+\n+)\index{line feed} should be used instead of the 
 carriage return (\verb+\r+).\index{carriage return}%
@@ -1909,18 +1927,17 @@ literal}.  Integers are just written in the normal way using the digits
 \verb+0+--\verb+9+;\footnote{Neither hexadecimal nor octal integer literals
 are supported --- in particular, \verb+010+ is the decimal number 10 written
 with an unnecessary leading zero, and not the decimal number 8 written in 
-octal.}  strings are enclosed in double quotes, e.g. \verb+"Untitled"+.
+octal.}  strings are enclosed in single or double quotes, e.g. 
+\verb+"Untitled"+ or \verb+'Untitled'+.
 
-The use of double quotes for string literals potentially conflicts with
-the use of double quotes for quoting a command line option from the 
-shell.\index{shell!quotation}.  On Unix-like systems this is generally not a 
-problem because shell quotation can be done with single quotes instead.  On
-Windows (and in Unix shells if you choose to use double quotes for 
-shell quotation), there is a problem.  For example, supposing you want to
-use a \verb+--require+ option to restrict a search to unnamed methods.  The 
-obvious syntax is \verb+--require="$n ne "Untitled""+.  However, this doesn't
-work because the shell interprets all four double quotes, not realising the
-inner two are intended for \methsearch.  To solve this, the inner two
+The use of quotes for string literals potentially conflicts with
+the use of quotes for quoting a command line option from the 
+shell.\index{shell!quotation}.  Generally this is not a 
+problem because either the shell quotation can be done with one type of quotes,
+and the literal quoted with the other sort.  However, there are circumstances
+when this luxury is not available, for example, because the whole shell command
+line is itself quoted in single quotes, and you need to use double quotes for 
+both.  To solve this, the inner two
 need escaping \index{escaping|see shell!escaping}\index{shell!escaping} 
 from the shell.  This is done by prefixing them with 
 a backslash\index{backslash}: 
@@ -2605,7 +2622,8 @@ in this case.\oi{P}
 
 However, the \verb+-FP+ options can be used in other situations too.  For
 example, there is a second group of {60} in-course rows on six bells ---
-this is \textitidx{Hudson's group} which is generated by the changes
+this is \textit{Hudson's group}\index{Hudson's group|see{group, Hudson's}}%
+\index{group!Hudson's} which is generated by the changes
 \verb+12+, \verb+16+ and \verb+34+.
 
 \begin{Verbatim}[commandchars=@~~]
@@ -2614,14 +2632,15 @@ methsearch -b6 -G1 -p3 -l2 -srf -R"$q  $N" -Ldel6.txt@hfill\
 \end{Verbatim}
 
 Interestingly, this just generates one method:%
-\footnote{This method was originally named Hudson Delight Minor.
+\footnote{This method was originally named Hudson Delight Minor.%
+\index{Hudson Delight Minor|see{Norwich Delight Minor}}
 However, in their wisdom, the Central Council Methods Committee have
 decided that this method should be renamed Norwich Delight Minor because
 of some perceived similarity with a major method of that name.}
-
 \begin{Verbatim}[obeytabs=true]
 &3-3.4-2-1.4-4.5,2	Norwich Delight Minor
 \end{Verbatim}
+\index{Norwich Delight Minor}
 
 \index{falseness|)}
 
@@ -3248,8 +3267,14 @@ In addition, the command line should contain one or more music pattern.
 These may be basic patterns (\sref{muspattern}), named patterns 
 (\sref{musnamed}) or customised music scores (\sref{musscore}). 
 The syntax for these is as given in chapter \ref{music},
-except without the leading \verb+-M+.  As examples of \texttt{musgrep}
-have been given throughout this chapter, no further ones are given here.
+except without the leading \verb+-M+.  When giving a negative score to 
+a pattern the syntax (e.g.\ \verb+-1:*28+ to negatively score \verb+28+s
+at the back) looks like the standard form of an option because of the 
+leading minus sign.  This is resolved by preceeding the music with
+the special option \verb+--+.  This tells \texttt{musgrep} to stop looking
+for options and to parse everything after it on the command line as an 
+argument.\index{options!ending}  This syntax is standard to most command
+line tools.
 
 If no \verb+-p+, \verb+-n+, \verb+-c+ or \verb+-s+ is supplied, 
 \texttt{musgrep} prints out all of the matching rows; 
@@ -3475,6 +3500,184 @@ a similar example in the section entitled `Rule-based touches'.}
 %
 %However one method in particular --- Stonebow --- is quite unpopular with 
 %ringers because of its unmemorable line.
+
+\chapter{History of \methsearch}
+
+\section{Early development}
+
+I have no precise record of when I began writing \methsearch\ though it 
+must have been sometime in the first quarter of 2002.  It was around
+this time that interest was developing in cyclic methods, largely
+driven by Philip Earis\index{Earis, Philip}, and I found 
+myself writing C++ code to explore the space of cyclic methods in search 
+of methods that we might want to ring.  The earliest reference I have 
+found to \methsearch\ is from an email exchange with Philip on 5 April 2002
+when I enumerated (incompletely as it turned out) rotationally-symmetric
+cyclic plain major methods.  
+
+The first version of \methsearch, or \texttt{meth-search} as it was then spelt, 
+that I made available for anyone else was on 22 May 2002, and even at this 
+stage it already had a surprising amount of functionality.  \methsearch\ 
+releases have always been somewhat \textit{ad hoc} and have not had 
+meaningful release numbers.  The following entries are dates when I 
+advertised new Windows binaries and produced an accompanying list of new
+features.  For the first two months this happened very frequently before
+slowing to a more steady rate.  The earlier releases also involved a fair
+amount of bug fixing that is not mentioned below.
+
+\subsection{22 May 2002}
+
+In the first public version of \methsearch,
+the \verb+-b+, \verb+-G+, \verb+-S+, \verb+-p+, \verb+-l+, \verb+-f+, 
+\verb+-r+, \verb+-c+, \verb+-e+, \verb+A+, \verb+-s+, \verb+-k+, \verb+-d+, 
+\verb+-q+, \verb+-L+, \verb+-H+ and \verb+-P+ options all existed in 
+much their present form.
+The \verb+-w+ option supported right-place methods on even stages, and
+the current \verb+-R+ functionality existed, though the option was called
+\verb+-F+. 
+
+At this time, by default \methsearch\ would only look for methods with
+no more than three places made at the lead-end or lead-head.  A \verb+-h+
+option disabled this behaviour and allowed arbitrary places.  
+\methsearch's handling of falseness was still ill-defined, though probably
+behaved much like the current \verb+-Fn+ option.  There was no facility 
+for analysing music.
+
+Format strings were supported for both the \verb+-F+ (now \verb+-R+) and 
+\verb+-H+ options and could only contain literal text, variables
+and a limited number of character escape sequences (namely \verb+\t+ and 
+\verb+\n+).
+Variables were written with a \verb+%+ rather than a \verb+$+ — the former
+is still supported but is deprecated, and only the following were available:
+\verb+%l+, \verb+%p+, \verb+%n+, \verb+%N+, \verb+%C+, \verb+%S+, \verb+%%+ 
+and (probably) \verb+%c+ and \verb+%b+.
+
+\subsection{27 May 2002}
+\begin{list}{\labelitemi}{\leftmargin=1em}
+\item There's now a \verb+-j+ option which prohibits adjacent places 
+within the lead.
+\item Similarly to \verb+-S+, \verb+-T+ searches for treble bob methods.
+\item It now has a status option (\verb+-u+) which keeps a display of the 
+the place notation currently being considered.
+\item The \verb+-F+ option has been renamed \verb+-R+ so that I can use 
+\verb+-F+ for falseness.
+\item The new \verb+-F+ options (\verb+-Fx+, \verb+-Fn+, \verb+-Fh+, 
+\verb+-Fl+, \verb+-Fc+) can be used to filter out methods that are 
+false with the lead or plain course.  The default is \verb+-Fh+.
+\item It recognises \verb+$+ as an alternative to \verb+%+ in format strings.
+\end{list}
+
+\subsection{5 June 2002}
+\begin{list}{\labelitemi}{\leftmargin=1em}
+\item New \verb+%+$n$\verb+h+ and (probably) \verb+%+$n$\verb+r+ variables 
+to print the $n$th change and row.
+\item The \verb+--limit+ option aborts the search after a specified number
+have been found.
+\item There's now the start of a \verb+-M+ option for musical analysis.  It's 
+argument is a musical pattern, e.g.\ \verb+-M*1234*+.  The \verb+%M+ variable
+prints the musical score.
+\end{list}
+
+\subsection{19 June 2002}
+\begin{list}{\labelitemi}{\leftmargin=1em}
+\item Multiple hunt bells supported with \verb+-U+.
+\item Right-place methods (\verb+-w+) now supported on odd stages too.
+\item Testing for extent viability with \verb+-Fe+.
+\item Couting the total number of methods with \verb+--count+.
+\item Music analysis extended to handle named music including \verb+<4-runs>+.
+\end{list}
+
+\subsection{21 June 2002}
+\begin{list}{\labelitemi}{\leftmargin=1em}
+\item Testing for clear proof scale falseness: \verb+-FCPS+.
+\item Preventing `U' falseness\index{U falseness} 
+\verb+-FU+,\oidx{FU}{\texttt{FU}} 
+generalised to requiring a round block of homes\index{home} 
+(specified using \verb+--bob+\loid{bob}) to be true.%
+\footnote{This functionality has since been removed.}
+\item Added \verb+%q+ for more concise place notation.
+\end{list}
+
+\subsection{2 September 2002}
+\begin{list}{\labelitemi}{\leftmargin=1em}
+\item Added \verb+-m+ to partially specify the place notation.
+\item Generalised \verb+-M<4-runs>+ to \verb+-M<+$n$\verb+-runs>+.
+\item Added \verb+--start-at+.
+\item Added \verb+--hl-change+\loid{hl-change} and 
+\verb+--le-change+\loid{le-change}.%
+\footnote{Both options have been since removed.}
+\item Added \verb+--cyclic-hlh+, \verb+--cyclic-hle+ and their 
+\verb+--rev-+\ldots{} variants.
+\item Support for MicroSiril libraries.
+\end{list}
+
+\section{In the Ringing Class Library}
+
+On 28 November 2002, the code was added to the Ringing Class Library%
+\index{Ringing Class Library} CVS\index{CVS} repository, and, at the
+same time, renamed \verb+methsearch+ (without a hyphen).  This is the 
+earliest code snapshot that is still available.  From this point onwards,
+there is a complete version history of \methsearch.
+
+\subsection{5 December 2002}
+\begin{list}{\labelitemi}{\leftmargin=1em}
+\item Program renamed from \texttt{meth-search} to \methsearch.
+\item Code added to the Ringing Class Library CVS repository.
+\item Support for principles with \verb+-U0+ and \verb+-n+.
+\item Changed \verb+-j+ to take an optional argument.
+\item Added the variables \verb+%F+ (only in-course tenors-together codes
+for regular palindromic major methods and cyclic rotationally-symmetric
+major methods) and \verb+%o+.
+\end{list}
+
+\subsection{10 February 2003}
+\begin{list}{\labelitemi}{\leftmargin=1em}
+\item Added \verb+-M<front-+$n$\verb+-runs>+ and 
+\verb+-M<back-+$n$\verb+-runs>+.
+\item Added \verb+--offset-cyclic+.
+\end{list}
+
+\subsection{13 May 2003}
+\begin{list}{\labelitemi}{\leftmargin=1em}
+\item Added \verb+--regular-hls+.
+\item Generalised \verb+%F+ to support regular palindromic methods on any 
+even stage (greater than six).
+\item Removed \verb+%F+ support for cyclic rotationally-symmetric
+major methods.
+\item Added \verb+%F+ support for out-of-course falseness groups and `A' 
+falseness.
+\item Allow expressions in format strings using \verb+$[+\ldots\verb+]+.
+\item Added the \verb+suppress+ and \verb+abort+ keywords.
+\item Improved masks: alternative blocks (e.g.\ \verb+(36|34)+) and 
+over/underworks (e.g.\ \verb+&34.1.5.1.5/*+).
+\item Definition of \verb+-FCPS+ changed on six bells.
+\item Removed \verb+--le-change+ and \verb+--hl-change+.
+\item Removed \verb+-FU+ and \verb+--bob+.
+\item Added \verb+--require+.
+\end{list}
+
+\subsection{14 May 2003}
+\begin{list}{\labelitemi}{\leftmargin=1em}
+\item Allow string literals in expressions to be quoted with 
+\verb+'+\ldots\verb+'+.
+\item Added \verb+$d+ for the lead head code.
+\end{list}
+
+\subsection{23 April 2004}
+\begin{list}{\labelitemi}{\leftmargin=1em}
+\item Removed the \verb+-h+ option.
+\item Added \verb+-E+, \verb+-o+, \verb+-O+ and \verb+--raw-count+.
+\item Added support for XML output.
+\item The arguments to \verb+-l+ and \verb+-p+ are now optional — 
+the default is 2.
+\item The \verb+-j+ option now applies to the lead head and lead end.
+\item Added \verb+$Q+, \verb+$u+, \verb+$y+, \verb+$O+ and \verb!-Fe+!.
+\item Music patterns may now take a score.
+\item Expressions may now contain the \verb+.+ operator.
+\item Support for command invocations \verb+$(+\ldots\verb+)+.
+\end{list}
+
+% Next release is 2009
 
 \clearpage
 \footnotesize
