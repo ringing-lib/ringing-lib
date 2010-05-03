@@ -103,6 +103,11 @@ void arguments::bind( arg_parser& p )
            quiet ) );
 
   p.add( new boolean_opt
+         ( 'g', "comma-separate",
+           "Comma separate the output (suitable for passing to gsiril)",
+           comma_separate ) );
+
+  p.add( new boolean_opt
          ( 'c', "count",
            "Count the number of touches found",
            count ) );

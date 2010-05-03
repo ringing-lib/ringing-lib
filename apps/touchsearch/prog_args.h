@@ -1,5 +1,5 @@
 // -*- C++ -*- prog_args.h - program arguments for touchsearch
-// Copyright (C) 2007, 2009 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2007, 2009, 2010 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -55,6 +55,7 @@ struct arguments
   init_val<bool,false> quiet;
   init_val<bool,false> count;
   init_val<bool,false> raw_count;
+  init_val<bool,false> comma_separate;
 
   string               meth_str;
   method               meth;

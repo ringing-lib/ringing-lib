@@ -1,5 +1,6 @@
 // main.cpp - Entry point for touchsearch
-// Copyright (C) 2002, 2003, 2007, 2009 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003, 2007, 2009, 2010 
+// Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -57,11 +58,18 @@ class print_touch
 {
 public:
   typedef touch argument_type;
-  typedef void result_type;
-  
+  typedef void result_type; 
+
+  enum format_options {
+    comma_separate   = 0x01,  // Separate leads with a comma
+    plain_p          = 0x02,  // Use p instead of . for plain
+    print_length     = 0x04,  // Append (120 changes)
+    write_out_repeat = 0x08   // Write abcd x3 or abcdabcdabcd
+  };
+ 
   print_touch( arguments const& args, method const& meth, 
-               string const& filter_line ) 
-    : args(args), meth(meth), filter_line(filter_line)
+               string const& filter_line, format_options flags ) 
+    : args(args), meth(meth), filter_line(filter_line), flags(flags)
   {}
     
   void operator()( const touch &t ) const
@@ -74,26 +82,33 @@ public:
 
     int n=0;  row r( args.bells );
 
-    for ( touch::const_iterator i( t.begin() ); i != t.end(); ++i ) {
-      r *= *i;
-      if ( ++n % meth.size() == 0 ) {
-        size_t cn = find( args.calls.begin(), args.calls.end(), *i ) 
-          - args.calls.begin();
-        if ( cn < args.calls.size() ) cout << args.call_strs[cn];
-        else cout << '.';
+    do {
+      for ( touch::const_iterator i( t.begin() ); i != t.end(); ++i ) {
+        r *= *i;
+        if ( ++n % meth.size() == 0 ) {
+          size_t cn = find( args.calls.begin(), args.calls.end(), *i ) 
+            - args.calls.begin();
+          if ( (flags & comma_separate) && n != meth.size() ) cout << ',';
+          if ( cn < args.calls.size() ) cout << args.call_strs[cn];
+          else cout << ( flags & plain_p ? 'p' : '.' );
+        }
       }
-    }
+    } while ( (flags & write_out_repeat) && r.order() > 1 );
 
     if ( r.order() > 1 ) 
       cout << " x" << r.order();
 
-    cout << "  (" << (n*r.order()) << " changes)" << endl;
+    if ( flags & print_length )
+      cout << "  (" << (n*r.order()) << " changes)";
+
+    cout << endl;
   } 
 
 private:
   arguments const& args;
   method const& meth;
   string filter_line;
+  int flags;
 };
 
 class have_finished
@@ -128,9 +143,15 @@ void search( arguments const& args, method const& meth,
   table_search::flags flags = static_cast<table_search::flags>( 0 |
     args.ignore_rotations ? table_search::ignore_rotations : 0 |
     args.mutually_true_parts ? table_search::mutually_true_parts : 0 );
- 
+
+  print_touch::format_options fmt = static_cast<print_touch::format_options>( 
+    args.comma_separate ? 
+      ( print_touch::comma_separate | print_touch::plain_p 
+        | print_touch::write_out_repeat ) 
+    : print_touch::print_length );
+
   table_search searcher( meth, args.calls, args.pends, leads, flags );
-  print_touch  printer ( args, meth, filter_line );
+  print_touch  printer ( args, meth, filter_line, fmt );
 
   touch_search_until( searcher, iter_from_fun(printer), have_finished(args) );
 }
