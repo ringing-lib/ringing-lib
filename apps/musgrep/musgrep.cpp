@@ -178,13 +178,15 @@ int main( int argc, char *argv[] )
   // NB: Don't use args.mus.get_count() -- that will double count 5-runs
   // when 4-runs are selected, for example.
   int count = 0, countp = 0, countn = 0;
+  bool back = true;
   while ( cin ) {
     row r; 
     cin >> r;
     if ( r.bells() != args.bells ) continue;
+    back = !back;
 
     int old_score = args.mus.get_score();
-    if ( args.mus.process_row(r) ) 
+    if ( args.mus.process_row(r, back) ) 
     {
       ++count;
 
