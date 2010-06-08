@@ -1,0 +1,30 @@
+gsirilic mode needs:
+
+  _ not allowed in IDs (verify)
+  \n \t should output a literal n or t respectively
+  suppress the START, FINISH and ABORT built ins
+  (verify microsiril behaviour for these)
+
+  MUSIC
+
+    "DEFAULT" <-- CRUs, queens, (whits), tits, kings
+    "?5678"   <-- ordinary pattern but with ? instead of *
+    "7890s"   <-- "[7890]{4}*"
+
+    What is the output format?  (see. p11)
+
+  ATW
+
+    "[LON]"   <-- look at position of bells and store under 'LON'
+
+    counts: 
+      number of invocations of counter (i.e. # leads)
+      number of rows until next marker invocation (i.e. # rows)
+      how many times each place bell rings each lead
+      number of changs of method
+
+
+      
+           
+   
+
