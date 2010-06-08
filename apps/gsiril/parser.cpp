@@ -1,5 +1,5 @@
 // parser.cpp - Tokenise and parse lines of input
-// Copyright (C) 2002, 2003, 2004, 2005, 2007, 2008
+// Copyright (C) 2002, 2003, 2004, 2005, 2007, 2008, 2010
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -138,6 +138,13 @@ public:
     add_qtype(&q);    add_qtype(&qq);
     add_qtype(&defass); add_qtype(&land); add_qtype(&lor);
     add_qtype(&sym);  add_qtype(&asym);
+
+    if ( args.sirilic_syntax ) 
+      set_id_chars( "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                    "abcdefghijklmnopqrstuvwxyz",
+                    "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                    "abcdefghijklmnopqrstuvwxyz"
+                    "01234567890"  "%-!" );  // Sirilic adds '%', '-', '!'
   }
 
   virtual void validate( const token& t ) const
