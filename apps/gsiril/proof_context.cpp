@@ -121,7 +121,7 @@ bool proof_context::permute_and_prove_t::operator()( const change &c )
 bool proof_context::permute_and_prove_t::operator()( const row &c )
 {
   bool rv = p.add_row( r *= c ); 
-  pctx.execute_symbol("everyrow");
+  pctx.execute_everyrow();
   if ( pctx.isrounds() ) pctx.execute_symbol("rounds");
   if ( !rv ) pctx.execute_symbol("conflict");
   return rv;
