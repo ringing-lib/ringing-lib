@@ -1,5 +1,5 @@
 // -*- C++ -*- row_calc.h - classes to implement a simple row calculator
-// Copyright (C) 2009 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2009, 2010 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -59,6 +59,7 @@ public:
       virtual row evaluate() = 0;
       virtual void restart() = 0;
       virtual int count_vectors() const = 0;
+      virtual bool reads_stdin() const = 0;
 
     protected:
       node() {}
@@ -71,6 +72,7 @@ public:
     row evaluate() { return n->evaluate(); }
     void restart() { n->restart(); }
     int count_vectors() const { return n->count_vectors(); }
+    bool reads_stdin() const { return n->reads_stdin(); }
 
   private:
     shared_pointer<node> n;

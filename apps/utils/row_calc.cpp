@@ -1,5 +1,5 @@
 // -*- C++ -*- row_calc.cpp - classes to implement a simple row calculator
-// Copyright (C) 2009 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2009, 2010 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -174,23 +174,40 @@ private:
   virtual void restart() { lhs.restart(); rhs.restart(); }
   virtual int count_vectors() const
     { return lhs.count_vectors() + rhs.count_vectors(); }
+  virtual bool reads_stdin() const
+    { return lhs.reads_stdin() || rhs.reads_stdin(); }
 
   virtual row evaluate() {
-    row r;
     if ( lhs.count_vectors() == 0 || rhs.count_vectors() == 0 ) {
       l = lhs.evaluate();
       r = rhs.evaluate();
     }
-    else do {
-      if (l.bells() == 0 )
-        l = lhs.evaluate();
-      try { 
-        r = rhs.evaluate();
-      } catch (vector_end) {
-        rhs.restart();
-        l = row();
-      }
-    } while (l.bells() == 0);
+    // We have the cross product of two sets.  We need to be a little bit
+    // clever to ensure that we don't try to rewind stdin.
+    else if ( rhs.reads_stdin() ) {
+      do {
+        if (r.bells() == 0 )
+          r = rhs.evaluate();
+        try { 
+          l = lhs.evaluate();
+        } catch (vector_end) {
+          lhs.restart();
+          r = row();
+        }
+      } while (r.bells() == 0);
+    } 
+    else {
+      do {
+        if (l.bells() == 0 )
+          l = lhs.evaluate();
+        try { 
+          r = rhs.evaluate();
+        } catch (vector_end) {
+          rhs.restart();
+          l = row();
+        }
+      } while (l.bells() == 0);
+    }
 
     switch ( op ) {
       case tok_types::times:   
@@ -204,7 +221,7 @@ private:
   }
 
   row_calc::expr lhs, rhs;
-  row l;
+  row l, r;
   tok_types::enum_t op;
 };
 
@@ -217,6 +234,7 @@ public:
 private:
   virtual void restart() { lhs.restart(); }
   virtual int count_vectors() const { return lhs.count_vectors(); }
+  virtual bool reads_stdin() const { return lhs.reads_stdin(); }
 
   virtual row evaluate() { return lhs.evaluate().power(rhs); }
 
@@ -231,6 +249,7 @@ public:
 private:
   virtual void restart() { }
   virtual int count_vectors() const { return 0; }
+  virtual bool reads_stdin() const { return false; }
   virtual row evaluate() { return r; }
 
   row r;
@@ -243,6 +262,15 @@ public:
 private:
   virtual void restart() { started = false; }
   virtual int count_vectors() const { return 1; }
+
+  virtual bool reads_stdin() const 
+  { 
+    for ( list<row_calc::expr>::const_iterator it=l.begin(); 
+            it!=l.end(); ++it ) 
+      if ( it->reads_stdin() )
+        return true;
+    return false;
+  }
 
   virtual row evaluate()
   {
@@ -257,7 +285,7 @@ private:
         } catch (vector_end) {
           ++i; break;
         }
-      else
+      else 
         return i++->evaluate();
     }
 
@@ -277,6 +305,7 @@ public:
 private:
   virtual void restart() { started = false; }
   virtual int count_vectors() const { return 1; }
+  virtual bool reads_stdin() const { return gens.reads_stdin(); }
 
   virtual row evaluate()
   {
@@ -312,6 +341,7 @@ public:
 private:
   virtual void restart() { idx = 0; }
   virtual int count_vectors() const { return 1; }
+  virtual bool reads_stdin() const { return false; }
 
   virtual row evaluate() 
   {
@@ -347,8 +377,14 @@ public:
   }
 
 private:
-  virtual void restart() { in = NULL; }
   virtual int count_vectors() const { return 1; }
+  virtual bool reads_stdin() const { return !in_owner; }
+
+  virtual void restart() { 
+    if (reads_stdin()) 
+      throw runtime_error("Cannot re-read standard input");
+    in = NULL; 
+  }
 
   row evaluate()
   { 
