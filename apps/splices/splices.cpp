@@ -28,6 +28,9 @@
 #include "args.h"
 
 #include <iostream>
+#include <list>
+#include <set>
+#include <utility>
 
 RINGING_USING_NAMESPACE
 RINGING_USING_STD
@@ -40,12 +43,30 @@ struct arguments
   init_val<bool,false> null_splices;
   init_val<bool,false> same_le;
 
+  init_val<bool,false> show_pn;
+  init_val<bool,false> group_splices;
+
   init_val<bool,false> in_course;
 
+  arguments( int argc, char *argv[] );
   void bind( arg_parser& p );
   bool validate( arg_parser& p );
 };
 
+arguments::arguments( int argc, char *argv[] )
+{
+  arg_parser ap( argv[0], "musgrep -- grep rows for music", "OPTIONS" );
+  bind( ap );
+
+  if ( !ap.parse(argc, argv) )
+    {
+      ap.usage();
+      exit(1);
+    }
+  
+  if ( !validate(ap) )
+    exit(1);
+}
 
 void arguments::bind( arg_parser& p )
 {
@@ -71,6 +92,16 @@ void arguments::bind( arg_parser& p )
          ( 'e', "same-lead-ends",
            "Only look at pairs of methods with the same lead end change",
            same_le ) );
+
+  p.add( new boolean_opt
+         ( 'p', "place-notation",
+           "Use place notations instead of names", 
+           show_pn ) );
+
+  p.add( new boolean_opt
+         ( 'g', "group",
+           "Group together methods with mutual splices", 
+           group_splices ) );
 
   p.add( new integer_opt
          ( 'l', "leads",
@@ -99,32 +130,139 @@ bool arguments::validate( arg_parser& ap )
       return false;
     }
 
+  if ( null_splices && group_splices ) 
+    {
+      ap.error( "The -g and -n options are incompatible" );
+      return false;
+    }
 
   return true;
 }
 
-string describe_splice( group const& sg )
+class splices {
+public:
+  splices( arguments const& args ) : args(args) {}
+
+  void find_splices( library const& lib );
+
+private:
+  void test_splice( method const& a, method const& b );
+  string describe_splice( group const& sg ) const;
+  void save_splice( string const& a, string const& b, string const& d );
+  void print_splice_groups() const;
+
+  typedef list< pair< string, set<string> > > table_type;
+  table_type table;
+  arguments const& args;
+};
+
+void splices::print_splice_groups() const
+{
+  for ( table_type::const_iterator i=table.begin(), e=table.end(); i!=e; ++i ) {
+    bool need_sep = false;
+    for ( set<string>::const_iterator 
+            i2=i->second.begin(), e2=i->second.end(); i2 != e2; ++i2 ) {
+      if (need_sep) cout << " / ";
+      cout << *i2; 
+      need_sep = true;
+    }
+    cout << "\t" << i->first << "\n";
+  }
+}
+
+void splices::save_splice( string const& a, string const& b, string const& d )
+{
+  if ( !args.group_splices ) {
+    cout << a << " / " << b << "\t" << d << "\n";
+    return;
+  }
+  
+  table_type::iterator found = table.end();
+  for ( table_type::iterator i=table.begin(), e=table.end(); i!=e;  )
+    if ( d == i->first && 
+         ( i->second.find(a) != i->second.end() ||
+           i->second.find(b) != i->second.end() ) ) 
+    {
+      if ( found == e ) {
+        i->second.insert(a);
+        i->second.insert(b); 
+        found = i++;
+      }
+      else {
+        found->second.insert( i->second.begin(), i->second.end() );
+        found->second.insert(a);
+        found->second.insert(b);
+        table.erase(i++);
+      }
+    }
+    else ++i;
+
+  if ( found == table.end() ) {
+    set<string> meths;
+    meths.insert(a);  meths.insert(b);
+    table.push_back( make_pair( d, meths ) );
+  }
+}
+ 
+string splices::describe_splice( group const& sg ) const
 {
   return make_string() << (sg.size()/2) << "-lead";
 }
 
+void splices::test_splice( method const& a, method const& b )
+{
+  if ( args.same_le && a.back() != b.back() )
+    return;
+ 
+  int flags = 0; 
+  if ( args.in_course ) 
+    flags |= falseness_table::in_course_only;
+  group sg( falseness_table( a, b, flags ).generate_group() );
+
+  if ( !args.null_splices &&
+       sg.size() == factorial(args.bells-1) / (args.in_course ? 2 : 1) )
+    return;
+
+  if ( args.only_n_leads != -1 && sg.size() != args.only_n_leads * 2 )
+    return;
+
+  // If we have no names, use place notations
+  string astr = a.name(), bstr = b.name();
+  if ( astr.empty() || args.show_pn ) 
+    astr = a.format( method::M_FULL_SYMMETRY | method::M_DASH );
+  if ( bstr.empty() || args.show_pn ) 
+    bstr = b.format( method::M_FULL_SYMMETRY | method::M_DASH );
+
+  save_splice( astr, bstr, describe_splice(sg) );
+}
+
+void splices::find_splices( library const& lib )
+{
+  for ( library::const_iterator i=lib.begin(), e=lib.end(); i!=e; ++i ) 
+  {
+    library::const_iterator j=i;  ++j;
+    for ( ; j != e; ++j ) 
+    {
+      method a( i->meth() ), b( j->meth() );  
+
+      // Use litelib payloads as a proxy for the name as there's no way
+      // for a litelib to unambiguously carry a name.
+      if ( i->has_facet< litelib::payload >() )
+        a.name( i->get_facet< litelib::payload >() );
+      if ( j->has_facet< litelib::payload >() )
+        b.name( j->get_facet< litelib::payload >() );
+
+      test_splice( a, b );
+    }
+  }
+
+  if ( args.group_splices ) 
+    print_splice_groups();
+}
+
 int main( int argc, char *argv[] )
 {
-  arguments args;
-
-  {
-    arg_parser ap( argv[0], "musgrep -- grep rows for music", "OPTIONS" );
-    args.bind( ap );
-
-    if ( !ap.parse(argc, argv) )
-      {
-        ap.usage();
-        return 1;
-      }
-    
-    if ( !args.validate(ap) )
-      return 1;
-  }
+  arguments args(argc, argv);
 
   // Read methods into memory -- we need to make multiple passes over
   // the list and we can't do that on standard input.
@@ -135,30 +273,6 @@ int main( int argc, char *argv[] )
     copy( in.begin(), in.end(), back_inserter(meths) );  
   }
 
-  for ( methodset::const_iterator i=meths.begin(), e=meths.end(); i!=e; ++i ) 
-  {
-    methodset::const_iterator j=i;  ++j;
-    for ( ; j != e; ++j ) 
-    {
-      if ( args.same_le && i->meth().back() != j->meth().back() )
-        continue;
- 
-      int flags = 0; 
-      if ( args.in_course ) 
-        flags |= falseness_table::in_course_only;
-      group sg( falseness_table( i->meth(), j->meth(), flags )
-                  .generate_group() );
-
-      if ( args.null_splices &&
-           sg.size() == factorial(args.bells-1) / (args.in_course ? 2 : 1) )
-        continue;
-
-      if ( args.only_n_leads != -1 && sg.size() != args.only_n_leads * 2 )
-        continue;
-
-      string a = i->get_facet< litelib::payload >();
-      string b = j->get_facet< litelib::payload >();
-      cout << a << " & " << b << "\t" << describe_splice(sg) << "\n";
-    }
-  }
+  splices spl( args );
+  spl.find_splices( meths );
 }
