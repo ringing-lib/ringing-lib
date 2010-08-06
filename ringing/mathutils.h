@@ -37,6 +37,8 @@ RINGING_START_NAMESPACE
   
 RINGING_USING_STD
 
+#define RINGING_PI  3.14159265358979323844
+
 // Return the sign of a number
 inline RINGING_API int sign(int a) {
   return a > 0 ? +1 : a < 0 ? -1 : 0;
