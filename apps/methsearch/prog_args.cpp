@@ -767,9 +767,10 @@ bool arguments::validate( arg_parser &ap )
 	}
     }
 
-  if ( formats_have_names() && ! method_libraries::has_libraries() )
+  if ( ( formats_have_names() || formats_have_cc_ids() ) 
+       && ! method_libraries::has_libraries() )
     {
-      ap.error( "The -L option must be used if either $n or $N is used" );
+      ap.error( "The -L option must be used if $n, $N or $i is used" );
       return false;
     }
 

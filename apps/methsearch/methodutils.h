@@ -1,5 +1,5 @@
 // -*- C++ -*- methodutils.h - utility functions missing from the ringing-lib
-// Copyright (C) 2002, 2003, 2004 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003, 2004, 2010 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -51,8 +51,6 @@ bool has_rotational_symmetry( const method &m );
 bool has_consec_places( const change &c, size_t max_count = 1u );
 bool division_bad_parity_hack( const method &m, const change &c, 
 			       size_t divlen );
-
-string get_short_compressed_pn( const method &m );
 
 
 // S -- invariant under reflection in a change

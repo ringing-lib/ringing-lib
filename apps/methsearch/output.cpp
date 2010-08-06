@@ -1,5 +1,5 @@
 // -*- C++ -*- output.cpp - generic classes to handle output of methods
-// Copyright (C) 2002, 2003, 2004, 2005, 2009 
+// Copyright (C) 2002, 2003, 2004, 2005, 2009, 2010
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -50,6 +50,7 @@
 #include <ringing/row.h>
 #include <ringing/method.h>
 #include <ringing/library.h>
+#include <ringing/cclib.h> // For cc_collection_id
 #include <ringing/streamutils.h>
 
 RINGING_USING_NAMESPACE
@@ -153,8 +154,8 @@ string method_properties::impl2::get_property( int num_opt,
 	  break;
 
 	case 'Q': 
-	  // TODO: 'Q' should use m.format()
-	  os << get_short_compressed_pn(m);
+	  os << m.format( method::M_DASH | method::M_SYMMETRY |
+                          method::M_OMIT_LH );
 	  break;
 
 	case 'r': {
@@ -240,6 +241,14 @@ string method_properties::impl2::get_property( int num_opt,
 	  static int n=0;
 	  os << setw(num_opt) << ++n;
 	} break;
+ 
+        case 'i': {
+          library_entry const& e = method_libraries::instance().find(m);
+          if ( !e.null() && e.has_facet<cc_collection_id>() )
+            os << setw(num_opt) << e.get_facet<cc_collection_id>();
+          else 
+            os << string( ' ', num_opt );
+        } break;
 
 	default:
 	  throw logic_error( "Unknown variable requested" );

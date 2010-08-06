@@ -1,5 +1,5 @@
 // -*- C++ -*- methodutils.h - utility functions missing from the ringing-lib
-// Copyright (C) 2002, 2003, 2004, 2005, 2009
+// Copyright (C) 2002, 2003, 2004, 2005, 2009, 2010
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -176,56 +176,6 @@ bool division_bad_parity_hack( const method &m, const change &c,
     
   return false; // OK
 }
-
-void do_single_compressed_pn( make_string &os, const change &ch, 
-			      bool &might_need_dot, bool is_lh = false )
-{
-  const int n = ch.bells();
-  if ( ch == change( ch.bells(), "X" ) && n % 2 == 0 ) 
-    {
-      os << '-'; might_need_dot = false;
-    } 
-  else 
-    {
-      string p( ch.print() );
-      
-      if ( p.size() > 1 )
-	{
-	  if ( p[0] == bell(0).to_char() )
-	    p = p.substr(1);
-	  if ( !p.empty() && p[ p.size()-1 ] == bell( n-1 ).to_char() )
-	    p = p.substr( 0, p.size() - 1 );
-	  if ( p.empty() )
-	    p =  bell( is_lh ? n-1 : 0 ).to_char();
-	}
-
-      if (might_need_dot) os << '.';
-      os << p;
-      might_need_dot = true;
-    }
-}
-
-string get_short_compressed_pn( const method &m )
-{
-  make_string os;
-
-  bool might_need_dot(false);
-
-  if ( m.issym() )
-    {
-      os << '&';
-      for ( int i=0; i < m.length() / 2; ++i)
-	do_single_compressed_pn( os, m[i], might_need_dot );
-    }
-  else
-    {
-      for ( int i=0; i < m.length() - 1; ++i)
-	do_single_compressed_pn( os, m[i], might_need_dot );
-    }
-
-  return os;
-}
-
 
 bool has_rotational_symmetry( const method &m )
 {

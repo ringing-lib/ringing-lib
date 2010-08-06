@@ -1,5 +1,5 @@
 // -*- C++ -*- libraries.cpp - singleton containing the method libraries
-// Copyright (C) 2002, 2009 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2009, 2010 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -24,6 +24,7 @@
 #endif
 
 #include "libraries.h"
+#include "format.h"
 #include <string>
 #if RINGING_OLD_INCLUDES
 #include <vector.h>
@@ -114,6 +115,9 @@ void method_libraries::init()
         library::setpath( methlibpath );
       
       instance().clear();
+
+      if ( formats_have_cc_ids() )
+        instance().store_facet< cc_collection_id >();
 
       for ( vector< string >::const_iterator 
 	      i( instance().library_names.begin() ), 

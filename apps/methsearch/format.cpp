@@ -1,5 +1,5 @@
 // -*- C++ -*- format.cpp - classes to handle format specifiers
-// Copyright (C) 2002, 2003, 2004, 2005, 2008, 2009
+// Copyright (C) 2002, 2003, 2004, 2005, 2008, 2009, 2010
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -144,11 +144,13 @@ statsout::statsout( string const& fmt )
 RINGING_START_ANON_NAMESPACE
 static bool have_falseness_groups = false;
 static bool have_names = false;
+static bool have_cc_ids = false;
 static bool have_old_lhcodes = false;
 RINGING_END_ANON_NAMESPACE
 
 bool formats_have_falseness_groups() { return have_falseness_groups; }
 bool formats_have_names() { return have_names; }
+bool formats_have_cc_ids() { return have_cc_ids; }
 bool formats_have_old_lhcodes() { return have_old_lhcodes; }
 
 // -------------------------------------------------------------
@@ -400,6 +402,7 @@ format_string::format_string( const string &infmt,
 	      break;
 
 	    case 'p': case 'q': case 'Q': case 'n': case 'N': 
+            case 'i':
 	      if ( type != normal_type && type != require_type 
 		   && parens.empty() )
 		throw argument_error( make_string() << "The `$" << *iter << "'"
@@ -425,7 +428,7 @@ format_string::format_string( const string &infmt,
 	    {
 	    case '%': case '$': case 'c': case 'b': case 'M': 
 	    case 'o': case 'u': case ')': case 'L': case 's':
-            case '#':
+            case 'i': case '#':
 	      // Option may but needn't have a number
 	      break;
 
@@ -452,6 +455,10 @@ format_string::format_string( const string &infmt,
 	    case 'n': case 'N':
 	      have_names = true;
 	      break;
+
+            case 'i':
+              have_cc_ids = true;
+              break;
 
 	    case 'F':
 	      have_falseness_groups = true;
