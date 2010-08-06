@@ -1,5 +1,5 @@
 // -*- C++ -*- methodset.h - A set of methods with input and output interfaces
-// Copyright (C) 2009 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2009, 2010 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -46,6 +46,15 @@ RINGING_USING_STD
 class RINGING_API methodset : public libout, public library {
 public:
   methodset();
+
+  // By default, when a method is appended to the library, facets are
+  // not copied from the source.  This tells the class to copy the given
+  // facet when it is present
+  template <class Facet>
+  void store_facet( Facet const* = NULL ) { 
+    store_facet( Facet::id ); 
+  }
+  void store_facet( library_facet_id );
  
   typedef library::const_iterator const_iterator;
   typedef library::const_iterator iterator; // To avoid problems with libout's

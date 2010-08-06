@@ -1,5 +1,6 @@
 // -*- C++ -*- libbase.h - base class for both library and libout
-// Copyright (C) 2001, 2002, 2004, 2009 Martin Bright <martin@boojum.org.uk>
+// Copyright (C) 2001, 2002, 2004, 2009, 2010 
+// Martin Bright <martin@boojum.org.uk>
 // and Richard Smith <richard@ex-parrot.com>.
 
 // This library is free software; you can redistribute it and/or
@@ -118,6 +119,16 @@ public:
   {
     return pimpl->has_facet( Facet::id );
   }
+
+  // As above, but taking an id instead of a template parameter
+  shared_pointer< library_facet_base > 
+      get_facet( const library_facet_id& id ) const
+  { return pimpl->get_facet( id ); }
+
+  bool has_facet( const library_facet_id& id ) const
+  { return pimpl->has_facet( id ); }
+
+
 
   library_entry( impl *pimpl ) : pimpl(pimpl) {}
 

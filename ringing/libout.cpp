@@ -1,5 +1,5 @@
 // -*- C++ -*- libout.cpp - general classes for output of a method library
-// Copyright (C) 2004, 2009 Richard Smith <richard@ex-parrot.com>.
+// Copyright (C) 2004, 2009, 2010 Richard Smith <richard@ex-parrot.com>.
 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -40,10 +40,6 @@ void libout::flush() {
 
 void libout::append( library_entry const& entry ) { 
   get_impl<interface>()->append(entry); 
-}
-
-void libout::push_back( library_entry const& entry ) { 
-  get_impl<interface>()->append( entry ); 
 }
 
 libout::iterator libout::begin() { 

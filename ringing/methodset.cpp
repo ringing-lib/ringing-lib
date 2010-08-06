@@ -1,5 +1,5 @@
 // methodset.cpp - A set of methods with library and libout interfaces
-// Copyright (C) 2009 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2009, 2010 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -26,8 +26,12 @@
 #include <ringing/methodset.h>
 #if RINGING_OLD_INCLUDES
 #include <set.h>
+#include <map.h>
+#include <vector.h>
 #else
 #include <set>
+#include <map>
+#include <vector>
 #endif
 
 RINGING_START_NAMESPACE
@@ -40,9 +44,22 @@ public:
   class entry : public method {
   public:
     explicit entry( method const& m ) : method(m) {}
-    explicit entry( library_entry const& src ) : method(src.meth()) {}
-    // XXX: Facets
+    explicit entry( library_entry const& src,
+                    vector<library_facet_id> const& ids );
+    
     // Inherit comparison operators from method, so will work fine in a set
+
+    shared_pointer< library_facet_base > 
+      get_facet( const library_facet_id& id ) const;
+ 
+  private:
+    void copy_facets( library_entry const& src, 
+                      vector<library_facet_id> const& ids );
+
+    typedef map< library_facet_id, shared_pointer< library_facet_base > > 
+      facet_map;
+   
+    facet_map facets;
   };
  
   class entry_ref : public library_entry::impl
@@ -62,8 +79,10 @@ public:
     virtual int bells() const { return i->bells(); }
     virtual method meth() const { return *i; }
     virtual bool readentry( library_base &lb );
+    virtual shared_pointer< library_facet_base > 
+      get_facet( const library_facet_id& id ) const { return i->get_facet(id); }
 
-  private:
+ private:
     bool valid;
     set<entry>::const_iterator i;
 
@@ -78,16 +97,40 @@ public:
   
   void clear() { data.clear(); }
 
+  void store_facet( library_facet_id id ) { facet_ids.push_back(id); }
+
 private:
   // This needs to be something like a list or set that doesn't 
   // invalidate iterators on mutation.
   set<entry> data;
+
+  // Facets to copy
+  vector<library_facet_id> facet_ids;
 };
 
 void methodset::impl::append( library_entry const& e ) 
 {
-  entry new_entry(e);  
+  entry new_entry(e, facet_ids);  
   data.insert(new_entry);
+}
+
+methodset::impl::entry::entry( library_entry const& src,
+                               vector<library_facet_id> const& ids )
+  : method( src.meth() )
+{
+  for ( vector<library_facet_id>::const_iterator i=ids.begin(), e=ids.end();
+        i != e; ++i ) {
+    shared_pointer<library_facet_base> f( src.get_facet(*i) );
+    if (f) facets[*i] = f;
+  }
+}
+
+shared_pointer< library_facet_base >
+methodset::impl::entry::get_facet( const library_facet_id& id ) const
+{
+  facet_map::const_iterator i = facets.find(id);
+  if ( i != facets.end() ) return i->second;
+  else return shared_pointer< library_facet_base >();
 }
 
 bool methodset::impl::entry_ref::readentry( library_base &lb ) 
@@ -129,6 +172,11 @@ library_entry methodset::impl::find( method const& pn ) const
 void methodset::clear() 
 {
   this->libout::get_impl<impl>()->clear();
+}
+
+void methodset::store_facet( library_facet_id id )
+{
+  this->libout::get_impl<impl>()->store_facet(id);
 }
 
 RINGING_END_NAMESPACE

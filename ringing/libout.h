@@ -1,5 +1,5 @@
 // -*- C++ -*- libout.h - general classes for output of a method library
-// Copyright (C) 2004, 2009 Richard Smith <richard@ex-parrot.com>.
+// Copyright (C) 2004, 2009, 2010 Richard Smith <richard@ex-parrot.com>.
 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -44,7 +44,7 @@ public:
 
   void flush();
   void append( library_entry const& entry );
-  void push_back( library_entry const& entry );
+  void push_back( library_entry const& entry ) { return append(entry); }
 
   class iterator;
 

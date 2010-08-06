@@ -1,5 +1,5 @@
 // -*- C++ -*- libfacet.h - Library extensibility mechanism
-// Copyright (C) 2004 Richard Smith <richard@ex-parrot.com>.
+// Copyright (C) 2004, 2010 Richard Smith <richard@ex-parrot.com>.
 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -43,22 +43,38 @@ class RINGING_API library_facet_id {
 public:
   library_facet_id();
   
+  library_facet_id( const library_facet_id& o ) { *this = o; }
+  library_facet_id &operator=( const library_facet_id & );
+
 private:
-  library_facet_id( const library_facet_id & ); // Not implemented 
-  library_facet_id &operator=( const library_facet_id & ); // Not implemented 
   static int assign_id();
   friend bool operator==( const library_facet_id &, const library_facet_id & );
+  friend bool operator<( const library_facet_id &, const library_facet_id & );
   mutable int id; 
 };
 
 RINGING_API
 bool operator==( const library_facet_id &a, const library_facet_id &b );
 
+RINGING_API
+bool operator<( const library_facet_id &a, const library_facet_id &b );
+
 inline RINGING_API
 bool operator!=( const library_facet_id &a, const library_facet_id &b )
-{
-  return !( a == b );
-}
+{ return !( a == b ); }
+
+inline RINGING_API
+bool operator>( const library_facet_id &a, const library_facet_id &b )
+{ return b < a; }
+
+inline RINGING_API
+bool operator<=( const library_facet_id &a, const library_facet_id &b )
+{ return !( b < a ); }
+
+inline RINGING_API
+bool operator>=( const library_facet_id &a, const library_facet_id &b )
+{ return !( a < b ); }
+
 
 // Macro to assist in declaring facets.
 #define RINGING_DECLARE_LIBRARY_FACET( FACET_NAME, TYPE )		\

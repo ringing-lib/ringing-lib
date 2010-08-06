@@ -1,5 +1,5 @@
 // library.cpp : Library extensibility mechanism
-// Copyright (C) 2004 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2004, 2010 Richard Smith <richard@ex-parrot.com>
 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -29,11 +29,25 @@ RINGING_START_NAMESPACE
 
 RINGING_USING_STD
 
+library_facet_id& library_facet_id::operator=( library_facet_id const& o )
+{
+  if ( !o.id ) o.id = library_facet_id::assign_id();
+  id = o.id;
+  return *this;
+}
+
 bool operator==( const library_facet_id &a, const library_facet_id &b )
 {
   if ( !a.id ) a.id = library_facet_id::assign_id();
   if ( !b.id ) b.id = library_facet_id::assign_id();
   return a.id == b.id;
+}
+
+bool operator<( const library_facet_id &a, const library_facet_id &b )
+{
+  if ( !a.id ) a.id = library_facet_id::assign_id();
+  if ( !b.id ) b.id = library_facet_id::assign_id();
+  return a.id < b.id;
 }
 
 library_facet_id::library_facet_id()
