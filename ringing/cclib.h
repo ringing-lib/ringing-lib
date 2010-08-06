@@ -1,5 +1,5 @@
 // -*- C++ -*- cclib.h - Central Council Method libraries
-// Copyright (C) 2001, 2004 Mark Baner <mark@standard8.co.uk> and
+// Copyright (C) 2001, 2004, 2010 Mark Baner <mark@standard8.co.uk> and
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -37,9 +37,15 @@ RINGING_START_NAMESPACE
 
 RINGING_USING_STD
 
+// cc_collection_id is a general purpose ID for a number in printed 
+// method collections.  
+RINGING_DECLARE_LIBRARY_FACET( cc_collection_id, string );
+
 // cclib : Implement Central Council Method libraries
 class RINGING_API cclib : public library {
 public:
+  // cclib::ref is (effectively) the line number in the current version
+  // of the library.  It is not persistent as the library is updated.
   RINGING_DECLARE_LIBRARY_FACET( ref, int );
 
   static void registerlib(void);

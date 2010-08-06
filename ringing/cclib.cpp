@@ -1,5 +1,5 @@
 // cclib.cpp - Read and write the Central Council Method libraries
-// Copyright (C) 2001, 2002, 2003, 2004, 2009
+// Copyright (C) 2001, 2002, 2003, 2004, 2009, 2010
 // Mark Banner <mark@standard8.co.uk> and
 // Richard Smith <richard@ex-parrot.com>
 
@@ -53,6 +53,7 @@ RINGING_START_NAMESPACE
 
 RINGING_USING_STD
 
+RINGING_DEFINE_LIBRARY_FACET( cc_collection_id );
 RINGING_DEFINE_LIBRARY_FACET( cclib::ref );
 
 class cclib::impl : public library_base {
@@ -141,6 +142,9 @@ class cclib::impl::entry_type : public library_entry::impl
   string::size_type rw_start;
   string::size_type rw_end;
 
+  string::size_type ccc_start;
+  string::size_type ccc_end;
+
   // Method class & stage information
   int b;
   bool diff, little, plain;
@@ -173,6 +177,8 @@ cclib::impl::entry_type::entry_type()
     hand_end        ( string::npos ),
     rw_start        ( string::npos ),
     rw_end          ( string::npos ),
+    ccc_start       ( string::npos ),
+    ccc_end         ( string::npos ),
     b               ( 0            )
 {}
 
@@ -345,7 +351,13 @@ void cclib::impl::entry_type::parse_header()
   if ( rw_start != string::npos )
     rw_end = linebuf.find_first_not_of( " \t\r\n", rw_start + 6 );
   else
-    rw_end = rw_end;
+    rw_end = string::npos;
+
+  ccc_start = linebuf.find("CCC");
+  if ( ccc_start != string::npos )
+    ccc_end = linebuf.find_first_not_of( " \t\r\n", ccc_start + 3 );
+  else
+    ccc_end = string::npos;
 }
 
 string cclib::impl::entry_type::name() const
@@ -377,6 +389,9 @@ bool cclib::impl::entry_type::has_facet( const library_facet_id& id ) const
 
   else if ( id == rw_ref::id ) 
     return rw_start != string::npos && bool( get_facet( id ) );
+
+  else if ( id == cc_collection_id::id ) 
+    return ccc_start != string::npos && bool( get_facet( id ) );
 
   else
     return false;
@@ -410,6 +425,21 @@ cclib::impl::entry_type::get_facet( const library_facet_id& id ) const
 	--end;
       if ( end != rw_start )
 	result.reset( new rw_ref( linebuf.substr( rw_start, end-rw_start ) ) );
+    }
+  }
+
+  else if ( id == cc_collection_id::id ) {
+    if ( ccc_start != string::npos && ccc_start < linebuf.size() ) {
+      string::size_type end( ccc_end );
+      if ( end > linebuf.size() ) end = linebuf.size();
+      while ( end > ccc_start && isspace( linebuf[end-1] ) )
+	--end;
+      if ( end != ccc_start ) {
+        string::size_type i = linebuf.find_first_not_of(" ", ccc_start);
+        if (i > ccc_end) i = ccc_end;
+        string ccc( linebuf, i, end-i );
+	result.reset( new cc_collection_id(ccc) );
+      }
     }
   }
 
