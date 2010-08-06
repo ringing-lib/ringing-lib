@@ -1,5 +1,5 @@
 // -*- C++ -*- falseness.cpp - Class for falseness table
-// Copyright (C) 2001, 2002, 2003, 2005, 2008 
+// Copyright (C) 2001, 2002, 2003, 2005, 2008, 2010
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -66,23 +66,24 @@ falseness_table::falseness_table()
   : t(1, row())
 {}
 
-falseness_table::falseness_table( const method &m, int flags )
-  : flags(flags), lh(m.lh())
+void falseness_table::init( method const& m1, method const& m2 )
 {
-  // The falseness table is calculated using
-  //   F = \{ a b^{-1} : a, b \in M \}
-  // where M is the set of rows in the first lead of the method. 
+  // The inter-method falseness table is calculated using
+  //   F(A,B) = \{ a b^{-1} : a \in A, b \in B \}
+  // where A is the set of rows in the first lead of the first method,
+  // similarly for B and the second method. 
 
   set<row> fs;
 
-  method::const_iterator const end
-    ( flags & half_lead_only ?  m.begin() + m.size() / 2 : m.end() );
+  method::const_iterator const
+    e1( flags & half_lead_only ?  m1.begin() + m1.size() / 2 : m1.end() ),
+    e2( flags & half_lead_only ?  m2.begin() + m2.size() / 2 : m2.end() );
 
-  row r1( m.bells() );
-  for ( method::const_iterator i1( m.begin() ); i1 != end; r1 *= *i1++ )
+  row r1( m1.bells() );
+  for ( method::const_iterator i1( m1.begin() ); i1 != e1; r1 *= *i1++ )
     {
-      row r2( m.bells() );
-      for ( method::const_iterator i2( m.begin() ); i2 != end; r2 *= *i2++)
+      row r2( m2.bells() );
+      for ( method::const_iterator i2( m2.begin() ); i2 != e2; r2 *= *i2++)
 	{
 	  row f = r1 / r2;
 
@@ -101,6 +102,22 @@ falseness_table::falseness_table( const method &m, int flags )
   copy( fs.begin(), fs.end(), back_inserter(t) );
 }
 
+falseness_table::falseness_table( const method &m, int flags )
+  : flags(flags)
+{
+  init( m, m );
+}
+
+falseness_table::falseness_table( const method &a, const method& b, int flags )
+  : flags(flags)
+{
+  init( a, b );
+}
+
+group falseness_table::generate_group() const
+{
+  return group(t);
+}
 
 false_courses::false_courses()
   : t(1, row())

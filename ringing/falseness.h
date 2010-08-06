@@ -1,5 +1,6 @@
 // -*- C++ -*- falseness.h - Class for falseness table
-// Copyright (C) 2001, 2002, 2003, 2008 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2001, 2002, 2003, 2008, 2010 
+// Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -42,6 +43,7 @@ RINGING_START_NAMESPACE
 RINGING_USING_STD
 
 class method;
+class group;
 
 // The set of lead-heads that are false against the lead starting with rounds.
 class RINGING_API falseness_table
@@ -58,8 +60,15 @@ public:
     half_lead_only   = 0x04
   };
 
-  // falseness table for the method.  
+  // Falseness table for the method.  
   falseness_table( const method &m, int flags = 0 );
+
+  // Inter-method falseness table for a pair of methods,
+  //   F(A,B) = { a b^-1 : a in A, b in B }. 
+  // The order of A and B is important.  The lead of method A 
+  // starting from rounds, is false against the leads of method B 
+  // starting from each lead-head in the set F(A,B).
+  falseness_table( const method &a, const method &b, int flags = 0 );
 
   // Assignment and swapping
   void swap( falseness_table &other ) { t.swap( other.t ); }
@@ -73,10 +82,14 @@ public:
   // Number of elements
   size_t size() const { return t.size(); }
 
+  // Use the falseness table as the generator set for a group
+  group generate_group() const;
+
 private:
+  void init( method const& m1, method const& m2 );
+
   vector<row> t;
   int flags;
-  row lh;
 };
 
 // The set of course heads that are false against the plain course
