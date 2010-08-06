@@ -34,9 +34,13 @@ RINGING_USING_STD
 
 struct arguments
 {
-  init_val<int,0> bells;
+  init_val<int,0>      bells;
 
+  init_val<int,-1>     only_n_leads;
   init_val<bool,false> null_splices;
+  init_val<bool,false> same_le;
+
+  init_val<bool,false> in_course;
 
   void bind( arg_parser& p );
   bool validate( arg_parser& p );
@@ -57,6 +61,21 @@ void arguments::bind( arg_parser& p )
          ( 'n', "null-splice",
            "Display pairs of methods with no splice", 
            null_splices ) );
+
+  p.add( new boolean_opt
+         ( 'i', "in-course",
+           "Only display splices for in-course lead heads", 
+           in_course ) );
+
+  p.add( new boolean_opt
+         ( 'e', "same-lead-ends",
+           "Only look at pairs of methods with the same lead end change",
+           same_le ) );
+
+  p.add( new integer_opt
+         ( 'l', "leads",
+           "Only display methods with a NUM-lead splice", "NUM",
+           only_n_leads ) );
 }
 
 bool arguments::validate( arg_parser& ap )
@@ -73,6 +92,13 @@ bool arguments::validate( arg_parser& ap )
                 << bell::MAX_BELLS );
       return false;
     }
+
+  if ( null_splices && only_n_leads != -1 ) 
+    {
+      ap.error( "The -l and -n options are incompatible" );
+      return false;
+    }
+
 
   return true;
 }
@@ -109,15 +135,30 @@ int main( int argc, char *argv[] )
     copy( in.begin(), in.end(), back_inserter(meths) );  
   }
 
-  for ( methodset::const_iterator i=meths.begin(), e=meths.end(); i!=e; ++i ) {
+  for ( methodset::const_iterator i=meths.begin(), e=meths.end(); i!=e; ++i ) 
+  {
     methodset::const_iterator j=i;  ++j;
-    for ( ; j != e; ++j ) {
-      group sg( falseness_table( i->meth(), j->meth() ).generate_group() );
-      if ( sg.size() < factorial(args.bells-1) || args.null_splices ) {
-        string a = i->get_facet< litelib::payload >();
-        string b = j->get_facet< litelib::payload >();
-        cout << a << "\t" << b << "\t" << describe_splice(sg) << "\n";
-      }
+    for ( ; j != e; ++j ) 
+    {
+      if ( args.same_le && i->meth().back() != j->meth().back() )
+        continue;
+ 
+      int flags = 0; 
+      if ( args.in_course ) 
+        flags |= falseness_table::in_course_only;
+      group sg( falseness_table( i->meth(), j->meth(), flags )
+                  .generate_group() );
+
+      if ( args.null_splices &&
+           sg.size() == factorial(args.bells-1) / (args.in_course ? 2 : 1) )
+        continue;
+
+      if ( args.only_n_leads != -1 && sg.size() != args.only_n_leads * 2 )
+        continue;
+
+      string a = i->get_facet< litelib::payload >();
+      string b = j->get_facet< litelib::payload >();
+      cout << a << " & " << b << "\t" << describe_splice(sg) << "\n";
     }
   }
 }
