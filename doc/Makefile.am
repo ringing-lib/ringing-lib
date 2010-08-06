@@ -2,6 +2,10 @@
 
 MAINTAINERCLEANFILES = Makefile.in
 
+# Automake doesn't support conditional building of info_TEXINFOS 
+# so we cannot wrap this in `if HAVE_MAKEINFO'.  See bug 191 in
+# the Automake GNATS database.  This means that a working MAKEINFO
+# is required.
 info_TEXINFOS = ringing-lib.texi
 
 SUFFIXES = .html .pdf
