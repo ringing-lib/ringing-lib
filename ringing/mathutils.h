@@ -25,6 +25,8 @@
 
 #include <ringing/common.h>
 
+#include <utility> // For std::pair
+
 #if RINGING_HAS_PRAGMA_ONCE
 #pragma once
 #endif
