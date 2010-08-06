@@ -1,5 +1,5 @@
 // method.cpp - routines for methods, positions and calls
-// Copyright (C) 2001, 2004, 2008 Martin Bright <martin@boojum.org.uk>
+// Copyright (C) 2001, 2004, 2008, 2010 Martin Bright <martin@boojum.org.uk>
 // and Richard Smith <richard@ex-parrot.com>
 
 // This library is free software; you can redistribute it and/or
@@ -548,14 +548,18 @@ string method::format( int flags ) const
   int sym = size() / 2 - 1;
   if ( (flags & M_SYMMETRY) && size() > 2 
        && ( issym() || (flags & M_FULL_SYMMETRY) 
+                       && !(flags & M_OMIT_LH)
                        && (sym = symmetry_point()) != -1 ) ) {
     if (sym != 0) out += '&'; 
     do_compressed_section( out, *this, 0, sym+1, flags );
-    out += ',';
-    if (sym != size()/2 - 1) out += '&';
-    do_compressed_section( out, *this, 2*sym+1, size()/2+sym+1, flags );
+    if (!(flags & M_OMIT_LH)) {
+      out += ',';
+      if (sym != size()/2 - 1) out += '&';
+      do_compressed_section( out, *this, 2*sym+1, size()/2+sym+1, flags );
+    }
   } else {
-    do_compressed_section( out, *this, 0, size(), flags );
+    do_compressed_section( out, *this, 0, 
+                           size() - ( (flags & M_OMIT_LH) ? 1 : 0 ),  flags );
   }
 
   return out;

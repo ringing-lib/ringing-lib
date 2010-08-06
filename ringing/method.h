@@ -1,5 +1,5 @@
 // -*- C++ -*- method.h - Classes for dealing with methods
-// Copyright (C) 2001, 2009 Martin Bright <martin@boojum.org.uk>
+// Copyright (C) 2001, 2009, 2010 Martin Bright <martin@boojum.org.uk>
 // and Richard Smith <richard@ex-parrot.com>
 
 // This library is free software; you can redistribute it and/or
@@ -137,6 +137,7 @@ public:
     M_DASH          =  020,  // Use a dash ('-') for the cross change
     M_SYMMETRY      =  040,  // Separate palindromic methods into two components
     M_FULL_SYMMETRY = 0140,  // As above but also with unconventional sym points
+    M_OMIT_LH       = 0200   // Omit the lead head change.
   };
 
   string format( int flags = 0 ) const; // Format the place notation for output
