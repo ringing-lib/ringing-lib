@@ -30,6 +30,7 @@
 #include <iostream>
 #include <list>
 #include <set>
+#include <map>
 #include <utility>
 
 RINGING_USING_NAMESPACE
@@ -147,33 +148,90 @@ public:
 
 private:
   void test_splice( method const& a, method const& b );
+  bell get_pivot( group const& sg ) const;
   string describe_splice( group const& sg ) const;
-  void save_splice( string const& a, string const& b, string const& d );
+  void save_splice( method const& a, method const& b, string const& d );
   void print_splice_groups() const;
+  bool is_just_le_vars( set<method> const& s ) const;
+  void print_set( set<method> const& s ) const;
+  string name_or_pn( method const& m ) const;
 
-  typedef list< pair< string, set<string> > > table_type;
+  typedef list< pair< string, set<method> > > table_type;
   table_type table;
   arguments const& args;
 };
 
-void splices::print_splice_groups() const
+string splices::name_or_pn( method const& m ) const
 {
-  for ( table_type::const_iterator i=table.begin(), e=table.end(); i!=e; ++i ) {
-    bool need_sep = false;
-    for ( set<string>::const_iterator 
-            i2=i->second.begin(), e2=i->second.end(); i2 != e2; ++i2 ) {
-      if (need_sep) cout << " / ";
-      cout << *i2; 
-      need_sep = true;
-    }
-    cout << "\t" << i->first << "\n";
+  string astr = m.name();
+  // If we have no names, use place notations
+  if ( astr.empty() || args.show_pn ) 
+    return m.format( method::M_FULL_SYMMETRY | method::M_DASH );
+  else
+    return astr;
+}
+
+// Does the set of methods just consist of lead-end variants 
+bool splices::is_just_le_vars( set<method> const& s ) const
+{
+  if (s.size() < 2) return true;
+  set<method>::const_iterator first=s.begin(), i=first, e=s.end();
+  for (++i; i!=e; ++i) 
+    if ( !equal( i->begin(), i->end()-1, first->begin() ) )
+      return false;
+  return true;
+}
+
+void splices::print_set( set<method> const& s ) const
+{
+  bool need_sep = false;
+  for ( set<method>::const_iterator i=s.begin(), e=s.end(); i != e; ++i ) {
+    if (need_sep) cout << ", ";
+    cout << name_or_pn(*i); 
+    need_sep = true;
   }
 }
 
-void splices::save_splice( string const& a, string const& b, string const& d )
+void splices::print_splice_groups() const
+{
+  for ( table_type::const_iterator i=table.begin(), e=table.end(); i!=e; ++i )
+  {
+    // If we're running with -ge, we want to group methods by their lead-end.
+    if ( args.same_le ) {
+      if ( is_just_le_vars(i->second) )
+        continue;
+
+      map< change, set<method> > by_le;
+      for ( set<method>::const_iterator
+            i2=i->second.begin(), e2=i->second.end(); i2 != e2; ++i2 )
+        by_le[ i2->back() ].insert( *i2 );
+ 
+      bool need_sep = false;
+      for ( map< change, set<method> >::const_iterator 
+            i2=by_le.begin(), e2=by_le.end(); i2 != e2; ++i2 ) {
+        if (need_sep) cout << " / ";
+        print_set( i2->second );
+        need_sep = true;
+      }
+    }
+    else 
+      print_set( i->second );
+
+    // XXX: If the description becomes more detailed, this test should go.
+    // if ( !args.only_n_leads )
+      cout << "\t" << i->first;
+    cout << "\n";
+  }
+}
+
+void splices::save_splice( method const& a, method const& b, string const& d )
 {
   if ( !args.group_splices ) {
-    cout << a << " / " << b << "\t" << d << "\n";
+    cout << name_or_pn(a) << " / " << name_or_pn(b);
+    // XXX: If the description becomes more detailed, this test should go.
+    // if ( !args.only_n_leads )
+      cout << "\t" << d;
+    cout << "\n";
     return;
   }
   
@@ -189,29 +247,60 @@ void splices::save_splice( string const& a, string const& b, string const& d )
         found = i++;
       }
       else {
+        // It's possible that a is part of one set and b is part of another.
+        // If so, we need to merge them.  This can happen if some of the 
+        // splices between set members are more specific and thus not 
+        // shown.  We'll have already inserted a,b into found so no need
+        // to do again.
         found->second.insert( i->second.begin(), i->second.end() );
-        found->second.insert(a);
-        found->second.insert(b);
         table.erase(i++);
       }
     }
     else ++i;
 
   if ( found == table.end() ) {
-    set<string> meths;
+    set<method> meths;
     meths.insert(a);  meths.insert(b);
     table.push_back( make_pair( d, meths ) );
   }
 }
+
+bell splices::get_pivot( group const& sg ) const
+{
+  const int hunts = 1;
+  for ( int b=hunts; b<sg.bells(); ++b ) {
+    bool fixed = true;
+    for ( group::const_iterator i=sg.begin(), e=sg.end(); fixed && i!=e; ++i )
+      if ( (*i)[b] != b )
+        fixed = false;
+    if (fixed) return bell(b);
+  }
+
+  return bell(-1);
+}
  
 string splices::describe_splice( group const& sg ) const
 {
-  return make_string() << (sg.size()/2) << "-lead";
+  const int hunts = 1;
+
+  make_string os;
+  os << (sg.size()/2) << "-lead";
+
+  int f = factorial(sg.bells() - hunts - 1);
+  if (sg.size() == f || sg.size() == f/2) {
+    bell pivot = get_pivot(sg);
+    if (pivot != bell(-1))
+      os << " (pivot: " << pivot << ")";
+  }
+ 
+  return os;
 }
 
 void splices::test_splice( method const& a, method const& b )
 {
-  if ( args.same_le && a.back() != b.back() )
+  // If we're grouping splices, this gets done later.  This is so that
+  // we can output, e.g.  Bv,Su / Bk,He  for surprise minor lead splices.
+  if ( !args.group_splices && args.same_le && a.back() != b.back() )
     return;
  
   int flags = 0; 
@@ -226,14 +315,7 @@ void splices::test_splice( method const& a, method const& b )
   if ( args.only_n_leads != -1 && sg.size() != args.only_n_leads * 2 )
     return;
 
-  // If we have no names, use place notations
-  string astr = a.name(), bstr = b.name();
-  if ( astr.empty() || args.show_pn ) 
-    astr = a.format( method::M_FULL_SYMMETRY | method::M_DASH );
-  if ( bstr.empty() || args.show_pn ) 
-    bstr = b.format( method::M_FULL_SYMMETRY | method::M_DASH );
-
-  save_splice( astr, bstr, describe_splice(sg) );
+  save_splice( a, b, describe_splice(sg) );
 }
 
 void splices::find_splices( library const& lib )
