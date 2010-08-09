@@ -247,7 +247,7 @@ string method_properties::impl2::get_property( int num_opt,
           if ( !e.null() && e.has_facet<cc_collection_id>() )
             os << setw(num_opt) << e.get_facet<cc_collection_id>();
           else 
-            os << string( ' ', num_opt );
+            os << string( num_opt, ' ' );
         } break;
 
 	default:
