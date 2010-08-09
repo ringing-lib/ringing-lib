@@ -182,12 +182,41 @@ bool splices::is_just_le_vars( set<method> const& s ) const
   return true;
 }
 
+// Attempt to be clever.  Sort numerically if they're numbers;
+// sort numerically and then by suffix for things like 142B;
+// and sort alphabetically otherwise.
+struct sort_function {
+  sort_function( arguments const& args ) : args(args) {}
+
+  bool operator()( string const& x, string const& y ) const {
+    if ( y.empty() ) return false;
+    if ( x.empty() ) return true;
+    if ( isdigit(x[0]) && isdigit(y[0]) ) {
+      int xd = strtol(x.c_str(), NULL, 10);
+      int yd = strtol(y.c_str(), NULL, 10);
+      if (xd < yd) return true;
+      if (xd > yd) return false;
+    } 
+    else if ( isdigit(x[0]) ) return true;
+    else if ( isdigit(y[0]) ) return false;
+    return x < y;
+  }
+
+private:
+  arguments const& args;
+};
+
 void splices::print_set( set<method> const& s ) const
 {
+  set<string, sort_function> strs(( sort_function(args) ));
+  for ( set<method>::const_iterator i=s.begin(), e=s.end(); i != e; ++i )
+    strs.insert( name_or_pn(*i) );
+
   bool need_sep = false;
-  for ( set<method>::const_iterator i=s.begin(), e=s.end(); i != e; ++i ) {
+  for ( set<string, sort_function>::const_iterator 
+          i=strs.begin(), e=strs.end(); i != e; ++i ) {
     if (need_sep) cout << ", ";
-    cout << name_or_pn(*i); 
+    cout << *i; 
     need_sep = true;
   }
 }
