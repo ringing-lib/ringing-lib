@@ -28,6 +28,7 @@
 #include "expression.h"
 #include "tokeniser.h"
 #include "output.h"
+#include "stringutils.h"
 #if RINGING_OLD_INCLUDES
 #include <iterator.h>
 #include <algo.h>
@@ -57,9 +58,11 @@
 #if RINGING_OLD_C_INCLUDES
 #include <ctype.h>
 #include <assert.h>
+#include <stdlib.h>
 #else
 #include <cctype>
 #include <cassert>
+#include <cstdlib>
 #endif
 #include <ringing/streamutils.h>
 #include <ringing/row.h>
@@ -655,17 +658,44 @@ void statistics::add_entry( const histogram_entry &entry )
   ++instance().histogram[entry];
 }
 
+RINGING_START_ANON_NAMESPACE
+
+int init_columns() 
+{
+  // This is less useful that it might seem.  POSIX says $COLUMNS
+  // should be an environment variable, but it seems that most of 
+  // the time it is actually only a shell variable.  Currently,
+  // methsearch doesn't link against curses, but if we start doing so,
+  // getmaxyx() provides a better interface to this.
+  if ( char const* cols = getenv( "COLUMNS" ) ) 
+    try {
+      if ( int i = string_to_int(cols) ) 
+        return i;
+    } catch (...) {} 
+
+  return 80; 
+}
+
+int columns()
+{
+  static int val = init_columns();
+  return val;
+}
+
+RINGING_END_ANON_NAMESPACE
+
 void clear_status()
 {
-  cerr << '\r' << string( 75, ' ' ) << '\r';
+  cerr << '\r' << string( columns() - 1, ' ' ) << '\r';
 }
 
 void output_status( const method &m )
 {
   string s = m.format(method::M_DASH);
 
-  if ( s.size() > 65 ) 
-    s = s.substr(0, 65) + "...";
+  int width = columns() - 12;
+  if ( s.size() > width ) 
+    s = s.substr(0, width) + "...";
   
   clear_status();
   cerr << "Trying " << s << flush;
