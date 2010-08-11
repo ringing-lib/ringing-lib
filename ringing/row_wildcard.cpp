@@ -194,20 +194,23 @@ unsigned int row_wildcard::possible_matches
 	  // pass through again.
 	  unsigned int lastpos = s.find(']', pos + 1);
 	  unsigned int total = 0;
-	  unsigned int origq = q;
 	  for (unsigned int i = pos + 1; i < lastpos; i++)
 	    {
 	      string modified(s, 0, pos);
 	      unsigned int newpos = modified.size();
-	      // Only do this if the bell isn't in the string
-	      // already.
-	      if (modified.find(s[i]) > modified.size())
+	      // Only do this if the bell isn't in the string already,
+              // and if it isn't already in the alternatives group.  Thus,
+              // [5][5]* will never match anything, and [55]* doesn't double
+              // count rows beginning with 5.
+	      if (modified.find(s[i]) == string::npos &&
+                  s.find(s[i],pos) == i)
 		{
 		  modified += s[i];
 		  modified += s.substr(lastpos + 1, s.size() - lastpos - 1);
-		  // ensure q is reset
-		  q = origq;
+
+	          int orig_q = q;
 		  total += possible_matches(bells, newpos, modified, q);
+		  q = orig_q;
 		}
 	    } 
 	  return total;
@@ -238,7 +241,6 @@ unsigned int row_wildcard::possible_matches
               // match 120+120 times.
 
 	      unsigned int total = 0;
-	      unsigned int orig_q = q;
 
   	      for (unsigned i = 0; i <= n; ++i )
 		{
@@ -246,8 +248,9 @@ unsigned int row_wildcard::possible_matches
 		  modified.append( i, '?' );
                   modified.append( s, pos + 1, s.size() - pos - 1);
 
-		  q = orig_q;
+	          int orig_q = q;
 		  total += possible_matches(bells, pos, modified, q);
+		  q = orig_q;
 		}
 	      return total;
 	    }
