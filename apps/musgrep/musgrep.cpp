@@ -219,6 +219,7 @@ int main( int argc, char *argv[] )
     cout << (need_sep ? "\t" : "") << args.mus.get_score();    
     need_sep = true;
   }
-  cout << endl;
+  if (args.positive || args.negative || args.count || args.score)
+    cout << endl;
 }
 
