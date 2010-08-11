@@ -99,11 +99,6 @@ unsigned int count_bells(const string &s)
 // ********************************************************
 
 #if RINGING_USE_EXCEPTIONS
-music_details::invalid_regex::invalid_regex( string const& pat, 
-                                             string const& msg ) 
-  : invalid_argument( "The pattern '" + pat + "' was invalid: " + msg )
-{}
-
 invalid_named_music::invalid_named_music( string const& n, string const& msg )
   :  invalid_argument( "The named music '" + n + "' was invalid: " + msg )
 {}
@@ -129,24 +124,17 @@ bool music_details::set(const string &e, int s)
 
 bool music_details::set(const string &e, int sh, int sb)
 {
-  static_cast<string&>(*this) = e;
   scoreh = sh;  scoreb = sb;
 
   // Should reset this here as we have changed the expression
   counth = countb = 0;
 
-  bool isvalid = check_expression();
-#if !RINGING_USE_EXCEPTIONS
-  // Can't do match if we don't use exceptions, so
-  // just set the expression to "", hopefully the user will catch this.
-  if (!isvalid) this->clear();
-#endif
-  return isvalid;
+  return pat.set(e);
 }
 
-string music_details::get() const
+string const& music_details::get() const
 {
-  return *this;
+  return pat.get();
 }
 
 int music_details::possible_score(unsigned int bells) const
@@ -158,97 +146,7 @@ int music_details::possible_score(unsigned int bells) const
 
 unsigned int music_details::possible_matches(unsigned int bells) const
 {
-  int q = 1;
-  return possible_matches(bells, 0, *this, q);
-}
-
-unsigned int music_details::possible_matches(unsigned int bells, unsigned int pos, const string &s, int &q) const
-{
-  if (pos >= s.size()) // was >= bells
-    {
-      return 1;
-    }
-  else
-    {
-      if (bell::is_symbol(s[pos]))
-	{
-	  return possible_matches(bells, pos + 1, s, q);
-	}
-      else if (s[pos] == '?')
-	{
-	  unsigned int count = possible_matches(bells, pos + 1, s, q) * q;
-	  q++;
-	  return count;
-	}
-      else if (s[pos] == '[')
-	{
-	  // Replace the [...] with each item in it and 
-	  // pass through again.
-	  unsigned int lastpos = s.find(']', pos + 1);
-	  unsigned int total = 0;
-	  unsigned int origq = q;
-	  for (unsigned int i = pos + 1; i < lastpos; i++)
-	    {
-	      string modified(s, 0, pos);
-	      unsigned int newpos = modified.size();
-	      // Only do this if the bell isn't in the string
-	      // already.
-	      if (modified.find(s[i]) > modified.size())
-		{
-		  modified += s[i];
-		  modified += s.substr(lastpos + 1, s.size() - lastpos - 1);
-		  // ensure q is reset
-		  q = origq;
-		  total += possible_matches(bells, newpos, modified, q);
-		}
-	    } 
-	  return total;
-	}
-      else if (s[pos] == '*')
-	{
-	  if ((s.size() == pos + 1) || 
-	      (s.find('*', pos + 1) > s.size() - pos))
-	    {
-	      // Just 1 star, therefore replace with maximum ?
-	      string modified(s, 0, pos);
-	      // Now add ?
-	      for (unsigned int i = 0; i < bells - count_bells(s.substr(0, pos)) - count_bells(s.substr(pos + 1, s.size() - pos - 1)); i++)
-		{
-		  modified += '?';
-		}
-	      // Now add rest of string
-	      modified += s.substr(pos + 1, s.size() - pos - 1);
-	      return possible_matches(bells, pos, modified, q);
-	    }
-	  else
-	    {
-	      // More than 1 star. Replace string with 0, 1, 2... '?'
-	      // and calculate at each stage
-	      unsigned int total = 0;
-	      unsigned int origq = q;
-	      for (unsigned int i = 0; i <= bells - count_bells(s.substr(pos + 1, s.size() - pos - 1)) - count_bells(s.substr(0, pos)); i++)
-		{
-		  string modified(s, 0, pos);
-		  for (unsigned int j = 0; j < i; j++)
-		    {
-		      modified += '?';
-		    }
-
-		  // Now add rest of string
-		  modified += s.substr(pos + 1, s.size() - pos - 1);
-		  // reset q to ensure we start with the same each time.
-		  q = origq;
-		  total += possible_matches(bells, pos, modified, q);
-		}
-	      return total;
-	    }
-	}
-      else
-	{
-          RINGING_THROW_OR_RETURN( 
-            invalid_regex(*this, string("Unknown character: ") + s[pos]), 0 );
-	}
-    }
+  return pat.count(bells);
 }
 
 unsigned int music_details::count(const EStroke &stroke) const
@@ -293,60 +191,15 @@ void music_details::increment(const EStroke &stroke)
   else if (stroke == eHandstroke) counth++;
 }
 
-void music_details::check_bells(unsigned int b) const
+bool music_details::check_bells( unsigned bells ) const
 {
-#if RINGING_USE_EXCEPTIONS
-  for (string::const_iterator i = this->begin(); i != this->end(); i++)
-    if (bell::is_symbol(*i) && bell::read_char(*i) >= b )
-      RINGING_THROW_OR_RETURN_VOID( 
-        invalid_regex(*this, string("Bell out of range: ") + *i ) );
-#endif
+  // Logically this is a const function -- we don't care
+  // about the value of row_wildcard::bells(), so setting
+  // it here doesn't change the visible properties of the 
+  // music_details class.
+  return const_cast< music_details * >(this)->pat.set_bells( bells );
 }
 
-// Function to provide a brief check if an expression is valid/invalid.
-bool music_details::check_expression() const
-{
-  // check all items are valid.
-  int sqbrackets = 0;
-  for (string::const_iterator i = this->begin(); i != this->end(); i++)
-    {
-      if (!bell::is_symbol(*i))
-	{
-	  // Check it is not another valid character
-	  switch (*i)
-	    {
-	    case '?':
-	    case '*':
-	      if (sqbrackets)
-                RINGING_THROW_OR_RETURN( 
-                  invalid_regex(*this, 
-                    string("A ") + *i + " is not permitted in []s"), 
-                  false );
-	      break;
-	    case '[':
-	      if (sqbrackets)
-                RINGING_THROW_OR_RETURN( 
-                  invalid_regex(*this, "Nested [s"), false );
-	      sqbrackets = 1;
-	      break;
-	    case ']':
-	      if (sqbrackets != 1)
-                RINGING_THROW_OR_RETURN( 
-                  invalid_regex(*this, "Unexpected ']'"), false );
-	      sqbrackets = 0;
-	      break;
-	    default:
-              RINGING_THROW_OR_RETURN( 
-                invalid_regex(*this, string("Unknown character: ") + *i),
-                false );
-	    }
-	}
-    }
-  if (sqbrackets != 0)
-    RINGING_THROW_OR_RETURN( 
-      invalid_regex(*this, "Unterminated '['" ), false );
-  return true;
-}
 
 // ********************************************************
 // function definitions for MUSIC_NODE
@@ -369,36 +222,37 @@ void music_node::set_bells(unsigned int b)
 
 void music_node::add(const music_details &md, unsigned int i, unsigned int key, unsigned int pos)
 {
+  string const& mds = md.get();
   // Does this item end here?
-  if (i >= md.size())
+  if (i >= mds.size())
     {
       detailsmatch.push_back(key);
     }
   else if (pos <= bells)
     {
-      if (bell::is_symbol(md[i]))
+      if (bell::is_symbol(mds[i]))
 	{
 	  // Simple bell, add it and move on.
-	  add_to_subtree(bell::read_char(md[i]) + 1, md, i, key,  pos, false);
+	  add_to_subtree(bell::read_char(mds[i]) + 1, md, i, key,  pos, false);
 	}
       else
 	{
-	  if (md[i] == '?')
+	  if (mds[i] == '?')
 	    {
 	      add_to_subtree(0, md, i, key, pos, false);
 	    }
-	  else if (md[i] == '[')
+	  else if (mds[i] == '[')
 	    {
 	      unsigned int j = i;
 	      // 'remove' the [] section from the string
-	      unsigned int newpos = md.find(']', i + 1);
+	      unsigned int newpos = mds.find(']', i + 1);
 	      j++;
 	      // We have an option, so add to each tree until ] occurs.
-	      while (md[j] != ']')
+	      while (mds[j] != ']')
 		{
-		  if (bell::is_symbol(md[j]))
+		  if (bell::is_symbol(mds[j]))
 		    {
-		      add_to_subtree(bell::read_char(md[j]) + 1, md,  
+		      add_to_subtree(bell::read_char(mds[j]) + 1, md,  
                                      newpos, key, pos, false);
 		    }
 		  // else ignore it for now...
@@ -406,9 +260,9 @@ void music_node::add(const music_details &md, unsigned int i, unsigned int key, 
 		}
 	      // ok, that's all for here.
 	    }
-	  else if (md[i] == '*')
+	  else if (mds[i] == '*')
 	    {
-	      if (md.size() == i + 1)
+	      if (mds.size() == i + 1)
 		{
 		  // no more bells to go, don't bother adding to the subtree.
 		  // just add here
@@ -418,7 +272,7 @@ void music_node::add(const music_details &md, unsigned int i, unsigned int key, 
 		{
 		  // There are more to go
 		  // Any of them '*'s?
-		  if (md.find('*', i + 1) >= md.size())
+		  if (mds.find('*', i + 1) >= mds.size())
 		    {
 		      // Deal with the only * to go in the add_to_subtree
 		      // function.
@@ -431,7 +285,7 @@ void music_node::add(const music_details &md, unsigned int i, unsigned int key, 
 		      // First ignore the star and just move on.
 		      add(md, i + 1, key, pos);
 		      // Now deal with the star
-		      if (md.size() - i >= pos)
+		      if (mds.size() - i >= pos)
 			add_to_subtree(0, md, i, key, pos, true);
 		      else
 			add_to_subtree(0, md, i, key, pos, false);
@@ -447,11 +301,11 @@ void music_node::add_to_subtree(unsigned int place, const music_details &md, uns
   cloning_pointer<music_node>& j = subnodes[place];
   if (!j) j.reset( new music_node(bells) );
 
-  if (process_star)
+  string const& mds = md.get();  if (process_star)
     {
       // We are to process star data star.
-      if (bells - pos == count_bells(md.substr(i, md.size() - i)) + 1 &&
-	  md.find('*', i + 1) >= md.size())
+      if (bells - pos == count_bells(mds.substr(i, mds.size() - i)) + 1 &&
+	  mds.find('*', i + 1) >= mds.size())
 	// There are now only numbers to go.
 	j->add(md, i + 1, key, pos + 1);
       else

@@ -51,6 +51,7 @@
 #endif
 #include <string>
 #include <ringing/row.h>
+#include <ringing/row_wildcard.h>
 #include <ringing/pointers.h>
 
 RINGING_START_NAMESPACE
@@ -68,7 +69,7 @@ enum EStroke
 };
 
 // Class to store details of the expressions and count.
-class RINGING_API music_details : private string
+class RINGING_API music_details
 {
 public:
   music_details(const string& pattern, int scoreh, int scoreb);
@@ -80,7 +81,7 @@ public:
   bool set(const string& pattern, int score = 1);
 
   // Return the expression
-  string get() const;
+  string const& get() const;
 
   // Return the maximum number of possible matches
   unsigned int possible_matches(unsigned int bells) const;
@@ -99,11 +100,7 @@ public:
   friend class music;
   friend class music_node;
 
-#if RINGING_USE_EXCEPTIONS
-  struct invalid_regex : public invalid_argument {
-    invalid_regex( string const& pat, string const& msg );
-  };
-#endif
+  typedef row_wildcard::invalid_pattern invalid_regex;
 
   RINGING_FAKE_COMPARATORS(music_details)
   
@@ -112,10 +109,9 @@ private:
   void clear();
   // Which count to increment
   void increment(const EStroke& = eBackstroke);
-  bool check_expression() const;
-  void check_bells(unsigned int bells) const;
-  unsigned int possible_matches(unsigned int bells, unsigned int pos, const string &s, int &q) const;
+  bool check_bells(unsigned b) const;
   
+  row_wildcard pat;
   unsigned int counth, countb;
   int scoreh, scoreb;
 };
