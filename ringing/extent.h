@@ -1,5 +1,6 @@
 // -*- C++ -*- extent.h - Classes for iterating through an extent
-// Copyright (C) 2001, 2002, 2005, 2007, 2008 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2001, 2002, 2005, 2007, 2008, 2010
+// Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -52,7 +53,7 @@ RINGING_USING_STD
 
 // Generate the extent in lexicographical order
 class RINGING_API extent_iterator
-  : public RINGING_STD_CONST_ITERATOR( forward_iterator_tag, row )
+  : public RINGING_STD_CONST_ITERATOR( bidirectional_iterator_tag, row )
 {
 public:
   // Standard iterator typedefs
