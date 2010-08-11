@@ -1,5 +1,5 @@
 // -*- C++ -*- expression.cpp - classes to handle expressions
-// Copyright (C) 2002, 2003, 2004, 2005, 2008, 2009
+// Copyright (C) 2002, 2003, 2004, 2005, 2008, 2009, 2010
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -67,9 +67,14 @@ RINGING_USING_NAMESPACE
 RINGING_USING_STD
 
 // A helper class to dump the whole of a range (e.g. of tokens)
-#if RINGING_DEBUG_FILE
 RINGING_START_ANON_NAMESPACE
 
+class division_by_zero : public argument_error {
+public:
+  division_by_zero() : argument_error("Division by zero") {}
+};
+
+#if RINGING_DEBUG_FILE
 template <class It>
 class output_range_t {
 public:
@@ -90,9 +95,9 @@ template <class It>
 output_range_t<It> output_range(It first, It last) {
   return output_range_t<It>( first, last );
 }
+#endif
 
 RINGING_END_ANON_NAMESPACE
-#endif
 
 // ---------------------------------------------------------------------
 
@@ -415,6 +420,18 @@ expression::parser::parser()
   prec[5].push_back(modulo);
 }
 
+RINGING_START_ANON_NAMESPACE
+
+template <class T> 
+struct safe_divides : binary_function<T,T,T> {
+  T operator() (const T& x, const T& y) const {
+    if (y == T()) throw division_by_zero();
+    return x/y;
+  }
+};
+
+RINGING_END_ANON_NAMESPACE
+
 shared_pointer<expression::node> 
 expression::parser::split_expr( vector<token>::const_iterator first,
 				vector<token>::const_iterator middle,
@@ -444,19 +461,19 @@ expression::parser::split_expr( vector<token>::const_iterator first,
     case label:		     			\
       DEBUG( "Splitting node at " #tmpl );	\
       return ptr_t	      			\
-	( new i_binary_i_node< RINGING_PREFIX_STD tmpl<long> >(arg1, arg2) )
+	( new i_binary_i_node< tmpl<long> >(arg1, arg2) )
 
-      CASE( plus,       plus          );
-      CASE( minus,      minus         );
-      CASE( times,      multiplies    );
-      CASE( divide,     divides       );
-      CASE( modulo,     modulus       );
-      CASE( iless,      less          );
-      CASE( igreater,   greater       );
-      CASE( ilesseq,    less_equal    );
-      CASE( igreatereq, greater_equal );
-      CASE( iequals,    equal_to      );
-      CASE( inoteq,     not_equal_to  );
+      CASE( plus,       RINGING_PREFIX_STD plus          );
+      CASE( minus,      RINGING_PREFIX_STD minus         );
+      CASE( times,      RINGING_PREFIX_STD multiplies    );
+      CASE( divide,                        safe_divides  );
+      CASE( modulo,     RINGING_PREFIX_STD modulus       );
+      CASE( iless,      RINGING_PREFIX_STD less          );
+      CASE( igreater,   RINGING_PREFIX_STD greater       );
+      CASE( ilesseq,    RINGING_PREFIX_STD less_equal    );
+      CASE( igreatereq, RINGING_PREFIX_STD greater_equal );
+      CASE( iequals,    RINGING_PREFIX_STD equal_to      );
+      CASE( inoteq,     RINGING_PREFIX_STD not_equal_to  );
 
 # undef CASE
 # define CASE( label, tmpl )			\
@@ -782,16 +799,18 @@ expression::expression( const string& str )
   pimpl = p.make_node( toks.begin(), toks.end() ); 
 }
 
+#define RINGING_CATCH_EXPRESSION_ERROR( retval )           \
+  catch ( division_by_zero const& ) { return (retval); }   \
+  catch ( bad_lexical_cast const& ) { return (retval); }
+
 bool expression::b_evaluate( const method_properties& m ) const
 {
   try 
     {
       return pimpl->i_evaluate(m); 
     }
-  catch ( const bad_lexical_cast& )
-    {
-      return false;
-    }
+  RINGING_CATCH_EXPRESSION_ERROR( false )
+  
   catch ( const script_exception& sc )
     {
       switch ( sc.type() )
@@ -814,11 +833,10 @@ string expression::evaluate( const method_properties& m ) const
     {
       return pimpl->s_evaluate(m); 
     }
-  catch ( const bad_lexical_cast& )
-    {
-      return "<ERROR>";
-    }
+  RINGING_CATCH_EXPRESSION_ERROR( "<ERROR>" )
 }
+
+#undef RINGING_CATCH_EXPRESSION_ERROR
 
 vector<expression>& expression_cache::exprs() 
 {
@@ -843,4 +861,3 @@ bool expression_cache::b_evaluate( size_t idx,
 {
   return exprs().at(idx).b_evaluate(props);
 }
-
