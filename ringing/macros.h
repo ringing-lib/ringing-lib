@@ -1,6 +1,6 @@
 // -*- C++ -*- macros.h - Macros to hide system specific constructs
 //
-// Copyright (C) 2001, 2002, 2003, 2006, 2007, 2008, 2009
+// Copyright (C) 2001, 2002, 2003, 2006, 2007, 2008, 2009, 2010
 // Martin Bright <martin@boojum.org.uk> and
 // Richard Smith <richard@ex-parrot.com>
 
@@ -336,11 +336,11 @@ RINGING_END_NAMESPACE_STD
 
 // Abstract throwing versus returning an error value
 #if RINGING_USE_EXCEPTIONS
-#  define RINGING_THROW_OR_RETURN(t, r) throw t
-#  define RINGING_THROW_OR_RETURN_VOID(t) throw t
+#  define RINGING_THROW_OR_EXPR(t, e) throw t
 #else
-#  define RINGING_THROW_OR_RETURN(t, r) return r
-#  define RINGING_THROW_OR_RETURN_VOID(t) return
+#  define RINGING_THROW_OR_EXPR(t, e) e
 #endif
+#define RINGING_THROW_OR_RETURN(t, r)   RINGING_THROW_OR_EXPR(t, return r)
+#define RINGING_THROW_OR_RETURN_VOID(t) RINGING_THROW_OR_EXPR(t, return)
 
 #endif // RINGING_MACROS_H

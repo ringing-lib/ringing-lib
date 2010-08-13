@@ -61,7 +61,7 @@ public:
 
   // Counts the number of rows that match the pattern.
   // The bells argument here overrides the value passed to the constructor.
-  unsigned count( unsigned bells = 0 ) const;
+  RINGING_ULLONG count( unsigned bells = 0 ) const;
 
 #if RINGING_USE_EXCEPTIONS
   struct invalid_pattern : public invalid_argument {
@@ -72,9 +72,23 @@ public:
 private:
   bool check_expression() const;
 
-  unsigned int possible_matches
+  void copy_choices
+    ( string& dest, string const& src, unsigned& pos ) const;
+
+  bool copy_if_choices_contains
+    ( string& dest, string const& src, unsigned& pos, char sym ) const;
+
+  bool copy_choices_intersection 
+    ( string& dest, string const& a, unsigned& ai,
+                    string const& b, unsigned& bi ) const;
+
+  bool make_intersection
+    ( string& dest, string const& a, string const& b ) const;
+
+  RINGING_ULLONG possible_matches
     ( unsigned int bells, unsigned int pos, const string &s, int &q ) const;
 
+  // Data members
   string pat;
   unsigned b;
 };

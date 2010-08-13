@@ -28,6 +28,7 @@
 #include <ringing/bell.h>
 
 #include <string>
+#include <cassert>
 
 RINGING_START_NAMESPACE
 
@@ -96,7 +97,139 @@ unsigned int count_bells(const string &s)
   return total;
 }
 
+string expand_star( string const& src, unsigned star_pos, unsigned count )
+{
+  string expanded( src, 0, star_pos );
+  expanded.append( count, '?' );
+  expanded.append( src, star_pos + 1, src.size() - star_pos - 1);
+  return expanded;
+}
+
 RINGING_END_ANON_NAMESPACE
+
+void row_wildcard::copy_choices( string& dest, 
+                                 string const& src, unsigned& pos ) const
+{
+  assert( src[pos] == '[' );
+  unsigned p_end = src.find( ']', pos );
+  if ( p_end == string::npos ) 
+    RINGING_THROW_OR_EXPR( 
+      row_wildcard::invalid_pattern( pat, "Missing ]" ),
+      p_end = src.size()-1 );
+
+  dest.append( src, pos, p_end-pos+1 );
+  pos = p_end;
+}
+
+bool row_wildcard::copy_if_choices_contains( string& dest, 
+                                             string const& src, unsigned& pos,
+                                             char sym ) const
+{
+  assert( src[pos] == '[' );
+  unsigned p_end = src.find( ']', pos );
+  if ( p_end == string::npos ) 
+    RINGING_THROW_OR_EXPR( 
+      row_wildcard::invalid_pattern( pat, "Missing ]" ),
+      p_end = src.size()-1 );
+
+  unsigned p_sym = src.find( sym, pos );
+  if ( p_sym > p_end ) return false;
+  dest += sym;
+  pos = p_end;
+}
+
+bool row_wildcard::copy_choices_intersection( string& dest, 
+                                              string const& a, unsigned& ai,
+                                              string const& b, unsigned& bi )
+                                                                         const
+{
+  assert( a[ai] == '[' && b[bi] == '[' );
+  dest += '['; 
+
+  unsigned b_init = bi;
+  bool had_one = false;
+  for ( ++ai; a[ai] != ']'; ++ai ) {
+    bi = b_init;
+    if ( copy_if_choices_contains( dest, b, bi, a[ai] ) ) 
+      had_one = true;
+  }
+
+  dest += ']';
+  return had_one;
+}
+
+
+// This is not a general purpose intersection function -- it only 
+// parses A and B up to the first '*' and assumes that they are 
+// identical after that.  Returns false if the intersection is
+// necessarily zero.
+bool row_wildcard::make_intersection( string& dest, 
+                                      string const& a, string const& b ) const
+{
+  unsigned ai = 0, bi = 0;
+  unsigned an = a.find('*'), bn = b.find('*');
+  assert( an != string::npos && bn != string::npos );
+  assert( a.substr(an) == b.substr(bn) );
+
+  while ( ai != an || bi != bn ) 
+  {
+    bool a_wild = ( a[ai] == '*' || a[ai] == '?' );
+    bool b_wild = ( b[bi] == '*' || b[bi] == '?' );
+
+    bool a_bell = bell::is_symbol( a[ai] );
+    bool b_bell = bell::is_symbol( b[bi] );
+
+    bool a_set  = ( a[ai] == '[' );
+    bool b_set  = ( b[bi] == '[' );
+
+    if ( a_wild && b_wild ) 
+      dest += '?';
+
+    else if ( a_wild && b_bell )
+      dest += b[bi];
+    else if ( b_wild && a_bell )
+      dest += a[ai];
+
+    else if ( a_bell && a_bell ) {
+      if ( a[ai] == b[bi] ) 
+        dest += a[ai];
+      else return false;
+    }
+
+    else if ( a_wild && b_set ) 
+      copy_choices( dest, b, bi );  // bi now refers to ']'
+    else if ( b_wild && a_set ) 
+      copy_choices( dest, a, ai );  // bi now refers to ']'
+
+    else if ( a_bell && b_set ) {
+      if ( !copy_if_choices_contains(dest, b, bi, a[ai]) ) 
+        return false;
+    }
+    else if ( b_bell && a_set ) {
+      if ( !copy_if_choices_contains(dest, a, ai, b[bi]) ) 
+        return false;
+    }
+
+    else if ( a_set && b_set ) {
+      if ( !copy_choices_intersection(dest, a, ai, b, bi) )
+        return false;
+    }
+
+    else RINGING_THROW_OR_RETURN( 
+      row_wildcard::invalid_pattern( string(), 
+        string("Unknown symbol: ") 
+          + ( a_set || a_wild || a_bell ? b[bi] : a[ai] ) ),
+      false );
+
+
+    if ( ai < an ) ++ai;
+    if ( bi < bn ) ++bi;
+  }
+
+  dest += a.substr(an);
+  return true;
+}
+
 
 // Function to provide a brief check if an expression is valid/invalid.
 bool row_wildcard::check_expression() const
@@ -143,7 +276,7 @@ bool row_wildcard::check_expression() const
   return true;
 }
 
-unsigned row_wildcard::count( unsigned bells ) const
+RINGING_ULLONG row_wildcard::count( unsigned bells ) const
 {
   int q = 0;
   if (!bells) bells = b;
@@ -165,17 +298,25 @@ unsigned row_wildcard::count( unsigned bells ) const
 // S of the character we're considering.   When a '[...]' is encountered,
 // recurse try each possibility in turn, thus the leading substring of S
 // -- i.e. the section [0, POS) -- never contains a [].  When a '*' is 
-// encountered, we rewrite it as a sequence of '?'s; if multiple '*'s are
-// present, we try each possibility separate (but see below for discussion).
-// Q keeps track of the number of '?'s already found; we multiply by Q each
-// time we find one with the overall result of Q! for a series of Q '?'s.
+// encountered, we rewrite it as a sequence of '?'s.  If multiple '*'s are
+// present, we try each possibility separately -- and, critically, subtract
+// the double-counting due to a single row matching multiple times (see 
+// comment below for discussion).  Q keeps track of the number of '?'s 
+// already found; we multiply by Q each time we find one with the overall 
+// result of Q! for a series of Q '?'s.
 //
-unsigned int row_wildcard::possible_matches
+RINGING_ULLONG row_wildcard::possible_matches
   ( unsigned int bells, unsigned int pos, const string &s, int &q ) const
 {
   if (pos >= s.size())
     {
-      return 1;
+      // Elsewhere (and traditionally in the music_details class) we
+      // consider a overly-short pattern without a star (e.g. '5') to
+      // have an implicit trailing '*'.  For consistency, lets do that here.
+      if ( count_bells(s) < bells )
+        return possible_matches( bells, pos, s + '*', q );
+      else
+        return 1;
     }
   else
     {
@@ -190,10 +331,11 @@ unsigned int row_wildcard::possible_matches
 	}
       else if (s[pos] == '[')
 	{
+	  RINGING_ULLONG total = 0;
+
 	  // Replace the [...] with each item in it and 
 	  // pass through again.
 	  unsigned int lastpos = s.find(']', pos + 1);
-	  unsigned int total = 0;
 	  for (unsigned int i = pos + 1; i < lastpos; i++)
 	    {
 	      string modified(s, 0, pos);
@@ -212,46 +354,95 @@ unsigned int row_wildcard::possible_matches
 		  total += possible_matches(bells, newpos, modified, q);
 		  q = orig_q;
 		}
-	    } 
+	    }
+
 	  return total;
 	}
       else if (s[pos] == '*')
 	{
+          // Two consecutive '*'s should be replaced with a single one
+          // as the code to handle the intersection between moving sections
+          // is inefficient and this is one of the worst cases.
+          if ( s.size() > pos + 1 && s[pos+1] == '*' ) 
+            {
+              string modified( s, 0, pos );
+              modified.append( s, pos + 1, s.size() - pos - 1 );
+ 
+              return possible_matches( bells, pos, modified, q );
+            }
+
           // The largest number of '?'s that this could represent.
           const unsigned n = bells - count_bells(s);
 
 	  if ( s.size() == pos + 1 || s.find('*', pos + 1) == string::npos )
 	    {
-	      // Just 1 star, therefore replace with maximum ?
-	      string modified( s, 0, pos );
-              modified.append( n, '?' );
-	      modified.append( s, pos + 1, s.size() - pos - 1 );
-
-	      return possible_matches(bells, pos, modified, q);
+	      // Pattern has just 1 star, so replace with maximum '?'
+	      return possible_matches(bells, pos, expand_star(s, pos, n), q);
 	    }
 	  else
 	    {
        	      // More than 1 star. Replace string with 0, 1, 2... '?'
 	      // and calculate at each stage
+              //
+              // However, just doing this is not sufficient as it would
+              // have '*[35]*' match 240 different rows on five bells.
+              // The problem arises because we fail to handle the overlap 
+              // between '*5*' and '*3*'.  Both correctly match 120 times, 
+              // but that does not mean that '*[53]*' should match 120+120 
+              // times.
+              //
+              // When we expand the first '*' in '*[35]*' we sum the matches
+              // '[35]*' + '?[35]*' + '??[35]*' + '???[35]*' + '????[35]*'.
+              // However, we also need to subtract the intersections
+              // between each of the 5*4/2=10 pairs.  For example, the first
+              // intersection '[35]*' AND '?[35]*' is '[35][35]*' which 
+              // matches 2x6=12 times.  The other nine intersections 
+              // contribute the same giving a total of 240-10*12 = 120.
+              //
+              // However, as a useful optimisation, we can observe that
+              // the intersections are all zero iff the fragment of the
+              // pattern between the two '*'s includes a fixed bell.   For
+              // example, '*5*3*1*' has a fixed bell between each pair of 
+              // '*'s and so is correctly calculated (20 on five bells)
+              // without calculating the intersection.  As calculating
+              // the intersection is O(BELLS^2), this is best avoided 
+              // where possible.
+              //
+              bool need_intersection = true;
+              {
+                size_t frag_end = s.find('*', pos + 1);
+                bool in_bracket = false;
+                bool had_fixed_bell = false;
+                for ( unsigned i = pos+1; i < frag_end; ++i )
+                  if ( s[i] == '[' ) 
+                    in_bracket = true;
+                  else if ( s[i] == ']' ) 
+                    in_bracket = false;
+                  else if ( !in_bracket && bell::is_symbol(s[i]) ) 
+                    need_intersection = false;
+              }
 
-              // FIXME:  This code is buggy:  on five bells, '*[35]*' matches
-              // 240 different rows!  The problem is because we fail to
-              // handle the overlap between '*5*' and '*3*'.  Both correctly 
-              // match 120 times, but that does not mean that '*[53]*' should
-              // match 120+120 times.
+	      RINGING_ULLONG total = 0;
 
-	      unsigned int total = 0;
-
-  	      for (unsigned i = 0; i <= n; ++i )
+  	      for ( unsigned i = 0; i <= n; ++i )
 		{
-		  string modified( s, 0, pos );
-		  modified.append( i, '?' );
-                  modified.append( s, pos + 1, s.size() - pos - 1);
+		  string modified = expand_star(s, pos, i);
 
 	          int orig_q = q;
 		  total += possible_matches(bells, pos, modified, q);
 		  q = orig_q;
+
+                  for ( unsigned j = 0; need_intersection && j < i; ++j )
+                    {
+                      string intersect;
+                      if ( make_intersection
+                             ( intersect, modified, expand_star(s,pos,j) ) )
+                        total -= possible_matches( bells, pos, intersect, q );
+
+                      q = orig_q;
+                    }
 		}
+
 	      return total;
 	    }
 	}
