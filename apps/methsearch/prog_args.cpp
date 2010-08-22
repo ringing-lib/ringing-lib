@@ -386,6 +386,11 @@ void arguments::bind( arg_parser &p )
            filter_lib_mode ) );
 
   p.add( new boolean_opt
+         ( '\0', "invert-filter",
+           "Invert filter so only non-matching methods are listed",
+           invert_filter ) );
+
+  p.add( new boolean_opt
 	 ( 'P', "parity-hack",
 	   "Require an equal number of rows of each parity for each place "
 	   "in the treble's path",
@@ -783,6 +788,12 @@ bool arguments::validate( arg_parser &ap )
   if ( filter_lib_mode && ! method_libraries::has_libraries() )
     {
       ap.error( "--filter-lib specified, but no libaries specified" );
+      return false;
+    }
+
+  if ( invert_filter && !filter_lib_mode && !filter_mode )
+    {
+      ap.error( "--invert-filter can only be used when filtering" );
       return false;
     }
 

@@ -96,6 +96,7 @@ private:
   row canonical_coset_member( row const& r );
 
   bool is_acceptable_method();
+  void output_method( method const& meth );
   void found_method();
 
   bool is_acceptable_leadhead( const row &lh );
@@ -159,8 +160,19 @@ void searcher::filter( library const& in )
         output_status( filter_method );
       ++node_count;
 
+      RINGING_ULLONG old_search_count = search_count;
       general_recurse();
       assert( m.length() == 0 );
+
+      if ( args.invert_filter ) {
+        assert( search_count == old_search_count ||
+                search_count == old_search_count + 1 );
+        if ( old_search_count == search_count ) {
+          ++search_count;
+          output_method( filter_method );
+        } 
+        else --search_count;
+      }
     } 
 }
 
@@ -207,16 +219,22 @@ void run_search( const arguments &args )
     }
 }
 
-void searcher::found_method()
+void searcher::output_method( method const& meth )
 {
   if ( !args.outputs.empty() ) {
-    method_properties props(m);
+    method_properties props( meth );
 
     if ( !args.quiet && args.status && args.outfile.empty() )
       clear_status();
 
     args.outputs.append( props );
   }
+}
+
+void searcher::found_method()
+{
+  if ( !args.invert_filter ) 
+    output_method(m);
 
   ++search_count;
 }
