@@ -66,7 +66,7 @@ touch.h printm.h print_pdf.h pdf_fonts.h pointers.h extent.h falseness.h \
 search_base.h basic_search.h multtab.h table_search.h streamutils.h \
 xmllib.h group.h libfacet.h peal.h xmlout.h libout.h mathutils.h bell.h \
 change.h place_notation.h litelib.h dom.h libbase.h methodset.h \
-lexical_cast.h istream_impl.h row_wildcard.h
+lexical_cast.h istream_impl.h row_wildcard.h iteratorutils.h
 
 # Delete common-am.h before packaging up the distribution
 dist-hook:
