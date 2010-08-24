@@ -1,5 +1,5 @@
 // row.cpp - Classes for row and changes
-// Copyright (C) 2001, 2008, 2009 Martin Bright <martin@boojum.org.uk>
+// Copyright (C) 2001, 2008, 2009, 2010 Martin Bright <martin@boojum.org.uk>
 // and Richard Smith <richard@ex-parrot.com>
 
 // This library is free software; you can redistribute it and/or
@@ -548,6 +548,76 @@ row_block& row_block::recalculate(int start)
   for(;start < i;start++)
     (*this)[start + 1] = (*this)[start] * ch[start];
   return *this;
+}
+
+RINGING_START_ANON_NAMESPACE
+
+struct cycle_cmp {
+  bool operator()( string const& x, string const& y ) const { 
+    return x.size() < y.size();
+  }
+};
+
+struct cycle_eq {
+  bool operator()( string const& x, string const& y ) const { 
+    return x.size() == y.size();
+  }
+};
+
+vector<string> conjugacy_class_vector( row const& r )
+{
+  string c = r.cycles();
+  vector<string> v;  v.reserve( c.size() - r.bells() + 1 );
+
+  size_t i = 0;
+  for ( size_t j; (j = c.find(',', i)) != string::npos; i=j+1)
+    v.push_back( c.substr(i, j-i ) );
+  v.push_back( c.substr(i, c.size()-i) );
+
+  sort( v.begin(), v.end(), cycle_cmp() );
+  return v;
+}
+
+bool are_conjugate_impl( vector<string> const& xc, vector<string> const& yc )
+{
+  return xc.size() == yc.size() && 
+    equal( xc.begin(), xc.end(), yc.begin(), cycle_eq() );
+}
+
+row cycles_as_row( vector<string> const& rc )
+{
+  string s;
+  for ( vector<string>::const_iterator i=rc.begin(), e=rc.end(); i!=e; ++i )
+    s += *i;
+
+  return row(s);
+}
+
+RINGING_END_ANON_NAMESPACE
+
+bool are_conjugate( row const& x, row const& y )
+{
+  return are_conjugate_impl( conjugacy_class_vector(x), 
+                             conjugacy_class_vector(y) );
+}
+
+// Find a row r such that y = r^-1.x.r
+//
+// A partial explanation of this can be found here:
+// <http://ex-parrot.com/~richard/r-t/2010/08/003555.html>
+//
+// Proposition 9.20 from Humphreys' 'A Course in Group Theory' 
+// (OUP, 1996) is also relevant.
+//
+row conjugator( row const& x, row const& y )
+{
+  const vector<string> xc( conjugacy_class_vector(x) ),
+                       yc( conjugacy_class_vector(y) );
+
+  if ( are_conjugate_impl(xc, yc) )
+    return cycles_as_row(xc) * cycles_as_row(yc).inverse();
+  else
+    return row();
 }
 
 RINGING_END_NAMESPACE

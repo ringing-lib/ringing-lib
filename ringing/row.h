@@ -1,5 +1,6 @@
 // -*- C++ -*- row.h - Classes for rows and changes
-// Copyright (C) 2001, 2007, 2008, 2009 Martin Bright <martin@boojum.org.uk>
+// Copyright (C) 2001, 2007, 2008, 2009, 2010 
+// Martin Bright <martin@boojum.org.uk>
 // and Richard Smith <richard@ex-parrot.com>
 
 // This library is free software; you can redistribute it and/or
@@ -159,6 +160,11 @@ RINGING_API istream& operator>>(istream& i, row& r);
 
 // An operator which has to be here
 RINGING_API row& operator*=(row& r, const change& c);
+
+// Find r such that y = r^-1.x.r or return row() if x and y are not conjugate.
+RINGING_API row conjugator( row const& x, row const& y );
+RINGING_API bool are_conjugate( row const& x, row const& y );
+
 
 struct RINGING_API permuter
 {
