@@ -147,6 +147,9 @@ public:
   void find_splices( library const& lib );
 
 private:
+  static string name_or_pn( arguments const& args, method const& m );
+  class sort_function;
+
   void test_splice( method const& a, method const& b );
   bell get_pivot( group const& sg ) const;
   string describe_splice( group const& sg ) const;
@@ -154,14 +157,14 @@ private:
   void print_splice_groups() const;
   bool is_just_le_vars( set<method> const& s ) const;
   void print_set( set<method> const& s ) const;
-  string name_or_pn( method const& m ) const;
+  set<method, sort_function> get_lead_splices( method const& m ) const;
 
   typedef list< pair< string, set<method> > > table_type;
   table_type table;
   arguments const& args;
 };
 
-string splices::name_or_pn( method const& m ) const
+string splices::name_or_pn( arguments const& args, method const& m )
 {
   string astr = m.name();
   // If we have no names, use place notations
@@ -185,10 +188,11 @@ bool splices::is_just_le_vars( set<method> const& s ) const
 // Attempt to be clever.  Sort numerically if they're numbers;
 // sort numerically and then by suffix for things like 142B;
 // and sort alphabetically otherwise.
-struct sort_function {
+struct splices::sort_function {
   sort_function( arguments const& args ) : args(args) {}
 
-  bool operator()( string const& x, string const& y ) const {
+  bool operator()( method const& xm, method const& ym ) const {
+    string x = name_or_pn(args, xm), y = name_or_pn(args, ym); 
     if ( y.empty() ) return false;
     if ( x.empty() ) return true;
     if ( isdigit(x[0]) && isdigit(y[0]) ) {
@@ -206,17 +210,51 @@ private:
   arguments const& args;
 };
 
+set<method, splices::sort_function> 
+  splices::get_lead_splices( method const& m ) const 
+{
+  set<method, sort_function> ls(( sort_function(args) ));
+
+  for ( table_type::const_iterator i=table.begin(), e=table.end(); i!=e; ++i )
+    if ( i->first == "1-lead" && i->second.find(m) != i->second.end() ) {
+      for ( set<method>::const_iterator 
+              i2=i->second.begin(), e2=i->second.end(); i2 != e2; ++i2 )
+        if ( i2->back() == m.back() )
+          ls.insert(*i2);
+      break;
+    }
+
+  if (ls.size() == 1) ls.clear();
+
+  return ls;
+}
+
 void splices::print_set( set<method> const& s ) const
 {
-  set<string, sort_function> strs(( sort_function(args) ));
-  for ( set<method>::const_iterator i=s.begin(), e=s.end(); i != e; ++i )
-    strs.insert( name_or_pn(*i) );
+  set<method, sort_function> s2( s.begin(), s.end(), sort_function(args) );
 
   bool need_sep = false;
-  for ( set<string, sort_function>::const_iterator 
-          i=strs.begin(), e=strs.end(); i != e; ++i ) {
+  for ( set<method, sort_function>::const_iterator 
+          i=s2.begin(), e=s2.end(); i != e; ++i ) {
     if (need_sep) cout << ", ";
-    cout << *i; 
+
+    set<method, sort_function> ls( get_lead_splices(*i) );
+    if ( ls.size() ) {
+      cout << "[";
+      bool need_sep_2 = false;
+      for ( set<method, sort_function>::const_iterator 
+              i2=ls.begin(), e2=ls.end(); i2 != e2; ++i2 ) {
+        if (need_sep_2) cout << ", ";
+        cout << name_or_pn(args, *i2); 
+        need_sep_2 = true;
+
+        if (*i2 != *i) s2.erase(*i2);
+      }
+      cout << "]";
+    }
+    else 
+      cout << name_or_pn(args, *i); 
+
     need_sep = true;
   }
 }
@@ -225,6 +263,11 @@ void splices::print_splice_groups() const
 {
   for ( table_type::const_iterator i=table.begin(), e=table.end(); i!=e; ++i )
   {
+    // We've got spurious lead splice entries here to enable bracketing
+    // of lead splices within other types of splice.
+    if ( args.only_n_leads > 1 && i->first == "1-lead" )
+      continue;
+
     // If we're running with -ge, we want to group methods by their lead-end.
     if ( args.same_le ) {
       if ( is_just_le_vars(i->second) )
@@ -256,7 +299,7 @@ void splices::print_splice_groups() const
 void splices::save_splice( method const& a, method const& b, string const& d )
 {
   if ( !args.group_splices ) {
-    cout << name_or_pn(a) << " / " << name_or_pn(b);
+    cout << name_or_pn(args, a) << " / " << name_or_pn(args, b);
     // XXX: If the description becomes more detailed, this test should go.
     // if ( !args.only_n_leads )
       cout << "\t" << d;
@@ -341,7 +384,9 @@ void splices::test_splice( method const& a, method const& b )
        sg.size() == factorial(args.bells-1) / (args.in_course ? 2 : 1) )
     return;
 
-  if ( args.only_n_leads != -1 && sg.size() != args.only_n_leads * 2 )
+  if ( args.only_n_leads != -1 && sg.size() != args.only_n_leads * 2 &&
+       // Need to store lead splices if we're to group them
+       ( !args.group_splices || sg.size() != 2 ) )
     return;
 
   save_splice( a, b, describe_splice(sg) );
