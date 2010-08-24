@@ -58,7 +58,7 @@
 \usepackage[xetex,%
             citecolor=black,filecolor=black,linkcolor=black,urlcolor=black,%
             pdfauthor={Richard A. Smith},%
-            pdftitle={A users' guide to methsearch and associated tools},%
+            pdftitle={A user's guide to methsearch and associated tools},%
             bookmarks,colorlinks,hyperfootnotes,hyperindex]{hyperref}
 
 % Code to make indexes how we want them...
@@ -103,7 +103,7 @@
 \makeatother
 
 % And now for something different...
-\title{A users' guide to \methsearch\ and associated tools}
+\title{A user's guide to \methsearch\ and associated tools}
 \author{Richard A.\ Smith\\\url{richard@ex-parrot.com}}
 
 \begin{document}
@@ -580,7 +580,7 @@ to your \textitidx{path}\index{path} so that the the shell can find
 methsearch.  If, when trying to run \methsearch, you see an error message
 saying `\texttt{bash:\ methsearch:\ command not found}', you 
 probably need to run the following:\footnote{Or add it to your 
-\verb+~/.bashrc+ so they are always available.}
+\verb+~/.bashrc+ so they are always available.}\fspec{PATH}
 \begin{Verbatim}
 export PATH=$PATH:$HOME/bin
 \end{Verbatim}
@@ -1298,8 +1298,11 @@ When performing a very long search, especially one that finds few methods,
 it can be difficult to know how far through the search \methsearch\ has got.
 The \verb+-u+ option\oid{u}{status} tells \methsearch\ to display a 
 \textit{status line}
-which is updated every 10,000 nodes to containing the first 65 characters of 
-the place notation of the current node.  This information is displayed on
+which is updated every 10,000 nodes to containing the first 68 characters of 
+the place notation of the current node.\footnote{The number of characters
+to display can be overriden with the \verb+$COLUMNS+ environment variable.%
+\fspec{COLUMNS} Many shells set this automatically.}
+This information is displayed on
 \textitidx{standard error} meaning that it is not captured by shell
 redirection using \verb+>+.
 
@@ -1368,6 +1371,8 @@ then : $((++x)); fi; done | grep -Fv 'Alarm clock'
 \texttt{-V}&\texttt{--version}&Print version information and exit\\
 &\texttt{--filter}&Run in filter mode on standard input\\
 &\texttt{--filter-lib}&Run in filter mode on specified libraries\\
+&\texttt{--invert-filter}
+                &Invert filter so only non-matching methods are listed\\
 &\texttt{--require}&Apply an additional requirement to the search results\\
 \texttt{-M}&\texttt{--music}&Configure how \methsearch\ evaluates musicality\\
 \texttt{-F}&\texttt{--falseness}&Configure how falseness is checked\\
@@ -1387,9 +1392,14 @@ The \verb+--filter+\loid{filter} option is used to change \methsearch\ from
 searching for methods \textit{ab initio} to filtering 
 a list of methods supplied on \textitidx{standard input}.
 The input format is a list of methods, one per line, with the
-place notation first on the line followed by arbitrary junk that is ignored.%
-\footnote{A UTF-8 byte order mark (BOM)\index{byte order mark} is permitted
-at the start of the first line.}
+place notation first on the line followed by arbitrary content 
+that is ignored.%
+\footnote{A UTF-8\index{UTF-8} byte order mark (BOM)\index{byte order mark} 
+is permitted, though not required, at the start of the first line.  
+This has the hexadecimal encoding \texttt{EF BB BF}.  
+Other Unicode\index{Unicode} formats (such as UTF-16 or UTF-32) are not 
+permitted; nor, in general, are any 
+non-ASCII-compatible character sets.\index{character set}}
 The output from methsearch \verb+-R"$q +\ldots\verb+"+ is a suitable input.
 This is particularly useful if you want to do a lengthy search, but are not
 entirely sure how to restrict the results initially.  Dump everything into
@@ -1414,8 +1424,15 @@ instead of reading methods from standard input, it reads methods from
 all the libraries specified with \verb+-L+\oi{L} options.  This is useful
 for finding named methods with particular properties.\index{named methods}
 
+The \verb+--invert-filter+\loid{invert-filter} option is used in conjunction
+with either \verb+--filter+ or \verb+--filter-lib+.  It inverts the sense
+of the filtering so that \methsearch\ outputs every method that does 
+\textit{not} match the search criteria.  
+The method count (per \verb+-C+, below) 
+and any statistical output (\sref{stats}) is similarly inverted.
+
 The \verb+--require+\loid{require} provides a way of imposing more complex
-requirements on the methods that \methsearch\ finds.  It's argument is 
+requirements on the methods that \methsearch\ finds.  Its argument is 
 an \textit{expression} whose is described in \sref{expr}.  The expression
 is evaluated for each method found, and only if it evaluates to true 
 is the method found.  Many other options can also be rewritten as a
@@ -1472,7 +1489,7 @@ In addition to literal text, the format string may contain
 
 \textit{Variables} are pieces of text beginning with a 
 \verb+$+\symidx{\$}{variables}
-that are replaced by a \textit{method parameter} --- piece of information
+that are replaced by a \textit{method parameter} --- a piece of information
 about the method.\footnote{A \verb+%+\symidx{\%}{variable} 
 can be used as an alternative to
 \verb+$+ in variables, although not in expressions such as in
@@ -1531,6 +1548,7 @@ typed in on the command line reach \methsearch\ in their intended form.
 \D\N\F{P}&The path for bell \N\\
 \D\F{O}&The coursing order (defined so the tenors course)\\
 \D\No\F{s}&An index of the staticity of the method\\
+\D\No\F{i}&The method identifier from the CC libraries\\
 \D\No\textit{\#}&The number of that method\\
 \D\No\F{c}&The number of matching methods --- see \sref{stats}\\
 \D\D&A literal \D\\
@@ -1556,8 +1574,9 @@ that this is inspired by the \verb+printf+ format specifiers,
 for example \verb+%d+ versus \verb+%5d+.}
 
 A small number of variables can only be used in specific 
-contexts.  The place notation and name variables, \verb+$p+, \verb+$q+,
-\verb+$Q+, \verb+$n+ and \verb+$N+ cannot be included in \verb+-H+ options.
+contexts.  The place notation, name and identifier variables, 
+\verb+$p+, \verb+$q+, \verb+$Q+, \verb+$n+, \verb+$N+ and \verb+$i+,
+cannot be included in \verb+-H+ options.
 %This is not a technical restriction \textit{per se}, rather that as 
 %place notations are unique to a method and names nearly so, it would rarely
 The \verb+$c+ variable can only be included in \verb+-H+ format strings, 
@@ -1581,9 +1600,13 @@ with MicroSiril\index{MicroSiril libraries}, the letter \verb+z+ is used
 to denote all lead head types without a code.  The old lead head code,
 \verb+$D+\fspec{D}, only applies on five or six bells.  It is a capital
 letter, or \verb+?+ if no code applies.%
-\footnote{The codes for doubles are defined in the Central Council's
+\footnote{The codes \verb+A+--\verb+K+ (excluding \verb+I+) 
+and \verb+Q+--\verb+V+ for doubles are defined in the Central Council's
 1980 \textit{Doubles Collection}.%
 \index{Central Council!Doubles Collection@\textit{Doubles Collection}}
+These are augmented by \verb+K+, \verb+M+ and \verb+W+--\verb+Z+ for
+fourths place methods which will be defined in the Central Council's 
+forthcoming doubles collection.
 The codes for regular minor methods are defined in the Central Council's
 1961 \textit{Collection of Minor Methods}\index{Central Council!Collection of 
 Minor Methods@\textit{Collection of Minor Methods}}.  These are
@@ -1642,12 +1665,26 @@ Major is the most static treble dodging major method with a score of 104.
 
 Ignoring falseness,
 symmetry, treble path and other such constraints, the static index describes
-the number of trivial variants that exist for a method --- a method with
-staticity $s$ has $2^s$ variants.  (In case of Plain Bob, the dodges can be 
-replaced with Reverse Canterbury--style places or with three blows and a hunt or \textit{vice versa} giving four possibilities in each dodging position; 
+the number of trivial variants\index{trivial variants} that exist for a method
+--- a method with staticity $s$ has $2^s$ variants.  
+(In case of Plain Bob, the dodges can be replaced with 
+Reverse Canterbury--style places\index{Reverse Canterbury places} 
+or with three blows and a hunt or \textit{vice versa} giving four 
+possibilities in each dodging position; 
 similarly the seconds over the treble could be replaced with four blows over
 each other, or with a point and a place or \textit{vice versa}.  This gives
-$2^6=64$ possibilities.)
+$2^6=64$ possibilities.  Note that variants that alter the direction of bells
+leaving a piece of work are not counted --- thus the difference between
+Kent\index{Kent Treble Bob} and Oxford\index{Oxford Treble Bob} is not 
+considered a trivial variant for this purpose.)
+
+The method identifier, \verb+$i+, is read from the method libraries.  
+In the Central Council's libraries it is the column headed `CCC';  
+it is the method's number in the printed method collections.  It is of
+most use in plain doubles where these identifiers have become the standard 
+shorthand for referring to doubles methods.  Note that the lead head code
+is not included in this --- thus to get 131B for Reverse Canterbury, the
+format string \verb+$i$D+ should be used.
 
 The method number, \verb+$#+, is simply a counter that is incremented for 
 each method that is found.  (Note that methods discarded using the 
@@ -1678,7 +1715,7 @@ together with their ASCII\index{ASCII} values and meanings.
 \verb+\v+& $0$x$0$b& VT&  vertical tab character\\
 \verb+\x+\textit{NN}  &$0$x\textit{NN}&
   &arbitrary character by hexadecimal character number\\
-\verb+\\+& $0$x$0$c&   &  a literal \verb+\+ character\\
+\verb+\\+& $0$x$5$c&   &  a literal \verb+\+ character\\
 \verb+\$+& $0$x$24$&   &  a literal \verb+$+ character\\
 \verb+\%+& $0$x$25$&   &  a literal \verb+%+ character\\
 \end{tabular}
@@ -1747,7 +1784,7 @@ methsearch -b8 -SG1 -srefj -p2 -M'<4-runs>'      @hfill\
 Understanding complex examples like this is typically harder than
 writing them.  The first part of this \verb+-R+ option is a expression,
 \verb+$[ $M>35 ? "\x1b[1;31m" : "" ]+.  This says, if the music score 
-is greater than 35, print the string `\verb"\x1b[1;31m"'.  \verb+\x1b+
+is greater than 35, print the string `\verb"\x1b[1;31m"'.  Here, \verb+\x1b+
 is the ASCII \textitidx{escape character}, and the whole string means
 put the console into bold mode and set the 
 foreground colour to red.  Similarly, the `\verb"\x1b[0m"'
@@ -1932,16 +1969,17 @@ octal.}  strings are enclosed in single or double quotes, e.g.
 
 The use of quotes for string literals potentially conflicts with
 the use of quotes for quoting a command line option from the 
-shell.\index{shell!quotation}.  Generally this is not a 
-problem because either the shell quotation can be done with one type of quotes,
-and the literal quoted with the other sort.  However, there are circumstances
-when this luxury is not available, for example, because the whole shell command
+shell.\index{shell!quotation}  Generally this is not a 
+problem because the shell quotation can be done with one type of quotes,
+and the literal quoted with the other sort.  
+However, there are circumstances when this luxury is not available, 
+for example, because the whole shell command
 line is itself quoted in single quotes, and you need to use double quotes for 
 both.  To solve this, the inner two
 need escaping \index{escaping|see shell!escaping}\index{shell!escaping} 
 from the shell.  This is done by prefixing them with 
 a backslash\index{backslash}: 
-\verb+--require="$n ne \"Untitled\""+
+\verb+--require="$n ne \"Untitled\""+.
 
 \subsection{Expression type system}\index{type system}
 
@@ -1949,20 +1987,23 @@ Expressions in \methsearch\ are \textit{weakly typed}\index{weak typing}.
 This means that strings are integers are converted freely as required.
 When an integer is converted to a string, the string value is simply the
 decimal representation of the integer with no leading zeros.  
-Strings can be converted to integers too.  If the strings contains just
+Strings can be converted to integers too.  If the string contains just
 digits \verb+0+--\verb+9+ then the conversion occurs successfully;%
 \footnote{In fact, a leading \verb-+- or \verb+-+ is permitted too.  
 This is another way of getting around the lack of a unary minus operator.%
 \index{minus, unary, lack thereof}  In builds of \methsearch\ on 32-bit
 systems, integer value of the string, $i$, must satisfy 
 $-2^{31} \le i \le 2^{31}-1$.}
-an \textitidx{expression error} occurs.  This means that no further evaluation
+otherwise an \textitidx{expression error} occurs.  
+This means that no further evaluation
 of the whole expression occurs; if the expression was in a format string,
 its value is set to \verb+<ERROR>+; and if it was in a \verb+--require+ option,
 it is considered to have evaluated to false.  It is not possible to recover
 from an expression error within the expression.  For example, 
 \verb+"a"-1 > 42 ? "b" : "c"+ does not evaluate to either 
 \verb+"b"+ or \verb+"c"+.
+An expression error also occurs when division by zero is attempted,%
+\index{division!by zero} for example in \verb+1/0+.
 
 There is no specific boolean type\index{boolean type} --- any non-zero
 integer is considered to mean true.  The comparison operators and logical 
@@ -2006,7 +2047,7 @@ they need to be used in conjunction with an operator that does short circuiting%
 \section{Statistical output}\label{stats}
 \index{statistics|(}
 
-The \verb+-H+ option\oid{H} provides a mechanism for gathering simple
+The \verb+-H+ option\oid{H}\ provides a mechanism for gathering simple
 statistical information on methods.  The option's argument is a format string 
 (\sref{fmtstr}).  For each method that is found, the format string is expanded,
 any variables (\sref{variables}) except \verb+$c+\fspec{c}, 
@@ -2033,9 +2074,9 @@ This produces the output:
 29 Treble Bob
 \end{Verbatim}
 
-The place notation and name variables, \verb+$p+, \verb+$q+,
-\verb+$Q+, \verb+$n+ and \verb+$N+ cannot be included directly in 
-statistical output.  
+Certain variables --- namely \verb+$p+, \verb+$q+,
+\verb+$Q+, \verb+$n+, \verb+$N+, \verb+$i+ and \verb+$#+ --- 
+cannot be included directly in statistical output.  
 This is not a technical restriction \textit{per se}, rather that as 
 place notations are unique to a method and names nearly so, it would rarely
 serve any purpose, and as the whole statistical output has to be stored
@@ -2261,7 +2302,7 @@ Although it is possible to generalise these falsness groups codes to
 irregular methods, \methsearch\ does not currently support it.
 
 The \verb+A+ falseness group (that is, the one including \verb+23456+ as a
-couse head) is sometimes interpretted in different ways.%
+couse head) can be interpretted in different ways.%
 \index{A falseness@\texttt{A} falseness}  It is sometimes
 taken as the identity falseness, in which all methods have it; and it 
 is sometimes taken to mean that the method is internally false within the
@@ -2636,7 +2677,7 @@ Interestingly, this just generates one method:%
 \index{Hudson Delight Minor|see{Norwich Delight Minor}}
 However, in their wisdom, the Central Council Methods Committee have
 decided that this method should be renamed Norwich Delight Minor because
-of some perceived similarity with a major method of that name.}
+of some perceived similarity to a major method of that name.}
 \begin{Verbatim}[obeytabs=true]
 &3-3.4-2-1.4-4.5,2	Norwich Delight Minor
 \end{Verbatim}
@@ -3573,7 +3614,7 @@ false with the lead or plain course.  The default is \verb+-Fh+.
 to print the $n$th change and row.
 \item The \verb+--limit+ option aborts the search after a specified number
 have been found.
-\item There's now the start of a \verb+-M+ option for musical analysis.  It's 
+\item There's now the start of a \verb+-M+ option for musical analysis.  Its 
 argument is a musical pattern, e.g.\ \verb+-M*1234*+.  The \verb+%M+ variable
 prints the musical score.
 \end{list}
@@ -3677,7 +3718,52 @@ the default is 2.
 \item Support for command invocations \verb+$(+\ldots\verb+)+.
 \end{list}
 
-% Next release is 2009
+Relatively little developement happened during the next few years 
+and it wasn't until 2009 that I next produced a release of \methsearch.
+
+\subsection{15 June 2009}
+\begin{list}{\labelitemi}{\leftmargin=1em}
+\item Added \verb+-Mcourse+ and \verb+-Mlead+.
+\item Added \verb+-Fr+ and support for row expressions, including
+file inputs and command invocations (though not set literals or group 
+generator literals).
+\item Falseness groups can now be found with \verb+-F:+\textit{groups}.
+\item The \verb+-C+ option is now accepted as shorthard for \verb+--count+.
+\item Added \verb+--node-count+, \verb+--prefix+, \verb+--filter+.
+\item Multiple \verb+--require+ options can be given.
+\end{list}
+
+\subsection{18 September 2009}
+\begin{list}{\labelitemi}{\leftmargin=1em}
+\item Added \verb+-Mhalflead+, \verb+-M2halflead+, \verb+-Mrhalflead+
+and \verb+-M2rhalflead+.
+\end{list}
+
+\subsection{30 April 2010}
+\begin{list}{\labelitemi}{\leftmargin=1em}
+\item Wrote the first version of this manual.
+\item Little method: \verb+-Z+ (\sref{stage_class}).
+\item Symmetric sections: \verb+-y+ (\sref{int_struct}).
+\item Mirror symmetry: \verb+--mirror+ (\sref{symmetry}).
+\item Improved falseness: \verb+-Fs+ (\sref{avoidrow}, 
+  \verb+-FP+ (\sref{pends}).
+\item Library filtering: \verb+--filter-lib+ (\sref{misc_opt}).
+\item Random ordering: \verb+--random+, \verb+--random-count+, \verb+--seed+
+  (\S\ref{output_opt}).
+\item Method staticity: \verb+$s+ (\sref{fmtstr}).
+\item Support for three-bell methods.
+\item Set and group literals: \verb+{+\ldots\verb+}+, \verb+<+\ldots\verb+>+
+  (\sref{rowexprmulti}).
+\end{list}
+
+\subsection{Pending release}
+\begin{list}{\labelitemi}{\leftmargin=1em}
+\item Method identifiers: \verb+$i+ (\sref{fmtstr}).
+\item Support for reading \verb+$COLUMNS+ (\sref{output_opt}).
+\item Fourths-place doubles lead ends now supported in \verb+$D+ 
+  (\sref{fmtstr}).
+\item Filter inverting: \verb+--invert-filter+ (\sref{misc_opt}).
+\end{list}
 
 \clearpage
 \footnotesize
