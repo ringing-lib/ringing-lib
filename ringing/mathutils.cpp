@@ -37,8 +37,10 @@
 
 #if RINGING_OLD_INCLUDES
 #include <algo.h>
+#include <vector.h>
 #else
 #include <algorithm>
+#include <vector>
 #endif
 
 #include <ringing/mathutils.h>
@@ -166,6 +168,48 @@ RINGING_LLONG ipower( int base, int exp )
     RINGING_LLONG temp = ipower(base, exp / 2);
     return temp * temp;
   }
+}
+
+// These prime number functions are only here because the implementation of 
+// landau(), below, needs them.  They're really not very efficient for 
+// large values of n.
+bool is_prime(unsigned n)
+{
+  if (n<2) return false;
+  unsigned pmax = floor( sqrt(n) );
+  for ( unsigned p = 2; p <= pmax; ++p )
+    if ( n % p == 0 )
+      return false;
+  return true;
+}
+
+unsigned next_prime(unsigned n)
+{
+  while ( ! is_prime(++n) )
+    ;
+  return n;
+}
+
+// This algorithm is explained in section 2 of
+// "Landau's function for one million billions", 
+// by Marc Deleglise, Jean-Louis Nicolas and Paul Zimmermann
+// in Journal de Theorie des Nombres de Bordeaux 20, 3 (2009) 625-671.
+// The paper goes on to give a much more efficient algorithm for
+// larger values of n, but that seems needless complex for our purposes.
+unsigned landau(unsigned const n)
+{
+  vector<unsigned> g(n+1, 1);
+  // Strictly speaking, this bound is only valid for n>=5.  Adding 1 
+  // empirically fixes it for n<5.
+  unsigned pmax = floor( 1.328 * sqrt(n * log(n)) ) + 1;
+  for ( unsigned p = 2; p <= pmax; p = next_prime(p) )
+    for ( unsigned m = n; m >=1; --m ) 
+      for ( unsigned q = p; q <= m; q *= p ) {
+        unsigned gm = q * g[m-q];
+        if ( gm > g[m] )
+          g[m] = gm;
+      }
+  return g[n];
 }
 
 RINGING_END_NAMESPACE

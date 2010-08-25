@@ -76,8 +76,16 @@ RINGING_API double random_normal_deviate( double mean, double stddev );
 // If rand is NULL, then just return the existing one
 RINGING_API pair<int (*)(), int> random_fn( int (*randfn)(), int max_rand );
 
+
 // Return base raised to the power of exp
 RINGING_API RINGING_LLONG ipower( int base, int exp );
+
+// These functions are not currently efficient for large numbers
+RINGING_API bool is_prime(unsigned n);
+RINGING_API unsigned next_prime(unsigned n);
+
+// Landau's function, g(n), is the largest order of any element of S_n.
+RINGING_API unsigned landau(unsigned n);
 
 RINGING_END_NAMESPACE
 
