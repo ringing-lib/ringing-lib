@@ -53,10 +53,17 @@ public:
   class expr
   {
   public:
+    enum types {
+      row_type,
+      int_type
+    };
+
     class node {
     public:
       virtual ~node() {}
-      virtual row evaluate() = 0;
+      virtual bool supports_type( types t ) const = 0;
+      virtual row evaluate();
+      virtual int ievaluate();
       virtual void restart() = 0;
       virtual int count_vectors() const = 0;
       virtual bool reads_stdin() const = 0;
@@ -69,7 +76,9 @@ public:
     };
   
     explicit expr( node* n = NULL ) : n(n) {}
+    bool supports_type( types t ) const { return n->supports_type(t); }
     row evaluate() { return n->evaluate(); }
+    int ievaluate() { return n->ievaluate(); }
     void restart() { n->restart(); }
     int count_vectors() const { return n->count_vectors(); }
     bool reads_stdin() const { return n->reads_stdin(); }

@@ -73,6 +73,7 @@ namespace tok_types
     ldivide     = '\\', 
     power       = '^',
     minus       = '-',
+    plus        = '+',
     open_set    = '{', 
     close_set   = '}',
     open_group  = '<',
@@ -148,7 +149,8 @@ public:
 
     switch ( t.type() ) {
       case row_or_int: case row_lit: case open_paren: case close_paren: 
-      case times: case divide: case ldivide: case power: case minus:
+      case times: case divide: case ldivide: case power: 
+      case minus: case plus:
       case open_set: case close_set: case set_sep: 
       case open_group: case close_group:
         return;
@@ -163,6 +165,42 @@ public:
 
 class vector_end {};
 
+void evaluate_binary_arguments( row_calc::expr& rhs, row& r,
+                                row_calc::expr& lhs, row& l )
+{
+  if ( lhs.count_vectors() == 0 || rhs.count_vectors() == 0 ) {
+    l = lhs.evaluate();
+    r = rhs.evaluate();
+  }
+  // We have the cross product of two sets.  We need to be a little bit
+  // clever to ensure that we don't try to rewind stdin.
+  else if ( rhs.reads_stdin() ) {
+    do {
+      if (r.bells() == 0 )
+        r = rhs.evaluate();
+      try { 
+        l = lhs.evaluate();
+      } catch (vector_end) {
+        lhs.restart();
+        r = row();
+      }
+    } while (r.bells() == 0);
+  } 
+  else {
+    do {
+      if (l.bells() == 0 )
+        l = lhs.evaluate();
+      try { 
+        r = rhs.evaluate();
+      } catch (vector_end) {
+        rhs.restart();
+        l = row();
+      }
+    } while (l.bells() == 0);
+  }
+}
+                      
+
 class mult_node : public row_calc::expr::node {
 public:
   mult_node( row_calc::expr const& lhs, row_calc::expr const& rhs, 
@@ -176,38 +214,11 @@ private:
     { return lhs.count_vectors() + rhs.count_vectors(); }
   virtual bool reads_stdin() const
     { return lhs.reads_stdin() || rhs.reads_stdin(); }
+  virtual bool supports_type( row_calc::expr::types t ) const
+    { return t == row_calc::expr::row_type; }
 
   virtual row evaluate() {
-    if ( lhs.count_vectors() == 0 || rhs.count_vectors() == 0 ) {
-      l = lhs.evaluate();
-      r = rhs.evaluate();
-    }
-    // We have the cross product of two sets.  We need to be a little bit
-    // clever to ensure that we don't try to rewind stdin.
-    else if ( rhs.reads_stdin() ) {
-      do {
-        if (r.bells() == 0 )
-          r = rhs.evaluate();
-        try { 
-          l = lhs.evaluate();
-        } catch (vector_end) {
-          lhs.restart();
-          r = row();
-        }
-      } while (r.bells() == 0);
-    } 
-    else {
-      do {
-        if (l.bells() == 0 )
-          l = lhs.evaluate();
-        try { 
-          r = rhs.evaluate();
-        } catch (vector_end) {
-          rhs.restart();
-          l = row();
-        }
-      } while (l.bells() == 0);
-    }
+    evaluate_binary_arguments( lhs, l, rhs, r );
 
     switch ( op ) {
       case tok_types::times:   
@@ -227,19 +238,46 @@ private:
 
 class exp_node : public row_calc::expr::node {
 public:
-  exp_node( row_calc::expr const& lhs, int rhs )
+  exp_node( row_calc::expr const& lhs, row_calc::expr const& rhs )
     : lhs(lhs), rhs(rhs)
   {}
 
 private:
   virtual void restart() { lhs.restart(); }
-  virtual int count_vectors() const { return lhs.count_vectors(); }
-  virtual bool reads_stdin() const { return lhs.reads_stdin(); }
+  virtual int count_vectors() const 
+    { return lhs.count_vectors() + rhs.count_vectors(); }
+  virtual bool reads_stdin() const 
+    { return lhs.reads_stdin() || rhs.reads_stdin(); }
+  virtual bool supports_type( row_calc::expr::types t ) const
+    { return t == row_calc::expr::row_type; }
 
-  virtual row evaluate() { return lhs.evaluate().power(rhs); }
+  virtual row evaluate() {
+    if ( rhs.supports_type( row_calc::expr::row_type ) ) {
+      evaluate_binary_arguments( lhs, l, rhs, r );
+      return r.inverse() * l * r;
+    } 
+    else 
+      return lhs.evaluate().power( rhs.ievaluate() ); 
+  }
 
-  row_calc::expr lhs;
-  int rhs;
+  row_calc::expr lhs, rhs;
+  row r, l;
+};
+
+class int_node : public row_calc::expr::node {
+public:
+  int_node( int const& i ) : i(i) {}
+
+private:
+  virtual void restart() { }
+  virtual int count_vectors() const { return 0; }
+  virtual bool reads_stdin() const { return false; }
+  virtual bool supports_type( row_calc::expr::types t ) const
+    { return t == row_calc::expr::int_type; }
+
+  virtual int ievaluate() { return i; }
+
+  int i;
 };
 
 class row_node : public row_calc::expr::node {
@@ -250,6 +288,8 @@ private:
   virtual void restart() { }
   virtual int count_vectors() const { return 0; }
   virtual bool reads_stdin() const { return false; }
+  virtual bool supports_type( row_calc::expr::types t ) const
+    { return t == row_calc::expr::row_type; }
   virtual row evaluate() { return r; }
 
   row r;
@@ -271,6 +311,9 @@ private:
         return true;
     return false;
   }
+
+  virtual bool supports_type( row_calc::expr::types t ) const
+    { return t == row_calc::expr::row_type; }
 
   virtual row evaluate()
   {
@@ -306,6 +349,8 @@ private:
   virtual void restart() { started = false; }
   virtual int count_vectors() const { return 1; }
   virtual bool reads_stdin() const { return gens.reads_stdin(); }
+  virtual bool supports_type( row_calc::expr::types t ) const
+    { return t == row_calc::expr::row_type; }
 
   virtual row evaluate()
   {
@@ -342,6 +387,8 @@ private:
   virtual void restart() { idx = 0; }
   virtual int count_vectors() const { return 1; }
   virtual bool reads_stdin() const { return false; }
+  virtual bool supports_type( row_calc::expr::types t ) const
+    { return t == row_calc::expr::row_type; }
 
   virtual row evaluate() 
   {
@@ -385,6 +432,9 @@ private:
       throw runtime_error("Cannot re-read standard input");
     in = NULL; 
   }
+
+  virtual bool supports_type( row_calc::expr::types t ) const
+    { return t == row_calc::expr::row_type; }
 
   row evaluate()
   { 
@@ -438,7 +488,9 @@ private:
 
   row_calc::expr parse_expr( iter_t first, iter_t last );
   list<row_calc::expr> parse_set( iter_t first, iter_t last );
-  int parse_int( iter_t first, iter_t last );
+  row_calc::expr parse_row_or_int( iter_t first, iter_t last );
+  row_calc::expr parse_int( iter_t first, iter_t last, int sign = +1 );
+  row make_row( string const& );
 
   template <size_t N>
   bool find_first( iter_t first, iter_t last,
@@ -542,23 +594,64 @@ bool rc_parser::is_enclosed( iter_t first, iter_t last,
   return true;
 }
 
-int rc_parser::parse_int( iter_t first, iter_t last )
+row_calc::expr rc_parser::parse_int( iter_t first, iter_t last, int sign  )
 {
   if ( first == last )
     throw runtime_error( "Expression expected" );
 
-  // Parentheses first
-  if ( is_enclosed( first, last, tok_types::open_paren,
-                    tok_types::close_paren, "parentheses" ) )
-    return parse_int( first+1, last-1 );
+  if ( first+1 == last  && first->type() == tok_types::row_or_int )
+    return row_calc::expr(
+      ( new int_node( sign * lexical_cast<int>( string(*first) ) ) ) );
+  else
+    throw runtime_error( "Unable to parse expression as integer" );
+}
 
-  if ( first+1 == last  && first->type() == tok_types::row_or_int ) 
-    return lexical_cast<int>( string(*first) );
+row rc_parser::make_row( string const& s )
+{
+  string str = s;
+  // Allow treble to be omitted
+  if (str.find( bell(0).to_char() ) == string::npos)
+    str = bell(0).to_char() + str;
+  return row( str );
+}
 
-  if ( first != last && first->type() == tok_types::minus )
-    return - parse_int( first+1, last );
+row_calc::expr rc_parser::parse_row_or_int( iter_t first, iter_t last )
+{
+  if ( first == last )
+    throw runtime_error( "Expression expected" );
 
-  throw runtime_error( "Unable to parse expression as integer" );
+  // A unary plus or minus operator forces parsing as an integre
+  if ( first->type() == tok_types::minus )
+    return parse_int( first+1, last, -1 );
+
+  if ( first->type() == tok_types::plus )
+    return parse_int( first+1, last, +1 );
+
+  // Could it be an integer?  
+  if ( first + 1 == last && first->type() == tok_types::row_or_int ) {
+    string val(*first);
+    // Heuristic:  A single character string is always an integer
+    // (In practice, this only effects "2" which would otherwise
+    // be rounds with a implicit treble and tenors.  It would probably 
+    // not be good if we ended up having 1 == 2.  Technically, "1"
+    // is effected too, but as there are no situations in which 
+    // integer "1" and row "1" behave differently, this does not matter.)
+    if ( val.size() == 1 ) 
+      return parse_int( first, last ); 
+
+    // Otherwise attempt to parse as a row:
+    try { 
+      return row_calc::expr( new row_node( make_row( val ) ) );
+    }
+    // And fall back to parsing as an integer
+    catch ( row::invalid const& ) {
+      return parse_int( first, last ); 
+    }
+  }
+
+  // If it's a more complex expression, it must be a row as integer
+  // arithmetic is not supported.
+  return parse_expr( first, last );
 }
 
 list<row_calc::expr> rc_parser::parse_set(  iter_t first, iter_t last )
@@ -618,19 +711,15 @@ row_calc::expr rc_parser::parse_expr( iter_t first, iter_t last )
     {
       check_binary_expr( first, split, last, string(1, (char)split->type()) );
 
-      return row_calc::expr( new exp_node( parse_expr( first, split ),
-                                           parse_int( split+1, last ) ) ); 
+      return row_calc::expr
+        ( new exp_node( parse_expr( first, split ),
+                        parse_row_or_int( split+1, last ) ) ); 
     } 
 
   if ( first+1 == last ) {
     if ( first->type() == tok_types::row_or_int ||
-         first->type() == tok_types::row_lit ) {
-      string rstr = *first;
-      // Allow treble to be omitted
-      if (rstr.find( bell(0).to_char() ) == string::npos)
-        rstr = bell(0).to_char() + rstr;
-      return row_calc::expr( new row_node( row( rstr ) ) );
-    }
+         first->type() == tok_types::row_lit ) 
+      return row_calc::expr( new row_node( make_row(*first) ) );
 
     if ( first->type() == tok_types::exec || 
          first->type() == tok_types::read ) 
@@ -658,6 +747,15 @@ row_calc::row_calc( int b, string const& str )
   assert( e.count_vectors() == v );
 }
 
+row row_calc::expr::node::evaluate()
+{
+  abort();
+}
+
+int row_calc::expr::node::ievaluate()
+{
+  abort();
+}
 
 void row_calc::const_iterator::increment() 
 { 

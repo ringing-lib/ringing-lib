@@ -2439,15 +2439,21 @@ The details of this syntax are explained in \sref{rowexpr}.
 
 \subsection{Row expressions}\label{rowexpr}\index{row expression}
 
-The argument to \verb+-Fr+ is actually an expression%
-\index{expression|seealso{row expression}} that evaluates to a row
-or to a set of rows.  Row expressions also occur in the \verb+-Mlead+
-family of options discussed in \sref{muswhere}.
+The argument to \verb+-Fr+ is actually a \textit{row expression}%
+\index{expression|seealso{row expression}} --- an expression that evaluates 
+to a row or set of rows.  Row expressions also occur in the \verb+-Mlead+
+family of options (\sref{muswhere}) and in the \verb+rowcalc+ utility
+(\sref{rowcalc}).
 These row expressions are considerably simpler than the more general 
-expressions in \sref{expr}; 
-valid expressions are formed from the following operators, 
+expressions in \sref{expr}, and are handled by entirely separate code in
+\methsearch.  A future version of \methsearch\ is likely to merge both
+into a single expression language, but until that happens, the row expression
+syntax will remain very limited --- unless noted, all operators act only on 
+rows, and there is no facility for integer arithmetic.
+
+Valid expressions are formed from the following operators, 
 arranged in precedence\index{operators!precedence} levels from 
-highest to lowest.  The operators associativity\index{operators!associativity}
+highest to lowest.  The operators' associativity\index{operators!associativity}
 is also given.  Parentheses may also be used to make the order of invocation
 explicit.\index{parentheses}
 
@@ -2456,14 +2462,12 @@ explicit.\index{parentheses}
 \verb+*+ \verb+/+ \verb+\+& left&  multiplication-type operators\\
 \end{tabular}
 
-The exponentiation\index{exponentiation} operator is only defined when its 
-left-hand argument is a row and its right-hand argument is an integer.%
-\footnote{As it yields a row, this means that, although it is 
-right-associative, an expression cannot have more than one \verb+^+ operator.}
-The right-hand argument may be a negative integer in which case it denotes
-an inverse in the obvious way: $\hbox{$a$\verb+^-1+} = a^{-1}$.
-The three multiplicative-type operators are only defined when both their
-arguments are rows.\index{multiplication}
+The multiplication operator, \verb+*+,\index{multiplication} 
+permutes\index{permute} one row by another.  The convention used by 
+\methsearch\ is that $x$\verb+*+$y$ means $x$ transposed by $y$, rather
+than the $x$ transposition acting on $y$, thus \verb+1432*2143+ is 
+\verb+4123+ and not \verb+2341+.\footnote{Neither convention has universal 
+uptake amongst ringing theoreticians and both have advantages.}
 
 Because row multiplication is non-commutative, 
 division\index{division} isn't uniquely defined.  
@@ -2484,15 +2488,57 @@ to prevent the shell from trying to interpret them.  As usual, on Windows,
 double quotes should be used; and on Unix-like systems, single quotes will 
 be necessary.
 
+The \verb+^+ operator is \textit{overloaded}\index{operators!overloaded} 
+with two meanings.  If the right-hand argument is a row, 
+then it denotes \textitidx{conjugation}, and if the right-hand
+argument is an integer then it denotes \textitidx{exponentiation};
+in both cases, the left-hand argument must be a row.  In the mathematical
+literature these operations are often both denoted by right superscripts
+and this convention is followed here,%
+\footnote{One motivation for using the exponentation syntax for conjugation
+is that both satisfy the identity $(a^r)^s =  a^rs$.  However the analogy 
+shouldn't be taken too far.  If $a$ and $r$ are rows and $n$ is an integer,
+then $(a^r)^n = (a^n)^r$, and one might use $a^{nr}$ as syntactic shorthand 
+for this.  Nevertheless, the product, $nr$, of a integer and a row is 
+otherwise meaningless and \methsearch\ does not support this usage.}
+but using $x$\verb+^+$y$ in place of $x^y$.
+The conjugation and exponentiation operations are defined by
+\begin{align*}
+a^r = r^{-1} a r, && 
+a^n = \underbrace{a\,a\,a\,\dotsm a}_{\text{$n$ times}}, &&
+a^{-n} = (a^{-1})^n,
+\end{align*}
+where $a$ and $r$ are rows, $n$ is an integer, and
+$a^{-1}$ denotes the inverse\index{inverse} of $a$.
+
+Row expressions may also contain row literals and integer literals.
 Row literals\index{literals} may have the treble omitted --- for example,
 \verb+2345+ is equivalent to \verb+12345+.  This does not generalise
 further so \verb+345+ is not a valid row literal.  Rows may also have 
 an arbitrary number of tenors omitted, thus the two preceding examples
-are equivalent to \verb+123+ or even just \verb+1+.
+are equivalent to \verb+123+ or even just \verb+1+.  
+Integer literals may optionally be prefixed by a \verb-+- or \verb+-+ sign.
+
+Clearly an ambiguity exists between rows and integers, although in practice
+\methsearch\ almost always gets it right.  The heuristics by which rows
+and integers are disambiguated are as follows:
+\begin{itemize}\renewcommand{\labelitemi}{---}
+\item in contexts where integers would be invalid (i.e.\ anywhere other
+than the right-hand argument to a \verb+^+ operator), it is parsed as a row;
+\item if a leading \verb-+- or \verb+-+ is given, it will parse as an integer;
+\item if the token is only a single character long, it is parsed as an 
+integer;\footnote{This case is only relevant in one case --- the digit 
+\verb+2+.  Without this rule this would parse as rounds with an implicit 
+treble and we would find that $1 = 2$.  (Technically, it also changes \verb+1+
+from rounds to the number 1, but in practice this is indetectable.)}
+\item if the token is a valid row (possibly omitting the treble), it is 
+parsed as a row;
+\item otherwise it is parsed as an integer.
+\end{itemize}
 
 \subsection{Multiple rows}\label{rowexprmulti}
 
-However, most of the time, there isn't just one row that you wish to avoid.
+Most of the time, there isn't just one row that you wish to avoid.
 The obvious use is when you have a particular composition in mind and have
 already selected some of the methods.  In this case, you'll probably have
 hundreds of rows that you wish to avoid.
@@ -2542,8 +2588,17 @@ characters is parsed as the longest possible token.  For example, in many
 C-like languages, \verb+1--1+ is an error as it treats \verb+--+ as a single
 unary operator, but \verb+1 - -1+ is parsed successfully (and evaluates to 2).}
 
-An \verb+-Fr+ option may contain two (or more) sets of rows separated by
-the multiplica\-tion-type operators: \verb+*+, \verb+/+ and \verb+\+.  Using
+Sets (using any of these syntaxes) can appear in expressions.  If an
+expression contains just one set, the expression is evaluated multiple
+times, once for each member of the set.\footnote{This behaviour might be
+counter-intuitive for \verb+{+$a$\verb+,+$b$\verb+,+$\cdots$\verb+}^+$n$,
+and one might anticipate this to be equal to 
+\verb+<+$a$\verb+,+$b$\verb+,+$\cdots$\verb+>+ for sufficiently large $n$.
+It is not, and $A$\verb+^2+${} \not= AA$.}
+For example, \verb+-Fr="{ 124365, 132465, 213465 }^654321"+
+is equivalent to \verb+-Fr=214356 -Fr=213546 -Fr=214565+.
+
+An \verb+-Fr+ option may contain two (or more) sets of rows.  Using
 the set multiplication notation introduced in \sref{falsetheo} these are
 defined as follows for sets $A$ and $B$:
 
@@ -2551,9 +2606,16 @@ defined as follows for sets $A$ and $B$:
 \verb+-Fr="+$A$\verb+*+$B$\verb+"+  &  \verb+-Fr="+$A B$\verb+"+ \\
 \verb+-Fr="+$A$\verb+/+$B$\verb+"+  &  \verb+-Fr="+$A \bar{B}$\verb+"+ \\
 \verb+-Fr="+$A$\verb+\+$B$\verb+"+  &  \verb+-Fr="+$\bar{A} B$\verb+"+ \\
+\verb+-Fr="+$A$\verb+^+$B$\verb+"+  &  \verb+-Fr="+$A^B$\verb+"+ \\
 \end{tabular}
 
-Note in particular that $A$\verb+\+$B$ does \textit{not} denote the difference
+In the last case (conjugation), the set $A^B$ is defined
+\[ A^B = \{ b^{-1} a b : a \in A, b \in B \}. \]
+Thus $A^B \not= \bar{B}AB$ because the same element of $B$ is used on both
+sides of $A$.  This was the major motivation for adding support to 
+\methsearch\ for conjugation with the \verb+^+ operator.
+
+Note that $A$\verb+\+$B$ does \textit{not} denote the difference
 between two sets which is often denoted by a backslash in the mathematical
 literature.  
 A future version of \methsearch\ may introduce the \verb+-+ operator for
@@ -3759,10 +3821,11 @@ and \verb+-M2rhalflead+.
 \subsection{Pending release}
 \begin{list}{\labelitemi}{\leftmargin=1em}
 \item Method identifiers: \verb+$i+ (\sref{fmtstr}).
-\item Support for reading \verb+$COLUMNS+ (\sref{output_opt}).
-\item Fourths-place doubles lead ends now supported in \verb+$D+ 
+\item Fourths-place doubles lead-end symbols are now supported in \verb+$D+ 
   (\sref{fmtstr}).
 \item Filter inverting: \verb+--invert-filter+ (\sref{misc_opt}).
+\item The \verb+^+ operator is now overloaded to do conjugation 
+  (\sref{rowexpr}).
 \end{list}
 
 \clearpage
