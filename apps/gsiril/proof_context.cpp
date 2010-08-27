@@ -49,7 +49,8 @@ RINGING_USING_NAMESPACE
 proof_context::proof_context( const execution_context &ectx ) 
   : ectx(ectx), p( new prover(ectx.get_args().num_extents) ), 
     output( &ectx.output() ),
-    silent( ectx.get_args().everyrow_only || ectx.get_args().filter ), 
+    silent( ectx.get_args().everyrow_only || ectx.get_args().filter
+            || ectx.get_args().quiet >= 2 ), 
     underline( false )
 {
 # if RINGING_USE_TERMCAP

@@ -1,5 +1,5 @@
 // prog_args.cpp - handle program arguments
-// Copyright (C) 2002, 2003, 2004, 2007, 2008
+// Copyright (C) 2002, 2003, 2004, 2007, 2008, 2010
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -117,6 +117,11 @@ void arguments::bind( arg_parser& p )
 	 ( 'v', "verbose",
 	   "Run in verbose mode", 
 	   verbose ) );
+
+  p.add( new repeated_boolean_opt
+	 ( 'q', "quiet",
+	   "Do not give truth output; or if given twice, no output at all", 
+	   quiet ) );
 
   p.add( new boolean_opt
 	 ( 'E', "everyrow-only",

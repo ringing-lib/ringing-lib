@@ -1,5 +1,6 @@
 // statement.cpp - Code to execute different types of statement
-// Copyright (C) 2002, 2003, 2004, 2005 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003, 2004, 2005, 2010 
+// Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -73,6 +74,7 @@ void null_stmt::execute( execution_context& e ) const
 
 void prove_stmt::execute( execution_context& e ) const
 {
+  int const quiet = e.get_args().quiet;
   try
     {
       proof_context p(e);
@@ -86,12 +88,14 @@ void prove_stmt::execute( execution_context& e ) const
       catch( const script_exception& ex ) 
 	{
 	  if ( ex.t == script_exception::do_abort ) {
+            p.set_silent( e.get_args().quiet );
 	    p.execute_symbol( "abort" );
             e.set_failure();
           }
 	  return;
 	}
-    
+   
+      p.set_silent( e.get_args().quiet );
       switch ( p.state() )
 	{
 	case proof_context::rounds: 
