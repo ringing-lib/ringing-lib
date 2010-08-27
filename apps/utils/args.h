@@ -1,5 +1,6 @@
 // -*- C++ -*- args.h - argument-parsing things
-// Copyright (C) 2001, 2002, 2003, 2008 Martin Bright <martin@boojum.org.uk>
+// Copyright (C) 2001, 2002, 2003, 2008, 2010 
+// Martin Bright <martin@boojum.org.uk>
 // and Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -131,6 +132,20 @@ private:
   bool &opt, val;
 };
 
+// -x sets opt=1, -xx sets opt=2, -xxx sets opt=3, etc.
+class repeated_boolean_opt : public option {
+public:
+  repeated_boolean_opt( char c, const string &l, const string &d,
+                        int &opt );
+
+  repeated_boolean_opt( char c, const string &l, const string &d,
+                        init_val_base<int> &opt );
+  
+private:
+  // Sets opt = val.
+  virtual bool process( const string &, const arg_parser & ) const;
+  int &opt;
+};
 
 class integer_opt : public option {
 public:

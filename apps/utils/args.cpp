@@ -1,5 +1,5 @@
 // -*- C++ -*- args.cpp - argument-parsing things
-// Copyright (C) 2001, 2002, 2003, 2004, 2005, 2008
+// Copyright (C) 2001, 2002, 2003, 2004, 2005, 2008, 2010
 // Martin Bright <martin@boojum.org.uk>
 // and Richard Smith <richard@ex-parrot.com>
 
@@ -299,6 +299,25 @@ boolean_opt::boolean_opt( char c, const string &l, const string &d,
 bool boolean_opt::process( const string &, const arg_parser & ) const
 {
   opt = val;
+  return true;
+}
+
+
+repeated_boolean_opt::repeated_boolean_opt( char c, const string &l, 
+                                            const string &d,
+			                    int &opt ) 
+  : option(c, l, d), opt(opt)
+{}
+
+repeated_boolean_opt::repeated_boolean_opt( char c, const string &l, 
+                                            const string &d,
+			                    init_val_base<int> &opt ) 
+  : option(c, l, d), opt(opt.get())
+{}
+
+bool repeated_boolean_opt::process( const string &, const arg_parser & ) const
+{
+  ++opt;
   return true;
 }
 
