@@ -1,5 +1,5 @@
 // -*- C++ -*-  util.h - Various utility functions needed in gsiril
-// Copyright (C) 2002 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2010 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -34,6 +34,7 @@ int string_to_int( const string &num );
 
 void trim_leading_whitespace( string &line );
 void trim_trailing_whitespace( string &line );
+void trim_whitespace( string &line );
 
 string lower_case( const string& str );
 

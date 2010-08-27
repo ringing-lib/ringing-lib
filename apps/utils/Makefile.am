@@ -2,7 +2,7 @@
 
 # Process this file with automake to produce Makefile.in
 
-# Copyright (C) 2002, 2009 Martin Bright <martin@boojum.org.uk> and
+# Copyright (C) 2002, 2009, 2010 Martin Bright <martin@boojum.org.uk> and
 # Richard Smith <richard@ex-parrot.com>
 
 # This program is free software; you can redistribute it and/or modify
@@ -28,8 +28,13 @@ noinst_LIBRARIES = libstuff.a
 # Need both top_srcdir and top_builddir so that we can find common-am.h
 INCLUDES = -I$(top_srcdir) -I$(top_builddir)
 
+if HAVE_READLINE
+additional =  rlstream.cpp rlstream.h
+endif
+
 libstuff_a_SOURCES = args.cpp args.h tokeniser.cpp tokeniser.h init_val.h \
-stringutils.h stringutils.cpp exec.cpp exec.h row_calc.cpp row_calc.h
+stringutils.h stringutils.cpp exec.cpp exec.h row_calc.cpp row_calc.h \
+console_stream.h console_stream.cpp $(additional)
 
-
+EXTRA_libstuff_a_SOURCES = rlstream.cpp rlstream.h
 

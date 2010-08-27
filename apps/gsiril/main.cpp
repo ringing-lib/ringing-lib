@@ -1,5 +1,5 @@
 // main.cpp - Entry point for gsiril
-// Copyright (C) 2002, 2003, 2004, 2007, 2008
+// Copyright (C) 2002, 2003, 2004, 2007, 2008, 2010
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -203,13 +203,18 @@ bool prove_stream( execution_context& e, istream& in, const arguments& args )
     = parse_all( e, make_default_parser(in, args), 
                  "Error", !args.interactive );
 
-  if ( read_anything && args.prove_symbol.size() )
-    // Return directly from here:  this means that with -P and additional
-    // prove statements are allowed to fail.
-    return prove_final_symbol( e, args );
-      
   // Failure will be set if any prove statement has failed 
-  return !e.failure();
+  bool rv = !e.failure();
+
+  if ( read_anything && args.prove_symbol.size() )
+    // Return directly from here:  this means that with -P any additional
+    // prove statements are allowed to fail.
+    rv = prove_final_symbol( e, args );
+      
+  if ( args.interactive )
+    cout << "\n";
+
+  return rv;
 }
 
 bool run( execution_context& e, const arguments& args )

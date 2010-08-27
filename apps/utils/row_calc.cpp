@@ -419,8 +419,7 @@ public:
   read_node( string const& f ) 
     : file(f), in(NULL) 
   {
-    trim_leading_whitespace(file);
-    trim_trailing_whitespace(file);
+    trim_whitespace(file);
   }
 
 private:

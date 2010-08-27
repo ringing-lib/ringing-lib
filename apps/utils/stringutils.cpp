@@ -1,5 +1,5 @@
 // util.cpp - Various string utility functions
-// Copyright (C) 2002, 2008 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2008, 2010 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -61,6 +61,12 @@ void trim_trailing_whitespace( string &line )
   string::iterator b( line.begin() ), j( line.end() );
   while ( j-1 != b && isspace(*(j-1)) ) --j;
   line = string( b, j );
+}
+
+void trim_whitespace( string &line )
+{
+  trim_leading_whitespace( line );
+  trim_trailing_whitespace( line );
 }
 
 int string_to_int( const string &num )

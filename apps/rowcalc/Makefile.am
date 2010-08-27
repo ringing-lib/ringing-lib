@@ -2,7 +2,7 @@
 
 # Process this file with automake to produce Makefile.in
 
-# Copyright (C) 2009 Richard Smith <richard@ex-parrot.com>
+# Copyright (C) 2009, 2010 Richard Smith <richard@ex-parrot.com>
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -29,7 +29,8 @@ INCLUDES = -I$(top_srcdir) -I$(top_builddir) -I$(top_srcdir)/apps/utils
 
 rowcalc_LDADD = $(top_builddir)/apps/utils/libstuff.a \
 $(top_builddir)/ringing/libringing.la \
-$(top_builddir)/ringing/libringingcore.la
+$(top_builddir)/ringing/libringingcore.la \
+@READLINE_LIBS@
 
 rowcalc_SOURCES = rowcalc.cpp
 

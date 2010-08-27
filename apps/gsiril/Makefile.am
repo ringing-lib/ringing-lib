@@ -2,7 +2,7 @@
 
 # Process this file with automake to produce Makefile.in
 
-# Copyright (C) 2002, 2003, 2004, 2005, 2007, 2008, 2009
+# Copyright (C) 2002, 2003, 2004, 2005, 2007, 2008, 2009, 2010
 # Richard Smith <richard@ex-parrot.com>
 
 # This program is free software; you can redistribute it and/or modify
@@ -35,11 +35,7 @@ $(top_builddir)/ringing/libringing.la \
 $(top_builddir)/ringing/libringingcore.la \
 @READLINE_LIBS@ @TERMCAP_LIBS@
 
-if HAVE_READLINE
-additional =  rlstream.cpp rlstream.h
-endif
-
-gsiril_SOURCES = main.cpp console_stream.cpp console_stream.h \
+gsiril_SOURCES = main.cpp \
 execution_context.cpp execution_context.h expr_base.cpp expr_base.h \
 proof_context.cpp proof_context.h symbol_table.cpp symbol_table.h \
 expression.h expression.cpp statement.h statement.cpp \

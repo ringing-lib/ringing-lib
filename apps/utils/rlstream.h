@@ -26,6 +26,8 @@
 #pragma interface
 #endif
 
+// You almost certainly don't want to include this header directly.
+// Use console_stream.h instead.
 #if !RINGING_USE_READLINE
 #error "This file requires GNU readline" 
 #endif
