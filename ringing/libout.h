@@ -44,6 +44,13 @@ public:
 
   void flush();
   void append( library_entry const& entry );
+
+  template <class Iterator>
+  void append( Iterator first, Iterator last ) {
+    for ( ; first != last; ++first ) append(*first);
+  }
+
+  // To allow back_inserter_iterator to work with us
   void push_back( library_entry const& entry ) { return append(entry); }
 
   class iterator;
