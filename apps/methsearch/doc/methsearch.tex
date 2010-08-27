@@ -3235,15 +3235,15 @@ extent -b8 | musgrep -b8 -s "<4-runs>"
 \subsection{Calculating rows — \texttt{rowcalc}}\label{rowcalc}
 
 The \ttcmdidx{rowcalc} program is a stand-alone calculator for evaluating
-row expressions (\sref{rowexpr}).  Its only
-command line option is the \verb+-b+ option which specifies the number
-of bells.\footnote{A future version of \texttt{rowcalc} will likely 
-make this option optional, however at present it is required.}
-In addition to the \verb+-b+ option, the command line must contain a 
-row expression.  For example, the following command generates a list
+row expressions (\sref{rowexpr}).  The only command line option is the 
+optional \verb+-b+ option which specifies the number of bells. 
+If this is supplied, the results are padded or truncated to that number of 
+bells (and an error given if truncation produces an invalid row).
+The command line must contain a row expression.  
+For example, the following command generates a list
 of the seven Plain Bob lead ends\index{Plain Bob lead ends} on eight bells:
 \begin{Verbatim}
-rowcalc -b8 "<13254768*12436587>"
+rowcalc "<13254768*12436587>"
 \end{Verbatim}
 
 If the row expression contains the special \verb+<(-)+ file input 
@@ -3255,9 +3255,9 @@ first lead, then $\hbox{\texttt{87654321}} \in lM$ implies that lead $l$
 contains reverse rounds.  This can be expressed as follows:
 \begin{Verbatim}[commandchars=@~~]
 printmethod -b8 -F "&-3-4-25-36-4-5-6-7,2" @hfill\
-  | rowcalc -b8 "87654321 / <(-)" | musgrep -b8 1 
+  | rowcalc "87654321 / <(-)" | grep ^1 
 \end{Verbatim}
-The final \texttt{musgrep} command is there to restrict the list of lead ends
+The final \texttt{grep} command is there to restrict the list of lead ends
 to those that have the treble leading.
 
 \subsection{Printing methods — \texttt{printmethod}}\label{printmethod}
