@@ -45,6 +45,7 @@ bool arguments::validate( arg_parser& ap )
                 "0 and less than " << bell::MAX_BELLS );
       return false;
     }
+  return true;
 }
 
 int main( int argc, char *argv[] )

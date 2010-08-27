@@ -774,10 +774,10 @@ void row_calc::const_iterator::increment()
     rc = 0;
   else try {
     val = rc->e.evaluate();
-    if ( rc->bells() ) 
-      val.resize( rc->bells() );
   } catch ( vector_end ) {
     rc = 0;
   }
+  if ( rc && rc->bells() ) 
+    val.resize( rc->bells() );
 }
 
