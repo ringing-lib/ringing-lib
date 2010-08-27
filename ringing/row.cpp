@@ -481,6 +481,17 @@ row row::power( int n ) const
   }
 }
 
+void row::resize(int b)
+{
+  if ( b < data.size() )
+    row( vector<bell>( data.begin(), data.begin() + b ) ).swap(*this);
+  else {
+    data.reserve(b);
+    while ( data.size() < b )
+      data.push_back( data.size() );
+  }
+}
+
 RINGING_API ostream& operator<<(ostream& o, row const& r)
 {
   copy( r.begin(), r.end(), ostream_iterator<bell>(o) );

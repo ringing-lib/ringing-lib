@@ -151,6 +151,8 @@ public:
   const_iterator begin() const { return data.begin(); }
   const_iterator end() const { return data.end(); }
 
+  void resize(int b); // Truncate (or pad) to b bells or throw invalid
+
 private:
   void validate() const;
 };
