@@ -42,9 +42,12 @@ RINGING_USING_STD
 class row_calc
 {
 public:
-  row_calc( int b, string const& str );
+  // Number of bells is optional -- if provided if calls row::resize
+  // on the row before returning it.
+  explicit row_calc( string const& str );
+  row_calc( unsigned int b, string const& str );
 
-  int bells() const { return b; }
+  unsigned int bells() const { return b; }
 
   class const_iterator;
   const_iterator begin() const;
@@ -88,6 +91,8 @@ public:
   };
 
 private:
+  void init(string const& str);
+ 
   int b;
   expr e;  
   int v;

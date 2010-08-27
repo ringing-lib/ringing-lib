@@ -39,9 +39,9 @@ void arguments::bind( arg_parser& p )
 
 bool arguments::validate( arg_parser& ap )
 {
-  if ( bells <= 0 || bells >= int(bell::MAX_BELLS) )
+  if ( bells < 0 || bells >= int(bell::MAX_BELLS) )
     {
-      ap.error( make_string() << "Then number of bell must be greater than "
+      ap.error( make_string() << "The number of bell must be greater than "
                 "0 and less than " << bell::MAX_BELLS );
       return false;
     }
@@ -52,7 +52,7 @@ int main( int argc, char *argv[] )
   arguments args;
 
   {
-    arg_parser ap( argv[0], "musgrep -- grep rows for music", "OPTIONS" );
+    arg_parser ap( argv[0], "rowcalc -- a calculator for rows", "OPTIONS" );
     args.bind( ap );
 
     if ( !ap.parse(argc, argv) )
@@ -67,6 +67,7 @@ int main( int argc, char *argv[] )
 
   scoped_pointer<row_calc> rc;
   try {
+    // If args.bells == 0 this is equivalent to omitting that argument.
     rc.reset( new row_calc( args.bells, args.expr ) );
   } 
   catch ( exception const& e ) { 

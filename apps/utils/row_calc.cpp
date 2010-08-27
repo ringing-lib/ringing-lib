@@ -738,8 +738,19 @@ row_calc::expr rc_parser::parse_expr( iter_t first, iter_t last )
 
 RINGING_END_ANON_NAMESPACE
 
-row_calc::row_calc( int b, string const& str )
+row_calc::row_calc( unsigned b, string const& str )
   : b(b)
+{
+  init(str);
+}
+
+row_calc::row_calc( string const& str )
+  : b(0)
+{
+  init(str);
+}
+
+void row_calc::init( string const& str )
 {
   rc_parser p(str);
   e = p.parse();
@@ -763,7 +774,8 @@ void row_calc::const_iterator::increment()
     rc = 0;
   else try {
     val = rc->e.evaluate();
-    val.resize( rc->bells() );
+    if ( rc->bells() ) 
+      val.resize( rc->bells() );
   } catch ( vector_end ) {
     rc = 0;
   }
