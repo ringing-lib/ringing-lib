@@ -73,6 +73,12 @@ int main( int argc, char *argv[] )
     cerr << "Error parsing expression: " << e.what() << "\n";
     return 1;
   }
-  
-  copy( rc->begin(), rc->end(), ostream_iterator<row>(cout, "\n") );
+
+  try {  
+    copy( rc->begin(), rc->end(), ostream_iterator<row>(cout, "\n") );
+  }
+  catch ( row::invalid const& ex ) {
+    cerr << "Invalid row produced: " << ex.what() << "\n";
+    return 1;
+  }
 }

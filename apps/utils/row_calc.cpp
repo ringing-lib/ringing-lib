@@ -762,7 +762,8 @@ void row_calc::const_iterator::increment()
   if ( !rc->v && val.bells() )
     rc = 0;
   else try {
-    val = rc->e.evaluate() * row(rc->bells()); 
+    val = rc->e.evaluate();
+    val.resize( rc->bells() );
   } catch ( vector_end ) {
     rc = 0;
   }

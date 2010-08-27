@@ -153,8 +153,14 @@ bool falseness_opt::process( const string &arg, const arg_parser & ) const
         cerr << "Error parsing row in -Fr option: " << e.what() << "\n";
         return false;
       }
-      for ( row_calc::const_iterator i=rc->begin(), e=rc->end(); i!=e; ++i ) 
-        args.avoid_rows.insert( *i );
+      try {
+        for ( row_calc::const_iterator i=rc->begin(), e=rc->end(); i!=e; ++i ) 
+          args.avoid_rows.insert( *i );
+      }
+      catch ( row::invalid const& e ) { 
+        cerr << "Invalid row produced in -Fr option: " << e.what() << "\n";
+        return false;
+      }
     }
   else if ( arg.size() > 2 && arg[0] == 'P' && arg[1] == '=' )
     {

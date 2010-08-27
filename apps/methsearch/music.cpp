@@ -136,7 +136,8 @@ musical_analysis::analyser::analyser( int bells )
             try {
               rc.reset( new row_calc( bells, pattern.substr(eq+1) ) );
             } catch ( exception const& e ) {
-              cerr << "Unable to parse music course head: " << e.what() << endl;
+              cerr << "Unable to parse music course head expression: " 
+                   << e.what() << endl;
               exit(1);
             }
           }
@@ -146,10 +147,16 @@ musical_analysis::analyser::analyser( int bells )
             had_patterns = false;
           }
           if (rc)
-            for ( row_calc::const_iterator i=rc->begin(), e=rc->end(); 
-                    i!=e; ++i )
-              blocks.push_back( make_pair( *i * row(bells), len ) );
-          else
+            try {
+              for ( row_calc::const_iterator i=rc->begin(), e=rc->end(); 
+                      i!=e; ++i )
+                blocks.push_back( make_pair( *i * row(bells), len ) );
+            } catch ( row::invalid const& e ) {
+              cerr << "Music course head produces invalid row: " 
+                   << e.what() << endl;
+              exit(1);
+            }
+           else
             blocks.push_back( make_pair( lh, len ) );
 
           continue;
