@@ -149,11 +149,13 @@ static bool have_falseness_groups = false;
 static bool have_names = false;
 static bool have_cc_ids = false;
 static bool have_old_lhcodes = false;
+static bool have_payloads = false;
 RINGING_END_ANON_NAMESPACE
 
 bool formats_have_falseness_groups() { return have_falseness_groups; }
 bool formats_have_names() { return have_names; }
 bool formats_have_cc_ids() { return have_cc_ids; }
+bool formats_have_payloads() { return have_payloads; }
 bool formats_have_old_lhcodes() { return have_old_lhcodes; }
 
 // -------------------------------------------------------------
@@ -416,7 +418,7 @@ format_string::format_string( const string &infmt,
 	    case 'C': case 'S': case 'M': case 'h': case 'F':
 	    case 'o': case 'd': case 'u': case '[': case '(':
 	    case 'y': case 'O': case ')': case 'L': case 'D':
-            case 'P': case 's':
+            case 'P': case 's': case 'a':
 	      // Can be used in either
 	      break;
 
@@ -437,7 +439,7 @@ format_string::format_string( const string &infmt,
 
 	    case 'n': case 'N': case 'p': case 'q': case 'Q': case 'l': 
 	    case 'C': case 'S': case 'F': case 'd': case '[': case '(':
-	    case 'y': case 'O': case 'D':
+	    case 'y': case 'O': case 'D': case 'a':
 	      if ( got_num_opt )
 		throw argument_error
 		  ( make_string() << "The `$" << *iter << "' "
@@ -461,6 +463,10 @@ format_string::format_string( const string &infmt,
 
             case 'i':
               have_cc_ids = true;
+              break;
+
+            case 'a':
+              have_payloads = true;
               break;
 
 	    case 'F':

@@ -69,6 +69,7 @@ private:
 bool formats_have_falseness_groups();
 bool formats_have_names();
 bool formats_have_cc_ids();
+bool formats_have_payloads();
 bool formats_have_old_lhcodes();
 
 

@@ -1205,7 +1205,8 @@ together with the formatting of it, is controlled
 by the \verb+-R+\oi{R} option which is discussed in \sref{variables}.
 By default, \methsearch prints just the methods' place notation and lead head
 --- i.e.\ omitting the \verb+-R+ option is equivalent to 
-specifying \verb+-R$p\t$l+.
+specifying \verb+-R$p\t$l+ (unless \verb+--filter+ is supplied in which
+case \verb+-R$p\t$a+ is assumed).
 
 The \verb+-o+ option\oid{o}{out-file} tells \methsearch\ to write all 
 method output (but not other types of output) into a file.  
@@ -1392,7 +1393,7 @@ The \verb+--filter+\loid{filter} option is used to change \methsearch\ from
 searching for methods \textit{ab initio} to filtering 
 a list of methods supplied on \textitidx{standard input}.
 The input format is a list of methods, one per line, with the
-place notation first on the line followed by arbitrary content 
+place notation first on the line followed, optionally, by additional text
 that is ignored.%
 \footnote{A UTF-8\index{UTF-8} byte order mark (BOM)\index{byte order mark} 
 is permitted, though not required, at the start of the first line.  
@@ -1400,6 +1401,8 @@ This has the hexadecimal encoding \texttt{EF BB BF}.
 Other Unicode\index{Unicode} formats (such as UTF-16 or UTF-32) are not 
 permitted; nor, in general, are any 
 non-ASCII-compatible character sets.\index{character set}}
+Any ext after the place notation is called the \textit{filter payload} 
+and can be accessed by the \verb+$a+ method variable (\sref{variables}).
 The output from methsearch \verb+-R"$q +\ldots\verb+"+ is a suitable input.
 This is particularly useful if you want to do a lengthy search, but are not
 entirely sure how to restrict the results initially.  Dump everything into
@@ -1549,6 +1552,7 @@ typed in on the command line reach \methsearch\ in their intended form.
 \D\F{O}&The coursing order (defined so the tenors course)\\
 \D\No\F{s}&An index of the staticity of the method\\
 \D\No\F{i}&The method identifier from the CC libraries\\
+\D\No\F{a}&The filter payload --- see \sref{misc_opt}\\
 \D\No\textit{\#}&The number of that method\\
 \D\No\F{c}&The number of matching methods --- see \sref{stats}\\
 \D\D&A literal \D\\
@@ -3820,10 +3824,11 @@ and \verb+-M2rhalflead+.
 
 \subsection{Pending release}
 \begin{list}{\labelitemi}{\leftmargin=1em}
-\item Method identifiers: \verb+$i+ (\sref{fmtstr}).
+\item Method identifiers: \verb+$i+ (\sref{variables}).
+\item Filter payloads: \verb+$a+ (\sref{misc_opt}, \sref{variables}). 
+\item Filter inverting: \verb+--invert-filter+ (\sref{misc_opt}).
 \item Fourths-place doubles lead-end symbols are now supported in \verb+$D+ 
   (\sref{fmtstr}).
-\item Filter inverting: \verb+--invert-filter+ (\sref{misc_opt}).
 \item The \verb+^+ operator is now overloaded to do conjugation 
   (\sref{rowexpr}).
 \end{list}

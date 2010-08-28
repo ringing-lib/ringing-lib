@@ -51,6 +51,7 @@
 #include <ringing/method.h>
 #include <ringing/library.h>
 #include <ringing/cclib.h> // For cc_collection_id
+#include <ringing/litelib.h> // For litelib::payload
 #include <ringing/streamutils.h>
 
 RINGING_USING_NAMESPACE
@@ -59,7 +60,8 @@ RINGING_USING_STD
 class method_properties::impl2 : public library_entry::impl
 {
 public:
-  explicit impl2( const method& m ) : m(m), named(false) {}
+  explicit impl2( const method& m, const string& payload )
+    : m(m), payload(payload), named(false) {}
 
   string get_property( int num_opt, const string& name ) const;
 
@@ -80,6 +82,7 @@ private:
 
   // Data members
   mutable method m;
+  const string payload;
   mutable bool named; // Have we looked up the name; not whether it is named
   mutable map< pair< int, string >, string > cache;
 };
@@ -250,6 +253,10 @@ string method_properties::impl2::get_property( int num_opt,
             os << string( num_opt, ' ' );
         } break;
 
+        case 'a': 
+          os << payload;
+          break;
+
 	default:
 	  throw logic_error( "Unknown variable requested" );
 	}
@@ -264,8 +271,8 @@ string method_properties::impl2::get_property( int num_opt,
 
 
 
-method_properties::method_properties( const method& m )
-  : library_entry( new impl2( m ) )
+method_properties::method_properties( const method& m, const string& payload )
+  : library_entry( new impl2( m, payload ) )
 {  
 }
 
@@ -284,7 +291,13 @@ method_properties::method_properties( const library_entry& le )
 
   // MSVC 6.0 has issues with the get_impl<impl>() syntax  
   if ( ! dynamic_cast<impl2*>( get_impl( (impl*)NULL ) ) ) 
-    library_entry::operator=( library_entry( new impl2( le.meth() ) ) );
+  {
+    string pay;
+    if ( le.has_facet<litelib::payload>() )
+      pay = le.get_facet<litelib::payload>();
+
+    library_entry::operator=( library_entry( new impl2( le.meth(), pay ) ) );
+  }
 }
 
 string method_properties::get_property( int num_opt, const string& name ) const

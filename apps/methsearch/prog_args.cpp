@@ -700,7 +700,8 @@ bool arguments::validate( arg_parser &ap )
     try {
       if ( outfmt.empty() || outfmt == "fmt" ) {
 	outfmt.erase();
-	if ( R_fmt_str.empty() ) R_fmt_str = "$p\t$l";
+	if ( R_fmt_str.empty() )
+          R_fmt_str = filter_mode ? "$p\t$a" : "$p\t$l";
 	outputs.add( new fmtout( R_fmt_str, outfile ) );
       } 
       else if ( outfmt == "xml" ) {
@@ -782,6 +783,12 @@ bool arguments::validate( arg_parser &ap )
        && ! method_libraries::has_libraries() )
     {
       ap.error( "The -L option must be used if $n, $N or $i is used" );
+      return false;
+    }
+
+  if ( formats_have_payloads() && !filter_mode ) 
+    {
+      ap.error( "Filter payloads can only be accessed when filtering" );
       return false;
     }
 

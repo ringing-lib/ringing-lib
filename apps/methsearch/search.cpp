@@ -97,7 +97,6 @@ private:
 
   bool is_acceptable_method();
   void output_method( method const& meth );
-  void found_method();
 
   bool is_acceptable_leadhead( const row &lh );
   bool is_falseness_acceptable( const change& ch );
@@ -117,6 +116,7 @@ private:
 
   vector<change> startmeth;
   method filter_method;
+  string filter_payload;
   method m;
   row r;
   bool maintain_r;   // Whether r is valid
@@ -144,6 +144,10 @@ void searcher::filter( library const& in )
     {
       try {
         filter_method = i->meth();
+        if ( i->has_facet<litelib::payload>() )
+          filter_payload = i->get_facet<litelib::payload>();
+        else
+          filter_payload.clear();
       } 
       catch ( std::exception const& ex ) {
         std::cerr << "Error reading method from input stream: " 
@@ -222,21 +226,13 @@ void run_search( const arguments &args )
 void searcher::output_method( method const& meth )
 {
   if ( !args.outputs.empty() ) {
-    method_properties props( meth );
+    method_properties props( meth, filter_payload );
 
     if ( !args.quiet && args.status && args.outfile.empty() )
       clear_status();
 
     args.outputs.append( props );
   }
-}
-
-void searcher::found_method()
-{
-  if ( !args.invert_filter ) 
-    output_method(m);
-
-  ++search_count;
 }
 
 bool searcher::try_principle_symmetry()
@@ -491,7 +487,7 @@ bool searcher::is_acceptable_method()
   for ( vector<size_t>::const_iterator 
           i = args.require_expr_idxs.begin(), e = args.require_expr_idxs.end(); 
         i != e; ++i ) {
-    method_properties props(m);
+    method_properties props(m, filter_payload);
     if ( !expression_cache::b_evaluate( *i, props ) )
       return false;
   }
@@ -1094,8 +1090,14 @@ void searcher::general_recurse()
     {
       if ( filter_method.size() && filter_method != m )
         ;
-      else if ( is_acceptable_method() )
-        found_method();
+      else if ( is_acceptable_method() ) {
+        if ( !args.invert_filter ) 
+          output_method(m);
+
+        // This really should be outside the invert_filter test --
+        // counts are inverted in the filter() function when inverting.
+        ++search_count;
+      }
     }
 
 
