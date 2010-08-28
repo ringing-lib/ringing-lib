@@ -346,7 +346,7 @@ public:
     : gens( new set_node(gens) ), started(false) {}
 
 private:
-  virtual void restart() { started = false; }
+  virtual void restart() { started = false; gens.restart(); }
   virtual int count_vectors() const { return 1; }
   virtual bool reads_stdin() const { return gens.reads_stdin(); }
   virtual bool supports_type( row_calc::expr::types t ) const
@@ -535,9 +535,13 @@ bool rc_parser::find_first( iter_t first, iter_t const last,
 {
   int depth( 0 );
   for ( ; first != last; ++first )
-    if      ( first->type() == tok_types::open_paren )
+    if      ( first->type() == tok_types::open_paren ||
+              first->type() == tok_types::open_set   ||
+              first->type() == tok_types::open_group )
       ++depth;
-    else if ( first->type() == tok_types::close_paren )
+    else if ( first->type() == tok_types::close_paren ||
+              first->type() == tok_types::close_set   ||
+              first->type() == tok_types::close_group )
       --depth;
     else if ( !depth )
       for ( size_t i = 0u; i<N; ++i )
