@@ -238,4 +238,20 @@ row multtab::find( const multtab::row_t &r ) const
   return rows[r.n];
 }
 
+sqmulttab::row_t sqmulttab::find( const row &r ) const
+{
+  return sqmulttab::row_t( this->multtab::find(r).index(), this );
+}
+
+row sqmulttab::find( const sqmulttab::row_t &r ) const
+{
+  return this->multtab::find(r);
+}
+
+void sqmulttab::sqinit()
+{
+  for ( row_iterator i=begin_rows(), e=end_rows(); i != e; ++i ) 
+    this->multtab::compute_post_mult( this->multtab::find(*i) );
+}
+
 RINGING_END_NAMESPACE

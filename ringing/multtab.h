@@ -52,6 +52,7 @@ RINGING_START_NAMESPACE
 RINGING_USING_STD
 
 class multtab;
+class sqmulttab;
 
 RINGING_START_DETAILS_NAMESPACE 
 
@@ -65,7 +66,7 @@ public:
   size_t index() const { return n; }
 
   static multtab_row_t from_index( size_t idx ) { 
-    multtab_row_t r;  r.n = idx;  return r;
+    return multtab_row_t(idx);
   }
 
   bool operator==( multtab_row_t const& o ) const { return n == o.n; }
@@ -84,9 +85,13 @@ public:
   friend class multtab_row_iterator;
   friend struct cmp;
 
+protected:
+  multtab_row_t( size_t n ) : n(n) {}
+ 
 private:
   size_t n; 
 };
+
 
 // Iterate through the rows in the table
 class RINGING_API multtab_row_iterator 
@@ -120,10 +125,12 @@ class RINGING_API multtab_row_iterator
   multtab_row_t r;
 };
 
+class sqmulttab_row_t;
+
 class multtab_post_col_t
 {
 private:
-  multtab_post_col_t( size_t n, multtab *t )
+  multtab_post_col_t( size_t n, multtab const* t )
     : n(n), t(t) 
   {}
   
@@ -131,6 +138,7 @@ private:
   operator*( multtab_row_t r, multtab_post_col_t c );
 
   friend class RINGING_PREFIX multtab;
+  friend class sqmulttab_row_t;
 
 public:
   multtab_post_col_t() : n(0), t(NULL) {}
@@ -153,13 +161,13 @@ public:
 
 private:
   size_t n; 
-  multtab *t;
+  multtab const* t;
 };
 
 class multtab_pre_col_t
 {
 private:
-  multtab_pre_col_t( size_t n, multtab *t ) 
+  multtab_pre_col_t( size_t n, multtab const* t ) 
     : n(n), t(t) 
   {}
   
@@ -190,7 +198,25 @@ public:
 
 private:
   size_t n; 
-  multtab *t;
+  multtab const* t;
+};
+
+class sqmulttab_row_t : public multtab_row_t {
+public:
+  sqmulttab_row_t() : t(0) {}
+
+  operator multtab_post_col_t() const;
+
+  friend sqmulttab_row_t operator*( sqmulttab_row_t l, sqmulttab_row_t r );
+
+private:
+  friend class RINGING_PREFIX sqmulttab;
+
+  sqmulttab_row_t( size_t n, sqmulttab const* t ) 
+    : multtab_row_t(n), t(t) 
+  {}
+
+  sqmulttab const* t; 
 };
 
 RINGING_END_DETAILS_NAMESPACE
@@ -211,7 +237,7 @@ public:
   template < class InputIterator >
   multtab( InputIterator first, InputIterator last )
     : rows( make_vector( first, last ) )
-  {}
+  { table.resize( rows.size() ); }
 
   // As above but use factor out some part-end.
   template < class InputIterator >
@@ -264,6 +290,10 @@ public:
   friend row_t RINGING_DETAILS_PREFIX operator*( row_t r, post_col_t c );
   friend row_t RINGING_DETAILS_PREFIX operator*( pre_col_t c, row_t r );
 
+  friend RINGING_DETAILS_PREFIX sqmulttab_row_t 
+  RINGING_DETAILS_PREFIX operator*( RINGING_DETAILS_PREFIX sqmulttab_row_t l, 
+                                    RINGING_DETAILS_PREFIX sqmulttab_row_t r );
+
 private:
   // A helper to do what the templated constructor of vector does
   // (we can't use that directly because MSVC doesn't have it).
@@ -295,6 +325,30 @@ private:
   vector< pair< row, pre_or_post > > cols;
 };
 
+class sqmulttab : public multtab {
+public:
+  // Initialises a multiplication table with the rows in the 
+  // range [first, last).
+  template < class InputIterator >
+  sqmulttab( InputIterator first, InputIterator last )
+    : multtab( first, last )
+  { sqinit(); }
+
+  typedef RINGING_DETAILS_PREFIX sqmulttab_row_t row_t;
+
+  typedef row_t post_col_t;
+  typedef row_t pre_col_t;
+
+  pre_col_t compute_pre_mult( const row &x ) { return find(x); }
+  post_col_t compute_post_mult( const row &x ) { return find(x); }
+
+  row_t find( const row &r ) const;
+  row   find( const row_t &r ) const;
+
+private:
+  void sqinit();
+};
+
 RINGING_START_DETAILS_NAMESPACE
 
 // Operators to do optimised multiplication of rows:
@@ -303,6 +357,14 @@ inline multtab_row_t operator*( multtab_row_t r, multtab_post_col_t c )
 
 inline multtab_row_t operator*( multtab_pre_col_t c, multtab_row_t r )
 { return c.t->table[ r.index() ][ c.n ]; }
+
+inline sqmulttab_row_t operator*( sqmulttab_row_t l, sqmulttab_row_t r )
+{ return sqmulttab_row_t
+           ( l.t->table[ l.index() ][ r.index() ].index(), l.t ); }
+
+// Conversion operator
+inline sqmulttab_row_t::operator multtab_post_col_t() const
+{ return multtab_post_col_t( index(), t ); }
 
 RINGING_END_DETAILS_NAMESPACE
 
