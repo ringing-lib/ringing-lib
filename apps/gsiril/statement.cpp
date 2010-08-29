@@ -88,14 +88,14 @@ void prove_stmt::execute( execution_context& e ) const
       catch( const script_exception& ex ) 
 	{
 	  if ( ex.t == script_exception::do_abort ) {
-            p.set_silent( e.get_args().quiet );
+            if ( e.get_args().quiet ) p.set_silent(true);
 	    p.execute_symbol( "abort" );
             e.set_failure();
           }
 	  return;
 	}
    
-      p.set_silent( e.get_args().quiet );
+      if ( e.get_args().quiet ) p.set_silent(true);
       switch ( p.state() )
 	{
 	case proof_context::rounds: 
