@@ -37,7 +37,7 @@ int execution_context::bells( int b )
 {
   if ( b > args.rounds.bells() )
     args.rounds *= row(b);
-  else 
+  else if ( b < args.rounds.bells() )
     {
       if ( !args.rounds.isrounds() )
 	output() << "Warning: Rounds reset";
