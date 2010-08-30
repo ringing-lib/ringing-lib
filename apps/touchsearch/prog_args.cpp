@@ -107,6 +107,11 @@ void arguments::bind( arg_parser& p )
            "Comma separate the output (suitable for passing to gsiril)",
            comma_separate ) );
 
+  p.add( new string_opt
+         ( 'p', "plain-name",
+           "Use STR instead of '.' or 'p' as the plain lead symbol", "STR",
+           plain_name ) );
+
   p.add( new boolean_opt
          ( 'c', "count",
            "Count the number of touches found",
@@ -189,6 +194,9 @@ bool arguments::validate( arg_parser& ap )
       return false;
     }
   }
+
+  if ( plain_name.empty() ) 
+    plain_name = comma_separate ? 'p' : '.';
  
   return true;
 }

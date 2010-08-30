@@ -57,6 +57,7 @@ struct arguments
   init_val<bool,false> raw_count;
   init_val<bool,false> comma_separate;
 
+  string               plain_name;
   string               meth_str;
   method               meth;
 

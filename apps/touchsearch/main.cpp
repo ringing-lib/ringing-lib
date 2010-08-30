@@ -62,7 +62,6 @@ public:
 
   enum format_options {
     comma_separate   = 0x01,  // Separate leads with a comma
-    plain_p          = 0x02,  // Use p instead of . for plain
     print_length     = 0x04,  // Append (120 changes)
     write_out_repeat = 0x08   // Write abcd x3 or abcdabcdabcd
   };
@@ -90,7 +89,7 @@ public:
             - args.calls.begin();
           if ( (flags & comma_separate) && n != meth.size() ) cout << ',';
           if ( cn < args.calls.size() ) cout << args.call_strs[cn];
-          else cout << ( flags & plain_p ? 'p' : '.' );
+          else cout << args.plain_name;
         }
       }
     } while ( (flags & write_out_repeat) && r.order() > 1 );
@@ -146,8 +145,7 @@ void search( arguments const& args, method const& meth,
 
   print_touch::format_options fmt = static_cast<print_touch::format_options>( 
     args.comma_separate ? 
-      ( print_touch::comma_separate | print_touch::plain_p 
-        | print_touch::write_out_repeat ) 
+      ( print_touch::comma_separate | print_touch::write_out_repeat ) 
     : print_touch::print_length );
 
   table_search searcher( meth, args.calls, args.pends, leads, flags );
