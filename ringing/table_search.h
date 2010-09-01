@@ -1,5 +1,5 @@
 // -*- C++ -*- table_search.h - A search class using a multiplication table
-// Copyright (C) 2002 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2010 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -60,7 +60,11 @@ public:
 
     // In multipart searches, allow blocks that do not all join together
     // (e.g. WHx2 as 6-part of PB6)
-    mutually_true_parts = 0x02
+    mutually_true_parts = 0x02,
+
+    // For reasons of historical compatbility, the length argument
+    // is ordinarily in leads.  This option says the lengths are in changes.
+    length_in_changes = 0x04
   };
 
   // Constructors

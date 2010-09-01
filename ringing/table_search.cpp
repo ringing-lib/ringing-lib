@@ -52,6 +52,23 @@ RINGING_START_NAMESPACE
 
 RINGING_USING_STD
 
+static pair<size_t, size_t> 
+  range_div( pair<size_t, size_t> const& rows, size_t leadlen )
+{
+  pair<size_t, size_t> leads;
+ 
+  if ( rows.first % leadlen )
+    leads.first = (rows.first / leadlen + 1);
+  else
+    leads.first = rows.first / leadlen;
+  if ( rows.second == static_cast<size_t>(-1) )
+    leads.second = rows.second;
+  else
+    leads.second = rows.second / leadlen;
+
+  return leads;
+}
+
 table_search::table_search( const method &meth, const vector<change> &calls,
 			    const group& partends, flags f )
   : meth( meth ), calls( calls ), partends( partends ),
@@ -62,8 +79,13 @@ table_search::table_search( const method &meth, const vector<change> &calls,
 			    const group& partends, 
                             pair< size_t, size_t > lenrange,  flags f )
   : meth( meth ), calls( calls ), partends( partends ),
-    lenrange( lenrange ), f( f )
-{}
+    lenrange( range_div( lenrange, f & length_in_changes
+                                     ? partends.size() * meth.length() : 1) ),
+    f( f )
+{
+  DEBUG( "Length range set to " << lenrange.first << "-" << lenrange.second 
+         << " leads" );
+}
 
 table_search::table_search( const method &meth, const vector<change> &calls,
                             bool set_nr )
@@ -74,9 +96,13 @@ table_search::table_search( const method &meth, const vector<change> &calls,
 table_search::table_search( const method &meth, const vector<change> &calls,
                             pair< size_t, size_t > lenrange, bool set_nr )
   : meth( meth ), calls( calls ),
-    lenrange( lenrange ), f( set_nr ? ignore_rotations : no_flags )
-{}
-
+    lenrange( range_div( lenrange, f & length_in_changes
+                                     ? partends.size() * meth.length() : 1) ),
+    f( set_nr ? ignore_rotations : no_flags )
+{
+  DEBUG( "Length range set to " << lenrange.first << "-" << lenrange.second 
+         << " leads" );
+}
 
 class table_search::context : public search_base::context_base
 {
@@ -104,14 +130,34 @@ public:
     t.push_back( tl = new touch_child_list );    
     t.set_head( tl );
 
-    init_falseness( s->meth, is_fixed_treble(s) ? 0 
-			     : falseness_table::no_fixed_treble );
+    init_falseness( s->meth, 
+             (is_fixed_treble(s) ? 0 : falseness_table::no_fixed_treble) 
+           | (!is_in_course(s)   ? 0 : falseness_table::in_course_only ) );
+
     DEBUG( "Initialised " << falsenesses.size() << " flhs" );
   }
 
 private:
   typedef multtab::post_col_t post_col_t;
   typedef multtab::row_t row_t;
+
+  static bool is_in_course( const table_search *s )
+  {
+    if ( s->meth.lh().sign() == -1 ) {
+      DEBUG( "Lead head is out-of-course" );
+      return false;
+    }
+
+    int const psign = s->meth.back().sign();
+    for ( size_t i=0; i < s->calls.size(); ++i )
+      if ( s->calls[i].sign() != psign ) {
+        DEBUG( "Call #" << i << " is parity-altering" );
+        return false;
+      }
+
+    DEBUG( "All lead heads are in-course" );
+    return true;
+  }
 
   static bool is_fixed_treble( const table_search *s )
   {
