@@ -142,6 +142,13 @@ bool arguments::validate( arg_parser& ap )
   return true;
 }
 
+void output_counter( ostream& os, bool& need_sep, int counter )
+{
+  if (need_sep) os << "\t";
+  os << counter;
+  need_sep = true;
+}
+
 int main( int argc, char *argv[] )
 {
   arguments args;
@@ -205,21 +212,12 @@ int main( int argc, char *argv[] )
       cout << r << "\n";
   }
 
+  // Print counters
   bool need_sep = false;
-  if (args.positive) { 
-    cout << (need_sep ? "\t" : "") << countp;  need_sep = true;
-  }
-  if (args.negative) {
-    cout << (need_sep ? "\t" : "") << countn;  need_sep = true;
-  }
-  if (args.count) {
-    cout << (need_sep ? "\t" : "") << count;   need_sep = true;
-  }
-  if (args.score) {
-    cout << (need_sep ? "\t" : "") << args.mus.get_score();    
-    need_sep = true;
-  }
-  if (args.positive || args.negative || args.count || args.score)
-    cout << endl;
+  if (args.positive) output_counter( cout, need_sep, countp ); 
+  if (args.negative) output_counter( cout, need_sep, countn );
+  if (args.count)    output_counter( cout, need_sep, count  );
+  if (args.score)    output_counter( cout, need_sep, args.mus.get_score() );
+  if (need_sep)      cout << endl;
 }
 
