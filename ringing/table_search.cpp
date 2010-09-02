@@ -247,7 +247,7 @@ private:
   }
 
   // Output the current touch and any rotations of it.
-  void output_touches( outputer &output, size_t cur )
+  void output_touch( outputer &output, size_t cur )
   {
     size_t len( calls.size() );
     list< touch_child_list::entry > &ch = tl->children();
@@ -318,7 +318,7 @@ private:
   void run_recursive( outputer &output, const row_t &r, 
                       size_t depth, size_t cur )
   {
-#if 0
+#if DEBUG_LEVEL > 1
     IF_DEBUG( copy( calls.begin(), calls.end(), ostream_iterator<int>(cout) ));
     DEBUG( " at depth " << depth );
 #endif
@@ -334,7 +334,7 @@ private:
       {
 	// Has it come round, and is it in it's canonical form?
 	if ( depth >= lenrange.first && r.isrounds() && is_really_canonical() )
-	  output_touches( output, cur );
+	  output_touch( output, cur );
       }
     else if ( depth < lenrange.second )
       {
