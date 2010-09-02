@@ -30,6 +30,7 @@
 
 #include "prog_args.h"
 #include "iteratorutils.h"
+#include "join_plan_search.h"
 
 #include <string>
 #if RINGING_OLD_INCLUDES
@@ -44,6 +45,7 @@
 #include <iostream>
 #include <fstream>
 #endif
+#include <cassert>
 
 
 RINGING_USING_NAMESPACE
@@ -66,11 +68,11 @@ public:
     write_out_repeat = 0x08   // Write abcd x3 or abcdabcdabcd
   };
  
-  print_touch( arguments const& args, method const& meth, 
+  print_touch( arguments const& args, 
                string const& filter_line, format_options flags ) 
-    : args(args), meth(meth), filter_line(filter_line), flags(flags)
+    : args(args), filter_line(filter_line), flags(flags)
   {}
-    
+
   void operator()( const touch &t ) const
   {
     ++touch_count;
@@ -79,33 +81,43 @@ public:
     if (args.filter_mode)
       cout << filter_line << "\t";
 
-    int n=0;  row r( args.bells );
+    touch_child_list const* tl 
+      = dynamic_cast<touch_child_list const*>( t.get_head() );
+    assert( tl );
+     
+    size_t len = 0;   row r(args.bells);
+    do for ( list<touch_child_list::entry>::const_iterator
+               i = tl->children().begin(), e = tl->children().end();  
+               i != e;  ++i ) 
+    {    
+      for ( int n = 0; n < i->first; ++n ) {
+        change c;
+        for ( touch_node::const_iterator 
+                li = i->second->begin(), le = i->second->end(); 
+                li != le; ++li, ++len )
+          r *= c = *li;
 
-    do {
-      for ( touch::const_iterator i( t.begin() ); i != t.end(); ++i ) {
-        r *= *i;
-        if ( ++n % meth.size() == 0 ) {
-          size_t cn = find( args.calls.begin(), args.calls.end(), *i ) 
+        size_t cn = find( args.calls.begin(), args.calls.end(), c ) 
             - args.calls.begin();
-          if ( (flags & comma_separate) && n != meth.size() ) cout << ',';
-          if ( cn < args.calls.size() ) cout << args.call_strs[cn];
-          else cout << args.plain_name;
-        }
+
+        if ( (flags & comma_separate) && len != 0 ) cout << ',';
+        if ( cn < args.calls.size() ) cout << args.call_strs[cn];
+        else cout << args.plain_name;
       }
-    } while ( (flags & write_out_repeat) && r.order() > 1 );
+    }
+    while ( (flags & write_out_repeat) && r.order() > 1 );
 
     if ( r.order() > 1 ) 
       cout << " x" << r.order();
 
     if ( flags & print_length )
-      cout << "  (" << (n*r.order()) << " changes)";
+      cout << "  (" << (len*r.order()) << " changes)";
 
     cout << endl;
   } 
 
 private:
   arguments const& args;
-  method const& meth;
   string filter_line;
   int flags;
 };
@@ -133,25 +145,55 @@ private:
   shared_pointer<size_t> i;
 };
 
+void read_plan( int bells, istream& in, map<row, method>& plan )
+{
+  string line;  
+  int n=1;
+  while ( getline(in, line) ) {
+    RINGING_ISTRINGSTREAM linestr(line);
+    row r;    string pn, name;
+    if ( !(linestr >> r >> pn) )  {
+      cerr << "Error reading line #" << n << "\n";
+      continue;
+    }
+    linestr >> name; // We don't care about errors here
+    ++n;
+    plan[r] = method( pn, bells, name );
+  }
+}
+
 void search( arguments const& args, method const& meth, 
              string const& filter_line )
 {
-  const size_t leadlen = meth.size() * args.pends.size();
-  pair<size_t, size_t> leads = range_div( args.length, leadlen );
- 
-  table_search::flags flags = static_cast<table_search::flags>( 0 |
-    args.ignore_rotations ? table_search::ignore_rotations : 0 |
-    args.mutually_true_parts ? table_search::mutually_true_parts : 0 );
-
   print_touch::format_options fmt = static_cast<print_touch::format_options>( 
     args.comma_separate ? 
       ( print_touch::comma_separate | print_touch::write_out_repeat ) 
     : print_touch::print_length );
 
-  table_search searcher( meth, args.calls, args.pends, leads, flags );
-  print_touch  printer ( args, meth, filter_line, fmt );
+  scoped_pointer<search_base> searcher;
+  
+  print_touch printer( args, filter_line, fmt );
 
-  touch_search_until( searcher, iter_from_fun(printer), have_finished(args) );
+  if ( args.use_plan ) {
+    // XXX: Should this require a command-line option?
+    join_plan_search::flags f = join_plan_search::no_internal_falseness;
+
+    map<row, method> plan;  read_plan( args.bells, cin, plan );
+
+    searcher.reset
+      ( new join_plan_search( args.bells, plan, args.calls, args.length, f ) );
+  } 
+  else {
+    table_search::flags f = static_cast<table_search::flags>( 
+      table_search::length_in_changes | 
+      (args.ignore_rotations ? table_search::ignore_rotations : 0) |
+      (args.mutually_true_parts ? table_search::mutually_true_parts : 0) );
+
+    searcher.reset
+      ( new table_search( meth, args.calls, args.pends, args.length, f ) );
+  }
+
+  touch_search_until( *searcher, iter_from_fun(printer), have_finished(args) );
 }
 
 void filter( arguments const& args )

@@ -31,7 +31,8 @@ touchsearch_LDADD = $(top_builddir)/apps/utils/libstuff.a \
 $(top_builddir)/ringing/libringing.la \
 $(top_builddir)/ringing/libringingcore.la
 
-touchsearch_SOURCES = main.cpp prog_args.h prog_args.cpp iteratorutils.h
+touchsearch_SOURCES = main.cpp prog_args.h prog_args.cpp iteratorutils.h \
+join_plan_search.cpp join_plan_search.h
 
 
 

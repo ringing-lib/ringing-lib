@@ -56,6 +56,7 @@ struct arguments
   init_val<bool,false> count;
   init_val<bool,false> raw_count;
   init_val<bool,false> comma_separate;
+  init_val<bool,false> use_plan;
 
   string               plain_name;
   string               meth_str;

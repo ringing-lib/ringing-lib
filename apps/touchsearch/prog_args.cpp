@@ -98,6 +98,11 @@ void arguments::bind( arg_parser& p )
            mutually_true_parts ) );
 
   p.add( new boolean_opt
+         ( 'a', "use-plan",
+           "Read a touch plan from standard input",
+           use_plan ) );
+
+  p.add( new boolean_opt
          ( 'q', "quiet",
            "Don't output the touches",
            quiet ) );
@@ -109,7 +114,7 @@ void arguments::bind( arg_parser& p )
 
   p.add( new string_opt
          ( 'p', "plain-name",
-           "Use STR instead of '.' or 'p' as the plain lead symbol", "STR",
+           "Use STR instead of '.' or 'p' for plain leads", "STR",
            plain_name ) );
 
   p.add( new boolean_opt
@@ -134,23 +139,6 @@ void arguments::bind( arg_parser& p )
            filter_mode ) );
 }
 
-pair<size_t, size_t> 
-  range_div( pair<size_t, size_t> const& rows, size_t leadlen )
-{
-  pair<size_t, size_t> leads;
- 
-  if ( rows.first % leadlen )
-    leads.first = (rows.first / leadlen + 1);
-  else
-    leads.first = rows.first / leadlen;
-  if ( rows.second == static_cast<size_t>(-1) )
-    leads.second = rows.second;
-  else
-    leads.second = rows.second / leadlen;
-
-  return leads;
-}
-
 bool arguments::validate( arg_parser& ap )
 {
   if ( !bells ) {
@@ -172,7 +160,7 @@ bool arguments::validate( arg_parser& ap )
     return false;
   }
 
-  if ( !filter_mode && meth.empty() ) {
+  if ( !filter_mode && !use_plan && meth.empty() ) {
     ap.error( "Must specify a method" );
     return false;
   }
@@ -184,13 +172,14 @@ bool arguments::validate( arg_parser& ap )
     return false;
 
   if ( meth.size() ) {
-    const size_t leadlen = meth.size() * pends.size();
+    // TODO:  Warn if no whole number of leads is possible
 
-    pair<size_t, size_t> leads = range_div( length, leadlen );
-
-    if ( leads.first > leads.second ) {
-      ap.error( "The length range does not encompass a whole number of leads "
-                "(per part)" );
+    if ( length.first > length.second ) {
+      ap.error( "The minimum length is greater than the maximum length" );
+      return false;
+    }
+    if ( use_plan ) {
+      ap.error( "Must not specify a method when using a plan" );
       return false;
     }
   }
