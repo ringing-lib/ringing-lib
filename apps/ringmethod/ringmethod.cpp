@@ -182,9 +182,17 @@ double tower_sounds::sample()
   return sum;
 } 
 
+struct offset {
+  offset() :  meanpos_h(0), meanpos_b(0), stddev_h(-1), stddev_b(-1) {}
+
+  double meanpos_h, meanpos_b;
+  double stddev_h, stddev_b; // Negative values are replaced with default_dev
+};
+
 class row_player {
 public:
-  row_player( tower_sounds& tower, int peal_speed, double stddev );
+  row_player( tower_sounds& tower, int peal_speed, double hs_lead,
+              map<bell, offset> const& striking );
 
 private:
   class row_reader_base {
@@ -222,16 +230,16 @@ public:
 
 private:
   tower_sounds tower;
-  map< bell, pair<double,double> > striking;  // mean, stddev
   double bell_sep;
+  double hs_lead;
+  map< bell, offset > striking;
 };
 
-row_player::row_player( tower_sounds& tower, int peal_speed, double stddev )
-  : tower(tower), bell_sep(peal_speed * 60 / 2500.0 / (tower.bells()*2+1))
+row_player::row_player( tower_sounds& tower, int peal_speed, double hs_lead,
+                        map<bell, offset> const& striking )
+  : tower(tower), bell_sep(peal_speed * 60 / 2500.0 / (tower.bells()*2+1)),
+    hs_lead(hs_lead), striking(striking)
 {
-  for (bell i=0; i<tower.bells(); ++i) 
-    striking[i] = make_pair( 0.0, stddev );
-  
   assert( bell_sep * tower.sample_rate() > 2.0 );
 }
 
@@ -305,9 +313,11 @@ void row_player::do_ring( shared_pointer<row_reader_base> const& rr,
     if (queued_bells.empty() && r.bells()) {
       int ts;  // timestamp of last bell in row
       for (int i = 0; i<r.bells(); ++i) {
-        double offset = random_normal_deviate( striking[ r[i] ].first, 
-                                               striking[ r[i] ].second );
-        double posn = i + row_idx * tower.bells() + row_idx/2 + offset;
+        offset const& o = striking[ r[i] ];
+        double off = random_normal_deviate
+          ( row_idx % 2 ? o.meanpos_b : o.meanpos_h,  
+            row_idx % 2 ? o.stddev_b  : o.stddev_h );
+        double posn = i + row_idx * tower.bells() + row_idx/2 * hs_lead + off;
         ts = (int)( posn * bell_sep * tower.sample_rate() );
         if (ts<0) ts = 0;
         if (ts<queued_timestamp) queued_timestamp = ts;
@@ -405,17 +415,119 @@ bool time_opt::process( const string& arg, const arg_parser& ap ) const
 
 class arguments {
 public:
-  arguments() : default_deviation() {}
+  arguments() : hs_lead(1.0), default_deviation(0.0) {}
 
   void bind( arg_parser& p );
+  bool validate( arg_parser& p );
 
   init_val<int, 0>     bells;
   init_val<int, 22050> sample_rate;
   init_val<int, 180>   peal_speed;
   init_val<int, 587>   tenor_nominal;
+  double               hs_lead;
   double               default_deviation;
   init_val<int,-1>     seed;
+  map<bell, offset>    striking;
 };
+
+class offset_opt : public option {
+public:
+  offset_opt( char c, const string& l, const string& d, const string& a,
+              map<bell, offset> &opt )
+    : option(c, l, d, a), opt(opt) 
+  {}
+
+private:
+  virtual bool process( string const& arg, arg_parser const& ap ) const;
+  bool parse_meandev( string const& meandev, arg_parser const& ap,
+                      double& mean, double& stddev ) const;
+
+  map<bell, offset>& opt;
+};
+
+bool offset_opt::parse_meandev( string const& meandev, arg_parser const& ap,
+                                double& mean, double& stddev ) const
+{
+  // MEANDEV := OFFSET? ( ',' STDDEV )?
+  size_t comma = meandev.find(',');
+  if ( comma != 0 && meandev.size() ) {
+    string meanstr = meandev.substr( 0, comma == string::npos 
+                                          ? meandev.size() : comma );
+    try { 
+      mean = lexical_cast<double>( meanstr );
+    } catch ( bad_lexical_cast const& ) {
+      ap.error( make_string() << "Invalid offset: \"" << meanstr << "\"" );
+      return false;
+    }
+  }
+
+  if ( comma != string::npos ) {
+    try { 
+      stddev = lexical_cast<double>( meandev.substr(comma) );
+    } catch ( bad_lexical_cast const& ) {
+      ap.error( make_string() << "Invalid deviation: \"" 
+                              << meandev.substr(comma) << "\"" );
+      return false;
+    }
+    if (stddev < 0) {
+      ap.error( make_string() << "Negative deviation: \"" 
+                              << meandev.substr(comma) << "\"" );
+      return false;
+    }
+  }
+
+  return true;
+}
+
+bool offset_opt::process( string const& arg, arg_parser const& ap ) const
+{
+  // Format := BELL '=' ( MEANDEV | MEANDEV ';' MEANDEV )
+  // where MEANDEV := OFFSET? ( ',' STDDEV )?
+
+  int eq = arg.find('=');
+  if (eq == string::npos ) {
+    ap.error("Offset option should be of format BELL=OFFSET: no '=' found");
+    return false;
+  }
+
+  bell b;
+  if (eq == 1) {
+    try {
+      b = bell::read_char(arg[0]);
+    } catch ( bell::invalid const& ) {
+      ap.error( make_string() << "Invalid bell symbol: \"" << arg[0] << "\"" );
+      return false;
+    }
+  }
+  else {
+    try { 
+      b = bell( lexical_cast<int>( arg.substr(0,eq) ) - 1 );
+    } catch ( bad_lexical_cast const& ) {
+      ap.error( make_string() << "Invalid bell number: \"" 
+                              << arg.substr(0,eq) << "\"" );
+      return false;
+    }
+  }
+
+  offset& off = opt[b];
+
+  size_t semi = arg.find(';', eq+1);
+  if ( semi == string::npos ) {
+    if ( !parse_meandev( arg.substr(eq+1), ap, off.meanpos_h, off.stddev_h ) )
+      return false;
+    off.meanpos_b = off.meanpos_h;
+    off.stddev_b  = off.stddev_h;
+  } else {
+    if ( !parse_meandev( arg.substr(eq+1,semi-eq-1), ap, 
+                         off.meanpos_h, off.stddev_h ) )
+      return false;
+    if ( !parse_meandev( arg.substr(semi+1), ap, 
+                         off.meanpos_b, off.stddev_b ) )
+      return false;
+  }
+
+  return true;
+}
 
 void arguments::bind( arg_parser& p )
 {
@@ -443,14 +555,48 @@ void arguments::bind( arg_parser& p )
            "FREQ", tenor_nominal ) );
 
   p.add( new double_opt
+         ( 'h', "handstroke-lead",
+           "The size of the handstroke lead as a multiple of the inter-bell "
+           "spacing", "VAL", hs_lead ) );
+
+  p.add( new double_opt
          ( 'd', "deviation",
            "Standard deviation of bells within the row in multiples of "
            "the inter-bell spacing", "VAL", default_deviation ) );
+
+  p.add( new offset_opt 
+         ( 'o', "offset",
+           "Set the offset and standard deviation of the striking of BELL",
+           "BELL=OFFSET,STDDEV", striking ) );
 
   p.add( new integer_opt
          ( '\0', "seed",
            "Seed the random number generator",  "NUM",
            seed ) );
+}
+
+bool arguments::validate( arg_parser& ap )
+{
+  if ( bells >= int(bell::MAX_BELLS) )
+    {
+      ap.error( make_string() << "The number of bells must be less than "
+                << bell::MAX_BELLS );
+      return false;
+    }
+
+  for ( bell b=0; b<bells; ++b )
+    if ( striking.find(b) == striking.end() ) 
+      striking[b] = offset();
+
+  for ( map<bell, offset>::iterator i=striking.begin(), e=striking.end();
+        i != e; ++i ) {
+    if ( i->second.stddev_h < 0 )  
+      i->second.stddev_h = default_deviation;
+    if ( i->second.stddev_b < 0 )  
+      i->second.stddev_b = default_deviation;
+  }
+
+  return true;
 }
 
 int main(int argc, char* argv[])
@@ -468,6 +614,9 @@ int main(int argc, char* argv[])
 	ap.usage();
 	return 1;
       }
+
+    if ( !args.validate(ap) )
+      return 1;
   }
 
   if ( args.seed == -1 )
@@ -476,7 +625,7 @@ int main(int argc, char* argv[])
     srand( args.seed );
 
   tower_sounds tower( args.tenor_nominal, args.bells, args.sample_rate ); 
-  row_player player( tower, args.peal_speed, args.default_deviation );
+  row_player player( tower, args.peal_speed, args.hs_lead, args.striking );
   player.header( cout );
   player.ring( istream_iterator<row>(cin), istream_iterator<row>(), cout );
 }
