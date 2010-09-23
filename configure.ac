@@ -2,8 +2,9 @@ dnl -*- M4 -*- configure.ac - Autoconf script for the Ringing Class Library
 
 dnl Process this file with autoconf to produce a configure script.
 
-dnl Copyright (C) 2001, 2002, 2008, 2009 Martin Bright <martin@boojum.org.uk>
-dnl and Richard Smith <richard@ex-parrot.com>
+dnl Copyright (C) 2001, 2002, 2008, 2009, 2010 
+dnl Martin Bright <martin@boojum.org.uk> and
+dnl Richard Smith <richard@ex-parrot.com>
 
 dnl This program is free software; you can redistribute it and/or modify
 dnl it under the terms of the GNU General Public License as published by
@@ -175,6 +176,6 @@ AC_CONFIG_FILES([Makefile ringing/Makefile apps/Makefile apps/gsiril/Makefile
   apps/utils/Makefile apps/psline/Makefile apps/methsearch/Makefile
   apps/fextent/Makefile apps/extent/Makefile apps/touchsearch/Makefile
   apps/printmethod/Makefile apps/musgrep/Makefile apps/rowcalc/Makefile
-  apps/ringmethod/Makefile apps/splices/Makefile
+  apps/ringmethod/Makefile apps/splices/Makefile apps/spliceplan/Makefile
   doc/Makefile examples/Makefile tests/Makefile ringing/common-am.h])
 AC_OUTPUT
