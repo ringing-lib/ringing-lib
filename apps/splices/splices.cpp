@@ -49,6 +49,8 @@ struct arguments
 
   init_val<bool,false> in_course;
 
+  init_val<bool,false> filter_mode;
+
   arguments( int argc, char *argv[] );
   void bind( arg_parser& p );
   bool validate( arg_parser& p );
@@ -108,6 +110,11 @@ void arguments::bind( arg_parser& p )
          ( 'l', "leads",
            "Only display methods with a NUM-lead splice", "NUM",
            only_n_leads ) );
+
+  p.add( new boolean_opt
+         ( '\0', "filter",
+           "Run as a method filter",
+           filter_mode ) );
 }
 
 bool arguments::validate( arg_parser& ap )
@@ -137,6 +144,14 @@ bool arguments::validate( arg_parser& ap )
       return false;
     }
 
+  if ( filter_mode && 
+       ( group_splices || only_n_leads != -1 || show_pn || null_splices ) ) 
+    {
+      ap.error
+        ( "The -g, -l, -p and -n options cannot be used when filtering" );
+      return false;
+    }
+
   return true;
 }
 
@@ -158,6 +173,8 @@ private:
   bool is_just_le_vars( set<method> const& s ) const;
   void print_set( set<method> const& s ) const;
   set<method, sort_function> get_lead_splices( method const& m ) const;
+  static method get_method( library_entry const& e );
+  bool has_lead_splices( method const& m ) const;
 
   typedef list< pair< string, set<method> > > table_type;
   table_type table;
@@ -259,6 +276,14 @@ void splices::print_set( set<method> const& s ) const
   }
 }
 
+bool splices::has_lead_splices( method const& m ) const
+{
+  for ( table_type::const_iterator i=table.begin(), e=table.end(); i!=e; ++i )
+    if ( i->first == "1-lead" && i->second.find(m) != i->second.end() )
+      return true;
+  return false;
+}
+
 void splices::print_splice_groups() const
 {
   for ( table_type::const_iterator i=table.begin(), e=table.end(); i!=e; ++i )
@@ -289,21 +314,15 @@ void splices::print_splice_groups() const
     else 
       print_set( i->second );
 
-    // XXX: If the description becomes more detailed, this test should go.
-    // if ( !args.only_n_leads )
-      cout << "\t" << i->first;
-    cout << "\n";
+    cout << "\t" << i->first << "\n";
   }
 }
 
 void splices::save_splice( method const& a, method const& b, string const& d )
 {
-  if ( !args.group_splices ) {
-    cout << name_or_pn(args, a) << " / " << name_or_pn(args, b);
-    // XXX: If the description becomes more detailed, this test should go.
-    // if ( !args.only_n_leads )
-      cout << "\t" << d;
-    cout << "\n";
+  if ( !args.group_splices && !args.filter_mode ) {
+    cout << name_or_pn(args, a) << " / " << name_or_pn(args, b)
+         << "\t" << d << "\n";
     return;
   }
   
@@ -386,30 +405,42 @@ void splices::test_splice( method const& a, method const& b )
 
   if ( args.only_n_leads != -1 && sg.size() != args.only_n_leads * 2 &&
        // Need to store lead splices if we're to group them
-       ( !args.group_splices || sg.size() != 2 ) )
+       ( !args.group_splices && !args.filter_mode || sg.size() != 2 ) )
     return;
 
   save_splice( a, b, describe_splice(sg) );
 }
 
+method splices::get_method( library_entry const& e )
+{
+  method m( e.meth() );
+
+  // Use litelib payloads as a proxy for the name as there's no way
+  // for a litelib to unambiguously carry a name.
+  if ( e.has_facet< litelib::payload >() )
+    m.name( e.get_facet< litelib::payload >() );
+
+  return m;
+}
+
 void splices::find_splices( library const& lib )
 {
+  // The source library may not support restarting (e.g. if its 
+  // a litelib on stdin), so load them into a methodset as we 
+  // find them.
+  methodset meths;
+  meths.store_facet< litelib::payload >();
+
   for ( library::const_iterator i=lib.begin(), e=lib.end(); i!=e; ++i ) 
   {
-    library::const_iterator j=i;  ++j;
-    for ( ; j != e; ++j ) 
-    {
-      method a( i->meth() ), b( j->meth() );  
+    for ( library::const_iterator j=meths.begin(), f=meths.end(); j!=f; ++j )
+      test_splice( get_method(*i), get_method(*j) );
 
-      // Use litelib payloads as a proxy for the name as there's no way
-      // for a litelib to unambiguously carry a name.
-      if ( i->has_facet< litelib::payload >() )
-        a.name( i->get_facet< litelib::payload >() );
-      if ( j->has_facet< litelib::payload >() )
-        b.name( j->get_facet< litelib::payload >() );
+    meths.push_back(*i);
 
-      test_splice( a, b );
-    }
+    if ( args.filter_mode && !has_lead_splices(i->meth()) )
+      cout << i->meth().format( method::M_FULL_SYMMETRY | method::M_DASH )
+           << "\t" << i->get_facet< litelib::payload >() << "\n";
   }
 
   if ( args.group_splices ) 
@@ -420,15 +451,8 @@ int main( int argc, char *argv[] )
 {
   arguments args(argc, argv);
 
-  // Read methods into memory -- we need to make multiple passes over
-  // the list and we can't do that on standard input.
-  methodset meths;
-  {
-    meths.store_facet< litelib::payload >();
-    litelib in( args.bells, cin );
-    copy( in.begin(), in.end(), back_inserter(meths) );  
-  }
-
   splices spl( args );
-  spl.find_splices( meths );
+
+  litelib in( args.bells, cin );
+  spl.find_splices( in );
 }
