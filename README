@@ -76,15 +76,7 @@ project web page (see above).
 Supported compilers
 -------------------
 
-  It is hoped that the class library will compile on any modern C++ compilers 
-with any recent STL.  The library is regularly tested on the following 
-compilers:
-
-    gcc 3.2.1
-    gcc 3.0.1
-    gcc 2.95.3
-    egcs 1.1.2 (aka gcc 2.91.66)
-    msvc 7 (aka .NET)
-    msvc 6
-    msvc 5
+  It is hoped that the class library will compile on any modern C++ compiler.
+However, at present the code is generally only tested using the latest
+version of GCC.
 
