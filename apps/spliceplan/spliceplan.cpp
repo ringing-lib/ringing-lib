@@ -46,18 +46,25 @@ private:
   void init_search();
   void select_possibles( row_t& lh, vector<method_ptr>& meths ) const;
   bool is_possible( row_t const& lh, method_ptr const& m ) const;
-  void found();
+  void found( unsigned rotn_count );
   void set_method( row_t& lh, method_ptr const& m );
   void unset_method( row_t& lh, method_ptr const& m );
   void recheck_pos_map( row_t const& lh, method_ptr const& m,
                         vector<pair<row_t, method_ptr> >& backtrack );
   bool are_false( row_t const& lh1, method_ptr const& m1, 
                   row_t const& lh2, method_ptr const& m2 ) const;
+  void done_with_method( method_ptr const& m );
+  bool is_rotational_standard_form( unsigned& rotn_count ) const;
+  void make_rotation( row_t const& r, composition& rotn ) const;
 
+
+  const int verbosity;
    
   const int bells;
   const bool in_course_only;
+  const bool prune_rotations;
 
+  RINGING_ULLONG node_count;
 
   method_list meths; 
   map<method_pair, falseness_tab> false_data;
@@ -67,11 +74,12 @@ private:
   set<row_t, row_t::cmp> free_lhs;
 
   composition comp;
-  pos_map possibles;  
+  pos_map possibles;
 };
 
 searcher::searcher()
-  : bells(6), in_course_only(true) 
+  : verbosity(2), bells(6), in_course_only(true), 
+    prune_rotations(true), node_count(0)
 {
   init_multtab();
   read_methods();
@@ -189,6 +197,70 @@ void searcher::recheck_pos_map( row_t const& lh, method_ptr const& m,
   }
 }
 
+void searcher::make_rotation( row_t const& r, composition& rotn ) const
+{
+  for ( composition::const_iterator ci = comp.begin(), ce = comp.end(); 
+        ci != ce; ++ci ) 
+    rotn[ r * ci->first ] = ci->second;
+}
+
+template <class Cmp1, class Cmp2>
+struct pair_cmp {
+  typedef pair< typename Cmp1::first_argument_type,
+                typename Cmp2::first_argument_type > first_argument_type;
+  typedef pair< typename Cmp1::second_argument_type,
+                typename Cmp2::second_argument_type > second_argument_type;
+  typedef bool result_type;
+
+  pair_cmp() {}
+  pair_cmp( Cmp1 const& cmp1, Cmp2 const& cmp2 ) : cmp1(cmp1), cmp2(cmp2) {}
+
+  bool operator()( first_argument_type const& x, 
+                   second_argument_type const& y ) const {
+    if (cmp1(x.first, y.first)) return true;
+    else if (cmp1(y.first, x.first)) return false;
+    else return (cmp2(x.second, y.second));
+  }
+
+private:
+  Cmp1 cmp1; 
+  Cmp2 cmp2;
+};
+
+bool searcher::is_rotational_standard_form( unsigned& rotn_count ) const
+{
+  unsigned rotn_eq_count = 0u;
+
+  composition rotn( comp.key_comp() );
+  for ( composition::const_iterator ci = comp.begin(), ce = comp.end(); 
+        ci != ce; ++ci ) {
+    // XXX:  This assumes that the set of lhs and les form a group
+    // really we want inverse( ci->first ), but that's tedious to evaluate. 
+    // If we start looking at touches with singles, this will need changing.
+    make_rotation( ci->first, rotn );
+    if ( lexicographical_compare
+           ( rotn.begin(), rotn.end(), comp.begin(), comp.end(),
+             pair_cmp< row_t::cmp, less<method_ptr> >() ) ) 
+      return false;
+    if ( rotn == comp ) ++rotn_eq_count;
+    rotn.clear();
+  }
+
+  assert( comp.size() % rotn_eq_count == 0 );
+  rotn_count = comp.size() / rotn_eq_count;
+
+  return true;
+}
+
+void searcher::done_with_method( method_ptr const& m ) 
+{
+  pos_map::iterator i = possibles.begin(), e = possibles.end();
+  while ( i != e ) {
+    pos_map::iterator j = i;  ++i;  // We can now call erase(j) safely
+    if ( j->second == m ) possibles.erase(j);
+  }
+}
+
 void searcher::select_possibles( searcher::row_t& lh,
                                  vector<method_ptr>& try_meths ) const
 {
@@ -212,6 +284,9 @@ void searcher::select_possibles( searcher::row_t& lh,
     i = j;
   }
 
+  // BEST is the range in POSSIBLES where the l.h. has the fewest possible
+  // methods, and BEST_SZ is the number of methods.
+
   if ( best.first == best.second ) {
     try_meths.clear();
   } 
@@ -231,7 +306,7 @@ inline void assert_erase(Container& c, typename Container::key_type const& k)
   c.erase(i); 
 }
 
-void searcher::found()
+void searcher::found( unsigned rotn_count )
 {
   static int plan_n = 0;
 
@@ -258,7 +333,9 @@ void searcher::found()
     cout << i->first->meth.name() << " (" << i->second << ")";
     comma = true;
   }
-  cout << "\n";
+  if ( prune_rotations )
+    cout << " [" << rotn_count << " rotations]";
+  cout << endl;
 }
 
 void searcher::set_method( row_t& lh, method_ptr const& m )
@@ -298,18 +375,37 @@ void searcher::recurse()
   for ( vector<method_ptr>::const_iterator 
           i = try_meths.begin(), e = try_meths.end(); i != e; ++i )
   {
+    if (verbosity && depth == 0)
+      cerr << "Trying start method: " << (*i)->meth.name() << endl;
+
+    if (depth && depth < verbosity)
+      cerr << string(depth, ' ') << string(depth, ' ') << mt->find(lh) 
+           << " -> " << (*i)->meth.name() << endl;
+
     vector<pair<row_t, method_ptr> > undo;
     set_method(lh, *i);
     recheck_pos_map(lh, *i, undo);
-    if ( free_lhs.empty() ) found();  
+    if ( free_lhs.empty() ) {
+      unsigned rotn_count = 0;
+      bool canonical_rotn = is_rotational_standard_form(rotn_count);
+      if ( !prune_rotations || canonical_rotn ) 
+        found( rotn_count );  
+    }
     else recurse();
     unset_method(lh, *i);
     copy( undo.begin(), undo.end(), inserter(possibles, possibles.begin()) );
+
+    // Poor man's rotational pruning
+    if (depth == 0 && prune_rotations) 
+      done_with_method(*i);
   }
 
   for ( vector<method_ptr>::const_iterator 
           i = try_meths.begin(), e = try_meths.end(); i != e; ++i )
     possibles.insert( make_pair(lh, *i) );
+
+  ++node_count;
+  if (depth == 0) cerr << "Searched " << node_count << " nodes\n";
 }
 
 int main()
