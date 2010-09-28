@@ -167,6 +167,7 @@ private:
 
   void test_splice( method const& a, method const& b );
   bell get_pivot( group const& sg ) const;
+  pair<bell, bell> get_swapping_pair( group const& sg ) const;
   string describe_splice( group const& sg ) const;
   void save_splice( method const& a, method const& b, string const& d );
   void print_splice_groups() const;
@@ -369,6 +370,21 @@ bell splices::get_pivot( group const& sg ) const
 
   return bell(-1);
 }
+
+pair<bell, bell> splices::get_swapping_pair( group const& sg ) const
+{
+  const int hunts = 1;
+  for ( int b1=hunts; b1<sg.bells(); ++b1 ) 
+  for ( int b2=b1+1;  b2<sg.bells(); ++b2 ) {
+    bool fixed = true;
+    for ( group::const_iterator i=sg.begin(), e=sg.end(); fixed && i!=e; ++i )
+      if ( !( (*i)[b1] == b1 && (*i)[b2] == b2 ) &&
+           !( (*i)[b1] == b2 && (*i)[b2] == b1 ) )
+        fixed = false;
+    if (fixed) return make_pair( bell(b1), bell(b2) );
+  }
+  return make_pair( bell(-1), bell(-1) );
+}
  
 string splices::describe_splice( group const& sg ) const
 {
@@ -377,13 +393,19 @@ string splices::describe_splice( group const& sg ) const
   make_string os;
   os << (sg.size()/2) << "-lead";
 
-  int f = factorial(sg.bells() - hunts - 1);
-  if (sg.size() == f || sg.size() == f/2) {
+  int const f2 = factorial(sg.bells() - hunts - 2);
+  int const f1 = f2 * (sg.bells() - hunts - 1);
+
+  if (sg.size() == f1 || sg.size() == f1/2) {
     bell pivot = get_pivot(sg);
     if (pivot != bell(-1))
       os << " (pivot: " << pivot << ")";
   }
- 
+  if (sg.size() == f2 || sg.size() == f2/2) {
+    pair<bell, bell> swaps = get_swapping_pair(sg);
+    if (swaps.first != bell(-1) && swaps.second != bell(-1))
+      os << " (swaps: " << swaps.first << "&" << swaps.second << ")";
+  }
   return os;
 }
 
