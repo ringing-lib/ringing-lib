@@ -33,10 +33,13 @@
 #include "expr_base.h"
 #include "expression.h"
 #include "prog_args.h"
+#include <string>
 #if RINGING_OLD_INCLUDES
 #include <stdexcept.h>
+#include <vector.h>
 #else
 #include <stdexcept>
+#include <vector>
 #endif
 #if RINGING_OLD_IOSTREAMS
 #include <iostream.h>
@@ -95,21 +98,6 @@ void welcome()
 "conditions."  << endl;
 }
 
-shared_pointer<istream> load_file( string const& name )
-{
-  shared_pointer<istream> in( new ifstream(name.c_str()) );
-  if ( !*in ) {
-    string filename( name ); filename += ".gsir";
-    in.reset( new ifstream(filename.c_str()) );
-  }
-  if ( !*in ) {
-    string filename( name ); filename += ".sir";
-    in.reset( new ifstream(filename.c_str()) );
-  }
-  if ( !*in )
-    in.reset();
-  return in;
-}
 
 void initialise( execution_context& ex, const arguments& args )
 {

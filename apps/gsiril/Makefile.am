@@ -39,7 +39,7 @@ gsiril_SOURCES = main.cpp \
 execution_context.cpp execution_context.h expr_base.cpp expr_base.h \
 proof_context.cpp proof_context.h symbol_table.cpp symbol_table.h \
 expression.h expression.cpp statement.h statement.cpp \
-parser.cpp parser.h prog_args.h prog_args.cpp $(additional)
+parser.cpp parser.h prog_args.h prog_args.cpp import.cpp $(additional)
 
 EXTRA_gsiril_SOURCES = rlstream.cpp rlstream.h
 

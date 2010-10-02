@@ -62,4 +62,6 @@ shared_pointer<parser>
 make_default_parser( istream& in, const arguments& args );
 
 
+shared_pointer<istream> load_file( string const& filename );
+
 #endif // GSIRIL_PARSER_INCLUDED

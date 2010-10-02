@@ -148,12 +148,12 @@ void import_stmt::execute( execution_context& e ) const
 
   try
     {
-      ifstream ifs( name.c_str() );
-      if ( !ifs )
+      shared_pointer<istream> in(( load_file(name) )); 
+      if ( !in )
 	throw runtime_error
 	  ( make_string() << "Unable to load resource: " << name );
       
-      shared_pointer<parser> p( make_default_parser(ifs, e.get_args() ) );
+      shared_pointer<parser> p( make_default_parser(*in, e.get_args() ) );
       e.interactive(false);
       e.verbose(false);
       while (true)
