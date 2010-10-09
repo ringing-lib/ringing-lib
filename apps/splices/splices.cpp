@@ -51,6 +51,9 @@ struct arguments
 
   init_val<bool,false> filter_mode;
 
+  string               meth_str;
+  method               meth;
+
   arguments( int argc, char *argv[] );
   void bind( arg_parser& p );
   bool validate( arg_parser& p );
@@ -76,6 +79,8 @@ void arguments::bind( arg_parser& p )
   p.add( new help_opt );
   p.add( new version_opt );
            
+  p.set_default( new string_opt( '\0', "", "", "", meth_str ) );
+
   p.add( new integer_opt
          ( 'b', "bells",
            "The number of bells.  This option is required", "BELLS",
@@ -132,6 +137,17 @@ bool arguments::validate( arg_parser& ap )
       return false;
     }
 
+  if ( meth_str.size() ) 
+    {
+      try {  
+        meth = method( meth_str, bells, "@INPUT@" );
+      } catch ( const exception& e ) {
+        ap.error( make_string() << "Invalid method place notation: "
+                  << e.what() );
+        return false;
+      }
+    }
+
   if ( null_splices && only_n_leads != -1 ) 
     {
       ap.error( "The -l and -n options are incompatible" );
@@ -144,11 +160,17 @@ bool arguments::validate( arg_parser& ap )
       return false;
     }
 
-  if ( filter_mode && 
-       ( group_splices || only_n_leads != -1 || show_pn || null_splices ) ) 
+  if ( filter_mode && ( group_splices || show_pn ) ) 
     {
       ap.error
-        ( "The -g, -l, -p and -n options cannot be used when filtering" );
+        ( "The -g and -p options cannot be used when filtering" );
+      return false;
+    }
+
+  if ( filter_mode && ( only_n_leads != -1 || null_splices ) && meth.empty() ) 
+    {
+      ap.error
+        ( "The -l and -n options cannot be used when filtering" );
       return false;
     }
 
@@ -165,7 +187,7 @@ private:
   static string name_or_pn( arguments const& args, method const& m );
   class sort_function;
 
-  void test_splice( method const& a, method const& b );
+  bool test_splice( method const& a, method const& b );
   bell get_pivot( group const& sg ) const;
   pair<bell, bell> get_swapping_pair( group const& sg ) const;
   string describe_splice( group const& sg ) const;
@@ -322,8 +344,9 @@ void splices::print_splice_groups() const
 void splices::save_splice( method const& a, method const& b, string const& d )
 {
   if ( !args.group_splices && !args.filter_mode ) {
-    cout << name_or_pn(args, a) << " / " << name_or_pn(args, b)
-         << "\t" << d << "\n";
+    cout << name_or_pn(args, a);
+    if ( b != args.meth ) cout << " / " << name_or_pn(args, b);
+    cout << "\t" << d << "\n";
     return;
   }
   
@@ -409,12 +432,12 @@ string splices::describe_splice( group const& sg ) const
   return os;
 }
 
-void splices::test_splice( method const& a, method const& b )
+bool splices::test_splice( method const& a, method const& b )
 {
   // If we're grouping splices, this gets done later.  This is so that
   // we can output, e.g.  Bv,Su / Bk,He  for surprise minor lead splices.
   if ( !args.group_splices && args.same_le && a.back() != b.back() )
-    return;
+    return false;
  
   int flags = 0; 
   if ( args.in_course ) 
@@ -423,14 +446,19 @@ void splices::test_splice( method const& a, method const& b )
 
   if ( !args.null_splices &&
        sg.size() == factorial(args.bells-1) / (args.in_course ? 2 : 1) )
-    return;
+    return false;
 
   if ( args.only_n_leads != -1 && sg.size() != args.only_n_leads * 2 &&
        // Need to store lead splices if we're to group them
        ( !args.group_splices && !args.filter_mode || sg.size() != 2 ) )
-    return;
+    return false;
 
   save_splice( a, b, describe_splice(sg) );
+
+  if ( args.only_n_leads != -1 && sg.size() != args.only_n_leads * 2 )
+    return false;
+  else
+    return true;
 }
 
 method splices::get_method( library_entry const& e )
@@ -453,14 +481,28 @@ void splices::find_splices( library const& lib )
   methodset meths;
   meths.store_facet< litelib::payload >();
 
-  for ( library::const_iterator i=lib.begin(), e=lib.end(); i!=e; ++i ) 
+  typedef library::const_iterator const_iterator;
+  for ( const_iterator i=lib.begin(), e=lib.end(); i!=e; ++i ) 
   {
-    for ( library::const_iterator j=meths.begin(), f=meths.end(); j!=f; ++j )
-      test_splice( get_method(*i), get_method(*j) );
+    method m( get_method(*i) );
 
-    meths.push_back(*i);
+    bool filter_ok = false;
 
-    if ( args.filter_mode && !has_lead_splices(i->meth()) )
+    if ( ! args.meth.empty() ) {
+      if ( m != args.meth ) 
+        filter_ok = test_splice( m, args.meth );
+    }
+
+    else {
+      for ( const_iterator j=meths.begin(), f=meths.end(); j!=f; ++j )
+        test_splice( m, get_method(*j) );
+
+      meths.push_back(*i);
+
+      filter_ok = !has_lead_splices(i->meth());
+    }
+
+    if ( args.filter_mode && filter_ok )
       cout << i->meth().format( method::M_FULL_SYMMETRY | method::M_DASH )
            << "\t" << i->get_facet< litelib::payload >() << "\n";
   }
