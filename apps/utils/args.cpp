@@ -102,7 +102,7 @@ void arg_parser::set_default(const option* o) {
   default_opt = o;
 }
 
-bool arg_parser::parse(int argc, char** argv) const
+bool arg_parser::parse(int argc, char const* const* argv) const
 {
   int i;
   bool done_args = false;
@@ -111,7 +111,7 @@ bool arg_parser::parse(int argc, char** argv) const
     if(!done_args && argv[i][0] == '-') { // Found an option
       if(argv[i][1] == '-') { // It's a long one
 	if(argv[i][2] == '\0') { done_args = 1; continue; }
-	char* t = argv[i] + 2; while(*t != '\0' && *t != '=') ++t;
+	char const* t = argv[i] + 2; while(*t != '\0' && *t != '=') ++t;
 	string s(argv[i] + 2, t); 
 	longindex_t::const_iterator b = longindex.find(s);
        	if(b == longindex.end()) {
@@ -135,7 +135,7 @@ bool arg_parser::parse(int argc, char** argv) const
 	  if(!a->process(string(), *this)) return false;
 	}
       } else if(argv[i][1] != '\0') { // It's a short one
-	char* t = argv[i] + 1;
+	char const* t = argv[i] + 1;
 	const option* a;
 	do {
 	  shortindex_t::const_iterator b = shortindex.find(*t);

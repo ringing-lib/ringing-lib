@@ -92,7 +92,7 @@ public:
   // that is not an option (i.e. not prefixed with a dash).
   void set_default(const option* o);
 
-  bool parse(int argc, char** argv) const;
+  bool parse(int argc, char const* const* argv) const;
   void help() const;
   void usage() const;
   void version() const;
