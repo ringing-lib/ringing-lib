@@ -235,6 +235,7 @@ struct arguments
   init_val<bool,false> prune_rotations;
 
   init_val<int,0>      verbosity;
+  init_val<bool,false> quiet;
 
   vector<string>       pend_strs;
   group                pends;
@@ -288,6 +289,11 @@ void arguments::bind( arg_parser& p )
          ( 'P', "part-end",
            "Specify a part end",  "ROW",
            pend_strs ) );
+
+  p.add( new boolean_opt
+         ( 'q', "quiet",
+           "Suppress logging of plans as they're found",
+           quiet ) );
 
   p.add( new repeated_boolean_opt
          ( 'v', "verbose",
@@ -621,16 +627,18 @@ void searcher::found( unsigned rotn_count )
     counts[ ci->second ]++;
   }
 
-  bool comma = false;
-  for ( map<method_ptr, unsigned >::iterator 
-          i = counts.begin(), e = counts.end(); i !=e; ++i ) {
-    if (comma) cout << ", ";
-    cout << i->first->meth.name() << " (" << i->second << ")";
-    comma = true;
+  if (!args.quiet) {
+    bool comma = false;
+    for ( map<method_ptr, unsigned >::iterator 
+            i = counts.begin(), e = counts.end(); i !=e; ++i ) {
+      if (comma) cout << ", ";
+      cout << i->first->meth.name() << " (" << i->second << ")";
+      comma = true;
+    }
+    if ( args.prune_rotations )
+      cout << " [" << rotn_count << " rotations]";
+    cout << endl;
   }
-  if ( args.prune_rotations )
-    cout << " [" << rotn_count << " rotations]";
-  cout << endl;
 }
 
 void searcher::set_method( row_t const& lh1, method_ptr const& m )
