@@ -333,7 +333,9 @@ private:
     else if ( is_row_false( r ) )
       {
 	// Has it come round, and is it in it's canonical form?
-	if ( depth >= lenrange.first && r.isrounds() && is_really_canonical() )
+	if ( depth >= lenrange.first 
+             && ( (f & non_round_blocks) || r.isrounds() ) 
+             && is_really_canonical() )
 	  output_touch( output, cur );
       }
     else if ( depth < lenrange.second )

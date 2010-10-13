@@ -64,7 +64,10 @@ public:
 
     // For reasons of historical compatbility, the length argument
     // is ordinarily in leads.  This option says the lengths are in changes.
-    length_in_changes = 0x04
+    length_in_changes = 0x04,
+
+    // Allow non-round blocks.  Not compatible with ignore_rotations
+    non_round_blocks = 0x08
   };
 
   // Constructors
