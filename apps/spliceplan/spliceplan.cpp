@@ -1,5 +1,5 @@
-// -*- C++ -*- mask.cpp - handle method masks
-// Copyright (C) 2002, 2003, 2009 Richard Smith <richard@ex-parrot.com>
+// -*- C++ -*- spliceplan.cpp - generate a set of mutually true leads
+// Copyright (C) 2010 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -239,6 +239,8 @@ struct arguments
   vector<string>       pend_strs;
   group                pends;
 
+  string               write_plan;
+
   arguments( int argc, char const* argv[] );
 
 private:
@@ -282,15 +284,20 @@ void arguments::bind( arg_parser& p )
            "Filter out touches only differing by a rotation",
            prune_rotations ) );
 
+  p.add( new strings_opt
+         ( 'P', "part-end",
+           "Specify a part end",  "ROW",
+           pend_strs ) );
+
   p.add( new repeated_boolean_opt
          ( 'v', "verbose",
            "Be more verbose (use multiple times for increased verbosity)",
            verbosity ) );
 
-  p.add( new strings_opt
-         ( 'P', "part-end",
-           "Specify a part end",  "ROW",
-           pend_strs ) );
+  p.add( new string_opt
+         ( 'O', "output-plans",
+           "Write plans out to directory or file (with % for the plan number)",
+           "FILE", write_plan ) );
 }
 
 bool arguments::validate( arg_parser& ap )
@@ -590,10 +597,22 @@ void searcher::found( unsigned rotn_count )
   static int plan_n = 0;
   ++plan_n;
 
-  ofstream 
-    os( string( make_string() << "plans/" << plan_n << ".plan" ).c_str() );
-  comp.write_plan(os);
-  os.close();
+  if ( args.write_plan.size() )
+  {
+    string filename;
+    { size_t i = args.write_plan.find('%');
+      if ( i == string::npos ) 
+        filename = ( make_string() << args.write_plan 
+                                   << "/" << plan_n << ".plan" );
+      else
+        filename = ( make_string() << args.write_plan.substr(0,i)
+                                   << plan_n << args.write_plan.substr(i+1) );
+    }
+
+    ofstream os( filename.c_str() );
+    comp.write_plan(os);
+    os.close();
+  }
 
   map< method_ptr, unsigned > counts;
 
