@@ -176,7 +176,7 @@ RINGING_LLONG ipower( int base, int exp )
 bool is_prime(unsigned n)
 {
   if (n<2) return false;
-  unsigned pmax = floor( sqrt(n) );
+  unsigned pmax = (unsigned) floor( sqrt( (double)n) );
   for ( unsigned p = 2; p <= pmax; ++p )
     if ( n % p == 0 )
       return false;
@@ -201,7 +201,7 @@ unsigned landau(unsigned const n)
   vector<unsigned> g(n+1, 1);
   // Strictly speaking, this bound is only valid for n>=5.  Adding 1 
   // empirically fixes it for n<5.
-  unsigned pmax = floor( 1.328 * sqrt(n * log(n)) ) + 1;
+  unsigned pmax = (unsigned) floor( 1.328 * sqrt(n * log( (double)n ) ) ) + 1;
   for ( unsigned p = 2; p <= pmax; p = next_prime(p) )
     for ( unsigned m = n; m >=1; --m ) 
       for ( unsigned q = p; q <= m; q *= p ) {
