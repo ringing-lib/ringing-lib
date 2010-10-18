@@ -449,14 +449,42 @@ AC_DEFUN([AC_USE_TERMCAP],
          AC_LANG_PROGRAM(
            [#include <curses.h>
             #include <term.h>
-           ], [char const* dummy = enter_underline_mode]),
+           ], 
+           [char const* dummy = enter_underline_mode;
+            setupterm(NULL, 1, NULL);]),
          ac_cv_use_termcap=yes,
          ac_cv_use_termcap=no)
     ])
   fi
   if test "$ac_cv_use_termcap" != no; then
+    # Now see whether termcap needs to link against termcap (or similar)
+    AC_CACHE_CHECK(
+      [what libraries are needed for termcap functionality],
+      [ac_cv_termcap_libs],
+      [AC_LANG_PUSH(C++)
+       ac_check_cxx_lib_save_LIBS="$LIBS"
+       for library in "" -ltermcap -lncurses -lcurses -lpdcurses; do
+	 if test -z "$ac_cv_termcap_libs"; then
+	   LIBS="$ac_check_cxx_lib_save_LIBS $library"
+	   AC_LINK_IFELSE(
+             AC_LANG_PROGRAM(
+               [#include <curses.h>
+                #include <term.h>
+               ], 
+               [char const* dummy = enter_underline_mode;
+                setupterm(NULL, 1, NULL);]),
+             ac_cv_termcap_libs="$library")
+	 fi
+       done
+       LIBS="$ac_check_cxx_lib_save_LIBS"
+       AC_LANG_POP(C++)])
+    if test -z "$ac_cv_termcap_libs"; then
+      ac_cv_use_termcap=no
+    fi
+  fi
+  if test "$ac_cv_use_termcap" != no; then
     USE_TERMCAP=1
-    TERMCAP_LIBS=-ltermcap
+    TERMCAP_LIBS="$ac_cv_termcap_libs"
   else
     USE_TERMCAP=0
     TERMCAP_LISB=
