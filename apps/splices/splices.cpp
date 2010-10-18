@@ -419,12 +419,12 @@ string splices::describe_splice( group const& sg ) const
   int const f2 = factorial(sg.bells() - hunts - 2);
   int const f1 = f2 * (sg.bells() - hunts - 1);
 
-  if (sg.size() == f1 || sg.size() == f1/2) {
+  if (sg.size() > 2 && (sg.size() == f1 || sg.size() == f1/2)) {
     bell pivot = get_pivot(sg);
     if (pivot != bell(-1))
       os << " (pivot: " << pivot << ")";
   }
-  if (sg.size() == f2 || sg.size() == f2/2) {
+  if (sg.size() > 2 && (sg.size() == f2 || sg.size() == f2/2)) {
     pair<bell, bell> swaps = get_swapping_pair(sg);
     if (swaps.first != bell(-1) && swaps.second != bell(-1))
       os << " (swaps: " << swaps.first << "&" << swaps.second << ")";
