@@ -116,8 +116,11 @@ void method_libraries::init()
       
       instance().clear();
 
-      if ( formats_have_cc_ids() )
-        instance().store_facet< cc_collection_id >();
+      if ( formats_have_cc_ids() ) {
+        // Older GCCs (e.g. 3.1) can't cope with template members on bases
+        methodset &base = instance();
+        base.store_facet< cc_collection_id >();
+      }
 
       for ( vector< string >::const_iterator 
 	      i( instance().library_names.begin() ), 
