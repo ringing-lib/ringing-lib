@@ -46,13 +46,14 @@ struct arguments
 
   init_val<bool,false> show_pn;
   init_val<bool,false> group_splices;
+  init_val<bool,false> print_group;
 
   init_val<bool,false> in_course;
 
   init_val<bool,false> filter_mode;
 
-  string               meth_str;
-  method               meth;
+  vector<string>       meth_str;
+  vector<method>       meth;
 
   arguments( int argc, char *argv[] );
   void bind( arg_parser& p );
@@ -79,7 +80,7 @@ void arguments::bind( arg_parser& p )
   p.add( new help_opt );
   p.add( new version_opt );
            
-  p.set_default( new string_opt( '\0', "", "", "", meth_str ) );
+  p.set_default( new strings_opt( '\0', "", "", "", meth_str ) );
 
   p.add( new integer_opt
          ( 'b', "bells",
@@ -107,9 +108,14 @@ void arguments::bind( arg_parser& p )
            show_pn ) );
 
   p.add( new boolean_opt
-         ( 'g', "group",
+         ( 'g', "group-together",
            "Group together methods with mutual splices", 
            group_splices ) );
+
+  p.add( new boolean_opt
+         ( 'G', "print-group",
+           "Print the elements of the splice group",
+           print_group ) );
 
   p.add( new integer_opt
          ( 'l', "leads",
@@ -137,10 +143,13 @@ bool arguments::validate( arg_parser& ap )
       return false;
     }
 
-  if ( meth_str.size() ) 
+  unsigned int meth_num = 0;
+  for ( vector<string>::const_iterator i=meth_str.begin(), e=meth_str.end();
+        i != e; ++i )
     {
       try {  
-        meth = method( meth_str, bells, "@INPUT@" );
+        meth.push_back
+          ( method( *i, bells, make_string() << "Method " << ++meth_num ) );
       } catch ( const exception& e ) {
         ap.error( make_string() << "Invalid method place notation: "
                   << e.what() );
@@ -154,16 +163,16 @@ bool arguments::validate( arg_parser& ap )
       return false;
     }
 
-  if ( null_splices && group_splices ) 
+  if ( group_splices && (null_splices || print_group) ) 
     {
-      ap.error( "The -g and -n options are incompatible" );
+      ap.error( "The -g option is incompatible with the -n and -G options" );
       return false;
     }
 
-  if ( filter_mode && ( group_splices || show_pn ) ) 
+  if ( filter_mode && ( print_group || group_splices || show_pn ) ) 
     {
       ap.error
-        ( "The -g and -p options cannot be used when filtering" );
+        ( "The -g, -p and -G options cannot be used when filtering" );
       return false;
     }
 
@@ -173,6 +182,28 @@ bool arguments::validate( arg_parser& ap )
         ( "The -l and -n options cannot be used when filtering" );
       return false;
     }
+
+  if ( filter_mode && meth.size() > 1 ) 
+    {
+      ap.error
+        ( "At most one method can be provided on the command line when "
+          "filtering" );
+      return false;
+    }
+
+  if ( print_group && meth.size() != 2 ) 
+    {
+      ap.error
+        ( "The -G option needs two methods on the command line" );
+      return false;
+    }
+
+  if ( meth.size() > 2 )
+   {
+     ap.error
+       ( "At most two methods can be provided on the command line" );
+     return false;
+   }
 
   return true;
 }
@@ -345,7 +376,8 @@ void splices::save_splice( method const& a, method const& b, string const& d )
 {
   if ( !args.group_splices && !args.filter_mode ) {
     cout << name_or_pn(args, a);
-    if ( b != args.meth ) cout << " / " << name_or_pn(args, b);
+    if ( args.meth.size() != 1 || b != args.meth.front() ) 
+      cout << " / " << name_or_pn(args, b);
     cout << "\t" << d << "\n";
     return;
   }
@@ -453,6 +485,11 @@ bool splices::test_splice( method const& a, method const& b )
        ( !args.group_splices && !args.filter_mode || sg.size() != 2 ) )
     return false;
 
+  if ( args.print_group ) {
+    copy( sg.begin(), sg.end(), ostream_iterator<row>(cout, "\n") );
+    return true;
+  }
+
   save_splice( a, b, describe_splice(sg) );
 
   if ( args.only_n_leads != -1 && sg.size() != args.only_n_leads * 2 )
@@ -488,9 +525,9 @@ void splices::find_splices( library const& lib )
 
     bool filter_ok = false;
 
-    if ( ! args.meth.empty() ) {
-      if ( m != args.meth ) 
-        filter_ok = test_splice( m, args.meth );
+    if ( args.meth.size() == 1 ) {
+      if ( m != args.meth.front() ) 
+        filter_ok = test_splice( m, args.meth.front() );
     }
 
     else {
@@ -517,6 +554,12 @@ int main( int argc, char *argv[] )
 
   splices spl( args );
 
-  litelib in( args.bells, cin );
-  spl.find_splices( in );
+  if ( args.meth.size() >= 2 ) {
+    methodset in; in.append( args.meth.begin(), args.meth.end() );
+    spl.find_splices( in );
+  }
+  else {
+    litelib in( args.bells, cin );
+    spl.find_splices( in );
+  }
 }
