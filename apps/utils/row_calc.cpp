@@ -301,7 +301,16 @@ public:
 
 private:
   virtual void restart() { started = false; }
-  virtual int count_vectors() const { return 1; }
+  virtual int count_vectors() const
+  {
+    int v = 1;
+    for ( list<row_calc::expr>::const_iterator it=l.begin(); 
+            it!=l.end(); ++it ) 
+      if ( it->count_vectors() )
+        ++v;
+    return v;
+  }
+
 
   virtual bool reads_stdin() const 
   { 
@@ -321,12 +330,12 @@ private:
       i = l.begin(); started = true; 
     } 
  
-    while ( i != l.end() ) { 
+    while ( i != l.end() ) {
       if (i->count_vectors()) 
         try {
           return i->evaluate();
         } catch (vector_end) {
-          ++i; break;
+          ++i;
         }
       else 
         return i++->evaluate();
@@ -347,7 +356,7 @@ public:
 
 private:
   virtual void restart() { started = false; gens.restart(); }
-  virtual int count_vectors() const { return 1; }
+  virtual int count_vectors() const { return gens.count_vectors(); }
   virtual bool reads_stdin() const { return gens.reads_stdin(); }
   virtual bool supports_type( row_calc::expr::types t ) const
     { return t == row_calc::expr::row_type; }
