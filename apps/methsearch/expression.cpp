@@ -666,7 +666,12 @@ expression::parser::make_node( vector<token>::const_iterator first,
     {
     case num_lit:
       DEBUG( "Literal integer" );
-      return ptr_t( new integer_node(*first) );
+      try {
+        return ptr_t( new integer_node(*first) );
+      } catch ( bad_lexical_cast const& ) { 
+        throw argument_error( make_string() << "Overflow parsing '" 
+                              << *first << "' as an integer" );
+      }
 
     case variable:
       DEBUG( "Variable reference" );

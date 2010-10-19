@@ -111,7 +111,9 @@ void method_libraries::init()
       mslib::registerlib();
       xmllib::registerlib();
 
-      if ( char const* const methlibpath = getenv("METHLIBPATH") )
+      if ( char const* const methlibpath = getenv("METHOD_LIBRARY_PATH") )
+        library::setpath( methlibpath );
+      else if ( char const* const methlibpath = getenv("METHLIBPATH") )
         library::setpath( methlibpath );
       
       instance().clear();

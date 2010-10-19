@@ -1258,7 +1258,10 @@ delight, and a third for treble bob, multiple \verb+-L+ options can be
 supplied.  If the filename is not an absolute path (i.e.\ if it does not
 begin with a \verb+/+ on Unix, or \verb+\+ or \verb+X:\+ for some \verb+X+ 
 on Windows), and if the 
-\verb+$METHLIBPATH+\fspecd{METHLIBPATH} \textitidx{environment variable} 
+\verb+$METHOD_LIBRARY_PATH+\fspecd{METHOD\_LIBRARY\_PATH} or 
+\verb+$METHLIBPATH+\fspecd{METHLIBPATH} \textitidx{environment variable}%
+\footnote{The two variables are synonmous.  If both are set, 
+\verb+$METHLIBPATH+ is ignored.}
 is set to a colon-delimited list of directories, these directories are 
 search in turn for the file.  How an environment variable is set depends 
 on your system.  The three commands below are for Windows, most Unix-like 
@@ -1648,14 +1651,18 @@ case), the name, \verb+$n+, is the empty string; for all other methods,
 The path, \verb+$+$n$\verb+P+,\index{path}\fspec{P} contains the symbol for
 each place in the path of bell $n$ during the lead (including both the inital
 lead head row and the final lead head row).  For example, the path of the 2
-in Plain Bob Doubles is \verb+21123455434+.
+in Plain Bob Doubles is \verb+21123455434+.  Although \verb+$P+'s value
+looks like an integer, it should generally be treated as a string; for example,
+in an expression, it should be compared with the \verb+eq+ operator 
+(\sref{oper}) instead of \verb+==+.
 
 The coursing order, \verb+$O+\fspec{O}\index{coursing order}, is defined as
 the place bell order\index{place bell order} raised to some power such that 
 the two tenors are adjacent in the coursing order and the tenor is last.
 Most of the time this gives the obvious definition --- for example, 
 \verb+7532468+ for all regular major methods, but \verb+7542368+ for 
-Single Canterbury.
+Single Canterbury.  As with \verb+$P+, the value of \verb+$O+ should generally
+be treated as a string rather than an integer.
 
 The \verb+$s+\fspec{s} variable is a measure of how static the method is.
 \index{staticity}
