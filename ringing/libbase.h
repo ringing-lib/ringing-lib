@@ -53,6 +53,8 @@ public:
   public:
     virtual ~interface() {}
   };
+ 
+  virtual ~libbase() {}
 
 RINGING_PROTECTED_IMPL:
   libbase() {}

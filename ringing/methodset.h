@@ -62,6 +62,15 @@ public:
   using library::end;
 
   void clear();
+  size_t size() const;
+
+  // Currently libout doesn't have an append that takes a single method
+  using libout::append;
+  void append( method const& );
+  template <class InputIterator>
+  void append( InputIterator first, InputIterator last ) {
+    for ( ; first != last; ++first ) this->append(*first); 
+  }
 
 private:
   class impl;

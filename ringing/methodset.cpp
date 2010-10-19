@@ -94,8 +94,10 @@ public:
   virtual library_entry find( method const& pn ) const;
   virtual library_base::const_iterator begin() const;
   virtual void append( library_entry const& e );
+  virtual void append( method const& e );
   
   void clear() { data.clear(); }
+  size_t size() const { return data.size(); }
 
   void store_facet( library_facet_id id ) { facet_ids.push_back(id); }
 
@@ -110,8 +112,12 @@ private:
 
 void methodset::impl::append( library_entry const& e ) 
 {
-  entry new_entry(e, facet_ids);  
-  data.insert(new_entry);
+  data.insert( entry(e, facet_ids) );  
+}
+
+void methodset::impl::append( method const& m ) 
+{
+  data.insert( entry(m) );  
 }
 
 methodset::impl::entry::entry( library_entry const& src,
@@ -172,6 +178,16 @@ library_entry methodset::impl::find( method const& pn ) const
 void methodset::clear() 
 {
   this->libout::get_impl<impl>()->clear();
+}
+
+size_t methodset::size() const
+{
+  return this->libout::get_impl<impl>()->size();
+}
+
+void methodset::append( method const& m )
+{
+  this->libout::get_impl<impl>()->append( m );
 }
 
 void methodset::store_facet( library_facet_id id )
