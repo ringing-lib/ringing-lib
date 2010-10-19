@@ -40,6 +40,9 @@ struct arguments
 {
   init_val<int,0>      bells;
 
+  init_val<bool,false> in_course;
+  init_val<bool,false> half_leads;
+
   init_val<int,-1>     only_n_leads;
   init_val<bool,false> null_splices;
   init_val<bool,false> same_le;
@@ -47,8 +50,6 @@ struct arguments
   init_val<bool,false> show_pn;
   init_val<bool,false> group_splices;
   init_val<bool,false> print_group;
-
-  init_val<bool,false> in_course;
 
   init_val<bool,false> filter_mode;
 
@@ -96,6 +97,11 @@ void arguments::bind( arg_parser& p )
          ( 'i', "in-course",
            "Only display splices for in-course lead heads", 
            in_course ) );
+
+  p.add( new boolean_opt
+         ( 'h', "half-lead",
+           "Calculate half-lead splices instead of whole lead splices",
+           half_leads ) );
 
   p.add( new boolean_opt
          ( 'e', "same-lead-ends",
@@ -474,6 +480,8 @@ bool splices::test_splice( method const& a, method const& b )
   int flags = 0; 
   if ( args.in_course ) 
     flags |= falseness_table::in_course_only;
+  if ( args.half_leads ) 
+    flags |= falseness_table::half_lead_only;
   group sg( falseness_table( a, b, flags ).generate_group() );
 
   if ( !args.null_splices &&
