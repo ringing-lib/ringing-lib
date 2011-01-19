@@ -1,5 +1,5 @@
 // -*- C++ -*- format.cpp - classes to handle format specifiers
-// Copyright (C) 2002, 2003, 2004, 2005, 2008, 2009, 2010
+// Copyright (C) 2002, 2003, 2004, 2005, 2008, 2009, 2010, 2011
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -76,7 +76,7 @@ RINGING_USING_STD
 class statistics
 {
 public:
-  static size_t output( ostream &os );
+  static RINGING_ULLONG output( ostream &os );
   static void add_entry( const histogram_entry &entry );
 
   // Public to avoid MSVC compilation errors
@@ -176,7 +176,7 @@ public:
   histogram_entry( const format_string &f, 
 		   const method_properties &m );
 
-  void print( ostream &os, size_t count ) const;
+  void print( ostream &os, RINGING_ULLONG count ) const;
 
   RINGING_FAKE_DEFAULT_CONSTRUCTOR( histogram_entry )
 
@@ -232,7 +232,7 @@ histogram_entry::histogram_entry( const format_string &f,
 
 
 
-void histogram_entry::print( ostream &os2, size_t count ) const
+void histogram_entry::print( ostream &os2, RINGING_ULLONG count ) const
 {
   make_string os;
 
@@ -621,7 +621,8 @@ size_t format_string::parse_requirement( const string& str )
 
 struct statistics::impl
 {
-  typedef map< histogram_entry, size_t, histogram_entry::cmp > map_type;
+  typedef map< histogram_entry, RINGING_ULLONG, 
+               histogram_entry::cmp > map_type;
   map_type histogram;
 };
 
@@ -640,9 +641,9 @@ statistics::impl &statistics::instance()
   return *tmp.pimpl;
 }
 
-size_t statistics::output( ostream &os )
+RINGING_ULLONG statistics::output( ostream &os )
 {
-  size_t count(0u);
+  RINGING_ULLONG count(0ul);
 
   for ( impl::map_type::const_iterator 
 	  i( instance().histogram.begin() ),
