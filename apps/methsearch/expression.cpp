@@ -1,5 +1,5 @@
 // -*- C++ -*- expression.cpp - classes to handle expressions
-// Copyright (C) 2002, 2003, 2004, 2005, 2008, 2009, 2010
+// Copyright (C) 2002, 2003, 2004, 2005, 2008, 2009, 2010, 2011
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -101,9 +101,10 @@ RINGING_END_ANON_NAMESPACE
 
 // ---------------------------------------------------------------------
 
-long expression::s_node::i_evaluate( const method_properties& m ) const
+expression::integer_type 
+  expression::s_node::i_evaluate( const method_properties& m ) const
 {
-  return lexical_cast<long>( s_evaluate(m) );
+  return lexical_cast<expression::integer_type>( s_evaluate(m) );
 }
 
 string expression::i_node::s_evaluate( const method_properties& m ) const
@@ -149,7 +150,9 @@ public:
   {}
 
 private:
-  virtual long i_evaluate( const method_properties& m ) const {
+  virtual expression::integer_type 
+    i_evaluate( const method_properties& m ) const 
+  {
     return op(arg1->s_evaluate(m), arg2->s_evaluate(m));
   }
 
@@ -169,7 +172,9 @@ public:
   {}
 
 private:
-  virtual long i_evaluate( const method_properties& m ) const {
+  virtual expression::integer_type 
+    i_evaluate( const method_properties& m ) const 
+  {
     return op(arg1->i_evaluate(m), arg2->i_evaluate(m));
   }
 
@@ -187,7 +192,9 @@ public:
   {}
 
 private:
-  virtual long i_evaluate( const method_properties& m ) const {
+  virtual expression::integer_type 
+    i_evaluate( const method_properties& m ) const 
+  {
     return arg1->i_evaluate(m) && arg2->i_evaluate(m);
   }
 
@@ -202,7 +209,9 @@ public:
   {}
 
 private:
-  virtual long i_evaluate( const method_properties& m ) const {
+  virtual expression::integer_type 
+    i_evaluate( const method_properties& m ) const 
+  {
     return arg1->i_evaluate(m) || arg2->i_evaluate(m);
   }
 
@@ -218,7 +227,8 @@ public:
   {}
 
 private:
-  virtual long i_evaluate( const method_properties& m ) const 
+  virtual expression::integer_type 
+    i_evaluate( const method_properties& m ) const 
   {
     return arg1->i_evaluate(m)
       ? arg2->i_evaluate(m) : arg3->i_evaluate(m);
@@ -247,14 +257,18 @@ private:
 
 class integer_node : public expression::i_node {
 public:
-  explicit integer_node( const string& str ) : i( lexical_cast<long>(str) ) {}
+  explicit integer_node( const string& str ) 
+    : i( lexical_cast<expression::integer_type>(str) ) 
+  {}
 
 private:
-  virtual long i_evaluate( const method_properties& m ) const {
+  virtual expression::integer_type 
+    i_evaluate( const method_properties& m ) const 
+  {
     return i;
   }
 
-  long i;
+  expression::integer_type i;
 };
 
 class variable_node : public expression::s_node {
@@ -292,10 +306,13 @@ class exception_node : public expression::node {
 public:
   explicit exception_node( script_exception::type_t t ) : t(t) {}
 private:
-  virtual long i_evaluate( const method_properties& m ) const {
+  virtual expression::integer_type 
+    i_evaluate( const method_properties& m ) const 
+  {
     throw script_exception(t); return 0;
   }
-  virtual string s_evaluate( const method_properties& m ) const {
+  virtual string s_evaluate( const method_properties& m ) const 
+  {
     throw script_exception(t); return ""; 
   }
   script_exception::type_t t;
@@ -461,7 +478,7 @@ expression::parser::split_expr( vector<token>::const_iterator first,
     case label:		     			\
       DEBUG( "Splitting node at " #tmpl );	\
       return ptr_t	      			\
-	( new i_binary_i_node< tmpl<long> >(arg1, arg2) )
+	( new i_binary_i_node< tmpl<expression::integer_type> >(arg1, arg2) )
 
       CASE( plus,       RINGING_PREFIX_STD plus          );
       CASE( minus,      RINGING_PREFIX_STD minus         );

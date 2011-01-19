@@ -1,5 +1,5 @@
 // -*- C++ -*- expression.h - classes to handle expressions
-// Copyright (C) 2003, 2009 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2003, 2009, 2011 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -50,12 +50,16 @@ public:
 
   explicit expression( const string& str );
 
+  // The underlying (signed) integer type used.  
+  // Can be changed to RINGING_LLONG for 64-bit arithmetic.
+  typedef long integer_type;
+
   class node {
   public:
     node() {} // Keep gcc-2.95.3 happy
     virtual ~node() {}
     virtual string s_evaluate( const method_properties& m ) const = 0;
-    virtual long   i_evaluate( const method_properties& m ) const = 0;
+    virtual integer_type i_evaluate( const method_properties& m ) const = 0;
     
   private:
     node(const node&); // Unimplemented
@@ -69,7 +73,7 @@ public:
 
   // Implements i_evaluate in terms of s_evaluate
   class s_node : public node {
-    virtual long   i_evaluate( const method_properties& m ) const;
+    virtual integer_type i_evaluate( const method_properties& m ) const;
   };
 
   bool null() const { return !pimpl; }
