@@ -1,5 +1,5 @@
 // -*- C++ -*- search.cpp - the actual search algorithm
-// Copyright (C) 2002, 2003, 2004, 2005, 2007, 2008, 2009, 2010
+// Copyright (C) 2002, 2003, 2004, 2005, 2007, 2008, 2009, 2010, 2011
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -72,8 +72,10 @@ private:
   void general_recurse();
 
   inline bool push_change( const change& ch);
+  inline void pop_change( row const* r_old = NULL );
   inline void call_recurse( const change &ch );
-  inline int get_posn();
+  inline int get_posn() const;
+  inline size_t calc_cur_div_len() const;
 
   inline bool is_cyclic_hl( const row& hl );
   inline bool is_rev_cyclic_hl( const row& hl );
@@ -117,10 +119,13 @@ private:
   vector<change> startmeth;
   method filter_method;
   string filter_payload;
+  size_t div_start;  // The index (into m) of the row of the division
+  size_t cur_div_len; 
   method m;
   row r;
   bool maintain_r;   // Whether r is valid
 };
+
 
 searcher::searcher( const arguments &args )
   : args(args),
@@ -129,6 +134,7 @@ searcher::searcher( const arguments &args )
     hl_len( args.lead_len / 2 ),
     search_limit( args.search_limit ),
     search_count( 0ul ), node_count( 0ul ),
+    div_start( 0 ), cur_div_len( calc_cur_div_len() ),
     r( canonical_coset_member( args.start_row ) ),
     maintain_r( args.avoid_rows.size() )
 {
@@ -505,7 +511,24 @@ inline bool searcher::push_change( const change& ch )
          args.avoid_rows.find(r) != args.avoid_rows.end() )
       return false;
   }
+  if (m.length() == div_start + cur_div_len) {
+    div_start += cur_div_len;
+    cur_div_len = calc_cur_div_len();
+  }
   return true;
+}
+
+inline void searcher::pop_change( row const* r_old )
+{
+  m.pop_back();
+  if (div_start > m.length()) {
+     div_start -= cur_div_len;
+     cur_div_len = calc_cur_div_len();
+  }
+  if ( maintain_r ) {
+    if ( r_old ) r = *r_old;  
+    else r = m.lh();
+  }
 }
 
 inline void searcher::call_recurse( const change &ch )
@@ -518,14 +541,20 @@ inline void searcher::call_recurse( const change &ch )
   if ( push_change( ch ) )
     general_recurse();
 
-  m.pop_back();
-  if ( maintain_r ) r = old;
+  pop_change( &old );
 }
+
+// The length of the current division
+inline size_t searcher::calc_cur_div_len() const 
+{
+  return (1 + args.treble_dodges) * 2;
+}
+
 
 // 0 = treble in 1-2
 // 1 = treble in 2-3
 // 2 = treble in 3-4, ...
-inline int searcher::get_posn()
+inline int searcher::get_posn() const
 {
   assert( args.hunt_bells );
 
@@ -762,18 +791,19 @@ bool searcher::try_midlead_change( const change &ch )
       if ( args.treble_bob && ch.internal() )
         return false;
     }
- 
-  if ( args.sym_sects && !intersection && depth % div_len >= div_len/2 )
+
+  // Are we more than half way through the current division? 
+  if ( args.sym_sects && !intersection && depth - div_start >= cur_div_len/2 )
     {
-      int i = depth/div_len*div_len + div_len - 2 - (depth % div_len);
+      int i = div_start + cur_div_len - 2 - (depth - div_start);
       assert( i < (int)m.size() && i >= 0 );
       if ( ch != m[i] )
         return false;
     }
 
- 
+  // The 'parity hack' 
   if ( args.same_place_parity && args.treble_dodges == 1
-       && m.length() % div_len && depth % div_len != div_len - 1 
+       && depth - div_start != 0 && depth - div_start != cur_div_len - 1 
        && ch.sign() == m.back().sign() )
     return false;
   
@@ -795,16 +825,16 @@ bool searcher::try_midlead_change( const change &ch )
   // This test doesn't effect the -E handling noted above as if the base
   // method passes this, so will the variant with a 12 or 1N lh.
   if ( args.true_half_lead && args.treble_dodges > 1 && !intersection
-       && is_division_false( m, ch, div_len ) )
+       && is_division_false( m, ch, div_start, cur_div_len ) )
     return false;
   
   if ( args.same_place_parity && args.treble_dodges > 1 
-       && m.length() % div_len == div_len - 2 
-       && division_bad_parity_hack( m, ch, div_len ) )
+       && depth - div_start == cur_div_len - 2 
+       && division_bad_parity_hack( m, ch, div_start, cur_div_len ) )
     return false;
 
   if ( ( args.allowed_falseness.size() || args.require_CPS ) 
-       && depth % div_len >= 1 && depth % div_len != div_len - 1
+       && depth - div_start >= 1 && depth - div_start != cur_div_len - 1
        && ! is_falseness_acceptable( ch ) )
     return false;
 
@@ -956,8 +986,8 @@ void searcher::new_midlead_change()
         if ( ! try_leadend_sym_change( ch ) )
           continue;
       
-      if ( args.hunt_bells && args.require_offset_cyclic && div_len > 3
-           && depth == div_len-3 )
+      if ( args.hunt_bells && args.require_offset_cyclic 
+           && div_start == 0 && cur_div_len > 3 && depth == cur_div_len-3 )
         if ( ! try_offset_start_change( ch ) )
           continue;
 
@@ -994,7 +1024,7 @@ void searcher::double_existing()
 
   // Note: this loop does not add the lead-end change
   for ( size_t depth = m.length(); depth < 2*hl_len-1; ++depth )
-    push_change( m[ depth-hl_len ].reverse() ); // XXX: Update r
+    push_change( m[ depth-hl_len ].reverse() );
 
   change ch( m[ hl_len-1 ].reverse() );
   
@@ -1023,9 +1053,7 @@ void searcher::double_existing()
 
  end_of_function:
   while ( size_t(m.length()) > hl_len )
-    m.pop_back();
-  if (maintain_r)
-    r = m.lh();
+    pop_change();
 }
 
 // -----------------------------------------
@@ -1073,6 +1101,9 @@ bool searcher::is_acceptable_leadhead( const row &lh )
 void searcher::general_recurse()
 {
   const size_t depth = m.length();
+
+  assert( depth - div_start == depth % div_len );
+  assert( cur_div_len == div_len );
 
   if ( search_limit && search_limit != -1 && 
        search_count == search_limit )
@@ -1125,14 +1156,12 @@ void searcher::general_recurse()
       // This loop will add up to the half-lead
       while ( size_t(m.length()) <= hl_len - 1 - args.hunt_bells % 2 )
         push_change( m[ hl_len - args.hunt_bells % 2 * 2
-                          - m.length() ].reverse() ); // XXX: Update r
+                          - m.length() ].reverse() );
 
       general_recurse();
 
       while ( size_t(m.length()) > depth )
-        m.pop_back();
-      if (maintain_r)
-        r = m.lh();
+        pop_change();
     }
 
 
@@ -1145,14 +1174,12 @@ void searcher::general_recurse()
       // This loop will add up to the half-lead
       while ( size_t(m.length()) <= hl_len - args.hunt_bells % 2 * 2 )
         push_change( m[ hl_len - args.hunt_bells % 2 * 2
-                        - m.length() ].reverse() ); // XXX: Update r
+                        - m.length() ].reverse() );
 
       general_recurse();
 
       while ( size_t(m.length()) > depth )
-        m.pop_back();
-      if (maintain_r)
-        r = m.lh();
+        pop_change();
     }
 
 
@@ -1178,9 +1205,7 @@ void searcher::general_recurse()
       if (ok) general_recurse();
 
       while ( size_t(m.length()) > depth )
-        m.pop_back();
-      if (maintain_r)
-        r = m.lh();
+        pop_change();
     }
 
 
@@ -1197,9 +1222,7 @@ void searcher::general_recurse()
       if (ok) general_recurse();
 
       while ( size_t(m.length()) > depth )
-        m.pop_back();
-      if (maintain_r)
-        r = m.lh();
+        pop_change();
     }
 
   // Only rotational symmetry
@@ -1211,14 +1234,12 @@ void searcher::general_recurse()
       // This loop *will* add the lead end change.
       while ( size_t(m.length()) < 2*hl_len )
         push_change( m[ 3*hl_len - args.hunt_bells % 2 * 2
-                          - m.length() ].reverse() ); // XXX: Update r
+                          - m.length() ].reverse() );
 
       general_recurse();
 
       while ( size_t(m.length()) > depth )
-        m.pop_back();
-      if (maintain_r) 
-        r = m.lh();
+        pop_change();
     }
 
   // Need a new change

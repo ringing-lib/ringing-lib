@@ -1,5 +1,6 @@
 // -*- C++ -*- methodutils.h - utility functions missing from the ringing-lib
-// Copyright (C) 2002, 2003, 2004, 2010 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003, 2004, 2010, 2011 
+// Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -43,14 +44,15 @@ RINGING_USING_STD
 
 bool have_same_places( const change &a, const change &b );
 bool is_cyclic_le( const row &lh, int hunts );
-bool is_division_false( const method &m, const change &c, size_t divlen );
+bool is_division_false( const method &m, const change &c, 
+                        size_t div_start, size_t cur_div_len );
 bool is_too_many_places( const method &m, const change &c, size_t max );
 
 bool has_rotational_symmetry( const method &m );
 
 bool has_consec_places( const change &c, size_t max_count = 1u );
 bool division_bad_parity_hack( const method &m, const change &c, 
-			       size_t divlen );
+                               size_t div_start, size_t cur_div_len );
 
 
 // S -- invariant under reflection in a change

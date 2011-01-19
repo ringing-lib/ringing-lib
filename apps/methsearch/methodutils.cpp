@@ -1,5 +1,5 @@
 // -*- C++ -*- methodutils.h - utility functions missing from the ringing-lib
-// Copyright (C) 2002, 2003, 2004, 2005, 2009, 2010
+// Copyright (C) 2002, 2003, 2004, 2005, 2009, 2010, 2011
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -84,17 +84,19 @@ bool is_cyclic_le( const row &lh, int hunts )
   return true;
 }
 
-bool is_division_false( const method &m, const change &c, unsigned int divlen )
+bool is_division_false( const method &m, const change &c, 
+                        size_t div_start, size_t cur_div_len )
 {
-  if ( m.length() % divlen < 3 || m.length() % divlen == divlen-1 )
+  size_t const len = m.length();
+  if ( len - div_start < 3 || len - div_start == cur_div_len-1 )
     return false;
 
   row r( c.bells() );
 
   vector< row > rows( 1, r );
-  rows.reserve( divlen );
+  rows.reserve( cur_div_len );
 
-  for ( int i = (m.length() / divlen) * divlen; i < m.length(); ++i )
+  for ( int i = div_start; i < len; ++i )
     {
       r *= m[i];
       rows.push_back( r );
@@ -137,29 +139,24 @@ bool has_consec_places( const change &c, size_t max_count )
 }
 
 bool division_bad_parity_hack( const method &m, const change &c, 
-			       unsigned int divlen )
+                               size_t div_start, size_t cur_div_len )
 {
   // It should be possible to do this easily without calculating rows.
 
   row r( c.bells() );
 
   vector< row > rows( 1, r );
-  rows.reserve( divlen );
+  rows.reserve( cur_div_len );
 
+  for ( int i = div_start; i < m.length(); ++i )
   {
-    for ( int i = (m.length() / divlen) * divlen; 
-	  i < m.length(); ++i )
-      {
-	r *= m[i];
-	rows.push_back( r );
-      }
+    r *= m[i];
+    rows.push_back( r );
   }
   
   rows.push_back( r * c );
 
-  if ( rows.size() != divlen )
-    cerr << rows.size() << "!=" << divlen << endl;
-  assert( rows.size() == divlen );
+  assert( rows.size() == cur_div_len );
 
   size_t even[2] = { 0u, 0u }, odd[2] = { 0u, 0u };
   
