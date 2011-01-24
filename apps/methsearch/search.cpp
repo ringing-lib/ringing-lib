@@ -775,14 +775,14 @@ bool searcher::try_midlead_change( const change &ch )
 
   size_t depth = m.size();
 
-  if ( args.true_trivial && (args.treble_dodges || !args.hunt_bells) 
-       && m.size() && m.back() == ch )
+  if ( args.true_trivial && m.size() && m.back() == ch )
     return false;
 
   size_t const posn = args.hunt_bells ? get_posn() : 0;
-  bool const intersection = ( posn % 2 == args.treble_front % 2 );
 
   // Is the treble moving between dodging positions (i.e. is posn odd)?
+  bool const intersection = ( posn % 2 == args.treble_front % 2 );
+
   if ( intersection && depth % hl_len != hl_len-1 ) 
     {
       if ( args.surprise && !ch.internal() )
@@ -790,6 +790,24 @@ bool searcher::try_midlead_change( const change &ch )
   
       if ( args.treble_bob && ch.internal() )
         return false;
+
+      if ( args.delight3 && ( posn == 3 && !ch.internal() ||
+                              posn == 1 &&  ch.internal() ) )
+        return false;
+
+      if ( args.delight4 && ( posn == 1 && !ch.internal() ||
+                              posn == 3 &&  ch.internal() ) )
+        return false;
+
+      if ( args.delight && posn == args.treble_back - 3 ) {
+        bool is_s = true, is_t = true;
+        for ( int i = div_len-1; i < depth; i += div_len ) {
+          is_t = ( is_t && !m[i].internal() );
+          is_s = ( is_s &&  m[i].internal() );
+        }
+        if ( is_t && !ch.internal() || is_s && ch.internal() ) 
+          return false;
+      }
     }
 
   // Are we more than half way through the current division? 
@@ -802,7 +820,7 @@ bool searcher::try_midlead_change( const change &ch )
     }
 
   // The 'parity hack' 
-  if ( args.same_place_parity && args.treble_dodges == 1
+  if ( args.same_place_parity && cur_div_len == 4
        && depth - div_start != 0 && depth - div_start != cur_div_len - 1 
        && ch.sign() == m.back().sign() )
     return false;
@@ -824,11 +842,11 @@ bool searcher::try_midlead_change( const change &ch )
   // by the default -Fn.)
   // This test doesn't effect the -E handling noted above as if the base
   // method passes this, so will the variant with a 12 or 1N lh.
-  if ( args.true_half_lead && args.treble_dodges > 1 && !intersection
+  if ( args.true_half_lead && cur_div_len > 4 && !intersection
        && is_division_false( m, ch, div_start, cur_div_len ) )
     return false;
   
-  if ( args.same_place_parity && args.treble_dodges > 1 
+  if ( args.same_place_parity && cur_div_len > 4
        && depth - div_start == cur_div_len - 2 
        && division_bad_parity_hack( m, ch, div_start, cur_div_len ) )
     return false;
@@ -967,7 +985,7 @@ void searcher::new_midlead_change()
       // this is the half-lead; for twin-hunt methods, it is shifted.
       if ( args.hunt_bells % 2 == 1 && depth == hl_len-1 ||
            args.hunt_bells && 
-           args.hunt_bells % 2 == 0 && depth == hl_len+args.treble_dodges )
+           args.hunt_bells % 2 == 0 && depth == hl_len+cur_div_len/2-1 )
         if ( ! try_halflead_sym_change( ch ) )
           continue;
      
@@ -982,7 +1000,7 @@ void searcher::new_midlead_change()
       // the lead (e.g. in Grandsire, it is the 3 at the start of the lead).
       if ( args.hunt_bells % 2 == 1 && depth == 2*hl_len-1 ||
            args.hunt_bells && 
-           args.hunt_bells % 2 == 0 && depth == size_t(args.treble_dodges) )
+           args.hunt_bells % 2 == 0 && depth == cur_div_len/2-1 )
         if ( ! try_leadend_sym_change( ch ) )
           continue;
       
@@ -1192,7 +1210,7 @@ void searcher::general_recurse()
 
   // Only conventional (palindromic) symmetry
   else if ( args.sym && depth == hl_len + 
-            ( args.hunt_bells % 2 ? 0 : args.treble_dodges + 1 ) && hl_len > 1 )
+            ( args.hunt_bells % 2 ? 0 : args.treble_dodges+1 ) && hl_len > 1 )
     {
       assert( !args.skewsym && !args.doubsym );
 

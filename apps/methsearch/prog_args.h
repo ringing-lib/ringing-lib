@@ -1,5 +1,5 @@
 // -*- C++ -*- prog_args.h - program arguments
-// Copyright (C) 2002, 2003, 2004, 2007, 2008, 2009, 2010
+// Copyright (C) 2002, 2003, 2004, 2007, 2008, 2009, 2010, 2011
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -103,6 +103,9 @@ struct arguments
   init_val<bool,false> mirrorsym;
   init_val<bool,false> surprise;
   init_val<bool,false> treble_bob;
+  init_val<bool,false> delight;
+  init_val<bool,false> delight3;
+  init_val<bool,false> delight4;
 
   init_val<bool,false> same_place_parity;
   init_val<bool,true>  true_trivial;

@@ -1,5 +1,5 @@
 // -*- C++ -*- prog_args.cpp - handle program arguments
-// Copyright (C) 2002, 2003, 2004, 2005, 2007, 2008, 2009, 2010
+// Copyright (C) 2002, 2003, 2004, 2005, 2007, 2008, 2009, 2010, 2011
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -324,6 +324,21 @@ void arguments::bind( arg_parser &p )
 	   "Forbid an internal place between dodging positions",
 	   treble_bob ) );
 
+  p.add( new boolean_opt
+         ( '\0', "delight",
+           "Require internal places between some but not all dodging positions",
+           delight ) );
+
+  p.add( new boolean_opt
+         ( '\0', "3rds-place-delight",
+           "For minor only, require thirds as the treble moves between 4-5",
+           delight3 ) );
+
+  p.add( new boolean_opt
+         ( '\0', "4ths-place-delight",
+           "For minor only, require fourths as the treble moves between 2-3",
+           delight4 ) );
+
   p.add( new integer_opt
 	 ( 'G', "treble-dodges", 
 	   "Look for methods where the treble dodges NUM times in each "
@@ -578,23 +593,34 @@ bool arguments::validate( arg_parser &ap )
       return false;
     }
 
-  if ( surprise && treble_bob ) 
+  if ( surprise + treble_bob + delight + delight3 + delight4 >= 2 ) 
     {
-      ap.error( "The surprise and treble bob options are mututally exclusive");
+      ap.error( "The surprise, treble bob and delight options are "
+                "mututally exclusive");
       return false;
     }
-  if ( (surprise || treble_bob) && ! hunt_bells )
+
+  if ( ( delight3 || delight4 ) && treble_back != 6 && treble_front != 1 ) 
     {
-      ap.error( "Surprise and/or treble bob methods require at least one "
-		"hunt bell"  );
+      ap.error( "3rds and 4ths place delight methods are specific to minor" );
       return false;
     }
-  if ( (surprise || treble_bob) && (treble_back-treble_front+1) % 2 == 1 )
+
+  if ( surprise || treble_bob || delight || delight3 || delight4 ) 
     {
-      ap.error( "Surprise and/or treble bob methods can only be found when "
-		"the treble hunts an even number of places (typically an "
-                "even-bell method)"  );
-      return false;
+      if ( ! hunt_bells )   
+        {
+          ap.error( "Surprise, treble bob or delight methods require at "
+                    "least one hunt bell"  );
+          return false;
+        }
+      if ( (treble_back-treble_front+1) % 2 == 1 ) 
+        {
+          ap.error( "Surprise, treble bob or delight methods can only be "
+		    "found when the treble hunts an even number of places "
+                    "(typically an even-bell method)"  );
+          return false;
+        }
     }
 
   if ( treble_dodges && (treble_back-treble_front+1) % 2 == 1 )

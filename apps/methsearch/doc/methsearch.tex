@@ -650,6 +650,11 @@ miscellaneous options (\sref{misc_opt}).
   treble dodges in each position\\
 \texttt{-S}&\texttt{--surprise}&Require a surprise method\\
 \texttt{-T}&\texttt{--treble-bob}&Require a treble bob method\\
+&\texttt{--delight}&Require a delight method\\
+&\texttt{--3rds-place-delight}
+  &Require a thirds place delight method\\
+&\texttt{--4ths-place-delight}
+  &Require a fourths place delight method\\
 \texttt{-Z}&\texttt{--treble-path=PATH}&Require the specified treble path\\
 \texttt{-U}&\texttt{--hunts=N}&The number of hunt bells\\
 \texttt{-n}&\texttt{--changes-per-lead=N}&The lead length\\
@@ -678,9 +683,11 @@ has the treble dodging three times in each position.  \verb+-G0+ is valid
 and is equivalent to not specifying a \verb+-G+ option.  Treble-dodging methods
 are only supported on even stages.
 
-The \verb+-S+ and \verb+-T+ options\oid{S}{surprise}\oid{T}{treble-bob}
+The \verb+-S+, \verb+-T+ and \verb+--delight+ options%
+\oid{S}{surprise}\oid{T}{treble-bob}\loid{delight}
 require there to be at internal 
-places made at every (for \verb+-S+) or none (for \verb+-T+) of the 
+places made at every (for \verb+-S+), none (for \verb+-T+) or 
+some but not all (for \verb+--delight+) of the 
 occasions when the treble moves between dodging position.  These will
 usually be specified together with a \verb+-G1+ option in which case the
 effect is to limit the search to surprise or treble bob methods, however
@@ -691,15 +698,12 @@ surprising as the Central Council's former court method\index{court methods}
 class was close to being to plain as surprise is to treble dodging.}
 Both options are only supported on even stages.
 
-There is no equivalent option for delight methods.\index{delight methods}  
-This is because surprise
-and treble bob methods place a restriction on every cross section (place 
-where the treble moves between dodging positions).  As such, they can be
-used to significantly speed up the search by pruning large areas of the 
-search space --- for example, with \verb+-T+, \methsearch\ knows not to 
-look at any methods beginning \texttt{-3-4}.  This is not the case 
-with delight methods.  (If you wish to restrict a search to delight methods
-you can filter the results with \verb+--require='$C eq "Delight"'+.\fspec{C})
+The \verb+--3rds-place-delight+ and \verb+--4ths-place-delight+ options
+only apply to methods where the treble travels between lead and sixths place.
+Typically this will be a treble dodging minor method, but they can be used
+on higher stages in conjuction with \verb+-Z-6+ option.  Where these options
+are permitted, all delight methods will either be characterised as 3rds or
+4ths place delight.
 
 The \verb+-U+ option\oid{U}{hunts} specifies the number of 
 coursing hunt bells required.
@@ -734,9 +738,11 @@ of other supported treble paths --- i.e.\ little plain or treble dodging.
 The syntax \verb+-Z+$x$\verb+-+$y$ specifies the 
 range of places that the treble passes through --- i.e. that the treble hunts
 (or treble-dodges if \verb+-G+ is specified) from place $x$ to place $y$.
-The places should be specified by bell symbol (see \sref{pn}).  If the lowest
-place, $x$, is lead, it can be omitted; likewise, if the highest place, $y$,
-is the back, it can be omitted.  Thus \verb+-Z-4+ is a traditional treble to
+The places should be specified by bell symbol (see \sref{pn}) --- thus a plain
+maximus method is equivalent to \verb+-Z1-T+ and not \verb+-Z1-12+.  
+If the lowest place, $x$, is lead, it can be omitted; 
+likewise, if the highest place, $y$, is the back, it can be omitted.  
+Thus \verb+-Z-4+ is a traditional treble to
 fourths place little method, and \verb+-Z-+ is equivalent to no \verb+-Z+ 
 option as it means front to back.
 
@@ -1654,7 +1660,9 @@ lead head row and the final lead head row).  For example, the path of the 2
 in Plain Bob Doubles is \verb+21123455434+.  Although \verb+$P+'s value
 looks like an integer, it should generally be treated as a string; for example,
 in an expression, it should be compared with the \verb+eq+ operator 
-(\sref{oper}) instead of \verb+==+.
+(\sref{oper}) instead of \verb+==+.  This is because the \verb+==+ operator
+implicity converts its arguments to integers, which will likely result in
+a silent expression error when the integer overflows.
 
 The coursing order, \verb+$O+\fspec{O}\index{coursing order}, is defined as
 the place bell order\index{place bell order} raised to some power such that 
@@ -1749,7 +1757,7 @@ As a backslash\index{backslash}%
 \symidx{\textbackslash}{character escape sequence} 
 introduces a character escape sequence, 
 should you actually want to print a backslash, you need to double-up the 
-backslashes.  For example, to format a table in the \LaTeX\index{Latex@\LaTeX}, 
+backslashes.  For example, to format a table in \LaTeX\index{Latex@\LaTeX}, 
 columns are separated by an \verb+&+ and rows are ended with two backslashes 
 --- \verb+\\+.  
 To get \methsearch\ to produce output ready for \LaTeX, you can use
@@ -1906,9 +1914,14 @@ The \verb+.+ operator does string concatenation.\index{concatenation}
 It simply returns its two arguments joined together.  It is more commonly
 used on strings, but can also be used on integers too --- for example,
 \verb+1.1+ evaluates to 11.  (As \methsearch\ does not support floating 
-point numbers\index{floating point numbers} or any other form of non-integeral
+point numbers\index{floating point numbers} or any other form of non-integral
 numbers, there is no ambiguity between the the concatenation operator and 
-the decimal point.)
+the decimal point.\footnote{A future version of \methsearch\ might introduce
+place notation literals, but these will require \verb-+- or \verb+&+ prefixes.
+This may result in some obscure incompatibilities, e.g. \verb-3+3.1- currently
+evaluates to 93, but a future version may treat it as a place notation 
+\verb+3.1.3.1.3.1+.  Inserting whitespace after the \verb-+-, or around the
+\verb+.+ will force parsing as an integer.})
 
 The six arithmetic comparison operators,\index{comparison operator} 
 \verb+<+, \verb+>+, \verb+<=+, \verb+>=+, \verb+==+ and \verb+!=+ 
@@ -1917,7 +1930,7 @@ and evaluate to 1 (for true) or 0 (for false).   The operators
 \verb+lt+, \verb+gt+, \verb+le+, \verb+ge+, \verb+eq+ and \verb+ne+
 are the equivalent forms that do lexicographic comparisons\index{lexicographic
 comparison} of two strings.  This means that while \verb+11>2+ is true,
-\verb+11 gt 2+ is not as the two integers are simply treated as strings.
+\verb+11 gt 2+ is false, as the two integers are simply treated as strings.
 
 The \verb+&&+ and \verb+||+ operators are the logical `and' and logical `or'
 operators.\index{logical and}\index{logical or}  
@@ -1926,7 +1939,7 @@ evaluate to true; and in the latter case, it evaluates to true if either
 (or both) of its arguments evaluate to true.  Typically, though not always, 
 the arguments will be comparisons, for example \texttt{\$o>=3 || \$u==1}.
 Both of these operators evaluate their left-hand argument first and 
-\textit{short circuits}\index{operators!short circuiting} 
+\textit{short circuit}\index{operators!short circuiting} 
 based on the value of it --- this means that if
 the result of the operator does not depend on value of the second argument,
 then the second argument is not evaluated.  In practice this means that if
@@ -1962,7 +1975,10 @@ are \textit{binary operators}\index{operators!binary}
 some notable omissions.   In particular, there is no unary 
 minus\index{minus, unary, lack thereof} --- if you want to use a negative 
 number you need to use a circumlocution such as \verb+0-5+.  
-Similarly there is no logical `not' operator\index{logical not, lack thereof}.
+Similarly there is no logical `not' operator\index{logical not, lack thereof}.%
+\footnote{This can also be worked around with the expression 
+\verb+1-(+$x$\verb+)+, which exploits the fact that true and false are
+represented as 1 and 0, respectively.}
 This is likely to be addressed in a future version of \methsearch.
 
 \index{operators|)}
@@ -2004,7 +2020,8 @@ digits \verb+0+--\verb+9+ then the conversion occurs successfully;%
 This is another way of getting around the lack of a unary minus operator.%
 \index{minus, unary, lack thereof}  In builds of \methsearch\ on 32-bit
 systems, integer value of the string, $i$, must satisfy 
-$-2^{31} \le i \le 2^{31}-1$.}
+$-2^{31} \le i \le 2^{31}-1$.  
+A similar constraint with $2^{63}$ applies on 64-bit systems.}
 otherwise an \textitidx{expression error} occurs.  
 This means that no further evaluation
 of the whole expression occurs; if the expression was in a format string,
@@ -2023,7 +2040,12 @@ operators all return an integer which is either \verb+0+ (for false) or
 
 All variables (and command invocations) are considered to be strings,
 even those which are logically integers (such as \verb+$o+).  However,
-as strings are freely convertible to integers, this is rarely detectable.
+as strings are freely convertible to integers, this is rarely detectable.%
+\footnote{This allows \methsearch\ to treat \verb+$c+\fspec{c} and \verb+$#+
+as unsigned 64-bit integers on many 32-bit systems.  On such systems, 
+in an extremely long search where these might exceed $2^{31}$, 
+\verb+$#+ will succeed where \verb+$[$#]+ (which forces a conversion to a
+32-bit signed integer) will fail.}
 \methsearch\ does not currently have specific types representing rows or
 changes.  This is likely to change in a future version of \methsearch, 
 as it is likely that the expression mechanism described in this section will
@@ -2058,8 +2080,9 @@ they need to be used in conjunction with an operator that does short circuiting%
 \section{Statistical output}\label{stats}
 \index{statistics|(}
 
-The \verb+-H+ option\oid{H}\ provides a mechanism for gathering simple
-statistical information on methods.  The option's argument is a format string 
+The \verb+-H+ option\oid{H}{frequencies} provides a mechanism for gathering 
+simple statistical information on methods.  
+The option's argument is a format string 
 (\sref{fmtstr}).  For each method that is found, the format string is expanded,
 any variables (\sref{variables}) except \verb+$c+\fspec{c}, 
 expressions (\sref{expr}) or command invocations (\sref{cmdinv}) are evaluated 
@@ -2968,17 +2991,18 @@ $n-m+1$ times, once for each of the separate $m$ bell runs.}
 -Mlead=18267453 -Mlead=12378564 -Mlead=13482675 @hfill\
 -Mlead=14523786 -M"<4-runs>" -M10:"<queens>"
 \end{Verbatim}
-This contains a single batch of \verb+-M+ options.  It scores four-bell runs
-with an extra bonus for queens.%
+This contains a single batch of \verb+-M+ options.  For each of the seven 
+leads listed, it scores four-bell runs with an extra bonus for queens.%
 \footnote{This example will be of particular interest to anyone
 who wishes to replace Stonebow\index{Stonebow, replacing} in David Hull's
 cyclic 23-spliced composition.\index{Hull, David!23 spliced}}
 
-In practice, however, such a circumlocution is unnecessary as the \textit{row}
-argument to the \verb+-M+\textit{type}\verb+=+\textit{row} options is
-actually a \textit{row expression} (\sref{rowexpr}).\index{row expression}  
+In practice, however, such a circumlocution is unnecessary because the 
+\textit{row} argument to the \verb+-M+\textit{type}\verb+=+\textit{row} 
+options is actually a \textit{row expression} (\sref{rowexpr}).%
+\index{row expression}  
 This means that the group generator\index{group!generators} syntax can be used 
-to write this example as just:
+to write this example more concisely and informatively as:
 \begin{Verbatim}
 -Mlead="<8234567>*5634827" -M"<4-runs>" -M10:"<queens>"
 \end{Verbatim}
@@ -3834,6 +3858,8 @@ and \verb+-M2rhalflead+.
 \item Method identifiers: \verb+$i+ (\sref{variables}).
 \item Filter payloads: \verb+$a+ (\sref{misc_opt}, \sref{variables}). 
 \item Filter inverting: \verb+--invert-filter+ (\sref{misc_opt}).
+\item Delight methods: \verb+--delight+, \verb+--3rds-place-delight+, 
+  \verb+--4ths-place-delight+ (\sref{stage_class}).
 \item Fourths-place doubles lead-end symbols are now supported in \verb+$D+ 
   (\sref{fmtstr}).
 \item The \verb+^+ operator is now overloaded to do conjugation 
@@ -3866,7 +3892,7 @@ Computer Modern font.  The monospaced font used for code fragments and
 row literals is the Computer Modern Teletype font, again by Donald Knuth.%
 \index{fonts}
 
-All of the software described in this manual (except certain passing
+All of the software described in this manual (except some passing
 references to a certain product gestated in Redmont) are themselves open
 source software.  All of the ringing-related programs are available as 
 part of the Ringing Class Library project.\index{Ringing Class Library}
