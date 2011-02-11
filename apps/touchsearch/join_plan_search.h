@@ -53,7 +53,7 @@ public:
     no_flags = 0x0,
 
     // Assert that the plan has no internal falseness
-    no_internal_falseness = 0x8
+    no_internal_falseness = 0x10
   };
 
   join_plan_search( unsigned int bells, map<row, method> const& meths, 

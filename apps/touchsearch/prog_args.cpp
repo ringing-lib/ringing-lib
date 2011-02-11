@@ -98,6 +98,11 @@ void arguments::bind( arg_parser& p )
            mutually_true_parts ) );
 
   p.add( new boolean_opt
+         ( 'R', "allow-non-round-blocks",
+           "Allow true touches that do not come round ",
+           round_blocks, false ) );
+
+  p.add( new boolean_opt
          ( 'a', "use-plan",
            "Read a touch plan from standard input",
            use_plan ) );

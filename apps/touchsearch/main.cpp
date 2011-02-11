@@ -187,6 +187,7 @@ void search( arguments const& args, method const& meth,
     table_search::flags f = static_cast<table_search::flags>( 
       table_search::length_in_changes | 
       (args.ignore_rotations ? table_search::ignore_rotations : 0) |
+      (args.round_blocks ? 0 : table_search::non_round_blocks ) |
       (args.mutually_true_parts ? table_search::mutually_true_parts : 0) );
 
     searcher.reset
