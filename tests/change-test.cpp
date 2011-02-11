@@ -1,5 +1,5 @@
 // -*- C++ -*- row-tests.cc - Tests for the row class
-// Copyright (C) 2002 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2011 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -60,7 +60,8 @@ void test_bell_to_char(void)
 void test_bell_output(void)
 {
   string s = make_string() << bell(5) << bell(12) << bell(bell::MAX_BELLS); 
-  RINGING_TEST( s == "6A*" );
+  string expected = make_string() << "6A{" << (int)bell::MAX_BELLS+1 << "}";
+  RINGING_TEST( s == expected );
 }
 
 // ---------------------------------------------------------------------
