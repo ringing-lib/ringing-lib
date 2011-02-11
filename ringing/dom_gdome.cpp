@@ -1,5 +1,5 @@
 // -*- C++ -*- dom_gdome.cpp - DOM wrapper for Gdome
-// Copyright (C) 2008, 2009 Richard Smith <richard@ex-parrot.com>.
+// Copyright (C) 2008, 2009, 2011 Richard Smith <richard@ex-parrot.com>.
 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -32,6 +32,13 @@
 #include <ringing/dom.h>
 
 #include <gdome.h>
+#include <string.h>
+
+#if RINGING_OLD_C_INCLUDES
+#include <assert.h>
+#else
+#include <cassert>
+#endif
 
 // Needed to hook into error handling in the underlying library
 #include <libxml/xmlerror.h>
@@ -48,7 +55,11 @@ class transcode_output
 {
 public:
   transcode_output( const char* src )
-    : data( gdome_str_mkref(src) )
+    : data( gdome_str_mkref_own(strdup(src)) )
+  {}
+
+  transcode_output( const string& src )
+    : data( gdome_str_mkref_own(strdup(src.c_str())) )
   {}
 
  ~transcode_output() { gdome_str_unref(data); }
@@ -151,7 +162,7 @@ dom_document::dom_document( string const& filename, io mode, filetype type )
   pimpl->domimpl = gdome_di_mkref();
 
   if (mode == out) {
-    pimpl->ofilename = gdome_str_mkref(filename.c_str());
+    pimpl->ofilename = gdome_str_mkref_dup(filename.c_str());
   }
   else if (mode == in) {
     // We want errors by exceptions because otherwise they're 
@@ -166,8 +177,9 @@ dom_document::dom_document( string const& filename, io mode, filetype type )
 void dom_document::finalise()
 {
   if ( pimpl->ofilename && pimpl->doc && pimpl->domimpl ) {
+    assert( pimpl->ofilename->str );
     gdome_di_saveDocToFile( pimpl->domimpl, pimpl->doc, 
-                            TRANSCODE_I( pimpl->ofilename ), // sic
+                            pimpl->ofilename->str,
                             GDOME_SAVE_LIBXML_INDENT, &pimpl->exc );
 
     // Prevent multiple finalisation
@@ -187,10 +199,49 @@ dom_element dom_document::get_document() const
     ( pimpl->doc, gdome_doc_documentElement( pimpl->doc, &pimpl->exc ) );
 }
 
+#define XMLNS_NS "http://www.w3.org/2000/xmlns/"
+
+static bool has_ns_recurse( GdomeElement* elt, char const* ns, 
+                            string const& xmlns, GdomeException* exc )
+{
+  string a( TRANSCODE_I( 
+     gdome_el_getAttribute( elt, TRANSCODE_O(xmlns), exc ) ) );
+  
+  if (a == ns) return true; 
+  else if (!a.empty()) return false; 
+
+  GdomeNode* parent = gdome_el_parentNode(elt, exc);
+  if (parent && gdome_n_nodeType(parent, exc) == GDOME_ELEMENT_NODE) {
+    bool val = has_ns_recurse( GDOME_EL(parent), ns, xmlns, exc ); 
+    gdome_n_unref(parent, exc); 
+    return val;
+  }
+
+  return false;
+}
+
+
+static void setup_elt_ns( GdomeElement* elt, char const* ns, char const* qn, 
+                          GdomeException* exc )
+{
+  string xmlns;  
+  {
+    string n = qn;
+    int i = n.find(':'); 
+    if (i == string::npos) xmlns = "xmlns";
+    else xmlns = "xmlns:" + n.substr(0,i);
+  }
+  if (!has_ns_recurse(elt, ns, xmlns, exc))
+    gdome_el_setAttribute( elt, TRANSCODE_O(xmlns), TRANSCODE_O(ns), exc );
+}
+
 dom_element dom_document::create_document( char const* ns, char const* qn )
 {
   pimpl->doc = gdome_di_createDocument
     ( pimpl->domimpl, TRANSCODE_O(ns), TRANSCODE_O(qn), NULL, &pimpl->exc );
+
+  setup_elt_ns( gdome_doc_documentElement(pimpl->doc, &pimpl->exc), 
+                ns, qn, &pimpl->exc );
 
   return get_document();
 }
@@ -253,7 +304,6 @@ dom_element dom_element::get_next_sibling() const
     return dom_element();
 }
 
-
 dom_element dom_element::add_elt( char const* ns, char const* name )
 {
   GdomeElement* child 
@@ -264,6 +314,9 @@ dom_element dom_element::add_elt( char const* ns, char const* name )
     = gdome_n_appendChild( GDOME_N(pimpl->elt), GDOME_N(child), &pimpl->exc );
 
   gdome_n_unref(child2, &pimpl->exc);
+
+  setup_elt_ns( child, ns, name, &pimpl->exc );
+
   return new impl( pimpl->doc, child );
 }
 
@@ -288,10 +341,13 @@ void dom_element::add_content( string const& content )
 
 void dom_element::add_attr( char const* ns, char const* name, char const* val )
 {
-  if (ns)
+  if (ns) {
     gdome_el_setAttributeNS
       ( pimpl->elt, TRANSCODE_O(ns), TRANSCODE_O(name), TRANSCODE_O(val), 
         &pimpl->exc );
+
+    setup_elt_ns( pimpl->elt, ns, name, &pimpl->exc );
+  }
   else
     gdome_el_setAttribute
       ( pimpl->elt, TRANSCODE_O(name), TRANSCODE_O(val), &pimpl->exc );
