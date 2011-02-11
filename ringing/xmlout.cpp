@@ -157,7 +157,7 @@ void xmlout::impl::append( library_entry const& entry )
 
     int const fmt_opts = method::M_LCROSS | method::M_EXTERNAL;
 
-    int sp = meth.symmetry_point();
+    int sp = meth.length()%2 == 0 ? meth.symmetry_point() : -1;
     if ( sp == -1 ) {
       pn_elt.add_elt( METHODS_XMLNS, "block" )
         .add_content( meth.format(fmt_opts) );

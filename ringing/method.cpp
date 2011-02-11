@@ -1,6 +1,7 @@
 // method.cpp - routines for methods, positions and calls
-// Copyright (C) 2001, 2004, 2008, 2010 Martin Bright <martin@boojum.org.uk>
-// and Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2001, 2004, 2008, 2010, 2011 
+// Martin Bright <martin@boojum.org.uk> and
+// Richard Smith <richard@ex-parrot.com>
 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -27,9 +28,11 @@
 #if RINGING_OLD_C_INCLUDES
 #include <stdio.h>
 #include <string.h>
+#include <assert.h>
 #else
 #include <cstdio>
 #include <cstring>
+#include <cassert>
 #endif
 #if RINGING_OLD_INCLUDES
 #include <bvector.h>
@@ -153,14 +156,23 @@ string method::classname(int cl)
   return s;
 }
 
+bool method::is_palindromic_about(int i) const
+{
+  const int n( size() );
+  for ( int j=1; j<(n%2==0 ? n/2 : n/2+1); ++j ) 
+    if ( (*this)[(i+j) % n] != (*this)[(i-j+n) % n] )
+      return false;
+
+  return true;
+}
+
 // issym : Find out whether the method is symmetrical
 // This means symmetrical, not counting the half-lead or lead end.
 bool method::issym(void) const
 {
-  if(length() & 1) return 0;	// Must have an even length
-  for(int i = 0; i < length() / 2 - 1; i++)
-    if((*this)[i] != (*this)[length() - i - 2]) return false;
-  return true;
+  const int n( size() );
+  if(n & 1) return 0;	// Must have an even length
+  return is_palindromic_about(n/2-1);
 }
 
 // isdouble : Find out whether the method is double
@@ -184,20 +196,41 @@ int method::huntbells(void) const
   return n;
 }
 
+bool method::is_palindromic_about(bell b, int i) const
+{
+  const int n( size() );
+
+  // Trace path of bell, b, to the prospective symmetry point, i
+  for ( int j=0; j < (i+1) % n; ++j )
+    b *= (*this)[j%n];
+
+  // Does bell b make a place at the symmetry point?
+  if(b * (*this)[i] != b) 
+    return false;
+
+  // Iterate outwards in both directions from the symmetry point
+  for ( int j=1; j<(n%2==0 ? n/2 : n/2+1); ++j ) {
+    change const& c1 = (*this)[(i+j) % n];    
+    change const& c2 = (*this)[(i-j+n) % n];
+    // Do both changes affect bell b in the same way?
+    bell b1 = b * c1,  b2 = b * c2; 
+    if ( b1 != b2 ) return false;
+    b = b1;
+  }
+
+  // We're now at the other symmetry point.  Is there a place there too?
+  if(b * (*this)[i+(n%2==0 ? n/2 : n/2+1)] != b) 
+    return false;
+
+  return true;
+}
+
 // issym : Is this bell's path symmetrical?
 bool method::issym(bell b) const
 {
-  if(length() & 1) return 0;	// Must have even length
-  for(int i = 0; i < length() / 2 - 1; i++) {
-    if((*this)[i].findswap(b-1) != (*this)[length() - i - 2].findswap(b-1))
-      return false;
-    if((*this)[i].findswap(b) != (*this)[length() - i - 2].findswap(b))
-      return false;
-    b *= (*this)[i];
-  }
-  if(b * (*this)[length()/2-1] != b) // Must make a place at the half lead
-    return false;
-  return true;
+  const int n( size() );
+  if(n & 1) return 0;	// Must have even length
+  return is_palindromic_about(b, n/2-1);
 }
 
 // isplain : Does this bell plain hunt?
@@ -286,9 +319,11 @@ int method::methclass(void) const
     if(j > tmax) tmax = j;
   }
   if(tmax < bells()-1 || tmin > 0) cl |= M_LITTLE;
-  
-  // Is the treble path symmetrical?
-  if(!issym(hb)) return cl | M_HYBRID;
+
+  // Is the treble path palindromic about two changes?
+  if (length() % 2) return cl | M_HYBRID;  
+  int sym_point = symmetry_point(hb);
+  if(sym_point == -1) return cl | M_HYBRID;
  
   // Is it plain hunting?
   if(isplain(hb)) {
@@ -307,10 +342,11 @@ int method::methclass(void) const
   bell k;
   j = hb;
   vector<char> count(tmax-tmin+1);
-  for(i = 0;i < (length()/2 - 1);i++) {
+  for(i = 0; i<=sym_point; ++i) j *= (*this)[i];
+  for(i = sym_point+1;i <= sym_point+length()/2-1; i++) {
     count[j-tmin]++;
     k = j;
-    j *= (*this)[i];
+    j *= (*this)[i%length()];
     if(j == k)
       place = 1;		// Treble contains places
   }
@@ -476,18 +512,22 @@ char *method::lhcode(void) const
 int method::symmetry_point() const
 {
   const int n( size() );
-  for ( int i=0; i<n/2; ++i )
-    {
-      // try m[i] as the sym point
-      bool ok(true);
+  assert( n%2 == 0 );
+  for ( int i=0; i < (n%2==0 ? n/2 : n); ++i )
+    // Try m[i] as the sym point
+    if (is_palindromic_about(i))
+      return i;
+  return -1;
+}
 
-      for ( int j=1; ok && j<n/2; ++j ) 
-	if ( (*this)[(i+j) % n] != (*this)[(i-j+n) % n] )
-	  ok = false;
-
-      if (ok) return i;
-    }
-
+int method::symmetry_point(bell b) const
+{
+  const int n( size() );
+  assert( n%2 == 0 );
+  for ( int i=0; i < (n%2==0 ? n/2 : n); ++i )
+    // Try m[i] as the sym point
+    if (is_palindromic_about(b, i))
+      return i;
   return -1;
 }
 
@@ -603,6 +643,16 @@ int method::maxblows(void) const
 	}
 
   return maxn - 1;
+}
+
+bool method::ispalindromic() const
+{
+  return symmetry_point() != -1;
+}
+
+bool method::ispalindromic(bell b) const
+{
+  return symmetry_point(b) != -1;
 }
 
 RINGING_END_NAMESPACE

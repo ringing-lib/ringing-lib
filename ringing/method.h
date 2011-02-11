@@ -1,5 +1,5 @@
 // -*- C++ -*- method.h - Classes for dealing with methods
-// Copyright (C) 2001, 2009, 2010 Martin Bright <martin@boojum.org.uk>
+// Copyright (C) 2001, 2009, 2010, 2011 Martin Bright <martin@boojum.org.uk>
 // and Richard Smith <richard@ex-parrot.com>
 
 // This library is free software; you can redistribute it and/or
@@ -115,19 +115,25 @@ public:
   int length() const { return size(); }
   int bells() const { return b; }
   row lh() const;
-  bool issym(void) const;	// Is it symmetrical?
+  bool issym(void) const;	// Is it palindromic about the usual point?
+  bool ispalindromic() const;   // Is it palindromic about any point?
   bool isdouble(void) const;	// Is it double?
   bool isregular(void) const;	// Is it regular?
   int huntbells(void) const;	// Number of hunt bells
   int leads(void) const;	// Number of leads in a plain course
   bool issym(bell b) const;	// Is this bell's path symmetrical?
+  bool ispalindromic(bell b) const;   // Is it palindromic about any point?
   bool isplain(bell b=0) const;	// Does this bell plain hunt?
   bool hasdodges(bell b) const;	// Does this bell ever dodge?
   bool hasplaces(bell b) const;	// Does this bell make internal places?
   int methclass(void) const;    // What sort of method is it?
   char *lhcode(void) const;	// Return the lead head code
   int symmetry_point() const;   // Point of palindromic symmetry (or -1)
+  int symmetry_point(bell b) const;   // Point of palindromic symmetry (or -1)
   int maxblows(void) const;     // Counts the maximum blows in one place
+
+  bool is_palindromic_about(int i) const;
+  bool is_palindromic_about(bell b, int i) const;
 
   enum m_format {
     M_DOTS          =   01,  // Include all dots
