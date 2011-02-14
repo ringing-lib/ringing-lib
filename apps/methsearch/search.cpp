@@ -110,7 +110,7 @@ private:
   const size_t div_len;  // How long the treble stays in a dodging position
                          // 2 for plain methods;  4 for normal TD methods
 
-  const size_t hl_len;   // Length of half a lead
+  size_t hl_len;   // Length of half a lead
 
   RINGING_ULLONG search_limit;
   RINGING_ULLONG search_count;
@@ -138,7 +138,7 @@ searcher::searcher( const arguments &args )
     r( canonical_coset_member( args.start_row ) ),
     maintain_r( args.avoid_rows.size() )
 {
-  m.reserve( args.lead_len );
+  m.reserve( 2*hl_len );
 
   copy( args.startmeth.rbegin(), args.startmeth.rend(), 
         back_inserter(startmeth) );
@@ -150,6 +150,8 @@ void searcher::filter( library const& in )
     {
       try {
         filter_method = i->meth();
+        if ( !args.lead_len )
+          hl_len = filter_method.length() / 2;
         if ( i->has_facet<litelib::payload>() )
           filter_payload = i->get_facet<litelib::payload>();
         else
@@ -270,7 +272,7 @@ bool searcher::try_with_limited_le( const change& ch )
   m.pop_back();
 
   size_t depth = m.length();
-  assert( depth == size_t(args.lead_len-1) );
+  assert( depth == size_t(2*hl_len-1) );
 
   if ( !try_midlead_change(ch) )
     {
@@ -389,7 +391,7 @@ bool searcher::is_acceptable_method()
     {
       // This is a bit of a hack to allow -Fl to be used with TD Minimus
       int const n_extents = 1; 
-//        = (int) ceil( (double) (bells - args.hunt_bells) * args.lead_len
+//        = (int) ceil( (double) (bells - args.hunt_bells) * 2*hl_len
 //                    / (double) factorial(bells) );
 
       prover p( n_extents );
@@ -433,7 +435,7 @@ bool searcher::is_acceptable_method()
 
       // This is a bit of a hack to allow -Fl to be used with TD Minimus
       int const n_extents = 1; 
-//        = (int) ceil( (double) (bells - args.hunt_bells) * args.lead_len
+//        = (int) ceil( (double) (bells - args.hunt_bells) * 2*hl_len
 //                    / (double) factorial(bells) );
 
       {
@@ -507,7 +509,7 @@ inline bool searcher::push_change( const change& ch )
   if ( maintain_r ) {
     r = canonical_coset_member( r * ch );
     // We don't care about the lead head row.
-    if ( m.size() != args.lead_len && 
+    if ( m.size() != 2*hl_len && 
          args.avoid_rows.find(r) != args.avoid_rows.end() )
       return false;
   }
@@ -926,7 +928,10 @@ void searcher::new_midlead_change()
 {
   const size_t depth( m.length() );
 
-  vector< change > changes_to_try = args.allowed_changes[depth];
+  // When we're automatically determining the lead length, we only have 
+  // two change lists: one for h'stroke and one for b'stroke.
+  vector< change > changes_to_try 
+    = args.allowed_changes[args.lead_len ? depth : depth % 2];
   assert( changes_to_try.size() );
 
   // We explicitly use random_int_generator as we know how to seed that.
@@ -990,7 +995,7 @@ void searcher::new_midlead_change()
           continue;
      
       // Additional requirements for the lead-end: 
-      if ( depth == size_t(args.lead_len-1) )
+      if ( depth == size_t(2*hl_len-1) )
         if ( ! try_leadend_change( ch ) )
           continue;
       
@@ -1135,7 +1140,7 @@ void searcher::general_recurse()
   }
 
   // Found something
-  if ( depth == size_t(args.lead_len) )
+  if ( depth == size_t(2*hl_len) )
     {
       if ( filter_method.size() && filter_method != m )
         ;

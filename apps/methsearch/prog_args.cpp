@@ -516,7 +516,7 @@ bool arguments::validate( arg_parser &ap )
       return false;
     }
 
-  if ( !hunt_bells && !lead_len )
+  if ( !hunt_bells && !lead_len && !( filter_mode || filter_lib_mode ) )
     {
       ap.error( "Must specify the lead length when searching for principles" );
       return false;
@@ -528,7 +528,6 @@ bool arguments::validate( arg_parser &ap )
 		"with a hunt bell" );
       return false;
     }
-
 
   if ( treble_path.size() && !hunt_bells ) 
     {
@@ -577,7 +576,7 @@ bool arguments::validate( arg_parser &ap )
       }
   }
 
-  if ( ! lead_len )
+  if ( ! lead_len && !( filter_mode || filter_lib_mode ) )
     lead_len = (1 + treble_dodges) * (treble_back - treble_front + 1) * 2;
 
   if ( hunt_bells >= bells ) 
@@ -878,6 +877,11 @@ bool arguments::validate( arg_parser &ap )
   }
  
   if (mask.empty()) mask = "*";
+  else if (!lead_len) {
+      ap.error( "Cannot use a mask for principles without also supplying a "
+                "lead length" );
+      return false;
+  }
       
   try
     {
@@ -890,7 +894,7 @@ bool arguments::validate( arg_parser &ap )
       return false;
     }
   
-  if ( int(allowed_changes.size()) != lead_len )
+  if ( lead_len && int(allowed_changes.size()) != lead_len )
     {
       ap.error( "The specified mask was an incorrect length" );
       return false;

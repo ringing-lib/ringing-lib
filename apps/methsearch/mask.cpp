@@ -1,5 +1,5 @@
 // -*- C++ -*- mask.cpp - handle method masks
-// Copyright (C) 2002, 2003, 2009 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003, 2009, 2011 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -289,6 +289,10 @@ bool read_and_expand_blocks( arguments& args, const arg_parser& ap,
                              vector< vector<change> >& above, 
                              vector< vector<change> >& below )
 {
+  // If lead_len is unspecified, we use length of two (to accommodate -w) 
+  // and fix it up when reading this in the search algorithm.
+  size_t const lead_len = args.lead_len ? args.lead_len.get() : 2;
+
   // Block0 are those sections before the section containing a star
   // Block1 is the section containing a star
   // Block2 are those sections after the section containing a star
@@ -411,24 +415,24 @@ bool read_and_expand_blocks( arguments& args, const arg_parser& ap,
     {
       // We have a section of unknown length
 
-      expand_block( block1a, star_sym_a, star_index_a, args.lead_len -
+      expand_block( block1a, star_sym_a, star_index_a, lead_len -
 		    block0a.size() - block1a.size() - block2a.size() );
 
-      expand_block( block1b, star_sym_b, star_index_b, args.lead_len -
+      expand_block( block1b, star_sym_b, star_index_b, lead_len -
 		    block0b.size() - block1b.size() - block2b.size() );
 
       assert( block0a.size() + block1a.size() + block2a.size()
-	      == size_t(args.lead_len) );
+	      == size_t(lead_len) );
 
       assert( block0b.size() + block1b.size() + block2b.size()
-	      == size_t(args.lead_len) );
+	      == size_t(lead_len) );
     }
   else 
     {
-      if ( block0a.size() + block2a.size() != size_t(args.lead_len) )
+      if ( block0a.size() + block2a.size() != size_t(lead_len) )
 	throw mask_error( make_string() << "The mask was of the wrong "
 			  "length: found " << (block0a.size() + block2a.size())
-			  << " changes; expected " << args.lead_len );
+			  << " changes; expected " << lead_len );
     }
   
 
@@ -654,6 +658,7 @@ bool is_mask_consistent( arguments &args,
 			 const vector<vector<change> > &above,
 			 const vector<vector<change> > &below )
 {
+  assert( args.lead_len );
   const int hl_len = args.lead_len / 2;
 
   for ( int depth=0; depth < 2*hl_len; ++depth )
@@ -739,19 +744,19 @@ bool parse_mask( arguments &args, const arg_parser &ap )
   if ( !read_and_expand_blocks( args, ap, above, below ) )
     return false;
 
-  if ( !is_mask_consistent(args, above, below) )
+  if ( args.lead_len && !is_mask_consistent(args, above, below) )
     throw mask_error
       ( "Some of the required changes specified are inconsistent "
 	"with the specified symmetries" );
 
   // ----------------------------------
   // Expand ? to appropriate alternative lists
+  size_t const lead_len = args.lead_len ? args.lead_len.get() : 2;
+  assert( above.size() == size_t(lead_len) );
+  assert( below.size() == size_t(lead_len) );
 
-  assert( above.size() == size_t(args.lead_len) );
-  assert( below.size() == size_t(args.lead_len) );
 
-
-  for ( int i=0, n=args.lead_len; i<n; ++i )
+  for ( int i=0; i<lead_len; ++i )
     {
       args.allowed_changes.push_back( vector<change>() );
       vector<change>& changes_to_try = args.allowed_changes.back();
