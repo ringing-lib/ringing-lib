@@ -576,7 +576,7 @@ bool arguments::validate( arg_parser &ap )
       }
   }
 
-  if ( ! lead_len && !( filter_mode || filter_lib_mode ) )
+  if ( !lead_len && hunt_bells )
     lead_len = (1 + treble_dodges) * (treble_back - treble_front + 1) * 2;
 
   if ( hunt_bells >= bells ) 
