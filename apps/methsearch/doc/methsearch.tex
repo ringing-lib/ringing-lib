@@ -1449,7 +1449,7 @@ an \textit{expression} whose is described in \sref{expr}.  The expression
 is evaluated for each method found, and only if it evaluates to true 
 is the method found.  Many other options can also be rewritten as a
 \verb+--require+ option; almost invariably this results in a loss of 
-efficency, sometimes spectacularly so.
+efficiency, sometimes spectacularly so.
 
 The \verb+-M+\oi{M} and \verb+-F+\oi{F} options 
 configure how methsearch analyses the musicality and 
@@ -3141,7 +3141,7 @@ expressions, a deficiency that will likely be addressed in a future
 version of \methsearch.
 
 
-\subsection{Efficency}\label{efficency}
+\subsection{Efficiency}\label{efficiency}
 
 Overuse of per-method command invocation can have a severe impact on 
 efficiency.  A good example of this is with music analysis (\sref{music}).
@@ -3191,7 +3191,7 @@ can sometimes have unfortunate consequences for efficiency.  \methsearch\
 attempts to be pragmatic where a dogmatic separation of functionality would
 result in extreme inefficiency.
 
-Another efficency bottleneck can come from writing data to disk.  \methsearch\ 
+Another efficiency bottleneck can come from writing data to disk.  \methsearch\ 
 only directly writes data to disk when a \verb+-o+ option (\sref{output_opt})
 is given, but indirect writing to disk can occur in two situations:
 when the machine has insufficient memory and \textitidx{swaps} (that is,
@@ -3319,7 +3319,7 @@ what is wanted and the \verb+-F+ option suppresses the final lead head.
 
 This program is of particular use in command invocations in 
 \verb+--require+\loi{require} or \verb+-R+\oi{R} options.
-A example of this was given in \sref{efficency} as an illustration
+A example of this was given in \sref{efficiency} as an illustration
 of the degree to which unnecessary command invocations slow \methsearch\ down.
 Nevertheless, if \methsearch's built-in falseness or music analysis isn't 
 sufficiently powerful, this can be a useful technique.
@@ -3691,7 +3691,7 @@ is still supported but is deprecated, and only the following were available:
 and (probably) \verb+%c+ and \verb+%b+.
 
 \subsection{27 May 2002}
-\begin{list}{\labelitemi}{\leftmargin=1em}
+\begin{list}{\labelitemi}{\leftmargin=1em\itemsep=0em}
 \item There's now a \verb+-j+ option which prohibits adjacent places 
 within the lead.
 \item Similarly to \verb+-S+, \verb+-T+ searches for treble bob methods.
@@ -3706,7 +3706,7 @@ false with the lead or plain course.  The default is \verb+-Fh+.
 \end{list}
 
 \subsection{5 June 2002}
-\begin{list}{\labelitemi}{\leftmargin=1em}
+\begin{list}{\labelitemi}{\leftmargin=1em\itemsep=0em}
 \item New \verb+%+$n$\verb+h+ and (probably) \verb+%+$n$\verb+r+ variables 
 to print the $n$th change and row.
 \item The \verb+--limit+ option aborts the search after a specified number
@@ -3717,7 +3717,7 @@ prints the musical score.
 \end{list}
 
 \subsection{19 June 2002}
-\begin{list}{\labelitemi}{\leftmargin=1em}
+\begin{list}{\labelitemi}{\leftmargin=1em\itemsep=0em}
 \item Multiple hunt bells supported with \verb+-U+.
 \item Right-place methods (\verb+-w+) now supported on odd stages too.
 \item Testing for extent viability with \verb+-Fe+.
@@ -3726,7 +3726,7 @@ prints the musical score.
 \end{list}
 
 \subsection{21 June 2002}
-\begin{list}{\labelitemi}{\leftmargin=1em}
+\begin{list}{\labelitemi}{\leftmargin=1em\itemsep=0em}
 \item Testing for clear proof scale falseness: \verb+-FCPS+.
 \item Preventing `U' falseness\index{U falseness} 
 \verb+-FU+,\oidx{FU}{\texttt{FU}} 
@@ -3737,7 +3737,7 @@ generalised to requiring a round block of homes\index{home}
 \end{list}
 
 \subsection{2 September 2002}
-\begin{list}{\labelitemi}{\leftmargin=1em}
+\begin{list}{\labelitemi}{\leftmargin=1em\itemsep=0em}
 \item Added \verb+-m+ to partially specify the place notation.
 \item Generalised \verb+-M<4-runs>+ to \verb+-M<+$n$\verb+-runs>+.
 \item Added \verb+--start-at+.
@@ -3758,7 +3758,7 @@ earliest code snapshot that is still available.  From this point onwards,
 there is a complete version history of \methsearch.
 
 \subsection{5 December 2002}
-\begin{list}{\labelitemi}{\leftmargin=1em}
+\begin{list}{\labelitemi}{\leftmargin=1em\itemsep=0em}
 \item Program renamed from \texttt{meth-search} to \methsearch.
 \item Code added to the Ringing Class Library CVS repository.
 \item Support for principles with \verb+-U0+ and \verb+-n+.
@@ -3769,14 +3769,14 @@ major methods) and \verb+%o+.
 \end{list}
 
 \subsection{10 February 2003}
-\begin{list}{\labelitemi}{\leftmargin=1em}
+\begin{list}{\labelitemi}{\leftmargin=1em\itemsep=0em}
 \item Added \verb+-M<front-+$n$\verb+-runs>+ and 
 \verb+-M<back-+$n$\verb+-runs>+.
 \item Added \verb+--offset-cyclic+.
 \end{list}
 
 \subsection{13 May 2003}
-\begin{list}{\labelitemi}{\leftmargin=1em}
+\begin{list}{\labelitemi}{\leftmargin=1em\itemsep=0em}
 \item Added \verb+--regular-hls+.
 \item Generalised \verb+%F+ to support regular palindromic methods on any 
 even stage (greater than six).
@@ -3795,14 +3795,14 @@ over/underworks (e.g.\ \verb+&34.1.5.1.5/*+).
 \end{list}
 
 \subsection{14 May 2003}
-\begin{list}{\labelitemi}{\leftmargin=1em}
+\begin{list}{\labelitemi}{\leftmargin=1em\itemsep=0em}
 \item Allow string literals in expressions to be quoted with 
 \verb+'+\ldots\verb+'+.
 \item Added \verb+$d+ for the lead head code.
 \end{list}
 
 \subsection{23 April 2004}
-\begin{list}{\labelitemi}{\leftmargin=1em}
+\begin{list}{\labelitemi}{\leftmargin=1em\itemsep=0em}
 \item Removed the \verb+-h+ option.
 \item Added \verb+-E+, \verb+-o+, \verb+-O+ and \verb+--raw-count+.
 \item Added support for XML output.
@@ -3819,7 +3819,7 @@ Relatively little developement happened during the next few years
 and it wasn't until 2009 that I next produced a release of \methsearch.
 
 \subsection{15 June 2009}
-\begin{list}{\labelitemi}{\leftmargin=1em}
+\begin{list}{\labelitemi}{\leftmargin=1em\itemsep=0em}
 \item Added \verb+-Mcourse+ and \verb+-Mlead+.
 \item Added \verb+-Fr+ and support for row expressions, including
 file inputs and command invocations (though not set literals or group 
@@ -3831,13 +3831,13 @@ generator literals).
 \end{list}
 
 \subsection{18 September 2009}
-\begin{list}{\labelitemi}{\leftmargin=1em}
+\begin{list}{\labelitemi}{\leftmargin=1em\itemsep=0em}
 \item Added \verb+-Mhalflead+, \verb+-M2halflead+, \verb+-Mrhalflead+
 and \verb+-M2rhalflead+.
 \end{list}
 
 \subsection{30 April 2010}
-\begin{list}{\labelitemi}{\leftmargin=1em}
+\begin{list}{\labelitemi}{\leftmargin=1em\itemsep=0em}
 \item Wrote the first version of this manual.
 \item Little method: \verb+-Z+ (\sref{stage_class}).
 \item Symmetric sections: \verb+-y+ (\sref{int_struct}).
@@ -3854,7 +3854,7 @@ and \verb+-M2rhalflead+.
 \end{list}
 
 \subsection{Pending release}
-\begin{list}{\labelitemi}{\leftmargin=1em}
+\begin{list}{\labelitemi}{\leftmargin=1em\itemsep=0em}
 \item Method identifiers: \verb+$i+ (\sref{variables}).
 \item Filter payloads: \verb+$a+ (\sref{misc_opt}, \sref{variables}). 
 \item Filter inverting: \verb+--invert-filter+ (\sref{misc_opt}).
