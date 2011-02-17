@@ -30,6 +30,7 @@
 #include "falseness.h"
 #include "music.h"
 #include "format.h" // for clear_status
+#include "expression.h" // for get_last_exec_status
 #if RINGING_OLD_INCLUDES
 #include <map.h>
 #include <utility.h>
@@ -263,6 +264,10 @@ string method_properties::impl2::get_property( int num_opt,
         case 'a': 
           os << payload;
           break;
+ 
+        case '?':
+          // Return it to avoid caching it
+          return os << setw(num_opt) << get_last_exec_status(); 
 
 	default:
 	  throw logic_error( "Unknown variable requested" );
@@ -313,3 +318,7 @@ string method_properties::get_property( int num_opt, const string& name ) const
   return get_impl( (impl2*)NULL )->get_property( num_opt, name );
 }
 
+method_properties::~method_properties()
+{
+  clear_last_exec_status();
+}

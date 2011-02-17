@@ -1,5 +1,6 @@
 // -*- C++ -*- exec.cpp - execute sub-processes
-// Copyright (C) 2003, 2004, 2008, 2009 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2003, 2004, 2008, 2009, 2011 
+// Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -295,7 +296,7 @@ make_command_line( char const* full_exec_path, char const* const* argv)
         }
 }
 
-string exec_command( const string& str )
+string exec_command( const string& str, int* cmd_status )
 {
   // Construct this before any resources are claimed
   string result; 
@@ -416,6 +417,11 @@ string exec_command( const string& str )
   DWORD rv = WaitForMultipleObjects( 1, &procInfo.hProcess, FALSE, INFINITE );
   if ( rv == WAIT_FAILED )
     THROW_SYSTEM_ERROR( "WaitForMultipleObjects" );  
+
+  DWORD ierr = 0;
+  GetExitCodeProcess(procInfo.hProcess, &ierr);
+  if (cmd_status) cmd_status = ierr;
+
   return result;
 }
 
@@ -431,7 +437,7 @@ system_error::system_error( int errnum, const char* fn )
   do { throw system_error( errno, str ); } while (false)
 
 
-string exec_command( const string& str )
+string exec_command( const string& str, int* cmd_status )
 {
   // Construct this before any resources are claimed
   string result; 
@@ -512,6 +518,8 @@ string exec_command( const string& str )
     while ( ( w = wait( &status ) ) == -1 && errno == EINTR );
     if ( w == -1 )
       THROW_SYSTEM_ERROR( "wait" );
+    if (cmd_status) 
+      *cmd_status = WEXITSTATUS(status);
   }
 
   if ( result.size() && result[result.size()-1] == '\n' )

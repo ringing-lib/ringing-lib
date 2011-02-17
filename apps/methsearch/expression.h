@@ -108,6 +108,8 @@ private:
 };
 
 size_t store_exec_expression( const string& expr );
+int get_last_exec_status();
+void clear_last_exec_status();
 
 
 #endif // METHSEARCH_EXPRESSION_INCLUDED

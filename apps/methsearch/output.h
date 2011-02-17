@@ -37,6 +37,7 @@ class method_properties : public library_entry
 {
 public:
   method_properties() {}
+ ~method_properties();
   explicit method_properties( const method& m, const string& payload );
   explicit method_properties( const library_entry& e );
 

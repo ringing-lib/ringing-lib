@@ -1610,8 +1610,11 @@ typed in on the command line reach \methsearch\ in their intended form.
 \D\No\F{a}&The filter payload --- see \sref{misc_opt}\\
 \D\No\textit{\#}&The number of that method\\
 \D\No\F{c}&The number of matching methods --- see \sref{stats}\\
-\D\D&A literal \D\\
-\D\texttt{\%}&A literal \texttt{\%}\\
+\D\No\texttt{?}&The exit status of the last command invocation --- 
+             see \sref{cmdinv}\\
+%\D\D&A literal \D\\
+%\D\texttt{\%}&A literal \texttt{\%}\\
+%\D\texttt{)}&A literal \texttt{)}\\
 \end{tabularx}}
 
 In the above table, $n$ stands for an integer which must be supplied.
@@ -1876,6 +1879,11 @@ interesting line, a plain course with quite diverse music, and sane falseness:
 \end{Verbatim}
 %\includegraphics[width=\textwidth]{unrungmajor.eps}
 \index{character escape sequence|)}
+
+For a mixture of historical reasons and niche use-cases, there are a few 
+character escape sequences that are introduced by a \verb+$+ (or a \verb+%+,
+though that is deprecated).  They are \verb+$$+, \verb+$%+, \verb+$)+ which
+are alternative ways of producing a literal \verb+$+, \verb+%+ or \verb+)+.
 
 \section{Expressions}\label{expr}
 \index{expression|(}
@@ -3253,6 +3261,27 @@ to a file.  \methsearch\ is generally quite economical with its memory usage
 (an exception being when exceptionally lengthy \verb+-H+ statistics are
 being gathered as discussed in \sref{stats}).
 
+\subsection{Exit status}\label{exitstatus}
+
+When a command exits it communicates an \textit{exit status}\index{exit status}
+back to whatever launched it.  This is an integer, and, by convention, zero
+is used to denote success and any non-zero number represents failure.  
+Frequently programs will ignore the exit status of any other programs they
+spawn, as those programs are able to print a much more descriptive error 
+messages in the event of failure.  This is what \methsearch\ does.
+However, occasionally it's useful to be able to find out whether or not a 
+command exited succesfully and the \verb+$?+ variable stores the exit 
+status of the most recent command to be executed.
+
+Before each format string is printed and any command invocations in it are 
+executed, \verb+$?+ gets set to zero.  The format string is then evaluated
+left-to-right with command invocations being invoked as they're encountered.  
+This can be seen using the standard Unix programs 
+\verb+true+\index{true@\texttt{true}} and 
+\verb+false+\index{false@\texttt{false}} which simply exit 
+successfully and unsuccessfully, respectively.  The format string
+\verb+"$? $(false)$? $? $(true)$?"+ will evaluate to \verb+"0 1 1 0"+, with the 
+value of \verb+$?+ changing through the format string.
 
 \index{command invocation|)}
 
@@ -3266,7 +3295,8 @@ by allowing multiple rows per line, or by accepting alternative separators.
 You should consult the documentation for the specific program before using 
 these.}
 The only place where \methsearch\ uses row streams is when reading the output 
-from command invocations in row expressions, for example in \verb+-Fr+ options.
+from command invocations in row expressions, for example in \verb+-Fr+ or 
+\verb+-Mlead+ options.
 
 The \ttcmdidx{extent} (\sref{extentutil}), 
 \ttcmdidx{rowcalc} (\sref{rowcalc}),
@@ -3404,9 +3434,9 @@ follows:
 \begin{Verbatim}
 8 bells
 
-m = &-3-4-25-36-4-5-6-7
-p = m, +2
-b = m, +4
+m ?= &-3-4-25-36-4-5-6-7
+p  = m, +2
+b  = m, +4
 
 M  = 2p,b,4p
 MW = 2p,2b,3p
@@ -3433,9 +3463,38 @@ command invocation, such as:\index{example!major, music to Middleton's}
             | musgrep -b8 -c "<CRUs>")'
 \end{Verbatim}
 
-It is important to note, however, that this does not prove the composition
---- it just prints it.  For details on how to use \texttt{gsiril} to 
-prove compositions, see \sref{gsirilmeth}.
+It is important to note, however, that this does not ensure that the 
+composition is true --- it just analyses the music until it runs false or 
+comes round.\footnote{When run with \verb+-E+, \texttt{gsiril} gives no visual
+indication of whether the composition is true or false: it just stops printing
+rows if it runs false.  The exit status of \texttt{gsiril} will indicate 
+whether or not the touch was true, but in POSIX-compliant shells (which most
+Unix shells are), the exit status of a pipeline\index{pipe!exit status of} is
+that of its last command.  In the \verb+bash+ shell\index{bash@\texttt{bash}} 
+this can be changed by preceding the command with \verb+set -o pipefail;+ which
+causes the pipeline to exit unsuccessfully if \texttt{gsiril} fails.  This
+can then be tested with \verb+$?+, say by doing \verb+$[$? && suppress]+.%
+\index{suppress keyword@{\texttt{suppress} keyword}}
+But such circumlocutions are best avoided where possible.}
+For details on how to use \texttt{gsiril} to prove compositions, see 
+\sref{gsirilmeth}.
+
+It's often possible to rewrite examples like this so that instead of using
+a per-method command invocation it only invokes \texttt{gsiril} once when 
+\methsearch\ starts, and uses \methsearch's internal music testing abilities.
+In this case, we would use \texttt{gsiril} to generate a list of lead-heads
+in Middleton's and pass that to a \verb+-Mlead+ option.  First, we modify
+the definition of \verb+p+ and \verb+b+ in \texttt{middletons.gsir}:
+\begin{Verbatim}
+p  = "@", m, +2
+b  = "@", m, +4
+\end{Verbatim}
+This makes \texttt{gsiril} print each lead head, which can then be passed
+to a \verb+-Mlead+ option.  If lots of methods are being tested, this will
+speed the search up significantly.
+\begin{Verbatim}[commandchars=@~~]
+-Mlead='$(gsiril -qf middletons.gsir)' -M'<CRUs>' -R'$q $M'
+\end{Verbatim}
 
 \subsection{Analysing music — \texttt{musgrep}}\label{musgrep}
 \index{music|(}
@@ -3922,7 +3981,8 @@ and \verb+-M2rhalflead+.
 \item The \verb+^+ operator is now overloaded to do conjugation 
   (\sref{rowexpr}).
 \item The \verb+--require+ and \verb+--filter+ options can now be written
-  \verb+-Q+ and \verb+-I+, respectively.
+  \verb+-Q+ and \verb+-I+, respectively (\sref{misc_opt}). 
+\item Command exit status: \verb+$?+ (\sref{exitstatus}).
 \end{list}
 
 \clearpage

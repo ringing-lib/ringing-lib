@@ -324,17 +324,33 @@ public:
     : fs(expr, format_string::preparsed_type) 
   {}
 
+  static int get_last_status() { return status; }
+  static void clear_last_status() { status = 0; }
+
 private:
   virtual string s_evaluate( const method_properties& m ) const {
     make_string ms;
     fs.print_method( m, ms.out_stream() );
-    return exec_command( ms );
+    return exec_command( ms, &status );
   }
 
   format_string fs;
+  static int status;
 };
 
+int exec_expr_node::status = 0;
+
 RINGING_END_ANON_NAMESPACE
+
+int get_last_exec_status()
+{
+  return exec_expr_node::get_last_status();
+}
+
+void clear_last_exec_status()
+{
+  return exec_expr_node::clear_last_status();
+}
 
 size_t store_exec_expression( const string& expr ) 
 {
@@ -772,7 +788,8 @@ private:
       while ( j < e && isdigit(*j) ) ++j;
       if ( j == e ) return more; // Or fail?
       // $N* is magic:
-      if ( !isalpha(*j) && *j != '*' && *j != '#' ) return failed; ++j;
+      if ( !isalpha(*j) && *j != '*' && *j != '#' && *j != '?' ) 
+        return failed; ++j;
       tok.assign(i,j); tok.type( variable ); i = j;
       return done;
     }

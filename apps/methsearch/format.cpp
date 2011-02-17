@@ -208,6 +208,8 @@ bool histogram_entry::cmp::operator()( const histogram_entry &x,
       string xval, yval;
 
       if ( i->second == "*" ) {
+        // TODO: We should cache these in case they contain lengthy 
+        // command invocations and/or non-deterministic output
 	xval = expression_cache::evaluate(i->first, x.props);
 	yval = expression_cache::evaluate(i->first, y.props);
       }
@@ -420,7 +422,7 @@ format_string::format_string( const string &infmt,
 	    case 'C': case 'S': case 'M': case 'h': case 'F':
 	    case 'o': case 'd': case 'u': case '[': case '(':
 	    case 'y': case 'O': case ')': case 'L': case 'D':
-            case 'P': case 's': case 'a':
+            case 'P': case 's': case 'a': case '?':
 	      // Can be used in either
 	      break;
 
@@ -435,7 +437,7 @@ format_string::format_string( const string &infmt,
 	    {
 	    case '%': case '$': case 'c': case 'b': case 'M': 
 	    case 'o': case 'u': case ')': case 'L': case 's':
-            case 'i': case '#':
+            case 'i': case '#': case '?':
 	      // Option may but needn't have a number
 	      break;
 

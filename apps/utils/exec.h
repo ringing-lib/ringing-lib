@@ -1,5 +1,5 @@
 // -*- C++ -*- exec.h - execute sub-processes
-// Copyright (C) 2003, 2009 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2003, 2009, 2011 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -31,6 +31,6 @@
 RINGING_USING_STD
 
 // Execute a command and return what it prints on stdout.
-string exec_command( const string& str );
+string exec_command( const string& str, int* status = 0 );
 
 #endif // METHSEARCH_EXEC_INCLUDED

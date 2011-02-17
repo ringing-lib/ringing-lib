@@ -840,6 +840,9 @@ bool searcher::try_midlead_change( const change &ch )
               continue;  // Don't include the h.l.
   
             // If we have double symmetry, count the cross-section twice:
+            // TODO: This logic is incorrect for methods that are just 
+            // rotational symmetric, but we don't care because --exercise et 
+            // al. are not enabled for non-palindromic methods.
             int value = 1;
             if ( args.skewsym && i%hl_len != hl_len/2 - 1 ) value = 2;
      
@@ -857,6 +860,7 @@ bool searcher::try_midlead_change( const change &ch )
               external_cross_sections == cross_sections) // Treble Bob
             return false;
   
+          // Old classes:
           if (args.strict_delight && external_cross_sections != 1)
             return false;
           if (args.exercise && external_cross_sections < 2)
