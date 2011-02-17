@@ -57,6 +57,8 @@
 RINGING_USING_NAMESPACE
 RINGING_USING_STD
 
+char const* expr_error_string = "<ERROR>";
+
 class method_properties::impl2 : public library_entry::impl
 {
 public:
@@ -175,7 +177,12 @@ string method_properties::impl2::get_property( int num_opt,
 	} break;
 
 	case 'h': 
-	  os << m.at( num_opt-1 ); 
+	  try { 
+            os << m.at( num_opt-1 ); 
+          } catch ( out_of_range const& ) {
+            // This should only happen if we're filtering with -U0 and no -n.
+            os << expr_error_string;
+          }
 	  break;
 
 	case 'b': 

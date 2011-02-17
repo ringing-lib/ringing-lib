@@ -855,7 +855,7 @@ string expression::evaluate( const method_properties& m ) const
     {
       return pimpl->s_evaluate(m); 
     }
-  RINGING_CATCH_EXPRESSION_ERROR( "<ERROR>" )
+  RINGING_CATCH_EXPRESSION_ERROR( expr_error_string )
 }
 
 #undef RINGING_CATCH_EXPRESSION_ERROR

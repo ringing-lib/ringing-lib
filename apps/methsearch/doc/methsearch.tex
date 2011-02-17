@@ -183,8 +183,7 @@ and options typed at your system's \textitidx{command prompt} or
 It is rare for most Windows users to encounter tools that require the use 
 of the command line interface, however Windows does provide a terminal 
 that allows you to use \methsearch.  To start the terminal, on the 
-`Start' menu, choose `Run' and then type in `\texttt{cmd.exe}'.%
-\index{cmd.exe@\texttt{cmd.exe}}%
+`Start' menu, choose `Run' and then type in `\ttcmdidx{cmd.exe}'.%
 \footnote{On Windows 95, 98 or ME, this will be `\texttt{command.com}'.%
 \index{command.com@\texttt{command.com}}}
 You should then see a new window, probably black with a white font, 
@@ -427,12 +426,12 @@ Producing such a list is exactly the sort of task for which
 into a form that methsearch can understand:
 
 \begin{Verbatim}[commentchar=~]
-methsearch -b5 -sAC -R"$q\t$D" --require="$o>=3" -m"*(1|2|23)"
+methsearch -b5 -sAC -R"$q\t$D" -Q"$o>=3" -m"*(1|2|23)"
 ~ -- a comment to get vim's syntax highlighter back in sync:  $
 \end{Verbatim}
 
 Note: in most Linux shells, 
-the double quotes around the \verb+-R+ and \verb+--require+ options' arguments 
+the double quotes around the \verb+-R+ and \verb+-Q+ options' arguments 
 \textit{must} be replaced with single quotes.%
 \footnote{This is because the shell 
 \textit{interpolates}\index{shell!interpolation} text in double quotes,
@@ -467,12 +466,12 @@ be loaded in a spreadsheet\index{spreadsheet} as
 \textit{tab separated values} and the two values will appear in 
 separate spreadsheet columns.  
 
-The \verb+--require="$o>=3"+ option states that the number of leads in
+The \verb+-Q"$o>=3"+ option states that the number of leads in
 the plain course (\verb+$o+)\fspec{o} must be at least three.  
 (Strictly speaking, the rubric stated ``three or four leads in the 
-plain course'' which we would write \verb+--require="$o==3 || $o==4"+, 
+plain course'' which we would write \verb+-Q"$o==3 || $o==4"+, 
 but as plain courses with more than four leads are not possible, 
-this is unnecessarily pedantic.)  The argument to the \verb+--require+
+this is unnecessarily pedantic.)  The argument to the \verb+-Q+
 option is called an \textitidx{expression} and is described in detail
 in \sref{expr}.
 
@@ -517,7 +516,7 @@ When using \methsearch, it is not uncommon to discover that it has not
 accounted for some such implicit assumption about the desired method, 
 and it therefore finds too many methods.
 
-% methsearch -b5 -p4 -sCA --require='$o>=3 && ( $10h ne "145" || $(methsearch -b5 -p4 -sqA --require="\\$$o>=3" --raw-count --limit=1 -m"$Q,(1|123|125$)") == 0 )' -R'$q\t$D'
+% methsearch -b5 -p4 -sCA -Q'$o>=3 && ( $10h ne "145" || $(methsearch -b5 -p4 -sqA -Q"\\$$o>=3" --raw-count --limit=1 -m"$Q,(1|123|125$)") == 0 )' -R'$q\t$D'
 \index{example!doubles, plain|)}
 
 \section{Obtaining \methsearch}\label{obtain}
@@ -642,7 +641,7 @@ miscellaneous options (\sref{misc_opt}).
 \section{Stage and class}\label{stage_class}
 
 \index{class|(}
-\index{stage|see{bells, number of}}
+\index{stage|see{bells!number of}}
 
 \begin{tabularx}{\textwidth}{llX}
 \texttt{-b}&\texttt{--bells=N}&The number of bells\\
@@ -661,7 +660,7 @@ miscellaneous options (\sref{misc_opt}).
 \end{tabularx}
 
 The \verb+-b+ option is the only option that is always required.%
-\oid{b}{bells}\index{bells, number of}
+\oid{b}{bells}\index{bells!number of}
 Its argument is the number of bells and must be an integer between 2 and 33, 
 inclusive.  
 The lower limit is simply because, trivially, there is only one possible
@@ -690,8 +689,8 @@ places made at every (for \verb+-S+), none (for \verb+-T+) or
 some but not all (for \verb+--delight+) of the 
 occasions when the treble moves between dodging position.  These will
 usually be specified together with a \verb+-G1+ option in which case the
-effect is to limit the search to surprise or treble bob methods, however
-they can be applied to even-stage plain methods too.%
+effect is to limit the search to surprise, treble bob or delight methods, 
+respectively, however they can be applied to even-stage plain methods too.%
 \footnote{In particular, an \verb+-SG0+ search, on six bells at least, 
 finds methods with a distinctly Double Court feel to them.  This is hardly 
 surprising as the Central Council's former court method\index{court methods}
@@ -724,11 +723,15 @@ find treble dodging methods with multiple hunt bells.
 
 The \verb+-U+ option can also be used to find principles by specifying 
 \verb+-U0+.\index{principles}  
-When this is done, the \verb+-n+ option\oid{n}{changes-per-lead} 
-must also be used to specify length of the lead.  
-This combination is not especially well
-optimised in the code, nor is it particularly well tested.%
+When this is done, the \verb+-n+$n$ option\oid{n}{changes-per-lead} 
+must also be used to specify length of the lead unless \methsearch\ is 
+running in filter mode in which case the \verb+-n+$n$ option can be omitted and
+its value, $n$, inferred from the length of the methods being filtered.%
 \optdesc{n}{lead length!specifying}
+The combination \verb+-AU0+ is useful when filtering as it avoids the need to
+specifying details such as the lead length, number of hunt bells, or treble
+path.   Searching for principles is not especially well
+optimised in the code, nor is it particularly well tested.
 
 The \verb+-Z+ option is used to specify the path of the treble (or
 whichever bell is the primary hunt bell in methods with unusual treble paths).%
@@ -758,6 +761,46 @@ can be found with \verb+-G1+ \verb+-Z3-6+.
 \index{little methods|)}
 \index{class|)}
 \index{class|seealso{\textit{specific class names}}}
+
+\subsection{Historical classes}\label{hist_class}
+
+\begin{tabularx}{\textwidth}{llX}
+&\texttt{--strict-delight}
+  &Delight methods (1905--69)\\
+&\texttt{--exercise}
+  &Exercise methods (1955--69)\\
+&\texttt{--strict-exercise}
+  &Exercise methods (1905--55)\\
+&\texttt{--pas-alla-tria}
+  &`Pas-alla-tria' methods (1905--55)\\
+&\texttt{--pas-alla-tessera}
+  &`Pas-alla-tessera' methods (1905--55)\\
+\end{tabularx}
+
+Until 1969, the Central Council recognised a fourth class of treble 
+dodging methods: namely exercise methods\index{exercise methods}.  
+At that time, a delight method had to have internal places at 
+all but one occasion when the treble moves between dodging positions; 
+methods with internal places at all but two or fewer occasions 
+were classified as exercise methods.  To find methods 
+that would formerly have been classified as exercise, or as delight in this
+stricter sense, use the \verb+--exercise+\loid{exercise} and 
+\verb+--strict-delight+\loid{strict-delight} options.
+
+Similarly, until 1955, the exercise class was restricted to methods with
+internal places made at exactly all but two occasions when the treble moved
+between dodging positions.  Methods with internal places at all but three 
+and all but four occasions, respectively, were nominally called 
+`pas-alla-tria' and `pas-alla-tessera',\footnote{These were sometimes spelt
+as one word: viz., `pasallatria' and `pasallatessera'.  A variety of 
+spellings can be found, including `pasalltria' and `pasallatessara'.
+They presumably derive from the Ancient Greek \textit{πας αλλα τρια} and 
+\textit{πας αλλα τεσσερα} meaning `all but three' and `all but four'.}
+though I'm not aware of any evidence that these class names were actually used.
+These types of methods can be found with the 
+\verb+--strict-exercise+\loid{strict-exercise},
+\verb+--pas-alla-tria+\loid{pas-alla-tria} and 
+\verb+--pas-alla-tessera+\loid{pas-alla-tessera} options.
 
 \section{Internal structure}\label{int_struct}
 
@@ -921,7 +964,7 @@ are bob leads of other methods from other fourths place methods.
 The \verb+-E+ option allows \methsearch\ to make this distinction too.}
 In determining whether the seconds and $n$ths place variants are acceptable,
 \methsearch\ applies all options provided to \methsearch\ \textit{except}
-\verb+-F+ options (which govern falseness), \verb+--require+ options
+\verb+-F+ options (which govern falseness), \verb+-Q+ options
 (that apply a final layer of filtering to the result set) and 
 \verb+--start-at+ (which allows a search to be restarted part-way through).
 This subtlety is subject to change in a future version of \methsearch.
@@ -935,7 +978,7 @@ options).
 By specifying \verb+-A+,\oid{A}{all-methods} all such methods are included.  
 To include only certain additional types of method --- for example, to include
 differentials, but not hunters or differential hunters when doing an
-\verb+-U0+ search, the \verb+--require+ option should be used.%
+\verb+-U0+ search, the \verb+-Q+ option should be used.%
 \index{differential}\index{differential hunter}
 Typically this will involve tests of the \verb+$u+ and/or \verb+$o+ variables.
 
@@ -1082,7 +1125,7 @@ a method which restricts \methsearch\ to looking at just that one method.
 
 The \textit{place notation} can be expressed in any standard form.  
 Bells are represented using the following case-insensitive alphabet.
-\index{bells, symbols for} 
+\index{bells!symbols for} 
 
 {\footnotesize\begin{tabular}{cccccccccc cccccccc}
 1&2&3&4&5&6&7&8&9&10&11&12&13&14&15&16&17&18\\
@@ -1211,7 +1254,7 @@ together with the formatting of it, is controlled
 by the \verb+-R+\oi{R} option which is discussed in \sref{variables}.
 By default, \methsearch prints just the methods' place notation and lead head
 --- i.e.\ omitting the \verb+-R+ option is equivalent to 
-specifying \verb+-R$p\t$l+ (unless \verb+--filter+ is supplied in which
+specifying \verb+-R$p\t$l+ (unless \verb+-I+ is supplied in which
 case \verb+-R$p\t$a+ is assumed).
 
 The \verb+-o+ option\oid{o}{out-file} tells \methsearch\ to write all 
@@ -1310,8 +1353,9 @@ The \verb+-u+ option\oid{u}{status} tells \methsearch\ to display a
 \textit{status line}
 which is updated every 10,000 nodes to containing the first 68 characters of 
 the place notation of the current node.\footnote{The number of characters
-to display can be overriden with the \verb+$COLUMNS+ environment variable.%
-\fspec{COLUMNS} Many shells set this automatically.}
+to display can be overriden with the \verb+$COLUMNS+ environment variable%
+\fspec{COLUMNS} in which case \verb+$COLUMNS+$-$12 characters are printed. 
+Many shells set this variable automatically.}
 This information is displayed on
 \textitidx{standard error} meaning that it is not captured by shell
 redirection using \verb+>+.
@@ -1379,11 +1423,12 @@ then : $((++x)); fi; done | grep -Fv 'Alarm clock'
 \begin{tabularx}{\textwidth}{llX}
 \texttt{-?}&\texttt{--help}&Print an help message and exit\\
 \texttt{-V}&\texttt{--version}&Print version information and exit\\
-&\texttt{--filter}&Run in filter mode on standard input\\
+\texttt{-I}&\texttt{--filter}&Run in filter mode on standard input\\
 &\texttt{--filter-lib}&Run in filter mode on specified libraries\\
 &\texttt{--invert-filter}
                 &Invert filter so only non-matching methods are listed\\
-&\texttt{--require}&Apply an additional requirement to the search results\\
+\texttt{-Q}&\texttt{--require} 
+                &Apply an additional requirement to the search results\\
 \texttt{-M}&\texttt{--music}&Configure how \methsearch\ evaluates musicality\\
 \texttt{-F}&\texttt{--falseness}&Configure how falseness is checked\\
 \texttt{-P}&\texttt{--parity-hack}&Require an equal number of rows of each 
@@ -1398,7 +1443,7 @@ The \verb+--version+\oid{V}{version} option prints the version number of
 formal releases of \methsearch\ are made very infrequently, and most copies
 in use are development snapshots.)
 
-The \verb+--filter+\loid{filter} option is used to change \methsearch\ from
+The \verb+-I+\oid{I}{filter} option is used to change \methsearch\ from
 searching for methods \textit{ab initio} to filtering 
 a list of methods supplied on \textitidx{standard input}.
 The input format is a list of methods, one per line, with the
@@ -1425,7 +1470,7 @@ methsearch -b\textit{n} -R"$q" \textit{\rm\it[options]} > methods.txt
 \ldots and then filter the output as many times as you want:
 
 \begin{Verbatim}[commandchars=\\\{\}]
-methsearch -b\textit{n} --filter \textit{\rm\it[other options]} < methods.txt
+methsearch -b\textit{n} -I \textit{\rm\it[other options]} < methods.txt
 \end{Verbatim}
 
 Generally, doing a search once and filtering it several times is much faster
@@ -1437,18 +1482,19 @@ all the libraries specified with \verb+-L+\oi{L} options.  This is useful
 for finding named methods with particular properties.\index{named methods}
 
 The \verb+--invert-filter+\loid{invert-filter} option is used in conjunction
-with either \verb+--filter+ or \verb+--filter-lib+.  It inverts the sense
+with either of the options that enable filter mode (\verb+-I+ or 
+\verb+--filter-lib+).  It inverts the sense
 of the filtering so that \methsearch\ outputs every method that does 
 \textit{not} match the search criteria.  
 The method count (per \verb+-C+, below) 
 and any statistical output (\sref{stats}) is similarly inverted.
 
-The \verb+--require+\loid{require} provides a way of imposing more complex
+The \verb+-Q+\oid{Q}{require} provides a way of imposing more complex
 requirements on the methods that \methsearch\ finds.  Its argument is 
 an \textit{expression} whose is described in \sref{expr}.  The expression
 is evaluated for each method found, and only if it evaluates to true 
 is the method found.  Many other options can also be rewritten as a
-\verb+--require+ option; almost invariably this results in a loss of 
+\verb+-Q+ option; almost invariably this results in a loss of 
 efficiency, sometimes spectacularly so.
 
 The \verb+-M+\oi{M} and \verb+-F+\oi{F} options 
@@ -1472,7 +1518,7 @@ This chapter starts by discussing the format strings (\sref{fmtstr})
 that occur in the arguments to the \verb+-R+\oi{R} and \verb+-H+\oi{H} 
 options and provide \methsearch's main way of communicating 
 information about the methods back to the user.  
-The expression syntax (\sref{expr}) used by the \verb+--require+\loi{require} 
+The expression syntax (\sref{expr}) used by the \verb+-Q+\oi{Q} 
 option is also documented here as it shares much in common with format strings.
 Finally, \sref{stats} looks specifically at the \verb+-H+ option for 
 statistical output.
@@ -1505,7 +1551,7 @@ that are replaced by a \textit{method parameter} --- a piece of information
 about the method.\footnote{A \verb+%+\symidx{\%}{variable} 
 can be used as an alternative to
 \verb+$+ in variables, although not in expressions such as in
-the argument to \verb+--require+.  Use of \verb+%+ like this is deprecated.}
+the argument to \verb+-Q+.  Use of \verb+%+ like this is deprecated.}
 For example, \verb+-R$q+ causes the place notation%
 \index{place notation} of each method to be printed out as they are found.
 Some variables allow (and a few require) an integer to be specified
@@ -1576,7 +1622,14 @@ option\fspec{r} uses \verb+$0r+ for the first row (that is, rounds), and
 \verb+$h+ uses \verb+$1h+ for the first change.  This is because there are
 $n+1$ relevant rows in the lead, but only $n$ changes.
 
-Similarly, \textit{[$n$]} means an optional integer.  In each case,
+In most circumstances an offset, $n$, that's longer than the lead length
+will result in a error message when \methsearch\ starts.  The exception is
+when filtering over methods with variable length leads (e.g.\ with \verb+-IAU0+
+and no \verb+-n+$n$ option).  In this case, an expression error%
+\index{expression error} (\sref{type_sys}) results from an out-of-bounds 
+access.
+
+In the table, \textit{[$n$]} means an optional integer.  In each case,
 this is used as a \textitidx{field width}.  This is used to left-pad
 numbers with spaces up to the specified with in order to align 
 numbers with different numbers of digits.  This is most useful with 
@@ -1662,7 +1715,7 @@ looks like an integer, it should generally be treated as a string; for example,
 in an expression, it should be compared with the \verb+eq+ operator 
 (\sref{oper}) instead of \verb+==+.  This is because the \verb+==+ operator
 implicity converts its arguments to integers, which will likely result in
-a silent expression error when the integer overflows.
+a silent expression error\index{expression error} when the integer overflows.
 
 The coursing order, \verb+$O+\fspec{O}\index{coursing order}, is defined as
 the place bell order\index{place bell order} raised to some power such that 
@@ -1710,7 +1763,7 @@ each method that is found.  (Note that methods discarded using the
 \verb+suppress+ keyword (\sref{exprkey})%
 \index{suppress keyword@{\texttt{suppress} keyword}}
 still get a number; this is the principle way in which \verb+suppress+
-differs from \verb+--require+.)
+differs from \verb+-Q+.)
 
 \subsection{Character escape sequences}\label{charesc}
 \index{character escape sequence|(}
@@ -1797,7 +1850,7 @@ Users of Unix-like shells also have the option of including it.}
 \begin{Verbatim}[commandchars=@~~]
 methsearch -b8 -SG1 -srefj -p2 -M'<4-runs>'      @hfill\
   -R'$[$M>35?"\x1b[1;31m":""]$2#)  $q \x1b[38G$d [$F]\x1b[0m' @hfill\
-  --require='$M>30 && $n eq "Untitled"' -Lsurp8.txt
+  -Q'$M>30 && $n eq "Untitled"' -Lsurp8.txt
 \end{Verbatim}
 
 Understanding complex examples like this is typically harder than
@@ -1827,11 +1880,11 @@ interesting line, a plain course with quite diverse music, and sane falseness:
 \section{Expressions}\label{expr}
 \index{expression|(}
 
-The \verb+--require+\loi{require} option provides a way of specifying more 
+The \verb+-Q+\oi{Q} option provides a way of specifying more 
 complex requirements that methods must satisfy.  Its argument is an 
 \textit{expression} which must, when evaluated and converted to a boolean, 
 must be true in order that the method is found.  For example, 
-\verb+--require="$M >= 40"+ only prints methods where the music score 
+\verb+-Q"$M >= 40"+ only prints methods where the music score 
 (\verb+$M+)\fspec{M} is at least 40. 
 
 Expressions can also be included in format strings by including them
@@ -2006,9 +2059,9 @@ both.  To solve this, the inner two
 need escaping \index{escaping|see shell!escaping}\index{shell!escaping} 
 from the shell.  This is done by prefixing them with 
 a backslash\index{backslash}: 
-\verb+--require="$n ne \"Untitled\""+.
+\verb+-Q"$n ne \"Untitled\""+.
 
-\subsection{Expression type system}\index{type system}
+\subsection{Expression type system}\label{type_sys}\index{type system}
 
 Expressions in \methsearch\ are \textit{weakly typed}\index{weak typing}. 
 This means that strings are integers are converted freely as required.
@@ -2025,7 +2078,7 @@ A similar constraint with $2^{63}$ applies on 64-bit systems.}
 otherwise an \textitidx{expression error} occurs.  
 This means that no further evaluation
 of the whole expression occurs; if the expression was in a format string,
-its value is set to \verb+<ERROR>+; and if it was in a \verb+--require+ option,
+its value is set to \verb+<ERROR>+; and if it was in a \verb+-Q+ option,
 it is considered to have evaluated to false.  It is not possible to recover
 from an expression error within the expression.  For example, 
 \verb+"a"-1 > 42 ? "b" : "c"+ does not evaluate to either 
@@ -2062,7 +2115,7 @@ operations, such as permutation, within an expression.
 
 If the \verb+suppress+\index{suppress keyword@{\texttt{suppress} keyword}}
 is evaluated in an expression, then display of that method is suppressed. 
-This keyword is different in number of ways to the \verb+--require+
+This keyword is different in number of ways to the \verb+-Q+
 option --- methods that are suppressed still have a \verb+$#+ number assigned,
 and are still included in any statistics (\sref{stats}) and counted in the
 \verb+-C+\oi{C} method count.
@@ -2112,7 +2165,7 @@ Certain variables --- namely \verb+$p+, \verb+$q+,
 \verb+$Q+, \verb+$n+, \verb+$N+, \verb+$i+ and \verb+$#+ --- 
 cannot be included directly in statistical output.  
 This is not a technical restriction \textit{per se}, rather that as 
-place notations are unique to a method and names nearly so, it would rarely
+place notations are unique to a method, and names nearly so, it would rarely
 serve any purpose, and as the whole statistical output has to be stored
 in memory until the search completes, it would consume a large amount of
 memory and possibly result in \methsearch\ running out of memory and crashing.
@@ -2606,7 +2659,7 @@ is \verb+-+, instead of reading from a file, \methsearch\ reads from standard
 input.  If you do this, you must ensure that nothing else is also reading
 from standard input or you will end up with a bizarre undefined behaviour.
 In particular, you can only have one \verb+<(-)+ in anywhere, and you cannot
-use this in conjunction with \verb+--filter+\loi{filter}.
+use this in conjunction with \verb+-I+\oi{I}.
 
 A \textit{command invocation} has the syntax 
 \verb+-Fr="$(+\textit{command line}\verb+)"+ and is dealt with
@@ -3010,7 +3063,7 @@ to write this example more concisely and informatively as:
 \section{Falseness and music}
 
 The \verb+-M+ options are entirely independent from the \verb+-F+ options.
-This the unfortunate result that for many real-world searches, it will be
+This has the unfortunate result that for many real-world searches, it will be
 necessary to duplicate information between \verb+-Fr+ options and
 \verb+-Mlead+ options so that both the falseness engine and the music
 analysis engine know which leads to look at.  This is something that a future
@@ -3032,7 +3085,7 @@ the approach that \methsearch\ attempts to take.
 
 \methsearch\ interacts with external programs in several main ways.  First, it
 can filter input (in the form of a list of methods) from another source;
-this behaviour is activated by the \verb+--filter+\loi{filter} option was 
+this behaviour is activated by the \verb+-I+\oi{filter} option was 
 discussed in \sref{misc_opt}.  Secondly, it can output a list of methods
 which is parsed by another program; an example of this was also given in
 the discussion of filtering \sref{misc_opt}.  The final ways are when 
@@ -3059,7 +3112,7 @@ External commands can be invoked by \methsearch\ in three situations.
 First, a command invocation may be embedded directly in a format string
 (\sref{fmtstr}); second, it may be inside an expression (\sref{expr}),
 which itself will either be in a format string or as the argument to a 
-\verb+--require+\loi{require} option; and third, it can be used to 
+\verb+-Q+\oi{Q} option; and third, it can be used to 
 generate a list of rows within a row expression 
 (\sref{rowexpr}--\ref{rowexprmulti}).  
 
@@ -3111,12 +3164,11 @@ The command can generate arbitrary output which is like string literal
 (\sref{lits}).  However in most practical situations the string will 
 subsequently be converted to an integer.
 For example, the \ttcmdidx{touchsearch} program (\sref{touchsearch})
-could be invoked by a \verb+--require+ option to check that a touch 
+could be invoked by a \verb+-Q+ option to check that a touch 
 of the method is actually possible:
 \begin{Verbatim}[commandchars=@~~]
---require='$(touchsearch -b6 -r -l720 @hfill\
-               -Cb=4 -Cs=$[$12h eq "12" ? "234" : "456"] @hfill\
-               -q --raw-count --limit=1 $p)'
+-Q'$(touchsearch -b6 -r -l720 -q --raw-count --limit=1 @hfill\
+       -Cb=4 -Cs=$[$12h eq "12" ? "234" : "456"] $p)'
 \end{Verbatim}
 This command invocation contains both a variable 
 (the place notation, \verb+$p+) and a more complicated expression used to
@@ -3154,7 +3206,7 @@ methsearch -b8 -SG1 -srdk -p2 -R'$q $M' -M'<4-runs>'
 \end{Verbatim}
 can be rewritten to invoke the external \ttcmdidx{printmethod}
 (\sref{printmethod}) and \ttcmdidx{musgrep} (\sref{musgrep}) programs 
-as follows:%
+instead of using \methsearch's in-built \verb+$M+ variable:%
 \footnote{Both of these examples are presented here
 with Unix-style quoting.\index{shell!quotation}  
 On Windows, the outer single quotes will need replacing with double quotes.}
@@ -3318,7 +3370,7 @@ to lead head, inclusive.  For many applications this behaviour is not
 what is wanted and the \verb+-F+ option suppresses the final lead head.
 
 This program is of particular use in command invocations in 
-\verb+--require+\loi{require} or \verb+-R+\oi{R} options.
+\verb+-Q+\oi{Q} or \verb+-R+\oi{R} options.
 A example of this was given in \sref{efficiency} as an illustration
 of the degree to which unnecessary command invocations slow \methsearch\ down.
 Nevertheless, if \methsearch's built-in falseness or music analysis isn't 
@@ -3445,7 +3497,7 @@ Whitespace is not permitted in the place notation, and any text after
 the first whitespace character on the line is ignored.\footnote{%
 \methsearch\ considers the space, tab, carriage return and line feed
 to be whitespace.}\index{whitespace}
-When invoked with the \verb+--filter+ option (\sref{misc_opt}), 
+When invoked with the \verb+-I+ option (\sref{misc_opt}), 
 \methsearch requires a method stream on standard input.\index{standard input}
 Frequently, \methsearch's output is a method stream — specifically
 whenever a \verb+-R+ option starting with \verb+$p+ or \verb+$q+ is given
@@ -3459,7 +3511,8 @@ and \verb+gsiril+ (\sref{gsirilmeth}) programs,
 as well as \methsearch\ itself (\sref{misc_opt}),
 can be used as a filter on methods.  
 In each case, this behaviour is activated with the program's \verb+--filter+ 
-option.   The programs all read a method stream from standard input,
+option (which for \methsearch\ itself, can be abbreviated to \verb+-I+).\oi{I}  
+The programs all read a method stream from standard input,
 test whether each method has the desired properties, and if so, writes
 the method to its output method stream.
 
@@ -3501,7 +3554,7 @@ type.  For example, the following command searches for asymmetric plain minor
 methods that can actually produce an extent.%
 \index{example!minor, asymmetric extnts}
 \begin{Verbatim}[commandchars=@~~]
-methsearch -b6 -Fe --require='$y eq ""' -rf -m'*2' @hfill\
+methsearch -b6 -Fe -Q'$y eq ""' -rf -m'*2' @hfill\
   | touchsearch -b6 --filter -r -l720 -Cb=4 -Cs=234 --limit=1
 \end{Verbatim}
 
@@ -3858,12 +3911,18 @@ and \verb+-M2rhalflead+.
 \item Method identifiers: \verb+$i+ (\sref{variables}).
 \item Filter payloads: \verb+$a+ (\sref{misc_opt}, \sref{variables}). 
 \item Filter inverting: \verb+--invert-filter+ (\sref{misc_opt}).
-\item Delight methods: \verb+--delight+, \verb+--3rds-place-delight+, 
-  \verb+--4ths-place-delight+ (\sref{stage_class}).
+\item Delight methods: \verb+--delight+, and (for minor)
+\verb+--3rds-place-delight+ and \verb+--4ths-place-delight+ 
+(\sref{stage_class}).
+\item Historical classes: \verb+--strict-delight+, \verb+--exercise+, 
+\verb+--strict-exercise+, \verb+--pas-alla-tria+ and \verb+--pas-alla-tessera+
+(\sref{hist_class}).
 \item Fourths-place doubles lead-end symbols are now supported in \verb+$D+ 
   (\sref{fmtstr}).
 \item The \verb+^+ operator is now overloaded to do conjugation 
   (\sref{rowexpr}).
+\item The \verb+--require+ and \verb+--filter+ options can now be written
+  \verb+-Q+ and \verb+-I+, respectively.
 \end{list}
 
 \clearpage
@@ -3871,7 +3930,10 @@ and \verb+-M2rhalflead+.
 \printindex[default][\normalsize 
 %\addcontentsline{toc}{chapter}{Index}
 Underlined page references refer to the main definition of that option
-or variable.
+or variable.  Subjects are not generally indexed when they appear
+in the discussion of a similarly-named option.  For example, `surprise 
+methods' do not appear in the index because they are only discussed in 
+conjunction with the \texttt{--surprise} option.
 ]
 
 \normalsize

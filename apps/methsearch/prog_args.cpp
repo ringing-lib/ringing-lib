@@ -259,7 +259,7 @@ void arguments::bind( arg_parser &p )
 	   R_fmt_str ) );
 
   p.add( new strings_opt
-	 ( '\0', "require", 
+	 ( 'Q', "require", 
 	   "Require EXPR to be true", "EXPR",
 	   require_strs ) );
 
@@ -339,6 +339,31 @@ void arguments::bind( arg_parser &p )
            "For minor only, require fourths as the treble moves between 2-3",
            delight4 ) );
 
+  p.add( new boolean_opt
+         ( '\0', "strict-delight",
+           "Require internal places between all but one dodging positions",
+           strict_delight ) );
+
+  p.add( new boolean_opt
+         ( '\0', "exercise",
+           "Require internal places between all but two or fewer dodging "
+           "positions", exercise ) );
+
+  p.add( new boolean_opt
+         ( '\0', "strict-exercise",
+           "Require internal places between exactly all but two dodging "
+           "positions", strict_exercise ) );
+
+  p.add( new boolean_opt
+         ( '\0', "pas-alla-tria",
+           "Require internal places between exactly all but three dodging "
+           "positions", pas_alla_tria ) );
+
+  p.add( new boolean_opt
+         ( '\0', "pas-alla-tessera",
+           "Require internal places between exactly all but four dodging "
+           "positions", pas_alla_tessera ) );
+
   p.add( new integer_opt
 	 ( 'G', "treble-dodges", 
 	   "Look for methods where the treble dodges NUM times in each "
@@ -397,7 +422,7 @@ void arguments::bind( arg_parser &p )
            node_count ) );
 
   p.add( new boolean_opt
-         ( '\0', "filter",
+         ( 'I', "filter",
            "Act as a filter on standard input rather than searching",
            filter_mode ) );
 
@@ -592,7 +617,8 @@ bool arguments::validate( arg_parser &ap )
       return false;
     }
 
-  if ( surprise + treble_bob + delight + delight3 + delight4 >= 2 ) 
+  if ( surprise + treble_bob + delight + delight3 + delight4 + strict_delight +
+       exercise + strict_exercise + pas_alla_tria + pas_alla_tessera >= 2 ) 
     {
       ap.error( "The surprise, treble bob and delight options are "
                 "mututally exclusive");
@@ -605,7 +631,18 @@ bool arguments::validate( arg_parser &ap )
       return false;
     }
 
-  if ( surprise || treble_bob || delight || delight3 || delight4 ) 
+  if ( !sym && ( strict_delight || exercise || strict_exercise || 
+                 pas_alla_tria || pas_alla_tessera ) )
+    {
+      ap.error( "Historical delight, exercise, pas-alla-tria and "
+                "pas-alla-tessera classes are only well-defined for "
+                "palindromic methods" );
+      return false;
+    }
+
+  if ( surprise || treble_bob || delight || delight3 || delight4 ||   
+       strict_delight || exercise || strict_exercise || pas_alla_tria || 
+       pas_alla_tessera ) 
     {
       if ( ! hunt_bells )   
         {
@@ -790,6 +827,14 @@ bool arguments::validate( arg_parser &ap )
     {
       ap.error( "Double, rotational or mirror symmetry require the treble "
                 "path to invariant under this symmetry" );
+      return false;
+    }
+
+
+  if ( lead_len && formats_max_lead_offset() > lead_len ) 
+    {
+      ap.error( "Format contains a $r or $h offset beyond the end of the "
+                "lead" );
       return false;
     }
 

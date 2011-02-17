@@ -800,18 +800,77 @@ bool searcher::try_midlead_change( const change &ch )
       if ( args.delight4 && ( posn == 1 && !ch.internal() ||
                               posn == 3 &&  ch.internal() ) )
         return false;
+         
+      // Are we at the last cross-section that is chosen independently?
+      // (Cross-sections that are determined purely by copying or reflecting 
+      // a previous change do not pass through this code path.)  If so, 
+      // determine whether the method is a valid delight method (or exercise
+      // or whatever).   Surprise and treble bob are handled above and are
+      // much easier as they're the all or nothing cases.  The cases here 
+      // require us to counting how many cross-sections have internal places.
+      //
+      // TODO: Pas-alla-tessera (and the others less so) can be sped up
+      // by testing this at each division end.
+      //
+      if ( args.delight || args.exercise ||
+           args.strict_delight || args.strict_exercise ||
+           args.pas_alla_tria || args.pas_alla_tessera )
+      {
+        const int f = args.treble_front, b = args.treble_back, p = posn;
 
-      if ( args.delight && posn == args.treble_back - 3 ) {
-        bool is_s = true, is_t = true;
-        for ( int i = div_len-1; i < depth; i += div_len ) {
-          is_t = ( is_t && !m[i].internal() );
-          is_s = ( is_s &&  m[i].internal() );
+        if ( // If we're palindromic or glide symmetric (but not both) 
+             // the last independent cross-section is when the treble is 
+             // e.g. in 10-11 for maximus.
+             (args.sym ^ args.doubsym) && p == b - 3 ||
+             // If we're maximally symmetric, it's when the treble's in 
+             // 6-7 for fourteen or maximus, or 4-5 for royal or major.
+             args.sym && args.doubsym && p == (f + (b-f+1)/2 - 1)/2*2-1 ||
+             // If we're rotationally symmetric, it's when the treble's in 
+             // 6-7 down for max or royal, 4-5 for major or minor
+             args.skewsym && p == (f + (b-f+1)/2)/2*2 - 1 && depth > hl_len ||
+             // If we're asymmetric, the treble is in 2-3 on the way down.
+             !args.sym && !args.doubsym && !args.skewsym 
+                       && p == f && depth > hl_len ) 
+        {
+          // Count how many external (i.e. 1N) cross-sections there are:
+          int external_cross_sections = 0, cross_sections = 0;
+          for ( int i = div_len-1; i < depth; i += div_len ) 
+          {
+            if (i == hl_len-1) 
+              continue;  // Don't include the h.l.
+  
+            // If we have double symmetry, count the cross-section twice:
+            int value = 1;
+            if ( args.skewsym && i%hl_len != hl_len/2 - 1 ) value = 2;
+     
+            if (!m[i].internal()) external_cross_sections += value;
+            cross_sections += value;
+          }
+          {
+            int value = 1;
+            if ( args.skewsym && (b-f)%4 == 1 ) value = 2;
+            if (!ch.internal()) external_cross_sections += value;
+            cross_sections += value;
+          }
+  
+          if (external_cross_sections == 0 ||            // Surprise
+              external_cross_sections == cross_sections) // Treble Bob
+            return false;
+  
+          if (args.strict_delight && external_cross_sections != 1)
+            return false;
+          if (args.exercise && external_cross_sections < 2)
+            return false;
+          if (args.strict_exercise && external_cross_sections != 2)
+            return false;
+          if (args.pas_alla_tria && external_cross_sections != 3)
+            return false;
+          if (args.pas_alla_tessera && external_cross_sections != 4)
+            return false;
         }
-        if ( is_t && !ch.internal() || is_s && ch.internal() ) 
-          return false;
       }
     }
-
+  
   // Are we more than half way through the current division? 
   if ( args.sym_sects && !intersection && depth - div_start >= cur_div_len/2 )
     {

@@ -150,6 +150,7 @@ static bool have_names = false;
 static bool have_cc_ids = false;
 static bool have_old_lhcodes = false;
 static bool have_payloads = false;
+static int  max_lead_offset = 0;
 RINGING_END_ANON_NAMESPACE
 
 bool formats_have_falseness_groups() { return have_falseness_groups; }
@@ -157,6 +158,7 @@ bool formats_have_names() { return have_names; }
 bool formats_have_cc_ids() { return have_cc_ids; }
 bool formats_have_payloads() { return have_payloads; }
 bool formats_have_old_lhcodes() { return have_old_lhcodes; }
+int  formats_max_lead_offset() { return max_lead_offset; }
 
 // -------------------------------------------------------------
 
@@ -476,6 +478,9 @@ format_string::format_string( const string &infmt,
 	    case 'D':
 	      have_old_lhcodes = true;
 	      break;
+
+            case 'h': case 'r':
+              max_lead_offset = max( max_lead_offset, num_opt );
 	    }
 
 	  // $[ options are converted into $N* options by the ']' 

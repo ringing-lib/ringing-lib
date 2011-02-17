@@ -106,6 +106,11 @@ struct arguments
   init_val<bool,false> delight;
   init_val<bool,false> delight3;
   init_val<bool,false> delight4;
+  init_val<bool,false> strict_delight;
+  init_val<bool,false> exercise;
+  init_val<bool,false> strict_exercise;
+  init_val<bool,false> pas_alla_tria;
+  init_val<bool,false> pas_alla_tessera;
 
   init_val<bool,false> same_place_parity;
   init_val<bool,true>  true_trivial;

@@ -1,5 +1,6 @@
 // -*- C++ -*- output.h - generic classes to handle output of methods
-// Copyright (C) 2002, 2003, 2004, 2010 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003, 2004, 2010, 2011 
+// Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -45,5 +46,7 @@ private:
   class impl2;
 };
 
+// The string '<ERROR>' that we use to signal run-time errors in expressions.
+extern char const* expr_error_string;
 
 #endif // METHSEARCH_OUTPUT_INCLUDED

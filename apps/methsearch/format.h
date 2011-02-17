@@ -1,5 +1,6 @@
 // -*- C++ -*- format.h - classes to handle format specifiers
-// Copyright (C) 2002, 2003, 2004, 2010 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003, 2004, 2010, 2011 
+// Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -71,6 +72,7 @@ bool formats_have_names();
 bool formats_have_cc_ids();
 bool formats_have_payloads();
 bool formats_have_old_lhcodes();
+int  formats_max_lead_offset();
 
 
 // Exception to do exit(0) but calling destructors
