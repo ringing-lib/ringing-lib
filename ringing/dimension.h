@@ -69,10 +69,10 @@ public:
   bool operator!=(int i) const { return !(*this == i); }
 
   dimension& operator*=(int i) { n *= i; reduce(); return *this; }
-  dimension operator*(int i) { dimension dim = *this; dim *= i; return dim; }
+  dimension operator*(int i) const { dimension dim = *this; dim *= i; return dim; }
   dimension& operator/=(int i) { d *= i; reduce(); return *this; }
-  dimension operator/(int i) { dimension dim = *this; dim /= i; return dim; }
-  dimension operator-() { dimension dim = *this; dim.n = -dim.n; return dim; }
+  dimension operator/(int i) const { dimension dim = *this; dim /= i; return dim; }
+  dimension operator-() const { dimension dim = *this; dim.n = -dim.n; return dim; }
 
 private:
   class unit_names_map : public map<string, units> {
