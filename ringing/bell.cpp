@@ -1,5 +1,5 @@
 // -*- C++ -*- bell.cpp - A simple class representing a bell's position
-// Copyright (C) 2001, 2008, 2009 Martin Bright <martin@boojum.org.uk>
+// Copyright (C) 2001, 2008, 2009, 2011 Martin Bright <martin@boojum.org.uk>
 // and Richard Smith <richard@ex-parrot.com>
 
 // This library is free software; you can redistribute it and/or
@@ -68,10 +68,17 @@ bell::invalid::invalid()
 bool bell::is_symbol(char c)
 {
   c = toupper(c);
-  bell b;
-  for ( ; b.x < MAX_BELLS && symbols[b.x] != c; ++b.x)
-    ;
-  return b.x != MAX_BELLS;
+  if ( strchr(symbols, c) ) return true;
+
+  // I/1 and O/0 ambiguities:
+  switch (c) {
+    case 'I': case '1':
+      return ( !strchr(symbols, 'I') ^ !strchr(symbols, '1') );
+    case 'O': case '0':
+      return ( !strchr(symbols, 'O') ^ !strchr(symbols, '0') );
+  }
+ 
+  return false;
 }
 
 bell bell::read_char(char c) 
@@ -80,12 +87,20 @@ bell bell::read_char(char c)
   bell b;
   for ( ; b.x < MAX_BELLS && symbols[b.x] != c; ++b.x)
     ;
-  if (b.x == MAX_BELLS)
+  if (b.x == MAX_BELLS) {
+    // I/1 and O/0 ambiguities:
+    switch (c) {
+      case 'I': if (is_symbol('1')) return read_char('1');
+      case '1': if (is_symbol('I')) return read_char('I');
+      case 'O': if (is_symbol('0')) return read_char('0');
+      case '0': if (is_symbol('O')) return read_char('O');
+    }
 #if RINGING_USE_EXCEPTIONS
     throw invalid();
 #else
     b.x = MAX_BELLS + 1;
 #endif
+  }
   return b;
 }
 
