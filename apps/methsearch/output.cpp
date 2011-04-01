@@ -198,6 +198,10 @@ string method_properties::impl2::get_property( int num_opt,
 	  os << setw(num_opt) << m.huntbells(); 
 	  break;
 
+	case 'B': 
+	  os << setw(num_opt) << m.bells(); 
+	  break;
+
 	case 'd': 
 	  os << m.lhcode(); 
 	  break;

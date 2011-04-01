@@ -422,7 +422,7 @@ format_string::format_string( const string &infmt,
 	    case 'C': case 'S': case 'M': case 'h': case 'F':
 	    case 'o': case 'd': case 'u': case '[': case '(':
 	    case 'y': case 'O': case ')': case 'L': case 'D':
-            case 'P': case 's': case 'a': case '?':
+            case 'P': case 's': case 'a': case '?': case 'B':
 	      // Can be used in either
 	      break;
 
@@ -437,7 +437,7 @@ format_string::format_string( const string &infmt,
 	    {
 	    case '%': case '$': case 'c': case 'b': case 'M': 
 	    case 'o': case 'u': case ')': case 'L': case 's':
-            case 'i': case '#': case '?':
+            case 'i': case '#': case '?': case 'B':
 	      // Option may but needn't have a number
 	      break;
 

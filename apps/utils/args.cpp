@@ -1,5 +1,5 @@
 // -*- C++ -*- args.cpp - argument-parsing things
-// Copyright (C) 2001, 2002, 2003, 2004, 2005, 2008, 2010
+// Copyright (C) 2001, 2002, 2003, 2004, 2005, 2008, 2010, 2011
 // Martin Bright <martin@boojum.org.uk>
 // and Richard Smith <richard@ex-parrot.com>
 
@@ -103,6 +103,22 @@ void arg_parser::set_default(const option* o) {
 }
 
 bool arg_parser::parse(int argc, char const* const* argv) const
+{
+  extern int expandargv (arg_parser const& ap, int *argcp, char ***argvp);
+  extern void freeargv (arg_parser const& ap, char **vector);
+
+  // Handle response files (i.e. arguments beginning with @)
+  bool expanded = expandargv( *this, &argc, const_cast<char***>(&argv) );
+
+  try {
+    do_parse( argc, argv );
+  } catch (...) {
+    if (expanded) freeargv( *this, const_cast<char**>(argv) );
+    throw;
+  }
+}
+
+bool arg_parser::do_parse(int argc, char const* const* argv) const
 {
   int i;
   bool done_args = false;

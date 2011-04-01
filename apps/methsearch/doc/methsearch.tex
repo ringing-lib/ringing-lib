@@ -13,6 +13,9 @@
 \setromanfont[Mapping=tex-text]{Linux Libertine O}
 \setsansfont[Mapping=tex-text]{Linux Biolinum O}
 
+
+\chardef\vapost="0027
+
 % Sans-serif chapter headings
 \usepackage{sectsty}
 \allsectionsfont{\rm\sffamily} % \rm disables bold
@@ -35,6 +38,8 @@
 % Blackboard bold in maths
 \usepackage{amsmath}
 %\usepackage{amsfonts}
+
+\usepackage{upquote}
 
 % URLs
 \usepackage{url}
@@ -124,9 +129,11 @@
 
 This chapter gives a brief introduction to \methsearch\ --- what it is,
 what it can do, and who it's aimed at (\sref{what_is_it}).  
-This is followed by an introduction to command line aimed particularly 
-at those unfamiliar with it (\sref{cli}), and
-a slightly non-trivial worked example (\sref{eg_doubles}).  Finally are
+This is followed by an introduction to the command line (\sref{cli}),
+aimed particularly at those unfamiliar with it; it can safely be
+skipped by those familiar with Unix-style command line interfaces.  
+Finally, are 
+a slightly non-trivial worked example (\sref{eg_doubles}),
 details of how to obtain \methsearch\ (\sref{obtain}), and its
 current development status (\sref{dev_status}).
 
@@ -309,7 +316,7 @@ two adjacent places via \verb+-j2+.
 This allows the \verb+12+ or \verb+1256+ changes, but not \verb+1236+.
 Similarly, \verb+-j3+ allows \verb+1236+ but not \verb+1234+.  
 Because the \verb+-j+ option has an argument, albeit an optional one, 
-if it one of several options merged together on the command line, it 
+if it is one of several options merged together on the command line, it 
 must be last.  Thus `\verb+-drj+' is equivalent to `\verb+-rdj+', but
 specifying `\verb+-djr+' would result in an error as \verb+-j+ is not
 a boolean option.
@@ -325,6 +332,8 @@ and `\verb+-b4+' can be written `\verb+--bells=4+'.
 Certain rarely-used options only have a long form: for example,
 the option to require regular (i.e.\ Plain Bob) half-leads is 
 \verb+--regular-hls+ --- there is no equivalent short form.
+Perhaps unsurprisingly, it is not possible to merge together the long forms 
+of arguments in a way analogous to \verb+-drj+.
 
 
 \subsection{Output and redirection}\index{shell!redirection|(}
@@ -399,15 +408,15 @@ methsearch --help
 \end{Verbatim}
 \loi{help}
 
-This users' guide aims to provide more extensive documentation as 
+This user's guide aims to provide more extensive documentation as 
 well as some worked examples of how it can be used in real world situations.
 Don't be afraid to experiment.  If you're unlucky, you might
 ask \methsearch\ to perform a search that will never complete.  
 The \verb+-u+ option provides a good way of monitoring how quickly 
 the search is progressing.  If the search looks like it is going to take
 too long, press Ctrl-C to abort it, and try again with additional constraints.
-Finally, if you're stuck, drop me an email.  
-My email address is on the title page.
+Finally, if you're stuck, drop me an email:
+my email address is on the title page.
 
 \section{An example — doubles methods}\label{eg_doubles}
 \index{example!doubles, plain|(}
@@ -423,16 +432,15 @@ and which are not bobbed leads of other methods.
 \end{quote}
 Producing such a list is exactly the sort of task for which 
 \methsearch\ is ideally suited, but first we need to translate the problem
-into a form that methsearch can understand:
-
+into a form that methsearch can understand.  On a Windows system, we would
+type:
 \begin{Verbatim}[commentchar=~]
 methsearch -b5 -sAC -R"$q\t$D" -Q"$o>=3" -m"*(1|2|23)"
 ~ -- a comment to get vim's syntax highlighter back in sync:  $
 \end{Verbatim}
-
-Note: in most Linux shells, 
+And on most Unix systems (including most Linux shells), 
 the double quotes around the \verb+-R+ and \verb+-Q+ options' arguments 
-\textit{must} be replaced with single quotes.%
+\textit{must} be replaced with single quotes;%
 \footnote{This is because the shell 
 \textit{interpolates}\index{shell!interpolation} text in double quotes,
 but not in single quotes,  and will therefore interpret 
@@ -441,6 +449,13 @@ run \methsearch\ with the value of this variable (probably nothing) instead.
 If you see an error message saying 
 \texttt{Binary operator ">=" needs first argument}
 this is likely the cause.}
+it would be good practice to do it with \verb+-m+ option too:
+\begin{Verbatim}[commentchar=~]
+methsearch -b5 -sAC -R'$q\t$D' -Q'$o>=3' -m'*(1|2|23)'
+\end{Verbatim}
+Note that the \verb+'+ character in many of the examples here is the character
+you get by pressing the apostrophe key on your keyboard.  Some systems will
+display it as a \texttt{\vapost}.
 
 Here, \verb+-b5+ means doubles (i.e.\ on five bells), \verb+-s+ means 
 symmetric about the treble's lead and lie, \verb+-A+ means include methods
@@ -636,7 +651,8 @@ constraining the lead ends and heads (\sref{le_lh}), and half leads
 (\sref{hls}), requiring specific symmetries (\sref{symmetry}),
 partially specifying the method's place notation (\sref{pn}),
 configuring \methsearch's output (\sref{output_opt}), and other 
-miscellaneous options (\sref{misc_opt}).
+miscellaneous options (\sref{misc_opt}).  Options can also be 
+stored in response files (\sref{respfile}).
 
 \section{Stage and class}\label{stage_class}
 
@@ -1509,6 +1525,48 @@ this option imposes a necessary (but not sufficient) criterion for the
 existence of a true bobs-only extent.  This is particularly relevant in minor.
 This option is discussed further in \sref{extent}.
 
+\section{Response files}\label{respfile}\index{response files|(}
+
+\begin{tabularx}{\textwidth}{lX}
+\texttt{@}\textit{filename}&Import commands from the file
+\end{tabularx}
+
+In addition to taking command line options on the command line, \methsearch\ 
+can read them from a file which is then referenced on the command line by
+prefixing the filename with an \verb+@+.  Such files are called 
+\textit{response files}, and are fairly common on Windows where they can be 
+used to work around deficiencies in the Windows shell.  For example, suppose
+there's a file called \verb+legal-methods+ containing the following text:
+\begin{Verbatim}
+-p4 -Q"$u < $B-$u"
+\end{Verbatim}
+This can be referenced on the command line, with the effect that the 
+following two commands are equivalent:
+\begin{Verbatim}
+methsearch -b6 -s @legal-methods
+methsearch -b6 -sp4 -Q"$u < $B-$u"
+\end{Verbatim}
+
+In addition to the fact that this allows commonly-used groups of 
+options to be saved with a meaningful name so they can be reused,
+this also makes it easier to write complex searches so that they can
+be run equally easily on Windows and on various Unix shells.
+
+Options in response files can be quoted using either single or double
+quotes (\verb+'+ or \verb+"+) --- unlike in most popular shells, both forms of 
+quotes are treated the same.\footnote{In particular, there is no need to 
+escape a \verb+$+ with a \verb+\+ inside double quotes as there is in most 
+Unix shells,\index{shell!escaping} although it is harmless to do so.}
+Thus in the example above, in most Unix shells, the quotes on the command
+line need replacing with single quotes, but in the response file, either
+can be used.\index{shell!quotation}
+Single quotes can be nested within double quotes, or vice versa; if a
+additional levels of quotes are needed, the innermost ones can be escaped
+from the response file by preceding them with a \verb+\+, as in
+most shells. 
+
+
+\index{response files|)}
 
 \chapter{Formatted output}\label{fmtout}
 \index{output|(}
@@ -1590,6 +1648,7 @@ typed in on the command line reach \methsearch\ in their intended form.
   \index{blows, maximum consecutive!printing|see{\texttt{\$b}}}\\
 \D\No\F{o}&The number of leads per course\\
 \D\No\F{u}&The number of hunt bells\\
+\D\No\F{B}&The number of bells\\
 \D\F{d}&The lead head code (modern symbol)\\
 \D\F{D}&The lead head code (traditional symbol)
   \index{lead head!code|see{\texttt{\$d} \textit{and} \texttt{\$D}}}\\
@@ -2069,7 +2128,7 @@ from the shell.  This is done by prefixing them with
 a backslash\index{backslash}: 
 \verb+-Q"$n ne \"Untitled\""+.
 
-\subsection{Expression type system}\label{type_sys}\index{type system}
+\subsection{Type system}\label{type_sys}\index{type system}
 
 Expressions in \methsearch\ are \textit{weakly typed}\index{weak typing}. 
 This means that strings are integers are converted freely as required.
@@ -3068,6 +3127,12 @@ to write this example more concisely and informatively as:
 -Mlead="<8234567>*5634827" -M"<4-runs>" -M10:"<queens>"
 \end{Verbatim}
 
+More powerful music analysis of touches can be achieved by getting 
+\methsearch\ to invoke \texttt{gsiril} to print the touch.  This is 
+discussed further in \sref{gsirilrow}; there are often several ways to
+achieve the desired analysis and the discussion in \sref{efficiency} may
+be helpful in understanding the relative efficiencies of each way.
+
 \section{Falseness and music}
 
 The \verb+-M+ options are entirely independent from the \verb+-F+ options.
@@ -3983,6 +4048,8 @@ and \verb+-M2rhalflead+.
 \item The \verb+--require+ and \verb+--filter+ options can now be written
   \verb+-Q+ and \verb+-I+, respectively (\sref{misc_opt}). 
 \item Command exit status: \verb+$?+ (\sref{exitstatus}).
+\item Number of bells: \verb+$B+ (\sref{variables}).
+\item Response files: \verb+@+\textit{filename} (\sref{respfile}).
 \end{list}
 
 \clearpage

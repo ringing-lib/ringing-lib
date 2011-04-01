@@ -1,5 +1,5 @@
 // -*- C++ -*- args.h - argument-parsing things
-// Copyright (C) 2001, 2002, 2003, 2008, 2010 
+// Copyright (C) 2001, 2002, 2003, 2008, 2010, 2011
 // Martin Bright <martin@boojum.org.uk>
 // and Richard Smith <richard@ex-parrot.com>
 
@@ -102,6 +102,7 @@ public:
 
 private:
   void wrap(const string& s, int l, int r, int c) const;
+  bool do_parse(int argc, char const* const* argv) const;
 
   // Unimplemented copy constructor & assignment operator
   arg_parser(const arg_parser&);

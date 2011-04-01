@@ -34,7 +34,7 @@ endif
 
 libstuff_a_SOURCES = args.cpp args.h tokeniser.cpp tokeniser.h init_val.h \
 stringutils.h stringutils.cpp exec.cpp exec.h row_calc.cpp row_calc.h \
-console_stream.h console_stream.cpp $(additional)
+console_stream.h console_stream.cpp argv.cpp $(additional)
 
 EXTRA_libstuff_a_SOURCES = rlstream.cpp rlstream.h
 
