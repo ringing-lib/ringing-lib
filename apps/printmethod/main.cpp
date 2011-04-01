@@ -1,5 +1,5 @@
 // main.cpp - Entry point for printmethod
-// Copyright (C) 2008, 2009, 2010 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2008, 2009, 2010, 2011 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -61,6 +61,7 @@ struct arguments
   init_val<bool,false> whole_course;
 
   init_val<int,0>      init_rounds;
+  init_val<int,0>      final_rounds;
   init_val<bool,false> omit_final;
   init_val<bool,false> omit_start;
 
@@ -111,6 +112,11 @@ void arguments::bind( arg_parser& p )
          ( 'r', "init-rounds",
            "Start with NUM whole blows of rounds", "NUM",
             init_rounds ) );
+
+  p.add( new integer_opt
+         ( 'f', "final-rounds",
+           "Finish with NUM whole blows of rounds", "NUM",
+            final_rounds ) );
 
   p.add( new row_opt
          ( 's', "start", 
@@ -271,6 +277,9 @@ int main(int argc, char* argv[])
   } while ( r != args.startrow && args.whole_course );
 
   if (!args.omit_final && args.meth.size())
+    print_row(args, r);
+
+  for ( int i=0; i<args.final_rounds*2; ++i)
     print_row(args, r);
 }
 
