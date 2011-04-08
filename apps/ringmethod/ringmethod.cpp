@@ -1,5 +1,5 @@
 // ringmethod.cpp - Create audio output of ringing.
-// Copyright (C) 2009, 2010 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2009, 2010, 2011 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -577,13 +577,6 @@ void arguments::bind( arg_parser& p )
 
 bool arguments::validate( arg_parser& ap )
 {
-  if ( bells >= int(bell::MAX_BELLS) )
-    {
-      ap.error( make_string() << "The number of bells must be less than "
-                << bell::MAX_BELLS );
-      return false;
-    }
-
   for ( bell b=0; b<bells; ++b )
     if ( striking.find(b) == striking.end() ) 
       striking[b] = offset();
