@@ -1,5 +1,5 @@
 // rowcalc.cpp - Entry point for row calculator
-// Copyright (C) 2009, 2010
+// Copyright (C) 2009, 2010, 2011
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -73,10 +73,10 @@ void arguments::bind( arg_parser& p )
 
 bool arguments::validate( arg_parser& ap )
 {
-  if ( bells < 0 || bells >= int(bell::MAX_BELLS) )
+  if ( bells < 0 || bells > int(bell::MAX_BELLS) )
     {
       ap.error( make_string() << "The number of bell must be greater than "
-                "0 and less than " << bell::MAX_BELLS );
+                "0 and less than " << bell::MAX_BELLS+1 );
       return false;
     }
   return true;
@@ -122,6 +122,8 @@ bool evaluate_expr( int bells, string const& expr )
 
 int main( int argc, char *argv[] )
 {
+  bell::set_symbols_from_env();
+
   arguments args( argc, argv );
 
   if ( args.expr.empty() ) {

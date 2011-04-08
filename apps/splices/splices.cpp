@@ -1,5 +1,5 @@
 // -*- C++ -*- splices.cpp - utility to find splices between methods
-// Copyright (C) 2010 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2010, 2011 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -142,10 +142,10 @@ bool arguments::validate( arg_parser& ap )
       return false;
     }
 
-  if ( bells >= int(bell::MAX_BELLS) )
+  if ( bells > int(bell::MAX_BELLS) )
     {
       ap.error( make_string() << "The number of bells must be less than "
-                << bell::MAX_BELLS );
+                << bell::MAX_BELLS+1 );
       return false;
     }
 
@@ -558,6 +558,8 @@ void splices::find_splices( library const& lib )
 
 int main( int argc, char *argv[] )
 {
+  bell::set_symbols_from_env();
+
   arguments args(argc, argv);
 
   splices spl( args );

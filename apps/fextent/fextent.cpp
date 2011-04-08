@@ -1,5 +1,5 @@
 // -*- C++ -*- fexent.cpp - search of maximal sets of mutually true leads
-// Copyright (C) 2004, 2005 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2004, 2005, 2011 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -411,9 +411,9 @@ bool arguments::validate( arg_parser& ap )
     return false;
   }
 
-  if ( bells < 4 || bells >= int(bell::MAX_BELLS) ) {
+  if ( bells < 4 || bells > int(bell::MAX_BELLS) ) {
     ap.error( make_string() << "The number of bells must be between 4 and " 
-	      << bell::MAX_BELLS-1 << " (inclusive)" );
+	      << bell::MAX_BELLS << " (inclusive)" );
     return false;
   }
 
@@ -1512,6 +1512,8 @@ bool state::perturb()
 int main( int argc, char* argv[] )
 {
   try {
+    bell::set_symbols_from_env(); 
+
     arguments args( argc, argv );
 
     scoped_pointer< state > s;

@@ -573,6 +573,8 @@ bool myopt::process(const string& arg, const arg_parser& ap) const
 
 int main(int argc, char *argv[])
 {
+  bell::set_symbols_from_env();
+
   // Set up some default arguments
   args.width.n = 210; args.width.d = 1; args.width.u = dimension::mm;
   args.height.n = 297; args.height.d = 1; args.height.u = dimension::mm;

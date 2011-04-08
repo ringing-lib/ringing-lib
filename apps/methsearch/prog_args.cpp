@@ -521,10 +521,10 @@ bool arguments::validate( arg_parser &ap )
       return false;
     }
 
-  if ( bells < 2 || bells >= int(bell::MAX_BELLS) ) 
+  if ( bells < 2 || bells > int(bell::MAX_BELLS) ) 
     {
       ap.error( make_string() << "The number of bells must be between 2 and " 
-		<< bell::MAX_BELLS-1 << " (inclusive)" );
+		<< bell::MAX_BELLS << " (inclusive)" );
       return false;
     }
 

@@ -1,5 +1,5 @@
 // -*- C++ -*- musgrep.cpp - utility to grep for music in an extent
-// Copyright (C) 2009, 2010 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2009, 2010, 2011 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -151,6 +151,8 @@ void output_counter( ostream& os, bool& need_sep, int counter )
 
 int main( int argc, char *argv[] )
 {
+  bell::set_symbols_from_env();
+
   arguments args;
 
   {

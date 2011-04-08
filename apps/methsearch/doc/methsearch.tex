@@ -1140,7 +1140,20 @@ At its simplest, a method mask can just be the complete place notation for
 a method which restricts \methsearch\ to looking at just that one method.
 
 The \textit{place notation} can be expressed in any standard form.  
-Bells are represented using the following case-insensitive alphabet.
+Bells are represented using the following case-insensitive alphabet.%
+\footnote{This alphabet can be overriden with the \verb+BELL_SYMBOLS+
+environment variable.\fspecd{BELL\_SYMBOLS}  
+For example, setting \verb+BELL_SYMBOLS="123456789ABCDEF"+
+tells \methsearch\ to use hexadecimal digits instead of the conventional 
+symbols to represent bells (on up to 15 bells).  
+The \verb+BELL_SYMBOLS+ variable must be at least
+as long as the number of bells specified with \verb+-b+.  If the variable
+is entirely in upper case, then bell symbols are considered to be case
+insensitive; if it is mixed case, or partly lower case, they are assumed
+to be case sensitive.  The default alphabet is \textit{not} compatible with
+the alphabet used in Abel\index{Abel} on 20 or more bells as Abel uses 
+\verb+I+ to represent bell number 20.  The convention used by \methsearch\ is
+the one used in the Central Council's method libraries.}
 \index{bells!symbols for} 
 
 {\footnotesize\begin{tabular}{cccccccccc cccccccc}
@@ -3396,8 +3409,11 @@ of the rows on a given number of bells.  It accepts the following options:
 For example, \verb+extent -b8 -h1 -t2 -i+ lists the 60{} 
 in-course\index{parity} tenors-together\index{tenors-together} lead heads
 of the form \verb+1.....78+.  The rows are listed in lexicographic order%
-\index{lexicographic order}: \verb+12345678+, \verb+12346578+, 
-\verb+12354678+, \ldots, \verb+16543278+.
+\index{lexicographic order}:%
+%\footnote{Strictly, this is not quite lexicographic 
+%order as \verb+E+ and \verb+T+ (for 11 and 12) are found before \verb+A+ (13).
+%So \verb+1234567890ETA+ comes before \verb+1234567890EAT+.}
+\verb+12345678+, \verb+12346578+, \verb+12354678+, \ldots, \verb+16543278+.
 
 It is rare to want to use this program in conjunction with \methsearch.
 However, one use for this program is, in conjuction with \texttt{musgrep}, for
@@ -4050,6 +4066,8 @@ and \verb+-M2rhalflead+.
 \item Command exit status: \verb+$?+ (\sref{exitstatus}).
 \item Number of bells: \verb+$B+ (\sref{variables}).
 \item Response files: \verb+@+\textit{filename} (\sref{respfile}).
+\item The \verb+$BELL_SYMBOLS+ environment variable allows the bells used
+  to be redefined.
 \end{list}
 
 \clearpage

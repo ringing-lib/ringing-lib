@@ -42,12 +42,13 @@ const double pi = 3.14159265358979323844;
 
 class harmonic {
 public:
-  harmonic( double freq, double decay, int sample_rate );
+  harmonic( double ampl, double freq, double decay, int sample_rate );
 
   void strike();
   double sample();
 
 private:
+  double ampl;
   double freq;
   double decay;
   int sample_rate;
@@ -61,13 +62,13 @@ private:
   double x[3];
 };
 
-harmonic::harmonic( double freq, double decay, int sample_rate )
-  : freq(freq), decay(decay), sample_rate(sample_rate),
+harmonic::harmonic( double ampl, double freq, double decay, int sample_rate )
+  : ampl(ampl), freq(freq), decay(decay), sample_rate(sample_rate),
     phase( pi/2 ),
     cos_omega_dt( cos( 2*pi*freq/sample_rate ) ),
     decay_multiple( exp( - decay/sample_rate ) ),
-    x1_init( cos( phase + 2*pi*freq/sample_rate ) ),
-    x2_init( cos( phase ) )
+    x1_init( ampl * cos( phase + 2*pi*freq/sample_rate ) ),
+    x2_init( ampl * cos( phase ) )
 {
   x[0] = x[1] = x[2] = 0;
 }
@@ -88,7 +89,7 @@ double harmonic::sample()
 
 class bell_sound {
 public:
-  bell_sound( double freq, int sample_rate );
+  bell_sound( double ampl, double freq, int sample_rate );
 
   void strike();
   double sample();
@@ -97,15 +98,16 @@ private:
   vector<harmonic> x;
 };
 
-bell_sound::bell_sound( double freq, int sample_rate )
+bell_sound::bell_sound( double ampl, double freq, int sample_rate )
 {
   x.reserve(5);
 
-  x.push_back( harmonic( freq/4,            0.5, sample_rate ) ); // Hum
-  x.push_back( harmonic( freq/2,            2.5, sample_rate ) ); // Prime
-  x.push_back( harmonic( freq/pow(2,9/12.), 2.5, sample_rate ) ); // Tierce
-  x.push_back( harmonic( freq/pow(2,5/12.), 2.5, sample_rate ) ); // Quint
-  x.push_back( harmonic( freq,              2.5, sample_rate ) ); // Nominal
+  // Just add hum, prime, tierce, quint and nominal
+  x.push_back( harmonic( ampl, freq/4,            0.5, sample_rate ) );
+  x.push_back( harmonic( ampl, freq/2,            2.5, sample_rate ) );
+  x.push_back( harmonic( ampl, freq/pow(2,9/12.), 2.5, sample_rate ) );
+  x.push_back( harmonic( ampl, freq/pow(2,5/12.), 2.5, sample_rate ) );
+  x.push_back( harmonic( ampl, freq,              2.5, sample_rate ) );
 }
 
 
@@ -144,23 +146,24 @@ tower_sounds::tower_sounds( double tenor_freq, int num, int sample_rate )
   tenor_freq *= ipower( 2, num / 7 );
   bellv.reserve(num);
   int n = num % 7;
+  double a = 1, ax = 1.02;
   if (n == 0) n = 7;
   while (n <= num) {
     switch (n) {
     default:
-      bellv.push_back( bell_sound( tenor_freq * pow(2,11/12.), srate ) );
+      bellv.push_back( bell_sound( a*=ax, tenor_freq * pow(2,11/12.), srate ) );
     case 6:
-      bellv.push_back( bell_sound( tenor_freq * pow(2, 9/12.), srate ) );
+      bellv.push_back( bell_sound( a*=ax, tenor_freq * pow(2, 9/12.), srate ) );
     case 5:
-      bellv.push_back( bell_sound( tenor_freq * pow(2, 7/12.), srate ) );
+      bellv.push_back( bell_sound( a*=ax, tenor_freq * pow(2, 7/12.), srate ) );
     case 4:
-      bellv.push_back( bell_sound( tenor_freq * pow(2, 5/12.), srate ) );
+      bellv.push_back( bell_sound( a*=ax, tenor_freq * pow(2, 5/12.), srate ) );
     case 3:
-      bellv.push_back( bell_sound( tenor_freq * pow(2, 4/12.), srate ) );
+      bellv.push_back( bell_sound( a*=ax, tenor_freq * pow(2, 4/12.), srate ) );
     case 2:
-      bellv.push_back( bell_sound( tenor_freq * pow(2, 2/12.), srate ) );
+      bellv.push_back( bell_sound( a*=ax, tenor_freq * pow(2, 2/12.), srate ) );
     case 1:
-      bellv.push_back( bell_sound( tenor_freq * pow(2, 0/12.), srate ) );
+      bellv.push_back( bell_sound( a*=ax, tenor_freq * pow(2, 0/12.), srate ) );
     }
     n += 7;
     tenor_freq /= 2;
@@ -594,6 +597,8 @@ bool arguments::validate( arg_parser& ap )
 
 int main(int argc, char* argv[])
 {
+  bell::set_symbols_from_env();
+
   arguments args;
 
   {

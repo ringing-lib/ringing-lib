@@ -1,5 +1,5 @@
 // prog_args.cpp - handle program arguments
-// Copyright (C) 2002, 2003, 2004, 2007, 2008, 2010
+// Copyright (C) 2002, 2003, 2004, 2007, 2008, 2010, 2011
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -190,10 +190,10 @@ void arguments::bind( arg_parser& p )
 
 bool arguments::validate( arg_parser& ap )
 {
-  if ( bells != 0 && ( bells < 3 || bells >= int(bell::MAX_BELLS) ) )
+  if ( bells != 0 && ( bells < 3 || bells > int(bell::MAX_BELLS) ) )
     {
       ap.error( make_string() << "The number of bells must be between 3 and " 
-		<< bell::MAX_BELLS-1 << " (inclusive)" );
+		<< bell::MAX_BELLS << " (inclusive)" );
       return false;
     }
 

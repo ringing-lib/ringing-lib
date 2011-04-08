@@ -145,12 +145,18 @@ bool arguments::validate( arg_parser &ap )
 
   try {
     meth = method( methstr, bells );
-  } catch ( ... ) {
-    try { throw; }
-    catch ( bell::invalid const& ) {}
-    catch ( change::invalid const& ) {}
-    catch ( place_notation::invalid const& ) {}
-    catch ( ... ) { throw; }
+  } 
+  catch ( bell::invalid const& ) {
+    ap.error( make_string()
+              << "Error: '" << methstr << "' contains an invalid bell" );
+    return false;
+  }
+  catch ( change::invalid const& ) {
+    ap.error( make_string()
+              << "Error: '" << methstr << "' contains an invalid change" );
+    return false;
+  }
+  catch ( place_notation::invalid const& ) {
     ap.error( make_string()
               << "Error: '" << methstr << "' is not a place notation" );
     return false;
@@ -240,6 +246,8 @@ void print_row( arguments const& args, row const& r )
 
 int main(int argc, char* argv[]) 
 {
+  bell::set_symbols_from_env();
+
   arguments args;
 
   {

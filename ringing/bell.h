@@ -1,6 +1,7 @@
 // -*- C++ -*- bell.h - A simple class representing a bell's position in a row
-// Copyright (C) 2001, 2007, 2008, 2009 Martin Bright <martin@boojum.org.uk> 
-// and Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2001, 2007, 2008, 2009, 2011 
+// Martin Bright <martin@boojum.org.uk> and
+// Richard Smith <richard@ex-parrot.com>
 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -109,6 +110,11 @@ public:
   // Supply an alternative set of symbols to print bells.
   // E.g., lower-case letters for E & T.
   static void set_symbols( char const* syms, size_t num_syms = size_t(-1) );
+
+  // The default environment variable to read the symbols from
+  static const char* symbols_env_var;
+  // Read symbols from the specified environment variable.
+  static void set_symbols_from_env( char const* env = symbols_env_var );
 
 private:
 #if RINGING_BELL_BITS == CHAR_BIT

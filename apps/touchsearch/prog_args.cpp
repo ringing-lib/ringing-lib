@@ -151,9 +151,9 @@ bool arguments::validate( arg_parser& ap )
     return false;
   }
 
-  if ( bells < 4 || bells >= int(bell::MAX_BELLS) ) {
+  if ( bells < 4 || bells > int(bell::MAX_BELLS) ) {
     ap.error( make_string() << "The number of bells must be between 4 and "
-              << bell::MAX_BELLS-1 << " (inclusive)" );
+              << bell::MAX_BELLS << " (inclusive)" );
     return false;
   }
 

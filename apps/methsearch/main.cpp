@@ -1,5 +1,6 @@
 // -*- C++ -*- main.cpp - the entry point for methsearch 
-// Copyright (C) 2002, 2007, 2008, 2010 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2007, 2008, 2010, 2011 
+// Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -33,6 +34,8 @@ RINGING_USING_STD
 
 int main( int argc, char *argv[] )
 {
+  bell::set_symbols_from_env();
+
   arguments args( argc, argv );
 
   if ( args.random_seed == -1 )

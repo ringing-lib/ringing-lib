@@ -1,5 +1,5 @@
 // -*- C++ -*- extent.cpp - utility print an extent 
-// Copyright (C) 2007 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2007, 2011 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -94,18 +94,13 @@ bool arguments::validate( arg_parser& ap )
       return false;
     }
 
-  if ( bells >= int(bell::MAX_BELLS) )
-    {
-      ap.error( make_string() << "The number of bells must be less than "
-                << bell::MAX_BELLS );
-      return false;
-    }
-
   return true;
 }
 
 int main( int argc, char *argv[] )
 {
+  bell::set_symbols_from_env();
+
   arguments args;
 
   {

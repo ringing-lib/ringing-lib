@@ -28,11 +28,13 @@
 #if RINGING_OLD_C_INCLUDES
 #include <string.h>
 #include <stdlib.h>
-#include <limits.hh>
+#include <limits.h>
+#include <ctype.h>
 #else
 #include <cstring>
 #include <cstdlib>
 #include <climits>
+#include <cctype>
 #endif
 #if RINGING_OLD_IOSTREAMS
 #include <istream.h>
@@ -40,6 +42,11 @@
 #else
 #include <istream>
 #include <iomanip>
+#endif
+#if RINGING_OLD_INCLUDES
+#include <algorithm.h>
+#else
+#include <algorithm>
 #endif
 
 #include <ringing/bell.h>
@@ -49,6 +56,7 @@ RINGING_USING_STD
   
 RINGING_START_NAMESPACE
 
+static bool bells_case_sensitive = false;
 char const* bell::symbols = "1234567890ETABCDFGHJKLMNPQRSUVWYZ";
 unsigned int bell::MAX_BELLS = 33;
 
@@ -60,14 +68,23 @@ void bell::set_symbols( char const* syms, size_t n ) {
     symbols = "1234567890ETABCDFGHJKLMNPQRSUVWYZ";
     MAX_BELLS = 33;
   }
+  string s(symbols);
+  std::transform(s.begin(), s.end(), s.begin(), ::toupper);
+  bells_case_sensitive = ( s != symbols );
 }
-    
+
+const char* bell::symbols_env_var = "BELL_SYMBOLS";
+
+void bell::set_symbols_from_env( char const* env ) {
+  if ( char const* var = getenv(env) ) set_symbols(var);
+}
+
 bell::invalid::invalid()
   : invalid_argument("The bell supplied was invalid") {}
 
 bool bell::is_symbol(char c)
 {
-  c = toupper(c);
+  if ( !bells_case_sensitive ) c = toupper(c);
   if ( strchr(symbols, c) ) return true;
 
   // I/1 and O/0 ambiguities:
@@ -83,11 +100,11 @@ bool bell::is_symbol(char c)
 
 bell bell::read_char(char c) 
 {
-  c = toupper(c);
+  if ( !bells_case_sensitive ) c = toupper(c);
   bell b;
-  for ( ; b.x < MAX_BELLS && symbols[b.x] != c; ++b.x)
-    ;
-  if (b.x == MAX_BELLS) {
+  if ( char const* cp = strchr(symbols, c) )
+    b.x = cp - symbols;
+  else {
     // I/1 and O/0 ambiguities:
     switch (c) {
       case 'I': if (is_symbol('1')) return read_char('1');

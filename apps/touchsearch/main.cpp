@@ -1,5 +1,5 @@
 // main.cpp - Entry point for touchsearch
-// Copyright (C) 2002, 2003, 2007, 2009, 2010 
+// Copyright (C) 2002, 2003, 2007, 2009, 2010, 2011
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -228,6 +228,8 @@ int main( int argc, char *argv[] )
 {
   try
     {
+      bell::set_symbols_from_env();
+
       arguments args( argc, argv );
 
       if ( args.filter_mode )
