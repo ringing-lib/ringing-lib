@@ -45,6 +45,7 @@ struct arguments
   arguments( int argc, char *argv[] );
 
   init_val<bool, false>  interactive;
+  init_val<bool, false>  count;
   init_val<int, 0>       bells;
   vector<string>         expr;
 
@@ -62,6 +63,11 @@ void arguments::bind( arg_parser& p )
          ( 'b', "bells",
            "The number of bells.  This option is required", "BELLS",
            bells ) );
+
+  p.add( new boolean_opt
+         ( 'c', "count",
+           "Count the number of rows instead of printing them",
+           count ) );
 
   p.add( new boolean_opt
          ( 'i', "interactive",
@@ -97,12 +103,12 @@ arguments::arguments( int argc, char *argv[] )
     exit(1);
 }
 
-bool evaluate_expr( int bells, string const& expr )
+bool evaluate_expr( arguments const& args, string const& expr )
 {
   scoped_pointer<row_calc> rc;
   try {
     // If bells == 0 this is equivalent to omitting that argument.
-    rc.reset( new row_calc( bells, expr ) );
+    rc.reset( new row_calc( args.bells, expr ) );
   } 
   catch ( exception const& e ) { 
     cerr << "Error parsing expression: " << e.what() << "\n";
@@ -110,7 +116,10 @@ bool evaluate_expr( int bells, string const& expr )
   }
 
   try {  
-    copy( rc->begin(), rc->end(), ostream_iterator<row>(cout, "\n") );
+    if ( args.count )
+      cout << distance( rc->begin(), rc->end() ) << "\n";
+    else
+      copy( rc->begin(), rc->end(), ostream_iterator<row>(cout, "\n") );
   }
   catch ( row::invalid const& ex ) {
     cerr << "Invalid row produced: " << ex.what() << "\n";
@@ -133,13 +142,13 @@ int main( int argc, char *argv[] )
     while ( getline( in, expr ) ) {
       trim_whitespace(expr);
       if ( expr.size() )
-        evaluate_expr( args.bells, expr );
+        evaluate_expr( args, expr );
     }
     if (args.interactive)
       cout << "\n";
   }
   else for ( vector<string>::const_iterator 
                i=args.expr.begin(), e=args.expr.end(); i != e; ++i )
-    if ( !evaluate_expr( args.bells, *i ) )
+    if ( !evaluate_expr( args, *i ) )
       return 1;
 }
