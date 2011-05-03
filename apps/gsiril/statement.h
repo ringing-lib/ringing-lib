@@ -1,5 +1,5 @@
 // -*- C++ -*- statement.h - Code to execute different types of statement
-// Copyright (C) 2003, 2004, 2005 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2003, 2004, 2005, 2011 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -40,6 +40,7 @@ public:
 
 private:
   virtual void execute( execution_context& ) const;
+  virtual bool is_definition() const;
 
   pair<const string, expression> defn;
 };

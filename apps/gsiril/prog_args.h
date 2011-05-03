@@ -1,5 +1,5 @@
 // -*- C++ -*- prog_args.h - program arguments for gsiril
-// Copyright (C) 2003, 2004, 2007, 2008, 2010 
+// Copyright (C) 2003, 2004, 2007, 2008, 2010, 2011
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -64,6 +64,7 @@ struct arguments
 
   string               filename;
   string               expression;
+  init_val<bool,false> no_read;
 
   string               prove_symbol;
   string               lead_symbol;

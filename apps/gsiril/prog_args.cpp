@@ -173,6 +173,11 @@ void arguments::bind( arg_parser& p )
            filename ) );
 
   p.add( new boolean_opt
+         ( 'N', "no-read",
+           "Don't read from standard input", 
+           no_read ) );
+
+  p.add( new boolean_opt
          ( '\0', "filter",
            "Run as a filter on a method library",
            filter ) );
@@ -229,7 +234,8 @@ bool arguments::validate( arg_parser& ap )
 
   if ( filter && bells == 0 )
     {
-      ap.error( "When running in filter mode, the number of bells is required" );
+      ap.error( "When running in filter mode, "
+                "the number of bells is required" );
       return false;
     }
 

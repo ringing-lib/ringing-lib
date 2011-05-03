@@ -1,5 +1,5 @@
 // statement.cpp - Code to execute different types of statement
-// Copyright (C) 2002, 2003, 2004, 2005, 2010 
+// Copyright (C) 2002, 2003, 2004, 2005, 2010, 2011
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -34,6 +34,11 @@
 #include <fstream>
 #endif
 #include <ringing/streamutils.h>
+
+bool definition_stmt::is_definition() const
+{
+  return true;
+}
 
 void definition_stmt::execute( execution_context& e ) const
 {

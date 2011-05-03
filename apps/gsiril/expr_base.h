@@ -1,5 +1,6 @@
 // -*- C++ -*- expr_base.h - Expression and statement interfaces
-// Copyright (C) 2002, 2003, 2004, 2005 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003, 2004, 2005, 2011
+// Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -48,12 +49,14 @@ public:
   public:
     virtual ~impl() {}
     virtual void execute( execution_context& ) const = 0;
+    virtual bool is_definition() const { return false; }
   };
 
   statement( impl* pimpl = 0 ) : pimpl(pimpl) {}
 
   void execute( execution_context& e ) const { pimpl->execute(e); }
   bool eof() const { return !pimpl; } 
+  bool is_definition() const { return pimpl && pimpl->is_definition(); }
 
 private:
   shared_pointer< impl > pimpl;

@@ -149,10 +149,17 @@ void initialise( execution_context& ex, const arguments& args )
 	i != e; ++i ) 
     {
       RINGING_ISTRINGSTREAM in(*i);
-      
-      parse_all(ex, make_default_parser(in, args),
-		make_string() << "Error parsing definition '" << *i << "'", 
-		true);
+
+      shared_pointer<parser> p( make_default_parser(in, args) );
+
+      statement s( p->parse() );
+      if (s.is_definition()) s.execute(ex);
+
+      if (!s.is_definition() || !p->parse().eof()) { 
+        cerr << "Definition arguments must contain exactly one definition "
+                "and nothing else\n"; 
+        exit(1);
+      }
     }
 
   ex.interactive(interactive);
@@ -171,8 +178,10 @@ bool prove_final_symbol( execution_context& e, const arguments& args )
       // has been explicitly set, it should be there; but if it is 
       // implicitly set (e.g. by invoking as 'msiril'), we shouldn't give
       // an error.
-      if ( args.prove_symbol != "__first__" || e.defined("__first__") )
+      if ( args.prove_symbol != "__first__" || e.defined("__first__") ) {
+        cerr << "Proving " << args.prove_symbol << std::endl;
         e.prove_symbol( args.prove_symbol );
+      }
       return true;
     } 
   catch (const exception& ex ) 
@@ -183,13 +192,14 @@ bool prove_final_symbol( execution_context& e, const arguments& args )
     }
 }
 
-bool prove_stream( execution_context& e, istream& in, const arguments& args )
+bool prove_stream( execution_context& e, scoped_pointer<istream> const& in, 
+                   const arguments& args )
 {
   e.set_failure(false); // unset failure state
 
   bool read_anything 
-    = parse_all( e, make_default_parser(in, args), 
-                 "Error", !args.interactive );
+    = ( !in || parse_all( e, make_default_parser(*in, args), 
+                          "Error", !args.interactive ) );
 
   // Failure will be set if any prove statement has failed 
   bool rv = !e.failure();
@@ -221,12 +231,12 @@ bool run( execution_context& e, const arguments& args )
       exit(1);
     }
   }
-  else {
+  else if ( !args.no_read ) {
     in.reset( new console_istream( args.interactive ) );
     static_cast<console_istream*>( in.get() )->set_prompt( "> " );
   }
 
-  return prove_stream( e, *in, args );
+  return prove_stream( e, in, args );
 }
 
 void filter( execution_context& e, const arguments& args )
