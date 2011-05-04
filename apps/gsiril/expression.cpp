@@ -1,5 +1,5 @@
 // expression.cpp - Nodes and factory function for expressions
-// Copyright (C) 2002, 2003, 2004, 2005, 2008 
+// Copyright (C) 2002, 2003, 2004, 2005, 2008, 2011
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -46,15 +46,16 @@ void list_node::debug_print( ostream &os ) const
   os << " )";
 }
 
-void list_node::execute( proof_context &ctx )
+void list_node::execute( proof_context &ctx, int dir )
 {
-  car.execute( ctx );
-  cdr.execute( ctx );
+  if (dir > 0) car.execute( ctx, dir );
+  cdr.execute( ctx, dir );
+  if (dir <= 0) car.execute( ctx, dir );
 }
 
 bool list_node::evaluate( proof_context &ctx ) 
 {
-  car.execute( ctx );
+  car.execute( ctx, +1 );
   return cdr.evaluate( ctx );
 }
 
@@ -68,7 +69,7 @@ void nop_node::debug_print( ostream &os ) const
   os << "{null}";
 }
 
-void nop_node::execute( proof_context & )
+void nop_node::execute( proof_context &, int dir )
 {
 }
 
@@ -79,19 +80,20 @@ bool nop_node::isnop() const
 
 void repeated_node::debug_print( ostream &os ) const
 {
-  os << count << " ";
+  if (count != -1) os << count << " ";
+  else os << "repeat ";
   child.debug_print( os );
 }
 
-void repeated_node::execute( proof_context &ctx )
+void repeated_node::execute( proof_context &ctx, int dir )
 {
   try {
     if ( count != -1 )
       for (int i=0; i<count; ++i) 
-	child.execute( ctx );
+	child.execute( ctx, dir );
     else
       while ( true )
-	child.execute( ctx );
+	child.execute( ctx, dir );
   } catch ( script_exception const& ex ) {
     if ( ex.t == script_exception::do_break ) 
       return;
@@ -100,7 +102,18 @@ void repeated_node::execute( proof_context &ctx )
   }
 }
 
-void string_node::execute( proof_context &ctx )
+void reverse_node::debug_print( ostream &os ) const
+{
+  os << "~";
+  child.debug_print( os );
+}
+
+void reverse_node::execute( proof_context &ctx, int dir )
+{
+  child.execute( ctx, -dir );
+}
+
+void string_node::execute( proof_context &ctx, int dir )
 {
   ctx.output_string(str);
 }
@@ -135,9 +148,12 @@ void pn_node::debug_print( ostream &os ) const
 	ostream_iterator< change >( os, "." ) );
 }
 
-void pn_node::execute( proof_context &ctx )
+void pn_node::execute( proof_context &ctx, int dir )
 {
-  for_each( changes.begin(), changes.end(), ctx.permute_and_prove() );
+  if (dir > 0) 
+    for_each( changes.begin(), changes.end(), ctx.permute_and_prove() );
+  else
+    for_each( changes.rbegin(), changes.rend(), ctx.permute_and_prove() );
 }
 
 transp_node::transp_node( int bells, const string &r )
@@ -157,7 +173,7 @@ void transp_node::debug_print( ostream &os ) const
   os << "'" << transp << "'";
 }
 
-void transp_node::execute( proof_context &ctx )
+void transp_node::execute( proof_context &ctx, int dir )
 {
   ctx.permute_and_prove()( transp );
 }
@@ -167,9 +183,9 @@ void symbol_node::debug_print( ostream &os ) const
   os << sym;
 }
 
-void symbol_node::execute( proof_context &ctx )
+void symbol_node::execute( proof_context &ctx, int dir )
 {
-  ctx.execute_symbol(sym);
+  ctx.lookup_symbol(sym).execute(ctx, dir);
 }
 
 void assign_node::debug_print( ostream &os ) const
@@ -179,8 +195,19 @@ void assign_node::debug_print( ostream &os ) const
   os << ")";
 }
 
-void assign_node::execute( proof_context& ctx )
+static void throw_no_backwards_execution(expression::node const& x)
 {
+  make_string os;
+  os << "Unable to execute expression backwards: '";
+  x.debug_print( os.out_stream() );
+  os << "'";
+
+  throw runtime_error( os );
+}
+
+void assign_node::execute( proof_context& ctx, int dir )
+{
+  if (dir < 0) throw_no_backwards_execution(*this);
   ctx.define_symbol(defn);
 }
 
@@ -292,8 +319,10 @@ void if_match_node::debug_print( ostream &os ) const
   os << " }";
 }
 
-void if_match_node::execute( proof_context& ctx )
+void if_match_node::execute( proof_context& ctx, int dir )
 {
+  if (dir < 0) throw_no_backwards_execution(*this);
+
   proof_context ctx2( ctx.silent_clone() );
   bool result = false;
 
@@ -319,9 +348,9 @@ void if_match_node::execute( proof_context& ctx )
   catch ( script_exception const& ) {}
 
   if ( result )
-    iftrue.execute( ctx );
+    iftrue.execute( ctx, dir );
   else if ( !iffalse.isnull() )
-    iffalse.execute( ctx );
+    iffalse.execute( ctx, dir );
 }
 
 void exception_node::debug_print( ostream &os ) const
@@ -329,8 +358,9 @@ void exception_node::debug_print( ostream &os ) const
   os << "break";
 }
 
-void exception_node::execute( proof_context& ctx )
+void exception_node::execute( proof_context& ctx, int dir )
 {
+  if (dir < 0) throw_no_backwards_execution(*this);
   throw script_exception( t );
 }
 
@@ -339,7 +369,7 @@ void load_method_node::debug_print( ostream& os ) const
   os << "load(\"" << name << "\")";
 }
 
-void load_method_node::execute( proof_context& ctx )
+void load_method_node::execute( proof_context& ctx, int dir )
 {
   if (!read) {
 //    meth = load_method(name);
@@ -350,5 +380,8 @@ void load_method_node::execute( proof_context& ctx )
     throw runtime_error
       ( make_string() << "Unable to load method \"" << name << "\"" );
 
-  for_each( meth.begin(), meth.end(), ctx.permute_and_prove() );
+  if (dir > 0) 
+    for_each( meth.begin(), meth.end(), ctx.permute_and_prove() );
+  else
+    for_each( meth.rbegin(), meth.rend(), ctx.permute_and_prove() );
 }

@@ -76,7 +76,7 @@ public:
   public:
     virtual ~node() {}
     virtual void debug_print( ostream &os ) const = 0;
-    virtual void execute( proof_context &ctx ) = 0;
+    virtual void execute( proof_context &ctx, int dir ) = 0;
     virtual bool evaluate( proof_context &ctx ); // throws
     virtual bool isnop() const { return false; }
     virtual type_t type() const { return no_type; }
@@ -85,7 +85,7 @@ public:
   class bnode : public node
   {
   public:
-    virtual void execute( proof_context &ctx ) { evaluate(ctx); }
+    virtual void execute( proof_context &ctx, int dir );
     virtual bool evaluate( proof_context &ctx ) = 0;
     virtual type_t type() const { return boolean; }
   };
@@ -101,7 +101,7 @@ public:
   void debug_print( ostream &os ) const    { impl->debug_print(os); }
 
   // execute an expression, possibly adding to the current proof
-  void execute( proof_context &ctx ) const { impl->execute(ctx); }
+  void execute( proof_context &ctx, int dir ) const { impl->execute(ctx, dir); }
 
   // Evaluate a const expression in boolean context.
   // If evaluation requires execution of an expression, a silent clone

@@ -1,5 +1,6 @@
 // -*- C++ -*- expression.h - Code to execute different types of expression
-// Copyright (C) 2003, 2004, 2005, 2008 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2003, 2004, 2005, 2008, 2011 
+// Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -54,7 +55,7 @@ public:
 
 protected:
   virtual void debug_print( ostream &os ) const;
-  virtual void execute( proof_context &ctx );
+  virtual void execute( proof_context &ctx, int dir );
   virtual bool evaluate( proof_context &ctx );
   virtual expression::type_t type() const;
 
@@ -66,7 +67,7 @@ class nop_node : public expression::node
 {
 protected:
   virtual void debug_print( ostream &os ) const;
-  virtual void execute( proof_context & );
+  virtual void execute( proof_context &, int dir );
   virtual bool isnop() const;
 };
 
@@ -79,10 +80,24 @@ public:
 
 protected:
   virtual void debug_print( ostream &os ) const;
-  virtual void execute( proof_context &ctx );
+  virtual void execute( proof_context &ctx, int dir );
 
 private:  
   int count;
+  expression child;
+};
+
+class reverse_node : public expression::node
+{
+public:
+  reverse_node( const expression &child )
+    : child(child) {}
+
+protected:
+  virtual void debug_print( ostream &os ) const;
+  virtual void execute( proof_context &ctx, int dir );
+
+private:  
   expression child;
 };
 
@@ -94,7 +109,7 @@ public:
 
 protected:
   virtual void debug_print( ostream &os ) const;
-  virtual void execute( proof_context &ctx );
+  virtual void execute( proof_context &ctx, int dir );
 
 private:
   string str;
@@ -110,7 +125,7 @@ public:
 
 protected:
   virtual void debug_print( ostream &os ) const;
-  virtual void execute( proof_context &ctx );
+  virtual void execute( proof_context &ctx, int dir );
 
 private:
   vector< change > changes;
@@ -123,7 +138,7 @@ public:
 
 protected:
   virtual void debug_print( ostream &os ) const;
-  virtual void execute( proof_context &ctx );
+  virtual void execute( proof_context &ctx, int dir );
 
 private:
   row transp;
@@ -137,7 +152,7 @@ public:
 
 protected:
   virtual void debug_print( ostream &os ) const;
-  virtual void execute( proof_context &ctx );
+  virtual void execute( proof_context &ctx, int dir );
 
 private:
   string sym;
@@ -151,7 +166,7 @@ public:
 
 protected:
   virtual void debug_print( ostream &os ) const;
-  virtual void execute( proof_context &ctx );
+  virtual void execute( proof_context &ctx, int dir );
 
 private:
   pair< const string, expression > defn;
@@ -214,7 +229,7 @@ public:
 
 protected:
   virtual void debug_print( ostream &os ) const;
-  virtual void execute( proof_context &ctx );
+  virtual void execute( proof_context &ctx, int dir );
 
 private:
   expression test, iftrue, iffalse;
@@ -227,7 +242,7 @@ public:
 
 protected:
   virtual void debug_print( ostream &os ) const;
-  virtual void execute( proof_context &ctx );
+  virtual void execute( proof_context &ctx, int dir );
 
 private:
   script_exception::type t;
@@ -241,7 +256,7 @@ public:
 
 protected:
   virtual void debug_print( ostream &os ) const;
-  virtual void execute( proof_context &ctx );
+  virtual void execute( proof_context &ctx, int dir );
 
 private:
   string name;

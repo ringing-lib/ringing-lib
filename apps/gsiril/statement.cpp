@@ -87,7 +87,7 @@ void prove_stmt::execute( execution_context& e ) const
       try
 	{
 	  p.execute_symbol( "start" );
-	  expr.execute(p);
+	  expr.execute(p, +1);
 	  p.execute_symbol( "finish" );
       	} 
       catch( const script_exception& ex ) 

@@ -1,5 +1,5 @@
 // expr_base.cpp - Base classes, nodes and factory function for expressions
-// Copyright (C) 2005 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2005, 2011 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -42,3 +42,18 @@ bool expression::node::evaluate( proof_context& ctx )
 
   throw runtime_error( os );
 }
+
+void expression::bnode::execute( proof_context& ctx, int dir )
+{
+  if ( dir < 0 ) {
+    make_string os;
+    os << "Unable to execute expression backwards: '";
+    debug_print( os.out_stream() );
+    os << "'";
+
+    throw runtime_error( os );
+  }
+
+  evaluate(ctx);
+}
+

@@ -154,7 +154,7 @@ expression proof_context::lookup_symbol( const string& sym )
 
 void proof_context::execute_symbol( const string &sym ) 
 {
-  lookup_symbol(sym).execute( *this );
+  lookup_symbol(sym).execute( *this, +1 );
 }
 
 void proof_context::define_symbol( const pair<const string, expression>& defn )
