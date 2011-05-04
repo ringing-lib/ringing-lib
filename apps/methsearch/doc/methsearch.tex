@@ -444,7 +444,7 @@ the double quotes around the \verb+-R+ and \verb+-Q+ options' arguments
 \footnote{This is because the shell 
 \textit{interpolates}\index{shell!interpolation} text in double quotes,
 but not in single quotes,  and will therefore interpret 
-\verb+$q+, \verb+$D+ and \verb+$o+ as shell or environment variable, and 
+\verb+$q+, \verb+$D+ and \verb+$o+ as a shell or environment variable, and 
 run \methsearch\ with the value of this variable (probably nothing) instead.
 If you see an error message saying 
 \texttt{Binary operator ">=" needs first argument}
@@ -771,7 +771,7 @@ Very Little Bob Minor\index{Very Little Bob Minor}
 (in which the third hunts between thirds place and fourths) 
 can be found with \verb+-Z3-4+, and Double Bishopstoke Little Surprise Major%
 \index{Double Bishopstoke Little Surprise Major} 
-(in which the treble treble-dodges between thirds and sixths) 
+(in which the third treble-dodges between thirds and sixths) 
 can be found with \verb+-G1+ \verb+-Z3-6+.
 
 \index{little methods|)}
@@ -895,8 +895,8 @@ end of the row at backstroke.
 Traditionally, this is considered musically poor; however this
 is perhaps gradually changing.  (Note that there is no guarantee even with
 \verb+-f+ that such rows can be avoided at backstroke in an extent: Carlisle
-Surprise Minor is an example of a method where \verb+65+s at backstroke
-cannot be avoided.)
+Surprise Minor\index{Carlisle Surprise Minor} is an example of a method 
+where \verb+65+s at backstroke cannot be avoided.)
 
 The \verb+-y+ option\oid{y}{symmetric-sections} limits the search to
 methods which have symmetric work during each of the treble's dodges.  
@@ -1002,11 +1002,12 @@ The \verb+--offset-cyclic+ option\loid{offset-cyclic} is very specialised.%
 \index{cyclic, offset}   It limits the search
 to methods that, when started from the backstroke snap (or last backstroke
 snap for \verb+-G+$n$ with $n>1$) produce a cyclic row one lead further on.
-Spinning Jennie Delight Royal is an example of such a method.  
+Spinning Jennie Delight Royal\index{Spinning Jennie Delight Royal} is an 
+example of such a method.  
 Because \verb+--offset-cyclic+ actually effects the row at the backstroke
 snap, it can be used in conjuction with other options governing the lead head;
 however, because the lead head and backstroke snap are so close together, 
-doing so severely the opening few changes of the method.
+doing so severely limits the opening few changes of the method.
 
 \index{lead end|)}\index{lead head|)}
 
@@ -1030,9 +1031,11 @@ The \verb+--regular-hls+ option\loid{regular-hls}
 specifies that the method must have regular
 half leads.  This means that when the half lead end and the half lead head
 are written backwards, they must be regular lead heads and lead ends 
-or vice versa.  For example, both Beverley and Surfleet Surprise Minor
+or vice versa.  For example, both Beverley\index{Beverley Surprise Minor} 
+and Surfleet Surprise Minor\index{Surfleet Surprise Minor}
 have regular half leads even though the two half lead rows come in different
-orders in the two methods.  Cambridge Surprise Minor, however, does not have
+orders in the two methods.  Cambridge Surprise Minor%
+\index{Cambridge Surprise Minor}, however, does not have
 regular half leads, instead having completely different rows around the half
 lead.  All regular palindromic double (\verb+-rsd+) methods necessarily have 
 regular half heads.  If you want to use half-lead calls, it can be useful
@@ -1041,7 +1044,7 @@ to have regular half leads.
 The \verb+--cyclic-hle+ and \verb+--cyclic-hlh+ options%
 \loid{cyclic-hle}\loid{cyclic-hlh} specify that the
 half lead end or half lead head, respectively. should be descending cyclic 
-row (e.g.\ 456231 for a single-hunt minor method).
+row (e.g.\ \verb+456231+ for a single-hunt minor method).
 The \verb+--rev-cyclic-hle+ and \verb+--rev-cyclic-hlh+ options%
 \loid{rev-cyclic-hle}\loid{rev-cyclic-hlh} specify that 
 the half lead end or half lead head, respectively, should be ascending cyclic 
@@ -1131,6 +1134,7 @@ out of sync.  As a result \verb+-A+ will always need to be specified too.
 \texttt{-m}&\texttt{--mask=MASK}&Specify part of the place notation\\
 &\texttt{--prefix=PN}&Specify the first part of the place notation\\
 &\texttt{--start-at=PN}&Resume a search from a given place notation\\
+&\texttt{--changes=LIST}&Allow only changes from the list\\
 \end{tabularx}
 
 The \verb+-m+ option\oid{m}{mask} provides a 
@@ -1141,16 +1145,17 @@ a method which restricts \methsearch\ to looking at just that one method.
 
 The \textit{place notation} can be expressed in any standard form.  
 Bells are represented using the following case-insensitive alphabet.%
-\footnote{This alphabet can be overriden with the \verb+BELL_SYMBOLS+
+\footnote{This alphabet can be overriden with the \verb+$BELL_SYMBOLS+
 environment variable.\fspecd{BELL\_SYMBOLS}  
 For example, setting \verb+BELL_SYMBOLS="123456789ABCDEF"+
 tells \methsearch\ to use hexadecimal digits instead of the conventional 
 symbols to represent bells (on up to 15 bells).  
-The \verb+BELL_SYMBOLS+ variable must be at least
+The \verb+$BELL_SYMBOLS+ variable must be at least
 as long as the number of bells specified with \verb+-b+.  If the variable
-is entirely in upper case, then bell symbols are considered to be case
-insensitive; if it is mixed case, or partly lower case, they are assumed
-to be case sensitive.  The default alphabet is \textit{not} compatible with
+is entirely in upper case or entirely in lower case, 
+then bell symbols are considered to be case insensitive; 
+if it is mixed case, they are assumed to be case sensitive.  
+The default alphabet is \textit{not} compatible with
 the alphabet used in Abel\index{Abel} on 20 or more bells as Abel uses 
 \verb+I+ to represent bell number 20.  The convention used by \methsearch\ is
 the one used in the Central Council's method libraries.}
@@ -1243,6 +1248,40 @@ search was cancelled.\index{resuming a search}  Restarting a random search
 is only meaningful if the same random seed is used throughout and passed
 to \verb+--seed+.
 
+The \verb+--changes+ option\loid{changes} restricts the changes that
+\methsearch\ will consider to those in the comma-separated list provided.  
+For example, to find methods made soley using the \verb+x+, \verb+14+ and
+\verb+18+ changes, you could write \verb+--changes=x,14,18+.  
+Alternatively, the \verb+--changes+ option can be used to prohibit certain 
+changes.  This is done by prefixing the list of changes with a \verb+!+,
+so, for example, \verb+--changes=!1234+ will allow any changes except for
+\verb+1234+.  (In Unix shells, it will probably be necessary to quote the
+argument to prevent the shell from interpretting the \verb+!+.)
+
+This option can be useful for generating a method (and particularly principles)
+where the course forms a group\index{group}.  Any collection of changes 
+will generate a group, though often the group is simply the whole extent,
+$S_n$ (or the in-course half of it, $A_n$) which is of little interest.
+And the changes used in a method whose plain course is a group must be 
+generate that group.  So to find a method whose plain course is a group,
+we just need to identify the changes needed to generate the group and put
+them in a \verb+--changes+ argument.  
+For example, Striking Minor\index{Striking Minor} forms a group of order 120 
+generated by \verb+x+, \verb+14+ and \verb+36+.  \methsearch\ can
+identify other such principles with a search such as:
+
+\begin{Verbatim}
+methsearch -b6 -U0 -n20 --changes=x,14,36 -p2 -s
+\end{Verbatim}
+
+The \verb+--changes+ and \verb+--mask+ options are orthogonal, and similarly
+both options are orthogonal to \methsearch's other options that effect the
+permitted changes such as \verb+-l+, \verb+-j+ and \verb+-f+ 
+(\sref{int_struct}).  For \methsearch\ to find a method, it must satisfy all
+of the requirements.  In particular, a \verb+--mask+ cannot be used to 
+override these restrictions in one part of the method.  This feature
+may be included in a future version of \methsearch.
+
 \index{place notation|)}
 
 \section{Output options}\label{output_opt}\index{output|(}
@@ -1281,7 +1320,7 @@ can be suppressed with the \verb+-q+ option.\oid{q}{quiet}
 The information that \methsearch\ prints, 
 together with the formatting of it, is controlled
 by the \verb+-R+\oi{R} option which is discussed in \sref{variables}.
-By default, \methsearch prints just the methods' place notation and lead head
+By default, \methsearch\ prints just the methods' place notation and lead head
 --- i.e.\ omitting the \verb+-R+ option is equivalent to 
 specifying \verb+-R$p\t$l+ (unless \verb+-I+ is supplied in which
 case \verb+-R$p\t$a+ is assumed).
@@ -1545,7 +1584,7 @@ This option is discussed further in \sref{extent}.
 \end{tabularx}
 
 In addition to taking command line options on the command line, \methsearch\ 
-can read them from a file which is then referenced on the command line by
+can read them from a file which is referenced on the command line by
 prefixing the filename with an \verb+@+.  Such files are called 
 \textit{response files}, and are fairly common on Windows where they can be 
 used to work around deficiencies in the Windows shell.  For example, suppose
@@ -1573,7 +1612,7 @@ Unix shells,\index{shell!escaping} although it is harmless to do so.}
 Thus in the example above, in most Unix shells, the quotes on the command
 line need replacing with single quotes, but in the response file, either
 can be used.\index{shell!quotation}
-Single quotes can be nested within double quotes, or vice versa; if a
+Single quotes can be nested within double quotes, or vice versa; if an
 additional levels of quotes are needed, the innermost ones can be escaped
 from the response file by preceding them with a \verb+\+, as in
 most shells. 
@@ -3638,7 +3677,7 @@ the first whitespace character on the line is ignored.\footnote{%
 \methsearch\ considers the space, tab, carriage return and line feed
 to be whitespace.}\index{whitespace}
 When invoked with the \verb+-I+ option (\sref{misc_opt}), 
-\methsearch requires a method stream on standard input.\index{standard input}
+\methsearch\ requires a method stream on standard input.\index{standard input}
 Frequently, \methsearch's output is a method stream — specifically
 whenever a \verb+-R+ option starting with \verb+$p+ or \verb+$q+ is given
 (or no \verb+-R+ is given) and no statistical output or counts are requested.%
@@ -4066,8 +4105,9 @@ and \verb+-M2rhalflead+.
 \item Command exit status: \verb+$?+ (\sref{exitstatus}).
 \item Number of bells: \verb+$B+ (\sref{variables}).
 \item Response files: \verb+@+\textit{filename} (\sref{respfile}).
-\item The \verb+$BELL_SYMBOLS+ environment variable allows the bells used
-  to be redefined.
+\item Customising bell symbols: \verb+$BELL_SYMBOLS+ environment variable 
+  (\sref{pn}).
+\item Restricting or prohibiting changes: \verb+--changes+ (\sref{pn}).
 \end{list}
 
 \clearpage

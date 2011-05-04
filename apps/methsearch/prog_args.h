@@ -137,6 +137,10 @@ struct arguments
 
   string mask;
 
+  string              changes_str;
+  init_val<bool,true> include_changes;
+  set<change>         changes;
+
   vector< vector<change> > allowed_changes;
   vector<row>    required_rows;
 

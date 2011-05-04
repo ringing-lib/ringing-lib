@@ -457,6 +457,11 @@ void arguments::bind( arg_parser &p )
 	   "Require that the method matches the given mask", "PATTERN",
 	   mask ) );
 
+  p.add( new string_opt
+         ( '\0', "changes",
+           "Use only changes from the given list", "CHANGES",
+           changes_str ) );
+
   p.add( new delegate_opt
 	 ( 'M', "music",
 	   "Score the music in a plain course", "PATTERN",
@@ -926,6 +931,28 @@ bool arguments::validate( arg_parser &ap )
       ap.error( "Cannot use a mask for principles without also supplying a "
                 "lead length" );
       return false;
+  }
+
+  if (!changes_str.empty()) {
+    size_t i = 0, n = changes_str.size();
+    if ( changes_str[i] == '!' ) { include_changes = false; ++i; }
+    while ( i < n ) {
+      size_t j = changes_str.find(',', i); 
+      if ( j == string::npos ) j = n;
+      try { 
+        changes.insert( change(bells, changes_str.substr(i,j-i)) );
+      } catch ( const exception& e ) {
+        ap.error(make_string() << "Unable to parse --changes: "  << e.what());
+        return false;
+      }
+      i = j+1;
+    }
+
+    try {
+      restrict_changes(*this);
+    } catch (exception const& e) {
+      ap.error(make_string() << e.what()); return false;
+    }
   }
       
   try

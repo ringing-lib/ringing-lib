@@ -467,7 +467,7 @@ void select_changes_above( const arguments& args, vector<change>& changesa,
         j != e; ++j )
     {
       change a(*j); 
-      
+
       // Handle -w
       if ( args.right_place && i % 2 == args.bells % 2
            && args.bells - a.count_places() != active_above )
@@ -527,7 +527,12 @@ void select_changes_prin( const arguments& args, vector<change>& changes,
     
       for ( changes_iterator j(args.bells), e; j != e; ++j )
         {
-          change ch(*j);;
+          change ch(*j);
+    
+          // Handle --changes
+          if ( args.changes.size() && args.include_changes
+               != ( args.changes.find(ch) != args.changes.end() ) )
+            continue;
     
           // Handle -f
           if ( args.no_78_pns && ch.findplace(args.bells-2) )
@@ -615,6 +620,11 @@ void merge_changes( const arguments& args, vector<change>& result,
 	const change ch( merge_changes( args, above[ia], below[ib], posn ) );
         DEBUG( "Merging " << below[ib] << " and " << above[ia] << " gives "
                  << ch );
+
+        // Handle --changes
+        if ( args.changes.size() && args.include_changes
+             != ( args.changes.find(ch) != args.changes.end() ) )
+          continue;
 	
 	// Handle -l
 	if ( args.max_places_per_change 
@@ -735,7 +745,34 @@ bool is_mask_consistent( arguments &args,
   return true;
 }
 
+void changes_have_double_symmetry( arguments& args )
+{
+  vector<change> asymmetries;
+  for (set<change>::const_iterator 
+         i=args.changes.begin(), e=args.changes.end(); i != e; ++i )
+    if (args.changes.find(i->reverse()) == args.changes.end())
+      asymmetries.push_back(*i);
+
+  for (vector<change>::const_iterator
+         i=asymmetries.begin(), e=asymmetries.end(); i != e; ++i )
+    if (args.include_changes)
+      args.changes.erase(*i);
+    else
+      args.changes.insert(i->reverse());
+}
+
 RINGING_END_ANON_NAMESPACE
+
+void restrict_changes( arguments& args )
+{
+  if (args.changes.size()) {
+    if (args.skewsym || args.doubsym)
+      changes_have_double_symmetry(args);
+    if (args.changes.empty())
+      throw mask_error("The --changes argument is not compatible "
+                       "with the symmetries requested\n");
+  }
+}
 
 bool parse_mask( arguments &args, const arg_parser &ap )
 {

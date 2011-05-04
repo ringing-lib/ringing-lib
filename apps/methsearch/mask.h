@@ -1,5 +1,5 @@
 // -*- C++ -*- mask.h - functions for parsing the method mask
-// Copyright (C) 2002 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2011 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -31,6 +31,7 @@ class arg_parser;
 struct arguments;
 
 bool parse_mask( arguments &args, const arg_parser &ap );
+void restrict_changes( arguments &args );
 
 
 #endif // METHSEARCH_MASK_INCLUDED
