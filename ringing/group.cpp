@@ -1,5 +1,5 @@
 // -*- C++ -*- group.cpp - Class representing a permutation group
-// Copyright (C) 2003, 2009 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2003, 2009, 2011 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -44,6 +44,25 @@ RINGING_USING_STD
 
 RINGING_START_ANON_NAMESPACE
 
+void generate_group_nonrecursive( set<row>& s, const row& r0, 
+                                  const vector<row>& generators )
+{
+  vector<row> x( 1u, r0 );
+
+  while (x.size()) {
+    row r = x.back(); x.pop_back();
+
+    for ( vector<row>::const_iterator 
+	    i( generators.begin() ), e( generators.end() );
+	  i != e;  ++i )
+    {
+      const row r2( r * *i );
+      if ( s.insert( r2 ).second )
+        x.push_back(r2);
+    }
+  }
+}
+
 void generate_group_recursive( set<row>& s, const row& r, 
 			       const vector<row>& generators )
 {
@@ -87,7 +106,8 @@ group::group( const row& gen )
   : b( gen.bells() )
 {
   set< row > s;
-  generate_group_recursive( s, row(gen.bells()), vector<row>(1u, gen) );
+  generate_group_nonrecursive( s, row(gen.bells()), vector<row>(1u, gen) );
+  v.reserve(s.size());
   copy( s.begin(), s.end(), back_inserter(v) );
 }
 
@@ -101,13 +121,16 @@ group::group( const row& g1, const row& g2 )
   set< row > s;
 
   size_t b( g1.bells() > g2.bells() ? g1.bells() : g2.bells() );
-  generate_group_recursive( s, row(b), gens );
+  generate_group_nonrecursive( s, row(b), gens );
+  v.reserve(s.size());
   copy( s.begin(), s.end(), back_inserter(v) );
 }
 
 group::group( const vector<row>& gens )
   : b(0)
 {
+  if (gens.empty()) { v.push_back( row() ); return; }
+
   set< row > s;
 
   vector<row> uniq_gens(gens);
@@ -121,7 +144,8 @@ group::group( const vector<row>& gens )
     if ( size_t(i->bells()) > b ) 
       b = i->bells();
 
-  generate_group_recursive( s, row(b), uniq_gens );
+  generate_group_nonrecursive( s, row(b), uniq_gens );
+  v.reserve(s.size());
   copy( s.begin(), s.end(), back_inserter(v) );
 }
 
