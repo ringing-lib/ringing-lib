@@ -1,5 +1,5 @@
 // proof.cpp - Proving Stuff
-// Copyright (C) 2001, 2002, 2006, 2008, 2010 
+// Copyright (C) 2001, 2002, 2006, 2008, 2010, 2011
 // Mark Banner <mark@standard8.co.uk>
 // and Richard Smith <richard@ex-parrot.com>
 
@@ -78,7 +78,7 @@ bool prover::add_row( const row &r )
   if ( n > 1 )
     ++dups; 
 
-  if ( (int) n > max_occurs )
+  if ( max_occurs != -1 && (int) n > max_occurs )
     {
       is_true = false; 
       if ( fi )

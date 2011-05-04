@@ -1,5 +1,5 @@
 // -*- C++ -*- proof_context.h - Environment to evaluate expressions
-// Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2010
+// Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2010, 2011
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -73,6 +73,7 @@ public:
 
   bool set_silent( bool s ) { bool rv = silent; silent = s; return rv; }
 
+  expression lookup_symbol( const string& sym );
   void execute_symbol( const string &sym );
   void define_symbol( const pair< const string, expression > &defn );
 

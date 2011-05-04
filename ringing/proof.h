@@ -1,5 +1,6 @@
 // -*- C++ -*- proof.h - Proving Stuff
-// Copyright (C) 2001, 2002, 2006, 2008 Mark Banner <mark@standard8.co.uk>
+// Copyright (C) 2001, 2002, 2006, 2008, 2011 
+// Mark Banner <mark@standard8.co.uk>
 // and Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -96,6 +97,8 @@ public:
   size_t duplicates() const { return dups; }
 
   bool truth() const { return is_true; }
+
+  void disable_proving() { max_occurs = -1; }
 
   // Create a prover referencing all the rows in its argument.  It is 
   // undefined behaviour if chained prover (the argument) is modified

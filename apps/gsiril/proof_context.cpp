@@ -1,5 +1,5 @@
 // proof_context.cpp - Environment to evaluate expressions
-// Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008
+// Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2011
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -145,11 +145,16 @@ bool proof_context::isrounds() const
   return r == ectx.rounds() && p->count_row(r) == ectx.extents(); 
 }
 
-void proof_context::execute_symbol( const string &sym ) 
+expression proof_context::lookup_symbol( const string& sym )
 {
   expression e( dsym_table.lookup(sym) );
   if ( e.isnull() ) e = ectx.lookup_symbol(sym);
-  e.execute( *this );
+  return e;
+}
+
+void proof_context::execute_symbol( const string &sym ) 
+{
+  lookup_symbol(sym).execute( *this );
 }
 
 void proof_context::define_symbol( const pair<const string, expression>& defn )
@@ -221,6 +226,7 @@ proof_context proof_context::silent_clone() const
 {
   proof_context copy( *this );
   copy.p = prover::create_branch(copy.p);
+  copy.p->disable_proving();
   copy.silent = true;
   copy.output = NULL;
   return copy;

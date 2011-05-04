@@ -1,5 +1,5 @@
 // parser.cpp - Tokenise and parse lines of input
-// Copyright (C) 2002, 2003, 2004, 2005, 2007, 2008, 2010
+// Copyright (C) 2002, 2003, 2004, 2005, 2007, 2008, 2010, 2011
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -67,6 +67,7 @@ namespace tok_types
     assignment  = '=',
     new_line    = '\n',
     semicolon   = ';',
+    reverse     = '~',
     comment     = tokeniser::first_token,
     string_lit,
     transp_lit,
@@ -155,7 +156,7 @@ public:
     case name: case num_lit: case open_paren: case close_paren:
     case comma: case times: case assignment: case new_line: case semicolon:
     case comment: case string_lit: case transp_lit: case pn_lit: 
-    case def_assign: case logic_and: case logic_or:
+    case def_assign: case logic_and: case logic_or: case reverse:
       return;
 
     case regex_lit: case open_brace: case close_brace: case colon:
@@ -587,6 +588,22 @@ msparser::make_expr( vector< token >::const_iterator first,
       return expression
 	( new repeated_node( times,
 			     make_expr( begin_arg, last ) ) );
+    }
+
+  // Reversals are high precedence unary prefix operators
+  if ( first->type() == tok_types::reverse )
+    {
+      if ( first + 1 == last )
+	throw runtime_error
+	  ( "The reverse operator requires an argument" );
+
+      expression arg( make_expr( first + 1, last ) );
+      if ( !args.issimple() )
+        throw runtime_error
+          ( "The argument to the reversal operator must not test the "
+            "current row, implicitly or explicity" );
+
+      return expression( new reverse_node(arg) );
     }
 
   // Everything left is a literal of some sort
