@@ -95,6 +95,9 @@ private:
                               string::const_iterator e,
                               token& tok ) const
   {
+    if ( i != e && (*i == 'x' || *i == 'X') ) {
+      tok = string(i, i+1); tok.type( type() ); ++i; return done;
+    }
     bool had_letter = false;
     string::const_iterator j = i;
     for ( ; j != e && bell::is_symbol(*j); ++j ) 
