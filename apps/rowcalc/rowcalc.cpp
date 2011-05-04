@@ -47,6 +47,8 @@ struct arguments
   init_val<bool, false>  interactive;
   init_val<bool, false>  count;
   init_val<int, 0>       bells;
+  init_val<bool, false>  accept_changes;
+
   vector<string>         expr;
 
 private:
@@ -74,6 +76,11 @@ void arguments::bind( arg_parser& p )
            "Run in interactive mode",
            interactive ) );
 
+  p.add( new boolean_opt
+         ( 'C', "accept-changes",
+           "Allow changes in row expressions",
+           accept_changes ) );
+
   p.set_default( new strings_opt( '\0', "", "", "", expr ) );
 }
 
@@ -83,6 +90,13 @@ bool arguments::validate( arg_parser& ap )
     {
       ap.error( make_string() << "The number of bell must be greater than "
                 "0 and less than " << bell::MAX_BELLS+1 );
+      return false;
+    }
+
+  if ( accept_changes && !bells )
+    {
+      ap.error( make_string() << "The number of bells must be provided if -C "
+                "is used" );
       return false;
     }
   return true;
@@ -105,10 +119,17 @@ arguments::arguments( int argc, char *argv[] )
 
 bool evaluate_expr( arguments const& args, string const& expr )
 {
+  row_calc::flags flags; 
+  if (args.accept_changes) 
+    flags = row_calc::allow_raw_changes;
+  else
+    flags = static_cast<row_calc::flags>( row_calc::allow_implicit_treble 
+                                        | row_calc::allow_row_promotion );
+
   scoped_pointer<row_calc> rc;
   try {
     // If bells == 0 this is equivalent to omitting that argument.
-    rc.reset( new row_calc( args.bells, expr ) );
+    rc.reset( new row_calc( args.bells, expr, flags ) );
   } 
   catch ( exception const& e ) { 
     cerr << "Error parsing expression: " << e.what() << "\n";

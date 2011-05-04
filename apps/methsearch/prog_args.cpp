@@ -145,9 +145,11 @@ bool falseness_opt::process( const string &arg, const arg_parser & ) const
     }
   else if ( arg.size() > 2 && arg[0] == 'r' && arg[1] == '=' )
     {
+      row_calc::flags rcf = static_cast<row_calc::flags>
+        ( row_calc::allow_implicit_treble | row_calc::allow_row_promotion );
       scoped_pointer<row_calc> rc;
       try {
-        rc.reset( new row_calc( 0, arg.substr(2) ) );
+        rc.reset( new row_calc( 0, arg.substr(2), rcf ) );
       } 
       catch ( exception const& e ) { 
         cerr << "Error parsing row in -Fr option: " << e.what() << "\n";

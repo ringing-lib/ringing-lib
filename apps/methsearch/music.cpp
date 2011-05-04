@@ -131,10 +131,12 @@ musical_analysis::analyser::analyser( int bells )
           else if (opt == "rhalflead") len = half_lead_r;
 
           row lh = blocks.back().first;
+          row_calc::flags rcf = static_cast<row_calc::flags>
+            ( row_calc::allow_implicit_treble | row_calc::allow_row_promotion );
           scoped_pointer<row_calc> rc;
           if (eq != pattern.size()) {
             try {
-              rc.reset( new row_calc( bells, pattern.substr(eq+1) ) );
+              rc.reset( new row_calc( bells, pattern.substr(eq+1), rcf ) );
             } catch ( exception const& e ) {
               cerr << "Unable to parse music course head expression: " 
                    << e.what() << endl;

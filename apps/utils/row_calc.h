@@ -1,5 +1,5 @@
 // -*- C++ -*- row_calc.h - classes to implement a simple row calculator
-// Copyright (C) 2009, 2010 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2009, 2010, 2011 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -42,12 +42,20 @@ RINGING_USING_STD
 class row_calc
 {
 public:
+  enum flags {
+    no_flags              = 0x00,
+    allow_implicit_treble = 0x01,
+    allow_row_promotion   = 0x02,
+    allow_raw_changes     = 0x04
+  };
+
   // Number of bells is optional -- if provided if calls row::resize
   // on the row before returning it.
-  explicit row_calc( string const& str );
-  row_calc( unsigned int b, string const& str );
+  explicit row_calc( string const& str, flags f = no_flags );
+  row_calc( unsigned int b, string const& str, flags f = no_flags );
 
   unsigned int bells() const { return b; }
+  flags get_flags() const { return f; } 
 
   class const_iterator;
   const_iterator begin() const;
@@ -94,6 +102,7 @@ private:
   void init(string const& str);
  
   int b;
+  flags f;
   expr e;  
   int v;
 };

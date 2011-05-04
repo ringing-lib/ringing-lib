@@ -1,5 +1,5 @@
 // -*- C++ -*- row_calc.cpp - classes to implement a simple row calculator
-// Copyright (C) 2009, 2010 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2009, 2010, 2011 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -483,8 +483,8 @@ private:
 class rc_parser 
 {
 public:
-  rc_parser( string const& str )
-    : is(str), tok( is ), tokens( tok.begin(), tok.end() ), vec(0)
+  rc_parser( int b, string const& str, row_calc::flags f )
+    : is(str), tok(is), bells(b), f(f), tokens(tok.begin(), tok.end()), vec(0)
   {}
 
   row_calc::expr parse() { return parse_expr( tokens.begin(), tokens.end() ); }
@@ -518,6 +518,8 @@ private:
 
   RINGING_ISTRINGSTREAM is;
   rc_tokeniser tok;
+  int bells;
+  row_calc::flags f;
   vector<token> tokens;
   int vec;
 };
@@ -621,10 +623,22 @@ row_calc::expr rc_parser::parse_int( iter_t first, iter_t last, int sign  )
 row rc_parser::make_row( string const& s )
 {
   string str = s;
+ 
+  // Try it as a change.
+  if (f & row_calc::allow_raw_changes) try {
+    change c( bells, str );
+    return row() * c;
+  } catch ( change::invalid const& ) {}
+ 
   // Allow treble to be omitted
-  if (str.find( bell(0).to_char() ) == string::npos)
+  if ((f & row_calc::allow_implicit_treble) 
+      && str.find( bell(0).to_char() ) == string::npos)
     str = bell(0).to_char() + str;
-  return row( str );
+
+  row r( str );
+  if (!(f & row_calc::allow_row_promotion) && r.bells() != bells)  
+    throw row::invalid();
+  return r;
 }
 
 row_calc::expr rc_parser::parse_row_or_int( iter_t first, iter_t last )
@@ -750,21 +764,21 @@ row_calc::expr rc_parser::parse_expr( iter_t first, iter_t last )
 
 RINGING_END_ANON_NAMESPACE
 
-row_calc::row_calc( unsigned b, string const& str )
-  : b(b)
+row_calc::row_calc( unsigned b, string const& str, flags f )
+  : b(b), f(f)
 {
   init(str);
 }
 
-row_calc::row_calc( string const& str )
-  : b(0)
+row_calc::row_calc( string const& str, flags f )
+  : b(0), f(f)
 {
   init(str);
 }
 
 void row_calc::init( string const& str )
 {
-  rc_parser p(str);
+  rc_parser p(b, str, f);
   e = p.parse();
   v = p.count_vectors();
   assert( e.count_vectors() == v );
@@ -789,7 +803,11 @@ void row_calc::const_iterator::increment()
   } catch ( vector_end ) {
     rc = 0;
   }
-  if ( rc && rc->bells() ) 
-    val.resize( rc->bells() );
+  if ( rc && rc->bells() ) {
+    if ( rc->get_flags() & row_calc::allow_row_promotion )
+      val.resize( rc->bells() );
+    else if ( val.bells() != rc->bells() )
+      throw row::invalid();
+  }
 }
 
