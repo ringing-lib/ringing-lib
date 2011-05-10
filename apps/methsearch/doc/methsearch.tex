@@ -167,7 +167,7 @@ you with statistical information on them.
 Perhaps you're looking for an interesting new method to ring?  
 \methsearch\ can help here too, but first you need an idea of what you want.
 There is no magic option that says `find me the best possible method'.
-Computers a good at answering quantitive questions, not qualitative ones.
+Computers a good at answering quantitative questions, not qualitative ones.
 Only after `best' has been defined precisely enough that a computer 
 can understand it can \methsearch\ help you find your method.
 
@@ -275,11 +275,11 @@ methsearch -b4 -d
 \end{Verbatim}
 
 In this example, there are two command line options: `\verb+-b4+' and 
-`\verb+-d+'.  The former\oi{b} tells \methsearch\ to look for mimimus methods
+`\verb+-d+'.  The former\oi{b} tells \methsearch\ to look for minimus methods
 (i.e.\ methods on four bells), the latter tells it to restrict its search
 to double methods.\oi{d}  The \verb+-d+ option is a 
 \textit{boolean option}\index{options!boolean}: 
-either it's specified or it's not --- it's not parameterised in anyway; 
+either it's specified or it's not --- it's not parametrised in anyway; 
 for example, 
 it doesn't make sense to ask for methods that are at least 40\% double.
 By contrast, the \verb+-b+ option requires a 
@@ -291,8 +291,8 @@ should be.
 By convention, command line options can sometimes be merged into one 
 argument.  This can be confusing to the uninitiated as it results in a much 
 more terse command invocations.
-The rule is that any number of boolean options can be concatentated,
-followed, optionally, by at most one parameterised options.  For example,
+The rule is that any number of boolean options can be concatenated,
+followed, optionally, by at most one parametrised options.  For example,
 the following \methsearch\ invocation searches for all plain minor methods
 that are double, have regular (i.e.\ Plain Bob) lead ends, 
 and no adjacent places.\index{example!minor, plain double}
@@ -331,7 +331,7 @@ Each command line option also has a
 with two hyphens rather than one, and have long names that are intended to 
 make their meaning more obvious to a casual reader instead of the 
 normal single-character ones.  The other difference is that when they
-have arguments, the argument is preceeded by an `\verb+=+'.  For example,
+have arguments, the argument is preceded by an `\verb+=+'.  For example,
 `\verb+-d+' can be written `\verb+--double+', 
 and `\verb+-b4+' can be written `\verb+--bells=4+'.  
 Certain rarely-used options only have a long form: for example,
@@ -721,7 +721,7 @@ Both options are only supported on even stages.
 The \verb+--3rds-place-delight+ and \verb+--4ths-place-delight+ options
 only apply to methods where the treble travels between lead and sixths place.
 Typically this will be a treble dodging minor method, but they can be used
-on higher stages in conjuction with \verb+-Z-6+ option.  Where these options
+on higher stages in conjunction with \verb+-Z-6+ option.  Where these options
 are permitted, all delight methods will either be characterised as 3rds or
 4ths place delight.
 
@@ -835,7 +835,7 @@ These types of methods can be found with the
 \texttt{-w}&\texttt{--right-place}&
   Require right place methods\\
 \texttt{-f}&\texttt{--no-78s}&
-  Prohibit penulimate places above the treble\\
+  Prohibit penultimate places above the treble\\
 \texttt{-y}&\texttt{--symmetric-sections}&
   Require each treble section to be symmetric\\
 \end{tabularx}
@@ -909,7 +909,7 @@ This has no effect in a plain method, but in a treble dodging method
 (with one treble dodge per position), it limits each section to those
 of the form \verb+a.b.a.c+.  For example, a method starting \verb+3-3.4+
 will be permitted, but one starting \verb+34-3.4+ will not.  This option
-can be useful in reducing an otherwise unmanagable search to one of 
+can be useful in reducing an otherwise unmanageable search to one of 
 a feasible length.
 
 \section{Lead ends and lead heads}\label{le_lh}
@@ -1010,7 +1010,7 @@ snap for \verb+-G+$n$ with $n>1$) produce a cyclic row one lead further on.
 Spinning Jennie Delight Royal\index{Spinning Jennie Delight Royal} is an 
 example of such a method.  
 Because \verb+--offset-cyclic+ actually effects the row at the backstroke
-snap, it can be used in conjuction with other options governing the lead head;
+snap, it can be used in conjunction with other options governing the lead head;
 however, because the lead head and backstroke snap are so close together, 
 doing so severely limits the opening few changes of the method.
 
@@ -1104,13 +1104,13 @@ palindromic or rotational symmetry, but where the symmetry point is in
 an unorthodox position.  Such a method can only exist if there is one (or 
 more) additional hunt bells following the same path as the treble but that is
 not explicitly required by a \verb+-U+ option --- this means that this 
-posibility can only occur if \verb+-A+ is specified too.
+possibility can only occur if \verb+-A+ is specified too.
 
 When searching for principles (that is, with \verb+-U0+), the plane of 
 symmetry (for \verb+-s+) or the point of rotational symmetry (for \verb+-k+)
 are not prescribed by the search.  If the principle is to have an odd 
 number of changes per lead, then the only meaningful symmetries are
-rotational and mirror symmtery.  \methsearch's handling of symmetry in
+rotational and mirror symmetry.  \methsearch's handling of symmetry in
 principles is not very sophisticated --- in particular, a number of 
 obvious opportunities for optimisation are neglected.  This may be addressed
 in a future version of \methsearch.
@@ -1125,7 +1125,7 @@ by the \verb+--mirror+ option.\loid{mirror}
 It means that method is invariant when 
 each change is reversed without a subsequent shift of half a course.  It 
 is found in Mirror Bob Major.  Mirror symmetry heavily restricts the 
-possible changes avaible for producing a method: for example, on six bells,
+possible changes available for producing a method: for example, on six bells,
 only \verb+x+, \verb+16+, \verb+34+ and \verb+1256+ are allowed.
 By the nature of the symmetry, mirror symmetric methods with a hunt bell
 will always have a second hunt bell following the same path but half a lead
@@ -1166,7 +1166,7 @@ a method which restricts \methsearch\ to looking at just that one method.
 The \textit{place notation} can be expressed in any standard form.  
 Bells are represented using the case-insensitive alphabet shown in
 table~\ref{tab:bellsym}.%
-\footnote{This alphabet can be overriden with the \verb+$BELL_SYMBOLS+
+\footnote{This alphabet can be overridden with the \verb+$BELL_SYMBOLS+
 environment variable.\fspecd{BELL\_SYMBOLS}  
 For example, setting \verb+BELL_SYMBOLS="123456789ABCDEF"+
 tells \methsearch\ to use hexadecimal digits instead of the conventional 
@@ -1260,13 +1260,13 @@ to \verb+--seed+.
 
 The \verb+--changes+ option\loid{changes} restricts the changes that
 \methsearch\ will consider to those in the comma-separated list provided.  
-For example, to find methods made soley using the \verb+x+, \verb+14+ and
+For example, to find methods made solely using the \verb+x+, \verb+14+ and
 \verb+18+ changes, you could write \verb+--changes=x,14,18+.  
 Alternatively, the \verb+--changes+ option can be used to prohibit certain 
 changes.  This is done by prefixing the list of changes with a \verb+!+,
 so, for example, \verb+--changes=!1234+ will allow any changes except for
 \verb+1234+.  (In Unix shells, it will probably be necessary to quote the
-argument to prevent the shell from interpretting the \verb+!+.)
+argument to prevent the shell from interpreting the \verb+!+.)
 
 This option can be useful for generating a method (and particularly principles)
 where the course forms a group\index{group}.  Any collection of changes 
@@ -1354,7 +1354,7 @@ in \methsearch.)  The special combination \verb+-o-+ is equivalent to an
 omitted \verb+-o+ option.
 
 The \verb+-O+ option\oid{O}{out-format} can be used to further control 
-what is writen to the \verb+-o+ file.  At present three arguments to \verb+-O+ 
+what is written to the \verb+-o+ file.  At present three arguments to \verb+-O+ 
 are supported: \verb+fmt+, the default, which does formatted output as 
 specified by the \verb+-R+ option; \verb+utf8+, which is like \verb+fmt+ but
 enables Unicode\index{Unicode} characters to be output in UTF-8\index{UTF-8}; 
@@ -1388,7 +1388,7 @@ begin with a \verb+/+ on Unix, or \verb+\+ or \verb+X:\+ for some \verb+X+
 on Windows), and if the 
 \verb+$METHOD_LIBRARY_PATH+\fspecd{METHOD\_LIBRARY\_PATH} or 
 \verb+$METHLIBPATH+\fspecd{METHLIBPATH} \textitidx{environment variable}%
-\footnote{The two variables are synonmous.  If both are set, 
+\footnote{The two variables are synonymous.  If both are set, 
 \verb+$METHLIBPATH+ is ignored.}
 is set to a colon-delimited list of directories, these directories are 
 search in turn for the file.  How an environment variable is set depends 
@@ -1432,7 +1432,7 @@ The \verb+-u+ option\oid{u}{status} tells \methsearch\ to display a
 \textit{status line}
 which is updated every 10,000 nodes to containing the first 68 characters of 
 the place notation of the current node.\footnote{The number of characters
-to display can be overriden with the \verb+$COLUMNS+ environment variable%
+to display can be overridden with the \verb+$COLUMNS+ environment variable%
 \fspec{COLUMNS} in which case \verb+$COLUMNS+$-$12 characters are printed. 
 Many shells set this variable automatically.}
 This information is displayed on
@@ -1446,14 +1446,14 @@ whether any method exists with a particular set of properties.  In this
 context, the combination \verb+-q+ \verb+--limit=1+ \verb+--raw-count+ 
 can be useful when \methsearch\ is being invoked by a script.  
 The output is just a \verb+0+ or \verb+1+ 
-depending on whether the criteria can be satisified.  The \verb+--limit+
+depending on whether the criteria can be satisfied.  The \verb+--limit+
 option cannot be used in conjunction with the \verb+--random-count+ option.
 
 The \verb+--random+ option\loid{random} tells \methsearch\ to randomise the 
 order in which it searches the search space.  It is important to note, however,
 that \methsearch\ still does a depth-first search and it is only the 
 order of the child nodes at each point in the search tree that is randomised.%
-\footnote{The reason for this choice of implemention is that a truly randomised
+\footnote{The reason for this choice of implementation is that a truly randomised
 search would require \methsearch\ to store every single method it finds,
 which in turn would used a large amount of memory.  If you wish to genuinely
 randomise the methods, the \verb+-R+ option to the standard \verb+sort+%
@@ -1672,7 +1672,7 @@ that are replaced by a \textit{method parameter} --- a piece of information
 about the method.\footnote{A \verb+%+\symidx{\%}{variable} 
 can be used as an alternative to
 \verb+$+ in variables, although not in expressions such as in
-the argument to \verb+-Q+.  Use of \verb+%+ like this is deprecated.}
+the argument to \verb+-Q+.  This use of \verb+%+ is deprecated.}
 For example, \verb+-R$q+ causes the place notation%
 \index{place notation} of each method to be printed out as they are found.
 Some variables allow (and a few require) an integer to be specified
@@ -1904,8 +1904,8 @@ and table~\ref{tab:trad-lhcode6} for minor methods.%
 methods are defined in the Central Council's 1961 
 \textit{Collection of Minor Methods}\index{Central Council!Collection of 
 Minor Methods@\textit{Collection of Minor Methods}}.  These are
-repeated together with additional codes, \verb+P+--\verb+Y+ for irregular 
-methods in Michael Foulds' \textit{Spliced Treble Bob Minor} series of books,%
+augmented by \verb+P+--\verb+Y+ for irregular methods 
+in Michael Foulds' \textit{Spliced Treble Bob Minor} series of books,%
 \index{Foulds, Michael!Spliced Treble Bob Minor@\textit{Spliced 
 Treble Bob Minor} series}.}
 For minor, six possible fourths place lead heads are given Greek letters%
@@ -1913,7 +1913,10 @@ For minor, six possible fourths place lead heads are given Greek letters%
 Anthony S.\ Bishop's \textit{A Universal System for Extents of Treble
 Dodging Minor Methods}\index{Bishop, Anthony S.!A Universal System for 
 Extents of Treble Dodging Minor Methods@\textit{A Universal System for
-Extents of Treble Dodging Minor Methods}}.}
+Extents of Treble Dodging Minor Methods}}.  It is unfortunate that a more
+systematic allocation of Greek lead head codes has not been adopted, but
+unless and until an alternative scheme comes into use, \methsearch\ will
+use this one.}
 which are only displayed by \verb+$D+ if UTF-8 output is enabled with the 
 \verb+-Outf8+ option.\index{UTF-8}\index{Unicode}\oi{O}
 
@@ -1982,13 +1985,13 @@ case), the name, \verb+$n+, is the empty string; for all other methods,
 \verb+"$N"+ is equivalent to \verb+"$n $C $S"+.
 
 The path, \verb+$+$n$\verb+P+,\index{path}\fspec{P} contains the symbol for
-each place in the path of bell $n$ during the lead (including both the inital
+each place in the path of bell $n$ during the lead (including both the initial
 lead head row and the final lead head row).  For example, the path of the 2
 in Plain Bob Doubles is \verb+21123455434+.  Although \verb+$P+'s value
 looks like an integer, it should generally be treated as a string; for example,
 in an expression, it should be compared with the \verb+eq+ operator 
 (\sref{oper}) instead of \verb+==+.  This is because the \verb+==+ operator
-implicity converts its arguments to integers, which will likely result in
+implicitly converts its arguments to integers, which will likely result in
 a silent expression error\index{expression error} when the integer overflows.
 
 The coursing order, \verb+$O+\fspec{O}\index{coursing order}, is defined as
@@ -2207,7 +2210,7 @@ In expression involving two \textit{binary operators}\index{operators!binary}
 (that is, operators taking two arguments), for example, \verb-1+2*3-, 
 the order of invocation of the two operators can be made explicit by the use
 of parentheses.\index{parentheses}  For example, \verb-1+(2*3)- or 
-\verb-(1+2)*3-.  In the absense of parentheses, the operators' 
+\verb-(1+2)*3-.  In the absence of parentheses, the operators' 
 \textit{precedence} determines how tightly operators bind, relative to each 
 other.  In this example, \verb-1+2*3- is equivalent to \verb-1+(2*3)- because
 \verb+*+ has higher precedence than \verb-+-.\index{operators!precedence|)}
@@ -2216,7 +2219,7 @@ When an parenthesesless expression involves two operators of equal
 precedence, the order of their invocation is determined by that 
 precedence level's \textit{associativity}.  If the level is left-associative%
 \index{left-associative|see{operators, associativity}}, 
-the operators are evaluted from left to right; and if the level is 
+the operators are evaluated from left to right; and if the level is 
 right-associative\index{right-associative|see{operator, associativity}}, they 
 are evaluated right-to-left.  So, for example, \verb+12/2*3+ evaluates to 18,
 and not 2.\index{operators!associativity|)}
@@ -2239,7 +2242,7 @@ Because integer division rounds towards zero rather than down, this means that
 when $a$ is negative, the result of the modulus operator is also negative.%
 \footnote{To those familiar with modular arithmetic, this may be surprising.
 But this is behaviour is typical in most programming languages that use
-integer arithemetic --- for example, the C language, and languages derived
+integer arithmetic --- for example, the C language, and languages derived
 from it, define the \verb+%+ operator in this way.}
 
 The \verb+.+ operator does string concatenation.\index{concatenation}  
@@ -2381,7 +2384,7 @@ in an extremely long search where these might exceed $2^{31}$,
 \methsearch\ does not currently have specific types representing rows or
 changes.  This is likely to change in a future version of \methsearch, 
 as it is likely that the expression mechanism described in this section will
-be unified with the row expression\index{row expression} mechansim of 
+be unified with the row expression\index{row expression} mechanism of 
 \sref{rowexpr}.  An upshot of this is that it is not possible to do row-level
 operations, such as permutation, within an expression.
 
@@ -2479,7 +2482,7 @@ some other package, such as a spreadsheet\index{spreadsheet} or standard
 command line utilities such as \verb+awk+\index{awk@\texttt{awk}}, 
 \verb+sort+\index{sort@\texttt{sort}} or \verb+grep+\index{grep@\texttt{grep}}.
 This is consistent with the Unix philosophy outlined in \sref{unixphil} ---
-specificly that \methsearch\ should do one thing and do it well.  That thing
+specifically that \methsearch\ should do one thing and do it well.  That thing
 is searching for methods; plenty of other programs exist that can do
 interesting statistical analysis, and \methsearch\ aims to make interfacing
 with them as easy as possible rather than attempting to subsume their 
@@ -2498,7 +2501,7 @@ The \verb+-F+ option\oid{F}{falseness} provides a way of changing this
 behaviour.  The basic options governing whether the method should have 
 a true plain course, true leads, etc., are documented in \sref{basic_false}.
 Analysis of false course heads is discussed in \sref{fch}, and ways of 
-checking that an extent is possible is covered ni \sref{extent}.
+checking that an extent is possible is covered in \sref{extent}.
 The final two sections (\sref{avoidrow}--\ref{pends}) discuss using 
 \methsearch\ to find methods that are true against other methods.
 
@@ -2569,7 +2572,7 @@ are free to relabel $a$ and $b$.)
 It can be useful to introduce notation to refer to the set of inverse elements
 \[ \bar{C} = \{ a^{-1} : a \in C \}; \]
 the multiplication of two sets can also be defined in the obvious way 
---- as the set composed from each element of the first set multipled by each 
+--- as the set composed from each element of the first set multiplied by each 
 element of the second set: 
 \[ AB = \{ a b : a \in A, b \in B \}. \]
 Using this notation, the falseness set is simply $F(C) = C\bar{C}$.
@@ -2672,7 +2675,7 @@ Although it is possible to generalise these falseness groups codes to
 irregular methods, \methsearch\ does not currently support it.
 
 The \verb+A+ falseness group (that is, the one including \verb+23456+ as a
-couse head) can be interpretted in different ways.%
+course head) can be interpreted in different ways.%
 \index{A falseness@\texttt{A} falseness}  It is sometimes
 taken as the identity falseness, in which all methods have it; and it 
 is sometimes taken to mean that the method is internally false within the
@@ -2721,7 +2724,7 @@ checks the $(n-1)!$ possible fixed-treble lead heads on $n$ bells to see
 whether a mutually true set of $\half(n-1)!$ leads exists.
 The \verb^-Fe+^ option, also spelt \verb+-Fpositive-extent+,%
 \oidF{e+}{positive-extent} checks the $\half(n-1)!$ possible in-course 
-fixed-treble lead heads to see whether a mututally true set of 
+fixed-treble lead heads to see whether a mutually true set of 
 $\quarter(n-1)!$ leads exists.
 
 In practice, \verb+-Fe+ should be used for non-palindromic plain methods 
@@ -2743,7 +2746,7 @@ independent set} of this graph.  In the general case, finding the size of this
 is NP-complete;\index{NP-complete}\footnote{Actually, while the case of
 the maximal independent set of a general graph is known to be NP-complete,
 it is not known whether the special case of the maximal independent set of 
-a vertext transitive graph (such as a Cayley graph) is NP-complete.}
+a vertex transitive graph (such as a Cayley graph) is NP-complete.}
 however it is simple to test whether the maximal independent set is exactly 
 half the size of the graph by testing whether the graph is 
 \textitidx{bipartite} which can be tested easily.  This is what the \verb+-Fe+
@@ -2865,7 +2868,7 @@ argument is an integer then it denotes \textitidx{exponentiation};
 in both cases, the left-hand argument must be a row.  In the mathematical
 literature these operations are often both denoted by right superscripts
 and this convention is followed here,%
-\footnote{One motivation for using the exponentation syntax for conjugation
+\footnote{One motivation for using the exponentiation syntax for conjugation
 is that both satisfy the identity $(a^r)^s =  a^{(rs)}$.  However the analogy 
 shouldn't be taken too far.  If $a$ and $r$ are rows and $n$ is an integer,
 then $(a^r)^n = (a^n)^r$, and one might use $a^{nr}$ as syntactic shorthand 
@@ -3080,7 +3083,7 @@ can produce an extent.\index{extents, viability of}
 For example, if you can find a group, $G$, and a treble path of length $m$ 
 (whether in the half-lead, lead or course) such that $\left|G\right|m = n!$
 then it might be possible to use the group as the part-end group for an extent.
-In other words, it might be possible to find a method, $M$, that satifies
+In other words, it might be possible to find a method, $M$, that satisfies
 $GM=S_n$.  
 
 For example, most treble dodging minor methods produce extents
@@ -3517,7 +3520,7 @@ one \texttt{printmethod} process, and one \texttt{musgrep} process.}
 Examples with falseness can be even more extreme as \methsearch\ is able to
 use knowledge of the falseness to prune large branches of the search tree
 in one go.  A good instance of this is searching for 
-CPS\index{clear proof scale} treble doding major methods.
+CPS\index{clear proof scale} treble dodging major methods.
 \index{example!major, treble dodging, CPS}
 \begin{Verbatim}
 methsearch -b8 -G1 -srfp2 -FCPS
@@ -3551,7 +3554,7 @@ Frequently programs will ignore the exit status of any other programs they
 spawn, as those programs are able to print a much more descriptive error 
 messages in the event of failure.  This is what \methsearch\ does.
 However, occasionally it's useful to be able to find out whether or not a 
-command exited succesfully and the \verb+$?+ variable stores the exit 
+command exited successfully and the \verb+$?+ variable stores the exit 
 status of the most recent command to be executed.
 
 Before each format string is printed and any command invocations in it are 
@@ -3571,7 +3574,7 @@ value of \verb+$?+ changing through the format string.
 Row streams are used to stream a list of rows between programs.  
 The standard syntax is very straightforward: one row per line.%
 \footnote{Some programs will accept more permissive formats: for example
-by allowing (and ignoring) anotations after the row, 
+by allowing (and ignoring) annotations after the row, 
 by allowing multiple rows per line, or by accepting alternative separators.
 You should consult the documentation for the specific program before using 
 these.}
@@ -3588,7 +3591,7 @@ The \ttcmdidx{musgrep} (\sref{musgrep}) program acts upon a row stream.%
 \footnote{The experimental \ttcmdidx{ringmethod} program also acts on a row 
 stream which it converts into an audio\index{audio} WAV file%
 \index{wav file@\texttt{WAV} file} by synthesising bell sounds; however, there
-is very little call for this program to be used in conjuction with 
+is very little call for this program to be used in conjunction with 
 \methsearch, so it is not documented here.  The \verb+--help+ text gives a
 brief summary of how to use it.}
 Both \texttt{rowcalc} and \texttt{musgrep} can be optionally be used as a 
@@ -3619,7 +3622,7 @@ of the form \verb+1.....78+.  The rows are listed in lexicographic order%
 \verb+12345678+, \verb+12346578+, \verb+12354678+, \ldots, \verb+16543278+.
 
 It is rare to want to use this program in conjunction with \methsearch.
-However, one use for this program is, in conjuction with \texttt{musgrep}, for
+However, one use for this program is, in conjunction with \texttt{musgrep}, for
 calculating the maximum possible musical score.  Assuming no rows 
 have been given a negative score and that the stroke on which rows occur
 is irrelevant then the full extent must have the maximum score possible
@@ -3740,7 +3743,7 @@ example, to see which method is most musical for a given composition.  As
 it stands, the file contains the place notation of
 Cambridge hard-coded into it.  This can easily be resolved by removing
 the definition of \verb+m+ from the file and putting it on the command line
-instead.  This allows it to be subsituted by \verb+$Q+\fspec{Q} in a
+instead.  This allows it to be substituted by \verb+$Q+\fspec{Q} in a
 command invocation, such as:\index{example!major, music to Middleton's}
 \begin{Verbatim}[commandchars=@~~]
 -R'$q  $(gsiril -b8 -Dm="$Q" -E -f middletons.gsir @hfill\
@@ -3803,7 +3806,7 @@ The syntax for these is as given in chapter \ref{music},
 except without the leading \verb+-M+.  When giving a negative score to 
 a pattern the syntax (e.g.\ \verb+-1:*28+ to negatively score \verb+28+s
 at the back) looks like the standard form of an option because of the 
-leading minus sign.  This is resolved by preceeding the music with
+leading minus sign.  This is resolved by preceding the music with
 the special option \verb+--+.  This tells \texttt{musgrep} to stop looking
 for options and to parse everything after it on the command line as an 
 argument.\index{options!ending}  This syntax is standard to most command
@@ -3821,7 +3824,7 @@ number of matching rows.  The two can be different because a row can match
 more than one pattern (e.g.\ \verb+42135678+ is both a CRU and a 4-run), 
 because a pattern can be assigned a score other than one 
 (e.g.\ with \verb+2:*5678+ to score \verb+5678+s at the back double),
-or because a pattern can match multiple times (e.g.\ \verb+21345678+ matche
+or because a pattern can match multiple times (e.g.\ \verb+21345678+ matched
 the 4-run pattern three times).
 
 It is also possible for the positive and negative counts, 
@@ -3895,7 +3898,7 @@ interest here.  This allows a single invocation of \texttt{touchsearch} to
 search a series of methods for one that can produce a touch of the specified
 type.  For example, the following command searches for asymmetric plain minor
 methods that can actually produce an extent.%
-\index{example!minor, asymmetric extnts}
+\index{example!minor, asymmetric extents}
 \begin{Verbatim}[commandchars=@~~]
 methsearch -b6 -Fe -Q'$y eq ""' -rf -m'*2' @hfill\
   | touchsearch -b6 --filter -r -l720 -Cb=4 -Cs=234 --limit=1
@@ -4117,7 +4120,7 @@ prints the musical score.
 \item Multiple hunt bells supported with \verb+-U+.
 \item Right-place methods (\verb+-w+) now supported on odd stages too.
 \item Testing for extent viability with \verb+-Fe+.
-\item Couting the total number of methods with \verb+--count+.
+\item Counting the total number of methods with \verb+--count+.
 \item Music analysis extended to handle named music including \verb+<4-runs>+.
 \end{list}
 
@@ -4211,7 +4214,7 @@ the default is 2.
 \item Support for command invocations \verb+$(+\ldots\verb+)+.
 \end{list}
 
-Relatively little developement happened during the next few years 
+Relatively little development happened during the next few years 
 and it wasn't until 2009 that I next produced a release of \methsearch.
 
 \subsection{15 June 2009}
@@ -4221,7 +4224,7 @@ and it wasn't until 2009 that I next produced a release of \methsearch.
 file inputs and command invocations (though not set literals or group 
 generator literals).
 \item Falseness groups can now be found with \verb+-F:+\textit{groups}.
-\item The \verb+-C+ option is now accepted as shorthard for \verb+--count+.
+\item The \verb+-C+ option is now accepted as shorthand for \verb+--count+.
 \item Added \verb+--node-count+, \verb+--prefix+, \verb+--filter+.
 \item Multiple \verb+--require+ options can be given.
 \end{list}
