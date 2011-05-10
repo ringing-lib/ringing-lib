@@ -68,7 +68,7 @@ string tenors_together_coursing_order( const method& m );
 //   x < 12 < 1234 < 14 < 34
 bool compare_changes( change const& a, change const& b );
 
-char old_lhcode( method const& m );
+char const* old_lhcode( bool unicode, method const& m );
 
 unsigned long staticity( method const& m );
 

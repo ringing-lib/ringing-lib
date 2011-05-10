@@ -67,6 +67,7 @@ private:
 };
 
 
+void set_formats_in_unicode(bool);
 bool formats_have_falseness_groups();
 bool formats_have_names();
 bool formats_have_cc_ids();

@@ -60,6 +60,13 @@ RINGING_USING_STD
 
 char const* expr_error_string = "<ERROR>";
 
+static bool formats_in_unicode = false;
+
+void set_formats_in_unicode(bool val)
+{
+  formats_in_unicode = val;
+}
+
 class method_properties::impl2 : public library_entry::impl
 {
 public:
@@ -207,7 +214,7 @@ string method_properties::impl2::get_property( int num_opt,
 	  break;
 
 	case 'D':
-	  os << old_lhcode(m);
+	  os << old_lhcode(formats_in_unicode, m);
 	  break;
 
 	case 'y':

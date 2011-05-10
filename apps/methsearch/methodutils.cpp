@@ -313,7 +313,7 @@ bool compare_changes( change const& a, change const& b )
 }
 
 namespace {
-char old_lhcode_6( method const& m )
+char const* old_lhcode_6( bool unicode, method const& m )
 {
   row const lh( m.lh() );
   change const c12( m.bells(), "12" );
@@ -321,40 +321,53 @@ char old_lhcode_6( method const& m )
   bool const seconds( m.back() == c12 );
 
   // Only handle seconds and sixth place methods
-  if ( !seconds && m.back() != change( m.bells(), "1" ) )
-    return '?';
+  if ( !seconds && m.back() != change( m.bells(), "1" ) ) {
+    if ( m.back() != change(m.bells(), "14") ) return "?";
+
+    if ( lh == "145362" ) return "X";
+    if ( lh == "162534" ) return "Y";
+
+    if ( unicode && lh == "136524" ) return "\xCE\xBC"; // mu
+    if ( unicode && lh == "152643" ) return "\xCE\xB8"; // theta
+    if ( unicode && lh == "164235" ) return "\xCE\xB4"; // delta
+    if ( unicode && lh == "146325" ) return "\xCE\xA8"; // Psi
+    if ( unicode && lh == "154263" ) return "\xCE\xA3"; // Sigma
+    if ( unicode && lh == "135642" ) return "\xCE\xBB"; // lambda
+
+    return "?";
+  }
 
   switch (lh[1])
     {
     case 2:
-      if ( lh == "135264" ) return seconds ? 'G' : 'L';
-      if ( lh == "136245" ) return seconds ? 'Q' : '?';
-      if ( lh == "134625" ) return seconds ? '?' : 'W';
+      if ( lh == "135264" ) return seconds ? "G" : "L";
+      if ( lh == "136245" ) return seconds ? "Q" : "?";
+      if ( lh == "134625" ) return seconds ? "?" : "W";
       break;
       
     case 3:
-      if ( lh == "142635" ) return seconds ? 'K' : 'O';
-      if ( lh == "142563" ) return seconds ? 'P' : '?';
-      if ( lh == "146532" ) return seconds ? '?' : 'U';
+      if ( lh == "142635" ) return seconds ? "K" : "O";
+      if ( lh == "142563" ) return seconds ? "P" : "?";
+      if ( lh == "146532" ) return seconds ? "?" : "U";
       break;
       
     case 4:
-      if ( lh == "156342" ) return seconds ? 'H' : 'M';
-      if ( lh == "154632" ) return seconds ? 'S' : '?';
-      if ( lh == "152364" ) return seconds ? '?' : 'T';
+      if ( lh == "156342" ) return seconds ? "H" : "M";
+      if ( lh == "154632" ) return seconds ? "S" : "?";
+      if ( lh == "152364" ) return seconds ? "?" : "T";
       break;
       
     case 5:
-      if ( lh == "164523" ) return seconds ? 'J' : 'N';
-      if ( lh == "165324" ) return seconds ? 'R' : '?';
-      if ( lh == "165243" ) return seconds ? '?' : 'V';
+      if ( lh == "164523" ) return seconds ? "J" : "N";
+      if ( lh == "165324" ) return seconds ? "R" : "?";
+      if ( lh == "165243" ) return seconds ? "?" : "V";
       break;
     }
 
-  return '?';
+  return "?";
 }
 
-char old_lhcode_5( method const& m )
+char const* old_lhcode_5( method const& m )
 {
   row const lh( m.lh() );
   change const c1(m.bells(), "1"),   c2(m.bells(), "12"), 
@@ -364,49 +377,49 @@ char old_lhcode_5( method const& m )
              b3(m.back() == c3), b4(m.back() == c4);
 
   if ( !b1 && !b2 && !b3 && !b4 ) 
-    return '?';
+    return "?";
 
   switch (lh[1])
     {
     case 1:
-      if ( lh == "12534" ) return b2 ? 'G' : b3 ? 'T' : '?';
-      if ( lh == "12453" ) return b2 ? 'K' : b3 ? 'S' : '?';
+      if ( lh == "12534" ) return b2 ? "G" : b3 ? "T" : "?";
+      if ( lh == "12453" ) return b2 ? "K" : b3 ? "S" : "?";
       break;
  
     case 2:
-      if ( lh == "13524" ) return b2 ? 'A' : b1 ? 'C' : '?';
-      if ( lh == "13542" ) return b4 ? 'Z' : '?';
-      if ( lh == "13425" ) return b2 ? 'H' : b4 ? 'X' : '?';
-      if ( lh == "13452" ) return b1 ? 'F' : '?';
+      if ( lh == "13524" ) return b2 ? "A" : b1 ? "C" : "?";
+      if ( lh == "13542" ) return b4 ? "Z" : "?";
+      if ( lh == "13425" ) return b2 ? "H" : b4 ? "X" : "?";
+      if ( lh == "13452" ) return b1 ? "F" : "?";
       break;
  
     case 3:
-      if ( lh == "14253" ) return b2 ? 'B' : b1 ? 'D' : '?';
-      if ( lh == "14235" ) return b2 ? 'J' : b4 ? 'W' : '?';
-      if ( lh == "14352" ) return b3 ? 'U' : '?';
-      if ( lh == "14532" ) return b3 ? 'R' : b4 ? 'N' : '?';
+      if ( lh == "14253" ) return b2 ? "B" : b1 ? "D" : "?";
+      if ( lh == "14235" ) return b2 ? "J" : b4 ? "W" : "?";
+      if ( lh == "14352" ) return b3 ? "U" : "?";
+      if ( lh == "14532" ) return b3 ? "R" : b4 ? "N" : "?";
       break;
 
     case 4:
-      if ( lh == "15234" ) return b1 ? 'E' : '?';
-      if ( lh == "15243" ) return b4 ? 'Y' : '?';
-      if ( lh == "15423" ) return b3 ? 'Q' : b4 ? 'M' : '?';
-      if ( lh == "15324" ) return b3 ? 'V' : '?';
+      if ( lh == "15234" ) return b1 ? "E" : "?";
+      if ( lh == "15243" ) return b4 ? "Y" : "?";
+      if ( lh == "15423" ) return b3 ? "Q" : b4 ? "M" : "?";
+      if ( lh == "15324" ) return b3 ? "V" : "?";
       break;
     }
 
-  return '?';
+  return "?";
 }
 }
 
-char old_lhcode( method const& m ) 
+char const* old_lhcode( bool unicode, method const& m ) 
 {
   if ( m.bells() == 6 ) 
-    return old_lhcode_6(m);
+    return old_lhcode_6(unicode, m);
   else if ( m.bells() == 5 ) 
     return old_lhcode_5(m);
   else
-    return '?';
+    return "?";
 }
 
 unsigned long staticity( method const& m )

@@ -745,9 +745,9 @@ bool arguments::validate( arg_parser &ap )
       return false;
     }
 
-  if ( outfmt.size() && R_fmt_str.size() )
+  if ( outfmt == "xml" && R_fmt_str.size() )
     {
-      ap.error( "The -O option cannot be used with the -R option" );
+      ap.error( "The -Oxml option cannot be used with the -R option" );
       return false;
     }
 
@@ -763,11 +763,14 @@ bool arguments::validate( arg_parser &ap )
     return false;
   }
 
+  if ( outfmt == "utf8" ) 
+    set_formats_in_unicode( true );
+
   if (!quiet) {
     if ( outfile == "-" ) outfile.erase();
 
     try {
-      if ( outfmt.empty() || outfmt == "fmt" ) {
+      if ( outfmt.empty() || outfmt == "fmt" || outfmt == "utf8" ) {
 	outfmt.erase();
 	if ( R_fmt_str.empty() )
           R_fmt_str = filter_mode ? "$p\t$a" : "$p\t$l";
@@ -789,7 +792,8 @@ bool arguments::validate( arg_parser &ap )
         }
       }
       else {
-	ap.error( "Unknown -O format: must be either `xml' or `fmt'" );
+	ap.error( "Unknown -O format: "
+                  "must be one of \"xml\", \"fmt\" or \"utf8\"" );
 	return false;
       }
     }

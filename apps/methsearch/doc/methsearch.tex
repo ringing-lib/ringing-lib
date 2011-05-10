@@ -59,6 +59,11 @@
 \usepackage[nodayofweek]{datetime}
 \longdate
 
+\usepackage{rotating}
+\usepackage{multirow}
+\usepackage[small]{caption}
+
+
 % Coloured links, etc.
 \usepackage[xetex,%
             citecolor=black,filecolor=black,linkcolor=black,urlcolor=black,%
@@ -151,7 +156,7 @@ this tool is unlikely to be of interest.
 some particular criteria.  For example, the `standard' 41 surprise minor
 methods are the only methods that satisfy a particular set of criteria.
 In this case, it's possible to verify this with pencil and paper, and 
-indeded this was first discovered a hundred or more years ago.  But 
+indeed this was first discovered a hundred or more years ago.  But 
 \methsearch\ allows you to verify this in a fraction of a second.
 
 A comparable list of major methods runs to tens of millions of entries ---
@@ -286,7 +291,7 @@ should be.
 By convention, command line options can sometimes be merged into one 
 argument.  This can be confusing to the uninitiated as it results in a much 
 more terse command invocations.
-The rule is that any number of boolean options can be concatentated
+The rule is that any number of boolean options can be concatentated,
 followed, optionally, by at most one parameterised options.  For example,
 the following \methsearch\ invocation searches for all plain minor methods
 that are double, have regular (i.e.\ Plain Bob) lead ends, 
@@ -455,7 +460,7 @@ methsearch -b5 -sAC -R'$q\t$D' -Q'$o>=3' -m'*(1|2|23)'
 \end{Verbatim}
 Note that the \verb+'+ character in many of the examples here is the character
 you get by pressing the apostrophe key on your keyboard.  Some systems will
-display it as a \texttt{\vapost}.
+display it as a straight (symmetrical) quote, others as a curved close quote.
 
 Here, \verb+-b5+ means doubles (i.e.\ on five bells), \verb+-s+ means 
 symmetric about the treble's lead and lie, \verb+-A+ means include methods
@@ -472,7 +477,7 @@ The argument to the \verb+-R+ option is called a \textitidx{format string}
 and is described in detail in \sref{fmtstr}.
 In this case, we request the place notation in a 
 concise notation (\verb+$q+)\fspec{q} and the lead head code using the 
-older-style codes used in the 1980 collection (\verb+$D+)\fspec{D}.  
+traditional codes used in the 1980 collection (\verb+$D+)\fspec{D}.  
 The remaining part of the argument, \verb+\t+, instructs \methsearch\ to 
 place a \textitidx{tab character} between the two pieces of information.
 Most terminals display this as some (varying) number of spaces; however, 
@@ -761,8 +766,8 @@ The places should be specified by bell symbol (see \sref{pn}) --- thus a plain
 maximus method is equivalent to \verb+-Z1-T+ and not \verb+-Z1-12+.  
 If the lowest place, $x$, is lead, it can be omitted; 
 likewise, if the highest place, $y$, is the back, it can be omitted.  
-Thus \verb+-Z-4+ is a traditional treble to
-fourths place little method, and \verb+-Z-+ is equivalent to no \verb+-Z+ 
+Thus \verb+-Z-4+ is a traditional treble-to-%
+fourths-place little method, and \verb+-Z-+ is equivalent to no \verb+-Z+ 
 option as it means front to back.
 
 \methsearch\ supports little methods in which the primary hunt bell does not
@@ -1143,8 +1148,24 @@ of the method's place notation.  Its argument is a \textitidx{method mask}.
 At its simplest, a method mask can just be the complete place notation for 
 a method which restricts \methsearch\ to looking at just that one method.
 
+\index{bells!symbols for} 
+
+\begin{table}[h]\centering
+{\footnotesize\begin{tabular}{cccccccccc cccccccc}
+1&2&3&4&5&6&7&8&9&10&11&12&13&14&15&16&17&18\\
+\texttt{1}&\texttt{2}&\texttt{3}&\texttt{4}&\texttt{5}&\texttt{6}&\texttt{7}&\texttt{8}&\texttt{9}&\texttt{0}&\texttt{E}&\texttt{T}&\texttt{A}&\texttt{B}&\texttt{C}&\texttt{D}&\texttt{F}&\texttt{G}\\
+\end{tabular}}
+\caption*{}
+{\footnotesize\begin{tabular}{cc cccccccccc ccc}
+19&20&21&22&23&24&25&26&27&28&29&30&31&32&33\\
+\texttt{H}&\texttt{J}&\texttt{K}&\texttt{L}&\texttt{M}&\texttt{N}&\texttt{P}&\texttt{Q}&\texttt{R}&\texttt{S}&\texttt{U}&\texttt{V}&\texttt{W}&\texttt{Y}&\texttt{Z}\\
+\end{tabular}}
+\caption{\label{tab:bellsym}The default set of bell symbols.}
+\end{table}
+
 The \textit{place notation} can be expressed in any standard form.  
-Bells are represented using the following case-insensitive alphabet.%
+Bells are represented using the case-insensitive alphabet shown in
+table~\ref{tab:bellsym}.%
 \footnote{This alphabet can be overriden with the \verb+$BELL_SYMBOLS+
 environment variable.\fspecd{BELL\_SYMBOLS}  
 For example, setting \verb+BELL_SYMBOLS="123456789ABCDEF"+
@@ -1159,18 +1180,6 @@ The default alphabet is \textit{not} compatible with
 the alphabet used in Abel\index{Abel} on 20 or more bells as Abel uses 
 \verb+I+ to represent bell number 20.  The convention used by \methsearch\ is
 the one used in the Central Council's method libraries.}
-\index{bells!symbols for} 
-
-{\footnotesize\begin{tabular}{cccccccccc cccccccc}
-1&2&3&4&5&6&7&8&9&10&11&12&13&14&15&16&17&18\\
-\texttt{1}&\texttt{2}&\texttt{3}&\texttt{4}&\texttt{5}&\texttt{6}&\texttt{7}&\texttt{8}&\texttt{9}&\texttt{0}&\texttt{E}&\texttt{T}&\texttt{A}&\texttt{B}&\texttt{C}&\texttt{D}&\texttt{F}&\texttt{G}\\
-\end{tabular}}
-
-{\footnotesize\begin{tabular}{cc cccccccccc ccc}
-19&20&21&22&23&24&25&26&27&28&29&30&31&32&33\\
-\texttt{H}&\texttt{J}&\texttt{K}&\texttt{L}&\texttt{M}&\texttt{N}&\texttt{P}&\texttt{Q}&\texttt{R}&\texttt{S}&\texttt{U}&\texttt{V}&\texttt{W}&\texttt{Y}&\texttt{Z}\\
-\end{tabular}}
-
 External places may be stated
 explicitly or left implicit, the cross change can be denoted \verb+x+, 
 \verb+X+ or \verb+-+ as preferred,\index{x@\texttt{x}|see{cross change}}%
@@ -1211,7 +1220,8 @@ the method derived from the mask is symmetric --- use \verb+-s+ for that.
 
 Parentheses cannot be used to enclose longer fragments of place notation.
 For example, it is \textit{not} possible to specify that a method must have 
-either a Kent or an Oxford start by writing \verb+&(-34-|34-34).*,?+.
+either a Kent\index{Kent Treble Bob} or an Oxford\index{Oxford Treble Bob} 
+start by writing \verb+&(-34-|34-34).*,?+.
 
 Finally, a mask can specify separate mask for the above
 and below works.\index{above work}\index{below work}  The above and below 
@@ -1344,11 +1354,12 @@ in \methsearch.)  The special combination \verb+-o-+ is equivalent to an
 omitted \verb+-o+ option.
 
 The \verb+-O+ option\oid{O}{out-format} can be used to further control 
-what is writen to the \verb+-o+ file.  At present two arguments to \verb+-O+ 
+what is writen to the \verb+-o+ file.  At present three arguments to \verb+-O+ 
 are supported: \verb+fmt+, the default, which does formatted output as 
-specified by the \verb+-R+ option; and \verb+xml+ which tells 
-\methsearch\ to produce an XML file containing the methods.%
-\index{XML|(}%
+specified by the \verb+-R+ option; \verb+utf8+, which is like \verb+fmt+ but
+enables Unicode\index{Unicode} characters to be output in UTF-8\index{UTF-8}; 
+and \verb+xml+, which tells \methsearch\ to produce an XML file containing 
+the methods.\index{XML|(}%
 \footnote{The XML conforms to the \textit{schema} published by the 
 online method database project which is documented at
 \url{http://methods.ringing.org/xml.html}.  This schema is not the one 
@@ -1771,33 +1782,182 @@ to the \verb+-p+ option.  The number of hunt bells, \verb+$u+\fspec{u}
 includes any bell that is back in its starting place at the lead head.
 
 The modern lead head code, \verb+$d+\fspec{d}, is the lead head as defined
-in modern Central Council collections.\footnote{For a full description
-of the modern lead head codes, see paragraph 3.6 (vi) of 
-\url{http://methods.org.uk/method-collections/fmtspec.htm}.}
+in modern Central Council collections and enumerated in 
+table~\ref{tab:mod-lhcode}.
 It is a lower case letter \verb+a+--\verb+r+ (excluding \verb+i+); 
-on ten or more bells, it may also have a numeric suffix.  For compatibility
+on nine or more bells, it may also have a numeric suffix.  For compatibility
 with MicroSiril\index{MicroSiril libraries}, the letter \verb+z+ is used
-to denote all lead head types without a code.  The old lead head code,
+to denote all lead head types without a code, including methods with regular
+(i.e.\ Plain Bob) lead heads, but with a short course, such as a royal
+method with lead head \verb+1795038264+.
+
+
+\begin{sidewaystable}[p]\centering{\tt\tiny
+\def\head#1{\multicolumn{3}{l|}{{\rm\footnotesize#1}}}
+\def\lasthead#1{\multicolumn{3}{l}{{\rm\footnotesize#1}}}
+\begin{tabular}{lll| lll| lll| lll| lll| lll| lll}
+\head{Minimus}&\head{Minor}&\head{Major}&\head{Royal}&\head{Maximus}&
+\head{Fourteen}&\lasthead{Sixteen}\\\hline
+342&a&g&35264&a&g&3527486&a&g&352749608&a &g &3527496E8T0&a &g 
+  &3527496E8A0BT&a &g &3527496E8A0CTDB&a &g \\
+   & & &56342&b&h&5738264&b&h&573920486&b &h &57392E4T608&b &h 
+  &57392E4A6B8T0&b &h &57392E4A6C8D0BT&b &h \\
+   & & &     & & &7856342&c&j&795038264&z &z &795E3T20486&c &j 
+  &795E3A2B4T608&c &j &795E3A2C4D6B8T0&z &z \\
+   & & &     & & &       & & &907856342&c1&j1&9E7T5038264&c1&j1
+  &9E7A5B3T20486&c1&j1&9E7A5C3D2B4T608&c1&j1\\
+   & & &     & & &       & & &         &  &  &ET907856342&c2&j2
+  &EA9B7T5038264&c2&j2&EA9C7D5B3T20486&z &z \\
+   & & &     & & &       & & &         &  &  &           &  &  
+  &ABET907856342&c3&j3&ACED9B7T5038264&z &z \\
+   & & &     & & &       & & &         &  &  &           &  &  
+  &             &  &  &CDABET907856342&c4&j4\\\hline
+   & & &     & & &       & & &         &  &  &           &  &  
+  &             &  &  &DBCTA0E89674523&d4&k4\\
+   & & &     & & &       & & &         &  &  &           &  &  
+  &BTA0E89674523&d3&k3&BTD0C8A6E492735&z &z \\
+   & & &     & & &       & & &         &  &  &T0E89674523&d2&k2
+  &T0B8A6E492735&d2&k2&T0B8D6C4A2E3957&z &z \\
+   & & &     & & &       & & &089674523&d1&k1&08T6E492735&d1&k1
+  &08T6B4A2E3957&d1&k1&08T6B4D2C3A5E79&d1&k1\\
+   & & &     & & &8674523&d&k&860492735&z &z &8604T2E3957&d &k 
+  &8604T2B3A5E79&d &k &8604T2B3D5C7A9E&z&z  \\
+   & & &64523&e&l&6482735&e&l&648203957&e &l &648203T5E79&e &l 
+  &648203T5B7A9E&e &l &648203T5B7D9CEA&e &l \\
+423&f&m&42635&f&m&4263857&f&m&426385079&f &m &42638507T9E&f &m 
+  &42638507T9BEA&f &m &42638507T9BEDAC&f &m \\\hline
+   & & &25364&p&r&2537486&p&r&253749608&p &r &2537496E8T0&p &r
+  &2537496E8A0BT&p &r &2537496E8A0CTDB&p &r \\
+   & & &     & & &       & & &297058364&p1&r1&297E5T30486&p1&r1
+  &297E5A3B4T608&p1&r1&297E5A3C4D6B8T0&p1&r1\\
+   & & &     & & &       & & &         &  &  &           &  &  
+  &2AEB9T7058364&p2&r2&2AEC9D7B5T30486&p2&r2\\
+   & & &     & & &       & & &         &  &  &           &  &  
+  &2TB0A8E694735&q2&s2&2TB0D8C6A4E3957&q2&r2\\
+   & & &     & & &       & & &280694735&q1&s1&2806T4E3957&q1&s1
+  &2806T4B3A5E79&q1&s1&2806T4B3D5C7A9E&q1&r1\\
+   & & &24635&q&s&2463857&q&s&246385079&q &s &24638507T9E&q &s
+  &24638507T9BEA&q &s &24638507T9BEDAC&q &r \\\hline
+\end{tabular}
+\caption*{} % For vertical padding
+
+\begin{tabular}{lll| lll| lll| lll| lll| lll}
+\head{Doubles}&\head{Triples}&\head{Caters}&\head{Cinques}&\head{Sextuples}&
+\lasthead{Septuples}\\\hline
+2453&a&g&246375&a&g&24638597&a &g &24638507E9&a &g &24638507T9AE&a &g 
+  &24638507T9BECA&a &g \\
+    & & &267453&b&h&26849375&b &h &268403E597&b &h &268403T5A7E9&b &h 
+  &268403T5B7C9AE&b &h \\
+    & & &      & & &28967453&c &j &2806E49375&z &z &2806T4A3E597&c &j 
+  &2806T4B3C5A7E9&c &j \\
+    & & &      & & &        &  &  &20E8967453&c1&j1&20T8A6E49375&c1&j1
+  &20T8B6C4A3E597&c1&j1\\
+    & & &      & & &        &  &  &          &  &  &2TA0E8967453&c2&j2
+  &2TB0C8A6E49375&c2&j2\\
+    & & &      & & &        &  &  &          &  &  &            &  &  
+  &2BCTA0E8967453&c3&j3\\\hline
+    & & &      & & &        &  &  &          &  &  &            &  &  
+  &2CABET90785634&d3&k3\\
+    & & &      & & &        &  &  &          &  &  &2AET90785634&d2&k2
+  &2AEC9B7T503846&d2&k2\\
+    & & &      & & &        &  &  &2E90785634&d1&k1&2E9A7T503846&d1&k1
+  &2E9A7C5B3T4068&d1&k1\\
+    & & &      & & &29785634&d &k &297E503846&z &z &297E5A3T4068&d &k 
+  &297E5A3C4B6T80&d &k \\
+    & & &275634&e&l&27593846&e &l &27593E4068&e &l &27593E4A6T80&e &l 
+  &27593E4A6C8B0T&e &l \\
+2534&f&m&253746&f&m&25374968&f &m &2537496E80&f &m &2537496E8A0T&f &m 
+  &2537496E8A0CTB&f &m \\\hline
+4253&p&r&426375&p&r&42638597&p &r &42638507E9&p &r &42638507T9AE&p &r 
+  &42638507T9BECA&p &r \\
+    & & &      & & &86947253&p1&r1&8604E29375&p1&r1&8604T2A3E597&p1&r1
+  &8604T2B3C5A7E9&p1&r1\\
+    & & &      & & &        &  &  &          &  &  &T0A8E6947253&p1&r1
+  &T0B8C6A4E29375&p1&r1\\
+    & & &      & & &        &  &  &          &  &  &EA9T70583624&q1&s1
+  &EA9C7B5T302846&q1&r1\\
+    & & &      & & &79583624&q1&s1&795E302846&q1&s1&795E3A2T4068&q1&s1
+  &795E3A2C4B6T80&q1&r1\\
+3524&q&s&352746&q&s&35274968&q &s &3527496E80&q &s &3527496E8A0T&q &s 
+  &3527496E8A0CTB&q &r \\\hline
+\end{tabular}}
+\caption{\label{tab:mod-lhcode}%
+Modern lead head codes as shown by \texttt{\$d} for methods on
+four to sixteen bells.  For each lead head, the first
+code is for a seconds place lead end (or thirds place for twin hunt methods), 
+and the second code is for an $n$th place lead end.}
+\end{sidewaystable}
+
+The traditional lead head code,
 \verb+$D+\fspec{D}, only applies on five or six bells.  It is a capital
-letter, or \verb+?+ if no code applies.%
+letter, or \verb+?+ if no code applies; they are listed in 
+table~\ref{tab:trad-lhcode5} for doubles%
 \footnote{The codes \verb+A+--\verb+K+ (excluding \verb+I+) 
 and \verb+Q+--\verb+V+ for doubles are defined in the Central Council's
 1980 \textit{Doubles Collection}.%
 \index{Central Council!Doubles Collection@\textit{Doubles Collection}}
-These are augmented by \verb+K+, \verb+M+ and \verb+W+--\verb+Z+ for
+These are augmented by \verb+M+, \verb+N+ and \verb+W+--\verb+Z+ for
 fourths place methods which will be defined in the Central Council's 
-forthcoming doubles collection.
-The codes for regular minor methods are defined in the Central Council's
-1961 \textit{Collection of Minor Methods}\index{Central Council!Collection of 
+forthcoming doubles collection.}
+and table~\ref{tab:trad-lhcode6} for minor methods.%
+\footnote{The codes \verb+G+--\verb+O+ (excluding \verb+I+) for regular minor 
+methods are defined in the Central Council's 1961 
+\textit{Collection of Minor Methods}\index{Central Council!Collection of 
 Minor Methods@\textit{Collection of Minor Methods}}.  These are
-repeated together with additional codes for irregular methods in Michael
-Foulds' \textit{Spliced Treble Bob Minor} series of books.%
+repeated together with additional codes, \verb+P+--\verb+Y+ for irregular 
+methods in Michael Foulds' \textit{Spliced Treble Bob Minor} series of books,%
 \index{Foulds, Michael!Spliced Treble Bob Minor@\textit{Spliced 
-Treble Bob Minor} series}}
+Treble Bob Minor} series}.}
+For minor, six possible fourths place lead heads are given Greek letters%
+\footnote{These are μ, θ, δ, Σ, λ and Ψ which are defined in
+Anthony S.\ Bishop's \textit{A Universal System for Extents of Treble
+Dodging Minor Methods}\index{Bishop, Anthony S.!A Universal System for 
+Extents of Treble Dodging Minor Methods@\textit{A Universal System for
+Extents of Treble Dodging Minor Methods}}.}
+which are only displayed by \verb+$D+ if UTF-8 output is enabled with the 
+\verb+-Outf8+ option.\index{UTF-8}\index{Unicode}\oi{O}
+
+\begin{table}[ht]
+\centering{\scriptsize\tt
+\def\co#1{\multirow{2}{*}{#1}}
+\begin{tabular}{ll@{\qquad} ll@{\qquad} ll@{\qquad} ll@{\qquad} ll@{\qquad} ll}
+13254&\co{A}&14523&\co{B}&12354&\co{G}&13245&\co{H}&14325&\co{J}&12543&\co{K}\\
+13524&      &14253&      &12534&      &13425&      &14235&      &12453&      \\
+\\
+     &      &15342&\co{C}&12435&\co{D}&12543&\co{E}&14325&\co{F}\\
+     &      &13524&      &14253&      &15234&      &13452&      \\
+\\
+15432&\co{Q}&14523&\co{R}&12435&\co{S}&12543&\co{T}&14325&\co{U}&15342&\co{V}\\
+15423&      &14532&      &12453&      &12534&      &14352&      &15324&      \\
+\\
+14523&\co{M}&15432&\co{N}&12435&\co{W}&14325&\co{X}&12543&\co{Y}&13542&\co{Z}\\
+15423&      &14532&      &14235&      &13425&      &15243&      &13542&      \\
+\end{tabular}}
+\caption{\label{tab:trad-lhcode5}
+Traditional lead head codes for doubles methods, as printed by \texttt{\$D},
+shown with their corresponding lead ends and lead heads.}
+\end{table}
+
+\begin{table}[ht]
+\centering{\scriptsize\tt
+\def\firsthead#1{\multicolumn{3}{c}{\rm\small#1}}
+\def\head#1{\multicolumn{2}{c}{\rm\small#1}}
+\begin{tabular}{llll@{\qquad} lll@{\qquad} lll@{\qquad} lll@{\qquad} ll}
+\firsthead{2nds / 6ths}&&\head{2nds}&&\head{6ths}&&\head{4ths}&&\head{4ths}\\
+135264&G&L&& 142563&P&& 152364&T&& 145362&X&& 162534&Y\\
+156342&H&M&& 154632&S&& 165243&V&& 136524&\rm μ&& 146325&\rm Ψ\\
+164523&J&N&& 165324&R&& 146532&U&& 152643&\rm θ&& 154263&\rm Σ\\
+142635&K&O&& 136245&Q&& 134625&W&& 164235&\rm δ&& 135642&\rm λ\\
+\end{tabular}}
+\caption{\label{tab:trad-lhcode6}
+Traditional lead head codes for minor methods, as printed by \texttt{\$D}.}
+\end{table}
+
 
 The symmetry code, \verb+$y+\fspec{y}, is a string containing some of 
 the letters \verb+P+, \verb+M+, \verb+G+ and \verb+R+ standing for
-for palindromic, mirror, glide and rotation symmetry, respectively.  For
+for palindromic, mirror, glide and rotation symmetry, respectively.  
+See \sref{symmetry} for the definitions of these types of symmetry.  For
 methods with none of these symmetries, the string is empty.\index{symmetry}
 
 The method class string, \verb+$C+\fspec{C}, includes the tags `differential'
@@ -1854,7 +2014,7 @@ symmetry, treble path and other such constraints, the static index describes
 the number of trivial variants\index{trivial variants} that exist for a method
 --- a method with staticity $s$ has $2^s$ variants.  
 (In case of Plain Bob, the dodges can be replaced with 
-Reverse Canterbury--style places\index{Reverse Canterbury places} 
+Reverse Canterbury--style places\index{Reverse Canterbury places},
 or with three blows and a hunt or \textit{vice versa} giving four 
 possibilities in each dodging position; 
 similarly the seconds over the treble could be replaced with four blows over
@@ -2482,11 +2642,12 @@ remaining groups which have no tenors-together rows.
 On ten or more bells, certain tenors-together groups split.  This is 
 indicated by a numeric suffix on the falseness group code.  The only 
 difference between falseness groups on ten bells and higher stages is that 
-on ten, the \verb+D1+ and \verb+B1+ groups combine.  The table below gives
-all of the tenors-together false course heads and their corresponding 
+on ten, the \verb+D1+ and \verb+B1+ groups combine.  Table~\ref{tab:fchs}
+gives all of the tenors-together false course heads and their corresponding 
 falseness group.
 
-{\tt\tiny\begin{center}\begin{tabular}{ll ll ll ll ll ll ll ll}
+\begin{table}[h]\centering
+{\tt\tiny\begin{tabular}{ll ll ll ll ll ll ll ll}
 23456 A&25463 M&34256 U1&36452 T1&45236 F1&52463 e&56234 R&63452 D2\\
 23465 a1&25634 C1&34265 C2&36524 O1&45263 T2&52634 N3&56243 H2&63524 O2\\
 23546 a2&25643 b&34526 K2&36542 H2&45326 d&52643 O1&56324 f&63542 G\\
@@ -2502,9 +2663,12 @@ falseness group.
 25346 T1&32564 T2&36245 L2&43562 e&52346 K2&54362 K3&63245 e&65342 f\\
 25364 E2&32645 T2&36254 c&43625 N2&52364 S&54623 f&63254 U1&65423 O2\\
 25436 B2&32654 F1&36425 e&43652 U1&52436 U1&54632 I&63425 H1&65432 K1\\
-\end{tabular}\end{center}}
+\end{tabular}}
+\caption{\label{tab:fchs}%
+False course heads and their corresponding falseness group.}
+\end{table}
 
-Although it is possible to generalise these falsness groups codes to 
+Although it is possible to generalise these falseness groups codes to 
 irregular methods, \methsearch\ does not currently support it.
 
 The \verb+A+ falseness group (that is, the one including \verb+23456+ as a
@@ -2702,7 +2866,7 @@ in both cases, the left-hand argument must be a row.  In the mathematical
 literature these operations are often both denoted by right superscripts
 and this convention is followed here,%
 \footnote{One motivation for using the exponentation syntax for conjugation
-is that both satisfy the identity $(a^r)^s =  a^rs$.  However the analogy 
+is that both satisfy the identity $(a^r)^s =  a^{(rs)}$.  However the analogy 
 shouldn't be taken too far.  If $a$ and $r$ are rows and $n$ is an integer,
 then $(a^r)^n = (a^n)^r$, and one might use $a^{nr}$ as syntactic shorthand 
 for this.  Nevertheless, the product, $nr$, of a integer and a row is 
@@ -2736,7 +2900,7 @@ than the right-hand argument to a \verb+^+ operator), it is parsed as a row;
 integer;\footnote{This case is only relevant in one case --- the digit 
 \verb+2+.  Without this rule this would parse as rounds with an implicit 
 treble and we would find that $1 = 2$.  (Technically, it also changes \verb+1+
-from rounds to the number 1, but in practice this is indetectable.)}
+from rounds to the number 1, but in practice this is undetectable.)}
 \item if the token is a valid row (possibly omitting the treble), it is 
 parsed as a row;
 \item otherwise it is parsed as an integer.
@@ -2776,8 +2940,8 @@ however a standard \textit{row stream}\index{row stream} (\sref{rowstream})
 with one row per line is recommended.  As a special case, if \textit{filename}
 is \verb+-+, instead of reading from a file, \methsearch\ reads from standard
 input.  If you do this, you must ensure that nothing else is also reading
-from standard input or you will end up with a bizarre undefined behaviour.
-In particular, you can only have one \verb+<(-)+ in anywhere, and you cannot
+from standard input or you will end up with bizarre undefined behaviour.
+In particular, you can only have one \verb+<(-)+ anywhere, and you cannot
 use this in conjunction with \verb+-I+\oi{I}.
 
 A \textit{command invocation} has the syntax 
@@ -2805,8 +2969,8 @@ For example, \verb+-Fr="{ 124365, 132465, 213465 }^654321"+
 is equivalent to \verb+-Fr=214356 -Fr=213546 -Fr=214565+.
 
 An \verb+-Fr+ option may contain two (or more) sets of rows.  Using
-the set multiplication notation introduced in \sref{falsetheo} these are
-defined as follows for sets $A$ and $B$:
+the definitions of $AB$ and $\bar{A}$ introduced in \sref{falsetheo}, 
+there these are defined as follows for sets $A$ and $B$:
 
 \begin{tabular}{c@{$\quad\iff\quad$}c}
 \verb+-Fr="+$A$\verb+*+$B$\verb+"+  &  \verb+-Fr="+$A B$\verb+"+ \\
@@ -4074,7 +4238,7 @@ and \verb+-M2rhalflead+.
 \item Little method: \verb+-Z+ (\sref{stage_class}).
 \item Symmetric sections: \verb+-y+ (\sref{int_struct}).
 \item Mirror symmetry: \verb+--mirror+ (\sref{symmetry}).
-\item Improved falseness: \verb+-Fs+ (\sref{avoidrow}, 
+\item Improved falseness: \verb+-Fs+ (\sref{avoidrow}), 
   \verb+-FP+ (\sref{pends}).
 \item Library filtering: \verb+--filter-lib+ (\sref{misc_opt}).
 \item Random ordering: \verb+--random+, \verb+--random-count+, \verb+--seed+
@@ -4096,8 +4260,8 @@ and \verb+-M2rhalflead+.
 \item Historical classes: \verb+--strict-delight+, \verb+--exercise+, 
 \verb+--strict-exercise+, \verb+--pas-alla-tria+ and \verb+--pas-alla-tessera+
 (\sref{hist_class}).
-\item Fourths-place doubles lead-end symbols are now supported in \verb+$D+ 
-  (\sref{fmtstr}).
+\item Fourths-place doubles and minor lead-end symbols are now supported in 
+\verb+$D+ (\sref{variables}).
 \item The \verb+^+ operator is now overloaded to do conjugation 
   (\sref{rowexpr}).
 \item The \verb+--require+ and \verb+--filter+ options can now be written
@@ -4108,6 +4272,7 @@ and \verb+-M2rhalflead+.
 \item Customising bell symbols: \verb+$BELL_SYMBOLS+ environment variable 
   (\sref{pn}).
 \item Restricting or prohibiting changes: \verb+--changes+ (\sref{pn}).
+\item Support for Unicode output in UTF-8: \verb+-Outf8+ (\sref{output_opt}).
 \end{list}
 
 \clearpage
@@ -4126,7 +4291,8 @@ conjunction with the \texttt{--surprise} option.
 
 This manual was typeset using \XeTeX\index{Xetex@\XeTeX}, a document 
 typesetting package written by Jonathan Kew.  It is derived from 
-\LaTeX\ but includes support for the Unicode character set and OpenType fonts.
+\LaTeX, written by Leslie Lamport, but includes support for the Unicode 
+character set and OpenType fonts.
 Both are derived from Donald Knuth's original \TeX\ typesetting engine.  
 These are all open source products and are freely available on a variety of 
 operating systems, include GNU/Linux. 
@@ -4142,7 +4308,11 @@ row literals is the Computer Modern Teletype font, again by Donald Knuth.%
 All of the software described in this manual (except some passing
 references to a certain product gestated in Redmont) are themselves open
 source software.  All of the ringing-related programs are available as 
-part of the Ringing Class Library project.\index{Ringing Class Library}
+part of the Ringing Class Library project,\index{Ringing Class Library}
+and \methsearch\ uses it for manipulation rows, changes and methods, 
+reading method libraries, analysing music, proof and much more.  
+The Ringing Class Library was started by Martin Bright and contains
+contributions from Richard Smith and Mark Banner.
 
 The source code for this manual is available from the Ringing Class Library
 CVS repository and is itself open source.  Any additions or corrections 
