@@ -271,29 +271,15 @@ bool searcher::try_with_limited_le( const change& ch )
   change orig( m.back() );
   m.pop_back();
 
-  size_t depth = m.length();
-  assert( depth == size_t(2*hl_len-1) );
+  assert( m.length() == size_t(2*hl_len-1) );
 
-  if ( !try_midlead_change(ch) )
+  if ( ! try_midlead_change(ch) || ! try_leadend_change(ch) ||
+       args.hunt_bells % 2 == 1 && ! try_leadend_sym_change(ch) )
     {
       m.push_back(orig);
       return false;
     }
   
-  if ( ! try_leadend_change( ch ) )
-    {
-      m.push_back(orig);
-      return false;
-    }
-
-  if ( args.hunt_bells % 2 == 1 && depth == 2*hl_len-1 ||
-       args.hunt_bells % 2 == 0 && depth == 0 )
-    if ( ! try_leadend_sym_change( ch ) )
-      {
-        m.push_back(orig);
-        return false;
-      }
-
   m.push_back(ch);
 
   // This used to call is_acceptable_method.  This was bad because
@@ -782,6 +768,7 @@ bool searcher::try_midlead_change( const change &ch )
 
   size_t const posn = args.hunt_bells ? get_posn() : 0;
 
+  // XXX ALLIANCE -- Needs fixing
   // Is the treble moving between dodging positions (i.e. is posn odd)?
   bool const intersection = ( posn % 2 == args.treble_front % 2 );
 
@@ -892,11 +879,13 @@ bool searcher::try_midlead_change( const change &ch )
   
   if ( args.max_consec_blows )
     {
-      if ( args.sym && args.hunt_bells % 2 == 0 && depth < hl_len 
+      // Handle places around the lead end.
+      if ( args.sym && args.hunt_bells && args.hunt_bells % 2 == 0 
+           && depth == args.max_consec_blows/2 
            && is_too_many_places( m, ch, args.max_consec_blows/2+1 ) )
         return false;
 
-      else if ( is_too_many_places( m, ch, args.max_consec_blows ) )
+      if ( is_too_many_places( m, ch, args.max_consec_blows ) )
         return false;
     }
  
@@ -1037,6 +1026,7 @@ void searcher::new_midlead_change()
       if ( ! try_midlead_change( ch ) )
         continue;
 
+      // XXX ALLIANCE -- locate rotational symmetry point
       // Additional requirements for the rotational symmetry point:
       if ( args.hunt_bells && args.skewsym && hl_len % 2 == 0 
            && depth % hl_len == hl_len / 2 - args.hunt_bells % 2 &&
@@ -1067,12 +1057,14 @@ void searcher::new_midlead_change()
       // the lead-end; for twin-hun methods, it is shifted to the start of
       // the lead (e.g. in Grandsire, it is the 3 at the start of the lead).
       if ( args.hunt_bells % 2 == 1 && depth == 2*hl_len-1 ||
-           args.hunt_bells && 
+           args.hunt_bells &&
+           // XXX ALLIANCE -- First division
            args.hunt_bells % 2 == 0 && depth == cur_div_len/2-1 )
         if ( ! try_leadend_sym_change( ch ) )
           continue;
       
       if ( args.hunt_bells && args.require_offset_cyclic 
+           // XXX ALLIANCE -- First division
            && div_start == 0 && cur_div_len > 3 && depth == cur_div_len-3 )
         if ( ! try_offset_start_change( ch ) )
           continue;
@@ -1188,6 +1180,7 @@ void searcher::general_recurse()
 {
   const size_t depth = m.length();
 
+  // XXX ALLIANCE -- These assertions will fail
   assert( depth - div_start == depth % div_len );
   assert( cur_div_len == div_len );
 
@@ -1226,6 +1219,7 @@ void searcher::general_recurse()
     }
 
 
+  // XXX ALLIANCE -- Locate quarter lead
   // The quarter-lead change in skew-symmetric methods is special.
   // (e.g. it is self-reverse).
   else if ( args.skewsym && hl_len % 2 == 0 
@@ -1235,6 +1229,7 @@ void searcher::general_recurse()
     }
 
 
+  // XXX ALLIANCE -- Locate quarter lead
   // Maximum symmetry
   else if ( args.skewsym && args.doubsym && args.sym 
             && depth == hl_len/2 + 1 - args.hunt_bells % 2 && hl_len > 2 )
@@ -1251,6 +1246,7 @@ void searcher::general_recurse()
     }
 
 
+  // XXX ALLIANCE -- Locate quarter lead
   // Only rotational symmetry
   else if ( args.skewsym 
             && depth == hl_len/2 + 1 - args.hunt_bells % 2 && hl_len > 2 )
@@ -1276,13 +1272,15 @@ void searcher::general_recurse()
     }
 
 
+  // XXX ALLIANCE -- First division after lead head
   // Only conventional (palindromic) symmetry
   else if ( args.sym && depth == hl_len + 
-            ( args.hunt_bells % 2 ? 0 : args.treble_dodges+1 ) && hl_len > 1 )
+            ( args.hunt_bells % 2 ? 0 : cur_div_len/2 ) && hl_len > 1 )
     {
       assert( !args.skewsym && !args.doubsym );
 
       bool ok = true;
+      // XXX ALLIANCE
       for (method::reverse_iterator i = m.rbegin() + 1,
              e = m.rend() - (args.hunt_bells % 2 ? 0 : 2*args.treble_dodges+1);
              i != e; ++i)
@@ -1295,14 +1293,14 @@ void searcher::general_recurse()
     }
 
 
+  // XXX ALLIANCE -- First division
   // Conventional symmetry when we have an even number of hunt bells 
   // treble dodging -- first division
   else if ( args.sym && args.hunt_bells % 2 == 0 && args.treble_dodges &&
-            depth == size_t(args.treble_dodges + 1) )
+            depth == size_t(cur_div_len/2) )
     {
       bool ok = true;
-      for (method::reverse_iterator i = m.rbegin() + 1, e = m.rend(); 
-             i!=e; ++i)
+      for (method::reverse_iterator i = m.rbegin()+1, e = m.rend(); i!=e; ++i)
         ok = ok && push_change(*i);
 
       if (ok) general_recurse();
@@ -1311,6 +1309,7 @@ void searcher::general_recurse()
         pop_change();
     }
 
+  // XXX ALLIANCE -- Three quarter lead
   // Only rotational symmetry
   else if ( args.skewsym 
             && depth == 3*hl_len/2 + 1 - args.hunt_bells % 2 && hl_len > 2 )
