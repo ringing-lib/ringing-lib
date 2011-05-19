@@ -420,7 +420,7 @@ string exec_command( const string& str, int* cmd_status )
 
   DWORD ierr = 0;
   GetExitCodeProcess(procInfo.hProcess, &ierr);
-  if (cmd_status) cmd_status = ierr;
+  if (cmd_status) *cmd_status = ierr;
 
   return result;
 }
