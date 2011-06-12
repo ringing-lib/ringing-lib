@@ -17,7 +17,7 @@
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 // Part of this file is taken from the boost lexical_cast library,
-// version 1.28.0 [see http://www.boost.org for details], and is under
+// version 1.28.0 [see http://www.boost.org/ for details], and is under
 // the following copyright:
 
 //  Copyright Kevlin Henney, 2000, 2001, 2002. All rights reserved.
