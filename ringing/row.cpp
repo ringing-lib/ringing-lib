@@ -536,22 +536,30 @@ RINGING_API istream& operator>>(istream& i, row& r)
 // *                    Functions for class row_block                  *
 // *********************************************************************
 
-// Constructor
-row_block::row_block(const vector<change> &c) 
-  : vector<row>(c.size() + 1), ch(c)
+static size_t row_block_base_size(vector<change> const& c, int flags) 
 {
-  if(ch.size() > 0) {
+  size_t sz = c.size();
+  if (flags & row_block::half_lead_only) sz /= 2;
+  if (!(flags & row_block::no_final_lead_head)) sz += 1;
+  return sz;
+}
+
+row_block::row_block(const vector<change> &c, int flags) 
+  : vector<row>( row_block_base_size(c, flags) ), ch(c), flags(flags)
+{
+  if (size()) {
     (*this)[0] = row::rounds(ch[0].bells());
     recalculate();
   }
 }
 
-// Another constructor
-row_block::row_block(const vector<change> &c, const row &r) 
-  : vector<row>(c.size() + 1), ch(c)
+row_block::row_block(const vector<change> &c, const row &r, int flags) 
+  : vector<row>( row_block_base_size(c, flags) ), ch(c), flags(flags)
 {
-  (*this)[0] = r;
-  recalculate();
+  if (size()) {
+    (*this)[0] = r;
+    recalculate();
+  }
 }
 
 // Recalculate rows from changes

@@ -235,18 +235,26 @@ RINGING_EXPLICIT_STL_TEMPLATE vector<row>;
 // row_block : Stores some rows, along with a pointer to some
 // changes from which they can be calculated.
 class RINGING_API row_block : public vector<row> {
-private:
-  const vector<change>& ch;	  // The changes which these rows are based on
-
 public:
-  row_block(const vector<change> &c);	         // Starting from rounds
-  row_block(const vector<change> &c, const row &r); // Starting from the given row
+  enum
+  {
+    no_final_lead_head    = 0x01,
+    half_lead_only        = 0x02
+  };
+
+  row_block(const vector<change> &c, int flags = 0);    // Starting from rounds
+  row_block(const vector<change> &c, const row &r, int flags = 0); 
+
+  const vector<change>& get_changes(void) const // Return the changes which we are using
+    { return ch; }
 
   row& set_start(const row& r)	// Set the first row
     { (*this)[0] = r; return (*this)[0]; }
   row_block& recalculate(int start = 0); // Recalculate rows from changes
-  const vector<change>& get_changes(void) const // Return the changes which we are using
-    { return ch; }
+
+private:
+  const vector<change>& ch;	  // The changes which these rows are based on
+  int flags;
 };
       
 RINGING_END_NAMESPACE
