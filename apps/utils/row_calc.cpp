@@ -784,7 +784,6 @@ void row_calc::init( string const& str )
   rc_parser p(b, str, f);
   e = p.parse();
   v = p.count_vectors();
-  assert( e.count_vectors() == v );
 }
 
 row row_calc::expr::node::evaluate()
