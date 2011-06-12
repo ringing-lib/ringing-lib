@@ -56,21 +56,32 @@ RINGING_USING_STD
   
 RINGING_START_NAMESPACE
 
-static bool bells_case_sensitive = false;
+static int (*bells_case_mapper)(int) = &::toupper;
 char const* bell::symbols = "1234567890ETABCDFGHJKLMNPQRSUVWYZ";
 unsigned int bell::MAX_BELLS = 33;
 
+static string string_transform( char const* str, int (*func)(int) ) {
+  string s(str);
+  std::transform(s.begin(), s.end(), s.begin(), func);
+  return s;
+}
+
 void bell::set_symbols( char const* syms, size_t n ) {
   if ( syms ) {
+    if ( string_transform(syms, &::toupper) == syms ) 
+      bells_case_mapper = &::toupper;
+    else if ( string_transform(syms, &::tolower) == syms )
+      bells_case_mapper = &::tolower;
+    else 
+      bells_case_mapper = NULL;
+
     symbols = syms;
     MAX_BELLS = n == size_t(-1) ? strlen(syms) : n;
   } else {
     symbols = "1234567890ETABCDFGHJKLMNPQRSUVWYZ";
     MAX_BELLS = 33;
+    bells_case_mapper = &::toupper;
   }
-  string s(symbols);
-  std::transform(s.begin(), s.end(), s.begin(), ::toupper);
-  bells_case_sensitive = ( s != symbols );
 }
 
 const char* bell::symbols_env_var = "BELL_SYMBOLS";
@@ -84,7 +95,7 @@ bell::invalid::invalid()
 
 bool bell::is_symbol(char c)
 {
-  if ( !bells_case_sensitive ) c = toupper(c);
+  if ( bells_case_mapper ) c = bells_case_mapper(c);
   if ( strchr(symbols, c) ) return true;
 
   // I/1 and O/0 ambiguities:
@@ -100,7 +111,7 @@ bool bell::is_symbol(char c)
 
 bell bell::read_char(char c) 
 {
-  if ( !bells_case_sensitive ) c = toupper(c);
+  if ( bells_case_mapper ) c = bells_case_mapper(c);
   bell b;
   if ( char const* cp = strchr(symbols, c) )
     b.x = cp - symbols;
