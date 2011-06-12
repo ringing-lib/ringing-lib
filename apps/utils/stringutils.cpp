@@ -1,5 +1,5 @@
 // util.cpp - Various string utility functions
-// Copyright (C) 2002, 2008, 2010 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2008, 2010, 2011 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -81,4 +81,30 @@ int string_to_int( const string &num )
 			   " is not an integer" );
 
   return n;
+}
+
+RINGING_START_ANON_NAMESPACE
+
+int init_columns() 
+{
+  // This is less useful that it might seem.  POSIX says $COLUMNS
+  // should be an environment variable, but it seems that most of 
+  // the time it is actually only a shell variable.  Currently, many
+  // programs (e.g. methsearch) don't link against curses, but if we
+  // start doing so,/ getmaxyx() provides a better interface to this.
+  if ( char const* cols = getenv( "COLUMNS" ) ) 
+    try {
+      if ( int i = string_to_int(cols) ) 
+        return i;
+    } catch (...) {} 
+
+  return 80; 
+}
+
+RINGING_END_ANON_NAMESPACE
+
+int display_columns()
+{
+  static int val = init_columns();
+  return val;
 }

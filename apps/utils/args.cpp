@@ -223,7 +223,7 @@ void arg_parser::help() const
   vtab = description.begin(); 
   while(vtab != description.end() && *vtab != '\v') ++vtab;
   if(vtab != description.begin()) {
-    wrap(string(description.begin(), vtab), 0, 78, 0);
+    wrap(string(description.begin(), vtab), 0, display_columns() - 2, 0);
     cout << "\n\n";
   }
 
@@ -267,7 +267,7 @@ void arg_parser::help() const
 	  } else {
 	    cout << ' '; ++c;
 	  }
-	  wrap((*i)->desc, desc_col, 78, c);
+	  wrap((*i)->desc, desc_col, display_columns() - 2, c);
 	}
 	cout << '\n';
       }
@@ -280,7 +280,7 @@ void arg_parser::help() const
     "optional arguments to the corresponding short options.\n";
   
   if(vtab != description.end()) {
-    wrap(string(vtab, description.end()), 0, 78, 0);
+    wrap(string(vtab, description.end()), 0, display_columns() - 2, 0);
     cout << "\n\n";
   } else if ( had_arg ) {
     cout << "\n";
