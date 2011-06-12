@@ -1,5 +1,5 @@
 // -*- C++ -*- falseness.h - Class for falseness table
-// Copyright (C) 2001, 2002, 2003, 2008, 2010 
+// Copyright (C) 2001, 2002, 2003, 2008, 2010, 2011
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -69,6 +69,7 @@ public:
   // starting from rounds, is false against the leads of method B 
   // starting from each lead-head in the set F(A,B).
   falseness_table( const method &a, const method &b, int flags = 0 );
+  falseness_table( const vector<row> &a, const vector<row> &b, int flags = 0 );
 
   // Assignment and swapping
   void swap( falseness_table &other ) { t.swap( other.t ); }
@@ -86,7 +87,7 @@ public:
   group generate_group() const;
 
 private:
-  void init( method const& m1, method const& m2 );
+  void init( vector<row> const& m1, vector<row> const& m2 );
 
   vector<row> t;
   int flags;

@@ -1,5 +1,5 @@
 // -*- C++ -*- falseness.cpp - Class for falseness table
-// Copyright (C) 2001, 2002, 2003, 2005, 2008, 2010
+// Copyright (C) 2001, 2002, 2003, 2005, 2008, 2010, 2011
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -66,7 +66,7 @@ falseness_table::falseness_table()
   : t(1, row())
 {}
 
-void falseness_table::init( method const& m1, method const& m2 )
+void falseness_table::init( vector<row> const& m1, vector<row> const& m2 )
 {
   // The inter-method falseness table is calculated using
   //   F(A,B) = \{ a b^{-1} : a \in A, b \in B \}
@@ -75,17 +75,15 @@ void falseness_table::init( method const& m1, method const& m2 )
 
   set<row> fs;
 
-  method::const_iterator const
+  vector<row>::const_iterator const
     e1( flags & half_lead_only ?  m1.begin() + m1.size() / 2 : m1.end() ),
     e2( flags & half_lead_only ?  m2.begin() + m2.size() / 2 : m2.end() );
 
-  row r1( m1.bells() );
-  for ( method::const_iterator i1( m1.begin() ); i1 != e1; r1 *= *i1++ )
+  for ( vector<row>::const_iterator i1( m1.begin() ); i1 != e1; ++i1 )
     {
-      row r2( m2.bells() );
-      for ( method::const_iterator i2( m2.begin() ); i2 != e2; r2 *= *i2++)
+      for ( vector<row>::const_iterator i2( m2.begin() ); i2 != e2; ++i2 )
 	{
-	  row f = r1 / r2;
+	  row f = *i1 / *i2;
 
 	  if ( !( flags & no_fixed_treble ) && f[0] != 0 )
 	    continue;
@@ -105,10 +103,22 @@ void falseness_table::init( method const& m1, method const& m2 )
 falseness_table::falseness_table( const method &m, int flags )
   : flags(flags)
 {
-  init( m, m );
+  int rb_flags = row_block::no_final_lead_head;
+  if (flags & half_lead_only) rb_flags |= row_block::half_lead_only;
+  row_block rb(m, rb_flags);
+  init( rb, rb );
 }
 
 falseness_table::falseness_table( const method &a, const method& b, int flags )
+  : flags(flags)
+{
+  int rb_flags = row_block::no_final_lead_head;
+  if (flags & half_lead_only) rb_flags |= row_block::half_lead_only;
+  init( row_block(a, rb_flags), row_block(b, rb_flags) );
+}
+
+falseness_table::falseness_table( const vector<row> &a, const vector<row>& b, 
+                                  int flags )
   : flags(flags)
 {
   init( a, b );
