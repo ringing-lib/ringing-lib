@@ -298,8 +298,51 @@ inline row searcher::canonical_coset_member( row const& r )
   else return args.pends.rcoset_label(r);
 }
 
+class prover2 {
+public:
+  prover2( arguments const& args ) 
+     // This is where we would hack to allow -Fl to be used with TD Minimus
+   : args(args), n_extents(1), p(n_extents), r(args.start_row)
+  {
+    for ( set<row>::const_iterator 
+            i=args.avoid_rows.begin(), e=args.avoid_rows.end(); i != e; ++i )
+      p.add_row(*i);
+    assert( p.truth() );
+  }
+
+  struct raw {};
+  prover2( arguments const& args, raw )
+    : args(args), n_extents(1), p(n_extents), r(args.bells)
+  {}
+
+  bool prove( method::const_iterator i, method::const_iterator e ) {
+    for ( ; p.truth() && i != e; ++i ) {
+      p.add_row( args.pends.size() == 1 ? r : args.pends.rcoset_label(r) );
+      r *= *i;
+    }
+    return p.truth();
+  }
+
+  bool prove_lh() {
+    if ( r != args.start_row )
+      p.add_row(r);
+    return p.truth();
+  }
+
+  bool truth() const { return p.truth(); }
+  bool is_course_head() const { return r == args.start_row; }
+  bool is_semicourse_head(int b) const { return r[b] == args.start_row[b]; }
+
+private:
+  arguments const& args;
+   int const n_extents;
+   prover p;
+   row r;
+};
+
 bool searcher::is_acceptable_method()
 {
+
   if ( lexicographical_compare( m.begin(), m.end(), 
            args.startmeth.begin(), args.startmeth.end(),
            compare_changes ) )
@@ -373,39 +416,20 @@ bool searcher::is_acceptable_method()
   if ( args.true_lead 
          && ( args.pends.size() > 1 
               || !( args.sym && args.hunt_bells && !args.treble_dodges ) ) )
-      // && !args.sym )
     {
-      // This is a bit of a hack to allow -Fl to be used with TD Minimus
-      int const n_extents = 1; 
-//        = (int) ceil( (double) (bells - args.hunt_bells) * 2*hl_len
-//                    / (double) factorial(bells) );
+      prover2 p(args);
+      while ( p.prove(m.begin(), m.end()) &&
+              ( args.true_course && !p.is_course_head() ||
+                args.true_semicourse != -1 
+                  && !p.is_semicourse_head(args.true_semicourse) ) )
+        ;
 
-      prover p( n_extents );
-      for ( set<row>::const_iterator 
-              i=args.avoid_rows.begin(), e=args.avoid_rows.end(); i != e; ++i )
-        p.add_row(*i);
-      assert( p.truth() );
-  
-      row r( args.start_row );
-
-      do for ( method::const_iterator i(m.begin()), e(m.end()); 
-               p.truth() && i != e; ++i ) {
-        p.add_row( canonical_coset_member( r ) );
-        r *= *i;
-      }
-      while ( args.true_course && r != args.start_row && p.truth() );
-
-      // There doesn't seem any idea solution as to what to do with the 
+      // There doesn't seem any ideal solution as to what to do with the 
       // lead head row.  Arguably we shouldn't prove it as it's not 
       // part of the lead.  But that leads to odd things in -AU0 searches
       // where we're just looking for a block of rows.  So lets require that 
       // either it is true or it is the first row again.
-      if ( !args.true_course && r != args.start_row ) {
-        p.add_row(r);
-      }
-
-      if ( !p.truth() ) 
-        return false;
+      if ( !p.prove_lh() ) return false;
     }
   // Although treble-dodging methods with more than one dodge can run
   // false within a half lead, this is handled by the is_division_false
@@ -417,47 +441,12 @@ bool searcher::is_acceptable_method()
   else if ( args.true_half_lead 
             && ( args.pends.size() > 1 || args.hunt_bells == 0 )  )
     {
-      // TODO: Merge with the above test
-
-      // This is a bit of a hack to allow -Fl to be used with TD Minimus
-      int const n_extents = 1; 
-//        = (int) ceil( (double) (bells - args.hunt_bells) * 2*hl_len
-//                    / (double) factorial(bells) );
-
-      {
-        prover p( n_extents );
-        for ( set<row>::const_iterator 
-                i=args.avoid_rows.begin(), e=args.avoid_rows.end();
-                i != e; ++i )
-          p.add_row(*i);
-        assert( p.truth() );
-
-        row r( args.start_row );
-  
-        for ( method::const_iterator i(m.begin()), e(m.begin()+m.size()/2);
-                 p.truth() && i != e; ++i ) {
-          p.add_row( canonical_coset_member( r ) );
-          r *= *i;
-        }
-   
-        if ( !p.truth() )
+      if ( !prover2(args).prove(m.begin(), m.begin()+m.size()/2) )
+        return false;
+      
+      if ( !args.sym && !args.doubsym &&
+           !prover2(args, prover2::raw()).prove(m.begin()+m.size()/2, m.end()) )
           return false;
-      }
-      if ( !args.sym && !args.doubsym )
-      {
-        prover p( n_extents );
-        row r(bells); // not start_row, and no avoid_rows.
-  
-        for ( method::const_iterator i(m.begin()+m.size()/2), e(m.end());
-                 p.truth() && i != e; ++i ) {
-          p.add_row( canonical_coset_member( r ) );
-          r *= *i;
-        }
-   
-        if ( !p.truth() )
-          return false;
-
-      }
     }
 
   if ( args.require_CPS && !is_cps( m ) )
@@ -544,6 +533,8 @@ inline size_t searcher::calc_cur_div_len() const
 // 2 = treble in 3-4, ...
 inline int searcher::get_posn() const
 {
+  // XXX ALLIANCE -- Whole function needs reworking
+
   assert( args.hunt_bells );
 
   const size_t depth = m.length();

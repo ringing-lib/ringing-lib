@@ -67,6 +67,8 @@ private:
 
 bool falseness_opt::process( const string &arg, const arg_parser & ) const
 {
+  // Single letter options used:  c, e, h, l, n, r, s, x, P
+
   if ( arg == "CPS" )
     {
       args.true_trivial = args.true_half_lead 
@@ -86,27 +88,43 @@ bool falseness_opt::process( const string &arg, const arg_parser & ) const
     {
       args.true_trivial = args.true_half_lead 
 	= args.true_lead = args.true_course = true;
+      args.true_semicourse = -1;
+    }
+  else if ( arg.size() > 2 && arg[0] == 'c' && arg[1] == '=' )
+    {
+      args.true_trivial = args.true_half_lead = args.true_lead = true;
+      args.true_course = false;
+      try {
+        args.true_semicourse = lexical_cast<bell>( arg.substr(2) ); 
+        if ( args.true_semicourse >= args.bells ) throw change::out_of_range();
+      } catch ( exception const& e ) { 
+        cerr << "Error parsing bell in -Fc option: " << e.what() << "\n";
+        return false;
+      }
     }
   else if ( arg == "l" || arg == "lead" )
     {
       args.true_trivial = args.true_half_lead = args.true_lead = true;
-      args.true_course = args.true_extent = false;
+      args.true_course = false;
+      args.true_semicourse = -1;
     }
   else if ( arg == "h" || arg == "half-lead" )
     {
       args.true_trivial = args.true_half_lead = true;
-      args.true_lead = args.true_course = args.true_extent = false;
+      args.true_lead = args.true_course = false;
+      args.true_semicourse = -1;
     }
   else if ( arg == "n" || arg == "none" ) 
     {
       args.true_trivial = true;
-      args.true_half_lead = args.true_lead 
-	= args.true_course = args.true_extent = false;
+      args.true_half_lead = args.true_lead = args.true_course = false;
+      args.true_semicourse = -1;
     }
   else if ( arg == "x" || arg == "really-none" )
     {
       args.true_trivial = args.true_half_lead
-	= args.true_lead = args.true_course = args.true_extent  = false;
+	= args.true_lead = args.true_course = false;
+      args.true_semicourse = -1;
     }
   else if ( arg.size() && arg[0] == ':' )
     {
