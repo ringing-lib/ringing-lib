@@ -73,13 +73,13 @@ public:
   // max_occurs is the number of times a row is permitted to occur
   // in the touch before it is considered false.
   explicit prover( int max_occurs = 1 )
-    : max_occurs(max_occurs), lineno(0), is_true(true), dups(0u), fi(NULL)
+    : max_occurs(max_occurs), lineno(0), falsec(0u), dups(0u), fi(NULL)
   {}
 
   // fi is a structure into which information about duplicate lines 
   // are inserted.
   explicit prover( failinfo &fi, int max_occurs = 1 )
-    : max_occurs(max_occurs), lineno(0), is_true(true), dups(0u), fi(&fi)
+    : max_occurs(max_occurs), lineno(0), falsec(0u), dups(0u), fi(&fi)
   {}
 
   // Adds a row to the touch, and returns true if the touch (so far) 
@@ -87,6 +87,7 @@ public:
   // more than max_occurs times into the failinfo structure (if one was 
   // supplied).
   bool add_row( const row &r );
+  void remove_row( const row& r );
 
   // Returns the number of instances of 'r' in the touch.
   size_t count_row( const row& r ) const;
@@ -96,7 +97,7 @@ public:
 
   size_t duplicates() const { return dups; }
 
-  bool truth() const { return is_true; }
+  bool truth() const { return falsec == 0; }
 
   void disable_proving() { max_occurs = -1; }
 
@@ -112,8 +113,7 @@ private:
   typedef multimap<row, int> mmap;
   int max_occurs;
   int lineno;
-  bool is_true;
-  size_t dups;
+  size_t falsec, dups;
   mmap m;
   failinfo *fi;
 };

@@ -26,6 +26,8 @@
 #pragma implementation
 #endif
 
+#include <stdexcept>
+
 #include <ringing/proof.h>
 #include <ringing/iteratorutils.h>
 
@@ -80,7 +82,7 @@ bool prover::add_row( const row &r )
 
   if ( max_occurs != -1 && (int) n > max_occurs )
     {
-      is_true = false; 
+      falsec++;
       if ( fi )
 	{
 
@@ -115,7 +117,50 @@ bool prover::add_row( const row &r )
 	}
     }
 
-  return is_true;
+  return truth();
+}
+
+void prover::remove_row( const row& r )
+{
+  // As above.  TODO:  Refactor
+  typedef pair< mmap::iterator, mmap::iterator > range;
+  list<range> ranges;
+
+  for ( prover* p = this; p; p = p->chain.get() ) 
+    ranges.push_front( p->m.equal_range(r) );
+
+  // effecively m.count(r)
+  size_t n(0);  // Note this is not 1 as in add_row
+  for ( list<range>::const_iterator ri = ranges.begin(), re = ranges.end(); 
+	ri != re; ++ri ) 
+    n += distance( ri->first, ri->second );
+
+  range const& rng = ranges.back();
+  if ( n == 0 )
+    throw logic_error( "Row does not exist to be removed" );
+  if ( rng.first == rng.second ) 
+    throw logic_error( "Row does not exist at proof head to be removed" );
+
+  --lineno;
+  m.erase( prior( rng.second ) );
+
+  if ( n > 1 )
+    --dups;
+
+  if ( max_occurs != -1 && (int) n > max_occurs )
+    {
+      falsec--;
+      if (fi)
+        {
+	  for ( failinfo::iterator j = fi->begin(), e = fi->end(); j != e; ++j)
+	    if ( j->_row == r )
+	      {
+		j->_lines.pop_back(); 
+                if ( j->_lines.empty() ) fi->erase(j);
+                break;
+	      }
+        }
+    }
 }
 
 shared_pointer<prover> 
