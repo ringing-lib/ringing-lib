@@ -1,5 +1,5 @@
 // methodset.cpp - A set of methods with library and libout interfaces
-// Copyright (C) 2009, 2010 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2009, 2010, 2011 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -161,9 +161,14 @@ library_base::const_iterator methodset::impl::begin() const
                                        new entry_ref );
 }
 
+void methodset::init()
+{
+  this->set_impl( new impl ); 
+}
+
 methodset::methodset() 
 { 
-  this->set_impl( new impl ); 
+  init();
 }
 
 library_entry methodset::impl::find( method const& pn ) const
