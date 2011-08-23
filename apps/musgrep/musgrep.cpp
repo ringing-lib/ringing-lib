@@ -63,6 +63,7 @@ struct arguments
   init_val<int,0> bells;
 
   init_val<bool,false> in_course;
+  init_val<bool,false> oo_course;
 
   init_val<bool,false> count;
   init_val<bool,false> score;
@@ -113,6 +114,10 @@ void arguments::bind( arg_parser& p )
          ( 'i', "in-course",
            "Match only in-course rows", in_course ) );
 
+  p.add( new boolean_opt
+         ( 'o', "out-of-course",
+           "Match only out-of-course rows", oo_course ) );
+
   p.set_default( new strings_opt( '\0', "", "", "", musstrs ) ); 
 }
 
@@ -128,6 +133,12 @@ bool arguments::validate( arg_parser& ap )
     {
       ap.error( make_string() << "The number of bells must be less than "
                 << bell::MAX_BELLS );
+      return false;
+    }
+
+  if ( in_course && oo_course )
+    {
+      ap.error( "Cannot use both -i and -o" );
       return false;
     }
 
@@ -201,6 +212,7 @@ int main( int argc, char *argv[] )
     back = !back;
 
     if ( r.sign() < 0 && args.in_course ) continue;
+    if ( r.sign() > 0 && args.oo_course ) continue;
 
     int old_score = args.mus.get_score();
     if ( args.mus.process_row(r, back) ) 
