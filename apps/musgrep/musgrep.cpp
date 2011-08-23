@@ -62,6 +62,8 @@ struct arguments
 {
   init_val<int,0> bells;
 
+  init_val<bool,false> in_course;
+
   init_val<bool,false> count;
   init_val<bool,false> score;
 
@@ -106,6 +108,10 @@ void arguments::bind( arg_parser& p )
   p.add( new boolean_opt
          ( 'H', "highlight",
            "Highlight matching rows", hilight ) );
+
+  p.add( new boolean_opt
+         ( 'i', "in-course",
+           "Match only in-course rows", in_course ) );
 
   p.set_default( new strings_opt( '\0', "", "", "", musstrs ) ); 
 }
@@ -193,6 +199,8 @@ int main( int argc, char *argv[] )
     cin >> r;
     if ( r.bells() != args.bells ) continue;
     back = !back;
+
+    if ( r.sign() < 0 && args.in_course ) continue;
 
     int old_score = args.mus.get_score();
     if ( args.mus.process_row(r, back) ) 
