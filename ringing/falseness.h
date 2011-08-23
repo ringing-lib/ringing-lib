@@ -69,6 +69,7 @@ public:
   // starting from rounds, is false against the leads of method B 
   // starting from each lead-head in the set F(A,B).
   falseness_table( const method &a, const method &b, int flags = 0 );
+  falseness_table( const method &a, const vector<row> &b, int flags = 0 );
   falseness_table( const vector<row> &a, const vector<row> &b, int flags = 0 );
 
   // Assignment and swapping

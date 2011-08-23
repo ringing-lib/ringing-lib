@@ -100,21 +100,33 @@ void falseness_table::init( vector<row> const& m1, vector<row> const& m2 )
   copy( fs.begin(), fs.end(), back_inserter(t) );
 }
 
+static int row_block_flags( int flags )
+{
+  int rb_flags = row_block::no_final_lead_head;
+  if (flags & falseness_table::half_lead_only) 
+    rb_flags |= row_block::half_lead_only;
+  return rb_flags;
+}
+
 falseness_table::falseness_table( const method &m, int flags )
   : flags(flags)
 {
-  int rb_flags = row_block::no_final_lead_head;
-  if (flags & half_lead_only) rb_flags |= row_block::half_lead_only;
-  row_block rb(m, rb_flags);
+  row_block rb(m, row_block_flags(flags));
   init( rb, rb );
+}
+
+falseness_table::falseness_table( const method &a, const vector<row>& b, 
+                                  int flags )
+  : flags(flags)
+{
+  init( row_block( a, row_block_flags(flags) ), b );
 }
 
 falseness_table::falseness_table( const method &a, const method& b, int flags )
   : flags(flags)
 {
-  int rb_flags = row_block::no_final_lead_head;
-  if (flags & half_lead_only) rb_flags |= row_block::half_lead_only;
-  init( row_block(a, rb_flags), row_block(b, rb_flags) );
+  init( row_block( a, row_block_flags(flags) ), 
+        row_block( b, row_block_flags(flags) ) );
 }
 
 falseness_table::falseness_table( const vector<row> &a, const vector<row>& b, 
