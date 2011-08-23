@@ -122,8 +122,9 @@ private:
   size_t div_start;  // The index (into m) of the row of the division
   size_t cur_div_len; 
   method m;
-  row r;
   bool maintain_r;   // Whether r is valid
+  row r;
+  scoped_pointer<prover> prv;
 };
 
 
@@ -142,6 +143,18 @@ searcher::searcher( const arguments &args )
 
   copy( args.startmeth.rbegin(), args.startmeth.rend(), 
         back_inserter(startmeth) );
+
+  if ( args.true_lead && ( args.pends.size() > 1 || !args.sym 
+       || args.hunt_bells == 0 || args.treble_dodges > 1 ) ) 
+  {
+    prv.reset( new prover(1) ); // XXX n_extents
+    for ( set<row>::const_iterator 
+            i=args.avoid_rows.begin(), e=args.avoid_rows.end(); i != e; ++i )
+      prv->add_row(*i);
+    prv->add_row(r);
+    assert( prv->truth() );
+    maintain_r = true;
+  }
 }
 
 void searcher::filter( library const& in )
@@ -413,7 +426,7 @@ bool searcher::is_acceptable_method()
   // As a further optimisation, we could (but don't) move symmetric 
   // into the following block by folding the actual lhs and les into the
   // part end group.
-  if ( args.true_lead 
+  if ( (args.true_course || args.true_semicourse != -1) //args.true_lead 
          && ( args.pends.size() > 1 
               || !( args.sym && args.hunt_bells && !args.treble_dodges ) ) )
     {
@@ -423,6 +436,9 @@ bool searcher::is_acceptable_method()
                 args.true_semicourse != -1 
                   && !p.is_semicourse_head(args.true_semicourse) ) )
         ;
+
+      if ( !args.true_course && args.true_semicourse == -1 ) 
+        assert( p.truth() );
 
       // There doesn't seem any ideal solution as to what to do with the 
       // lead head row.  Arguably we shouldn't prove it as it's not 
@@ -484,9 +500,13 @@ inline bool searcher::push_change( const change& ch )
   if ( maintain_r ) {
     r = canonical_coset_member( r * ch );
     // We don't care about the lead head row.
-    if ( m.size() != 2*hl_len && 
-         args.avoid_rows.find(r) != args.avoid_rows.end() )
-      return false;
+    if ( m.size() != 2*hl_len ) {
+      if ( prv && !prv->add_row(r) )
+        return false;
+      // Is this case still necessary?
+      else if (!prv && args.avoid_rows.find(r) != args.avoid_rows.end() )
+        return false;
+    }
   }
   if (m.length() == div_start + cur_div_len) {
     div_start += cur_div_len;
@@ -503,8 +523,9 @@ inline void searcher::pop_change( row const* r_old )
      cur_div_len = calc_cur_div_len();
   }
   if ( maintain_r ) {
+    if ( prv && m.size() != 2*hl_len-1 ) prv->remove_row(r);
     if ( r_old ) r = *r_old;  
-    else r = m.lh();
+    else r = canonical_coset_member( m.lh() );
   }
 }
 
