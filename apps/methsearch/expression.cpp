@@ -54,6 +54,8 @@
 #include <istream>
 #include <iomanip>
 #endif
+#include <ringing/music.h>
+#include <ringing/row.h>
 #include <ringing/streamutils.h> // Takes care of <sstream>
 
 #if RINGING_DEBUG_FILE
@@ -179,6 +181,26 @@ private:
   }
 
   BinaryOperator op;
+  shared_pointer<expression::node> arg1, arg2;
+};
+
+class match_node : public expression::i_node {
+public:
+  match_node( const shared_pointer<expression::node>& arg1,
+              const shared_pointer<expression::node>& arg2 )
+    : arg1(arg1), arg2(arg2) 
+  {}
+
+private:
+  virtual expression::integer_type 
+    i_evaluate( const method_properties& m ) const 
+  {
+    row r( arg1->s_evaluate(m) );
+    music mus( m.bells() );
+    mus.push_back( music_details( arg2->s_evaluate(m) ) );
+    return mus.process_row(r);
+  }
+
   shared_pointer<expression::node> arg1, arg2;
 };
 
@@ -393,6 +415,7 @@ public:
     snoteq     /* 'ne' */,
     logand     /* '&&' */,
     logor      /* '||' */,
+    match      /* '~~' */,
     string_lit /* "..." */,
     kwd_suppress/* suppress */, 
     kwd_abort  /* abort */,
@@ -420,7 +443,7 @@ private:
 
   class etokeniser;
 
-  enum { precedence_levels = 6 };
+  enum { precedence_levels = 7 };
   vector<tok_types> prec[(int)precedence_levels];
 };
 
@@ -430,27 +453,30 @@ expression::parser::parser()
   
   prec[1].push_back(logand);  
   
-  prec[2].push_back(iequals);  
-  prec[2].push_back(inoteq);  
-  prec[2].push_back(sequals);  
-  prec[2].push_back(snoteq);  
+  prec[2].push_back(match);
+
+  prec[3].push_back(iequals);  
+  prec[3].push_back(inoteq);  
+  prec[3].push_back(sequals);  
+  prec[3].push_back(snoteq);  
   
-  prec[3].push_back(iless);  
-  prec[3].push_back(igreater);
-  prec[3].push_back(ilesseq);  
-  prec[3].push_back(igreatereq);
-  prec[3].push_back(sless);  
-  prec[3].push_back(sgreater);
-  prec[3].push_back(slesseq);  
-  prec[3].push_back(sgreatereq);
+  prec[4].push_back(iless);  
+  prec[4].push_back(igreater);
+  prec[4].push_back(ilesseq);  
+  prec[4].push_back(igreatereq);
+  prec[4].push_back(sless);  
+  prec[4].push_back(sgreater);
+  prec[4].push_back(slesseq);  
+  prec[4].push_back(sgreatereq);
   
-  prec[4].push_back(plus);  
-  prec[4].push_back(minus);
-  prec[4].push_back(concat);
+  prec[5].push_back(plus);  
+  prec[5].push_back(minus);
+  prec[5].push_back(concat);
   
-  prec[5].push_back(times); 
-  prec[5].push_back(divide);
-  prec[5].push_back(modulo);
+  prec[6].push_back(times); 
+  prec[6].push_back(divide);
+  prec[6].push_back(modulo);
+  
 }
 
 RINGING_START_ANON_NAMESPACE
@@ -532,6 +558,10 @@ expression::parser::split_expr( vector<token>::const_iterator first,
       CASE( concat,     plus          );
 
 #undef CASE
+
+    case match:
+      DEBUG( "Splitting node at ~~" );
+      return ptr_t( new match_node(arg1, arg2) );
 
     case logand:
       DEBUG( "Splitting node at &&" );
@@ -744,16 +774,16 @@ public:
       t5 ("lt", sless),   t6 ("gt", sgreater),
       t7 ("le", slesseq), t8 ("ge", sgreatereq),
       t9 ("eq", sequals), t10("ne", snoteq),
-      t11("&&", logand),  t12("||", logor),
+      t11("&&", logand),  t12("||", logor),  t13("~~", match),
       k1 ("suppress", kwd_suppress),  
       k2 ("abort",   kwd_abort)
   {
     // NB: Must add se before v
-    add_qtype(&v);  add_qtype(&q);   add_qtype(&qq); 
-    add_qtype(&t1); add_qtype(&t2);  add_qtype(&t3);  add_qtype(&t4);
-    add_qtype(&t5); add_qtype(&t6);  add_qtype(&t7);  add_qtype(&t8);
-    add_qtype(&t9); add_qtype(&t10); add_qtype(&t11); add_qtype(&t12);
-    add_qtype(&k1); add_qtype(&k2);
+    add_qtype(&v);   add_qtype(&q);   add_qtype(&qq); 
+    add_qtype(&t1);  add_qtype(&t2);  add_qtype(&t3);  add_qtype(&t4);
+    add_qtype(&t5);  add_qtype(&t6);  add_qtype(&t7);  add_qtype(&t8);
+    add_qtype(&t9);  add_qtype(&t10); add_qtype(&t11); add_qtype(&t12);
+    add_qtype(&t13); add_qtype(&k1);  add_qtype(&k2);
   }
 
   virtual void validate( const token& t ) const
@@ -765,7 +795,7 @@ public:
       case iless: case igreater: case ilesseq: case igreatereq: 
       case sless: case sgreater: case slesseq: case sgreatereq: 
       case iequals: case inoteq: case sequals: case snoteq: 
-      case logand: case logor: case string_lit: 
+      case logand: case logor: case match: case string_lit: 
       case kwd_suppress: case kwd_abort: case subexpr:
 	return;
     
@@ -797,7 +827,7 @@ private:
 
   var_impl v;
   string_token q, qq;
-  basic_token t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12; // operators
+  basic_token t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13; // ops
   basic_token k1, k2; // keywords
 };
 
@@ -840,7 +870,10 @@ expression::expression( const string& str )
 
 #define RINGING_CATCH_EXPRESSION_ERROR( retval )           \
   catch ( division_by_zero const& ) { return (retval); }   \
-  catch ( bad_lexical_cast const& ) { return (retval); }
+  catch ( bad_lexical_cast const& ) { return (retval); }   \
+  catch ( bell::invalid    const& ) { return (retval); }   \
+  catch ( row::invalid     const& ) { return (retval); }   \
+  catch ( row_wildcard::invalid_pattern const& ) { return (retval); }
 
 bool expression::b_evaluate( const method_properties& m ) const
 {

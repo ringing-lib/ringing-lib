@@ -2201,6 +2201,7 @@ is marked in the second column.
                             left& comparison operators\\
 \verb+==+ \verb+!=+ \verb+eq+ \verb+ne+&
                             left& equality comparison operators\\
+\verb+~~+&                  left& pattern matching\\
 \verb+&&+&                  left& logical and\\
 \verb+||+&                  left& logical or\\
 \verb+?:+&                  right& the conditional (ternary) operator\\
@@ -2266,6 +2267,15 @@ and evaluate to 1 (for true) or 0 (for false).   The operators
 are the equivalent forms that do lexicographic comparisons\index{lexicographic
 comparison} of two strings.  This means that while \verb+11>2+ is true,
 \verb+11 gt 2+ is false, as the two integers are simply treated as strings.
+
+The \verb+~~+ operator does pattern matching on rows.  The left hand argument 
+is parsed as a row, and the right hand argument is parsed as a
+music pattern (\sref{muspattern}).  If the row matches the pattern, the
+expression evaluates to \verb+1+; if not, it evaluates to \verb+0+.  If
+the arguments are not well-formed as a row an a pattern, respectively, an
+expression error (\sref{lits}) occurs.  For example, \verb+$l ~~ "12*"+ can
+be used to filter slow course methods.\index{slow course methods}
+
 
 The \verb+&&+ and \verb+||+ operators are the logical `and' and logical `or'
 operators.\index{logical and}\index{logical or}  
@@ -3849,6 +3859,8 @@ music in it.  The following options are of relevance:
   &Print the number of rows with a negative score\\
 \texttt{-c}&\texttt{--count}&Print the number of matching rows\\
 \texttt{-s}&\texttt{--score}&Print the score for matching rows\\
+\texttt{-i}&\texttt{--in-course}&Match only in-course rows\\
+\texttt{-o}&\texttt{--out-of-course}&Match only out-of-course rows\\
 \end{tabularx}
 
 In addition, the command line should contain one or more music pattern.
@@ -3882,6 +3894,17 @@ the 4-run pattern three times).
 It is also possible for the positive and negative counts, 
 \verb+-p+ and \verb+-n+, not to sum to count, \verb+-c+.  This can happen
 if a row matches a pattern but has zero net score.  
+
+The \verb+-i+ and \verb+-o+ options can be used to filter the input stream
+to only in-course or out-of-course rows, respectively.  This is applied before
+any pattern matching is applied.  Even if \texttt{musgrep} is only being 
+used to filter a row stream based on parity, a pattern must still be supplied:%
+\footnote{Using \verb+?+ as a catch-all pattern can be easier than \verb+*+
+as most shells do not require \verb+?+ to be quoted, whereas \verb+*+ generally
+does need quoting.}
+\begin{Verbatim}[commandchars=@~~]
+musgrep -b8 -i ?
+\end{Verbatim}
 
 \index{music|)}
 \index{row stream|)}
@@ -4307,7 +4330,7 @@ and \verb+-M2rhalflead+.
 \subsection{Pending release}
 \begin{list}{\labelitemi}{\leftmargin=1em\itemsep=0em}
 \item Method identifiers: \verb+$i+ (\sref{variables}).
-\item Filter payloads: \verb+$a+ (\sref{misc_opt}, \sref{variables}). 
+\item Filter payloads: \verb+$a+ (\sref{misc_opt} and \sref{variables}). 
 \item Filter inverting: \verb+--invert-filter+ (\sref{misc_opt}).
 \item Delight methods: \verb+--delight+, and (for minor)
 \verb+--3rds-place-delight+ and \verb+--4ths-place-delight+ 
@@ -4317,8 +4340,9 @@ and \verb+-M2rhalflead+.
 (\sref{hist_class}).
 \item Fourths-place doubles and minor lead-end symbols are now supported in 
 \verb+$D+ (\sref{variables}).
-\item The \verb+^+ operator is now overloaded to do conjugation 
-  (\sref{rowexpr}).
+\item The \verb+^+ operator is now overloaded to do conjugation in row 
+  expressions (\sref{rowexpr}).
+\item Music pattern matching in expressions: \verb+~~+ (\sref{oper}).
 \item The \verb+--require+ and \verb+--filter+ options can now be written
   \verb+-Q+ and \verb+-I+, respectively (\sref{misc_opt}). 
 \item Command exit status: \verb+$?+ (\sref{exitstatus}).
