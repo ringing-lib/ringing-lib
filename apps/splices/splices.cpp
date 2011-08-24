@@ -52,9 +52,12 @@ struct arguments
   init_val<bool,false> print_group;
 
   init_val<bool,false> filter_mode;
+  init_val<bool,false> read_rows;
 
   vector<string>       meth_str;
   vector<method>       meth;
+
+  vector<row>          rows;
 
   arguments( int argc, char *argv[] );
   void bind( arg_parser& p );
@@ -63,7 +66,15 @@ struct arguments
 
 arguments::arguments( int argc, char *argv[] )
 {
-  arg_parser ap( argv[0], "musgrep -- grep rows for music", "OPTIONS" );
+  arg_parser ap( argv[0], "splices -- search for splices\v"
+    "If no methods are given on the command line, then methods are read from "
+    "standard input and all splices between them are located (unless -I is "
+    "specified, in which case lead splices are removed).  If one method is "
+    "given on the command line, then methods are read from standard input and "
+    "tested for splices with the method on the command line.  If two "
+    "methods are given on the command line, then the splice between those "
+    "methods is found.", "OPTIONS METHODS" );
+
   bind( ap );
 
   if ( !ap.parse(argc, argv) )
@@ -129,9 +140,15 @@ void arguments::bind( arg_parser& p )
            only_n_leads ) );
 
   p.add( new boolean_opt
-         ( '\0', "filter",
-           "Run as a method filter",
+         ( 'I', "filter",
+           "Run as a method filter; if no methods are given on the command "
+           "line, then lead-splices are excluded",
            filter_mode ) );
+
+  p.add( new boolean_opt
+         ( '\0', "read-rows",
+           "Read the rows of a method from standard input",
+           read_rows ) );
 }
 
 bool arguments::validate( arg_parser& ap )
@@ -225,6 +242,8 @@ private:
   class sort_function;
 
   bool test_splice( method const& a, method const& b );
+  string test_splice( method const& a, vector<row> const& b, 
+                      string const& b_name = string() );
   bell get_pivot( group const& sg ) const;
   pair<bell, bell> get_swapping_pair( group const& sg ) const;
   string describe_splice( group const& sg ) const;
@@ -380,14 +399,6 @@ void splices::print_splice_groups() const
 
 void splices::save_splice( method const& a, method const& b, string const& d )
 {
-  if ( !args.group_splices && !args.filter_mode ) {
-    cout << name_or_pn(args, a);
-    if ( args.meth.size() != 1 || b != args.meth.front() ) 
-      cout << " / " << name_or_pn(args, b);
-    cout << "\t" << d << "\n";
-    return;
-  }
-  
   table_type::iterator found = table.end();
   for ( table_type::iterator i=table.begin(), e=table.end(); i!=e;  )
     if ( d == i->first && 
@@ -470,13 +481,9 @@ string splices::describe_splice( group const& sg ) const
   return os;
 }
 
-bool splices::test_splice( method const& a, method const& b )
-{
-  // If we're grouping splices, this gets done later.  This is so that
-  // we can output, e.g.  Bv,Su / Bk,He  for surprise minor lead splices.
-  if ( !args.group_splices && args.same_le && a.back() != b.back() )
-    return false;
- 
+string splices::test_splice( method const& a, vector<row> const& b,
+                             string const& b_name )
+{ 
   int flags = 0; 
   if ( args.in_course ) 
     flags |= falseness_table::in_course_only;
@@ -486,24 +493,48 @@ bool splices::test_splice( method const& a, method const& b )
 
   if ( !args.null_splices &&
        sg.size() == factorial(args.bells-1) / (args.in_course ? 2 : 1) )
-    return false;
+    return string();
 
   if ( args.only_n_leads != -1 && sg.size() != args.only_n_leads * 2 &&
        // Need to store lead splices if we're to group them
        ( !args.group_splices && !args.filter_mode || sg.size() != 2 ) )
-    return false;
+    return string();
+
+  if ( args.only_n_leads != -1 && sg.size() != args.only_n_leads * 2 )
+    return string();
+
+  string desc( describe_splice(sg) );
 
   if ( args.print_group ) {
     copy( sg.begin(), sg.end(), ostream_iterator<row>(cout, "\n") );
-    return true;
+  }
+  else if ( !args.group_splices && !args.filter_mode ) {
+    cout << name_or_pn(args, a);
+    if ( args.meth.size() != 1 ) 
+      cout << " / " << b_name;
+    cout << "\t" << desc << "\n";
   }
 
-  save_splice( a, b, describe_splice(sg) );
+  return desc;
+}
 
-  if ( args.only_n_leads != -1 && sg.size() != args.only_n_leads * 2 )
+bool splices::test_splice( method const& a, method const& b )
+{
+  // If we're grouping splices, this gets done later.  This is so that
+  // we can output, e.g.  Bv,Su / Bk,He  for surprise minor lead splices.
+  if ( !args.group_splices && args.same_le && a.back() != b.back() )
     return false;
-  else
-    return true;
+
+  int flags = row_block::no_final_lead_head; 
+  if ( args.half_leads ) 
+    flags |= row_block::half_lead_only;
+
+  string desc = test_splice( a, row_block(b, flags), name_or_pn(args, b) );
+
+  if ( desc.size() && ( args.group_splices || args.filter_mode ) )
+    save_splice( a, b, desc );
+
+  return desc.size();
 }
 
 method splices::get_method( library_entry const& e )
@@ -533,7 +564,11 @@ void splices::find_splices( library const& lib )
 
     bool filter_ok = false;
 
-    if ( args.meth.size() == 1 ) {
+    if ( args.read_rows ) {
+      test_splice( m, args.rows );
+    }
+
+    else if ( args.meth.size() == 1 ) {
       if ( m != args.meth.front() ) 
         filter_ok = test_splice( m, args.meth.front() );
     }
@@ -564,8 +599,13 @@ int main( int argc, char *argv[] )
 
   splices spl( args );
 
+  if ( args.read_rows ) {
+    args.rows.assign( istream_iterator<row>(cin), istream_iterator<row>() );
+    methodset in( args.meth.begin(), args.meth.end() );
+    spl.find_splices( in );
+  }
   if ( args.meth.size() >= 2 ) {
-    methodset in; in.append( args.meth.begin(), args.meth.end() );
+    methodset in( args.meth.begin(), args.meth.end() );
     spl.find_splices( in );
   }
   else {
