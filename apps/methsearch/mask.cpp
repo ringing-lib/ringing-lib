@@ -532,7 +532,7 @@ void select_changes_prin( const arguments& args, vector<change>& changes,
           // Handle -Fx
           if ( args.true_trivial && ch.count_places() == args.bells )
             continue;
-  
+
           // Handle --changes
           if ( args.changes.size() && args.include_changes
                != ( args.changes.find(ch) != args.changes.end() ) )
@@ -624,6 +624,10 @@ void merge_changes( const arguments& args, vector<change>& result,
 	const change ch( merge_changes( args, above[ia], below[ib], posn ) );
         DEBUG( "Merging " << below[ib] << " and " << above[ia] << " gives "
                  << ch );
+
+        // Handle -Fx
+        if ( args.true_trivial && ch.count_places() == args.bells )
+          continue;
 
         // Handle --changes
         if ( args.changes.size() && args.include_changes
