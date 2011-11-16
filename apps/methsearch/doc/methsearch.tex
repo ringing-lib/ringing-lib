@@ -214,9 +214,9 @@ that the terminal is waiting for you to type something in;
 this should always end in a `\verb+>+' character. %\symidx{>}{Windows prompt}
 First you need to change directory into the directory that contains
 your copy of \texttt{methsearch.exe} (and any associated tools and libraries
-you may also have got).  If, for example, you've put it in a directory called
-`\verb+C:\Documents and Settings\Richard\methsearch+' then you should
-type:
+you may also have got).  If you've put it in a directory called
+`\verb+C:\Documents and Settings\Richard\methsearch+', for example,
+then you should type:
 
 \begin{Verbatim}
 cd C:\Documents and Settings\Richard\methsearch
@@ -818,10 +818,11 @@ spellings can be found, including `pasalltria' and `pasallatessara'.
 They presumably derive from the Ancient Greek \textit{πας αλλα τρια} and 
 \textit{πας αλλα τεσσερα} meaning `all but three' and `all but four'.}
 though I'm not aware of any evidence that these class names were actually used.
-These types of methods can be found with the 
+The
 \verb+--strict-exercise+\loid{strict-exercise},
 \verb+--pas-alla-tria+\loid{pas-alla-tria} and 
-\verb+--pas-alla-tessera+\loid{pas-alla-tessera} options.
+\verb+--pas-alla-tessera+\loid{pas-alla-tessera} opt\-ions
+can be used to find these types of methods.
 
 \section{Internal structure}\label{int_struct}
 
@@ -835,7 +836,7 @@ These types of methods can be found with the
 \texttt{-w}&\texttt{--right-place}&
   Require right place methods\\
 \texttt{-f}&\texttt{--no-78s}&
-  Prohibit penultimate places above the treble\\
+  Disallow penultimate places above the treble\\
 \texttt{-y}&\texttt{--symmetric-sections}&
   Require each treble section to be symmetric\\
 \end{tabularx}
@@ -1084,13 +1085,13 @@ the middle of the treble's 1--2 up dodge(s).
 \textit{Glide symmetry}\index{symmetry!glide},
 specified with \verb+-d+,\oid{d}{double} means that the method is 
 invariant when reversed (i.e.\ when the frontwork move to the back and 
-vice versa) and then shifted by half a course.  
+vice versa) and then shifted by half a lead.  
 The Central Council refers to this form of symmetry as 
 \textit{double symmetry}\index{symmetry!double|see{glide}}, 
-although this terms is sometime incorrectly
+although this term is sometime incorrectly
 reserved to mean the combination of glide and palindromic symmetry.  
-It is relatively rare to find methods with just glide symmetry although
-Double Resurrection Cyclic Bob Royal is an example.
+Methods with just glide symmetry are relatively rare;y rung; 
+Double Resurrection Cyclic Bob Royal is an example of one.
 
 \textit{Rotational symmetry}\index{symmetry!rotational}, 
 specified with \verb+-k+,\oid{k}{rotational} means that the method
@@ -1123,13 +1124,17 @@ harmless, to specify all three of \verb+-skd+.
 is similar to glide symmetry, and is required
 by the \verb+--mirror+ option.\loid{mirror}  
 It means that method is invariant when 
-each change is reversed without a subsequent shift of half a course.  It 
+each change is reversed without a subsequent shift of half a lead.  It 
 is found in Mirror Bob Major.  Mirror symmetry heavily restricts the 
 possible changes available for producing a method: for example, on six bells,
 only \verb+x+, \verb+16+, \verb+34+ and \verb+1256+ are allowed.
 By the nature of the symmetry, mirror symmetric methods with a hunt bell
 will always have a second hunt bell following the same path but half a lead
-out of sync.  As a result \verb+-A+ will always need to be specified too.
+out of sync; as a result \verb+-A+ will always need to be specified too.
+Under these definitions, Original on even stages has mirror symmetry rather 
+than glide symmetry.  This is because shifting the method by half a lead 
+(one change) moves the cross changes to the \verb+1N+ changes.
+
 
 \index{symmetry|)}
 
@@ -1296,7 +1301,7 @@ may be included in a future version of \methsearch.
 
 \section{Output options}\label{output_opt}\index{output|(}
 
-The options in the previous section allow you to control what
+The options in the previous sections control what
 \methsearch\ searches for.  By contrast, the options here control
 what \methsearch\ does when it has found a method.
 
@@ -1312,6 +1317,7 @@ what \methsearch\ does when it has found a method.
 &\texttt{--raw-count}&A more concise version of \texttt{--count}\\
 &\texttt{--node-count}&Count the number of nodes visited in the search tree\\
 \texttt{-u}&\texttt{--status}&Keep a running status of progress\\
+&\texttt{--status-freq=N}&Display the status every \texttt{N} nodes\\
 &\texttt{--limit=N}&Terminate the search after finding \texttt{N} methods\\
 &\texttt{--random}&Randomise the order in which methods are listed\\
 &\texttt{--random-count=N}&
@@ -1430,11 +1436,13 @@ When performing a very long search, especially one that finds few methods,
 it can be difficult to know how far through the search \methsearch\ has got.
 The \verb+-u+ option\oid{u}{status} tells \methsearch\ to display a 
 \textit{status line}
-which is updated every 10,000 nodes to containing the first 68 characters of 
-the place notation of the current node.\footnote{The number of characters
+which is updated by default every 10,000 nodes to show the first 68 characters 
+of the place notation of the current node.\footnote{The number of characters
 to display can be overridden with the \verb+$COLUMNS+ environment variable%
 \fspec{COLUMNS} in which case \verb+$COLUMNS+$-$12 characters are printed. 
 Many shells set this variable automatically.}
+The frequency with which this is displayed can be overridden with the 
+\verb+--status-freq+ option, and the use of that option implies \verb+-u+.
 This information is displayed on
 \textitidx{standard error} meaning that it is not captured by shell
 redirection using \verb+>+.
@@ -1450,7 +1458,7 @@ depending on whether the criteria can be satisfied.  The \verb+--limit+
 option cannot be used in conjunction with the \verb+--random-count+ option.
 
 The \verb+--random+ option\loid{random} tells \methsearch\ to randomise the 
-order in which it searches the search space.  It is important to note, however,
+order in which it traverses the search space.  It is important to note, however,
 that \methsearch\ still does a depth-first search and it is only the 
 order of the child nodes at each point in the search tree that is randomised.%
 \footnote{The reason for this choice of implementation is that a truly randomised
@@ -1487,7 +1495,7 @@ appears to be in such a region.  For example, on Unix-like platform one
 could use the following command to generate 23 utterly structureless random
 treble dodging major methods:%
 \index{perl@\texttt{perl}}\fspec{RANDOM}\index{alarm}\index{timeout}%
-\index{example!major, random structureless surprise}
+\index{example!major, random structureless}
 \begin{Verbatim}[commandchars=\%~~]
 for ((x=0; x<23; )); do if perl -e 'alarm 1; exec @ARGV' %hfill\ 
   methsearch -b8 -G1 --random --seed=$RANDOM --limit=1 ; %hfill\
@@ -1964,7 +1972,8 @@ See \sref{symmetry} for the definitions of these types of symmetry.  For
 methods with none of these symmetries, the string is empty.\index{symmetry}
 
 The method class string, \verb+$C+\fspec{C}, includes the tags `differential'
-and `little', even though the former is not technically a class.  It does
+and `little', even though the Central Council do not consider `differential'
+technically to be a class.  It does
 not include `principle', `treble-dodging' or `plain' because these tags never
 appear in method names.  (In the first case, an empty string is used; in 
 the latter two, the classes are subdivided.)   It uses
@@ -1974,7 +1983,7 @@ older classification schemes, such as those that included the now-obsolete
 classes court\index{court methods}, imperial\index{imperial methods}, 
 college\index{college methods} and exercise\index{exercise methods}.  
 
-In the terminology used in the Central Council's 
+In the terminology of the Central Council's 
 decisions\index{Central Council!decisions}, 
 \verb+$N+ contains the method's \textit{title}\index{title, method} 
 and \verb+$n+ contains its \textit{name}\index{name, method}.
@@ -2131,16 +2140,17 @@ methsearch -b8 -SG1 -srefj -p2 -M'<4-runs>'      @hfill\
 \end{Verbatim}
 
 Understanding complex examples like this is typically harder than
-writing them.  The first part of this \verb+-R+ option is a expression,
-\verb+$[ $M>35 ? "\x1b[1;31m" : "" ]+.  This says, if the music score 
-is greater than 35, print the string `\verb"\x1b[1;31m"'.  Here, \verb+\x1b+
+writing them.  The first part of the \verb+-R+ option is 
+\verb+$[ $M>35 ? "\x1b[1;31m" : "" ]+.  This is an expression saying 
+if the music score is greater than 35, 
+then print the string `\verb"\x1b[1;31m"'.  Here, \verb+\x1b+
 is the ASCII \textitidx{escape character}, and the whole string means
 put the console into bold mode and set the 
 foreground colour to red.  Similarly, the `\verb"\x1b[0m"'
 at the end of the format string sets the console back to its default mode;
 `\verb+\x1b[38G+' advances the cursor to column 38, in order to get nice
 alignment.\footnote{The console codes\index{console codes} available
-will depend on your system, but some 
+depends on your system, but some 
 documentation can be found at
 \url{http://www.kernel.org/doc/man-pages/online/pages/man4/%
 console_codes.4.html}.}
@@ -2205,6 +2215,7 @@ is marked in the second column.
 \verb+&&+&                  left& logical and\\
 \verb+||+&                  left& logical or\\
 \verb+?:+&                  right& the conditional (ternary) operator\\
+\verb+,+&                   left& the comma (sequence) operator\\
 \end{tabular}
 
 In expression involving two \textit{binary operators}\index{operators!binary}
@@ -2276,7 +2287,6 @@ the arguments are not well-formed as a row an a pattern, respectively, an
 expression error (\sref{lits}) occurs.  For example, \verb+$l ~~ "12*"+ can
 be used to filter slow course methods.\index{slow course methods}
 
-
 The \verb+&&+ and \verb+||+ operators are the logical `and' and logical `or'
 operators.\index{logical and}\index{logical or}  
 In the former case, it evaluates to true if both its arguments 
@@ -2296,7 +2306,7 @@ expensive. In such an example, by reordering the expression such that the
 command invocation is on right, it is often possible to get a significant
 speed improvement.
 
-The final operator is the \textitidx{conditional operator}.  It is a 
+The penultimate operator is the \textitidx{conditional operator}.  It is a 
 \textit{ternary operator}\index{operators!ternary} --- 
 that is, an operator which takes three arguments.%
 \footnote{Because it is the only ternary operator in most
@@ -2311,6 +2321,14 @@ argument is evaluated and the expression takes its value.  The conditional
 operator never evaluates both its arguments.  An example is 
 \verb+$M>=40 ? "*" : ""+ which might be used to print an asterisk next
 to particularly musical methods.
+
+Finally, the \verb+,+ operator\index{operators!comma}
+evaluates its first argument and ignores its
+value.  It then unconditionally evaluates its second argument, and the 
+argument of the whole expression is that of its second argument.  This
+is only of use when evaluating the first argument has some effect, for example,
+evaluating a \verb+suppress+ or \verb+abort+ keyword (\sref{exprkey}) or
+invoking a command (\sref{cmdinv}).
 
 Except for the conditional operator, all of \methsearch's supported operators
 are \textit{binary operators}\index{operators!binary} 
@@ -2899,8 +2917,8 @@ The multiplication operator, \verb+*+,\index{multiplication}
 permutes\index{permute} one row by another.  The convention used by 
 \methsearch\ is that $x$\verb+*+$y$ means $x$ transposed by $y$, rather
 than the $x$ transposition acting on $y$, thus \verb+1432*2143+ is 
-\verb+4123+ and not \verb+2341+.\footnote{Neither convention has universal 
-uptake amongst ringing theoreticians and both have advantages.}
+\verb+4123+ and not \verb+2341+.\footnote{Neither convention is used 
+universally by ringing theoreticians and both have advantages.}
 
 Because row multiplication is non-commutative, 
 division\index{division} isn't uniquely defined.  
@@ -2952,7 +2970,7 @@ an arbitrary number of tenors omitted, thus the two preceding examples
 are equivalent to \verb+123+ or even just \verb+1+.  
 Integer literals may optionally be prefixed by a \verb-+- or \verb+-+ sign.
 
-Clearly an ambiguity exists between rows and integers, although in practice
+An ambiguity exists between rows and integers, although in practice
 \methsearch\ almost always gets it right.  The heuristics by which rows
 and integers are disambiguated are as follows:
 \begin{itemize}\renewcommand{\labelitemi}{---}
@@ -3065,7 +3083,7 @@ of checking that any complicated expressions passed to \verb+-Fr+
 are producing the correct output.
 
 \subsection{An example — course splices}
-\index{example!minor, treble-dodging, course splices}
+\index{example!minor, course splices}
 
 As an example, suppose we want to find \textitidx{course splices} of
 Beverley Surprise Minor.  These are methods that can be dropped into an
@@ -3151,8 +3169,8 @@ $GM=S_n$.
 For example, most treble dodging minor methods produce extents
 that have the {60} in-course rows of the form \verb+1.....+ as lead-ends
 and lead-heads.  The \verb+-P+ option guarantees that the methods will be
-true with a composition of this style.  However, the same effect can be 
-achieved with \verb+-FP=124365 -FP=132546 -FP=132465 -Fh+.  (These three 
+true with a composition of this style.  The same effect can be 
+achieved with \verb+-FP=124365 -FP=132546 -FP=132465+ \verb+-Fh+.  (These three 
 rows, which are the changes \verb+12+, \verb+16+ and \verb+14+ generate
 the group $A_5$ of in-course fixed-treble rows.)  In practice, the \verb+-P+
 option is significantly faster and there is no reason to prefer \verb+-FP+
@@ -3208,7 +3226,7 @@ at the back; this can be written more succinctly as \verb+-M*5678+.  A
 combination roll-up (CRU)\index{CRU|see{combination roll-up}}%
 \index{combination roll-up} on eight
 has two of \verb+4+, \verb+5+ and \verb+6+ rolling-up followed by \verb+78+.
-This can be written \verb+-M*[456][456]78+.
+It can be written \verb+-M*[456][456]78+.
 
 If a pattern is shorter than the row and contains no \verb+*+ to match the
 surplus bells, then it matches at the start of the row.  For example,
@@ -3625,9 +3643,18 @@ left-to-right with command invocations being invoked as they're encountered.
 This can be seen using the standard Unix programs 
 \verb+true+\index{true@\texttt{true}} and 
 \verb+false+\index{false@\texttt{false}} which simply exit 
-successfully and unsuccessfully, respectively.  The format string
+successfully and unsuccessfully, respectively:
 \verb+"$? $(false)$? $? $(true)$?"+ will evaluate to \verb+"0 1 1 0"+, with the 
 value of \verb+$?+ changing through the format string.
+
+To use the exit status instead of the output of a command in an expression
+(such as the argument to a \verb+-Q+ option),
+it's usually necessary to use the comma operator%
+\index{operators!comma} to discard the output of the command.  For example
+\verb+-Q"$(true), $?"+ will always succeed, despite the fact that \verb+true+
+does not provide any output; similarly, \verb+-Q"$(false), $?"+ will always
+fail.  However, trying to use \verb+-Q"$(true)"+ will give an error as 
+the textual output of \verb+true+ is neither true nor false.
 
 \index{command invocation|)}
 
@@ -3674,13 +3701,13 @@ of the rows on a given number of bells.  It accepts the following options:
 \texttt{-i}&\texttt{--in-course}&Only list in-course (even parity) rows\\
 \end{tabularx}
 
-For example, \verb+extent -b8 -h1 -t2 -i+ lists the 60{} 
+For example, \verb+extent -b8 -h1 -t2 -i+ lists the 
 in-course\index{parity} tenors-together\index{tenors-together} lead heads
-of the form \verb+1.....78+.  The rows are listed in lexicographic order%
-\index{lexicographic order}:%
-%\footnote{Strictly, this is not quite lexicographic 
-%order as \verb+E+ and \verb+T+ (for 11 and 12) are found before \verb+A+ (13).
-%So \verb+1234567890ETA+ comes before \verb+1234567890EAT+.}
+of the form \verb+1.....78+ of which there are 60.  
+The rows are ordered lexicographically\index{lexicographic order}:%
+\footnote{Strictly, this is not quite lexicographic 
+order as \verb+E+ and \verb+T+ (for 11 and 12) are found before \verb+A+ (13).
+So \verb+1234567890ETA+ comes before \verb+1234567890EAT+.}
 \verb+12345678+, \verb+12346578+, \verb+12354678+, \ldots, \verb+16543278+.
 
 It is rare to want to use this program in conjunction with \methsearch.
@@ -3995,7 +4022,7 @@ The \verb+-l720+ says that a touch of exactly 720 changes is required.
 Ranges are also permitted in the \verb+-l+ option's argument: e.g.
 \verb+-l540-720+ requires any touch of between 540 and 720 changes, inclusive.
 
-The \verb+-P+ option restricts the search to multi-part compositions.  For 
+The \verb+-P+ option looks for multi-part compositions.  For 
 example, \verb+-P1342+ looks for a three-part composition with 2,3,4 cycling.
 Note that, like \methsearch's \verb+-FP+ option (\sref{pends}), this option
 specifies a part end group 
@@ -4252,8 +4279,8 @@ major methods) and \verb+%o+.
 \subsection{13 May 2003}
 \begin{list}{\labelitemi}{\leftmargin=1em\itemsep=0em}
 \item Added \verb+--regular-hls+.
-\item Generalised \verb+%F+ to support regular palindromic methods on any 
-even stage (greater than six).
+\item Generalised \verb+%F+ to regular palindromic methods on 
+any even stage greater than six.
 \item Removed \verb+%F+ support for cyclic rotationally-symmetric
 major methods.
 \item Added \verb+%F+ support for out-of-course falseness groups and `A' 
@@ -4343,6 +4370,7 @@ and \verb+-M2rhalflead+.
 \item The \verb+^+ operator is now overloaded to do conjugation in row 
   expressions (\sref{rowexpr}).
 \item Music pattern matching in expressions: \verb+~~+ (\sref{oper}).
+\item Comma operator (for sequencing): \verb+,+ (\sref{oper}).
 \item The \verb+--require+ and \verb+--filter+ options can now be written
   \verb+-Q+ and \verb+-I+, respectively (\sref{misc_opt}). 
 \item Command exit status: \verb+$?+ (\sref{exitstatus}).
@@ -4354,6 +4382,7 @@ and \verb+-M2rhalflead+.
 \item Support for Unicode output in UTF-8: \verb+-Outf8+ (\sref{output_opt}).
 \item Falseness per semicourse: \verb+-Fc=+$x$ (\sref{semicourse} and
   \sref{pends}).
+\item Status update frequencies: \verb+--status-freq+ (\sref{output_opt}).
 \end{list}
 
 \clearpage

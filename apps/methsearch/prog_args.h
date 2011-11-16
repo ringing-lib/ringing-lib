@@ -87,6 +87,7 @@ struct arguments
   init_val<bool,false> quiet;
   init_val<bool,false> histogram;
   init_val<bool,false> status;
+  init_val<int, 0>     status_freq;
   init_val<bool,false> count;
   init_val<bool,false> raw_count;
   init_val<bool,false> node_count;

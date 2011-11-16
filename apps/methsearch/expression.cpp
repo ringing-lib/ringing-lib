@@ -265,6 +265,32 @@ private:
   shared_pointer<expression::node> arg1, arg2, arg3;
 };
 
+class comma_node : public expression::node {
+public:
+  comma_node( const shared_pointer<expression::node>& arg1,
+              const shared_pointer<expression::node>& arg2 )
+    : arg1( arg1 ), arg2( arg2 )
+  {}
+
+private:
+  virtual expression::integer_type 
+    i_evaluate( const method_properties& m ) const 
+  {
+    // Use s_evaluate instead of i_evaluate on arg1 as anything can be
+    // converted into a string, but not necessarily into an integer.
+    arg1->s_evaluate(m);
+    return arg2->i_evaluate(m);
+  }
+
+  virtual string s_evaluate( const method_properties& m ) const 
+  {
+    arg1->s_evaluate(m);
+    return arg2->s_evaluate(m);
+  }
+
+  shared_pointer<expression::node> arg1, arg2;
+};
+
 class string_node : public expression::s_node {
 public:
   explicit string_node( const string& str ) : s(str) {}
@@ -403,6 +429,7 @@ public:
     concat      = '.',
     iless       = '<',
     igreater    = '>',
+    comma       = ',',
     ilesseq    /* '<=' */ = tokeniser::first_token,
     igreatereq /* '>=' */,
     iequals    /* '==' */,
@@ -476,7 +503,6 @@ expression::parser::parser()
   prec[6].push_back(times); 
   prec[6].push_back(divide);
   prec[6].push_back(modulo);
-  
 }
 
 RINGING_START_ANON_NAMESPACE
@@ -570,6 +596,10 @@ expression::parser::split_expr( vector<token>::const_iterator first,
     case logor:
       DEBUG( "Splitting node at ||" );
       return ptr_t( new logor_node(arg1, arg2) );
+
+    case comma:
+      DEBUG( "Spltting node at ," );
+      return ptr_t( new comma_node(arg1, arg2) );
     }
 
   throw logic_error( "Attempted to split expression at an illegal token" );
@@ -654,6 +684,14 @@ expression::parser::make_node( vector<token>::const_iterator first,
       // It's something like (1) + (2), so continue
     }
 
+  // , is the lowest precedence operator and isn't in the table of binary
+  // operators because it is lower precedence than ?: and so needs special
+  // handling
+  {
+    vector<tok_types> toks( 1, comma );
+    ptr_t result = handle_left_infix( first, last, toks );
+    if ( result ) return result;
+  }
 
   // ?: is the lowest precedence operator
   // It is right associative -- so start from the left looking for ?
@@ -795,7 +833,7 @@ public:
       case iless: case igreater: case ilesseq: case igreatereq: 
       case sless: case sgreater: case slesseq: case sgreatereq: 
       case iequals: case inoteq: case sequals: case snoteq: 
-      case logand: case logor: case match: case string_lit: 
+      case logand: case logor: case match: case comma: case string_lit: 
       case kwd_suppress: case kwd_abort: case subexpr:
 	return;
     

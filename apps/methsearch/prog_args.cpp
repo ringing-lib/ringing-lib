@@ -406,6 +406,11 @@ void arguments::bind( arg_parser &p )
 	   status ) );
 
   p.add( new integer_opt
+	 ( '\0', "status-freq",
+	   "Display the current status every NUM nodes", "NUM",
+	   status_freq ) );
+
+  p.add( new integer_opt
 	 ( '\0', "limit",
 	   "Limit the search to the first NUM methods", "NUM",
 	   search_limit ) );
@@ -1041,5 +1046,8 @@ bool arguments::validate( arg_parser &ap )
         }
     }
 
+  if ( status_freq ) status = true;
+  else status_freq = 10000;
+ 
   return true;
 }

@@ -528,7 +528,11 @@ void select_changes_prin( const arguments& args, vector<change>& changes,
       for ( changes_iterator j(args.bells), e; j != e; ++j )
         {
           change ch(*j);
-    
+   
+          // Handle -Fx
+          if ( args.true_trivial && ch.count_places() == args.bells )
+            continue;
+  
           // Handle --changes
           if ( args.changes.size() && args.include_changes
                != ( args.changes.find(ch) != args.changes.end() ) )
