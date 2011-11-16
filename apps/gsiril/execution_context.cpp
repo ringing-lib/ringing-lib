@@ -1,5 +1,6 @@
 // execution_context.cpp - Global environment
-// Copyright (C) 2002, 2003, 2004, 2007 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003, 2004, 2007, 2011 
+// Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -43,6 +44,13 @@ int execution_context::bells( int b )
 	output() << "Warning: Rounds reset";
       args.rounds = row(b);
     }
+
+  // Define __line__ to be a line of hyphens, one per bell, with no 
+  // terminating line break.  The expectation is that users will do
+  // something like:   line = __line__, "";
+  sym_table.define
+    ( pair<const string, expression>( "__line__", 
+        expression( new string_node( string(b, '-') + '\\' ) ) ) );
 
   swap( b, args.bells.get() );
   return b;
