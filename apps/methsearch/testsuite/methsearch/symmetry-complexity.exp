@@ -1,0 +1,106 @@
+# Copyright (C) 2011 Richard Smith <richard@ex-parrot.com>
+
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+# $Id$
+
+
+proc symmetry_test { bells hunts td opt methods nodes } {
+  global METHSEARCH
+
+  set test "symmetry-complexity-b$bells-U$hunts-G$td-$opt"
+  spawn $METHSEARCH -b$bells -U$hunts -G$td -q --count --node-count -$opt
+  set n 0
+
+  # Is there not a better way of requiring multiple lines to match?
+  expect {
+    -ex "Found $methods methods" { incr n; exp_continue; }
+    -ex "Searched $nodes nodes"  { incr n; exp_continue; }
+    default {
+      if { $n == 2 } { pass "$test" } else { fail "$test" }
+    }
+  }
+}
+
+# None of these tests are all that complicated: 2.5s is more than adequate.
+set timeout 2.5
+
+# These tests are designed to ensure that the logic for creating the method
+# from existing parts (i.e. by applying symmetry) is working correctly.
+# Our aim is to detect any changes from the current (believed-correct)
+# behaviour, rather than to use test cases that are simple enough that
+# we can be sure the answers are correct.
+#
+# The number of nodes is entered by examining the output of something like:
+# 
+#   methsearch -b5 -q --status-freq=1 -sAU2 2>&1 \
+#     | tr '\r' '\n' | grep Trying | less
+#
+# Once satisified that methsearch is correctly applying symmetry as the
+# logic in searcher::general_recurse demands, copy the values of --count 
+# and --node-count into the test suite below.
+
+
+#              b U G  opts    meths    nodes
+symmetry_test  4 1 0  A         44      107
+symmetry_test  4 1 0  As        16       41
+symmetry_test  4 1 0  Ak         6       29
+symmetry_test  4 1 0  Ad         6       23
+symmetry_test  4 1 0  Asdk       4       15
+
+symmetry_test  4 2 0  A          4       25
+symmetry_test  4 2 0  As         4       17
+symmetry_test  4 2 0  Ak         2       15
+symmetry_test  4 2 0  Ad         2       11
+symmetry_test  4 2 0  Asdk       2       11
+
+symmetry_test  5 1 0  A      15568    22110
+symmetry_test  5 1 0  As       576      922
+symmetry_test  5 1 0  Ak       104      328
+symmetry_test  5 1 0  Ad       108      310
+symmetry_test  5 1 0  Asdk      24       64
+
+symmetry_test  5 2 0  A        144      430
+symmetry_test  5 2 0  As        36      106
+symmetry_test  5 2 0  Ak        12       58
+symmetry_test  5 2 0  Ad        12       46
+symmetry_test  5 2 0  Asdk       6       28
+
+# Drop -A to speed this batch up a bit, though still not enough for the first.
+#symmetry_test 6 1 0  -    5141325 39286245    # ~70s
+symmetry_test  6 1 0  s       3775    57861
+symmetry_test  6 1 0  k       2835    14973
+symmetry_test  6 1 0  d       1745    12857
+symmetry_test  6 1 0  sdk       63      501
+
+symmetry_test  6 2 0  A      32400    57921
+symmetry_test  6 2 0  As       900     2121
+symmetry_test  6 2 0  Ak       180      741
+symmetry_test  6 2 0  Ad       180      501
+symmetry_test  6 2 0  Asdk      30      141
+
+# Add -y -p2 to speed searches up.
+#symmetry_test 6 1 1  yp2  1821882 16794598    # ~50s
+symmetry_test  6 1 1  syp2    2435    32901
+symmetry_test  6 1 1  kyp2     817     7713
+symmetry_test  6 1 1  dyp2     632     9312
+symmetry_test  6 1 1  sdkyp2    33      333
+
+# Need -A to find any methods with -k; use -p2 to speed it up
+symmetry_test  6 2 1  Ap2     3248    24379
+symmetry_test  6 2 1  Asp2     262      914
+symmetry_test  6 2 1  Akp2      50      680
+symmetry_test  6 2 1  Adp2      54      523
+symmetry_test  6 2 1  Asdkp2    15      159

@@ -1082,6 +1082,11 @@ following change as with Grandsire.  For the esoteric case of treble dodging
 methods with an even number of hunts, the symmetry plane must pass through
 the middle of the treble's 1--2 up dodge(s).
 
+\textit{Rotational symmetry}\index{symmetry!rotational}, 
+specified with \verb+-k+,\oid{k}{rotational} means that the method
+is invariant under a rotation about the quarter lead.  
+Brave New World Bob Royal is an example of a method with just this symmetry.
+
 \textit{Glide symmetry}\index{symmetry!glide},
 specified with \verb+-d+,\oid{d}{double} means that the method is 
 invariant when reversed (i.e.\ when the frontwork move to the back and 
@@ -1093,10 +1098,20 @@ reserved to mean the combination of glide and palindromic symmetry.
 Methods with just glide symmetry are relatively rare;y rung; 
 Double Resurrection Cyclic Bob Royal is an example of one.
 
-\textit{Rotational symmetry}\index{symmetry!rotational}, 
-specified with \verb+-k+,\oid{k}{rotational} means that the method
-is invariant under a rotation about the quarter lead.  
-Brave New World Bob Royal is an example of a method with just this symmetry.
+\textit{Mirror symmetry}\index{symmetry!mirror} 
+is similar to glide symmetry, and is required
+by the \verb+--mirror+ option.\loid{mirror}  
+It means that method is invariant when 
+each change is reversed without a subsequent shift of half a lead.  It 
+is found in Mirror Bob Major.  Mirror symmetry heavily restricts the 
+possible changes available for producing a method: for example, on six bells,
+only \verb+x+, \verb+16+, \verb+34+ and \verb+1256+ are allowed.
+By the nature of the symmetry, mirror symmetric methods with a hunt bell
+will always have a second hunt bell following the same path but half a lead
+out of sync; as a result \verb+-A+ will always need to be specified too.
+Under these definitions, Original on even stages has mirror symmetry rather 
+than glide symmetry.  This is because shifting the method by half a lead 
+(one change) moves the cross changes to the \verb+1N+ changes.
 
 For methods with hunt bells, the \verb+-s+ and \verb+-k+ options prescribe
 the symmetry points of the method.  This means that it is, exceptionally, 
@@ -1119,22 +1134,6 @@ in a future version of \methsearch.
 If a method has any two of palindromic, rotational or glide symmetry,
 it necessarily has the third one.  It is therefore unnecessary, though 
 harmless, to specify all three of \verb+-skd+.
-
-\textit{Mirror symmetry}\index{symmetry!mirror} 
-is similar to glide symmetry, and is required
-by the \verb+--mirror+ option.\loid{mirror}  
-It means that method is invariant when 
-each change is reversed without a subsequent shift of half a lead.  It 
-is found in Mirror Bob Major.  Mirror symmetry heavily restricts the 
-possible changes available for producing a method: for example, on six bells,
-only \verb+x+, \verb+16+, \verb+34+ and \verb+1256+ are allowed.
-By the nature of the symmetry, mirror symmetric methods with a hunt bell
-will always have a second hunt bell following the same path but half a lead
-out of sync; as a result \verb+-A+ will always need to be specified too.
-Under these definitions, Original on even stages has mirror symmetry rather 
-than glide symmetry.  This is because shifting the method by half a lead 
-(one change) moves the cross changes to the \verb+1N+ changes.
-
 
 \index{symmetry|)}
 
@@ -1206,11 +1205,11 @@ as \verb+&-1-1-1,2+ or in full as \verb-X.16.X.16.X.16.X.16.X.16.X.12-.%
 \verb+$p+ variables described in \sref{variables}.}
 
 In a method mask, a specific change can be left unspecified by writing 
-\verb+?+\symidx{?}{method mask} in its place, 
-and a sequence of several consecutive 
+\verb+?+\symidx{?}{method mask} in its place; 
+a sequence of several consecutive 
 unspecified changes can be written \verb+*+.\symidx{*}{method mask}  
-A method mask can have at most one \verb+*+ ---
-this is because otherwise \methsearch\ would be unable 
+A method mask can have at most one \verb+*+
+because otherwise \methsearch\ would be unable 
 to calculate how many changes are represented by each \verb+*+.
 
 A change needn't be completely unspecified or fully specified: it is also
@@ -2558,10 +2557,12 @@ To allow these trivial falsenesses, the \verb+-Fx+ option\oidF{x}{really-none}
 should be used.
 
 When checking a lead with \verb+-Fl+,\oidF{l}{lead} \methsearch\ proves all 
-the rows between the opening rounds and the lead end row inclusive -- it does 
-not include the lead head.  Similarly, \verb+-Fh+\oidF{h}{half-lead} proves 
-all the rows from the opening rounds to the half lead end, and separately from 
-the half lead head to the lead end.  (In practice, if either \verb+-s+ or 
+the rows between the opening rounds and the lead end row inclusive --- it 
+also requires that the lead head is either distinct, or the same as the 
+initial lead head.
+Similarly, \verb+-Fh+\oidF{h}{half-lead} proves all the rows from the opening 
+rounds to the half lead end, and separately from the half lead head to the 
+lead end.  (In practice, if either \verb+-s+ or 
 \verb+-d+ is specified, only one half-lead is tested --- the other is 
 guaranteed by symmetry.)
 

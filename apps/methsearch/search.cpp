@@ -147,8 +147,10 @@ searcher::searcher( const arguments &args )
   copy( args.startmeth.rbegin(), args.startmeth.rend(), 
         back_inserter(startmeth) );
 
-  if ( args.true_lead && ( args.pends.size() > 1 || !args.sym 
-       || args.hunt_bells == 0 || args.treble_dodges > 1 ) ) 
+  if ( args.true_lead && ( !args.sym ||  
+         args.treble_dodges && !args.same_place_parity )  ||
+       args.true_half_lead && ( args.pends.size() > 1 ||
+         args.hunt_bells == 0 || args.treble_dodges > 1 ) ) 
   {
     prv.reset( new prover(1) ); // XXX n_extents
     for ( set<row>::const_iterator 
@@ -340,10 +342,20 @@ public:
   }
 
   bool prove_lh() {
-    if ( r != args.start_row )
-      p.add_row(r);
+    row r2 = args.pends.size() == 1 ? r : args.pends.rcoset_label(r);
+    if ( r2 != args.start_row )
+      p.add_row(r2);
     return p.truth();
   }
+
+  bool prove_hl( change const& lec ) {
+    row r2 = args.pends.size() == 1 ? r : args.pends.rcoset_label(r);
+    row r3 = args.pends.size() == 1 ? r*lec : args.pends.rcoset_label(r*lec);
+    if ( r2 != r3 ) 
+      p.add_row(r2);
+    return p.truth();
+  }
+    
 
   bool truth() const { return p.truth(); }
   bool is_course_head() const { return r == args.start_row; }
@@ -351,9 +363,9 @@ public:
 
 private:
   arguments const& args;
-   int const n_extents;
-   prover p;
-   row r;
+  int const n_extents;
+  prover p;
+  row r;
 };
 
 bool searcher::is_acceptable_method()
@@ -429,7 +441,8 @@ bool searcher::is_acceptable_method()
   // As a further optimisation, we could (but don't) move symmetric 
   // into the following block by folding the actual lhs and les into the
   // part end group.
-  if ( (args.true_course || args.true_semicourse != -1) //args.true_lead 
+  if ( args.true_lead 
+       //(args.true_course || args.true_semicourse != -1) //args.true_lead 
          && ( args.pends.size() > 1 
               || !( args.sym && args.hunt_bells && !args.treble_dodges ) ) )
     {
@@ -440,7 +453,7 @@ bool searcher::is_acceptable_method()
                   && !p.is_semicourse_head(args.true_semicourse) ) )
         ;
 
-      if ( !args.true_course && args.true_semicourse == -1 ) 
+      if ( !args.true_course && args.true_semicourse == -1 )  // i.e. if -Fl
         assert( p.truth() );
 
       // There doesn't seem any ideal solution as to what to do with the 
@@ -450,22 +463,29 @@ bool searcher::is_acceptable_method()
       // either it is true or it is the first row again.
       if ( !p.prove_lh() ) return false;
     }
+
   // Although treble-dodging methods with more than one dodge can run
   // false within a half lead, this is handled by the is_division_false
   // function.  We only care if (i) we have part ends; or (ii) we're 
   // looking for hunt-dominated method.  And as this test is a subset
   // of the previous one, we don't want to do them both.
   // If we adopt the above further optimisation, we need to also test
-  // -Fl/-Fc for symmetric methods
+  // -Fl/-Fc for symmetric methods.
   else if ( args.true_half_lead 
             && ( args.pends.size() > 1 || args.hunt_bells == 0 )  )
     {
-      if ( !prover2(args).prove(m.begin(), m.begin()+m.size()/2) )
+      prover2 p(args);
+      if ( !p.prove(m.begin(), m.begin()+m.size()/2) )
         return false;
-      
-      if ( !args.sym && !args.doubsym &&
-           !prover2(args, prover2::raw()).prove(m.begin()+m.size()/2, m.end()) )
+  
+      // Similarly to above, we need to do something with the half-lead change.
+      if ( args.sym && !p.prove_hl( m[m.size()/2] ) ) return false;
+
+      if ( !args.sym && !args.doubsym ) {
+        prover2 p2(args);
+        if ( !p2.prove(m.begin()+m.size()/2, m.end()) )
           return false;
+      }
     }
 
   if ( args.require_CPS && !is_cps( m ) )
@@ -503,7 +523,9 @@ inline bool searcher::push_change( const change& ch )
   if ( maintain_r ) {
     r = canonical_coset_member( r * ch );
     // We don't care about the lead head row.
-    if ( m.size() != lead_len ) {
+    if (!( m.size() == lead_len ||
+           // Or the half-lead with just -Fh (and not -Fl)
+           !args.true_lead && args.true_half_lead && m.size() >= lead_len/2 )) {
       if ( prv && !prv->add_row(r) )
         return false;
       // Is this case still necessary?
@@ -526,7 +548,12 @@ inline void searcher::pop_change( row const* r_old )
      cur_div_len = calc_cur_div_len();
   }
   if ( maintain_r ) {
-    if ( prv && m.size() != lead_len-1 ) prv->remove_row(r);
+
+    if (!( m.size() == lead_len-1 ||
+           // Or the half-lead with just -Fh (and not -Fl)
+           !args.true_lead && args.true_half_lead && m.size() >= lead_len/2-1 )
+        && prv )
+      prv->remove_row(r);
     if ( r_old ) r = *r_old;  
     else r = canonical_coset_member( m.lh() );
   }
@@ -1112,7 +1139,7 @@ void searcher::double_existing()
           if ( count > args.max_consec_blows )
             return;
         }
- 
+
   assert( lead_len % 2 == 0 );
   size_t hl_len = lead_len / 2;
   assert( size_t(m.length()) == hl_len );
@@ -1212,6 +1239,18 @@ void searcher::general_recurse()
     ++node_count;
   }
 
+  // XXX ALLIANCE
+  const size_t sym_offset 
+    = args.hunt_bells && args.hunt_bells % 2 == 0 
+    ? (1 + args.treble_dodges) : 0;
+
+  // XXX ALLIANCE Is the lead_len % 4 test valid? 
+  const bool has_qlead_change = lead_len % 4 == 0;
+
+  const size_t  qlead_sym_pt =   lead_len/4 - 1 + sym_offset;
+  const size_t  hlead_sym_pt =   lead_len/2 - 1 + sym_offset;
+  const size_t tqlead_sym_pt = 3*lead_len/4 - 1 + sym_offset;
+
   // Found something
   if ( depth == size_t(lead_len) )
     {
@@ -1227,7 +1266,6 @@ void searcher::general_recurse()
       }
     }
 
-
   // Symmetry in principles is not handled until later, because we cannot
   // be sure where the symmetry points will be.
   else if ( ! args.hunt_bells )
@@ -1235,52 +1273,33 @@ void searcher::general_recurse()
       new_midlead_change();
     }
 
-
-  // XXX ALLIANCE -- Locate quarter lead
-  // The quarter-lead change in skew-symmetric methods is special.
-  // (e.g. it is self-reverse).
-  else if ( args.skewsym && lead_len % 4 == 0 
-            && depth % (lead_len/2) == lead_len/4 - args.hunt_bells % 2 )
+  // Maximum symmetry is handled here
+  else if ( args.skewsym && depth == qlead_sym_pt + 1 && lead_len > 4 )
     {
-      new_midlead_change();
-    }
+      // If we have a qlead change at Q, then we want m[Q+i] = m[Q-i]
+      // m.length() is Q+i, so Q-i = 2*Q - m.length().
+      // If there is no qlead change and Q is the last before it, then
+      // we want m[Q+i] = m[Q-i+1], so Q-i-1 = 2*Q - m.length() + 1
+    
+ 
+      bool ok = true;
 
+      // This loop will add up to the half-lead symmetry point, unless we 
+      // have glide symmetry, in which case stop at the half-way point, 
+      // when the glide symmetry loop allows us to complete.
+      size_t end = hlead_sym_pt;
+      if ( args.doubsym && sym_offset ) end = lead_len/2;
+      else if ( sym_offset ) end += sym_offset;
 
-  // XXX ALLIANCE -- Locate quarter lead
-  // Maximum symmetry
-  else if ( args.skewsym && args.doubsym && args.sym 
-            && depth == lead_len/4 + 1 - args.hunt_bells % 2 && lead_len > 4 )
-    {
-      // This loop will add up to the half-lead
-      while ( size_t(m.length()) <= lead_len/2 - 1 - args.hunt_bells % 2 )
-        push_change( m[ lead_len/2 - args.hunt_bells % 2 * 2
-                          - m.length() ].reverse() );
+      while ( ok && size_t(m.length()) < end )
+        ok = ok && push_change( m[ 2*qlead_sym_pt - m.length() 
+                                   + (has_qlead_change ? 0 : 1) ].reverse() );
 
-      general_recurse();
+      if (ok) general_recurse();
 
       while ( size_t(m.length()) > depth )
         pop_change();
     }
-
-
-  // XXX ALLIANCE -- Locate quarter lead
-  // Only rotational symmetry
-  else if ( args.skewsym 
-            && depth == lead_len/4 + 1 - args.hunt_bells % 2 && lead_len > 4 )
-    {
-      assert( !args.doubsym && !args.sym );
-
-      // This loop will add up to the half-lead
-      while ( size_t(m.length()) <= lead_len/2 - args.hunt_bells % 2 * 2 )
-        push_change( m[ lead_len/2 - args.hunt_bells % 2 * 2
-                        - m.length() ].reverse() );
-
-      general_recurse();
-
-      while ( size_t(m.length()) > depth )
-        pop_change();
-    }
-
 
   // Double (glide) symmetry (with or without others)
   else if ( args.doubsym && depth == lead_len/2 )
@@ -1288,19 +1307,15 @@ void searcher::general_recurse()
       double_existing();
     }
 
-
-  // XXX ALLIANCE -- First division after lead head
   // Only conventional (palindromic) symmetry
-  else if ( args.sym && depth == lead_len/2 + 
-            ( args.hunt_bells % 2 ? 0 : cur_div_len/2 ) && lead_len > 2 )
+  else if ( args.sym && depth == hlead_sym_pt + 1 && lead_len > 2 )
     {
       assert( !args.skewsym && !args.doubsym );
 
       bool ok = true;
-      // XXX ALLIANCE
       for (method::reverse_iterator i = m.rbegin() + 1,
-             e = m.rend() - (args.hunt_bells % 2 ? 0 : 2*args.treble_dodges+1);
-             i != e; ++i)
+             e = m.rend() - (sym_offset ? 2*sym_offset-1 : 0); 
+             ok && i != e; ++i)
         ok = ok && push_change(*i);
           
       if (ok) general_recurse();
@@ -1309,15 +1324,13 @@ void searcher::general_recurse()
         pop_change();
     }
 
-
-  // XXX ALLIANCE -- First division
   // Conventional symmetry when we have an even number of hunt bells 
-  // treble dodging -- first division
-  else if ( args.sym && args.hunt_bells % 2 == 0 && args.treble_dodges &&
-            depth == size_t(cur_div_len/2) )
+  // treble dodging -- fold the first division (when two hunts are doging 1-2)
+  else if ( args.sym && sym_offset > 1 && depth == sym_offset )
     {
       bool ok = true;
-      for (method::reverse_iterator i = m.rbegin()+1, e = m.rend(); i!=e; ++i)
+      for (method::reverse_iterator i = m.rbegin()+1, e = m.rend(); 
+             ok && i!=e; ++i)
         ok = ok && push_change(*i);
 
       if (ok) general_recurse();
@@ -1326,19 +1339,18 @@ void searcher::general_recurse()
         pop_change();
     }
 
-  // XXX ALLIANCE -- Three quarter lead
   // Only rotational symmetry
-  else if ( args.skewsym 
-            && depth == 3*lead_len/4 + 1 - args.hunt_bells % 2 && lead_len > 4 )
+  else if ( args.skewsym && depth == tqlead_sym_pt + 1 && lead_len > 4 )
     {
       assert( !args.doubsym && !args.sym );
 
+      bool ok = true;
       // This loop *will* add the lead end change.
-      while ( size_t(m.length()) < lead_len )
-        push_change( m[ 3*lead_len/2 - args.hunt_bells % 2 * 2
-                          - m.length() ].reverse() );
+      while ( ok && size_t(m.length()) < lead_len ) 
+        ok = ok && push_change( m[ 2*tqlead_sym_pt - m.length()
+                                   + (has_qlead_change ? 0 : 1) ].reverse() );
 
-      general_recurse();
+      if (ok) general_recurse();
 
       while ( size_t(m.length()) > depth )
         pop_change();

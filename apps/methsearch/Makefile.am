@@ -2,7 +2,8 @@
 
 # Process this file with automake to produce Makefile.in
 
-# Copyright (C) 2002, 2003, 2004, 2009 Richard Smith <richard@ex-parrot.com>
+# Copyright (C) 2002, 2003, 2004, 2009, 2011 
+# Richard Smith <richard@ex-parrot.com>
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
