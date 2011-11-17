@@ -20,6 +20,8 @@
 
 # $Id$
 
+AUTOMAKE_OPTIONS = dejagnu
+
 MAINTAINERCLEANFILES = Makefile.in
 
 bin_PROGRAMS = methsearch
@@ -39,6 +41,12 @@ prog_args.h falseness.h format.h expression.h libraries.h mask.h \
 methodutils.h music.h search.h output.h
 
 EXTRA_DIST = doc/methsearch.tex
+
+# Configuration for dejagnu
+EXTRA_DIST += testsuite/methsearch/basic.exp
+DEJATOOL = methsearch
+RUNTESTDEFAULTFLAGS = --tool $$tool --srcdir=$$srcdir/testsuite \
+   METHSEARCH=`pwd`/$$tool
 
 if HAVE_XELATEX
 EXTRA_DIST += doc/methsearch.pdf
