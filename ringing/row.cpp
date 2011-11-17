@@ -547,7 +547,7 @@ static size_t row_block_base_size(vector<change> const& c, int flags)
 row_block::row_block(const vector<change> &c, int flags) 
   : vector<row>( row_block_base_size(c, flags) ), ch(c), flags(flags)
 {
-  if (size()) {
+  if (ch.size()) {
     (*this)[0] = row::rounds(ch[0].bells());
     recalculate();
   }
