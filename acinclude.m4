@@ -446,12 +446,12 @@ AC_DEFUN([AC_USE_TERMCAP],
       [for a termcap library],
       [ac_cv_use_termcap],
       [AC_COMPILE_IFELSE(
-         AC_LANG_PROGRAM(
+         [AC_LANG_PROGRAM(
            [#include <curses.h>
             #include <term.h>
            ], 
            [char const* dummy = enter_underline_mode;
-            setupterm(NULL, 1, NULL);]),
+            setupterm(NULL, 1, NULL);])],
          ac_cv_use_termcap=yes,
          ac_cv_use_termcap=no)
     ])
@@ -467,12 +467,12 @@ AC_DEFUN([AC_USE_TERMCAP],
 	 if test -z "$ac_cv_termcap_libs"; then
 	   LIBS="$ac_check_cxx_lib_save_LIBS $library"
 	   AC_LINK_IFELSE(
-             AC_LANG_PROGRAM(
+             [AC_LANG_PROGRAM(
                [#include <curses.h>
                 #include <term.h>
                ], 
                [char const* dummy = enter_underline_mode;
-                setupterm(NULL, 1, NULL);]),
+                setupterm(NULL, 1, NULL);])],
              ac_cv_termcap_libs="$library")
 	 fi
        done
@@ -509,16 +509,16 @@ AC_DEFUN([AC_USE_READLINE],
       [ac_cv_use_readline],
       [AC_LANG_PUSH(C++)
        AC_COMPILE_IFELSE(
-         AC_LANG_PROGRAM(
+         [AC_LANG_PROGRAM(
 	   [#include <readline/readline.h>
-	   ], [readline(">");]),
+	   ], [readline(">");])],
 	 ac_cv_use_readline=yes,
          # Some versions of readline fail to include <stdio.h> from <readline.h>
          AC_COMPILE_IFELSE(
-           AC_LANG_PROGRAM(
+           [AC_LANG_PROGRAM(
 	     [#include <stdio.h>
 	      #include <readline/readline.h>
-	     ], [readline(">");]),
+	     ], [readline(">");])],
            ac_cv_use_readline=stdio,
            ac_cv_use_readline=no))
        AC_LANG_POP(C++)
@@ -535,10 +535,10 @@ AC_DEFUN([AC_USE_READLINE],
 	 if test -z "$ac_cv_readline_libs"; then
 	   LIBS="$ac_check_cxx_lib_save_LIBS -lreadline $library"
 	   AC_LINK_IFELSE(
-	     AC_LANG_PROGRAM(
+	     [AC_LANG_PROGRAM(
 	       [#include <stdio.h>
 		#include <readline/readline.h>
-	       ], [readline(">");]),
+	       ], [readline(">");])],
 	     ac_cv_readline_libs="-lreadline $library")
 	 fi
        done
