@@ -386,11 +386,9 @@ bool searcher::is_acceptable_method()
   if ( ! is_acceptable_leadhead( m.lh() ) )
     return false;
 
-#if 0
-  if ( !args.hunt_bells )
+  if ( args.floating_sym )
     if ( ! try_principle_symmetry() )
       return false;
-#endif
 
   if ( args.hunt_bells && args.require_offset_cyclic )
     {
@@ -1299,14 +1297,12 @@ void searcher::general_recurse()
       }
     }
 
-#if 0
   // Symmetry in principles is not handled until later, because we cannot
   // be sure where the symmetry points will be.
-  else if ( ! args.hunt_bells )
+  else if ( args.floating_sym )
     {
       new_midlead_change();
     }
-#endif
 
   // Maximum symmetry is handled here
   else if ( args.skewsym && depth == qlead_sym_pt + 1 && lead_len > 4 )

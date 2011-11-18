@@ -103,6 +103,7 @@ struct arguments
   init_val<bool,false> sym;
   init_val<bool,false> doubsym;
   init_val<bool,false> mirrorsym;
+  init_val<bool,false> floating_sym;
   init_val<bool,false> surprise;
   init_val<bool,false> treble_bob;
   init_val<bool,false> delight;

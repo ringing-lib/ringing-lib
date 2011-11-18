@@ -349,6 +349,11 @@ void arguments::bind( arg_parser &p )
            mirrorsym ) );
 
   p.add( new boolean_opt
+         ( '\0', "floating-sym",
+           "Allow the symmetry points in arbitrary places",
+           floating_sym ) );
+
+  p.add( new boolean_opt
 	 ( 'S', "surprise", 
 	   "Require an internal place between dodging positions",
 	   surprise ) );
@@ -884,6 +889,11 @@ bool arguments::validate( arg_parser &ap )
       return false;
     }
 
+  if ( hunt_bells & floating_sym )
+    {
+      ap.error( "--floating-sym is not supported with hunt bells" );
+      return false;
+    }
 
   if ( lead_len && formats_max_lead_offset() > lead_len ) 
     {

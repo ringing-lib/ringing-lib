@@ -120,7 +120,7 @@
 
 \frontmatter
 \maketitle
-%\addcontentsline{toc}{chapter}{Contents}
+\addcontentsline{toc}{chapter}{Contents}
 
 \tableofcontents
 % General paragraph style -- this has to be after the table of contents
@@ -1010,7 +1010,7 @@ By specifying \verb+-A+,\oid{A}{all-methods} all such methods are included.
 To include only certain additional types of method --- for example, to include
 differentials, but not hunters or differential hunters when doing an
 \verb+-U0+ search, the \verb+-Q+ option should be used.%
-\index{differential}\index{differential hunter}
+\index{differentials}\index{differential hunters}
 Typically this will involve tests of the \verb+$u+ and/or \verb+$o+ variables.
 
 The \verb+--offset-cyclic+ option\loid{offset-cyclic} is very specialised.%
@@ -1074,6 +1074,7 @@ row (e.g.\ 432651 for a single-hunt minor method).
 \texttt{-d}&\texttt{--double}&Require glide symmetric methods\\
 \texttt{-k}&\texttt{--rotational}&Require rotationally symmetric methods\\
 &\texttt{--mirror}&Require mirror symmetric methods\\
+&\texttt{--floating-sym}&Allow the symmetry points in arbitrary places\\
 \end{tabularx}
 
 These options govern the symmetry that the method must have.%
@@ -1131,14 +1132,24 @@ more) additional hunt bells following the same path as the treble but that is
 not explicitly required by a \verb+-U+ option --- this means that this 
 possibility can only occur if \verb+-A+ is specified too.
 
-When searching for principles (that is, with \verb+-U0+), the plane of 
-symmetry (for \verb+-s+) or the point of rotational symmetry (for \verb+-k+)
-are not prescribed by the search.  If the principle is to have an odd 
+When searching for principles (that is, with \verb+-U0+), the planes of 
+symmetry (for \verb+-s+) are normally fixed at the half-lead and lead-end,
+and or point of rotational symmetry (for \verb+-k+) is normally fixed at
+the quarter and three-quarter leads.  
+The \verb+--floating-sym+\loid{floating-sym} allows to be at arbitrary points;
+however, it makes the search \textit{much} slower as the requirement for
+floating symmetry point is enforced by filtering the results of the search,
+instead of pruning the search tree during the search.
+
+If the principle is to have an odd 
 number of changes per lead, then the only meaningful symmetries are
-rotational and mirror symmetry.  \methsearch's handling of symmetry in
-principles is not very sophisticated --- in particular, a number of 
-obvious opportunities for optimisation are neglected.  This may be addressed
-in a future version of \methsearch.
+rotational and mirror symmetry.\footnote{Palindromic symmetry is possible
+in theory, but only in trivially false methods.}  \methsearch\ does not
+currently support rotation symmetry in methods of odd length.
+%\methsearch's handling of symmetry in
+%principles is not very sophisticated --- in particular, a number of 
+%obvious opportunities for optimisation are neglected.  This may be addressed
+%in a future version of \methsearch.
 
 If a method has any two of palindromic, rotational or glide symmetry,
 it necessarily has the third one.  It is therefore unnecessary, though 
@@ -2584,7 +2595,7 @@ plain method, there is no possibility of internal falseness.
 
 In most methods, all working bells (i.e.\ non-hunt bells) only return to their
 home position at the end of the course, at which point the method comes round.
-However, in differential\index{differential} methods this is not generally 
+However, in differential\index{differentials} methods this is not generally 
 true.  For example, 
 Double Helix Differential Major\index{Double Helix Differential Major} 
 has the lead end \verb+31278564+ which gives rise to a course that is
@@ -4371,7 +4382,15 @@ and \verb+-M2rhalflead+.
   (\sref{rowexprmulti}).
 \end{list}
 
-\subsection{Pending release}
+\section{Pending release}
+
+\methsearch\ is getting close to the point where I shall build a release
+branded version 1.0 and announce it publicly on appropriate mailing lists.
+The following new features are now implemented ready for 1.0.  The main 
+features that are still missing are support for alliance methods%
+\index{alliance methods} and improved support for 
+principles\index{principles} and differentials.\index{differentials}
+
 \begin{list}{\labelitemi}{\leftmargin=1em\itemsep=0em}
 \item Method identifiers: \verb+$i+ (\sref{variables}).
 \item Filter payloads: \verb+$a+ (\sref{misc_opt} and \sref{variables}). 
@@ -4400,14 +4419,17 @@ and \verb+-M2rhalflead+.
 \item Falseness per semicourse: \verb+-Fc=+$x$ (\sref{semicourse} and
   \sref{pends}).
 \item Status update frequencies: \verb+--status-freq+ (\sref{output_opt}).
-\item Allowing exceptions to \verb+p+ across the lead-end: 
-\verb+--long-le-place+ (\sref{int_structure}).
+\item Allowing exceptions to \verb+-p+ across the lead-end: 
+  \verb+--long-le-place+ (\sref{int_struct}).
+\item Improved symmetry handling for principles: 
+  \verb+--floating-sym+ (\sref{symmetry}).
 \end{list}
 
 \clearpage
+\phantomsection
 \footnotesize
 \printindex[default][\normalsize 
-%\addcontentsline{toc}{chapter}{Index}
+\addcontentsline{toc}{chapter}{Index}
 Underlined page references refer to the main definition of that option
 or variable.  Subjects are not generally indexed when they appear
 in the discussion of a similarly-named option.  For example, `surprise 
@@ -4417,6 +4439,7 @@ conjunction with the \texttt{--surprise} option.
 
 \normalsize
 \chapter*{Colophon}
+\addcontentsline{toc}{chapter}{Colophon}
 
 This manual was typeset using \XeTeX\index{Xetex@\XeTeX}, a document 
 typesetting package written by Jonathan Kew.  It is derived from 
