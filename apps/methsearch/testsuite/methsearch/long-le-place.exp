@@ -1,0 +1,62 @@
+# Copyright (C) 2011 Richard Smith <richard@ex-parrot.com>
+
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+# $Id$
+
+# Tests for the --long-le-place option
+
+set suite "long-le-place"
+
+# Looking manually through the 98, 21 seems to be the correct number.
+# (Note it doesn't include methods outside the 98 such as those with 8
+# blows behind.)
+set test "$suite-count"
+spawn $METHSEARCH -b5 -sp2 --long-le-place -qC
+expect {
+  -ex "Found 21 methods" { pass "$test" }
+  default { fail "$test" }
+}
+
+set test "$suite-paths"
+spawn $METHSEARCH -b5 -sp2 --long-le-place -R {$2P $3P $4P $5P }
+expect {
+  -re {(222|333|444|555)[^ ]} { fail "$test" }
+  default { pass "$test" }
+}
+
+set test "$suite-pb5"
+spawn $METHSEARCH -b5 -sp2 --long-le-place -R {$q}
+expect {
+  -re "&5.1.5.1.5,2" { pass "$test" }
+  default { fail "$test" }
+}
+
+# Twin-hunt minor is the same as single-hunt doubles.
+set test "$suite-twinhunt"
+spawn $METHSEARCH -b6 -U2 -sp2 --long-le-place -qC
+expect {
+  -ex "Found 21 methods" { pass "$test" }
+  default { fail "$test" }
+}
+
+for { set n 2 } { $n <= 5 } { incr n } {
+  set test "$suite-p$n"
+  spawn $METHSEARCH -b6 -sp$n --long-le-place -Q\$b>2*$n -qC --limit=1
+  expect {
+    -ex "Found 0 methods" { pass "$test" }
+    default { fail "$test" }
+  }
+}

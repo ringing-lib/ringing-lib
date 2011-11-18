@@ -839,6 +839,8 @@ can be used to find these types of methods.
   Disallow penultimate places above the treble\\
 \texttt{-y}&\texttt{--symmetric-sections}&
   Require each treble section to be symmetric\\
+&\texttt{--long-le-place}&
+  Allow an exception to -pN across the lead-end\\
 \end{tabularx}
 
 The Central Council requires methods (except minimus methods) to have
@@ -912,6 +914,13 @@ of the form \verb+a.b.a.c+.  For example, a method starting \verb+3-3.4+
 will be permitted, but one starting \verb+34-3.4+ will not.  This option
 can be useful in reducing an otherwise unmanageable search to one of 
 a feasible length.
+
+The \verb+--long-le-place+ option prevents checking of the \verb+-p+$n$ 
+option across the lead-end symmetry point.  This allows up to $2n$ 
+consecutive blows in one place across the lead-end, whilst prohibiting more
+than $n$ blows anywhere else.  Thus, Grandsire Minor\index{Grandsire Minor}
+is found with \verb+-b6 -U2 -p2 --long-le-place+, though Reverse Grandsire
+is not.
 
 \section{Lead ends and lead heads}\label{le_lh}
 \index{lead end|(}\index{lead head|(}
@@ -3132,9 +3141,10 @@ structure with part ends $\{\hbox{\verb+123456+}$, $\hbox{\verb+134256+}$,
 $\hbox{\verb+142356+}\}$.
 
 The parts are specified with the \verb+-FP+\oidx{FP}{\texttt{FP}} option. 
-Its argument is a row, and the rows pasted to \verb+-FP+ are used to generate%
-\index{generators, of group} the part end group.  Thus for the three-part
-group above only one option is needed \verb+-FP=134256+.
+Its argument is a row expression, and the rows passed to \verb+-FP+ are used 
+to generate\index{generators, of group} the part end group.  
+Thus for the three-part group above only one option is needed 
+\verb+-FP=134256+.
 
 This option can be combined with \verb+-Fs+,\oi{Fs} \verb+-Fr+\oi{Fr} 
 (see \sref{avoidrow}) and \verb+-Fc+,\oi{Fc}, \verb+-Fc=+$x$, 
@@ -3171,11 +3181,17 @@ For example, most treble dodging minor methods produce extents
 that have the {60} in-course rows of the form \verb+1.....+ as lead-ends
 and lead-heads.  The \verb+-P+ option guarantees that the methods will be
 true with a composition of this style.  The same effect can be 
-achieved with \verb+-FP=124365 -FP=132546 -FP=132465+ \verb+-Fh+.  (These three 
-rows, which are the changes \verb+12+, \verb+16+ and \verb+14+ generate
-the group $A_5$ of in-course fixed-treble rows.)  In practice, the \verb+-P+
-option is significantly faster and there is no reason to prefer \verb+-FP+
-in this case.\oi{P}
+achieved with \verb+-FP=124365 -FP=132546 -FP=132465+ \verb+-Fh+.  
+(These three rows, which are the changes \verb+12+, \verb+16+ and \verb+14+ 
+generate the group $A_5$ of in-course fixed-treble rows.)  
+In practice, the \verb+-P+ option is significantly faster and there is no 
+reason to prefer \verb+-FP+ in this case.\oi{P}
+
+It makes no difference whether you use multiple \verb+-FP+ options, or to put 
+all the generators together with a set literal.  For example, the generators
+for $A_5$ given above could have been written 
+\verb+-FP="{124365,132546,132465}"+.  The quotes may be necessary to prevent
+the shell from interpreting the braces itself.\index{shell!quotation}
 
 However, the \verb+-FP+ options can be used in other situations too.  For
 example, there is a second group of {60} in-course rows on six bells ---
@@ -4371,7 +4387,7 @@ and \verb+-M2rhalflead+.
 \item The \verb+^+ operator is now overloaded to do conjugation in row 
   expressions (\sref{rowexpr}).
 \item Music pattern matching in expressions: \verb+~~+ (\sref{oper}).
-\item Comma operator (for sequencing): \verb+,+ (\sref{oper}).
+\item Comma operator (for sequencing) in expressions: \verb+,+ (\sref{oper}).
 \item The \verb+--require+ and \verb+--filter+ options can now be written
   \verb+-Q+ and \verb+-I+, respectively (\sref{misc_opt}). 
 \item Command exit status: \verb+$?+ (\sref{exitstatus}).
@@ -4384,6 +4400,8 @@ and \verb+-M2rhalflead+.
 \item Falseness per semicourse: \verb+-Fc=+$x$ (\sref{semicourse} and
   \sref{pends}).
 \item Status update frequencies: \verb+--status-freq+ (\sref{output_opt}).
+\item Allowing exceptions to \verb+p+ across the lead-end: 
+\verb+--long-le-place+ (\sref{int_structure}).
 \end{list}
 
 \clearpage

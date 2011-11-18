@@ -61,6 +61,7 @@ struct arguments
 
   init_val<int,0>  bells;
   init_val<int,0>  max_consec_blows;
+  init_val<bool,false> long_le_place;
   init_val<int,0>  max_places_per_change;
   init_val<int,0>  treble_dodges;
   init_val<int,1>  hunt_bells;

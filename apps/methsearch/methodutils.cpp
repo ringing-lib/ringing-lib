@@ -108,16 +108,19 @@ bool is_division_false( const method &m, const change &c,
   return false;
 }
 
-bool is_too_many_places( const method &m, const change &c, size_t max )
+bool is_too_many_places( const method &m, const change &c, size_t max, 
+                         size_t stopoff )
 {
   for ( int i=0; i<c.bells(); ++i )
     if ( c.findplace(i) )
       {
 	size_t count(2u);
 
-	for ( ; count <= size_t(m.length())+1; ++count )
-	  if ( !m[m.length()-count+1].findplace(i) )
+	for ( ; count <= size_t(m.length())+1; ++count ) {
+          size_t o = m.length() - count + 1;
+          if ( o == stopoff || !m[o].findplace(i) )
 	    break;
+        }
 
 	if ( count > max )
 	  return true;

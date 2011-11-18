@@ -112,7 +112,7 @@ private:
   const size_t div_len;  // How long the treble stays in a dodging position
                          // 2 for plain methods;  4 for normal TD methods
 
-  //size_t hl_len;   // Length of half a lead
+  size_t sym_offset;     // Position of the symmetry point in trebles' paths
 
   RINGING_ULLONG search_limit;
   RINGING_ULLONG search_count;
@@ -135,7 +135,8 @@ searcher::searcher( const arguments &args )
     bells( args.bells ),
     lead_len( args.lead_len ),
     div_len( (1 + args.treble_dodges) * 2 ),
-    //hl_len( args.lead_len / 2 ),
+    sym_offset( args.hunt_bells && args.hunt_bells % 2 == 0
+                ? (1 + args.treble_dodges) : 0 ), // XXX ALLIANCE
     search_limit( args.search_limit ),
     search_count( 0ul ), node_count( 0ul ),
     div_start( 0 ), cur_div_len( calc_cur_div_len() ),
@@ -317,16 +318,20 @@ inline row searcher::canonical_coset_member( row const& r )
 }
 
 class prover2 {
-public:
-  prover2( arguments const& args ) 
-     // This is where we would hack to allow -Fl to be used with TD Minimus
-   : args(args), n_extents(1), p(n_extents), r(args.start_row)
-  {
+private:
+  void init() {
     for ( set<row>::const_iterator 
             i=args.avoid_rows.begin(), e=args.avoid_rows.end(); i != e; ++i )
       p.add_row(*i);
     assert( p.truth() );
   }
+
+public:
+  prover2( arguments const& args ) 
+   : args(args), n_extents(1), p(n_extents), r(args.start_row) { init(); }
+
+  prover2( arguments const& args, row const& r ) 
+   : args(args), n_extents(1), p(n_extents), r(r) { init(); }
 
   struct raw {};
   prover2( arguments const& args, raw )
@@ -341,16 +346,18 @@ public:
     return p.truth();
   }
 
-  bool prove_lh() {
-    row r2 = args.pends.size() == 1 ? r : args.pends.rcoset_label(r);
+  bool prove_lh( row const& lh ) {
+    row r2 = args.pends.size() == 1 ? lh : args.pends.rcoset_label(lh);
     if ( r2 != args.start_row )
       p.add_row(r2);
     return p.truth();
   }
 
-  bool prove_hl( change const& lec ) {
-    row r2 = args.pends.size() == 1 ? r : args.pends.rcoset_label(r);
-    row r3 = args.pends.size() == 1 ? r*lec : args.pends.rcoset_label(r*lec);
+  bool prove_lh() { return prove_lh(r); }
+
+  bool prove_hl( change const& hlc ) {
+    row r2 = args.pends.rcoset_label(r);
+    row r3 = args.pends.rcoset_label(r*hlc);
     if ( r2 != r3 ) 
       p.add_row(r2);
     return p.truth();
@@ -360,6 +367,7 @@ public:
   bool truth() const { return p.truth(); }
   bool is_course_head() const { return r == args.start_row; }
   bool is_semicourse_head(int b) const { return r[b] == args.start_row[b]; }
+  row const& current_row() const { return r; }
 
 private:
   arguments const& args;
@@ -370,7 +378,6 @@ private:
 
 bool searcher::is_acceptable_method()
 {
-
   if ( lexicographical_compare( m.begin(), m.end(), 
            args.startmeth.begin(), args.startmeth.end(),
            compare_changes ) )
@@ -379,9 +386,11 @@ bool searcher::is_acceptable_method()
   if ( ! is_acceptable_leadhead( m.lh() ) )
     return false;
 
+#if 0
   if ( !args.hunt_bells )
     if ( ! try_principle_symmetry() )
       return false;
+#endif
 
   if ( args.hunt_bells && args.require_offset_cyclic )
     {
@@ -477,14 +486,22 @@ bool searcher::is_acceptable_method()
       prover2 p(args);
       if ( !p.prove(m.begin(), m.begin()+m.size()/2) )
         return false;
-  
+ 
       // Similarly to above, we need to do something with the half-lead change.
-      if ( args.sym && !p.prove_hl( m[m.size()/2] ) ) return false;
+      // We require that either the half-lead head is the same as the half-lead
+      // end (modulo the part-end group), or that the half-lead head does not
+      // cause the initial half-lead to run false.   As above, it's a bit
+      // heuristical, but it seems to work.
+      if ( args.sym && !p.prove_hl( m[m.size()/2-1] ) ) return false;
 
       if ( !args.sym && !args.doubsym ) {
-        prover2 p2(args);
+        prover2 p2(args, p.current_row());
         if ( !p2.prove(m.begin()+m.size()/2, m.end()) )
           return false;
+        if ( !p2.prove_lh() ) return false;
+      }  
+      else {
+        if ( !p.prove_lh(m.lh()) ) return false;
       }
     }
 
@@ -713,8 +730,10 @@ bool searcher::try_halflead_sym_change( const change &ch )
        args.no_78_pns && ch.findplace(1) )
     return false;
 
+  size_t stopoff = args.long_le_place 
+    ? (lead_len+sym_offset-1) % lead_len : (size_t)-1;
   if ( args.sym && args.max_consec_blows
-       && is_too_many_places( m, ch, args.max_consec_blows/2+1 ) )
+       && is_too_many_places( m, ch, args.max_consec_blows/2+1, stopoff ) )
     return false;
 
   return true;
@@ -748,15 +767,25 @@ bool searcher::try_leadend_change( const change &ch )
       if ( ch.findplace(i) )
         {
           int count(2);
-          
+          if (args.long_le_place && !sym_offset) count=1;
+         
           for ( int offset = m.length() - 1; 
                 offset >= 0 && count <= args.max_consec_blows; 
                 --offset, ++count )
             if ( !m[offset].findplace(i) )
               break;
 
+          if ( count > args.max_consec_blows )
+            return false;
+
+
+          if (args.long_le_place && !sym_offset) count=1; 
+
+          int end = m.length();
+          if (args.long_le_place && sym_offset) end = sym_offset;
+
           for ( int offset = 0; 
-                offset < m.length() && count <= args.max_consec_blows; 
+                offset < end && count <= args.max_consec_blows; 
                 ++offset, ++count )
             if ( !m[offset].findplace(i) )
               break;
@@ -784,7 +813,7 @@ bool searcher::try_leadend_sym_change( const change &ch )
   if ( args.no_78_pns && ch.findplace(bells-2) )
     return false;
 
-  if ( args.sym && args.max_consec_blows
+  if ( args.sym && !args.long_le_place && args.max_consec_blows
        && is_too_many_places( m, ch, args.max_consec_blows/2+1 ) )
     return false;
 
@@ -915,16 +944,27 @@ bool searcher::try_midlead_change( const change &ch )
        && depth - div_start != 0 && depth - div_start != cur_div_len - 1 
        && ch.sign() == m.back().sign() )
     return false;
-  
+ 
   if ( args.max_consec_blows )
     {
-      // Handle places around the lead end.
-      if ( args.sym && args.hunt_bells && args.hunt_bells % 2 == 0 
-           && depth == args.max_consec_blows/2 
-           && is_too_many_places( m, ch, args.max_consec_blows/2+1 ) )
-        return false;
+      size_t stopoff = args.long_le_place 
+        ? (lead_len+sym_offset-1) % lead_len : (size_t)-1;
 
-      if ( is_too_many_places( m, ch, args.max_consec_blows ) )
+      if ( args.long_le_place && (depth+1) % lead_len == sym_offset )
+        ;
+
+#if 0
+      // Handle places around the lead end.
+      else if ( args.sym && args.sym_offset 
+           && depth == args.max_consec_blows/2 
+           && is_too_many_places( m, ch, args.max_consec_blows/2+1 ) ) {
+cerr << "SOUP: " << ch << " at depth " << m.length() << endl;
+        assert(false);  // This case shouldn't be happening
+        return false;
+      }
+#endif
+
+      else if ( is_too_many_places( m, ch, args.max_consec_blows, stopoff ) )
         return false;
     }
  
@@ -1098,10 +1138,8 @@ void searcher::new_midlead_change()
       // treble's path near the lead end.  For single hunt methods, this is
       // the lead-end; for twin-hun methods, it is shifted to the start of
       // the lead (e.g. in Grandsire, it is the 3 at the start of the lead).
-      if ( args.hunt_bells % 2 == 1 && depth == lead_len-1 ||
-           args.hunt_bells &&
-           // XXX ALLIANCE -- First division
-           args.hunt_bells % 2 == 0 && depth == cur_div_len/2-1 )
+      if ( !sym_offset && depth == lead_len-1 ||
+           sym_offset && depth == sym_offset-1 )
         if ( ! try_leadend_sym_change( ch ) )
           continue;
       
@@ -1239,11 +1277,6 @@ void searcher::general_recurse()
     ++node_count;
   }
 
-  // XXX ALLIANCE
-  const size_t sym_offset 
-    = args.hunt_bells && args.hunt_bells % 2 == 0 
-    ? (1 + args.treble_dodges) : 0;
-
   // XXX ALLIANCE Is the lead_len % 4 test valid? 
   const bool has_qlead_change = lead_len % 4 == 0;
 
@@ -1266,12 +1299,14 @@ void searcher::general_recurse()
       }
     }
 
+#if 0
   // Symmetry in principles is not handled until later, because we cannot
   // be sure where the symmetry points will be.
   else if ( ! args.hunt_bells )
     {
       new_midlead_change();
     }
+#endif
 
   // Maximum symmetry is handled here
   else if ( args.skewsym && depth == qlead_sym_pt + 1 && lead_len > 4 )

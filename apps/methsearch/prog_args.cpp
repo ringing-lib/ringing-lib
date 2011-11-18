@@ -184,15 +184,24 @@ bool falseness_opt::process( const string &arg, const arg_parser & ) const
     }
   else if ( arg.size() > 2 && arg[0] == 'P' && arg[1] == '=' )
     {
-      row r;
-      try { 
-        r = row( arg.substr(2) );
+      row_calc::flags rcf = static_cast<row_calc::flags>
+        ( row_calc::allow_implicit_treble | row_calc::allow_row_promotion );
+      scoped_pointer<row_calc> rc;
+      try {
+        rc.reset( new row_calc( 0, arg.substr(2), rcf ) );
       } 
-      catch ( exception const& e ) {
+      catch ( exception const& e ) { 
         cerr << "Error parsing row in -FP option: " << e.what() << "\n";
         return false;
       }
-      args.pends_generators.push_back(r); 
+      try {
+        for ( row_calc::const_iterator i=rc->begin(), e=rc->end(); i!=e; ++i ) 
+          args.pends_generators.push_back( *i );
+      }
+      catch ( row::invalid const& e ) { 
+        cerr << "Invalid row produced in -FP option: " << e.what() << "\n";
+        return false;
+      }
     }
   else
     {
@@ -257,6 +266,11 @@ void arguments::bind( arg_parser &p )
 	 ( 'l', "places-per-change", 
 	   "At most NUM places in any change (0 = unlimited)", "NUM",
 	   max_places_per_change, /* default = */ 2 ) );
+
+  p.add( new boolean_opt
+	 ( '\0', "long-le-place", 
+	   "Allow a long place across the lead-end", 
+	   long_le_place ) );
 
   p.add( new integer_opt
 	 ( 'n', "changes-per-lead", 
@@ -852,6 +866,12 @@ bool arguments::validate( arg_parser &ap )
 	  return false;
 	}
     }
+
+  if ( (skewsym || sym || doubsym) && lead_len % 2 ) {
+    ap.error( "Symmetry is not supported for methods with an odd number of "
+              "rows per lead" );
+    return false;
+  }
 
   if ( skewsym + sym + doubsym >= 2 )
     skewsym = sym = doubsym = true;

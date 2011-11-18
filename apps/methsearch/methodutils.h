@@ -46,7 +46,8 @@ bool have_same_places( const change &a, const change &b );
 bool is_cyclic_le( const row &lh, int hunts );
 bool is_division_false( const method &m, const change &c, 
                         size_t div_start, size_t cur_div_len );
-bool is_too_many_places( const method &m, const change &c, size_t max );
+bool is_too_many_places( const method &m, const change &c, size_t max,
+                         size_t stopoff = (size_t)-1 );
 
 bool has_rotational_symmetry( const method &m );
 
