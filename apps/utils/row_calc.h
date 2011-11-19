@@ -104,7 +104,6 @@ private:
   int b;
   flags f;
   expr e;  
-  int v;
 };
 
 

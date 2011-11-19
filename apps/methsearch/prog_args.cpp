@@ -230,7 +230,7 @@ arguments::arguments( int argc, char* argv[] )
     exit(1);
 }
 
-// Unused letters: -aghitvxzBDEJKNWXY.  Plunder with caution
+// Unused letters: -aghitvxzBDJKNWXY.  Plunder with caution
 
 void arguments::bind( arg_parser &p )
 {

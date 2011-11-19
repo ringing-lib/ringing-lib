@@ -41,10 +41,12 @@
 #include <stdexcept.h>
 #include <vector.h>
 #include <list.h>
+#include <set.h>
 #else
 #include <stdexcept>
 #include <vector>
 #include <list>
+#include <set>
 #endif
 #if RINGING_OLD_C_INCLUDES
 #include <assert.h>
@@ -202,7 +204,47 @@ void evaluate_binary_arguments( row_calc::expr& rhs, row& r,
     } while (l.bells() == 0);
   }
 }
-                      
+
+class setdiff_node : public row_calc::expr::node {
+public:
+  setdiff_node( row_calc::expr const& lhs, row_calc::expr const& rhs )
+    : lhs(lhs), rhs(rhs), started(false)
+  {}
+
+private:
+  virtual void restart() { lhs.restart(); }
+  virtual int count_vectors() const { return lhs.count_vectors(); }
+  virtual bool reads_stdin() const
+    { return lhs.reads_stdin() || rhs.reads_stdin(); }
+  virtual bool supports_type( row_calc::expr::types t ) const
+    { return t == row_calc::expr::row_type; }
+
+  virtual row evaluate() {
+    if (!started) {
+      exclude.clear();
+      if (rhs.count_vectors()) 
+        try {
+          while (true) 
+            exclude.insert( rhs.evaluate() ); 
+        } 
+        catch (vector_end) {}
+      else
+        exclude.insert( rhs.evaluate() );
+      started = true;
+    }
+
+    row r;
+    do { 
+      r = lhs.evaluate();
+    } while ( lhs.count_vectors() && exclude.count(r) );
+    if ( exclude.count(r) ) throw vector_end();
+    return r;
+  }
+
+  row_calc::expr lhs, rhs;
+  bool started;
+  set<row> exclude;
+};                    
 
 class mult_node : public row_calc::expr::node {
 public:
@@ -487,12 +529,10 @@ class rc_parser
 {
 public:
   rc_parser( int b, string const& str, row_calc::flags f )
-    : is(str), tok(is), bells(b), f(f), tokens(tok.begin(), tok.end()), vec(0)
+    : is(str), tok(is), bells(b), f(f), tokens(tok.begin(), tok.end())
   {}
 
   row_calc::expr parse() { return parse_expr( tokens.begin(), tokens.end() ); }
-
-  int count_vectors() const { return vec; }
 
 private:
   typedef vector<token>::const_iterator iter_t;
@@ -507,6 +547,11 @@ private:
   bool find_first( iter_t first, iter_t last,
                    tok_types::enum_t (&tt_list)[N],
                    iter_t &result ) const;
+
+  template <size_t N>
+  bool find_last( iter_t first, iter_t last,
+                  tok_types::enum_t (&tt_list)[N],
+                  iter_t &result ) const;
 
   bool find_close_paren( iter_t const first, iter_t const last,
                          tok_types::enum_t open, tok_types::enum_t close,
@@ -524,7 +569,6 @@ private:
   int bells;
   row_calc::flags f;
   vector<token> tokens;
-  int vec;
 };
 
 void
@@ -548,21 +592,23 @@ bool rc_parser::find_first( iter_t first, iter_t const last,
                             iter_t &result ) const
 {
   int depth( 0 );
-  for ( ; first != last; ++first )
-    if      ( first->type() == tok_types::open_paren ||
-              first->type() == tok_types::open_set   ||
-              first->type() == tok_types::open_group )
+  for ( ; first != last; ++first ) {
+    iter_t i = first;
+    if      ( i->type() == tok_types::open_paren ||
+              i->type() == tok_types::open_set   ||
+              i->type() == tok_types::open_group )
       ++depth;
-    else if ( first->type() == tok_types::close_paren ||
-              first->type() == tok_types::close_set   ||
-              first->type() == tok_types::close_group )
+    else if ( i->type() == tok_types::close_paren ||
+              i->type() == tok_types::close_set   ||
+              i->type() == tok_types::close_group )
       --depth;
     else if ( !depth )
-      for ( size_t i = 0u; i<N; ++i )
-        if ( first->type() == tt_list[i] ) {
-          result = first;
+      for ( size_t j = 0u; j<N; ++j )
+        if ( i->type() == tt_list[j] ) {
+          result = i;
           return true;
         }
+  }
 
   if (depth)
     throw runtime_error( "Unmatched brackets" );
@@ -570,6 +616,36 @@ bool rc_parser::find_first( iter_t first, iter_t const last,
   return false;
 }
  
+template <size_t N>
+bool rc_parser::find_last( iter_t const first, iter_t last,
+                           tok_types::enum_t (&tt_list)[N],
+                           iter_t &result ) const
+{
+  int depth( 0 );
+  for ( ; first != last; --last ) {
+    iter_t i = last; --i;
+    if      ( i->type() == tok_types::open_paren ||
+              i->type() == tok_types::open_set   ||
+              i->type() == tok_types::open_group )
+      ++depth;
+    else if ( i->type() == tok_types::close_paren ||
+              i->type() == tok_types::close_set   ||
+              i->type() == tok_types::close_group )
+      --depth;
+    else if ( !depth )
+      for ( size_t j = 0u; j<N; ++j )
+        if ( i->type() == tt_list[j] ) {
+          result = i;
+          return true;
+        }
+  }
+
+  if (depth)
+    throw runtime_error( "Unmatched brackets" );
+
+  return false;
+}
+
 bool
 rc_parser::find_close_paren( iter_t const first, iter_t const last,
                              tok_types::enum_t open,  
@@ -649,7 +725,7 @@ row_calc::expr rc_parser::parse_row_or_int( iter_t first, iter_t last )
   if ( first == last )
     throw runtime_error( "Expression expected" );
 
-  // A unary plus or minus operator forces parsing as an integre
+  // A unary plus or minus operator forces parsing as an integer
   if ( first->type() == tok_types::minus )
     return parse_int( first+1, last, -1 );
 
@@ -711,21 +787,30 @@ row_calc::expr rc_parser::parse_expr( iter_t first, iter_t last )
   }
   if ( is_enclosed( first, last, tok_types::open_set,
                     tok_types::close_set, "braces" ) ) {
-    ++vec;
     return row_calc::expr(
       ( new set_node( parse_set( first+1, last-1 ) ) ) );
   }
   if ( is_enclosed( first, last, tok_types::open_group,
                     tok_types::close_group, "angle brackets" ) ) {
-    ++vec;
     return row_calc::expr(
       ( new group_node( parse_set( first+1, last-1 ) ) ) );
   }
 
   iter_t split;
+  tok_types::enum_t setdiff[1]
+    = { tok_types::minus };
+  if ( find_last( first, last, setdiff, split ) ) 
+    {
+      check_binary_expr( first, split, last, string(1, (char)split->type()) );
+     
+      return row_calc::expr
+        ( new setdiff_node( parse_expr( first, split ),
+                            parse_expr( split+1, last ) ) );
+    }
+
   tok_types::enum_t multops[3] 
     = { tok_types::times, tok_types::divide, tok_types::ldivide };
-  if ( find_first( first, last, multops, split ) ) 
+  if ( find_last( first, last, multops, split ) ) 
     {
       check_binary_expr( first, split, last, string(1, (char)split->type()) );
      
@@ -753,8 +838,6 @@ row_calc::expr rc_parser::parse_expr( iter_t first, iter_t last )
     if ( first->type() == tok_types::exec || 
          first->type() == tok_types::read ) 
       {
-        vec++;
-
         if ( first->type() == tok_types::exec )
           return row_calc::expr( new exec_node(*first) );
         else
@@ -783,7 +866,6 @@ void row_calc::init( string const& str )
 {
   rc_parser p(b, str, f);
   e = p.parse();
-  v = p.count_vectors();
 }
 
 row row_calc::expr::node::evaluate()
@@ -798,7 +880,7 @@ int row_calc::expr::node::ievaluate()
 
 void row_calc::const_iterator::increment() 
 { 
-  if ( !rc->v && val.bells() )
+  if ( !rc->e.count_vectors() && val.bells() )
     rc = 0;
   else try {
     val = rc->e.evaluate();
