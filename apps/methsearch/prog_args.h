@@ -119,7 +119,6 @@ struct arguments
   init_val<bool,true>  true_trivial;
   init_val<bool,true>  true_half_lead;
   init_val<bool,true>  true_lead;
-  init_val<int, -1>    true_semicourse;
   init_val<bool,false> true_course;
   init_val<bool,false> true_extent;
   init_val<bool,false> true_positive_extent;

@@ -35,10 +35,7 @@
   {xleftmargin=2em,fontsize=\small}
 \VerbatimFootnotes
 
-% Blackboard bold in maths
-\usepackage{amsmath}
-%\usepackage{amsfonts}
-
+\usepackage{amsmath}  % for tfrac
 \usepackage{upquote}
 
 % URLs
@@ -2555,9 +2552,8 @@ The final two sections (\sref{avoidrow}--\ref{pends}) discuss using
 
 \section{Basic falseness levels}\label{basic_false}
 
-\methsearch\ supports six basic levels of falseness checking.  Five of these
-can be specified by a single-letter argument to the \verb+-F+ option.  (The
-sixth basic level is described in \sref{semicourse}.)
+\methsearch\ supports five basic levels of falseness checking wich 
+can be specified by a single-letter argument to the \verb+-F+ option.  
 Longer, more descriptive, synonyms are also provided.
 
 \begin{tabular}{lll}
@@ -2589,53 +2585,6 @@ guaranteed by symmetry.)
 \methsearch\ contains a number of optimisations to speed up proving falseness
 in the most common cases.  For example, it knows that in a palindromic 
 plain method, there is no possibility of internal falseness.
-
-\subsection{Differentials and semicourses}\label{semicourse}
-\index{semicourses|(}
-
-In most methods, all working bells (i.e.\ non-hunt bells) only return to their
-home position at the end of the course, at which point the method comes round.
-However, in differential\index{differentials} methods this is not generally 
-true.  For example, 
-Double Helix Differential Major\index{Double Helix Differential Major} 
-has the lead end \verb+31278564+ which gives rise to a course that is
-$\hbox{3}\times\hbox{5} = \hbox{15}$ leads long.  Every three leads the
-\verb+1+, \verb+2+ and \verb+3+ return to their home positions; and every
-five leads the \verb+4+, \verb+5+, \verb+6+, \verb+7+ and \verb+8+ return
-to theirs.
-
-Double Helix was designed so that in any three-lead block, 
-the \verb+1+, \verb+2+ and \verb+3+ get into every position relative to each 
-other --- for example, exactly one row of the form \verb+??1?3??2+ will 
-appear in each three-lead block.  Because of this, it is sometimes useful
-to consider the falseness of a three-lead block in Double Helix instead of
-for the whole course or for just one lead.
-
-There is no generally-accepted name for a three- or five-lead block of 
-Double Helix, so I have coined the term \textit{semicourse} for this purpose.
-Specifically, a semicourse is defined as a block of leads that returns some 
-specified set of bells back to their home positions.\footnote{%
-The prefix \textit{semi} is being used to mean ``satisfying
-half the rules of'' rather than ``half the length of''.  
-It is coined by analogy to the mathematical term \textit{semigroup} --- 
-that is, something that satisfies the closure and associativity requirements 
-of a group, but not the identity and inverse requirements.}
-Because most differentials have semicourses of different sizes (e.g.\ 3 or
-5 for Double Helix), it is necessary to tell \methsearch\ which bell must be
-back in its home position to define the semicourse.  This is done by
-providing an argument to the \verb+-Fc+ option\oidx{Fc}{\texttt{Fc}} 
-introduced in \sref{basic_false}.  
-In Double Helix, \verb+-Fc=1+, \verb+-Fc=2+ and 
-\verb+-Fc=3+ all specify a three-lead semicourse, whereas \verb+-Fc=4+ 
-specifies a five-lead semicourse.  Note that the argument to \verb+-Fc+ 
-is a bell symbol, not a number, so \verb+-Fc=T+ is correct, but \verb+-Fc=12+
-is not.
-
-Semicourses thus provides a level of basic falseness checking intermediate 
-to the per-course and per-lead modes specified by \verb+-Fc+ and \verb+-Fl+.
-The motivation for this additional granularity be clearer in the discussion of 
-part end groups in \sref{pends}.
-\index{semicourses|)}
 
 \section{False course heads}\label{fch}
 \subsection{A digression — the theory of falseness}%
@@ -2875,10 +2824,10 @@ specific rows that must be avoided in the the method.%
 \index{rows, avoiding specific|see{\texttt{-Fr}}}
 The syntax is \verb+-Fr=+\textit{row} --- for example, \verb+-Fr=12435678+
 will force the method not to contain the row \verb+12435678+.
-Depending on the basic falseness level specified (\verb+-Fc+, \verb+-Fc=+$x$,
+Depending on the basic falseness level specified (\verb+-Fc+, 
 \verb+-Fl+ or \verb+-Fh+\oi{Fc}\oi{Fl}\oi{Fh} --- see \sref{basic_false}), 
-\methsearch\ will avoid the specified rows in the plain course, first
-semicourse (\sref{semicourse}), first lead or first half lead of the method.
+\methsearch\ will avoid the specified rows in the plain course, 
+first lead or first half lead of the method.
 
 The initial rounds is counted as part of the first lead;
 the lead head at the end is not --- therefore, \verb+-Fl+ 
@@ -3170,12 +3119,12 @@ Thus for the three-part group above only one option is needed
 \verb+-FP=134256+.
 
 This option can be combined with \verb+-Fs+,\oi{Fs} \verb+-Fr+\oi{Fr} 
-(see \sref{avoidrow}) and \verb+-Fc+,\oi{Fc}, \verb+-Fc=+$x$, 
+(see \sref{avoidrow}) and \verb+-Fc+,\oi{Fc}, 
 \verb+-Fl+\oi{Fl} or \verb+-Fh+\oi{Fh} (see \sref{basic_false}) 
 with powerful effect.  These interact as follows.
-The \verb+-Fc+, \verb+-Fc=+$x$, \verb+-Fl+ or \verb+-Fh+ option is used to 
-determine whether to prove the whole course, the first semicourse 
-(\sref{semicourse}), the first lead (the default), or the first half lead.  
+The \verb+-Fc+, \verb+-Fl+ or \verb+-Fh+ option is used to 
+determine whether to prove the whole course,
+the first lead (the default), or the first half lead.  
 Let $M$ denote the rows in this section of method.
 The \verb+-Fs+ option specifies the starting row, denoted here by $s$;
 the \verb+-FP+ options generate the part end group, $P$; and 
@@ -4428,8 +4377,6 @@ principles\index{principles} and differentials.\index{differentials}
   (\sref{pn}).
 \item Restricting or prohibiting changes: \verb+--changes+ (\sref{pn}).
 \item Support for Unicode output in UTF-8: \verb+-Outf8+ (\sref{output_opt}).
-\item Falseness per semicourse: \verb+-Fc=+$x$ (\sref{semicourse} and
-  \sref{pends}).
 \item Status update frequencies: \verb+--status-freq+ (\sref{output_opt}).
 \item Allowing exceptions to \verb+-p+$n$ across the lead-end: 
   \verb+--long-le-place+ (\sref{int_struct}).

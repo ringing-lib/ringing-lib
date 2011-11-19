@@ -366,7 +366,6 @@ public:
 
   bool truth() const { return p.truth(); }
   bool is_course_head() const { return r == args.start_row; }
-  bool is_semicourse_head(int b) const { return r[b] == args.start_row[b]; }
   row const& current_row() const { return r; }
 
 private:
@@ -449,18 +448,15 @@ bool searcher::is_acceptable_method()
   // into the following block by folding the actual lhs and les into the
   // part end group.
   if ( args.true_lead 
-       //(args.true_course || args.true_semicourse != -1) //args.true_lead 
          && ( args.pends.size() > 1 
               || !( args.sym && args.hunt_bells && !args.treble_dodges ) ) )
     {
       prover2 p(args);
       while ( p.prove(m.begin(), m.end()) &&
-              ( args.true_course && !p.is_course_head() ||
-                args.true_semicourse != -1 
-                  && !p.is_semicourse_head(args.true_semicourse) ) )
+              args.true_course && !p.is_course_head() )
         ;
 
-      if ( !args.true_course && args.true_semicourse == -1 )  // i.e. if -Fl
+      if ( !args.true_course )  // i.e. if -Fl
         assert( p.truth() );
 
       // There doesn't seem any ideal solution as to what to do with the 
