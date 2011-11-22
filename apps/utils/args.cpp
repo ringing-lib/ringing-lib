@@ -111,7 +111,7 @@ bool arg_parser::parse(int argc, char const* const* argv) const
   bool expanded = expandargv( *this, &argc, const_cast<char***>(&argv) );
 
   try {
-    do_parse( argc, argv );
+    return do_parse( argc, argv );
   } catch (...) {
     if (expanded) freeargv( *this, const_cast<char**>(argv) );
     throw;
