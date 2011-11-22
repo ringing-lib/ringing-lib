@@ -53,8 +53,7 @@
 \usepackage{footnote}
 
 % Don't use US-style dates
-\usepackage[nodayofweek]{datetime}
-\longdate
+\usepackage[level,nodayofweek]{datetime}
 
 \usepackage{rotating}
 \usepackage{multirow}
@@ -551,18 +550,24 @@ I used to provide Windows binaries compiled with Microsoft's
 Visual C++ compiler\index{Microsoft Visual C++} which produced excellent
 binaries.  Unfortunately, since 2007 I've no longer had access to a Windows
 machine on which to compile these.  Instead, I now compile Windows binaries
-on a Linux machine using a \textitidx{cross compiler}.  The results are far
-from satisfactory, but probably better than nothing.  What's    
+on a Linux machine using a \textitidx{cross compiler} with less satisfactory 
+results.  What's    
 really needed is for someone with some programming knowledge and a Windows      
 machine to take an interest in the project and (with my assistance, 
 if necessary) provide Windows binaries.
 
-Meantime, the binaries from the current Windows 
-binaries\index{Windows!binaries}%
-\index{downloading methsearch@downloading \methsearch} are here:
-\begin{center}\small
-\url{http://ex-parrot.com/~richard/methsearch/ringingtools-win32.tar.gz}
-\end{center}
+Meantime, the current Windows 
+binary of \methsearch, the Windows binaries of the other associated tools 
+(see \sref{interop}),%
+\index{downloading methsearch@downloading \methsearch}\index{Windows!binaries}%
+\index{manual, downloading}
+and the PDF version of this manual can be found at the following locations:
+
+{\parsep=0em\begin{itemize}\footnotesize\itemsep=0em
+\item \url{http://ex-parrot.com/~richard/methsearch/methsearch-win32.tar.gz}
+\item \url{http://ex-parrot.com/~richard/methsearch/ringingtools-win32.tar.gz}
+\item \url{http://ex-parrot.com/~richard/methsearch/methsearch.pdf}
+\end{itemize}}
 
 \subsection{Compiling from source on Linux}
 \index{compiling methsearch@compiling \methsearch}
@@ -594,7 +599,7 @@ associated programs (including \methsearch) into your home directory.
 Depending how your system is configured, you may need to add this
 to your \textitidx{path}\index{path} so that the the shell can find
 methsearch.  If, when trying to run \methsearch, you see an error message
-saying `\texttt{bash:\ methsearch:\ command not found}', you 
+saying `\texttt{command not found}', you 
 probably need to run the following:\footnote{Or add it to your 
 \verb+~/.bashrc+ so they are always available.}\fspec{PATH}
 \begin{Verbatim}
@@ -3572,7 +3577,7 @@ version of \methsearch\ might address.
 \index{music!batches|)}
 \index{music|)}
 
-\chapter{Interoperability}
+\chapter{Interoperability}\label{interop}
 
 As mentioned in \sref{unixphil}, the Unix paradigm\index{Unix philosophy} 
 is not one of huge monolithic programs.  Instead, it favours separate
