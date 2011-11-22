@@ -1,5 +1,5 @@
 // -*- C++ -*- group.h - Class representing a group
-// Copyright (C) 2003, 2009 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2003, 2009, 2011 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -85,9 +85,15 @@ public:
   row rcoset_label( row const& r ) const;
   row lcoset_label( row const& r ) const;
 
+  vector<bell> invariants() const;
+
 private:
+  void calc_orbit_space() const;
+
   size_t b;
   vector<row> v;
+
+  mutable vector< vector<bell> > o; // Created on demand
 };
 
 RINGING_END_NAMESPACE

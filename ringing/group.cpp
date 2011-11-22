@@ -32,10 +32,12 @@
 #include <set.h>
 #include <vector.h>
 #include <algo.h>
+#include <limits.h>
 #else
 #include <set>
 #include <vector>
 #include <algorithm>
+#include <limits>
 #endif
 
 RINGING_START_NAMESPACE
@@ -44,8 +46,10 @@ RINGING_USING_STD
 
 RINGING_START_ANON_NAMESPACE
 
-void generate_group_nonrecursive( set<row>& s, const row& r0, 
-                                  const vector<row>& generators )
+// This algorithm is non-recursive because some groups are big
+// enough that they cause a stack overflow when calculating them.
+void generate_group( set<row>& s, const row& r0, 
+                     const vector<row>& generators )
 {
   vector<row> x( 1u, r0 );
 
@@ -63,17 +67,30 @@ void generate_group_nonrecursive( set<row>& s, const row& r0,
   }
 }
 
-void generate_group_recursive( set<row>& s, const row& r, 
-			       const vector<row>& generators )
+bool is_direct_product_of_symmetric_groups( vector< vector<bell> > const& o,
+                                            size_t gsize )
 {
-  for ( vector<row>::const_iterator 
-	  i( generators.begin() ), e( generators.end() );
-	i != e;  ++i )
-    {
-      const row r2( r * *i );
-      if ( s.insert( r2 ).second )
-	generate_group_recursive( s, r2, generators );
-    }
+  size_t const largest_factorial
+    = sizeof(size_t) == 2 ? 8       //  8!  < 2^16 < (8+1)!
+    : sizeof(size_t) == 4 ? 12      //  12! < 2^32 < (12+1)! 
+    : sizeof(size_t) == 8 ? 20      //  20! < 2^64 < (20+1)!
+    : /* default */ 12;
+
+  // Is the group \Prod S_{n_i} for some \{ n_i \}?
+  size_t sz = 1;
+  for ( vector< vector<bell> >::const_iterator i=o.begin(), e=o.end(); 
+          i!=e; ++i ) {
+    if ( i->size() > largest_factorial ) 
+      return false;
+    size_t const f = factorial(i->size());
+    if ( f > numeric_limits<size_t>::max() / sz )
+      return false; // We'd overflow
+    sz *= f;
+    if ( sz > gsize )
+      return false;
+  }
+    
+  return sz == gsize;
 }
 
 RINGING_END_ANON_NAMESPACE
@@ -87,6 +104,7 @@ group group::symmetric_group(int nw, int nh, int nt)
   g.v.reserve( factorial(nw) );
   copy( extent_iterator(nw, nh, nt), extent_iterator(), 
 	back_inserter(g.v) );
+  g.calc_orbit_space();
   return g;
 }
 
@@ -99,6 +117,7 @@ group group::alternating_group(int nw, int nh, int nt)
   g.v.reserve( factorial(nw) / 2 );
   copy( incourse_extent_iterator(nw, nh, nt), incourse_extent_iterator(), 
 	back_inserter(g.v) );
+  g.calc_orbit_space();
   return g;
 }
 
@@ -106,9 +125,10 @@ group::group( const row& gen )
   : b( gen.bells() )
 {
   set< row > s;
-  generate_group_nonrecursive( s, row(gen.bells()), vector<row>(1u, gen) );
+  generate_group( s, row(gen.bells()), vector<row>(1u, gen) );
   v.reserve(s.size());
   copy( s.begin(), s.end(), back_inserter(v) );
+  calc_orbit_space();
 }
 
 group::group( const row& g1, const row& g2 )
@@ -121,9 +141,10 @@ group::group( const row& g1, const row& g2 )
   set< row > s;
 
   size_t b( g1.bells() > g2.bells() ? g1.bells() : g2.bells() );
-  generate_group_nonrecursive( s, row(b), gens );
+  generate_group( s, row(b), gens );
   v.reserve(s.size());
   copy( s.begin(), s.end(), back_inserter(v) );
+  calc_orbit_space();
 }
 
 group::group( const vector<row>& gens )
@@ -144,9 +165,10 @@ group::group( const vector<row>& gens )
     if ( size_t(i->bells()) > b ) 
       b = i->bells();
 
-  generate_group_nonrecursive( s, row(b), uniq_gens );
+  generate_group( s, row(b), uniq_gens );
   v.reserve(s.size());
   copy( s.begin(), s.end(), back_inserter(v) );
+  calc_orbit_space();
 }
 
 group group::conjugate( const row& r ) const
@@ -165,6 +187,7 @@ group group::conjugate( const row& r ) const
 
   // Keep it sorted so that comparison is cheap(ish)
   sort( g.v.begin(), g.v.end() );
+  g.calc_orbit_space();
 
   return g;
 }
@@ -186,6 +209,32 @@ bool operator>( const group& a, const group& b )
 
 row group::rcoset_label( row const& r ) const
 {
+  if ( size() == 1 ) return r;
+
+  // |G|=6 is the point at which the O(1) algorithm beats the O(|G|) one.
+  if ( size() >= 6 && is_direct_product_of_symmetric_groups( o, size() ) ) 
+  {
+    // Use an O(1) algorithm.
+    vector<bell> label( r.bells() );
+
+    for ( vector< vector<bell> >::const_iterator i=o.begin(), e=o.end(); 
+            i != e; ++i ) {
+      size_t n = i->size();
+      vector<bell> v;
+      for ( size_t j=0; j<n; ++j )
+        v.push_back( r.find( (*i)[j] ) );
+
+      sort( v.begin(), v.end() );
+      for ( size_t j=0; j<n; ++j ) {
+        // label[ (*i)[j] ] = v[j];  // lcoset case
+        label[ v[j] ] = (*i)[j];
+      }
+    }
+
+    return row(label);
+  }
+
+  // Default to an O(|G|) algorithm
   row label;
   for ( const_iterator i=v.begin(), e=v.end(); i != e; ++i ) 
   {
@@ -208,5 +257,33 @@ row group::lcoset_label( row const& r ) const
   return label;
 }
 
+void group::calc_orbit_space() const
+{
+  vector< set<bell> > orbs( bells() );
+
+  for ( const_iterator i=v.begin(), e=v.end(); i != e; ++i ) 
+    for ( size_t j=0; j<bells(); ++j )
+      orbs[j].insert( (*i)[j] );
+ 
+  o.clear(); 
+  for ( size_t j=0; j<bells(); ++j ) {
+    vector<bell> oj( orbs[j].begin(), orbs[j].end() );
+    if ( find( o.begin(), o.end(), oj ) == o.end() )
+      o.push_back(oj);
+  }
+}
+
+vector<bell> group::invariants() const
+{
+  if ( bells() && o.empty() )
+    calc_orbit_space();
+
+  vector<bell> rv;
+  for ( vector< vector<bell> >::const_iterator i=o.begin(), e=o.end(); 
+          i!=e; ++i )
+    if ( i->size() == 1 )
+      rv.push_back(i->front());
+  return rv;
+}
 
 RINGING_END_NAMESPACE
