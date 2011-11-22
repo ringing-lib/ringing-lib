@@ -44,10 +44,12 @@
 #include <assert.h>
 #include <math.h>
 #include <string.h>
+#include <time.h>
 #else
 #include <cassert>
 #include <cmath>
 #include <cstring>
+#include <ctime>
 #endif
 #include <ringing/row.h>
 #include <ringing/method.h>
@@ -67,7 +69,9 @@ private:
   friend void run_search( const arguments &args );
 
   searcher( const arguments &args );
+  void reset();
 
+  inline void do_status( method const& m );
   void filter( library const& );
   void general_recurse();
 
@@ -94,8 +98,6 @@ private:
   bool try_offset_start_change( const change &ch);
   bool try_with_limited_le( const change& ch );
   bool try_principle_symmetry();
-
-  row canonical_coset_member( row const& r );
 
   bool is_acceptable_method();
   void output_method( method const& meth );
@@ -127,6 +129,7 @@ private:
   bool maintain_r;   // Whether r is valid
   row r;
   scoped_pointer<prover> prv;
+  time_t start;
 };
 
 
@@ -140,13 +143,24 @@ searcher::searcher( const arguments &args )
     search_limit( args.search_limit ),
     search_count( 0ul ), node_count( 0ul ),
     div_start( 0 ), cur_div_len( calc_cur_div_len() ),
-    r( canonical_coset_member( args.start_row ) ),
+    r( args.pends.rcoset_label( args.start_row ) ),
     maintain_r( args.avoid_rows.size() )
 {
-  m.reserve( lead_len );
+  reset();
 
   copy( args.startmeth.rbegin(), args.startmeth.rend(), 
         back_inserter(startmeth) );
+
+}
+
+void searcher::reset()
+{
+  m.clear();
+  m.reserve( lead_len );
+  div_start = 0; cur_div_len = calc_cur_div_len();
+
+  if (maintain_r) 
+    r = args.pends.rcoset_label( args.start_row );
 
   if ( args.true_lead && ( !args.sym ||  
          args.treble_dodges && !args.same_place_parity )  ||
@@ -161,6 +175,17 @@ searcher::searcher( const arguments &args )
     assert( prv->truth() );
     maintain_r = true;
   }
+
+  start = time(NULL);
+}
+
+inline void searcher::do_status( method const& m ) {
+  if ( node_count % args.status_freq == 0 ) {
+    if ( args.status ) output_status(m);
+    if ( args.timeout && time(NULL) - start > args.timeout ) 
+      throw timeout_exception();
+  }
+  ++node_count;
 }
 
 void searcher::filter( library const& in )
@@ -187,9 +212,7 @@ void searcher::filter( library const& in )
       }
 
       // Status message (when in filter mode)
-      if ( args.status && node_count % args.status_freq == 0 )
-        output_status( filter_method );
-      ++node_count;
+      do_status( filter_method );
 
       RINGING_ULLONG old_search_count = search_count;
       general_recurse();
@@ -218,11 +241,15 @@ void run_search( const arguments &args )
         s.filter(in);
       } else if ( args.filter_lib_mode ) { 
         s.filter( method_libraries::instance() );
-      } else if ( args.random_count > 0 ) {
-        for ( int i=0; i<args.random_count; ++i ) {
-          s.search_limit = s.search_count + 1;
-          s.general_recurse();
-          assert( s.m.length() == 0 );
+      } else if ( args.random_count ) {
+        for ( int i=0; args.random_count==-1 || i<args.random_count; ++i ) {
+          try {
+            s.search_limit = s.search_count + 1;
+            s.general_recurse();
+            assert( s.m.length() == 0 );
+          } catch (timeout_exception) {}
+          s.reset();
+          if (s.search_count >= args.search_limit) break;
         }
       } else {
         s.general_recurse();
@@ -230,6 +257,7 @@ void run_search( const arguments &args )
       }
     } 
   catch ( const exit_exception& ) {}
+  catch ( const timeout_exception& ) {}
  
   if ( args.status && args.outfile.empty() ) clear_status();
 
@@ -309,14 +337,6 @@ bool searcher::try_with_limited_le( const change& ch )
   return ok;
 }
 
-// NB: Rounds is by necessarily canonical
-inline row searcher::canonical_coset_member( row const& r )
-{
-  // Streamline the normal case
-  if ( args.pends.size() == 1 ) return r;
-  else return args.pends.rcoset_label(r);
-}
-
 class prover2 {
 private:
   void init() {
@@ -340,14 +360,14 @@ public:
 
   bool prove( method::const_iterator i, method::const_iterator e ) {
     for ( ; p.truth() && i != e; ++i ) {
-      p.add_row( args.pends.size() == 1 ? r : args.pends.rcoset_label(r) );
+      p.add_row( args.pends.rcoset_label(r) );
       r *= *i;
     }
     return p.truth();
   }
 
   bool prove_lh( row const& lh ) {
-    row r2 = args.pends.size() == 1 ? lh : args.pends.rcoset_label(lh);
+    row const r2 = args.pends.rcoset_label(lh);
     if ( r2 != args.start_row )
       p.add_row(r2);
     return p.truth();
@@ -356,8 +376,8 @@ public:
   bool prove_lh() { return prove_lh(r); }
 
   bool prove_hl( change const& hlc ) {
-    row r2 = args.pends.rcoset_label(r);
-    row r3 = args.pends.rcoset_label(r*hlc);
+    row const r2 = args.pends.rcoset_label(r);
+    row const r3 = args.pends.rcoset_label(r*hlc);
     if ( r2 != r3 ) 
       p.add_row(r2);
     return p.truth();
@@ -532,7 +552,7 @@ inline bool searcher::push_change( const change& ch )
 {
   m.push_back( ch );
   if ( maintain_r ) {
-    r = canonical_coset_member( r * ch );
+    r = args.pends.rcoset_label( r * ch );
     // We don't care about the lead head row.
     if (!( m.size() == lead_len ||
            // Or the half-lead with just -Fh (and not -Fl)
@@ -566,7 +586,7 @@ inline void searcher::pop_change( row const* r_old )
         && prv )
       prv->remove_row(r);
     if ( r_old ) r = *r_old;  
-    else r = canonical_coset_member( m.lh() );
+    else r = args.pends.rcoset_label( m.lh() );
   }
 }
 
@@ -1265,11 +1285,7 @@ void searcher::general_recurse()
     return;
 
   // Status message (when in search mode)
-  if ( !args.filter_mode ) {
-    if ( args.status && node_count % args.status_freq == 0 )
-      output_status( m );
-    ++node_count;
-  }
+  if ( !args.filter_mode ) do_status(m);
 
   // XXX ALLIANCE Is the lead_len % 4 test valid? 
   const bool has_qlead_change = lead_len % 4 == 0;

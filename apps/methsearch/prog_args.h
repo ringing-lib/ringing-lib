@@ -56,7 +56,7 @@ struct arguments
 {
   init_val<int,-1>     search_limit;
   init_val<bool,false> random_order;
-  init_val<int,-1>     random_count;
+  init_val<int,0>      random_count; // 0 disables, -1 is infinite
   init_val<int,-1>     random_seed;
 
   init_val<int,0>  bells;
@@ -95,6 +95,7 @@ struct arguments
   init_val<bool,false> filter_mode;
   init_val<bool,false> filter_lib_mode;
   init_val<bool,false> invert_filter;
+  init_val<int, 0>     timeout;
 
   init_val<bool,false> no_78_pns;
   init_val<bool,false> sym_sects;

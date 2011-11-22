@@ -404,7 +404,7 @@ format_string::format_string( const string &infmt,
 				      " can only be used in stats formats" );
 	      break;
 
-	    case '#':
+	    case '#': case 'T':
 	      if ( type != normal_type )
 		throw argument_error( make_string() << "The `$" << *iter << "'"
 				      " can only be used in output formats" );
@@ -443,7 +443,7 @@ format_string::format_string( const string &infmt,
 
 	    case 'n': case 'N': case 'p': case 'q': case 'Q': case 'l': 
 	    case 'C': case 'S': case 'F': case 'd': case '[': case '(':
-	    case 'y': case 'O': case 'D': case 'a':
+	    case 'y': case 'O': case 'D': case 'a': case 'T':
 	      if ( got_num_opt )
 		throw argument_error
 		  ( make_string() << "The `$" << *iter << "' "

@@ -423,9 +423,9 @@ void arguments::bind( arg_parser &p )
 	   random_order ) );
 
   p.add( new integer_opt
-	 ( '\0', "random-count",
+	 ( '\0', "loop",
 	   "Repeatedly search for one random method NUM times", "NUM",
-	   random_count ) );
+	   random_count, -1 ) );
 
   p.add( new integer_opt
 	 ( '\0', "seed",
@@ -462,6 +462,11 @@ void arguments::bind( arg_parser &p )
          ( '\0', "invert-filter",
            "Invert filter so only non-matching methods are listed",
            invert_filter ) );
+
+  p.add( new integer_opt
+         ( '\0', "timeout",
+           "Time the search out after NUM seconds", "NUM",
+           timeout ) );
 
   p.add( new boolean_opt
 	 ( 'P', "parity-hack",
@@ -776,15 +781,16 @@ bool arguments::validate( arg_parser &ap )
       return false;
     }
 
-  if ( random_count > 0 ) 
-    random_order = true;
-
+  if ( random_count > 0 && !random_order ) {
+    ap.error( "--loop is only supported with --random" );
+    return false;
+  }
   if ( random_order > 0 && ( filter_mode || filter_lib_mode ) ) {
     ap.error( "--random cannot be used when filtering" );
     return false;
   }
-  if ( random_count > 0 && search_limit != -1 ) {
-    ap.error( "--random-count cannot be used with --limit" );
+  if ( random_count > 0 && search_limit > 0 ) {
+    ap.error( "--limit cannot be used when --loop is given an argument" );
     return false;
   }
 
@@ -1059,8 +1065,7 @@ bool arguments::validate( arg_parser &ap )
         }
     }
 
-  if ( status_freq ) status = true;
-  else status_freq = 10000;
+  if ( !status_freq ) status_freq = 10000;
  
   return true;
 }

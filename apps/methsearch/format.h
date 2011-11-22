@@ -81,6 +81,10 @@ class exit_exception
 {
 };
 
+class timeout_exception 
+{
+};
+
 class argument_error : public std::runtime_error
 {
 public:

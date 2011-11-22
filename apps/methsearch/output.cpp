@@ -47,6 +47,11 @@
 #include <ostream>
 #include <iomanip>
 #endif
+#if RINGING_OLD_C_INCLUDES
+#include <time.h>
+#else
+#include <ctime>
+#endif
 #include <string>
 #include <ringing/row.h>
 #include <ringing/method.h>
@@ -270,6 +275,13 @@ string method_properties::impl2::get_property( int num_opt,
             os << setw(num_opt) << e.get_facet<cc_collection_id>();
           else 
             os << string( num_opt, ' ' );
+        } break;
+
+        case 'T': {
+          char buf[16]; time_t t = time(NULL);
+          // This use of the internal libc struct tm may not be thread safe.
+          strftime(buf, sizeof(buf), "%H:%M:%S", localtime(&t));
+          os << buf;
         } break;
 
         case 'a': 
