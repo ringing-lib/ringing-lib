@@ -1,0 +1,28 @@
+On debian, in order to configure and build the package you need at least:
+
+  apt-get install make g++
+
+To check out from CVS and generate the configure script you also need:
+
+  apt-get install cvs autoconf automake libtool
+
+Some of the class library's applications have optional dependencies on:
+
+  apt-get install libreadline-dev libgdome2-dev
+
+The test suites for gsiril and methsearch will not be run without:
+
+  apt-get install dejagnu
+
+The gsiril man page only gets built if:
+
+  apt-get install help2man
+
+And the methsearch documentation only gets built if all of these are present:
+
+  apt-get install texlive-xetex ttf-linux-libertine \
+    texlive-latex-recommended texlive-latex-extra
+
+(Note that the ./configure test for this is not ideal.  If you have some but 
+not all of the above tex packages installed, you'll get odd errors when
+make runs xelatex.)
