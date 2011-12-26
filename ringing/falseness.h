@@ -55,9 +55,10 @@ public:
   // What gets included in the falseness table?
   enum
   {
-    in_course_only   = 0x01,
-    no_fixed_treble  = 0x02,
-    half_lead_only   = 0x04
+    in_course_only     = 0x01,
+    no_fixed_treble    = 0x02,
+    half_lead_only     = 0x04,
+    out_of_course_only = 0x08
   };
 
   // Falseness table for the method.  

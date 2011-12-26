@@ -41,6 +41,7 @@ struct arguments
   init_val<int,0>      bells;
 
   init_val<bool,false> in_course;
+  init_val<bool,false> out_of_course;
   init_val<bool,false> half_leads;
 
   init_val<int,-1>     only_n_leads;
@@ -50,6 +51,7 @@ struct arguments
   init_val<bool,false> show_pn;
   init_val<bool,false> group_splices;
   init_val<bool,false> print_group;
+  init_val<bool,false> print_falseness;
 
   init_val<bool,false> filter_mode;
   init_val<bool,false> read_rows;
@@ -110,6 +112,12 @@ void arguments::bind( arg_parser& p )
            in_course ) );
 
   p.add( new boolean_opt
+         ( 'o', "out-of-course",
+           "Only display splices between an in-course and an out-of-course "
+           "lead head", 
+           out_of_course ) );
+
+  p.add( new boolean_opt
          ( 'h', "half-lead",
            "Calculate half-lead splices instead of whole lead splices",
            half_leads ) );
@@ -133,6 +141,11 @@ void arguments::bind( arg_parser& p )
          ( 'G', "print-group",
            "Print the elements of the splice group",
            print_group ) );
+
+  p.add( new boolean_opt
+         ( 'F', "print-falseness",
+           "Print the elements of the inter-method falseness table",
+           print_falseness ) );
 
   p.add( new integer_opt
          ( 'l', "leads",
@@ -166,6 +179,12 @@ bool arguments::validate( arg_parser& ap )
       return false;
     }
 
+  if ( (in_course || read_rows) && out_of_course )
+    { 
+      ap.error( "The -o option cannot be used with either -i or --read-rows" );
+      return false;
+    }
+
   unsigned int meth_num = 0;
   for ( vector<string>::const_iterator i=meth_str.begin(), e=meth_str.end();
         i != e; ++i )
@@ -186,16 +205,18 @@ bool arguments::validate( arg_parser& ap )
       return false;
     }
 
-  if ( group_splices && (null_splices || print_group) ) 
+  if ( group_splices && (null_splices || print_group || print_falseness) ) 
     {
-      ap.error( "The -g option is incompatible with the -n and -G options" );
+      ap.error
+        ( "The -g option is incompatible with the -n, -G and -F options" );
       return false;
     }
 
-  if ( filter_mode && ( print_group || group_splices || show_pn ) ) 
+  if ( filter_mode && ( print_group || print_falseness || group_splices 
+                        || show_pn ) ) 
     {
       ap.error
-        ( "The -g, -p and -G options cannot be used when filtering" );
+        ( "The -g, -p, -G and -F options cannot be used when filtering" );
       return false;
     }
 
@@ -214,10 +235,10 @@ bool arguments::validate( arg_parser& ap )
       return false;
     }
 
-  if ( print_group && meth.size() != 2 ) 
+  if ( (print_group || print_falseness) && meth.size() != 2 ) 
     {
       ap.error
-        ( "The -G option needs two methods on the command line" );
+        ( "The -G or -F options needs two methods on the command line" );
       return false;
     }
 
@@ -484,15 +505,33 @@ string splices::describe_splice( group const& sg ) const
 string splices::test_splice( method const& a, vector<row> const& b,
                              string const& b_name )
 { 
+  size_t max_size = factorial(args.bells-1);
+
   int flags = 0; 
-  if ( args.in_course ) 
+  if ( args.in_course ) {
     flags |= falseness_table::in_course_only;
+    max_size /= 2;
+  }
+  else if ( args.out_of_course ) {
+    flags |= falseness_table::out_of_course_only;
+    max_size /= 2;
+  }
   if ( args.half_leads ) 
     flags |= falseness_table::half_lead_only;
-  group sg( falseness_table( a, b, flags ).generate_group() );
 
-  if ( !args.null_splices &&
-       sg.size() == factorial(args.bells-1) / (args.in_course ? 2 : 1) )
+  falseness_table ft( a, b, flags );
+  if ( args.print_falseness ) {
+    copy( ft.begin(), ft.end(), ostream_iterator<row>(cout, "\n") );
+    return string();
+  }
+
+  group sg( ft.generate_group() );
+  if ( args.print_group ) {
+    copy( sg.begin(), sg.end(), ostream_iterator<row>(cout, "\n") );
+    return string();
+  }
+
+  if ( !args.null_splices && sg.size() == max_size )
     return string();
 
   if ( args.only_n_leads != -1 && sg.size() != args.only_n_leads * 2 &&
@@ -504,17 +543,12 @@ string splices::test_splice( method const& a, vector<row> const& b,
     return string();
 
   string desc( describe_splice(sg) );
-
-  if ( args.print_group ) {
-    copy( sg.begin(), sg.end(), ostream_iterator<row>(cout, "\n") );
-  }
-  else if ( !args.group_splices && !args.filter_mode ) {
+  if ( !args.group_splices && !args.filter_mode ) {
     cout << name_or_pn(args, a);
     if ( args.meth.size() != 1 ) 
       cout << " / " << b_name;
     cout << "\t" << desc << "\n";
   }
-
   return desc;
 }
 
@@ -529,7 +563,8 @@ bool splices::test_splice( method const& a, method const& b )
   if ( args.half_leads ) 
     flags |= row_block::half_lead_only;
 
-  string desc = test_splice( a, row_block(b, flags), name_or_pn(args, b) );
+  row lh(args.bells);
+  string desc = test_splice( a, row_block(b, lh, flags), name_or_pn(args, b) );
 
   if ( desc.size() && ( args.group_splices || args.filter_mode ) )
     save_splice( a, b, desc );
@@ -599,12 +634,10 @@ int main( int argc, char *argv[] )
 
   splices spl( args );
 
-  if ( args.read_rows ) {
+  if ( args.read_rows ) 
     args.rows.assign( istream_iterator<row>(cin), istream_iterator<row>() );
-    methodset in( args.meth.begin(), args.meth.end() );
-    spl.find_splices( in );
-  }
-  if ( args.meth.size() >= 2 ) {
+
+  if ( args.read_rows || args.meth.size() >= 2 ) {
     methodset in( args.meth.begin(), args.meth.end() );
     spl.find_splices( in );
   }

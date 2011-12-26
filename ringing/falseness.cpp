@@ -84,11 +84,13 @@ void falseness_table::init( vector<row> const& m1, vector<row> const& m2 )
       for ( vector<row>::const_iterator i2( m2.begin() ); i2 != e2; ++i2 )
 	{
 	  row f = *i1 / *i2;
-
 	  if ( !( flags & no_fixed_treble ) && f[0] != 0 )
 	    continue;
 
 	  if ( ( flags & in_course_only ) && f.sign() == -1 )
+	    continue;
+
+	  if ( ( flags & out_of_course_only ) && f.sign() == +1 )
 	    continue;
 
 	  fs.insert( f );
@@ -138,7 +140,16 @@ falseness_table::falseness_table( const vector<row> &a, const vector<row>& b,
 
 group falseness_table::generate_group() const
 {
-  return group(t);
+  if ( !( flags & out_of_course_only ) )
+    return group(t);
+
+  vector<row> t2; t2.reserve( t.size() * t.size() );
+  for ( vector<row>::const_iterator i=t.begin(), e=t.end(); i!=e; ++i )
+  for ( vector<row>::const_iterator j=t.begin(); j!=e; ++j ) {
+    t2.push_back( *i / *j );
+    assert( t2.back().sign() == +1 );
+  }
+  return group(t2);
 }
 
 false_courses::false_courses()
