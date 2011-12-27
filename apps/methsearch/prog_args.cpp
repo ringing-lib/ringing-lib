@@ -395,7 +395,7 @@ void arguments::bind( arg_parser &p )
   p.add( new integer_opt
 	 ( 'U', "hunts", 
 	   "Look for methods with NUM hunt bells", "NUM",
-	   hunt_bells ) );
+	   hunt_bells, 0 ) );
 
   p.add( new string_opt
          ( 'Z', "treble-path",

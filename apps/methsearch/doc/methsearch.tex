@@ -117,8 +117,10 @@
 \frontmatter
 \maketitle
 
-\tableofcontents
+\clearpage
+\phantomsection
 \addcontentsline{toc}{chapter}{Contents}
+\tableofcontents
 % General paragraph style -- this has to be after the table of contents
 \parskip=1em
 \parindent=0em
@@ -745,13 +747,14 @@ The \verb+-U+ option can be used in conjunction with the \verb+-G+ option to
 find treble dodging methods with multiple hunt bells.
 
 The \verb+-U+ option can also be used to find principles by specifying 
-\verb+-U0+.\index{principles}  
+\verb+-U0+,\index{principles} or just \verb+-U+ as the argument to \verb+-U+
+is optional and 0 is the default.
 When this is done, the \verb+-n+$n$ option\oid{n}{changes-per-lead} 
 must also be used to specify length of the lead unless \methsearch\ is 
 running in filter mode in which case the \verb+-n+$n$ option can be omitted and
 its value, $n$, inferred from the length of the methods being filtered.%
 \optdesc{n}{lead length!specifying}
-The combination \verb+-AU0+ is useful when filtering as it avoids the need to
+The combination \verb+-AU+ is useful when filtering as it avoids the need to
 specifying details such as the lead length, number of hunt bells, or treble
 path.   Searching for principles is not especially well
 optimised in the code, nor is it particularly well tested.
@@ -1138,7 +1141,7 @@ more) additional hunt bells following the same path as the treble but that is
 not explicitly required by a \verb+-U+ option --- this means that this 
 possibility can only occur if \verb+-A+ is specified too.
 
-When searching for principles (that is, with \verb+-U0+), the planes of 
+When searching for principles (that is, with \verb+-U+), the planes of 
 symmetry (for \verb+-s+) are normally fixed at the half-lead and lead-end,
 and or point of rotational symmetry (for \verb+-k+) is normally fixed at
 the quarter and three-quarter leads.  
@@ -1327,7 +1330,7 @@ Hudson's group\index{group!Hudson's} is its even-parity subgroup.}
 \methsearch\ can identify other such principles with a search such as:
 
 \begin{Verbatim}
-methsearch -b6 -U0 -n20 --changes=x,14,36 -p2 -s
+methsearch -b6 -U -n20 --changes=x,14,36 -p2 -s
 \end{Verbatim}
 
 The \verb+--changes+ and \verb+--mask+ options are orthogonal, and similarly
@@ -1829,7 +1832,7 @@ $n+1$ relevant rows in the lead, but only $n$ changes.
 
 In most circumstances an offset, $n$, that's longer than the lead length
 will result in a error message when \methsearch\ starts.  The exception is
-when filtering over methods with variable length leads (e.g.\ with \verb+-IAU0+
+when filtering over methods with variable length leads (e.g.\ with \verb+-IAU+
 and no \verb+-n+$n$ option).  In this case, an expression error%
 \index{expression error} (\sref{type_sys}) results from an out-of-bounds 
 access.
@@ -3280,7 +3283,7 @@ to the command line.  The latter \verb+-Q+
 option is to avoid methods with four blows behind over the lead end.}%
 \index{example!doubles, differential}
 \begin{Verbatim}
-methsearch -b5 -AU0 -n20 -sFh -FP="{12435,21453}" -Q"$o==6"
+methsearch -b5 -AU -n20 -sFh -FP="{12435,21453}" -Q"$o==6"
 \end{Verbatim}
 In this case, \verb+12435+ and \verb+21453+ generate the group 
 $S_2 \times S_3$.   The need to specify the part-end group in terms
@@ -3305,7 +3308,7 @@ however it is a good example of when the random sampling techniques in
 \sref{random} can be used.\loi{random}\loi{timeout}\loi{loop}%
 \index{example!major, differential}
 \begin{Verbatim}[commandchars=@~~]
-methsearch -b8 -AU0 -n112 -sFh -FP="{23156487,13287654}"    @hfill\
+methsearch -b8 -AU -n112 -sFh -FP="{23156487,13287654}"    @hfill\
   -Q"$o==15" -dkj -p2 --random --loop --timeout=1
 \end{Verbatim}
 
@@ -3591,7 +3594,7 @@ can filter input (in the form of a list of methods) from another source;
 this behaviour is activated by the \verb+-I+\oi{I} option was 
 discussed in \sref{misc_opt}.  Secondly, it can output a list of methods
 which is parsed by another program; an example of this was also given in
-the discussion of filtering \sref{misc_opt}.  The final ways are when 
+the discussion of filtering in \sref{misc_opt}.  The final ways are when 
 \methsearch\ invokes an external program via a \textit{command invocation}
 (\sref{cmdinv}).  
 
@@ -4529,7 +4532,7 @@ principles\index{principles} and differentials.\index{differentials}
   \verb+--floating-sym+ (\sref{symmetry}).
 \item Improved random sampling: \verb+--loop+, \verb+--timeout+ 
   (\sref{random}); \verb+--random-count+'s functionality subsumed in
-  \verb+--limit+ and \verb+--loop+ and the option removed.
+  \verb+--limit+ and \verb+--loop+, and the option removed.
 \item The current time: \verb+$T+ (\sref{variables}).
 \end{list}
 
@@ -4571,8 +4574,8 @@ source software.  All of the ringing-related programs are available as
 part of the Ringing Class Library project,\index{Ringing Class Library}
 and \methsearch\ uses it for manipulation rows, changes and methods, 
 reading method libraries, analysing music, proof and much more.  
-The Ringing Class Library was started by Martin Bright and contains
-contributions from Richard Smith and Mark Banner.
+The Ringing Class Library was started by Martin Bright\index{Bright, Martin} 
+and contains contributions from Richard Smith and Mark Banner.
 
 The source code for this manual is available from the Ringing Class Library
 CVS repository and is itself open source.  Any additions or corrections 
