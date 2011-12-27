@@ -1,5 +1,5 @@
 // -*- C++ -*- litelib.h - Lightweight library format
-// Copyright (C) 2007 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2007, 2011 Richard Smith <richard@ex-parrot.com>
 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -51,8 +51,12 @@ public:
 
   litelib() {}
 
-  explicit litelib( int b, const string& filename );
-  explicit litelib( int b, istream& is );
+  enum flags {
+    payload_is_name = 0x01
+  };
+
+  explicit litelib( int b, const string& filename, int flags = 0 );
+  explicit litelib( int b, istream& is, int flags = 0 );
 
   //static void registerlib(void);
 

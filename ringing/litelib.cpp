@@ -1,5 +1,5 @@
 // -*- C++ -*- litelib.cpp - Lightweight library format
-// Copyright (C) 2007, 2009, 2010 Richard Smith <richard@ex-parrot.com>.
+// Copyright (C) 2007, 2009, 2010, 2011 Richard Smith <richard@ex-parrot.com>.
 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -42,12 +42,13 @@ RINGING_DEFINE_LIBRARY_FACET( litelib::payload );
 
 class litelib::impl : public library_base {
 public:
-  impl(int b, const string& filename)
-    : b(b), f_owner( new ifstream(filename.c_str()) ), f(*f_owner)
+  impl(int b, const string& filename, int flags)
+    : b(b), f_owner( new ifstream(filename.c_str()) ), f(*f_owner), 
+      flags(flags)
   { ok = f.good(); skip_bom(); }
 
-  impl(int b, istream& is)
-    : b(b), f(is)
+  impl(int b, istream& is, int flags)
+    : b(b), f(is), flags(flags)
   { ok = f.good(); skip_bom(); }
 
   // Is this file in the right format?
@@ -67,6 +68,7 @@ private:
   int b;
   scoped_pointer<ifstream> f_owner;
   istream& f;
+  int flags;
   bool ok;
 };
 
@@ -92,20 +94,20 @@ void litelib::impl::skip_bom()
 //  library::addtype(&impl::canread);
 //}
   
-litelib::litelib(int b, const string& filename)
-  : library( new impl(b, filename) ) {}
+litelib::litelib(int b, const string& filename, int flags)
+  : library( new impl(b, filename, flags) ) {}
 
-litelib::litelib(int b, istream& is)
-  : library( new impl(b, is) ) {}
+litelib::litelib(int b, istream& is, int flags)
+  : library( new impl(b, is, flags) ) {}
 
 class litelib::impl::entry_type : public library_entry::impl
 {
 public:
-  explicit entry_type(int b) : b(b) {}
+  explicit entry_type(int b, int flags) : b(b), flags(flags) {}
 
 private:
-  virtual string name() const { return string(); }
-  virtual string base_name() const { return string(); }
+  virtual string name() const;
+  virtual string base_name() const;
   virtual string pn() const;
   virtual int bells() const { return b; }
 
@@ -115,6 +117,7 @@ private:
 
   virtual bool has_facet( const library_facet_id& id ) const;
 
+  string get_payload() const;
   virtual shared_pointer< library_facet_base >
     get_facet( const library_facet_id& id ) const;
 
@@ -125,7 +128,50 @@ private:
   string::size_type linestart;
 
   int b; // bells
+  int flags;
 };
+
+string litelib::impl::entry_type::name() const 
+{
+  if ( flags & litelib::payload_is_name ) 
+    return get_payload();
+  else
+    return string(); 
+}
+
+static void trim_trailing_whitespace( string &line )
+{
+  string::iterator b( line.begin() ), j( line.end() );
+  while ( j-1 != b && isspace(*(j-1)) ) --j;
+  line = string( b, j );
+}
+
+static bool remove_suffix( string& n, string const& suffix )
+{
+  string::size_type i = n.find(suffix);
+  if ( i != string::npos && i == n.length() - suffix.length() ) {
+    n.erase(i); trim_trailing_whitespace(n);
+    return true;
+  }
+  return false;
+}
+
+string litelib::impl::entry_type::base_name() const 
+{
+  string n = name();
+  if ( remove_suffix( n, method::stagename(b) ) ) {
+    bool had_class = false;
+    for ( method::m_class c = method::M_BOB; 
+            c <= method::M_SLOW_COURSE && !had_class;  
+            c = (method::m_class)( (int)c + 1 ) )
+      if ( remove_suffix( n, method::classname(c) ) )
+        had_class = true;
+   
+    if (had_class) remove_suffix( n, method::classname( method::M_LITTLE ) );
+    remove_suffix( n, method::classname( method::M_DIFFERENTIAL ) );
+  }
+  return n;
+}
 
 string litelib::impl::entry_type::pn() const
 {
@@ -160,7 +206,7 @@ library_base::const_iterator litelib::impl::begin() const
     f_owner->seekg(0, ios::beg);
   }
   return const_iterator(const_cast< litelib::impl * >(this),
-                        new entry_type(b));
+                        new entry_type(b, flags));
 }
 
 bool litelib::impl::entry_type::has_facet( const library_facet_id& id ) const
@@ -172,20 +218,23 @@ bool litelib::impl::entry_type::has_facet( const library_facet_id& id ) const
     return false;
 }
 
+string litelib::impl::entry_type::get_payload() const
+{
+  string::size_type i = linebuf.find_first_of(" \t\r\n", linestart);
+  i = linebuf.find_first_not_of(" \t\r\n", i);
+
+  string val;  
+  if (i < linebuf.length()) val = linebuf.substr(i);
+  return val;
+}
+
 shared_pointer< library_facet_base >
 litelib::impl::entry_type::get_facet( const library_facet_id& id ) const
 {
   shared_pointer< library_facet_base > result;
 
   if ( id == litelib::payload::id ) 
-  {
-    string::size_type i = linebuf.find_first_of(" \t\r\n", linestart);
-    i = linebuf.find_first_not_of(" \t\r\n", i);
-
-    string val;  
-    if (i < linebuf.length()) val = linebuf.substr(i);
-    result.reset( new litelib::payload(val) );
-  }
+    result.reset( new litelib::payload( get_payload() ) );
 
   return result;
 }
