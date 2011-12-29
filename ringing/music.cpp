@@ -1,5 +1,6 @@
 // -*- C++ -*- music.cpp - Musical Analysis
-// Copyright (C) 2001, 2008, 2009, 2010 Mark Banner <mark@standard8.co.uk> and
+// Copyright (C) 2001, 2008, 2009, 2010, 2011 
+// Mark Banner <mark@standard8.co.uk> and
 // Richard Smith <richard@ex-parrot.com>.
 
 // This program is free software; you can redistribute it and/or modify
@@ -349,10 +350,17 @@ bool music_node::match(const row &r, unsigned int pos,
 // ********************************************************
 
 // default constructor.
-music::music(unsigned int b) : top_node( new music_node(b) ), b(b)
+music::music(unsigned int b) 
+  : top_node( new music_node(b) ), b(b)
 {
-  // Reset the music
   reset_music();
+}
+
+music::music(unsigned int b, music_details const& md) 
+  : top_node( new music_node(b) ), b(b)
+{
+  reset_music();
+  push_back(md);
 }
 
 // Specify the music and add it into the search structure

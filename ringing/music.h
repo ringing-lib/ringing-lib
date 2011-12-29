@@ -1,5 +1,6 @@
 // -*- C++ -*- music.h - Musical Analysis
-// Copyright (C) 2001, 2008, 2009, 2010 Mark Banner <mark@standard8.co.uk> and
+// Copyright (C) 2001, 2008, 2009, 2010, 2011 
+// Mark Banner <mark@standard8.co.uk> and
 // Richard Smith <richard@ex-parrot.com>.
 
 // This program is free software; you can redistribute it and/or modify
@@ -127,6 +128,7 @@ public:
   typedef vector<music_details>::size_type size_type;
 
   music(unsigned int b = 0);         // Default Constructor
+  music(unsigned int b, music_details const& md);
 
   void push_back(const music_details&); // "Specify items" to end of vector
   //  void pop_back(); // Remove items from end of vector
