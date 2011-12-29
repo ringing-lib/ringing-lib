@@ -84,21 +84,19 @@ void prove_stmt::execute( execution_context& e )
     {
       proof_context p(e);
 
-      try
-	{
-	  p.execute_symbol( "start" );
-	  expr.execute(p, +1);
-	  p.execute_symbol( "finish" );
-      	} 
-      catch( const script_exception& ex ) 
-	{
-	  if ( ex.t == script_exception::do_abort ) {
-            if ( e.get_args().quiet ) p.set_silent(true);
-	    p.execute_symbol( "abort" );
-            e.set_failure();
-          }
-	  return;
-	}
+      try {
+        p.execute_symbol( "start" );
+        expr.execute(p, +1);
+        p.execute_symbol( "finish" );
+      } 
+      catch( const script_exception& ex ) {
+        if ( ex.t == script_exception::do_abort ) {
+          if ( e.get_args().quiet ) p.set_silent(true);
+          p.execute_symbol( "abort" );
+          e.set_failure();
+        }
+        return;
+      }
    
       if ( e.get_args().quiet ) p.set_silent(true);
       switch ( p.state() )

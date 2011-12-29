@@ -88,7 +88,7 @@ public:
   };
 
   // Create an expression handle
-  expression( node* impl ) : impl(impl) {}
+  explicit expression( node* impl ) : impl(impl) {}
 
   bool isnull() const { return !impl; }
   bool isnop() const { return !impl || impl->isnop(); }

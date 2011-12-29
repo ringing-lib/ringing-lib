@@ -90,10 +90,10 @@ void repeated_node::execute( proof_context &ctx, int dir ) const
   try {
     if ( count != -1 )
       for (int i=0; i<count; ++i) 
-	child.execute( ctx, dir );
+        child.execute( ctx, dir );
     else
       while ( true )
-	child.execute( ctx, dir );
+        child.execute( ctx, dir );
   } catch ( script_exception const& ex ) {
     if ( ex.t == script_exception::do_break ) 
       return;
