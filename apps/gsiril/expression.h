@@ -55,8 +55,8 @@ public:
 
 protected:
   virtual void debug_print( ostream &os ) const;
-  virtual void execute( proof_context &ctx, int dir );
-  virtual bool evaluate( proof_context &ctx );
+  virtual void execute( proof_context &ctx, int dir ) const;
+  virtual bool evaluate( proof_context &ctx ) const;
   virtual expression::type_t type() const;
 
 private:  
@@ -67,7 +67,7 @@ class nop_node : public expression::node
 {
 protected:
   virtual void debug_print( ostream &os ) const;
-  virtual void execute( proof_context &, int dir );
+  virtual void execute( proof_context &, int dir ) const;
   virtual bool isnop() const;
 };
 
@@ -80,7 +80,7 @@ public:
 
 protected:
   virtual void debug_print( ostream &os ) const;
-  virtual void execute( proof_context &ctx, int dir );
+  virtual void execute( proof_context &ctx, int dir ) const;
 
 private:  
   int count;
@@ -95,7 +95,7 @@ public:
 
 protected:
   virtual void debug_print( ostream &os ) const;
-  virtual void execute( proof_context &ctx, int dir );
+  virtual void execute( proof_context &ctx, int dir ) const;
 
 private:  
   expression child;
@@ -109,7 +109,7 @@ public:
 
 protected:
   virtual void debug_print( ostream &os ) const;
-  virtual void execute( proof_context &ctx, int dir );
+  virtual void execute( proof_context &ctx, int dir ) const;
 
 private:
   string str;
@@ -125,7 +125,7 @@ public:
 
 protected:
   virtual void debug_print( ostream &os ) const;
-  virtual void execute( proof_context &ctx, int dir );
+  virtual void execute( proof_context &ctx, int dir ) const;
 
 private:
   vector< change > changes;
@@ -138,7 +138,7 @@ public:
 
 protected:
   virtual void debug_print( ostream &os ) const;
-  virtual void execute( proof_context &ctx, int dir );
+  virtual void execute( proof_context &ctx, int dir ) const;
 
 private:
   row transp;
@@ -152,7 +152,7 @@ public:
 
 protected:
   virtual void debug_print( ostream &os ) const;
-  virtual void execute( proof_context &ctx, int dir );
+  virtual void execute( proof_context &ctx, int dir ) const;
 
 private:
   string sym;
@@ -166,7 +166,7 @@ public:
 
 protected:
   virtual void debug_print( ostream &os ) const;
-  virtual void execute( proof_context &ctx, int dir );
+  virtual void execute( proof_context &ctx, int dir ) const;
 
 private:
   pair< const string, expression > defn;
@@ -176,7 +176,7 @@ class isrounds_node : public expression::bnode
 {
 protected:
   virtual void debug_print( ostream &os ) const;
-  virtual bool evaluate( proof_context &ctx );
+  virtual bool evaluate( proof_context &ctx ) const;
 };
 
 class pattern_node : public expression::bnode
@@ -186,10 +186,11 @@ public:
 
 protected:
   virtual void debug_print( ostream &os ) const;
-  virtual bool evaluate( proof_context &ctx );
+  virtual bool evaluate( proof_context &ctx ) const;
 
 private:
-  music mus;
+  int bells;
+  music_details mus;
 };
 
 class and_node : public expression::bnode
@@ -200,7 +201,7 @@ public:
 
 protected:
   virtual void debug_print( ostream &os ) const;
-  virtual bool evaluate( proof_context &ctx );
+  virtual bool evaluate( proof_context &ctx ) const;
 
 private:
   expression left, right;
@@ -214,7 +215,7 @@ public:
 
 protected:
   virtual void debug_print( ostream &os ) const;
-  virtual bool evaluate( proof_context &ctx );
+  virtual bool evaluate( proof_context &ctx ) const;
 
 private:
   expression left, right;
@@ -229,7 +230,7 @@ public:
 
 protected:
   virtual void debug_print( ostream &os ) const;
-  virtual void execute( proof_context &ctx, int dir );
+  virtual void execute( proof_context &ctx, int dir ) const;
 
 private:
   expression test, iftrue, iffalse;
@@ -242,7 +243,7 @@ public:
 
 protected:
   virtual void debug_print( ostream &os ) const;
-  virtual void execute( proof_context &ctx, int dir );
+  virtual void execute( proof_context &ctx, int dir ) const;
 
 private:
   script_exception::type t;
@@ -256,7 +257,7 @@ public:
 
 protected:
   virtual void debug_print( ostream &os ) const;
-  virtual void execute( proof_context &ctx, int dir );
+  virtual void execute( proof_context &ctx, int dir ) const;
 
 private:
   string name;

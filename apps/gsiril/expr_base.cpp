@@ -33,7 +33,7 @@
 
 RINGING_USING_NAMESPACE
 
-bool expression::node::evaluate( proof_context& ctx )
+bool expression::node::evaluate( proof_context& ctx ) const
 {
   make_string os;
   os << "Unable to evaluate expression as a boolean: '";
@@ -43,7 +43,7 @@ bool expression::node::evaluate( proof_context& ctx )
   throw runtime_error( os );
 }
 
-void expression::bnode::execute( proof_context& ctx, int dir )
+void expression::bnode::execute( proof_context& ctx, int dir ) const
 {
   if ( dir < 0 ) {
     make_string os;

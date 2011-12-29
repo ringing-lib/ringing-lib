@@ -39,7 +39,7 @@ public:
     : defn(name, val) {}
 
 private:
-  virtual void execute( execution_context& ) const;
+  virtual void execute( execution_context& );
   virtual bool is_definition() const;
 
   pair<const string, expression> defn;
@@ -54,7 +54,7 @@ public:
     : defn(name, val) {}
 
 private:
-  virtual void execute( execution_context& ) const;
+  virtual void execute( execution_context& );
 
   pair<const string, expression> defn;
 };
@@ -70,7 +70,7 @@ public:
     : diagnostic(diagnostic) {}
 
 private:
-  virtual void execute( execution_context& ) const;
+  virtual void execute( execution_context& );
 
   string diagnostic;
 };
@@ -83,7 +83,7 @@ public:
     : expr(expr) {}
 
 private:
-  virtual void execute( execution_context& ) const;
+  virtual void execute( execution_context& );
 
   expression expr;
 };
@@ -96,7 +96,7 @@ public:
     : n(n) {}
 
 private:
-  virtual void execute( execution_context& ) const;
+  virtual void execute( execution_context& );
 
   int n;
 };
@@ -109,7 +109,7 @@ public:
     : bells(bells) {}
 
 private:
-  virtual void execute( execution_context& ) const;
+  virtual void execute( execution_context& );
 
   int bells;
 };
@@ -121,7 +121,7 @@ public:
     : rounds(rounds) {}
 
 private:
-  virtual void execute( execution_context& ) const;
+  virtual void execute( execution_context& );
 
   row rounds;
 };
@@ -134,7 +134,7 @@ public:
     : name(name) {}
 
 private:
-  virtual void execute( execution_context& ) const;
+  virtual void execute( execution_context& );
 
   string name;
 };

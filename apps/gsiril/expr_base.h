@@ -44,17 +44,16 @@ class parser;
 class statement 
 {
 public:
-  class impl
-  {
+  class impl {
   public:
     virtual ~impl() {}
-    virtual void execute( execution_context& ) const = 0;
+    virtual void execute( execution_context& ) = 0;
     virtual bool is_definition() const { return false; }
   };
 
   statement( impl* pimpl = 0 ) : pimpl(pimpl) {}
 
-  void execute( execution_context& e ) const { pimpl->execute(e); }
+  void execute( execution_context& e ) { pimpl->execute(e); }
   bool eof() const { return !pimpl; } 
   bool is_definition() const { return pimpl && pimpl->is_definition(); }
 
@@ -71,22 +70,20 @@ public:
     no_type
   };
 
-  class node
-  {
+  class node {
   public:
     virtual ~node() {}
     virtual void debug_print( ostream &os ) const = 0;
-    virtual void execute( proof_context &ctx, int dir ) = 0;
-    virtual bool evaluate( proof_context &ctx ); // throws
+    virtual void execute( proof_context &ctx, int dir ) const = 0;
+    virtual bool evaluate( proof_context &ctx ) const; // throws
     virtual bool isnop() const { return false; }
     virtual type_t type() const { return no_type; }
   };
 
-  class bnode : public node
-  {
+  class bnode : public node {
   public:
-    virtual void execute( proof_context &ctx, int dir );
-    virtual bool evaluate( proof_context &ctx ) = 0;
+    virtual void execute( proof_context &ctx, int dir ) const;
+    virtual bool evaluate( proof_context &ctx ) const = 0;
     virtual type_t type() const { return boolean; }
   };
 

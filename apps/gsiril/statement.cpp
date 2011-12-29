@@ -40,7 +40,7 @@ bool definition_stmt::is_definition() const
   return true;
 }
 
-void definition_stmt::execute( execution_context& e ) const
+void definition_stmt::execute( execution_context& e )
 {
   if ( e.define_symbol( defn ) )
     {
@@ -60,7 +60,7 @@ void definition_stmt::execute( execution_context& e ) const
     }
 }
 
-void default_defn_stmt::execute( execution_context& e ) const
+void default_defn_stmt::execute( execution_context& e )
 {
   if ( e.default_define_symbol( defn ) )
     {
@@ -71,13 +71,13 @@ void default_defn_stmt::execute( execution_context& e ) const
     }
 }
 
-void null_stmt::execute( execution_context& e ) const
+void null_stmt::execute( execution_context& e )
 {
   if ( e.verbose() )
     e.output() << diagnostic;
 }
 
-void prove_stmt::execute( execution_context& e ) const
+void prove_stmt::execute( execution_context& e )
 {
   int const quiet = e.get_args().quiet;
   try
@@ -121,7 +121,7 @@ void prove_stmt::execute( execution_context& e ) const
     }
 }
 
-void extents_stmt::execute( execution_context& e ) const
+void extents_stmt::execute( execution_context& e )
 {
   e.extents( n );
 
@@ -129,7 +129,7 @@ void extents_stmt::execute( execution_context& e ) const
     e.output() << "Set extents to " << n << endl;
 }
 
-void bells_stmt::execute( execution_context& e ) const
+void bells_stmt::execute( execution_context& e )
 {
   e.bells( bells );
 
@@ -137,7 +137,7 @@ void bells_stmt::execute( execution_context& e ) const
     e.output() << "Set bells to " << bells << endl;
 }
 
-void rounds_stmt::execute( execution_context& e ) const
+void rounds_stmt::execute( execution_context& e )
 {
   e.rounds( rounds );
 
@@ -145,7 +145,7 @@ void rounds_stmt::execute( execution_context& e ) const
     e.output() << "Set rounds to " << rounds << endl;
 }
 
-void import_stmt::execute( execution_context& e ) const
+void import_stmt::execute( execution_context& e )
 {
   bool i( e.interactive() );
   bool v( e.verbose() );

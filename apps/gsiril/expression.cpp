@@ -46,14 +46,14 @@ void list_node::debug_print( ostream &os ) const
   os << " )";
 }
 
-void list_node::execute( proof_context &ctx, int dir )
+void list_node::execute( proof_context &ctx, int dir ) const
 {
   if (dir > 0) car.execute( ctx, dir );
   cdr.execute( ctx, dir );
   if (dir <= 0) car.execute( ctx, dir );
 }
 
-bool list_node::evaluate( proof_context &ctx ) 
+bool list_node::evaluate( proof_context &ctx ) const
 {
   car.execute( ctx, +1 );
   return cdr.evaluate( ctx );
@@ -69,7 +69,7 @@ void nop_node::debug_print( ostream &os ) const
   os << "{null}";
 }
 
-void nop_node::execute( proof_context &, int dir )
+void nop_node::execute( proof_context &, int dir ) const
 {
 }
 
@@ -85,7 +85,7 @@ void repeated_node::debug_print( ostream &os ) const
   child.debug_print( os );
 }
 
-void repeated_node::execute( proof_context &ctx, int dir )
+void repeated_node::execute( proof_context &ctx, int dir ) const
 {
   try {
     if ( count != -1 )
@@ -108,12 +108,12 @@ void reverse_node::debug_print( ostream &os ) const
   child.debug_print( os );
 }
 
-void reverse_node::execute( proof_context &ctx, int dir )
+void reverse_node::execute( proof_context &ctx, int dir ) const
 {
   child.execute( ctx, -dir );
 }
 
-void string_node::execute( proof_context &ctx, int dir )
+void string_node::execute( proof_context &ctx, int dir ) const
 {
   ctx.output_string(str);
 }
@@ -148,7 +148,7 @@ void pn_node::debug_print( ostream &os ) const
 	ostream_iterator< change >( os, "." ) );
 }
 
-void pn_node::execute( proof_context &ctx, int dir )
+void pn_node::execute( proof_context &ctx, int dir ) const
 {
   if (dir > 0) 
     for_each( changes.begin(), changes.end(), ctx.permute_and_prove() );
@@ -173,7 +173,7 @@ void transp_node::debug_print( ostream &os ) const
   os << "'" << transp << "'";
 }
 
-void transp_node::execute( proof_context &ctx, int dir )
+void transp_node::execute( proof_context &ctx, int dir ) const
 {
   ctx.permute_and_prove()( transp );
 }
@@ -183,7 +183,7 @@ void symbol_node::debug_print( ostream &os ) const
   os << sym;
 }
 
-void symbol_node::execute( proof_context &ctx, int dir )
+void symbol_node::execute( proof_context &ctx, int dir ) const
 {
   ctx.lookup_symbol(sym).execute(ctx, dir);
 }
@@ -205,7 +205,7 @@ static void throw_no_backwards_execution(expression::node const& x)
   throw runtime_error( os );
 }
 
-void assign_node::execute( proof_context& ctx, int dir )
+void assign_node::execute( proof_context& ctx, int dir ) const
 {
   if (dir < 0) throw_no_backwards_execution(*this);
   ctx.define_symbol(defn);
@@ -248,7 +248,7 @@ static void validate_regex( const music_details& desc, int bells )
   // TODO: Check for multiple occurances of the same bell
 }
 
-bool isrounds_node::evaluate( proof_context& ctx )
+bool isrounds_node::evaluate( proof_context& ctx ) const
 {
   return ctx.isrounds();
 }
@@ -259,27 +259,24 @@ void isrounds_node::debug_print( ostream &os ) const
 }
 
 pattern_node::pattern_node( int bells, const string& regex )
-  : mus( bells )
+  : bells(bells), mus( regex )
 {
-  music_details md;
-  md.set( regex );
-  validate_regex( md, bells );
-  mus.push_back( md );
+  validate_regex( mus, bells );
 }
 
-bool pattern_node::evaluate( proof_context &ctx ) 
+bool pattern_node::evaluate( proof_context &ctx ) const
 {
-  row r(ctx.current_row());
-  mus.process_rows( &r, &r + 1 );  // Ugh!
-  return mus.get_score();
+  music m( bells, mus );
+  m.process_row( ctx.current_row() );
+  return m.get_score();
 }
 
 void pattern_node::debug_print( ostream &os ) const
 {
-  os << mus.begin()->get();
+  os << mus.get();
 }
 
-bool and_node::evaluate( proof_context &ctx )
+bool and_node::evaluate( proof_context &ctx ) const
 {
   // short-circuits
   return left.evaluate(ctx) && right.evaluate(ctx);
@@ -292,7 +289,7 @@ void and_node::debug_print( ostream &os ) const
   right.debug_print(os);
 }
 
-bool or_node::evaluate( proof_context &ctx )
+bool or_node::evaluate( proof_context &ctx ) const
 {
   // short-circuits
   return left.evaluate(ctx) || right.evaluate(ctx);
@@ -319,7 +316,7 @@ void if_match_node::debug_print( ostream &os ) const
   os << " }";
 }
 
-void if_match_node::execute( proof_context& ctx, int dir )
+void if_match_node::execute( proof_context& ctx, int dir ) const
 {
   if (dir < 0) throw_no_backwards_execution(*this);
 
@@ -358,7 +355,7 @@ void exception_node::debug_print( ostream &os ) const
   os << "break";
 }
 
-void exception_node::execute( proof_context& ctx, int dir )
+void exception_node::execute( proof_context& ctx, int dir ) const
 {
   if (dir < 0) throw_no_backwards_execution(*this);
   throw script_exception( t );
@@ -369,7 +366,7 @@ void load_method_node::debug_print( ostream& os ) const
   os << "load(\"" << name << "\")";
 }
 
-void load_method_node::execute( proof_context& ctx, int dir )
+void load_method_node::execute( proof_context& ctx, int dir ) const
 {
   if (!read) {
 //    meth = load_method(name);
