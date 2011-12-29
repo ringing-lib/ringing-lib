@@ -1,5 +1,5 @@
 // main.cpp - Entry point for gsiril
-// Copyright (C) 2002, 2003, 2004, 2007, 2008, 2010
+// Copyright (C) 2002, 2003, 2004, 2007, 2008, 2010, 2011
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -66,7 +66,7 @@ RINGING_USING_NAMESPACE
 
 int parse_all( execution_context& e,
 	       const shared_pointer<parser>& p,
-	       const string& error_prefix,
+	       const string& filename,
 	       bool errors_are_fatal )
 {
   int count(0);
@@ -82,7 +82,11 @@ int parse_all( execution_context& e,
 	}
       catch (const exception& ex )
 	{
-	  cerr << error_prefix << ": " << ex.what() << endl;
+          if (filename.empty())
+	    cerr << "Error: " << ex.what() << endl;
+          else
+	    cerr << filename << ':' << p->line() << ": " << ex.what() << endl;
+ 
 	  if (errors_are_fatal) exit(1);
 	}
     }
@@ -125,8 +129,7 @@ void initialise( execution_context& ex, const arguments& args )
   {
     RINGING_ISTRINGSTREAM in(init_string);
 
-    parse_all(ex, make_default_parser(in, args),
-	      "Error initialising", true);
+    parse_all(ex, make_default_parser(in, args), "INIT", true);
   }
 
   // Import any required modules
@@ -140,8 +143,7 @@ void initialise( execution_context& ex, const arguments& args )
 	throw runtime_error
 	  ( make_string() << "Unable to find module: " << *i );
 
-      parse_all(ex, make_default_parser(*in, args),
-		make_string() << "Error loading module '" << *i << "'", true);
+      parse_all(ex, make_default_parser(*in, args), *i, true);
     }
     
   for ( vector< string >::const_iterator 
@@ -193,13 +195,13 @@ bool prove_final_symbol( execution_context& e, const arguments& args )
 }
 
 bool prove_stream( execution_context& e, scoped_pointer<istream> const& in, 
-                   const arguments& args )
+                   string const& filename, const arguments& args )
 {
   e.set_failure(false); // unset failure state
 
   bool read_anything 
     = ( !in || parse_all( e, make_default_parser(*in, args), 
-                          "Error", !args.interactive ) );
+                          filename, !args.interactive ) );
 
   // Failure will be set if any prove statement has failed 
   bool rv = !e.failure();
@@ -221,10 +223,12 @@ bool run( execution_context& e, const arguments& args )
 
   scoped_pointer<istream> in;
 
+  string filename;
   if ( !args.expression.empty() ) {
     in.reset( new RINGING_ISTRINGSTREAM( args.expression ) );
   }
   else if ( !args.filename.empty() ) {
+    filename = args.filename;
     in.reset( new fstream( args.filename.c_str() ) );
     if ( !*in ) { 
       cerr << "Error opening file: " << args.filename << "\n";
@@ -232,11 +236,12 @@ bool run( execution_context& e, const arguments& args )
     }
   }
   else if ( !args.no_read ) {
+    if (!args.interactive) filename = "<input>";
     in.reset( new console_istream( args.interactive ) );
     static_cast<console_istream*>( in.get() )->set_prompt( "> " );
   }
 
-  return prove_stream( e, in, args );
+  return prove_stream( e, in, filename, args );
 }
 
 void filter( execution_context& e, const arguments& args )

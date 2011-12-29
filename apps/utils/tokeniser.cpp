@@ -1,5 +1,5 @@
 // tokeniser.cpp - Tokenise lines of input
-// Copyright (C) 2003 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2003, 2011 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -119,7 +119,7 @@ tokeniser::tokeniser( istream& in,
   : nlp( nlp ), cp( cp ),
     id_first_chars( NULL ), id_other_chars( NULL ),
     buffer(), i( buffer.begin() ), e( buffer.end() ), 
-    in( &in ) 
+    in( &in ), lineno(0)
 {
 }
 
@@ -144,7 +144,7 @@ bool tokeniser::parse( token& tok )
 
   while ( i == e )
     {
-      getline(*in, buffer); buffer += '\n';
+      getline(*in, buffer); ++lineno; buffer += '\n';
       if (!*in) return false;
 
       i = buffer.begin();
@@ -170,7 +170,7 @@ bool tokeniser::parse( token& tok )
 	      break;
 
 	    size_t offset = i - buffer.begin();
-	    string line; getline(*in, line); line += '\n';
+	    string line; getline(*in, line); ++lineno; line += '\n';
 	    buffer += line;
 	    i = buffer.begin() + offset;
 	    e = buffer.end();

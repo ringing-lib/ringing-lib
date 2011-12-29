@@ -1,5 +1,5 @@
 // -*- C++ -*- parser.h - Tokenise and parse lines of input into statements
-// Copyright (C) 2002, 2003 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003, 2011 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -55,13 +55,17 @@ public:
   // Retrieves one statement from the input
   // or a null pointer for EOF
   virtual statement parse() = 0;
+
+  // The line number of the last line of the statement returned by the 
+  // most recent call to parse().
+  virtual int line() const = 0;
 };
 
 // if library_mode is set, the parser will not emit final
 shared_pointer<parser> 
 make_default_parser( istream& in, const arguments& args );
 
-
+// Defined in import.cpp
 shared_pointer<istream> load_file( string const& filename );
 
 #endif // GSIRIL_PARSER_INCLUDED

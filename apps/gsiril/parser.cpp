@@ -190,6 +190,7 @@ public:
 
 private:
   virtual statement parse();
+  virtual int line() const { return tok.line(); }
 
   int bells() const { return args.bells; }
   void bells(int new_b);
@@ -354,7 +355,7 @@ statement msparser::parse()
 	            ? expression( new nop_node )
 	            : make_expr( cmd.begin() + 2, cmd.end() ) ) );
 
-  throw runtime_error( "Unknown command" );
+  throw runtime_error( "Unknown command: " + cmd[0] + " ..." );
 }
 
 
