@@ -106,14 +106,8 @@ void welcome()
 void initialise( execution_context& ex, const arguments& args )
 {
   string init_string = 
-"true     = \"# rows ending in @\", \"Touch is true\"\n"
-"notround = \"# rows ending in @\", \"Is this OK?\"\n"
-"false    = \"# rows ending in @\", \"Touch is false in $ rows\"\n"
-"conflict = \"# rows ending in @\", \"Touch not completed due to false row$$\"\n"
-"rounds   = \n"
-"start    = \n"
-"finish   = \n"
-"abort    = \n";
+#   include "init.dat"
+  ;
 
   // The 'everyrow' symbol is defined to "@" if -E is specified.
   if ( args.everyrow_only )

@@ -43,6 +43,15 @@ parser.cpp parser.h prog_args.h prog_args.cpp import.cpp $(additional)
 
 EXTRA_gsiril_SOURCES = rlstream.cpp rlstream.h
 
+# Build init.dat from the file in init/
+$(builddir)/main.o:	$(builddir)/init.dat
+
+$(builddir)/init.dat:	$(srcdir)/escape.awk $(srcdir)/init/gsiril.init
+	$(AWK) -f $(srcdir)/escape.awk $(srcdir)/init/gsiril.init > $@
+
+CLEANFILES = $(builddir)/init.dat
+
+
 # When gsiril is run under the name msiril, it automatically runs
 # in MicroSiril compatibility mode.  Create a symlink to assist
 # with this.  Similarly for sirilic and Sirilic compatibility mode.
@@ -74,5 +83,5 @@ gsiril.1: $(srcdir)/prog_args.cpp $(srcdir)/Makefile.am
 	$(MAKE) $(AM_MAKEFLAGS) gsiril$(EXEEXT)
 	$(HELP2MAN) -N --output=gsiril.1 ./gsiril$(EXEEXT)
 
-CLEANFILES = gsiril.1
+CLEANFILES += gsiril.1
 endif
