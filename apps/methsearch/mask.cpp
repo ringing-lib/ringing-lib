@@ -1,5 +1,6 @@
 // -*- C++ -*- mask.cpp - handle method masks
-// Copyright (C) 2002, 2003, 2009, 2011 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003, 2009, 2011, 2012 
+// Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -728,11 +729,12 @@ bool is_mask_consistent( arguments &args,
 
       if ( args.sym )
 	{
-	  if ( 2 * (hl_len - args.hunt_bells % 2) - depth < 0 || 
-	       2 * (hl_len - args.hunt_bells % 2) - depth >= 2 * hl_len )
+          size_t offset = (args.hunt_bells && args.hunt_bells % 2 == 0) ? 1 : 0;
+	  if ( 2 * (hl_len - 1 + offset) - depth < 0 || 
+	       2 * (hl_len - 1 + offset) - depth >= 2 * hl_len )
 	    continue;
 
-	  int other_index( 2 * (hl_len - args.hunt_bells % 2) - depth );
+	  int other_index( 2 * (hl_len - 1 + offset) - depth );
           assert( other_index >= 0 ); assert( other_index <= above.size() );
 
 	  const vector<change> &ch1a = above[depth];
