@@ -1,5 +1,5 @@
 // -*- C++ -*- proof_context.h - Environment to evaluate expressions
-// Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2010, 2011
+// Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2010, 2011, 2012
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -70,6 +70,7 @@ public:
 
   row current_row() const { return r; }
   bool isrounds() const;
+  size_t length() const { return p->size(); }
 
   bool set_silent( bool s ) { bool rv = silent; silent = s; return rv; }
 

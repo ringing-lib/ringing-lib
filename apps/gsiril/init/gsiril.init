@@ -1,5 +1,5 @@
 // gsiril.init - Initialisation for gsiril
-// Copyright (C) 2002, 2003, 2004, 2007, 2008, 2010, 2011
+// Copyright (C) 2002, 2003, 2004, 2007, 2008, 2010, 2011, 2012
 // Richard Smith <richard@ex-parrot.com>
 
 // This library is free software; you can redistribute it and/or
@@ -19,10 +19,13 @@
 // $Id$
 
 
-true     = "# rows ending in @", "Touch is true"
-notround = "# rows ending in @", "Is this OK?"
-false    = "# rows ending in @", "Touch is false in $ rows"
-conflict = "# rows ending in @", "Touch not completed due to false row$$"
+__summary__ = "# rows ending in @"
+
+true         = __summary__, "Touch is true"
+notround     = __summary__, "Is this OK?"
+false        = __summary__, "Touch is false in $ rows"
+__wronglen__ = __summary__, "Touch is of wrong length"
+conflict     = __summary__, "Touch not completed due to false row$$"
 
 rounds   =
 start    =

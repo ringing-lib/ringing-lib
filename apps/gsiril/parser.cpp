@@ -1,5 +1,5 @@
 // parser.cpp - Tokenise and parse lines of input
-// Copyright (C) 2002, 2003, 2004, 2005, 2007, 2008, 2010, 2011
+// Copyright (C) 2002, 2003, 2004, 2005, 2007, 2008, 2010, 2011, 2012
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -322,7 +322,8 @@ statement msparser::parse()
     }
 
   // Import directive
-  if ( cmd.size() == 2 && cmd[0].type() == tok_types::name
+  if ( !args.disable_import
+       && cmd.size() == 2 && cmd[0].type() == tok_types::name
        && cmd[0] == "import" && ( cmd[1].type() == tok_types::name ||
 				  cmd[1].type() == tok_types::string_lit ) )
     return statement( new import_stmt(cmd[1]) );

@@ -1,5 +1,5 @@
 // prog_args.cpp - handle program arguments
-// Copyright (C) 2002, 2003, 2004, 2007, 2008, 2010, 2011
+// Copyright (C) 2002, 2003, 2004, 2007, 2008, 2010, 2011, 2012
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -123,6 +123,11 @@ void arguments::bind( arg_parser& p )
 	   "Do not give truth output; or if given twice, no output at all", 
 	   quiet ) );
 
+  p.add( new integer_opt
+         ( '\0', "length", 
+           "Require the touch to be of the specified length", "NUM",
+           expected_length ) ); 
+
   p.add( new boolean_opt
 	 ( 'E', "everyrow-only",
 	   "Only print output from the everyrow symbol",
@@ -176,6 +181,11 @@ void arguments::bind( arg_parser& p )
          ( 'N', "no-read",
            "Don't read from standard input", 
            no_read ) );
+
+  p.add( new boolean_opt
+         ( '\0', "disable-import", 
+           "Disable the import directive",
+           disable_import ) );
 
   p.add( new boolean_opt
          ( '\0', "filter",

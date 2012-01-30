@@ -1,5 +1,5 @@
 // statement.cpp - Code to execute different types of statement
-// Copyright (C) 2002, 2003, 2004, 2005, 2010, 2011
+// Copyright (C) 2002, 2003, 2004, 2005, 2010, 2011, 2012
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -102,7 +102,13 @@ void prove_stmt::execute( execution_context& e )
       switch ( p.state() )
 	{
 	case proof_context::rounds: 
-	  p.execute_symbol( "true" ); 
+          if ( e.get_args().expected_length 
+               && e.get_args().expected_length != p.length() ) {
+            p.execute_symbol( "__wronglen__" );
+            e.set_failure();
+          }
+          else
+	    p.execute_symbol( "true" ); 
 	  break;
 	case proof_context::notround:
 	  p.execute_symbol( "notround" );
