@@ -51,11 +51,11 @@ arguments::arguments( int argc, char** argv )
   bind(ap);
   if ( !ap.parse(argc, argv) ) {
     ap.usage();
-    exit(1);
+    exit(3);
   }
 
   if ( !validate(ap) )
-    exit(1);
+    exit(3);
 }
 
 void arguments::set_msiril_compatible()

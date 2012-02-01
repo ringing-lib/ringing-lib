@@ -87,7 +87,7 @@ int parse_all( execution_context& e,
           else
 	    cerr << filename << ':' << p->line() << ": " << ex.what() << endl;
  
-	  if (errors_are_fatal) exit(1);
+	  if (errors_are_fatal) exit(2);
 	}
     }
 
@@ -154,7 +154,7 @@ void initialise( execution_context& ex, const arguments& args )
       if (!s.is_definition() || !p->parse().eof()) { 
         cerr << "Definition arguments must contain exactly one definition "
                 "and nothing else\n"; 
-        exit(1);
+        exit(3);
       }
     }
 
@@ -226,7 +226,7 @@ bool run( execution_context& e, const arguments& args )
     in.reset( new fstream( args.filename.c_str() ) );
     if ( !*in ) { 
       cerr << "Error opening file: " << args.filename << "\n";
-      exit(1);
+      exit(3);
     }
   }
   else if ( !args.no_read ) {
@@ -302,12 +302,12 @@ int main( int argc, char *argv[] )
   catch ( const exception &ex )
     {
       cerr << "Unexpected error: " << ex.what() << endl;
-      exit(1);
+      exit(2);
     }
   catch ( ... )
     {
       cerr << "An unknown error occured" << endl;
-      exit(1);
+      exit(2);
     }
 
   return 0;
