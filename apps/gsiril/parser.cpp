@@ -581,7 +581,8 @@ msparser::make_expr( vector< token >::const_iterator first,
 
       if ( begin_arg == last )
 	throw runtime_error
-	  ( "The repetition operator requires an argument" );
+	  ( make_string() << "The repetition operator requires an argument, "
+            "or did you mean +" << *first << "?" );
 
       int times(-1);
       if ( first->type() == tok_types::num_lit )
