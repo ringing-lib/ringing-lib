@@ -67,6 +67,7 @@ struct arguments
   string               expression;
   init_val<bool,false> no_read;
   init_val<bool,false> disable_import;
+  init_val<int,0>      node_limit;
 
   string               prove_symbol;
   string               lead_symbol;

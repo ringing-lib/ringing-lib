@@ -87,6 +87,8 @@ public:
 
   proof_context silent_clone() const;
 
+  void increment_node_count() const;
+
 private:
   void termination_sequence( ostream& os );
 

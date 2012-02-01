@@ -187,6 +187,11 @@ void arguments::bind( arg_parser& p )
            "Disable the import directive",
            disable_import ) );
 
+  p.add( new integer_opt
+         ( '\0', "node-limit", 
+           "Limit prover to some number of nodes.", "NUM",
+           node_limit ) );
+
   p.add( new boolean_opt
          ( '\0', "filter",
            "Run as a filter on a method library",

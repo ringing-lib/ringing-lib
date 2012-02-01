@@ -1,5 +1,5 @@
 // expr_base.cpp - Base classes, nodes and factory function for expressions
-// Copyright (C) 2005, 2011 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2005, 2011, 2012 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -30,6 +30,7 @@
 #endif
 #include <ringing/streamutils.h>
 #include "expr_base.h"
+#include "proof_context.h"
 
 RINGING_USING_NAMESPACE
 
@@ -55,5 +56,17 @@ void expression::bnode::execute( proof_context& ctx, int dir ) const
   }
 
   evaluate(ctx);
+}
+
+void expression::execute( proof_context &ctx, int dir ) const 
+{ 
+  ctx.increment_node_count();
+  impl->execute(ctx, dir); 
+}
+
+bool expression::evaluate( proof_context& ctx ) const 
+{ 
+  ctx.increment_node_count();
+  return impl->evaluate(ctx); 
 }
 

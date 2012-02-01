@@ -1,5 +1,5 @@
 // execution_context.cpp - Global environment
-// Copyright (C) 2002, 2003, 2004, 2007, 2011 
+// Copyright (C) 2002, 2003, 2004, 2007, 2011, 2012
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -57,7 +57,7 @@ int execution_context::bells( int b )
 }
 
 execution_context::execution_context( ostream& os, const arguments& a )
-  : args(a), os(&os), failed(false)
+  : args(a), os(&os), failed(false), node_count(0)
 {
   if ( !args.rounds.bells() )
     args.rounds = row(args.bells);
@@ -115,3 +115,10 @@ void execution_context::prove_symbol( const string& sym )
   statement s( new prove_stmt(e) );
   s.execute( *this );
 }
+
+void execution_context::increment_node_count() const
+{
+  if (args.node_limit && ++node_count == args.node_limit)
+    throw runtime_error("Node count exceeded");
+}
+

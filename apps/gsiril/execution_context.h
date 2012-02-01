@@ -1,5 +1,5 @@
 // -*- C++ -*- execution_context.h - Global environment
-// Copyright (C) 2002, 2003, 2004, 2007, 2008
+// Copyright (C) 2002, 2003, 2004, 2007, 2008, 2012
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -90,11 +90,14 @@ public:
   void set_failure( bool f = true ) { failed = f; }
   bool failure() const { return failed; }
 
+  void increment_node_count() const;
+
 private:
   arguments args;
   ostream* os;
   symbol_table sym_table;
   bool failed;
+  mutable int node_count;
 };
 
 #endif // GSIRIL_EXECUTION_CONTEXT_INCLUDED

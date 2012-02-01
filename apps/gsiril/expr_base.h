@@ -1,5 +1,5 @@
 // -*- C++ -*- expr_base.h - Expression and statement interfaces
-// Copyright (C) 2002, 2003, 2004, 2005, 2011
+// Copyright (C) 2002, 2003, 2004, 2005, 2011, 2012
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -98,13 +98,12 @@ public:
   void debug_print( ostream &os ) const    { impl->debug_print(os); }
 
   // execute an expression, possibly adding to the current proof
-  void execute( proof_context &ctx, int dir ) const { impl->execute(ctx, dir); }
+  void execute( proof_context &ctx, int dir ) const;
 
   // Evaluate a const expression in boolean context.
   // If evaluation requires execution of an expression, a silent clone
-  // of the proof_context is made and discarded at the end of the 
-  // evaluation.
-  bool evaluate( proof_context& ctx ) const { return impl->evaluate(ctx); }
+  // of the proof_context is made and discarded at the end of the evaluation.
+  bool evaluate( proof_context& ctx ) const;
 
 
   RINGING_FAKE_DEFAULT_CONSTRUCTOR(expression);

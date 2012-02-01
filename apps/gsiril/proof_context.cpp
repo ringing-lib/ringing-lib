@@ -1,5 +1,5 @@
 // proof_context.cpp - Environment to evaluate expressions
-// Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2011
+// Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2011, 2012
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -231,3 +231,9 @@ proof_context proof_context::silent_clone() const
   copy.output = NULL;
   return copy;
 }
+
+void proof_context::increment_node_count() const
+{
+  return ectx.increment_node_count();
+}
+
