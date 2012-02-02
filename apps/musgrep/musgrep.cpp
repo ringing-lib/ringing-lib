@@ -1,5 +1,5 @@
 // -*- C++ -*- musgrep.cpp - utility to grep for music in an extent
-// Copyright (C) 2009, 2010, 2011 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2009, 2010, 2011, 2012 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -67,6 +67,7 @@ struct arguments
 
   init_val<bool,false> count;
   init_val<bool,false> score;
+  init_val<bool,false> separate_scores;
 
   init_val<bool,false> positive;
   init_val<bool,false> negative;
@@ -74,6 +75,7 @@ struct arguments
   init_val<bool,false> hilight;
 
   vector<string> musstrs;
+  vector< pair<size_t,size_t> > musdets;
   music mus;
 
   void bind( arg_parser& p );
@@ -97,6 +99,11 @@ void arguments::bind( arg_parser& p )
   p.add( new boolean_opt
          ( 's', "score",
            "Print the score for matching rows", score ) );
+
+   p.add( new boolean_opt
+         ( 'S', "scores",
+           "Print the scores for matching rows separately for each pattern", 
+           separate_scores ) );
 
   p.add( new boolean_opt
          ( 'p', "positive",
@@ -148,7 +155,10 @@ bool arguments::validate( arg_parser& ap )
   {
     try 
     {
+      size_t first = distance(mus.begin(), mus.end());
       add_scored_music_string( mus, *i );
+      size_t last = distance(mus.begin(), mus.end());
+      musdets.push_back( make_pair( first, last ) );
     }
     catch ( exception const& e ) {
       ap.error( make_string() << "Error parsing music pattern: " << e.what() );
@@ -199,7 +209,8 @@ int main( int argc, char *argv[] )
   if (!seq2 || !isatty(1)) seq1 = NULL, seq2 = " *";
 
   const bool output_rows 
-    = !args.count && !args.score && !args.negative && !args.positive;
+    = !args.count && !args.separate_scores && !args.score 
+      && !args.negative && !args.positive;
 
   // NB: Don't use args.mus.get_count() -- that will double count 5-runs
   // when 4-runs are selected, for example.
@@ -241,5 +252,24 @@ int main( int argc, char *argv[] )
   if (args.count)    output_counter( cout, need_sep, count  );
   if (args.score)    output_counter( cout, need_sep, args.mus.get_score() );
   if (need_sep)      cout << endl;
+
+  if (args.separate_scores) {
+    need_sep = false;
+
+    // We need an extra level of mapping instead of just printing 
+    // music::const_iterator->count, because some named music patterns
+    // such as <4-runs> us multiple details objects.
+    for ( vector< pair<size_t,size_t> >::const_iterator 
+            i = args.musdets.begin(), e = args.musdets.end();
+            i != e; ++i ) { 
+      size_t c = 0;
+      for ( music::const_iterator j = args.mus.begin() + i->first,
+                                  k = args.mus.begin() + i->second; 
+              j != k; ++j )
+        c += j->total();
+      output_counter( cout, need_sep, c );
+    }
+    if (need_sep) cout << endl;
+  }
 }
 
