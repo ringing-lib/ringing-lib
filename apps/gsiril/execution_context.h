@@ -91,6 +91,8 @@ public:
   bool failure() const { return failed; }
 
   void increment_node_count() const;
+  bool done_one_proof() const { return done_proof; }
+  void set_done_proof() { done_proof = true; }
 
 private:
   arguments args;
@@ -98,6 +100,7 @@ private:
   symbol_table sym_table;
   bool failed;
   mutable int node_count;
+  bool done_proof;
 };
 
 #endif // GSIRIL_EXECUTION_CONTEXT_INCLUDED

@@ -174,8 +174,10 @@ bool prove_final_symbol( execution_context& e, const arguments& args )
       // has been explicitly set, it should be there; but if it is 
       // implicitly set (e.g. by invoking as 'msiril'), we shouldn't give
       // an error.
-      if ( args.prove_symbol != "__first__" || e.defined("__first__") ) {
-        cerr << "Proving " << args.prove_symbol << std::endl;
+      if ( args.prove_symbol != "__first__" 
+           || !e.done_one_proof() && e.defined("__first__") ) {
+        if ( e.verbose() )
+          cerr << "Proving " << args.prove_symbol << std::endl;
         e.prove_symbol( args.prove_symbol );
       }
       return true;
@@ -193,6 +195,7 @@ bool prove_stream( execution_context& e, scoped_pointer<istream> const& in,
 {
   e.set_failure(false); // unset failure state
 
+  // IN is null if -N is used without -e or -f
   bool read_anything 
     = ( !in || parse_all( e, make_default_parser(*in, args), 
                           filename, !args.interactive ) );
@@ -204,7 +207,12 @@ bool prove_stream( execution_context& e, scoped_pointer<istream> const& in,
     // Return directly from here:  this means that with -P any additional
     // prove statements are allowed to fail.
     rv = prove_final_symbol( e, args );
-      
+
+  if ( args.prove_one && !e.done_one_proof() ) {
+    cerr << "No touch proved";
+    exit(2);
+  }
+  
   if ( args.interactive )
     cout << "\n";
 

@@ -177,6 +177,8 @@ void arguments::bind( arg_parser& p )
            "Execute file FILENAME", "FILENAME",
            filename ) );
 
+  // This is used in conjunction with -D and -P when the whole work
+  // is done at initialistion time, and no -e or -f is given.
   p.add( new boolean_opt
          ( 'N', "no-read",
            "Don't read from standard input", 
@@ -191,6 +193,11 @@ void arguments::bind( arg_parser& p )
          ( '\0', "node-limit", 
            "Limit prover to some number of nodes.", "NUM",
            node_limit ) );
+
+  p.add( new boolean_opt
+         ( '\0', "prove-one", 
+           "Prove one composition only.", 
+           prove_one ) );
 
   p.add( new boolean_opt
          ( '\0', "filter",

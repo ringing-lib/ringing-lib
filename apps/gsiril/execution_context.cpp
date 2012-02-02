@@ -57,7 +57,7 @@ int execution_context::bells( int b )
 }
 
 execution_context::execution_context( ostream& os, const arguments& a )
-  : args(a), os(&os), failed(false), node_count(0)
+  : args(a), os(&os), failed(false), node_count(0), done_proof(false)
 {
   if ( !args.rounds.bells() )
     args.rounds = row(args.bells);

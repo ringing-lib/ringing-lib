@@ -70,6 +70,7 @@ struct arguments
   init_val<int,0>      node_limit;
 
   string               prove_symbol;
+  init_val<bool,false> prove_one;
   string               lead_symbol;
   string               lh_symbol;
 

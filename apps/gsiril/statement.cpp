@@ -79,11 +79,16 @@ void null_stmt::execute( execution_context& e )
 
 void prove_stmt::execute( execution_context& e )
 {
+  if (e.get_args().prove_one && e.done_one_proof())
+    throw runtime_error( "Already done proof" );
+
   int const quiet = e.get_args().quiet;
   try
     {
       proof_context p(e);
 
+      e.set_done_proof();
+  
       try {
         p.execute_symbol( "start" );
         expr.execute(p, +1);
