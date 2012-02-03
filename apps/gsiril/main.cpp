@@ -200,13 +200,8 @@ bool prove_stream( execution_context& e, scoped_pointer<istream> const& in,
     = ( !in || parse_all( e, make_default_parser(*in, args), 
                           filename, !args.interactive ) );
 
-  // Failure will be set if any prove statement has failed 
-  bool rv = !e.failure();
-
   if ( read_anything && args.prove_symbol.size() )
-    // Return directly from here:  this means that with -P any additional
-    // prove statements are allowed to fail.
-    rv = prove_final_symbol( e, args );
+    prove_final_symbol( e, args );
 
   if ( args.prove_one && !e.done_one_proof() ) {
     cerr << "No touch proved";
@@ -216,7 +211,7 @@ bool prove_stream( execution_context& e, scoped_pointer<istream> const& in,
   if ( args.interactive )
     cout << "\n";
 
-  return rv;
+  return !e.failure();
 }
 
 bool run( execution_context& e, const arguments& args )
