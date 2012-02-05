@@ -85,10 +85,15 @@ void prove_stmt::execute( execution_context& e )
   int const quiet = e.get_args().quiet;
   try
     {
-      proof_context p(e);
-
       e.set_done_proof();
   
+      if (e.get_args().determine_bells) {
+        cout << e.bells() << " bells" << endl;
+        return;
+      }
+
+      proof_context p(e);
+
       try {
         p.execute_symbol( "start" );
         expr.execute(p, +1);

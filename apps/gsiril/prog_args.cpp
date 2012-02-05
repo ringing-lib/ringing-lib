@@ -195,6 +195,11 @@ void arguments::bind( arg_parser& p )
            node_limit ) );
 
   p.add( new boolean_opt
+         ( '\0', "determine-bells", 
+           "Determine the number of bells for each proof without proving.",
+           determine_bells ) );
+
+  p.add( new boolean_opt
          ( '\0', "prove-one", 
            "Prove one composition only.", 
            prove_one ) );

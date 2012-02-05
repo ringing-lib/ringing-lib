@@ -68,6 +68,7 @@ struct arguments
   init_val<bool,false> no_read;
   init_val<bool,false> disable_import;
   init_val<int,0>      node_limit;
+  init_val<bool,false> determine_bells;
 
   string               prove_symbol;
   init_val<bool,false> prove_one;
