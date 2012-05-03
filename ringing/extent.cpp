@@ -1,5 +1,5 @@
 // -*- C++ -*- extent.h - Classes for iterating through an extent
-// Copyright (C) 2001, 2002, 2003, 2005, 2007
+// Copyright (C) 2001, 2002, 2003, 2005, 2007, 2012
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -61,7 +61,7 @@ extent_iterator::extent_iterator( unsigned int nw, unsigned int nh )
 extent_iterator &extent_iterator::operator++()
 {
   vector<bell> v; r.swap(v);
-  end_ = ! next_permutation( v.begin() + nh, v.end() + (nh + nw - nt) );
+  end_ = ! next_permutation( v.begin() + nh, v.begin() + nh + nw );
   if (!end_) r.swap(v);
   return *this;
 }
