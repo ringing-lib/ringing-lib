@@ -77,7 +77,7 @@ extent_iterator &extent_iterator::operator--()
   } 
   else {
     vector<bell> v; r.swap(v);
-    prev_permutation( v.begin() + nh, v.end() + (nh + nw - nt) );
+    prev_permutation( v.begin() + nh, v.begin() + nh + nw );
     r.swap(v);
   }
   return *this;
