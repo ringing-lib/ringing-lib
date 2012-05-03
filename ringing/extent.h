@@ -1,5 +1,5 @@
 // -*- C++ -*- extent.h - Classes for iterating through an extent
-// Copyright (C) 2001, 2002, 2005, 2007, 2008, 2010
+// Copyright (C) 2001, 2002, 2005, 2007, 2008, 2010, 2011
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -129,6 +129,10 @@ position_in_extent( row const& r, unsigned nw, unsigned nh = 0 ) {
   return position_in_extent( r, nw, nh, nw+nh );
 }
 
+inline RINGING_API size_t position_in_extent( row const& r ) {
+  return position_in_extent( r, r.bells(), 0, r.bells() );
+}
+
 
 // Finds the nth row of an extent ordered lexicographically.
 RINGING_API row
@@ -231,6 +235,10 @@ position_in_incourse_extent( row const& r,
 inline RINGING_API size_t
 position_in_incourse_extent( row const& r, unsigned nw, unsigned nh = 0 ) {
   return position_in_extent( r, nw, nh, nw+nh ) / 2;
+}
+
+inline RINGING_API size_t position_in_incourse_extent( row const& r ) {
+  return position_in_extent( r, r.bells(), 0, r.bells() ) / 2;
 }
 
 // Finds the nth row of an in-course half-extent ordered lexicographically.
