@@ -141,7 +141,7 @@ public:
       RINGING_PREFIX_STD swap( deletor, o.deletor );
       RINGING_PREFIX_STD swap( cloner, o.cloner ); }
   cloning_pointer( const cloning_pointer &o ) 
-    : ptr( o.cloner ? o.cloner(o.ptr) : 0 ),
+    : ptr( o.ptr && o.cloner ? o.cloner(o.ptr) : 0 ),
       deletor( o.deletor ), cloner( o.cloner ) 
   {}
   cloning_pointer &operator=( const cloning_pointer &o )

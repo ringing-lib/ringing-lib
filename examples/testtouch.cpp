@@ -108,6 +108,23 @@ int main()
   {
     touch t2 = make_touch();
     
+    cout << "Comparing changes\n" ;
+    touch_node::const_iterator p1, p2 ;
+    int	c1, c2 ;
+    for ( p1 = t2.begin(), c1 = 0; p1 != t2.end(); p1++, c1++ ) {
+	cout << c1 << ": " ;
+//	for ( p2 = p1, c2 = c1, p2++, c2++; p2!= t2.end(); p2++, c2++ )
+	for ( p2 = t2.begin(), c2 = 0; p2!= t2.end(); p2++, c2++ ) {
+	    if ( p1 == p2 && c1 != c2 ) {
+		if ( c2 > c1 )
+		    cout << " " << c2 ;
+		else
+		    cout << " (" << c2 << ")" ;
+	    }
+	}
+	cout << "\n" ;
+    }
+
     cout << "\n\n"
 	 << "3*WHW of Cambridge Surprise Minor is "
 	 << distance( t2.begin(), t2.end() )
