@@ -83,8 +83,8 @@ public:
 private:
   friend class touch_child_list;
   iterator(list<entry>::const_iterator j, 
-	   list<entry>::const_iterator k) : i(j), last(k)
-  { if(i != last) { count = 0; ci = (*i).second->begin(); } }
+	   list<entry>::const_iterator k) : i(j), last(k), count(0)
+  { if(i != last) { ci = (*i).second->begin(); } }
 };
 
 
