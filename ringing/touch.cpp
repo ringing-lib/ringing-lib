@@ -77,7 +77,7 @@ public:
   touch_node::iterator_base& operator++();
   bool operator==(const touch_node::iterator_base& ib) const {
     const iterator* j = dynamic_cast<const iterator*>(&ib);
-    return (j && (i == j->i && (i == last || ci == j->ci)));
+    return j && (i == j->i && (i == last || count == j->count && ci == j->ci));
   }
   touch_node::iterator_base* clone() { return new iterator(*this); }
 private:
