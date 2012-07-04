@@ -1,5 +1,5 @@
 // change.cpp - Class representing a change
-// Copyright (C) 2001, 2009 Martin Bright <martin@boojum.org.uk>
+// Copyright (C) 2001, 2009, 2012 Martin Bright <martin@boojum.org.uk>
 // and Richard Smith <richard@ex-parrot.com>
 
 // This library is free software; you can redistribute it and/or
@@ -251,6 +251,18 @@ bell& operator*=(bell& b, const change& c)
     else if(*s == b)
       ++b;
   return b;
+}
+
+bool have_same_places( const change &a, const change &b )
+{
+  if ( a.bells() != b.bells() ) 
+    throw logic_error("Mismatched numbers of bells");
+
+  for ( int i=0; i<a.bells(); ++i )
+    if ( a.findplace(i) && b.findplace(i) )
+      return true;
+
+  return false;
 }
 
 RINGING_END_NAMESPACE

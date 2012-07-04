@@ -1,5 +1,5 @@
 // -*- C++ -*- chage.h - Class representing a change
-// Copyright (C) 2001, 2009 Martin Bright <martin@boojum.org.uk>
+// Copyright (C) 2001, 2009, 2012 Martin Bright <martin@boojum.org.uk>
 // and Richard Smith <richard@ex-parrot.com>
 
 // This library is free software; you can redistribute it and/or
@@ -130,6 +130,8 @@ inline RINGING_API bell operator*(bell i, const change& c)
 {
   bell j = i; j *= c; return j;
 }
+
+bool have_same_places( const change &a, const change &b );
 
 #if RINGING_AS_DLL
 RINGING_EXPLICIT_STL_TEMPLATE vector<change>;

@@ -49,18 +49,6 @@
 RINGING_USING_NAMESPACE
 RINGING_USING_STD
 
-bool have_same_places( const change &a, const change &b )
-{
-  if ( a.bells() != b.bells() ) 
-    throw logic_error("Mismatched numbers of bells");
-
-  for ( int i=0; i<a.bells(); ++i )
-    if ( a.findplace(i) && b.findplace(i) )
-      return true;
-  
-  return false;
-}
-
 bool is_cyclic_le( const row &lh, int hunts )
 {
   const int n( lh.bells() - hunts );
