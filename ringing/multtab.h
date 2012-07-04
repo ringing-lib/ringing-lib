@@ -147,6 +147,7 @@ public:
   bool operator!=( multtab_post_col_t const& o ) const { return n != o.n; }
 
   bool null() const { return !t; } // Is it default constructed
+  size_t col_index() const { return n; }
 
   RINGING_FAKE_COMPARATORS( multtab_post_col_t )
 
@@ -183,6 +184,7 @@ public:
   bool operator!=( multtab_pre_col_t const& o ) const { return n != o.n; }
 
   bool null() const { return !t; } // Is it default constructed
+  size_t col_index() const { return n; }
 
   RINGING_FAKE_COMPARATORS( multtab_pre_col_t )
 
@@ -270,6 +272,8 @@ public:
   // Precompute the products of the set with the given row.
   pre_col_t compute_pre_mult( const row &x );   // (x * r) for all rows r
   post_col_t compute_post_mult( const row &x ); // (r * x) for all rows r
+  post_col_t compute_post_mult( const change &c ) 
+    { return compute_post_mult( row() * c ); }
   
   // Convert a row into a precomputed table offset & vice versa
   row_t find( const row &r ) const;
