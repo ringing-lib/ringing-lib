@@ -165,7 +165,7 @@ void initialise( execution_context& ex, const arguments& args )
   ex.undefine_symbol( "__first__" );
 }
 
-bool prove_final_symbol( execution_context& e, const arguments& args )
+void prove_final_symbol( execution_context& e, const arguments& args )
 {
   try 
     {
@@ -180,13 +180,12 @@ bool prove_final_symbol( execution_context& e, const arguments& args )
           cerr << "Proving " << args.prove_symbol << std::endl;
         e.prove_symbol( args.prove_symbol );
       }
-      return true;
     } 
   catch (const exception& ex ) 
     {
       cerr << "Error proving final symbol, " << args.prove_symbol << ": "
 	   << ex.what() << endl;
-      return false;
+      exit(2);
     }
 }
 
@@ -201,7 +200,7 @@ bool prove_stream( execution_context& e, scoped_pointer<istream> const& in,
                           filename, !args.interactive ) );
 
   if ( read_anything && args.prove_symbol.size() )
-    e.set_failure( !prove_final_symbol( e, args ) );
+    prove_final_symbol( e, args );
 
   if ( args.prove_one && !e.done_one_proof() ) {
     cerr << "No touch proved";
