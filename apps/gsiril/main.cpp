@@ -1,5 +1,5 @@
 // main.cpp - Entry point for gsiril
-// Copyright (C) 2002, 2003, 2004, 2007, 2008, 2010, 2011
+// Copyright (C) 2002, 2003, 2004, 2007, 2008, 2010, 2011, 2012
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -184,7 +184,7 @@ bool prove_final_symbol( execution_context& e, const arguments& args )
     } 
   catch (const exception& ex ) 
     {
-      cerr << "Error proving " << args.prove_symbol << ": "
+      cerr << "Error proving final symbol, " << args.prove_symbol << ": "
 	   << ex.what() << endl;
       return false;
     }
@@ -201,7 +201,7 @@ bool prove_stream( execution_context& e, scoped_pointer<istream> const& in,
                           filename, !args.interactive ) );
 
   if ( read_anything && args.prove_symbol.size() )
-    prove_final_symbol( e, args );
+    e.set_failure( !prove_final_symbol( e, args ) );
 
   if ( args.prove_one && !e.done_one_proof() ) {
     cerr << "No touch proved";
