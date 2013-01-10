@@ -1,5 +1,5 @@
 // -*- C++ -*- search.cpp - the actual search algorithm
-// Copyright (C) 2002, 2003, 2004, 2005, 2007, 2008, 2009, 2010, 2011
+// Copyright (C) 2002, 2003, 2004, 2005, 2007, 2008, 2009, 2010, 2011, 2013
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -259,7 +259,7 @@ void run_search( const arguments &args )
   catch ( const exit_exception& ) {}
   catch ( const timeout_exception& ) {}
  
-  if ( args.status && args.outfile.empty() ) clear_status();
+  if ( args.status ) clear_status();
 
   // Causes the stats to be emittted
   if ( args.H_fmt_str.size() ) {

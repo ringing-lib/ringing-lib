@@ -29,7 +29,6 @@
 #include "methodutils.h"
 #include "falseness.h"
 #include "music.h"
-#include "format.h" // for clear_status
 #include "expression.h" // for get_last_exec_status
 #if RINGING_OLD_INCLUDES
 #include <map.h>

@@ -3,11 +3,12 @@
 %\usepackage{lmodern}
 
 % We're using xelatex: configure for unicode fonts
-% (The cm-default option to fontspec is needed to render math symbols
-% in certain versions of fontspec.)
-\usepackage{xunicode}
-\usepackage[cm-default]{fontspec}
 \usepackage{xltxtra}
+\usepackage{xunicode}
+
+% The cm-default option to fontspec is needed to render math symbols
+% in certain versions of fontspec, and breaks with xltxtra in others.
+%\usepackage[cm-default]{fontspec}
 
 % Computer Modern warps my fragile little eyes
 \setromanfont[Mapping=tex-text]{Linux Libertine O}
@@ -51,6 +52,7 @@
 \usepackage{tabularx}
 
 \usepackage{footnote}
+\usepackage{bigfoot}
 
 % Don't use US-style dates
 \usepackage[level,nodayofweek]{datetime}
@@ -1396,7 +1398,9 @@ is that when used with \verb+-u+, shell redirection can result in very
 flickery status line.  
 (This is due to technical limitations of the terminal and not a bug
 in \methsearch.)  The special combination \verb+-o-+ is equivalent to an
-omitted \verb+-o+ option.
+omitted \verb+-o+ option except that it doesn't clear the status line when
+a method is found.  This is useful when standard output is redirected or
+piped to another program.
 
 The \verb+-O+ option\oid{O}{out-format} can be used to further control 
 what is written to the \verb+-o+ file.  At present three arguments to \verb+-O+ 

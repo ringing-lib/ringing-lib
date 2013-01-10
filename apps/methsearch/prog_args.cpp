@@ -1,5 +1,5 @@
 // -*- C++ -*- prog_args.cpp - handle program arguments
-// Copyright (C) 2002, 2003, 2004, 2005, 2007, 2008, 2009, 2010, 2011
+// Copyright (C) 2002, 2003, 2004, 2005, 2007, 2008, 2009, 2010, 2011, 2013
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -798,8 +798,6 @@ bool arguments::validate( arg_parser &ap )
     set_formats_in_unicode( true );
 
   if (!quiet) {
-    if ( outfile == "-" ) outfile.erase();
-
     try {
       if ( outfmt.empty() || outfmt == "fmt" || outfmt == "utf8" ) {
 	outfmt.erase();
@@ -808,7 +806,7 @@ bool arguments::validate( arg_parser &ap )
 	outputs.add( new fmtout( R_fmt_str, outfile ) );
       } 
       else if ( outfmt == "xml" ) {
-        if ( outfile.empty() ) { 
+        if ( outfile.empty() || outfile == "-" ) { 
           ap.error( make_string() << "XML output cannot be specified without "
                     "an output file name (with -o)" );
           return false;
