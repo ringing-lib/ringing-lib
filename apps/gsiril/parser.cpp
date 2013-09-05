@@ -1,5 +1,5 @@
 // parser.cpp - Tokenise and parse lines of input
-// Copyright (C) 2002, 2003, 2004, 2005, 2007, 2008, 2010, 2011, 2012
+// Copyright (C) 2002, 2003, 2004, 2005, 2007, 2008, 2010, 2011, 2012, 2013
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -68,6 +68,7 @@ namespace tok_types
     new_line    = '\n',
     semicolon   = ';',
     reverse     = '~',
+    ctrl_z      = '\x1A',   /* EOF marker in microSIRIL */
     comment     = tokeniser::first_token,
     string_lit,
     transp_lit,
@@ -158,6 +159,11 @@ public:
     case comment: case string_lit: case transp_lit: case pn_lit: 
     case def_assign: case logic_and: case logic_or: case reverse:
       return;
+
+    case ctrl_z:
+      // Obsolete microSIRIL features
+      if ( args.msiril_syntax ) return;
+      break;
 
     case regex_lit: case open_brace: case close_brace: case colon:
       // These can only work when msiril comments are disabled
@@ -288,7 +294,8 @@ statement msparser::parse()
 
   // EOF
   if ( cmd.size() == 0 || cmd.size() == 1 && 
-       ( cmd[0] == "end" || cmd[0] == "quit" || cmd[0] == "exit" ) )
+       ( cmd[0] == "end" || cmd[0] == "quit" || cmd[0] == "exit" 
+         || cmd[0].type() == tok_types::ctrl_z ) )
     return statement( NULL );
 
   // Version directive
