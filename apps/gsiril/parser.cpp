@@ -271,7 +271,11 @@ vector< token > msparser::tokenise_command()
 	}
     }
   while  ( !toks.empty() && ( toks.back().type() == tok_types::comma 
-			      || nesting ) );
+			      || nesting ) && tokiter != tokend );
+
+  if ( !toks.empty() && ( toks.back().type() == tok_types::comma || nesting ) )
+    throw runtime_error( make_string() 
+      << "Unexpected end of file midway through command" );
    
   return toks;
 }
