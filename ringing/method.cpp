@@ -1,5 +1,5 @@
 // method.cpp - routines for methods, positions and calls
-// Copyright (C) 2001, 2004, 2008, 2010, 2011 
+// Copyright (C) 2001, 2004, 2008, 2010, 2011, 2014
 // Martin Bright <martin@boojum.org.uk> and
 // Richard Smith <richard@ex-parrot.com>
 
@@ -590,14 +590,17 @@ string method::format( int flags ) const
        && ( issym() || (flags & M_FULL_SYMMETRY) 
                        && !(flags & M_OMIT_LH)
                        && (sym = symmetry_point()) != -1 ) ) {
-    if (sym != 0) out += '&'; 
+    if (sym != 0) out += '&';
+    else if (flags & M_PLUS) out += '+';
     do_compressed_section( out, *this, 0, sym+1, flags );
     if (!(flags & M_OMIT_LH)) {
       out += ',';
       if (sym != size()/2 - 1) out += '&';
+      else if (flags & M_PLUS) out += '+';
       do_compressed_section( out, *this, 2*sym+1, size()/2+sym+1, flags );
     }
   } else {
+    if (flags & M_PLUS) out += '+';
     do_compressed_section( out, *this, 0, 
                            size() - ( (flags & M_OMIT_LH) ? 1 : 0 ),  flags );
   }

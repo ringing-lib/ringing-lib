@@ -278,7 +278,9 @@ void filter( execution_context& e, const arguments& args )
                        expression( new pn_node( m ) ) ) );
 
       if ( run( e, args ) ) 
-        cout << i->meth().format( method::M_DASH | method::M_SYMMETRY )
+         // Add M_PLUS in case our output is being fed back as a definition.
+         cout << i->meth().format( method::M_DASH | method::M_SYMMETRY 
+                                     | method::M_PLUS )
              << '\t' << i->get_facet<litelib::payload>()
              << endl;
     }
