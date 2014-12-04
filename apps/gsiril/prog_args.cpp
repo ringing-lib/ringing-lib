@@ -1,5 +1,5 @@
 // prog_args.cpp - handle program arguments
-// Copyright (C) 2002, 2003, 2004, 2007, 2008, 2010, 2011, 2012
+// Copyright (C) 2002, 2003, 2004, 2007, 2008, 2010, 2011, 2012, 2014
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -206,13 +206,18 @@ void arguments::bind( arg_parser& p )
 
   p.add( new boolean_opt
          ( '\0', "filter",
-           "Run as a filter on a method library",
+           "Run as a filter on a method library or stream",
            filter ) );
 
   p.add( new string_opt
          ( '\0', "lead-symbol",
            "Assign lead place-notation (excluding l.h.) to SYM; default 'm'",
            "SYM", lead_symbol ) );
+
+  p.add( new boolean_opt
+         ( '\0', "lead-includes-lh", 
+           "Assign the whole lead (including l.h.) to the lead symbol",
+           lead_includes_lh ) );
 
   p.add( new string_opt
          ( '\0', "lh-symbol", 

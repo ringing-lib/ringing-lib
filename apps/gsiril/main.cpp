@@ -1,5 +1,5 @@
 // main.cpp - Entry point for gsiril
-// Copyright (C) 2002, 2003, 2004, 2007, 2008, 2010, 2011, 2012
+// Copyright (C) 2002, 2003, 2004, 2007, 2008, 2010, 2011, 2012, 2014
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -270,7 +270,8 @@ void filter( execution_context& e, const arguments& args )
           ( make_pair( args.lh_symbol, 
                        expression( new pn_node( m.back() ) ) ) );
 
-      m.pop_back();
+      if ( ! args.lead_includes_lh )
+        m.pop_back();
       if ( args.lead_symbol.size() )
         e.define_symbol
           ( make_pair( args.lead_symbol, 
