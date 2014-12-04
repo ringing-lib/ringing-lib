@@ -1,5 +1,5 @@
 // proof_context.cpp - Environment to evaluate expressions
-// Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2011, 2012
+// Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2011, 2012, 2014
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -145,16 +145,26 @@ bool proof_context::isrounds() const
   return r == ectx.rounds() && p->count_row(r) == ectx.extents(); 
 }
 
-expression proof_context::lookup_symbol( const string& sym )
+void proof_context::execute_symbol( const string& sym, int dir )
 {
+  if ( ectx.get_args().show_lead_heads && output && sym != "everyrow" ) {
+    if ( ectx.get_args().methods.size() ) {
+      for ( vector<string>::const_iterator i = ectx.get_args().methods.begin(), 
+                                           e = ectx.get_args().methods.end();
+            i != e; ++i )
+        if ( sym == *i ) {
+          *output << r;
+          if ( ectx.get_args().methods.size() > 1 )
+            *output << "\t" << sym;
+          *output << endl;
+        }
+    } else
+      *output << r << "\t" << sym << endl;
+  }
+
   expression e( dsym_table.lookup(sym) );
   if ( e.isnull() ) e = ectx.lookup_symbol(sym);
-  return e;
-}
-
-void proof_context::execute_symbol( const string &sym ) 
-{
-  lookup_symbol(sym).execute( *this, +1 );
+  e.execute( *this, dir );
 }
 
 void proof_context::define_symbol( const pair<const string, expression>& defn )

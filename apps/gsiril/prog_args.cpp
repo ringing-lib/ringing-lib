@@ -223,7 +223,18 @@ void arguments::bind( arg_parser& p )
          ( '\0', "lh-symbol", 
            "Assign lead end change to SYM; default 'lh'",
            "SYM", lh_symbol ) );
-}
+
+  p.add( new boolean_opt
+         ( '\0', "show-lead-heads", 
+           "List the lead heads for the specified methods",
+           show_lead_heads ) );
+
+  p.add( new strings_opt
+	 ( '\0', "methods",
+	   "Mark the specified symbols as methods",
+	   "SYM,SYM,...",
+	   methods ) );
+ }
 
 bool arguments::validate( arg_parser& ap )
 {

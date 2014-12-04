@@ -76,6 +76,9 @@ struct arguments
   string               lh_symbol;
   init_val<bool,false> lead_includes_lh;
 
+  init_val<bool,false> show_lead_heads;
+  vector<string>       methods;
+
   row                  rounds;
 
   arguments( int argc, char** argv );

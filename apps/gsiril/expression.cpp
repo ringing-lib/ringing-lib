@@ -1,5 +1,5 @@
 // expression.cpp - Nodes and factory function for expressions
-// Copyright (C) 2002, 2003, 2004, 2005, 2008, 2011
+// Copyright (C) 2002, 2003, 2004, 2005, 2008, 2011, 2014
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -185,7 +185,7 @@ void symbol_node::debug_print( ostream &os ) const
 
 void symbol_node::execute( proof_context &ctx, int dir ) const
 {
-  ctx.lookup_symbol(sym).execute(ctx, dir);
+  ctx.execute_symbol(sym, dir);
 }
 
 void assign_node::debug_print( ostream &os ) const
