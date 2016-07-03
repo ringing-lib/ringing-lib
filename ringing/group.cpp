@@ -38,6 +38,7 @@
 #include <vector>
 #include <algorithm>
 #include <limits>
+#include <iterator>
 #endif
 
 RINGING_START_NAMESPACE

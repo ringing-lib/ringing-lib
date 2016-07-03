@@ -785,7 +785,7 @@ bool arguments::validate( arg_parser &ap )
     ap.error( "--loop is only supported with --random" );
     return false;
   }
-  if ( random_order > 0 && ( filter_mode || filter_lib_mode ) ) {
+  if ( random_order && ( filter_mode || filter_lib_mode ) ) {
     ap.error( "--random cannot be used when filtering" );
     return false;
   }
@@ -876,7 +876,7 @@ bool arguments::validate( arg_parser &ap )
       return false;
     }
 
-  if ( hunt_bells & floating_sym )
+  if ( hunt_bells && floating_sym )
     {
       ap.error( "--floating-sym is not supported with hunt bells" );
       return false;

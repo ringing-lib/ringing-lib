@@ -21,6 +21,7 @@
 #include <ringing/row.h>
 #include <ringing/streamutils.h>
 #include "test-base.h"
+#include <iterator>
 
 RINGING_START_NAMESPACE
 

@@ -273,7 +273,7 @@ void music_node::add(const music_details &md, unsigned int i, unsigned int key, 
 		{
 		  // There are more to go
 		  // Any of them '*'s?
-		  if (mds.find('*', i + 1) >= mds.size())
+		  if (mds.find('*', i + 1) == string::npos)
 		    {
 		      // Deal with the only * to go in the add_to_subtree
 		      // function.
@@ -302,11 +302,12 @@ void music_node::add_to_subtree(unsigned int place, const music_details &md, uns
   cloning_pointer<music_node>& j = subnodes[place];
   if (!j) j.reset( new music_node(bells) );
 
-  string const& mds = md.get();  if (process_star)
+  string const& mds = md.get();
+  if (process_star)
     {
       // We are to process star data star.
       if (bells - pos == count_bells(mds.substr(i, mds.size() - i)) + 1 &&
-	  mds.find('*', i + 1) >= mds.size())
+	  mds.find('*', i + 1) == string::npos)
 	// There are now only numbers to go.
 	j->add(md, i + 1, key, pos + 1);
       else
@@ -332,16 +333,21 @@ bool music_node::match(const row &r, unsigned int pos,
     matched = true;
   }
 
+
+
   // Try all against ? or *
   BellNodeMap::const_iterator j = subnodes.find(0);
   if (j != subnodes.end())
     matched = j->second->match(r, pos + 1, results, stroke) || matched;
-    
-  // Now try the actual number
-  j = subnodes.find(r[pos] + 1);
-  if (j != subnodes.end())
-    matched = j->second->match(r, pos + 1, results, stroke) || matched;
 
+  // Now try the actual number
+  if (pos < r.bells())
+  {
+	  j = subnodes.find(r[pos] + 1);
+	  if (j != subnodes.end())
+		  matched = j->second->match(r, pos + 1, results, stroke) || matched;
+
+  }
   return matched;
 }
 

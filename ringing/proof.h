@@ -174,22 +174,25 @@ public:
 
   // Constructor - 1 extent only.
   proof(RowIterator first, RowIterator last, bool qp = false) 
-    : istrue(prove(first, last, qp)) 
-  {}
+  {
+	  istrue = prove(first, last, qp);
+  }
 
   // Constructor - multiple extents.
   proof(RowIterator first, RowIterator last, const int max, 
 	bool qp = false)
-    : istrue(prove(first, last, max, qp)) 
-  {}
+  {
+	  istrue = prove(first, last, max, qp);
+  }
 
   proof(RowIterator true_first,
 	RowIterator true_last,
 	RowIterator unknown_first,
 	RowIterator unknown_last,
 	bool qp = false)
-    : istrue(prove(true_first, true_last, unknown_first, unknown_last, qp))
-  {}
+  {
+	  istrue = prove(true_first, true_last, unknown_first, unknown_last, qp);
+  }
 
   proof(RowIterator true_first,
 	RowIterator true_last,
@@ -197,8 +200,9 @@ public:
 	RowIterator unknown_last,
 	const int max,
 	bool qp = false)
-    : istrue(prove(true_first, true_last, unknown_first, unknown_last, max, qp))
-  {}
+  {
+	  istrue = prove(true_first, true_last, unknown_first, unknown_last, max, qp);
+  }
 
   bool prove(RowIterator first, RowIterator last, 
 	     bool qp = false) {

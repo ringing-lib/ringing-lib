@@ -164,7 +164,7 @@ bool mslib::impl::entry_type::readentry( library_base &lb )
 	}
     }
 
-  return ifs;
+  return bool(ifs);
 }
 
 string mslib::impl::entry_type::name() const

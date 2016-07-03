@@ -232,7 +232,7 @@ bool cclib::impl::entry_type::readentry( library_base &lb )
 	  parse_title();
 	}
     }
-  return ifs;
+  return bool(ifs);
 }
 
 void cclib::impl::entry_type::parse_title()
