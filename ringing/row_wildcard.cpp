@@ -136,6 +136,7 @@ bool row_wildcard::copy_if_choices_contains( string& dest,
   if ( p_sym > p_end ) return false;
   dest += sym;
   pos = p_end;
+  return true;
 }
 
 bool row_wildcard::copy_choices_intersection( string& dest, 
@@ -190,7 +191,7 @@ bool row_wildcard::make_intersection( string& dest,
     else if ( b_wild && a_bell )
       dest += a[ai];
 
-    else if ( a_bell && a_bell ) {
+    else if ( a_bell && b_bell ) {
       if ( a[ai] == b[bi] ) 
         dest += a[ai];
       else return false;

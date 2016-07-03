@@ -44,6 +44,7 @@
 #include <ringing/method.h>
 #include <ringing/streamutils.h>
 #include <ringing/mathutils.h>
+#include <iterator>
 
 
 RINGING_USING_NAMESPACE

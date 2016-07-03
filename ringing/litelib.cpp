@@ -62,7 +62,7 @@ public:
 private:
   void skip_bom();
 
-  virtual bool good(void) const { return f; }
+  virtual bool good(void) const { return bool(f); }
 
 private:
   int b;
@@ -196,7 +196,7 @@ bool litelib::impl::entry_type::readentry( library_base &lb )
       }
     }
 
-  return ifs;
+  return bool(ifs);
 }
 
 library_base::const_iterator litelib::impl::begin() const

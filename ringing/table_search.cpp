@@ -94,13 +94,13 @@ table_search::table_search( const method &meth, const vector<change> &calls,
 {}
 
 table_search::table_search( const method &meth, const vector<change> &calls,
-                            pair< size_t, size_t > lenrange, bool set_nr )
-  : meth( meth ), calls( calls ),
-    lenrange( range_div( lenrange, f & length_in_changes
-                                     ? partends.size() * meth.length() : 1) ),
-    f( set_nr ? ignore_rotations : no_flags )
+                            pair< size_t, size_t > _lenrange, bool set_nr )
+  : meth( meth ), calls( calls ), f( set_nr ? ignore_rotations : no_flags )
 {
-  DEBUG( "Length range set to " << lenrange.first << "-" << lenrange.second 
+	lenrange = range_div(_lenrange, f & length_in_changes
+		? partends.size() * meth.length() : 1);
+
+DEBUG( "Length range set to " << lenrange.first << "-" << lenrange.second 
          << " leads" );
 }
 

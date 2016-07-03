@@ -43,6 +43,7 @@
 #include <ringing/method.h>
 #include <ringing/place_notation.h>
 #include <ringing/row.h>
+#include <iterator>
 
 #ifdef _MSC_VER
 // Microsoft have unilaterally deprecated snprintf in favour of a non-standard
@@ -287,7 +288,7 @@ int method::methclass(void) const
 
   // Find the first hunt bell
   row lhr = lh();
-  for(hb = 0; lhr[hb] != hb && hb < bells(); ++hb);
+  for(hb = 0; hb < bells() && lhr[hb] != hb; ++hb);
   
   // Find the size of the first set of working bells    
   int wb=0;

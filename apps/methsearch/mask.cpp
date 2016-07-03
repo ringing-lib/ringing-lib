@@ -61,6 +61,7 @@
 #include <ringing/streamutils.h>
 #include <ringing/mathutils.h>
 #include <ringing/place_notation.h>
+#include <iterator>
 
 #if RINGING_DEBUG_FILE
 #define DEBUG( expr ) (void)((cout << expr) << endl)

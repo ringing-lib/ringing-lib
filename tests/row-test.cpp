@@ -21,6 +21,7 @@
 #include <ringing/streamutils.h>
 #include <ringing/mathutils.h>
 #include "test-base.h"
+#include <iterator>
 
 RINGING_START_NAMESPACE
 
