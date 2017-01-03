@@ -1,5 +1,5 @@
 // -*- C++ -*- multtab.h - A precomputed multiplication table of rows
-// Copyright (C) 2002, 2003, 2004, 2008, 2010 
+// Copyright (C) 2002, 2003, 2004, 2008, 2010, 2017 
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -126,6 +126,12 @@ class RINGING_API multtab_row_iterator
 };
 
 class sqmulttab_row_t;
+class multtab_post_col_t;
+class multtab_pre_col_t;
+
+multtab_row_t operator*( multtab_row_t r, multtab_post_col_t c );
+multtab_row_t operator*( multtab_pre_col_t c, multtab_row_t r );
+sqmulttab_row_t operator*( sqmulttab_row_t l, sqmulttab_row_t r );
 
 class multtab_post_col_t
 {
