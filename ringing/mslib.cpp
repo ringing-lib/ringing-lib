@@ -1,5 +1,5 @@
 // mslib.cpp - Read and write MicroSIRIL libraries
-// Copyright (C) 2001-2 Martin Bright <martin@boojum.org.uk>
+// Copyright (C) 2001, 2002, 2017 Martin Bright <martin@boojum.org.uk>
 // and Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -164,7 +164,7 @@ bool mslib::impl::entry_type::readentry( library_base &lb )
 	}
     }
 
-  return ifs;
+  return bool(ifs);
 }
 
 string mslib::impl::entry_type::name() const

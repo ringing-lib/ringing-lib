@@ -1,5 +1,6 @@
 // -*- C++ -*- litelib.cpp - Lightweight library format
-// Copyright (C) 2007, 2009, 2010, 2011 Richard Smith <richard@ex-parrot.com>.
+// Copyright (C) 2007, 2009, 2010, 2011, 2017 
+// Richard Smith <richard@ex-parrot.com>.
 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -62,7 +63,7 @@ public:
 private:
   void skip_bom();
 
-  virtual bool good(void) const { return f; }
+  virtual bool good(void) const { return bool(f); }
 
 private:
   int b;
@@ -196,7 +197,7 @@ bool litelib::impl::entry_type::readentry( library_base &lb )
       }
     }
 
-  return ifs;
+  return bool(ifs);
 }
 
 library_base::const_iterator litelib::impl::begin() const

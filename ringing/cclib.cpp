@@ -1,5 +1,5 @@
 // cclib.cpp - Read and write the Central Council Method libraries
-// Copyright (C) 2001, 2002, 2003, 2004, 2009, 2010
+// Copyright (C) 2001, 2002, 2003, 2004, 2009, 2010, 2017
 // Mark Banner <mark@standard8.co.uk> and
 // Richard Smith <richard@ex-parrot.com>
 
@@ -232,7 +232,7 @@ bool cclib::impl::entry_type::readentry( library_base &lb )
 	  parse_title();
 	}
     }
-  return ifs;
+  return bool(ifs);
 }
 
 void cclib::impl::entry_type::parse_title()
