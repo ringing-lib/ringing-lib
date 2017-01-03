@@ -1,5 +1,5 @@
 // -*- C++ -*- exec.cpp - execute sub-processes
-// Copyright (C) 2003, 2004, 2008, 2009, 2011 
+// Copyright (C) 2003, 2004, 2008, 2009, 2011, 2017
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -67,9 +67,10 @@
 RINGING_USING_NAMESPACE
 RINGING_USING_STD
 
-class system_error : public logic_error {
+// TODO: Convert this to use std::system_error if __cplusplus >= 201103L
+class exec_system_error : public logic_error {
 public:
-  system_error( int errnum, const char* fn );
+  exec_system_error( int errnum, const char* fn );
 };
 
 #if RINGING_WINDOWS && !defined(__CYGWIN__)
@@ -104,14 +105,14 @@ string windows_errstr( int errnum )
   return s;
 }
 
-system_error::system_error( int errnum, const char* fn )
+exec_system_error::exec_system_error( int errnum, const char* fn )
   : logic_error( make_string() << "System error: " << fn << ": " 
 		   << windows_errstr( errnum ) )
 {
 }
 
 #define THROW_SYSTEM_ERROR( str ) \
-  do { throw system_error( GetLastError(), str ); } while (false)
+  do { throw exec_system_error( GetLastError(), str ); } while (false)
 
 
 /*
@@ -427,14 +428,14 @@ string exec_command( const string& str, int* cmd_status )
 
 #else // !RINGING_WINDOWS -- assume POSIX
 
-system_error::system_error( int errnum, const char* fn )
+exec_system_error::exec_system_error( int errnum, const char* fn )
   : logic_error( make_string() << "System error: " << fn << ": " 
 		   << strerror(errnum) )
 {
 }
 
 #define THROW_SYSTEM_ERROR( str ) \
-  do { throw system_error( errno, str ); } while (false)
+  do { throw exec_system_error( errno, str ); } while (false)
 
 
 string exec_command( const string& str, int* cmd_status )
