@@ -207,6 +207,11 @@ row row::operator*(const change& c) const
   return result;
 }
 
+row row::conjugate(const row& r) const
+{
+  return r.inverse() * *this * r;
+}
+
 // Print it to a string
 string row::print() const
 {

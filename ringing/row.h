@@ -106,6 +106,8 @@ public:
   int bells(void) const { return data.size(); } // How many bells?
   row& rounds(void);		// Set it to rounds
 
+  row conjugate( const row& r ) const;  // Return r^-1 * *this * r
+
   static row rounds(int n) { return row(n); } // Return rounds on n bells
 
   static row queens(int n);        // Return queens on n bells
