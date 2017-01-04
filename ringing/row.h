@@ -1,7 +1,7 @@
 // -*- C++ -*- row.h - Classes for rows and changes
-// Copyright (C) 2001, 2007, 2008, 2009, 2010 
-// Martin Bright <martin@boojum.org.uk>
-// and Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2001, 2007, 2008, 2009, 2010, 2017
+// Martin Bright <martin@boojum.org.uk> and
+// Richard Smith <richard@ex-parrot.com>
 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -106,13 +106,14 @@ public:
   int bells(void) const { return data.size(); } // How many bells?
   row& rounds(void);		// Set it to rounds
 
-  static row rounds(const int n) { return row(n); } // Return rounds on n bells
+  static row rounds(int n) { return row(n); } // Return rounds on n bells
 
-  static row queens(const int n);  // Return queens on n bells
-  static row kings(const int n);   // Return kings on n bells
-  static row tittums(const int n); // Return tittums on n bells
-  static row reverse_rounds(const int n); // Return reverse rounds on n bells
-
+  static row queens(int n);        // Return queens on n bells
+  static row kings(int n);         // Return kings on n bells
+  static row tittums(int n);       // Return tittums on n bells
+  static row reverse_rounds(int n);// Return reverse rounds on n bells
+  static row reverse_rounds(int nw, int nh, int nt=0); // nw working bells, 
+                                   // hh hunt bells, nt total bells
   static row cyclic(int n, int h=1, int c=1); // Return cyclic lead head 
                                    // (13456..2)^c on n bells with h hunt bells
   static row pblh(int n, int h=1); // Return first plain bob lead head on 

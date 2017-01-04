@@ -1,6 +1,7 @@
 // row.cpp - Classes for row and changes
-// Copyright (C) 2001, 2008, 2009, 2010 Martin Bright <martin@boojum.org.uk>
-// and Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2001, 2008, 2009, 2010, 2017 
+// Martin Bright <martin@boojum.org.uk> and
+// Richard Smith <richard@ex-parrot.com>
 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -300,6 +301,20 @@ row row::reverse_rounds(const int n)
     
   return r;
 }
+
+// Return reverse rounds on n bells
+row row::reverse_rounds(int nw, int nh, int nt)
+{
+  if (!nt) nt = nh + nw;
+  row r(nt);
+  for (int i = 0; i < nh; i++)
+    r.data[i] = i;
+  for (int i = nh; i < nh+nw; i++)
+    r.data[i] = 2*nh + nw - i - 1;
+    
+  return r;
+}
+
 
 // Return 1st plain bob lead head on n bells
 // h=1 for Plain Bob, 2 for Grandsire etc.
