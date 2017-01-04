@@ -75,6 +75,8 @@ public:
   static group cyclic_group_c(int nw, int nh = 0, int nt = 0);
   static group cyclic_group_r(int nw, int nh = 0, int nt = 0);
 
+  static group direct_product( group const& a, group const& b );
+
   // Congugate by r to get { r^-1 g r : g \in *this }
   group conjugate( const row& r ) const; 
 

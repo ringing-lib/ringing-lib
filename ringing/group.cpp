@@ -149,6 +149,19 @@ group group::cyclic_group_r(int nw, int nh, int nt)
   if (!nt) nt = nh + nw;
   return group( row::pblh(nh+nw, nh), row(nt) );
 }
+  
+group group::direct_product( group const& a, group const& b )
+{
+  // Create a conjugate version of b with all bells shifted right by
+  // a.bells() places.
+  group b2( b.conjugate( row::cyclic(a.bells() + b.bells(), 0, -a.bells()) ) );
+
+  vector<row> gens;
+  gens.reserve(a.size() + b.size());
+  copy( a.begin(), a.end(), back_inserter(gens) );
+  copy( b2.begin(), b2.end(), back_inserter(gens) );
+  return group(gens);
+}
 
 group::group( const row& gen )
   : b( gen.bells() )
