@@ -1,5 +1,5 @@
 // -*- C++ -*- group.h - Class representing a group
-// Copyright (C) 2003, 2009, 2011 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2003, 2009, 2011, 2017 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -66,6 +66,14 @@ public:
   // Named constructors
   static group symmetric_group(int nw, int nh = 0, int nt = 0);
   static group alternating_group(int nw, int nh = 0, int nt = 0);
+  static group trivial_group(int nt);
+
+  // These come in two version, _c and _r depending on whether the 
+  // nw-cycle is row::cyclic or row::pblh.
+  static group dihedral_group_c(int nw, int nh = 0, int nt = 0);
+  static group dihedral_group_r(int nw, int nh = 0, int nt = 0);
+  static group cyclic_group_c(int nw, int nh = 0, int nt = 0);
+  static group cyclic_group_r(int nw, int nh = 0, int nt = 0);
 
   // Congugate by r to get { r^-1 g r : g \in *this }
   group conjugate( const row& r ) const; 

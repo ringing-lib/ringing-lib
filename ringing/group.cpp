@@ -1,5 +1,5 @@
 // -*- C++ -*- group.cpp - Class representing a permutation group
-// Copyright (C) 2003, 2009, 2011 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2003, 2009, 2011, 2017 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -119,6 +119,35 @@ group group::alternating_group(int nw, int nh, int nt)
 	back_inserter(g.v) );
   g.calc_orbit_space();
   return g;
+}
+
+group group::trivial_group(int nt) 
+{
+  return group( row(nt) ); 
+}
+
+group group::dihedral_group_c(int nw, int nh, int nt)
+{
+  if (!nt) nt = nh + nw;
+  return group( row::cyclic(nh+nw, nh), row::reverse_rounds(nw, nh, nt) );
+}
+
+group group::dihedral_group_r(int nw, int nh, int nt)
+{
+  if (!nt) nt = nh + nw;
+  return group( row::pblh(nh+nw, nh), row::reverse_rounds(nw, nh, nt) );
+}
+
+group group::cyclic_group_c(int nw, int nh, int nt)
+{
+  if (!nt) nt = nh + nw;
+  return group( row::cyclic(nh+nw, nh), row(nt) );
+}
+
+group group::cyclic_group_r(int nw, int nh, int nt)
+{
+  if (!nt) nt = nh + nw;
+  return group( row::pblh(nh+nw, nh), row(nt) );
 }
 
 group::group( const row& gen )
