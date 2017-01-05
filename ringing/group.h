@@ -61,7 +61,10 @@ public:
   const_iterator end()   const { return v.end();   }
   size_t         size()  const { return v.size();  }
 
-  void swap( group& g ) { v.swap(g.v); }
+  void swap( group& g ) { 
+     size_t tmp(b); b=g.b; g.b=tmp;
+     v.swap(g.v); o.swap(g.o);  
+  }
 
   // Named constructors
   static group symmetric_group(int nw, int nh = 0, int nt = 0);
