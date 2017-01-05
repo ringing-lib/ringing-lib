@@ -69,19 +69,28 @@ public:
   // Named constructors
   static group symmetric_group(int nw, int nh = 0, int nt = 0);
   static group alternating_group(int nw, int nh = 0, int nt = 0);
-  static group trivial_group(int nt);
+
+  // Preferred aliases
+  static group symmetric(int nw, int nh=0, int nt=0) 
+    { return symmetric_group(nw, nh, nt); }
+  static group alternating(int nw, int nh=0, int nt=0) 
+    { return alternating_group(nw, nh, nt); }
+   
+  static group trivial(int nt); // Group of order 1
 
   // These come in two version, _c and _r depending on whether the 
-  // nw-cycle is row::cyclic or row::pblh.
-  static group dihedral_group_c(int nw, int nh = 0, int nt = 0);
-  static group dihedral_group_r(int nw, int nh = 0, int nt = 0);
-  static group cyclic_group_c(int nw, int nh = 0, int nt = 0);
-  static group cyclic_group_r(int nw, int nh = 0, int nt = 0);
+  // nw-cycle is row::cyclic or row::pblh.  D(n) is defined here 
+  // as a group of order 2n.
+  static group dihedral_c(int nw, int nh = 0, int nt = 0);
+  static group dihedral_r(int nw, int nh = 0, int nt = 0);
+  static group cyclic_c(int nw, int nh = 0, int nt = 0);
+  static group cyclic_r(int nw, int nh = 0, int nt = 0);
 
   static group direct_product( group const& a, group const& b );
 
   // Congugate by r to get { r^-1 g r : g \in *this }
   group conjugate( const row& r ) const; 
+  group even_subgroup() const;
 
   friend bool operator==( const group& a, const group& b );
   friend bool operator< ( const group& a, const group& b );

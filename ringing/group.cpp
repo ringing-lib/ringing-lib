@@ -121,30 +121,30 @@ group group::alternating_group(int nw, int nh, int nt)
   return g;
 }
 
-group group::trivial_group(int nt) 
+group group::trivial(int nt) 
 {
   return group( row(nt) ); 
 }
 
-group group::dihedral_group_c(int nw, int nh, int nt)
+group group::dihedral_c(int nw, int nh, int nt)
 {
   if (!nt) nt = nh + nw;
   return group( row::cyclic(nh+nw, nh), row::reverse_rounds(nw, nh, nt) );
 }
 
-group group::dihedral_group_r(int nw, int nh, int nt)
+group group::dihedral_r(int nw, int nh, int nt)
 {
   if (!nt) nt = nh + nw;
   return group( row::pblh(nh+nw, nh), row::reverse_rounds(nw, nh, nt) );
 }
 
-group group::cyclic_group_c(int nw, int nh, int nt)
+group group::cyclic_c(int nw, int nh, int nt)
 {
   if (!nt) nt = nh + nw;
   return group( row::cyclic(nh+nw, nh), row(nt) );
 }
 
-group group::cyclic_group_r(int nw, int nh, int nt)
+group group::cyclic_r(int nw, int nh, int nt)
 {
   if (!nt) nt = nh + nw;
   return group( row::pblh(nh+nw, nh), row(nt) );
@@ -226,6 +226,26 @@ group group::conjugate( const row& r ) const
   for ( vector<row>::const_iterator i( v.begin() ), e( v.end() );
 	i != e;  ++i )
     g.v.push_back( ri * *i * r );
+
+  // Keep it sorted so that comparison is cheap(ish)
+  sort( g.v.begin(), g.v.end() );
+  g.calc_orbit_space();
+
+  return g;
+}
+
+group group::even_subgroup() const
+{
+  group g;
+
+  g.b = b;
+  g.v.clear();
+  g.v.reserve( v.size() / 2 );
+
+  for ( vector<row>::const_iterator i( v.begin() ), e( v.end() );
+	i != e;  ++i )
+    if ( i->sign() == +1 ) 
+      g.v.push_back(*i);
 
   // Keep it sorted so that comparison is cheap(ish)
   sort( g.v.begin(), g.v.end() );
