@@ -384,7 +384,7 @@ void arguments::bind( arg_parser& p )
 	   quiet ) );
 
   p.add( new boolean_opt
-	 ( 'u', "quiet",
+	 ( 'u', "status",
 	   "Display the current status",
 	   status ) );
 
