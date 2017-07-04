@@ -1600,13 +1600,14 @@ int main( int argc, char* argv[] )
       if ( args.print_leads && s->length() >= args.min_leads 
 	   && ( !args.linkage || s->fully_linked() ) ) {
 	s->dump( cout );
-	cout << "\n\n\n" << endl;
+        if ( !args.quiet )
+          cout << "\n\n\n" << endl;
       }
 
       s->clear();
     }
 
-    if ( args.quiet )
+    if ( args.quiet && !args.print_leads )
       cout << mx << endl;
 
     return 0;
