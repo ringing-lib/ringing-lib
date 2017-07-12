@@ -1,5 +1,6 @@
 // -*- C++ -*- library.h - Things for method libraries
-// Copyright (C) 2001, 2002, 2004, 2009 Martin Bright <martin@boojum.org.uk>
+// Copyright (C) 2001, 2002, 2004, 2009, 2017 
+// Martin Bright <martin@boojum.org.uk>
 // and Richard Smith <richard@ex-parrot.com>.
 
 // This library is free software; you can redistribute it and/or
@@ -201,6 +202,13 @@ private:
   static list<init_function> libtypes;
   static string libpath;
 };
+
+
+
+// cc_collection_id is a general purpose ID for a number in printed 
+// method collections.  
+RINGING_DECLARE_LIBRARY_FACET( cc_collection_id, string );
+// For licensing reasons, we want this out of cclib.h (which is GPL'd)
 
 
 RINGING_END_NAMESPACE

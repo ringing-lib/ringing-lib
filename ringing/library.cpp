@@ -1,5 +1,6 @@
 // library.cpp : Libraryish things
-// Copyright (C) 2001, 2002, 2004, 2009 Martin Bright <martin@boojum.org.uk>
+// Copyright (C) 2001, 2002, 2004, 2009, 2017 
+// Martin Bright <martin@boojum.org.uk>
 // and Richard Smith <richard@ex-parrot.com>
 
 // This library is free software; you can redistribute it and/or
@@ -34,6 +35,8 @@
 RINGING_START_NAMESPACE
 
 RINGING_USING_STD
+
+RINGING_DEFINE_LIBRARY_FACET( cc_collection_id );
 
 list<library::init_function> library::libtypes;
 string library::libpath;

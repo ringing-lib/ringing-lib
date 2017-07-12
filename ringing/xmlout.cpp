@@ -1,5 +1,5 @@
 // -*- C++ -*- xmlout.cpp - Output of xml libraries
-// Copyright (C) 2004, 2008, 2009 Richard Smith <richard@ex-parrot.com>.
+// Copyright (C) 2004, 2008, 2009, 2017 Richard Smith <richard@ex-parrot.com>.
 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -227,6 +227,13 @@ void xmlout::impl::append( library_entry const& entry )
         refs_elt = meth_elt.add_elt( METHODS_XMLNS, "refs" );
       refs_elt.add_elt( METHODS_XMLNS, "rwref" )
         .add_content( entry.get_facet< rw_ref >() );
+    }
+  
+    if ( entry.has_facet< cc_collection_id >() ) {
+      if ( !refs_elt ) 
+        refs_elt = meth_elt.add_elt( METHODS_XMLNS, "refs" );
+      refs_elt.add_elt( METHODS_XMLNS, "ccc" )
+        .add_content( entry.get_facet< cc_collection_id >() );
     }
   }
 }

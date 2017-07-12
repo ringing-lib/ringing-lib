@@ -1,5 +1,5 @@
 // cclib.cpp - Read and write the Central Council Method libraries
-// Copyright (C) 2001, 2002, 2003, 2004, 2009, 2010, 2017
+// Copyright (C) 2001, 2002, 2003, 2004, 2009, 2010, 2016, 2017
 // Mark Banner <mark@standard8.co.uk> and
 // Richard Smith <richard@ex-parrot.com>
 
@@ -53,7 +53,6 @@ RINGING_START_NAMESPACE
 
 RINGING_USING_STD
 
-RINGING_DEFINE_LIBRARY_FACET( cc_collection_id );
 RINGING_DEFINE_LIBRARY_FACET( cclib::ref );
 
 class cclib::impl : public library_base {
@@ -146,8 +145,8 @@ class cclib::impl::entry_type : public library_entry::impl
   string::size_type ccc_end;
 
   // Method class & stage information
-  int b;
-  bool diff, little, plain;
+  int b, main_class;
+  bool diff, little, plain, block;
 };
 
 
@@ -179,7 +178,12 @@ cclib::impl::entry_type::entry_type()
     rw_end          ( string::npos ),
     ccc_start       ( string::npos ),
     ccc_end         ( string::npos ),
-    b               ( 0            )
+    b               ( 0            ),
+    main_class      ( 0            ),
+    diff            ( false        ),
+    little          ( false        ),
+    plain           ( false        ),
+    block           ( false        )
 {}
 
 bool cclib::impl::entry_type::readentry( library_base &lb )
@@ -227,7 +231,8 @@ bool cclib::impl::entry_type::readentry( library_base &lb )
 	}
       else if ( linebuf.find( "methods" ) != string::npos ||
 		linebuf.find( "principles" ) != string::npos ||
-		linebuf.find( "differentials" ) != string::npos )
+		linebuf.find( "differentials" ) != string::npos ||
+		linebuf.find( "blocks" ) != string::npos )
 	{
 	  parse_title();
 	}
@@ -243,21 +248,33 @@ void cclib::impl::entry_type::parse_title()
 
   // Find out a few characteristics of the method class - we need
   // them to sort out the method name later
-  diff = ( linebuf.find( "differential " ) != string::npos )
+  diff = ( linebuf.find( "differentials" ) != string::npos )
     || ( linebuf.find( "Differential ") != string::npos );
   little = ( linebuf.find( "Little " ) != string::npos );
-  plain = ( linebuf.find( "Treble Place " ) == string::npos )
-    && ( linebuf.find( "Alliance " ) == string::npos )
-    && ( linebuf.find( "Hybrid " ) == string::npos )
-    && ( linebuf.find( "Surprise " ) == string::npos )
-    && ( linebuf.find( "Delight " ) == string::npos )
-    && ( linebuf.find( "Treble Bob " ) == string::npos );
+  block = linebuf.find( "blocks" ) != string::npos;
+
+  if ( linebuf.find( "Treble Place " ) != string::npos )
+    main_class = method::M_TREBLE_PLACE;
+  else if ( linebuf.find( "Alliance " ) != string::npos )
+    main_class = method::M_ALLIANCE;
+  else if ( linebuf.find( "Hybrid " ) != string::npos )
+    main_class = method::M_HYBRID;
+  else if ( linebuf.find( "Surprise " ) != string::npos )
+    main_class = method::M_SURPRISE;
+  else if ( linebuf.find( "Delight " ) != string::npos )
+    main_class = method::M_DELIGHT;
+  else if ( linebuf.find( "Treble Bob " ) != string::npos )
+    main_class = method::M_TREBLE_BOB;
+  else {
+    main_class = method::M_UNKNOWN;
+    plain = true;
+  }
 
   // Read the stage name
   for ( int i=3; i<=22; ++i )
     if ( linebuf.find( string( method::stagename(i) ) + 
-		       string( meth ? " methods" : 
-			       prin ? " principles" : " differentials" ) )
+		       string( meth ? " methods" : prin ? " principles" :
+                               block ? " blocks" : " differentials" ) )
 	 != string::npos )
       {
 	b = i;
@@ -369,11 +386,22 @@ string cclib::impl::entry_type::name() const
     n = wrapped_name.substr( meth_name_starts, string::npos );
 
   // Remove whitespace from end of method name
-  string::const_iterator i = n.end();
+  string::iterator i = n.end();
   while ( i > n.begin() && isspace( i[-1] ) )
     --i;
 
-  return n.substr( 0, i - n.begin() );
+  n.erase(i, n.end());
+
+  if (diff && n.find(method::classname( method::M_DIFFERENTIAL ))
+                   == string::npos )
+    n.append(" " + method::classname( method::M_DIFFERENTIAL ));
+  string cl(" "); cl.append( method::classname(main_class) );
+  if (main_class && n.find(cl) == string::npos )
+    n.append(cl);
+  if (block && n.find(" Block") == string::npos )
+    n.append(" Block");
+
+  return n;
 }
 
 bool cclib::impl::entry_type::has_facet( const library_facet_id& id ) const
@@ -467,6 +495,8 @@ string cclib::impl::entry_type::base_name() const
   // "selected" classes.  "The selected classes are Bob, Little, Place 
   // and Slow Course."  It also appears that for Differential Hunters 
   // (but not Differentials) have "Differential" in their name.
+  if(block)
+    maybe_strip_class( newname, "Block" );
 
   if(plain)
     maybe_strip_class( newname, method::classname( method::M_BOB ) ) ||
