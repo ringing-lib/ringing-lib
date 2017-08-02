@@ -37,7 +37,14 @@
 #include <xercesc/dom/DOMElement.hpp>
 #include <xercesc/dom/DOMCharacterData.hpp>
 #include <xercesc/dom/DOMImplementation.hpp>
+#if XERCES_VERSION_MAJOR >= 3
+#include <xercesc/dom/DOMImplementationLS.hpp>
+#include <xercesc/dom/DOMLSSerializer.hpp>
+#include <xercesc/dom/DOMLSOutput.hpp>
+#include <xercesc/dom/DOMConfiguration.hpp>
+#else
 #include <xercesc/dom/DOMWriter.hpp>
+#endif
 #include <xercesc/util/PlatformUtils.hpp>
 #include <xercesc/util/XMLURL.hpp>
 #include <xercesc/framework/StdOutFormatTarget.hpp>
@@ -120,7 +127,12 @@ struct dom_document::impl
 
   DOMImplementation* domimpl;
   DOMDocument* doc;
+#if XERCES_VERSION_MAJOR >= 3
+  scoped_pointer< DOMLSSerializer > ser;
+  scoped_pointer< DOMLSOutput > output;
+#else
   scoped_pointer< DOMWriter > writer;
+#endif
   scoped_pointer< XercesDOMParser > parser;
   scoped_pointer< XMLFormatTarget > target;
 };
@@ -138,26 +150,54 @@ dom_document::dom_document( string const& filename, io mode, filetype type )
 {
   if ( mode == out ) {
     // "LS" means we require the "Load and Save" feature
-    pimpl->domimpl 
-      = DOMImplementationRegistry::getDOMImplementation( TRANSCODE_O("LS") );
-  
-    if ( pimpl->domimpl ) {
-      pimpl->writer.reset( pimpl->domimpl->createDOMWriter() );
-  
-      // Turn pretty-printing on.  (TODO: Make this optional.)
-      if ( pimpl->writer->canSetFeature
-             ( XMLUni::fgDOMWRTFormatPrettyPrint, true ) )
-        pimpl->writer->setFeature( XMLUni::fgDOMWRTFormatPrettyPrint, true );
-    }
-  
-    if ( type == file ) 
+    pimpl->domimpl
+    = DOMImplementationRegistry::getDOMImplementation( TRANSCODE_O("LS") );
+    if(!pimpl->domimpl)
+      throw runtime_error("Failed to create XML an document");
+    
+    if ( type == file )
       pimpl->target.reset( new LocalFileFormatTarget(filename.c_str()) );
     else if ( type == stdio )
       pimpl->target.reset( new StdOutFormatTarget );
-  
-    if ( !pimpl->domimpl || !pimpl->writer || !pimpl->target )
+    if(!pimpl->target)
+      throw runtime_error( "Failed to open XML document for output");
+
+#if XERCES_VERSION_MAJOR >= 3
+    
+    pimpl->ser.reset(pimpl->domimpl->createLSSerializer());
+    
+    if (pimpl->ser) {
+      // Turn pretty-printing on.  (TODO: Make this optional.)
+      DOMConfiguration* config = pimpl->ser->getDomConfig();
+      transcode_output pp("format-pretty-print");
+      if( config->canSetParameter(pp.to_string(), true) )
+      config->setParameter(pp.to_string(), true);
+    }
+    
+    pimpl->output.reset(pimpl->domimpl->createLSOutput());
+    
+    if (pimpl->output) {
+      pimpl->output->setEncoding( TRANSCODE_O("UTF-8") );
+      pimpl->output->setByteStream(pimpl->target.get());
+    }
+    
+    if(!pimpl->ser || !pimpl->output)
       throw runtime_error( "Failed to create an XML document" );
-  } 
+    
+#else
+    
+    pimpl->writer.reset( pimpl->domimpl->createDOMWriter() );
+    if (!pimpl->writer)
+      throw runtime_error( "Failed to create an XML document" );
+    
+    // Turn pretty-printing on.  (TODO: Make this optional.)
+    if ( pimpl->writer->canSetFeature
+        ( XMLUni::fgDOMWRTFormatPrettyPrint, true ) )
+    pimpl->writer->setFeature( XMLUni::fgDOMWRTFormatPrettyPrint, true );
+  
+#endif
+    
+  }
   else if ( mode == in ) { 
     pimpl->parser.reset( new XercesDOMParser );
     pimpl->parser->setDoNamespaces(true);
@@ -196,9 +236,14 @@ dom_document::dom_document( string const& filename, io mode, filetype type )
 
 void dom_document::finalise()
 {
+#if XERCES_VERSION_MAJOR >= 3
+  if (pimpl->ser && pimpl->target && pimpl->output && pimpl->doc) {
+    pimpl->ser->write(pimpl->doc, pimpl->output.get());
+#else
   if ( pimpl->writer && pimpl->target && pimpl->doc ) {
     pimpl->writer->writeNode(pimpl->target.get(), *pimpl->doc);
-
+#endif
+    
     // Safe against multiple flushes
     pimpl->doc->release(); pimpl->doc = NULL;
   }
