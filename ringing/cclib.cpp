@@ -578,7 +578,7 @@ cclib::impl::impl(const string& filename)
   if(f.good()) {
     string s;
     getline(f,s);
-    if(s.find("Copyright Central Council of Church Bell Ringers")
+    if(s.find("Copyright ")
        != string::npos)
       _good = 1;
   }
