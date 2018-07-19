@@ -103,7 +103,7 @@ public:
   void set_options(const printrow::options& o) { opt = o; }
   const printrow::options& get_options() { return opt; }
   void dot(int i); 
-  void placebell(int i);
+  void placebell(int i, int dir = 0);
   void text(const string& t, const dimension& x, 
 	    text_style::alignment al, bool between, bool right);
 };

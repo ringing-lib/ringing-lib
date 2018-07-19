@@ -39,6 +39,7 @@
 #else
 #include <iomanip>
 #endif
+#include <cmath>
 #include <ringing/streamutils.h>
 #include <ringing/print_pdf.h>
 
@@ -259,6 +260,20 @@ void printpage_pdf::circle(float x, float y, float r, char op)
     << op << '\n';
 }
 
+void printpage_pdf::arrow(float x0, float y0, float x1, float y1, 
+                          float headsize)
+{
+  float theta = atan2(y1-y0, x1-x0);
+  f << x0 << ' ' << y0 << " m "
+    << x1 << ' ' << y1 << " l "
+    << x1-headsize/2*cos(theta + 3.1416/6) << ' ' 
+    << y1-headsize/2*sin(theta + 3.1416/6) << " m "
+    << x1 << ' ' << y1 << " l "
+    << x1-headsize/2*cos(theta - 3.1416/6) << ' ' 
+    << y1-headsize/2*sin(theta - 3.1416/6) << " l "
+    << "S\n"; // "h B\n";
+}
+
 void printpage_pdf::text(const string t, const dimension& x, 
 			const dimension& y, text_style::alignment al, 
 			const text_style& s)
@@ -446,6 +461,14 @@ void printrow_pdf::end_column()
     circles.clear();
   }
 
+  // Draw arrows
+  {
+    list<arrow_pdf>::iterator i;
+    for(i = arrows.begin(); i != arrows.end(); i++)
+      (*i).output(pp);
+    arrows.clear();
+  }
+
   // Draw the lines
   if(!drawlines.empty()) {
     list<drawline_pdf>::iterator i;
@@ -509,18 +532,28 @@ void printrow_pdf::dot(int i)
   }
 }
 
-void printrow_pdf::placebell(int i)
+void printrow_pdf::placebell(int i, int dir)
 {
   int j = 0;
   while(j < lastrow.bells() && lastrow[j] != i) j++;
   if(j < lastrow.bells()) {
-    circles.push_back(circle_pdf(currx + (lastrow.bells() + 0.5f) 
-				 * opt.xspace.in_points(),
-				 curry - (count - 1) 
-				 * opt.yspace.in_points(),
-				 opt.style.size * 0.07f, 'S'));
+    float radius = opt.style.size * 0.07f;
+    float xoff = lastrow.bells() + 0.5f;
+    xoff *= opt.xspace.in_points();
+    if (dir < 0) xoff += 2 * radius;
+    float yoff = (count - 1) * opt.yspace.in_points();
+
+    circles.push_back(circle_pdf(currx + xoff, curry - yoff, radius, 'S'));
+    if (dir > 0)
+      arrows.push_back(arrow_pdf(currx + xoff, curry - yoff - radius,
+                                 currx + xoff, curry - yoff - 2.5*radius, 
+                                 radius));
+    else if (dir < 0)
+      arrows.push_back(arrow_pdf(currx + xoff, curry - yoff + radius,
+                                 currx + xoff, curry - yoff + 2.5*radius,
+                                 radius));
     text_bit tb;
-    tb.x = (lastrow.bells() + 0.5f) * opt.xspace.in_points();
+    tb.x = xoff;
     tb.y = (count - 1) * opt.yspace.in_points();
     tb.al = text_style::centre;
     tb.squash = (j >= 10);
@@ -601,6 +634,13 @@ void circle_pdf::output(printpage_pdf& pp)
   pp.gsave();
   if(set_colour) pp.set_colour(c, (op == 'f'));
   pp.circle(x, y, r, op);
+  pp.grestore();
+}
+
+void arrow_pdf::output(printpage_pdf& pp)
+{
+  pp.gsave();
+  pp.arrow(x0, y0, x1, y1, headsize);
   pp.grestore();
 }
 

@@ -61,6 +61,7 @@ struct arguments {
   printmethod::number_mode_t number_mode;
   int pn_mode;
   int placebells;
+  bool reverse_placebells;
   bool landscape;
   dimension width, height;
   bool fit;
@@ -219,8 +220,10 @@ void setup_args(arg_parser& p)
   p.add(new myopt('n', "no-numbers", "Don't print numbers: print only lines"));
   p.add(new myopt('b', "place-bells", "Print place bells for"
     " BELL.  If BELL is not specified, print place bells for the first"
-    " working bell which has a line drawn.  If BELL is `x', don't print"
-		  " place bells.", "BELL|x", true));
+    " working bell which has a line drawn.  If BELL is `x' or `none', don't"
+    " print place bells.  If BELL is `default', select the bell automatically."
+    " If `rev' is appended, show reverse place bells too.",
+    "BELL|x|none|default[,rev]", true));
   p.add(new myopt('p', "place-notation", "Print place"
     " notation for the first lead, every lead, or no leads.  The default is"
     " to print place notation for the first lead.  Append ,nox to omit `X'"
@@ -454,19 +457,30 @@ bool myopt::process(const string& arg, const arg_parser& ap) const
     case 'b' :
       if(!arg.empty()) {
 	s = arg.begin();
-	if(*s == 'X' || *s == 'x')
-	  args.placebells = -1;
-	else {
-	  bell b;
-	  try {
-	    b.from_char(*s);
-	  }
-	  catch(bell::invalid e) {
-	    cerr << "Invalid bell: '" << *s << "'\n";
-	    return false;
-	  }
-	  args.placebells = b;
-	}
+	while (s != arg.end()) {
+          string a = next_bit(arg, s);
+          if(a == "X" || a == "x" || a == "none")
+            args.placebells = -1;
+          else if(a == "def" || a == "default")
+            args.placebells = -2;
+          else if(a == "rev" || a == "reverse")
+            args.reverse_placebells = true;
+          else if (a.length() == 1) {
+            bell b;
+            try {
+              b.from_char(a[0]);
+            }
+            catch(bell::invalid e) {
+              cerr << "Invalid bell: '" << *s << "'\n";
+              return false;
+            }
+            args.placebells = b;
+          }
+          else {
+            cerr << "Unrecognised argument: \"" << arg << "\"\n";
+            return false;
+          }
+        }
       }
       break;
     case 't' :
@@ -730,6 +744,7 @@ int main(int argc, char *argv[])
 	}
     } else
       pm.placebells = args.placebells;
+    pm.reverse_placebells = args.reverse_placebells;
     pm.opt.flags = args.numbers ? printrow::options::numbers : 0;
     if(args.pn_mode == -1)
       pm.pn_mode = printmethod::pn_first;

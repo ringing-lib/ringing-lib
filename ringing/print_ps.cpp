@@ -396,7 +396,7 @@ void printrow_ps::dot(int i)
   }
 }
 
-void printrow_ps::placebell(int i)
+void printrow_ps::placebell(int i, int dir)
 {
   fill_gap();
   int j = 0;

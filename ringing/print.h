@@ -95,7 +95,7 @@ public:
     virtual void set_options(const options& o) = 0;
     virtual const options& get_options() = 0;
     virtual void dot(int i) = 0;
-    virtual void placebell(int i) = 0;
+    virtual void placebell(int i, int dir = 0) = 0;
     virtual void text(const string& t, const dimension& x, 
 		      text_style::alignment al, bool between, bool right) = 0;
   };
@@ -124,8 +124,8 @@ public:
     { return pr->get_options(); } 
   void dot(int i)
     { pr->dot(i); }
-  void placebell(int i)
-    { pr->placebell(i); } 
+  void placebell(int i, int dir = 0)
+    { pr->placebell(i, dir); } 
   void text(const string& t, const dimension& x, 
 	    text_style::alignment al, bool between, bool right)
     { pr->text(t, x, al, between, right); }

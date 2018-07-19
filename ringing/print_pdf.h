@@ -169,6 +169,20 @@ public:
   RINGING_FAKE_ASSIGNMENT( circle_pdf )
 };
 
+class RINGING_API arrow_pdf {
+private:
+  float x0, y0, x1, y1, headsize;
+
+public:
+  arrow_pdf(float x0, float y0, float x1, float y1, float headsize) :
+    x0(x0), y0(y0), x1(x1), y1(y1), headsize(headsize) {}
+  void output(printpage_pdf& pp);
+
+  RINGING_FAKE_DEFAULT_CONSTRUCTOR( arrow_pdf )
+  RINGING_FAKE_COMPARATORS( arrow_pdf )
+  RINGING_FAKE_ASSIGNMENT( arrow_pdf )
+};
+
 struct text_bit {
   float x, y;
   text_style::alignment al;
@@ -192,6 +206,7 @@ private:
   list<text_bit> text_bits;
   list<rule_pdf> rules;
   list<circle_pdf> circles;
+  list<arrow_pdf> arrows;
 
   list<drawline_pdf> drawlines;
   friend class drawline_pdf;
@@ -213,7 +228,7 @@ public:
   void set_options(const printrow::options& o) { opt = o; }
   const printrow::options& get_options() { return opt; }
   void dot(int i); 
-  void placebell(int i);
+  void placebell(int i, int dir = 0);
   void text(const string& t, const dimension& x, 
 	    text_style::alignment al, bool between, bool right);
 };
@@ -236,6 +251,7 @@ private:
   friend class printrow_pdf;
   friend class drawline_pdf;
   friend class circle_pdf;
+  friend class arrow_pdf;
   printrow::base* new_printrow(const printrow::options& o) 
     { return new printrow_pdf(*this, o); }
 
@@ -243,6 +259,7 @@ protected:
   void set_colour(const colour& c, bool nonstroke = false);
   void landscape_mode();
   void circle(float x, float y, float r, char op);
+  void arrow(float x0, float y0, float x1, float y1, float headsize);
   void gsave() { f << "q\n"; }
   void grestore() {f << "Q\n"; }
 };

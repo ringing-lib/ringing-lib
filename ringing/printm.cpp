@@ -47,6 +47,7 @@ void printmethod::defaults()
   yoffset = (opt.yspace * (m->length() * 2 + 3)) / 2;
   number_mode = miss_lead;
   pn_mode = pn_first;
+  reverse_placebells = false;
 
   // Set up the lines
   change c = (*m)[m->length() - 1];
@@ -157,7 +158,7 @@ void printmethod::print(printpage& pp)
 	      pr.set_options(opt);
 	    }
 	    if(placebells >= 0)// Print place bell
-	      pr.placebell(placebells);
+	      pr.placebell(placebells, reverse_placebells ? +1 : 0);
 	    if(!(opt.flags & printrow::options::numbers))
 	      pr.dot(-1);
 	  } else if(i == (int) (b.size() - 2)) {
@@ -173,6 +174,12 @@ void printmethod::print(printpage& pp)
 	      opt.flags &= ~printrow::options::miss_numbers;
 	      pr.set_options(opt);
 	    }
+            if (reverse_placebells && row_count != total_rows - 1) {
+              if(placebells >= 0)
+ 	        pr.placebell(placebells, -1);
+	      if(!(opt.flags & printrow::options::numbers))
+	        pr.dot(-1); 
+            }
 	  }
 	  if(number_mode == miss_column && row_count == rows_per_column - 1) {
 	    // Last row of a column - print the numbers
