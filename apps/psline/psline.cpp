@@ -32,6 +32,7 @@
 #include <ringing/printm.h>
 #include <ringing/print_ps.h>
 #include <ringing/print_pdf.h>
+#include <ringing/print_svg.h>
 #include <ringing/mslib.h>
 #include <ringing/cclib.h>
 #include <ringing/streamutils.h>
@@ -41,7 +42,7 @@
 using namespace ringing;
 #endif
 
-enum format_t { ps, eps, pdf };
+enum format_t { ps, eps, pdf, svg };
 
 struct arguments {
   string output_file;
@@ -189,6 +190,8 @@ void setup_args(arg_parser& p)
 		  "Generate an Encapsulated PostScript (EPS) file"));
   p.add(new myopt('P', "pdf", 
 		  "Generate a Portable Document Format (PDF) file"));
+  p.add(new myopt('z', "svg",
+                  "Generate a Scalable Vector Graphics (SVG) file"));
   p.add(new myopt('t', "title",
     "Print TITLE above the method, using the font, size and colour"
     " specified.  In the string TITLE, the character `$' stands for the"
@@ -297,6 +300,9 @@ bool myopt::process(const string& arg, const arg_parser& ap) const
       break;
     case 'P' :
       args.format = pdf;
+      break;
+    case 'z' :
+      args.format = svg;
       break;
     case 'n' :
       args.numbers = false;
@@ -842,48 +848,54 @@ int main(int argc, char *argv[])
 			       : args.title_style.size * 0.2f)) / 2, 1);
     }
 
-    // Find a stream to write to
-    ostream* os = &cout;
-    ofstream ofs;
-    if(!args.output_file.empty()) { // Open the output file
-      ofs.open(args.output_file.c_str(), ios::binary);
-      if(!ofs.good()) {
-	cerr << argv[0] << ": Can't open output file " << args.output_file
-	     << endl;
-	return 1;
-      }
-      os = &ofs;
-    }
-
     dimension titlex, titley;
-    titlex.set_float(pm.xoffset.in_points() 
-		     + (urx + blx) / 2, 1);
+    titlex.set_float(pm.xoffset.in_points()
+                     + (urx + blx) / 2, 1);
     titley.set_float(pm.yoffset.in_points() + ury
-		     + args.title_style.size * 0.1f, 1);
+                     + args.title_style.size * 0.1f, 1);
     int i = args.title.find('$');
     if(i != (int) args.title.npos) args.title.replace(i, 1, m.fullname());
-
-    // Create a printpage object
+    
     printpage* pp = NULL;
-    switch(args.format) {
-      case eps :
-	pp = new printpage_ps(*os, 0, 0, int(urx-blx), 
-			      int(ury-bly
-				   + (args.title.empty() ? 0 
-				      : args.title_style.size * 0.2)));
-	break;
-      case ps:
-	if(args.landscape)
-	  pp = new printpage_ps(*os, args.height);
-	else
-	  pp = new printpage_ps(*os);
-	break;
-      case pdf:
-	if(args.landscape)
-	  pp = new printpage_pdf(*os, args.height, args.width, true);
-	else
-	  pp = new printpage_pdf(*os, args.width, args.height);
-	break;
+
+    if(args.format == svg) { // Pass the file name
+      // TODO: handle stdout
+      pp = new printpage_svg(args.output_file.c_str());
+      // TODO: error handling
+    } else { // First open a stream
+      ostream* os = &cout;
+      ofstream ofs;
+      if(!args.output_file.empty()) { // Open the output file
+        ofs.open(args.output_file.c_str(), ios::binary);
+        if(!ofs.good()) {
+          cerr << argv[0] << ": Can't open output file " << args.output_file
+          << endl;
+          return 1;
+        }
+        os = &ofs;
+      }
+
+      // Create a printpage object
+      switch(args.format) {
+        case eps :
+          pp = new printpage_ps(*os, 0, 0, int(urx-blx),
+                                int(ury-bly
+                                    + (args.title.empty() ? 0
+                                       : args.title_style.size * 0.2)));
+          break;
+        case ps:
+          if(args.landscape)
+            pp = new printpage_ps(*os, args.height);
+          else
+            pp = new printpage_ps(*os);
+          break;
+        case pdf:
+          if(args.landscape)
+            pp = new printpage_pdf(*os, args.height, args.width, true);
+          else
+            pp = new printpage_pdf(*os, args.width, args.height);
+          break;
+      }
     }
 
     // Print the method!
