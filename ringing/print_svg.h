@@ -37,12 +37,14 @@
 #include <set.h>
 #include <iostream.h>
 #include <iomanip.h>
+#include <sstream.h>
 #else
 #include <list>
 #include <map>
 #include <set>
 #include <iostream>
 #include <iomanip>
+#include <sstream>
 #endif
 #include <ringing/print.h>
 #include <ringing/dom.h>
@@ -59,14 +61,15 @@ private:
   const printrow_svg& p;
   bell bellno;
   printrow::options::line_style s;
-  dom_element path;
+  string data;
   int curr;
   
 public:
   drawline_svg(const printrow_svg& pr, bell b,
-              printrow::options::line_style st) :
-  p(pr), bellno(b), s(st), curr(-1) {}
+               printrow::options::line_style st);
+
   void add(const row& r);
+  void output(dom_element parent);
   
   RINGING_FAKE_DEFAULT_CONSTRUCTOR( drawline_svg )
   RINGING_FAKE_COMPARATORS( drawline_svg )
@@ -114,9 +117,10 @@ protected:
   static const char* ns;
   dom_document doc;
   dom_element root;
+  int ph;
   
 public:
-  printpage_svg(const string& filename);
+  printpage_svg(const string& filename, const dimension& w, const dimension& h);
   ~printpage_svg();
   void text(const string t, const dimension& x, const dimension& y,
        text_style::alignment al, const text_style& s);
@@ -130,8 +134,10 @@ private:
     { return new printrow_svg(*this, o); }
 
 protected:
-  string convert_dim(const dimension& d);
-  string convert_col(const colour& c);
+  static string convert_dim(const dimension& d);
+  static string format_float(float f);
+  static string convert_col(const colour& c);
+  static string convert_font(const text_style& s);
 };
 
 RINGING_END_NAMESPACE

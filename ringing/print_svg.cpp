@@ -24,7 +24,6 @@
 #endif
 
 #include <iterator>
-#include <sstream>
 
 #include <ringing/print_svg.h>
 
@@ -34,11 +33,63 @@ RINGING_USING_STD
 
 const char* printpage_svg::ns = "http://www.w3.org/2000/svg";
 
-// TODO: handle stdout as well
-printpage_svg::printpage_svg(string const& filename)
-: doc(filename, dom_document::out, dom_document::file),
-root(doc.create_document(ns, "svg"))
+string printpage_svg::convert_col(const colour& c)
 {
+  ostringstream os;
+  if(c.grey) {
+    int n = static_cast<int>(c.red * 255);
+    os << "rgb(" << n << ',' << n << ',' << n << ')';
+  } else
+    os << "rgb(" << static_cast<int>(c.red * 255)
+      << ',' << static_cast<int>(c.green * 255)
+      << ',' << static_cast<int>(c.blue * 255) << ')';
+  return os.str();
+}
+
+string printpage_svg::convert_dim(const dimension& d)
+{
+  ostringstream os;
+  os << setprecision(2) << fixed << static_cast<float>(d.n) / d.d;
+  switch(d.u) {
+    case dimension::points:
+      os << "pt";
+      break;
+    case dimension::inches:
+      os << "in";
+      break;
+    case dimension::cm:
+      os << "cm";
+      break;
+    case dimension::mm:
+      os << "mm";
+      break;
+  }
+  return os.str();
+}
+
+string printpage_svg::format_float(float f)
+{
+  ostringstream os;
+  os << setprecision(2) << fixed << f;
+  return os.str();
+}
+
+// TODO: do this properly
+string printpage_svg::convert_font(const text_style& s)
+{
+  ostringstream os;
+  os << s.font << ' ' << fixed << setprecision(1) << static_cast<float>(s.size)/10 << "pt";
+  return os.str();
+}
+
+// TODO: handle stdout as well
+printpage_svg::printpage_svg(string const& filename, const dimension& w, const dimension& h)
+: doc(filename, dom_document::out, dom_document::file), ph(static_cast<int>(h.in_points() * 4/3))
+{
+  root = doc.create_document(ns, "svg");
+  root.add_attr(ns, "version", "1.1");
+  root.add_attr(ns, "width", convert_dim(w).c_str());
+  root.add_attr(ns, "height", convert_dim(h).c_str());
 }
 
 printpage_svg::~printpage_svg()
@@ -51,12 +102,12 @@ void printpage_svg::text(const string t, const dimension& x, const dimension& y,
 {
   dom_element e = root.add_elt(ns, "text");
   e.add_content(t);
-  e.add_attr(ns, "x", convert_dim(x).c_str());
-  e.add_attr(ns, "y", convert_dim(y).c_str());
+  e.add_attr(ns, "x", format_float(x.in_points() * 4/3).c_str());
+  e.add_attr(ns, "y", format_float(ph - y.in_points() * 4/3).c_str());
   if(al != text_style::left)
     e.add_attr(ns, "text-anchor", al == text_style::right ? "end" : "middle");
   e.add_attr(ns, "font", s.font.c_str());
-  e.add_attr(ns, "font-size", to_string(s.size).c_str());
+  e.add_attr(ns, "font-size", format_float(s.size / 10 * 4/3).c_str());
   e.add_attr(ns, "fill", convert_col(s.col).c_str());
 }
 
@@ -67,15 +118,15 @@ void printpage_svg::new_page()
 void printrow_svg::set_position(const dimension& x, const dimension& y)
 {
   if(in_column) end_column();
-  currx = x.in_points();
-  curry = y.in_points();
+  currx = x.in_points() * 4/3;
+  curry = pp.ph - y.in_points() * 4/3;
 }
 
 void printrow_svg::move_position(const dimension& x, const dimension& y)
 {
   if(in_column) end_column();
-  currx += x.in_points();
-  curry += y.in_points();
+  currx += x.in_points() * 4/3;
+  curry -= y.in_points() * 4/3;
 }
 
 void printrow_svg::start_column()
@@ -84,11 +135,13 @@ void printrow_svg::start_column()
   col = pp.root.add_elt(printpage_svg::ns, "g");
   // Translate the group to the current position
   ostringstream os;
-  os << "transform(" << fixed << setprecision(2) << currx << ',' << curry << ')';
-  col.add_attr(printpage_svg::ns, "translate", os.str().c_str());
+  os << "translate(" << fixed << setprecision(2) << currx << ',' << curry << ')';
+  col.add_attr(printpage_svg::ns, "transform", os.str().c_str());
   // Create a text element inside it
   numbers = col.add_elt(printpage_svg::ns, "text");
   numbers.add_attr(printpage_svg::ns, "text-anchor", "middle");
+  numbers.add_attr(printpage_svg::ns, "font", printpage_svg::convert_font(opt.style).c_str());
+  numbers.add_attr(printpage_svg::ns, "fill", printpage_svg::convert_col(opt.style.col).c_str());
   // Create a drawline object for each line
   map<bell, printrow::options::line_style>::iterator i;
   for(i = opt.lines.begin(); i != opt.lines.end(); i++)
@@ -99,7 +152,13 @@ void printrow_svg::start_column()
 
 void printrow_svg::end_column()
 {
-  
+  if(!drawlines.empty()) {
+    list<drawline_svg>::iterator i;
+    for(i = drawlines.begin(); i != drawlines.end(); i++)
+      (*i).output(col);
+    drawlines.erase(drawlines.begin(), drawlines.end());
+  }
+  in_column = false;
 }
 
 void printrow_svg::print(const row& r)
@@ -117,7 +176,7 @@ void printrow_svg::print(const row& r)
          && ((i = opt.lines.find(r[j])) != opt.lines.end())
            && !((*i).second.crossing))) {
         s += r[j].to_char();
-        pos.push_back(j * opt.xspace.in_points());
+        pos.push_back(j * opt.xspace.in_points() * 4/3);
       }
     if(!s.empty()) {
       // Create a tspan element
@@ -136,27 +195,54 @@ void printrow_svg::print(const row& r)
       {
         // Add a y-coordinate
         ostringstream os;
-        os << fixed << setprecision(2) << count * opt.yspace.in_points();
+        os << fixed << setprecision(2) << count * opt.yspace.in_points() * 4/3;
         ts.add_attr(printpage_svg::ns, "y", os.str().c_str());
       }
+      // Add the correct vertical alignment
+      ts.add_attr(printpage_svg::ns, "alignment-baseline", "middle");
     }
   }
-  count++;
-  lastrow = r;
-  
-  // Add the various bits of lines to the end of the line
+    // Add the various bits of lines to the end of the line
   list<drawline_svg>::iterator i;
   for(i = drawlines.begin(); i != drawlines.end(); i++)
     (*i).add(r);
+
+  count++;
+  lastrow = r;
 }
 
 void printrow_svg::rule()
 {
+  dom_element e = col.add_elt(printpage_svg::ns, "line");
+  e.add_attr(printpage_svg::ns, "x1", printpage_svg::format_float(-opt.xspace.in_points() * 4/3 / 2).c_str());
+  e.add_attr(printpage_svg::ns, "x2", printpage_svg::format_float((opt.xspace.in_points() * 4/3 * (2*lastrow.bells()-1))/2).c_str());
+  e.add_attr(printpage_svg::ns, "y1", printpage_svg::format_float((count + 0.5) * opt.yspace.in_points() * 4/3).c_str());
+  e.add_attr(printpage_svg::ns, "y2", printpage_svg::format_float((count + 0.5) * opt.yspace.in_points() * 4/3).c_str());
+  e.add_attr(printpage_svg::ns, "stroke", printpage_svg::convert_col(opt.style.col).c_str());
 }
 
 void printrow_svg::dot(int i)
 {
-  
+  if(i == -1) { // Draw dots for all bells that have lines
+    map<bell, printrow::options::line_style>::const_iterator j;
+    for(j = opt.lines.begin(); j != opt.lines.end(); j++)
+      if(!(*j).second.crossing) dot((*j).first);
+  } else { // Draw dot for one bell
+    int j = 0;
+    while(j < lastrow.bells() && lastrow[j] != i) j++; // Find the position of the bell
+    if(j < lastrow.bells()) {
+      map<bell, printrow::options::line_style>::const_iterator k;
+      k = opt.lines.find(i); // Find the style information
+      if(k != opt.lines.end()) {
+        dom_element e = col.add_elt(printpage_svg::ns, "circle");
+        e.add_attr(printpage_svg::ns, "cx", printpage_svg::format_float(opt.xspace.in_points() * 4/3 * j).c_str());
+        e.add_attr(printpage_svg::ns, "cy", printpage_svg::format_float(opt.yspace.in_points() * 4/3 * (count-1)).c_str());
+        e.add_attr(printpage_svg::ns, "fill", printpage_svg::convert_col((*k).second.col).c_str());
+        e.add_attr(printpage_svg::ns, "stroke", "none");
+        e.add_attr(printpage_svg::ns, "r", printpage_svg::format_float((*k).second.width.in_points() * 2 * 4/3).c_str());
+      }
+    }
+  }
 }
 
 void printrow_svg::placebell(int i)
@@ -175,9 +261,39 @@ void printrow_svg::grid()
   
 }
 
+drawline_svg::drawline_svg(const printrow_svg& pr, bell b,
+             printrow::options::line_style st)
+  : p(pr), bellno(b), s(st), curr(-1)
+{
+}
+
 void drawline_svg::add(const row& r)
 {
-  
+  // Find our bell in the row
+  int j;
+  for(j = 0; j < r.bells() && r[j] != bellno; j++);
+  if(j == r.bells()) j = -1; // Not found
+  if(j != -1) {
+    ostringstream os;
+    os << setprecision(2) << fixed;
+    // If the bell was not in the previous row, do a moveto
+    if(curr == -1)
+      os << 'M' << p.opt.xspace.in_points() * 4/3 * j << ' ' << p.opt.yspace.in_points() * 4/3 * p.count;
+    else { // Do a lineto
+      os << 'L' << p.opt.xspace.in_points() * 4/3 * j << ' ' << p.opt.yspace.in_points() * 4/3 * p.count;
+    }
+    data += os.str();
+  }
+  curr = j;
+}
+
+void drawline_svg::output(dom_element parent)
+{
+  dom_element path = parent.add_elt(printpage_svg::ns, "path");
+  path.add_attr(printpage_svg::ns, "d", data.c_str());
+  path.add_attr(printpage_svg::ns, "fill", "none");
+  path.add_attr(printpage_svg::ns, "stroke", printpage_svg::convert_col(s.col).c_str());
+  path.add_attr(printpage_svg::ns, "stroke-width", printpage_svg::convert_dim(s.width).c_str());
 }
 
 RINGING_END_NAMESPACE
