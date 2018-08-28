@@ -86,6 +86,7 @@ private:
   printrow::options opt;
   dom_element col;
   dom_element numbers;
+  dom_element grid;
   
   list<drawline_svg> drawlines;
   friend class drawline_svg;
@@ -94,7 +95,7 @@ private:
 //  void start();
   void start_column();
   void end_column();
-  void grid();
+  void do_grid();
 
 public:
   printrow_svg(printpage_svg& p, const printrow::options& op)
@@ -137,7 +138,7 @@ protected:
   static string convert_dim(const dimension& d);
   static string format_float(float f);
   static string convert_col(const colour& c);
-  static string convert_font(const text_style& s);
+  static void convert_font(const text_style& s, dom_element e);
 };
 
 RINGING_END_NAMESPACE
