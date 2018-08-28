@@ -1,5 +1,5 @@
 // -*- C++ -*- psline.cpp - print out lines for methods
-// Copyright (C) 2001-2 Martin Bright <martin@boojum.org.uk>
+// Copyright (C) 2001-2, 2018 Martin Bright <martin@boojum.org.uk>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -613,7 +613,7 @@ int main(int argc, char *argv[])
   // Parse the arguments
   {
     arg_parser p(argv[0], 
-      "psline -- print out lines for methods in PostScript or PDF.\v"
+      "psline -- print out lines for methods in PostScript, PDF or SVG.\v"
 "Most options have sensible defaults.  In particular, unless you specify"
 " otherwise, the image will be fitted to the page; and lines will be drawn"
 " for the treble and for the bell which makes the lead end place."
@@ -682,58 +682,58 @@ int main(int argc, char *argv[])
       change c = m[m.length() - 1];
       bool found_working_bell = false;
       for(b = 0; b < m.bells(); b = b + 1) {
-	j = args.lines.find(b);
-	if(j == args.lines.end()) {
-	  if(lh[b] == b) 
-	    j = args.lines.find(-2);
-	  else {
-	    if(!found_working_bell && c.findplace(b)) { 
-	      j = args.lines.find(-4);
-	      if(j == args.lines.end()) j = args.lines.find(-3);
-	      found_working_bell = true;
-	    } else
-	      j = args.lines.find(-3);
-	  }
-	  if(j == args.lines.end())
-	    j = args.lines.find(-1);
-	}
-	if(j != args.lines.end()) pm.opt.lines[b] = (*j).second;
+        j = args.lines.find(b);
+        if(j == args.lines.end()) {
+          if(lh[b] == b)
+            j = args.lines.find(-2);
+          else {
+            if(!found_working_bell && c.findplace(b)) {
+              j = args.lines.find(-4);
+              if(j == args.lines.end()) j = args.lines.find(-3);
+              found_working_bell = true;
+            } else
+              j = args.lines.find(-3);
+          }
+          if(j == args.lines.end())
+            j = args.lines.find(-1);
+        }
+        if(j != args.lines.end()) pm.opt.lines[b] = (*j).second;
       }
-      if(!found_working_bell 
-	 && (j = args.lines.find(-4)) != args.lines.end()) {
-	for(b = 0; b < m.bells() && !found_working_bell; b = b + 1)
-	  if(lh[b] != b) {
-	    pm.opt.lines[b] = (*j).second;
-	    found_working_bell = true;
-	  }
+      if(!found_working_bell
+         && (j = args.lines.find(-4)) != args.lines.end()) {
+        for(b = 0; b < m.bells() && !found_working_bell; b = b + 1)
+          if(lh[b] != b) {
+            pm.opt.lines[b] = (*j).second;
+            found_working_bell = true;
+          }
       }
     }
-    if(args.custom_rules) 
+    if(args.custom_rules)
       pm.rules = args.rules;
     else { // Set up some default rules
       pm.rules.clear();
       if(args.numbers) {
-	int cl = m.methclass();
-	if(cl == method::M_TREBLE_BOB 
-	   || cl == method::M_SURPRISE 
-	   || cl == method::M_DELIGHT)
-	  pm.rules.push_back(pair<int,int>(4,4));
-	else
-	  pm.rules.push_back(pair<int,int>(m.length(),0));
+        int cl = m.methclass();
+        if(cl == method::M_TREBLE_BOB
+           || cl == method::M_SURPRISE
+           || cl == method::M_DELIGHT)
+          pm.rules.push_back(pair<int,int>(4,4));
+        else
+          pm.rules.push_back(pair<int,int>(m.length(),0));
       }
     }
     if(args.placebells == -2) {
       bell b;
       pm.placebells = -1;
       for(b = 0; b < m.bells(); b = b + 1)
-	if(lh[b] != b && pm.opt.lines.find(b) != pm.opt.lines.end()) {
-	  if(pm.placebells == -1)
-	    pm.placebells = b;
-	  else {
-	    pm.placebells = -1;
-	    break;
-	  }
-	}
+        if(lh[b] != b && pm.opt.lines.find(b) != pm.opt.lines.end()) {
+          if(pm.placebells == -1)
+            pm.placebells = b;
+          else {
+            pm.placebells = -1;
+            break;
+          }
+        }
     } else
       pm.placebells = args.placebells;
     pm.opt.flags = args.numbers ? printrow::options::numbers : 0;
@@ -741,11 +741,11 @@ int main(int argc, char *argv[])
       pm.pn_mode = printmethod::pn_first;
     else
       pm.pn_mode = static_cast<printmethod::pn_mode_t>(args.pn_mode);
-	pm.calls = args.calls;
-	if (args.rounds.length()==m.bells())
-	{
-		pm.startrow(args.rounds);
-	}
+    pm.calls = args.calls;
+    if (args.rounds.length()==m.bells())
+    {
+      pm.startrow(args.rounds);
+    }
     
     // Set the space to fit to
     if(args.fit && args.fitwidth == 0) {
@@ -763,61 +763,61 @@ int main(int argc, char *argv[])
     // Now fit to the space
     if(args.leads_per_column || args.rows_per_column) {
       if(args.leads_per_column)
-	pm.rows_per_column = args.leads_per_column * m.length();
+        pm.rows_per_column = args.leads_per_column * m.length();
       else if(args.rows_per_column)
-	pm.rows_per_column = args.rows_per_column;
+        pm.rows_per_column = args.rows_per_column;
       if(args.columns_per_set) {
-	pm.columns_per_set = args.columns_per_set;
-	if(args.sets_per_page) {
-	  pm.sets_per_page = args.sets_per_page;
-	} else {
-	  if(!args.pages) args.pages = 1;
-	  pm.sets_per_page = divu(pm.total_rows, 
-				  args.pages * pm.columns_per_set 
-				  * pm.rows_per_column);
-	}
+        pm.columns_per_set = args.columns_per_set;
+        if(args.sets_per_page) {
+          pm.sets_per_page = args.sets_per_page;
+        } else {
+          if(!args.pages) args.pages = 1;
+          pm.sets_per_page = divu(pm.total_rows,
+                                  args.pages * pm.columns_per_set
+                                  * pm.rows_per_column);
+        }
       } else {
-	if(!args.sets_per_page) args.sets_per_page = 1;
-	pm.sets_per_page = args.sets_per_page;
-	if(!args.pages) args.pages = 1;
-	pm.columns_per_set = divu(pm.total_rows,
-				  args.pages * pm.sets_per_page
-				  * pm.rows_per_column);
+        if(!args.sets_per_page) args.sets_per_page = 1;
+        pm.sets_per_page = args.sets_per_page;
+        if(!args.pages) args.pages = 1;
+        pm.columns_per_set = divu(pm.total_rows,
+                                  args.pages * pm.sets_per_page
+                                  * pm.rows_per_column);
       }
       pm.scale_to_space(args.fitwidth, args.fitheight, args.numbers ? 1.f : 2.f);
     } else {
       if(args.columns_per_set) {
-	pm.columns_per_set = args.columns_per_set;
-	if(!args.sets_per_page) args.sets_per_page = 1;
-	pm.sets_per_page = args.sets_per_page;
-	if(!args.pages) args.pages = 1;
-	pm.rows_per_column = divu(pm.total_rows,
-				  args.pages * pm.columns_per_set
+        pm.columns_per_set = args.columns_per_set;
+        if(!args.sets_per_page) args.sets_per_page = 1;
+        pm.sets_per_page = args.sets_per_page;
+        if(!args.pages) args.pages = 1;
+        pm.rows_per_column = divu(pm.total_rows,
+                                  args.pages * pm.columns_per_set
 				  * pm.sets_per_page * m.length())
-	  * m.length();
-	pm.scale_to_space(args.fitwidth, args.fitheight, 
-			  args.numbers ? 1.f : 2.f);
+        * m.length();
+        pm.scale_to_space(args.fitwidth, args.fitheight,
+                          args.numbers ? 1.f : 2.f);
       } else {
-	if(args.sets_per_page) {
-	  pm.rows_per_column = m.length();
-	  pm.sets_per_page = args.sets_per_page;
-	  if(!args.pages) args.pages = 1;
-	  pm.columns_per_set = divu(pm.total_rows,
-				    args.pages * pm.sets_per_page
-				    * pm.rows_per_column);
-	  pm.scale_to_space(args.fitwidth, args.fitheight, 
-			    args.numbers ? 1.f : 2.f);
-	} else {
-	  if(!args.pages) args.pages = 1;
+        if(args.sets_per_page) {
+          pm.rows_per_column = m.length();
+          pm.sets_per_page = args.sets_per_page;
+          if(!args.pages) args.pages = 1;
+          pm.columns_per_set = divu(pm.total_rows,
+                                    args.pages * pm.sets_per_page
+                                    * pm.rows_per_column);
+          pm.scale_to_space(args.fitwidth, args.fitheight,
+                            args.numbers ? 1.f : 2.f);
+        } else {
+          if(!args.pages) args.pages = 1;
           int tr = pm.total_rows;
-	  pm.total_rows = divu(tr, args.pages * m.length()) * m.length();
-	  pm.fit_to_space(args.fitwidth, args.fitheight, 
-			  args.vgap_mode, args.numbers ? 1.f : 2.f);
-	  pm.total_rows = tr;
-	}
+          pm.total_rows = divu(tr, args.pages * m.length()) * m.length();
+          pm.fit_to_space(args.fitwidth, args.fitheight,
+                          args.vgap_mode, args.numbers ? 1.f : 2.f);
+          pm.total_rows = tr;
+        }
       }
     }
-
+    
     // Set up the things which override the fitting, and everything else
     if(!args.font.empty()) pm.opt.style.font = args.font;
     if(args.font_size) pm.opt.style.size = args.font_size;
