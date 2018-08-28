@@ -287,7 +287,19 @@ void printrow_svg::placebell(int i)
 void printrow_svg::text(const string& t, const dimension& x,
                         text_style::alignment al, bool between, bool right)
 {
-  
+  dom_element e = col.add_elt(printpage_svg::ns, "text");
+  printpage_svg::convert_font(opt.style, e);
+  e.add_attr(printpage_svg::ns, "fill", printpage_svg::convert_col(opt.style.col).c_str());
+  if(al != text_style::left)
+    e.add_attr(printpage_svg::ns, "text-anchor", al == text_style::right ? "end" : "middle");
+  e.add_attr(printpage_svg::ns, "alignment-baseline", "middle");
+  e.add_attr(printpage_svg::ns, "x",
+             printpage_svg::format_float((right ?
+                                         (x.in_points() + (lastrow.bells() - 1) * opt.xspace.in_points())
+                                          : -x.in_points()) * 4/3).c_str());
+  e.add_attr(printpage_svg::ns, "y",
+             printpage_svg::format_float(((between ? (count - 0.5f) : (count - 1)) * opt.yspace.in_points()) * 4/3).c_str());
+  e.add_content(t);
 }
 
 void printrow_svg::do_grid()
