@@ -1,5 +1,5 @@
 // -*- C++ -*- expression.h - Code to execute different types of expression
-// Copyright (C) 2003, 2004, 2005, 2008, 2011 
+// Copyright (C) 2003, 2004, 2005, 2008, 2011, 2019
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -104,8 +104,8 @@ private:
 class string_node : public expression::node
 {
 public:
-  string_node( const string &str ) 
-    : str(str) {}
+  string_node( const string &str, bool echo = false ) 
+    : str(str), echo(echo) {}
 
 protected:
   virtual void debug_print( ostream &os ) const;
@@ -113,6 +113,7 @@ protected:
 
 private:
   string str;
+  bool echo;
 };
 
 class pn_node : public expression::node

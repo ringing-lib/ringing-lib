@@ -1,6 +1,6 @@
 // proof_context.cpp - Environment to evaluate expressions
-// Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2011, 2012, 2014
-// Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2011, 2012, 2014,
+// 2019 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -47,7 +47,7 @@
 RINGING_USING_NAMESPACE
 
 proof_context::proof_context( const execution_context &ectx ) 
-  : ectx(ectx), p( new prover(ectx.get_args().num_extents) ), 
+  : ectx(ectx), p( new prover(ectx.get_args().num_extents) ), parent( NULL ),
     output( &ectx.output() ),
     silent( ectx.get_args().everyrow_only || ectx.get_args().filter
             || ectx.get_args().quiet >= 2 ), 
@@ -80,7 +80,7 @@ proof_context::~proof_context()
   }
 }
 
-void proof_context::termination_sequence(ostream& os)
+void proof_context::termination_sequence(ostream& os) const
 {
   if (underline) {
     if ( char const* e = RINGING_TERMINFO_VAR( exit_underline_mode ) ) {
@@ -90,12 +90,20 @@ void proof_context::termination_sequence(ostream& os)
   }
 }
 
-void proof_context::output_string( const string& str )
+void proof_context::do_output( const string& str ) const
+{
+  if (!silent && output) 
+    *output << str;
+}
+
+void proof_context::output_string( const string& str, bool to_parent ) const
 {
   bool do_exit( false );
   std::string o( substitute_string(str, do_exit) );
-  if ( !silent && output )
-    *output << o;
+
+  if ( to_parent && parent ) parent->do_output(o);
+  else do_output(o);
+
   if (do_exit)
     throw script_exception( script_exception::do_abort );
 }
@@ -182,7 +190,8 @@ proof_context::proof_state proof_context::state() const
     return isfalse;
 }
 
-string proof_context::substitute_string( const string &str, bool &do_exit )
+string proof_context::substitute_string( const string &str, 
+                                         bool &do_exit ) const
 {
   make_string os;
   bool nl = true;
@@ -239,6 +248,7 @@ proof_context proof_context::silent_clone() const
   copy.p->disable_proving();
   copy.silent = true;
   copy.output = NULL;
+  copy.parent = this;
   return copy;
 }
 

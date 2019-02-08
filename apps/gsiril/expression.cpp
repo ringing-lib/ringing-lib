@@ -1,5 +1,5 @@
 // expression.cpp - Nodes and factory function for expressions
-// Copyright (C) 2002, 2003, 2004, 2005, 2008, 2011, 2014
+// Copyright (C) 2002, 2003, 2004, 2005, 2008, 2011, 2014, 2019
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -115,7 +115,7 @@ void reverse_node::execute( proof_context &ctx, int dir ) const
 
 void string_node::execute( proof_context &ctx, int dir ) const
 {
-  ctx.output_string(str);
+  ctx.output_string(str, echo);
 }
 
 void string_node::debug_print( ostream &os ) const

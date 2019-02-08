@@ -1,6 +1,6 @@
 // parser.cpp - Tokenise and parse lines of input
-// Copyright (C) 2002, 2003, 2004, 2005, 2007, 2008, 2010, 2011, 2012, 2013
-// Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003, 2004, 2005, 2007, 2008, 2010, 2011, 2012, 2013,
+// 2019 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -602,6 +602,16 @@ msparser::make_expr( vector< token >::const_iterator first,
       return expression
 	( new repeated_node( times,
 			     make_expr( begin_arg, last ) ) );
+    }
+
+  if ( first->type() == tok_types::name && *first == "echo" ) 
+    {
+      if ( first + 1 == last )
+	throw runtime_error( "The echo operator requires an argument" );
+      if ( (first + 1)->type() != tok_types::string_lit )
+	throw runtime_error( "The echo operator's argument must be a string" );
+
+      return expression( new string_node( *(first+1), true ) );
     }
 
   // Reversals are high precedence unary prefix operators
