@@ -638,6 +638,10 @@ msparser::make_expr( vector< token >::const_iterator first,
 	return expression( new exception_node( script_exception::do_break ) );
       else if ( *first == "rounds" )
 	return expression( new isrounds_node() );
+      else if ( *first == "true" )
+	return expression( new boolean_node(true) );
+      else if ( *first == "false" )
+	return expression( new boolean_node(false) );
       else
 	return expression( new symbol_node( *first ) );
 

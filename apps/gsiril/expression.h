@@ -194,6 +194,19 @@ private:
   music_details mus;
 };
 
+class boolean_node : public expression::bnode
+{
+public:
+  boolean_node( bool value ) : value(value) {}
+
+protected:
+  virtual void debug_print( ostream &os ) const;
+  virtual bool evaluate( proof_context &ctx ) const { return value; }
+
+private:
+  bool value;
+};
+
 class and_node : public expression::bnode
 {
 public:

@@ -276,6 +276,12 @@ void pattern_node::debug_print( ostream &os ) const
   os << mus.get();
 }
 
+void boolean_node::debug_print( ostream &os ) const
+{
+  os << ( value ? "true" : "false" );
+}
+
+
 bool and_node::evaluate( proof_context &ctx ) const
 {
   // short-circuits
