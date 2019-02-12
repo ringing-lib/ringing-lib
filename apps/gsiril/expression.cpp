@@ -32,6 +32,7 @@
 #include <ringing/method.h>
 #include <ringing/music.h>
 #include <ringing/place_notation.h>
+#include <ringing/lexical_cast.h>
 
 
 RINGING_USING_NAMESPACE
@@ -122,13 +123,57 @@ void string_node::debug_print( ostream &os ) const
 {
   os << "\"" << str << "\"";
 }
+ 
+static int parse_int( string const& str ) {
+  try {
+    return lexical_cast<int>( str ); 
+  } 
+  catch (bad_lexical_cast) {
+    throw runtime_error( make_string() << "Unable to parse \"" << str
+                           << "\" as a bell expression" );
+  }
+}
 
-pn_node::pn_node( int bells, const string &pn )
+static int parse_bell_expr( int bells, string const& expr ) {
+  // At the moment, the grammar for a bell expression is as follows:
+  //   BellExpr ::= "N" ("-" INT)? | INT
+
+  string::const_iterator i(expr.begin()), e(expr.end());
+  while (i != e && isspace(*i)) ++i;
+
+  if (*i == 'N') {
+    ++i; while (i != e && isspace(*i)) ++i;
+    if ( i == e ) return bells;
+
+    if ( *i != '-' ) 
+      throw runtime_error( make_string() << "Invalid bell expression: "
+                             "expected '-' after 'N' in " << expr );
+    ++i; while (i != e && isspace(*i)) ++i;
+    return bells - parse_int( string(i,e) ); 
+  } 
+  else return parse_int( string(i,e) ); 
+}
+
+static string expand_bell_exprs( int bells, string const& pn ) {
+  make_string ret;
+  for ( string::const_iterator i=pn.begin(), e=pn.end(); i!=e; ) {
+    if (*i == '{') {
+      string::const_iterator j = read_bell_expr(i, e);
+      ret << bell( parse_bell_expr( bells, string(i+1,j-1) ) - 1 );
+      i = j;
+    }
+    else ret << *i++;
+  }
+  return ret;
+}
+
+pn_node::pn_node( int bells, const string &raw_pn )
 {
   if ( bells <= 0 )
     throw runtime_error( "Must set number of bells before using "
 			 "place notation" );
-  
+
+  string pn( expand_bell_exprs(bells, raw_pn) );
   interpret_pn( bells, pn.begin(), pn.end(), back_inserter( changes ) );
 }
 
@@ -259,7 +304,7 @@ void isrounds_node::debug_print( ostream &os ) const
 }
 
 pattern_node::pattern_node( int bells, const string& regex )
-  : bells(bells), mus( regex )
+  : bells(bells), mus( expand_bell_exprs(bells, regex) )
 {
   validate_regex( mus, bells );
 }
