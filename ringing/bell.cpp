@@ -143,6 +143,7 @@ bell bell::read_extended(char const* str, char const** endp)
     return b;
   } else {
     unsigned long val = strtoul(++str, const_cast<char**&>(endp), 10);
+    while (isspace(**endp)) ++*endp;
     if ( *str == '-' || **endp != '}' ||
          RINGING_BELL_BITS < sizeof(unsigned long) * CHAR_BIT
          && val > (1ul<<RINGING_BELL_BITS) )
