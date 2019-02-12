@@ -1,5 +1,5 @@
 // -*- C++ -*- music.cpp - Musical Analysis
-// Copyright (C) 2001, 2008, 2009, 2010, 2011 
+// Copyright (C) 2001, 2008, 2009, 2010, 2011, 2019
 // Mark Banner <mark@standard8.co.uk> and
 // Richard Smith <richard@ex-parrot.com>.
 
@@ -64,7 +64,8 @@ private:
   vector<unsigned int>  detailsmatch;
   unsigned int bells;
 
-  void add_to_subtree(unsigned int place, const music_details &md, unsigned int i, unsigned int key, unsigned int pos, bool process_star);
+  void add_to_subtree(unsigned place, const music_details &md, unsigned i, 
+                      unsigned key, unsigned pos, bool process_star);
 };
 
 unsigned int count_bells(const string &s)
@@ -221,80 +222,72 @@ void music_node::set_bells(unsigned int b)
       i->second->set_bells(b);
 }
 
-void music_node::add(const music_details &md, unsigned int i, unsigned int key, unsigned int pos)
+void music_node::add(const music_details &md, unsigned int i, 
+                     unsigned int key, unsigned int pos)
 {
   string const& mds = md.get();
+
   // Does this item end here?
-  if (i >= mds.size())
-    {
-      detailsmatch.push_back(key);
+  if (i >= mds.size()) 
+    detailsmatch.push_back(key);
+  
+  else if (pos <= bells) {
+    char const* p = mds.c_str() + i;
+
+    // Simple bell, add it and move on.
+    if (bell::is_symbol(*p) || *p == '{') {
+      char const* endp = p;
+      bell b( bell::read_extended(p, &endp) );
+      add_to_subtree(b+1, md, i + (endp-p) - 1, key,  pos, false);
     }
-  else if (pos <= bells)
-    {
-      if (bell::is_symbol(mds[i]))
-	{
-	  // Simple bell, add it and move on.
-	  add_to_subtree(bell::read_char(mds[i]) + 1, md, i, key,  pos, false);
-	}
-      else
-	{
-	  if (mds[i] == '?')
-	    {
-	      add_to_subtree(0, md, i, key, pos, false);
-	    }
-	  else if (mds[i] == '[')
-	    {
-	      unsigned int j = i;
-	      // 'remove' the [] section from the string
-	      unsigned int newpos = mds.find(']', i + 1);
-	      j++;
-	      // We have an option, so add to each tree until ] occurs.
-	      while (mds[j] != ']')
-		{
-		  if (bell::is_symbol(mds[j]))
-		    {
-		      add_to_subtree(bell::read_char(mds[j]) + 1, md,  
-                                     newpos, key, pos, false);
-		    }
-		  // else ignore it for now...
-		  j++;
-		}
-	      // ok, that's all for here.
-	    }
-	  else if (mds[i] == '*')
-	    {
-	      if (mds.size() == i + 1)
-		{
-		  // no more bells to go, don't bother adding to the subtree.
-		  // just add here
-		  detailsmatch.push_back(key);
-		}
-	      else
-		{
-		  // There are more to go
-		  // Any of them '*'s?
-		  if (mds.find('*', i + 1) >= mds.size())
-		    {
-		      // Deal with the only * to go in the add_to_subtree
-		      // function.
-		      add_to_subtree(0, md, i, key, pos, true);
-		    }
-		  else
-		    {
-		      // We have *456*
-		      // This functionality to be implemented.
-		      // First ignore the star and just move on.
-		      add(md, i + 1, key, pos);
-		      // Now deal with the star
-		      if (mds.size() - i >= pos)
-			add_to_subtree(0, md, i, key, pos, true);
-		      else
-			add_to_subtree(0, md, i, key, pos, false);
-		    }
-		}
-	    }
-	}
+
+    else if (*p == '?') 
+      add_to_subtree(0, md, i, key, pos, false);
+      
+    else if (*p == '[') {
+      unsigned int newpos = mds.find(']', i + 1);
+      char const* q = p+1;
+
+      while (*q != ']') {
+        if (bell::is_symbol(*q) || *q == '{') {
+          char const* endp = q;
+          bell b( bell::read_extended(q, &endp) );
+          add_to_subtree(b+1, md, newpos, key, pos, false);
+          q = endp;
+        }
+        else throw music_details::invalid_regex(mds, 
+          make_string() << "Invalid character in []: " << *q );
+      }
     }
+
+    else if (*p == '*') {
+      if (mds.size() == i + 1)
+        // no more bells to go, don't bother adding to the subtree.
+        // just add here
+        detailsmatch.push_back(key);
+
+      // There are more to go
+      // Any of them '*'s?
+      else if (mds.find('*', i + 1) >= mds.size()) 
+        // Deal with the only * to go in the add_to_subtree
+        // function.
+        add_to_subtree(0, md, i, key, pos, true);
+          
+      else {
+        // We have something like '*456*'
+        // This functionality to be implemented.
+        // First ignore the star and just move on.
+        add(md, i + 1, key, pos);
+        // Now deal with the star
+        if (mds.size() - i >= pos)
+          add_to_subtree(0, md, i, key, pos, true);
+        else
+          add_to_subtree(0, md, i, key, pos, false);
+      }
+    }
+    else throw music_details::invalid_regex(mds, 
+      make_string() << "Invalid character in pattern: " << *p );
+  }
 }
 
 void music_node::add_to_subtree(unsigned int place, const music_details &md, unsigned int i, unsigned int key, unsigned int pos, bool process_star)
@@ -302,7 +295,8 @@ void music_node::add_to_subtree(unsigned int place, const music_details &md, uns
   cloning_pointer<music_node>& j = subnodes[place];
   if (!j) j.reset( new music_node(bells) );
 
-  string const& mds = md.get();  if (process_star)
+  string const& mds = md.get();
+  if (process_star)
     {
       // We are to process star data star.
       if (bells - pos == count_bells(mds.substr(i, mds.size() - i)) + 1 &&
