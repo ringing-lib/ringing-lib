@@ -170,9 +170,15 @@ void proof_context::execute_symbol( const string& sym, int dir )
       *output << r << "\t" << sym << endl;
   }
 
+  expression e( lookup_symbol(sym) );
+  e.execute( *this, dir );
+}
+
+expression proof_context::lookup_symbol( const string& sym ) const
+{
   expression e( dsym_table.lookup(sym) );
   if ( e.isnull() ) e = ectx.lookup_symbol(sym);
-  e.execute( *this, dir );
+  return e;
 }
 
 void proof_context::define_symbol( const pair<const string, expression>& defn )
@@ -203,10 +209,21 @@ string proof_context::substitute_string( const string &str,
 	os << r;
 	break;
       case '$': 
-	if ( i+1 == e || i[1] != '$' )
-	  os << p->duplicates();
-	else
+        if ( i+1 != e && i[1] == '{' 
+             && !ectx.get_args().msiril_syntax
+             && !ectx.get_args().sirilic_syntax) {
+          string::const_iterator j = std::find(i+2, e, '}');
+          if (j == e) throw runtime_error("Incomplete variable interpolation "
+                                          "in string '" + str + "'");
+          expression e( lookup_symbol( string(i+2, j) ) );
+          proof_context ctx2( silent_clone() );
+          os << e.string_evaluate( ctx2 );
+          i = j;
+        }
+	else if ( i+1 != e && i[1] == '$' )
 	  ++i, do_exit = true;
+	else
+	  os << p->duplicates();
 	break;
       case '#':
 	os << p->size();

@@ -56,7 +56,7 @@ public:
 protected:
   virtual void debug_print( ostream &os ) const;
   virtual void execute( proof_context &ctx, int dir ) const;
-  virtual bool evaluate( proof_context &ctx ) const;
+  virtual bool bool_evaluate( proof_context &ctx ) const;
   virtual expression::type_t type() const;
 
 private:  
@@ -110,6 +110,7 @@ public:
 protected:
   virtual void debug_print( ostream &os ) const;
   virtual void execute( proof_context &ctx, int dir ) const;
+  virtual string string_evaluate( proof_context &ctx ) const;
 
 private:
   string str;
@@ -154,6 +155,7 @@ public:
 protected:
   virtual void debug_print( ostream &os ) const;
   virtual void execute( proof_context &ctx, int dir ) const;
+  virtual string string_evaluate( proof_context &ctx ) const;
 
 private:
   string sym;
@@ -177,7 +179,7 @@ class isrounds_node : public expression::bnode
 {
 protected:
   virtual void debug_print( ostream &os ) const;
-  virtual bool evaluate( proof_context &ctx ) const;
+  virtual bool bool_evaluate( proof_context &ctx ) const;
 };
 
 class pattern_node : public expression::bnode
@@ -187,7 +189,7 @@ public:
 
 protected:
   virtual void debug_print( ostream &os ) const;
-  virtual bool evaluate( proof_context &ctx ) const;
+  virtual bool bool_evaluate( proof_context &ctx ) const;
 
 private:
   int bells;
@@ -201,7 +203,7 @@ public:
 
 protected:
   virtual void debug_print( ostream &os ) const;
-  virtual bool evaluate( proof_context &ctx ) const { return value; }
+  virtual bool bool_evaluate( proof_context &ctx ) const { return value; }
 
 private:
   bool value;
@@ -215,7 +217,7 @@ public:
 
 protected:
   virtual void debug_print( ostream &os ) const;
-  virtual bool evaluate( proof_context &ctx ) const;
+  virtual bool bool_evaluate( proof_context &ctx ) const;
 
 private:
   expression left, right;
@@ -229,7 +231,7 @@ public:
 
 protected:
   virtual void debug_print( ostream &os ) const;
-  virtual bool evaluate( proof_context &ctx ) const;
+  virtual bool bool_evaluate( proof_context &ctx ) const;
 
 private:
   expression left, right;

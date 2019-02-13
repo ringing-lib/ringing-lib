@@ -1,5 +1,6 @@
 // expr_base.cpp - Base classes, nodes and factory function for expressions
-// Copyright (C) 2005, 2011, 2012 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2005, 2011, 2012, 2019
+// Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -34,10 +35,20 @@
 
 RINGING_USING_NAMESPACE
 
-bool expression::node::evaluate( proof_context& ctx ) const
+bool expression::node::bool_evaluate( proof_context& ctx ) const
 {
   make_string os;
   os << "Unable to evaluate expression as a boolean: '";
+  debug_print( os.out_stream() );
+  os << "'";
+
+  throw runtime_error( os );
+}
+
+string expression::node::string_evaluate( proof_context& ctx ) const
+{
+  make_string os;
+  os << "Unable to evaluate expression as a string: '";
   debug_print( os.out_stream() );
   os << "'";
 
@@ -55,7 +66,7 @@ void expression::bnode::execute( proof_context& ctx, int dir ) const
     throw runtime_error( os );
   }
 
-  evaluate(ctx);
+  bool_evaluate(ctx);
 }
 
 void expression::execute( proof_context &ctx, int dir ) const 
@@ -64,9 +75,15 @@ void expression::execute( proof_context &ctx, int dir ) const
   impl->execute(ctx, dir); 
 }
 
-bool expression::evaluate( proof_context& ctx ) const 
+bool expression::bool_evaluate( proof_context& ctx ) const 
 { 
   ctx.increment_node_count();
-  return impl->evaluate(ctx); 
+  return impl->bool_evaluate(ctx); 
+}
+  
+string expression::string_evaluate( proof_context& ctx ) const
+{
+  ctx.increment_node_count();
+  return impl->string_evaluate(ctx); 
 }
 

@@ -54,10 +54,10 @@ void list_node::execute( proof_context &ctx, int dir ) const
   if (dir <= 0) car.execute( ctx, dir );
 }
 
-bool list_node::evaluate( proof_context &ctx ) const
+bool list_node::bool_evaluate( proof_context &ctx ) const
 {
   car.execute( ctx, +1 );
-  return cdr.evaluate( ctx );
+  return cdr.bool_evaluate( ctx );
 }
 
 expression::type_t list_node::type() const
@@ -117,6 +117,11 @@ void reverse_node::execute( proof_context &ctx, int dir ) const
 void string_node::execute( proof_context &ctx, int dir ) const
 {
   ctx.output_string(str, echo);
+}
+
+string string_node::string_evaluate( proof_context &ctx ) const
+{
+  return str;
 }
 
 void string_node::debug_print( ostream &os ) const
@@ -233,6 +238,12 @@ void symbol_node::execute( proof_context &ctx, int dir ) const
   ctx.execute_symbol(sym, dir);
 }
 
+string symbol_node::string_evaluate( proof_context &ctx ) const
+{
+   expression e( ctx.lookup_symbol(sym) );
+   return e.string_evaluate(ctx);
+}
+
 void assign_node::debug_print( ostream &os ) const
 {
   os << "(" << defn.first << " = ";
@@ -293,7 +304,7 @@ static void validate_regex( const music_details& desc, int bells )
   // TODO: Check for multiple occurances of the same bell
 }
 
-bool isrounds_node::evaluate( proof_context& ctx ) const
+bool isrounds_node::bool_evaluate( proof_context& ctx ) const
 {
   return ctx.isrounds();
 }
@@ -309,7 +320,7 @@ pattern_node::pattern_node( int bells, const string& regex )
   validate_regex( mus, bells );
 }
 
-bool pattern_node::evaluate( proof_context &ctx ) const
+bool pattern_node::bool_evaluate( proof_context &ctx ) const
 {
   music m( bells, mus );
   m.process_row( ctx.current_row() );
@@ -327,10 +338,10 @@ void boolean_node::debug_print( ostream &os ) const
 }
 
 
-bool and_node::evaluate( proof_context &ctx ) const
+bool and_node::bool_evaluate( proof_context &ctx ) const
 {
   // short-circuits
-  return left.evaluate(ctx) && right.evaluate(ctx);
+  return left.bool_evaluate(ctx) && right.bool_evaluate(ctx);
 }
 
 void and_node::debug_print( ostream &os ) const
@@ -340,10 +351,10 @@ void and_node::debug_print( ostream &os ) const
   right.debug_print(os);
 }
 
-bool or_node::evaluate( proof_context &ctx ) const
+bool or_node::bool_evaluate( proof_context &ctx ) const
 {
   // short-circuits
-  return left.evaluate(ctx) || right.evaluate(ctx);
+  return left.bool_evaluate(ctx) || right.bool_evaluate(ctx);
 }
 
 void or_node::debug_print( ostream &os ) const
@@ -391,7 +402,7 @@ void if_match_node::execute( proof_context& ctx, int dir ) const
   // Currently it does, and I think this is wrong.
 
   try {
-    result = test.evaluate( ctx2 );
+    result = test.bool_evaluate( ctx2 );
   } 
   catch ( script_exception const& ) {}
 

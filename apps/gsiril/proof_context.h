@@ -76,6 +76,7 @@ public:
 
   void execute_symbol( const string& sym, int dir = +1 );
   void define_symbol( const pair< const string, expression > &defn );
+  expression lookup_symbol( const string& sym ) const;
 
   enum proof_state { rounds, notround, isfalse };
   proof_state state() const;
