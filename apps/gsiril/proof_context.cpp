@@ -196,6 +196,46 @@ proof_context::proof_state proof_context::state() const
     return isfalse;
 }
 
+// When called, i will point to the initial \, and len will be set according
+// to i[1] (to 2 for \x, to 4 for \u or to 8 for \U).
+static string do_escape_seq(string::const_iterator& i, string::const_iterator e,
+                            size_t len) {
+  if (i+1+len >= e)
+    throw runtime_error("Incomplete \\" + string(1, i[1]) + " escape sequence");
+
+  RINGING_ULLONG val = 0;
+  for (int n=0; n<len; ++n) {
+    char c = i[2+n];
+    if (c >= '0' && c <= '9') val = (val<<4) | (c-'0');
+    else if (c >= 'A' && c <= 'F') val = (val<<4) | (c-'A'+10);
+    else if (c >= 'a' && c <= 'f') val = (val<<4) | (c-'a'+10);
+    else throw runtime_error("Invalid hexadecimal character "
+                             "'" + string(1u, c) + "' in "
+                             "\\" + string(1u, i[1]) + " escape");
+  }
+  i += 1+len;
+
+  // Convert to UTF-8
+  make_string os;
+  if (val < (RINGING_ULLONG)0x80)
+    os << char(val);
+  else if (val < (RINGING_ULLONG)0x800)
+    os << (char)(unsigned char)(0xC0|(val>>6))
+       << (char)(unsigned char)(0x80|(val&0x3F));
+  else if (val < (RINGING_ULLONG)0x10000)
+    os << (char)(unsigned char)(0xE0|(val>>12))
+       << (char)(unsigned char)(0x80|((val>>6)&0x3F))
+       << (char)(unsigned char)(0x80|(val&0x3F));
+  else if (val < (RINGING_ULLONG)0x110000)
+    os << (char)(unsigned char)(0xF0|(val>>18))
+       << (char)(unsigned char)(0x80|((val>>12)&0x3F))
+       << (char)(unsigned char)(0x80|((val>>6)&0x3F))
+       << (char)(unsigned char)(0x80|(val&0x3F));
+  else throw runtime_error(make_string() << "Character U+" << val
+                             << " out of range");
+  return os;
+}
+
 string proof_context::substitute_string( const string &str, 
                                          bool &do_exit ) const
 {
@@ -235,6 +275,12 @@ string proof_context::substitute_string( const string &str,
 	  ++i, os << '\n';
 	else if (i[1] == 't') 
 	  ++i, os << '\t';
+        else if (i[1] == 'x') 
+          os << do_escape_seq(i, e, 2);
+        else if (i[1] == 'u') 
+          os << do_escape_seq(i, e, 4);
+        else if (i[1] == 'U') 
+          os << do_escape_seq(i, e, 8);
 	else if (i[1] == '\'' )
 	  ++i, os << '"';
 	else
