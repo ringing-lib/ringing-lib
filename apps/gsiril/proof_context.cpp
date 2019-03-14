@@ -236,6 +236,34 @@ static string do_escape_seq(string::const_iterator& i, string::const_iterator e,
   return os;
 }
 
+static string string_escapes( const string &str ) {
+  make_string os;
+  for ( string::const_iterator i( str.begin() ), e( str.end() ); i != e; ++i )
+    switch (*i) {
+      case '\\':
+	if (i+1 == e) 
+	  throw runtime_error("Unexpected backslash");
+	else if (i[1] == 'n') 
+	  ++i, os << '\n';
+	else if (i[1] == 't') 
+	  ++i, os << '\t';
+        else if (i[1] == 'x') 
+          os << do_escape_seq(i, e, 2);
+        else if (i[1] == 'u') 
+          os << do_escape_seq(i, e, 4);
+        else if (i[1] == 'U') 
+          os << do_escape_seq(i, e, 8);
+	else if (i[1] == '\'' )
+	  ++i, os << '"';
+	else
+	  os << *++i;
+	break;
+      default:
+        os << *i;
+    }
+  return os;
+}
+
 string proof_context::substitute_string( const string &str, 
                                          bool &do_exit ) const
 {
@@ -257,7 +285,7 @@ string proof_context::substitute_string( const string &str,
                                           "in string '" + str + "'");
           expression e( lookup_symbol( string(i+2, j) ) );
           proof_context ctx2( silent_clone() );
-          os << e.string_evaluate( ctx2 );
+          os << e.string_evaluate(ctx2);
           i = j;
         }
 	else if ( i+1 != e && i[1] == '$' )
@@ -271,20 +299,8 @@ string proof_context::substitute_string( const string &str,
       case '\\':
 	if (i+1 == e) 
 	  nl = false;
-	else if (i[1] == 'n') 
-	  ++i, os << '\n';
-	else if (i[1] == 't') 
-	  ++i, os << '\t';
-        else if (i[1] == 'x') 
-          os << do_escape_seq(i, e, 2);
-        else if (i[1] == 'u') 
-          os << do_escape_seq(i, e, 4);
-        else if (i[1] == 'U') 
-          os << do_escape_seq(i, e, 8);
-	else if (i[1] == '\'' )
-	  ++i, os << '"';
-	else
-	  os << *++i;
+	else 
+	  os << *i;   // It will be handled by string_escapes
 	break;
       case '_':
         if (ectx.get_args().sirilic_syntax) {
@@ -301,7 +317,7 @@ string proof_context::substitute_string( const string &str,
     termination_sequence(os.out_stream());
     os << '\n';
   }
-  return os;
+  return string_escapes(os);
 }
 
 proof_context proof_context::silent_clone() const
