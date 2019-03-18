@@ -1,5 +1,5 @@
 // execution_context.cpp - Global environment
-// Copyright (C) 2002, 2003, 2004, 2007, 2011, 2012
+// Copyright (C) 2002, 2003, 2004, 2007, 2011, 2012, 2019
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -54,6 +54,22 @@ int execution_context::bells( int b )
 
   swap( b, args.bells.get() );
   return b;
+}
+  
+int execution_context::expected_length( int l )
+{ 
+  // Define __length__ to be the expected length.  This allows __wronglen__
+  // to include the expected length in the error message, e.g.
+  // __wronglen__ = "${__length__} rows expected";
+  if (l) 
+    sym_table.define
+      ( pair<const string, expression>( "__length__", 
+          expression( new string_node( make_string() << l ) ) ) );
+  else
+    sym_table.undefine("__length__");
+
+  swap( l, args.expected_length.get() ); 
+  return l;
 }
 
 execution_context::execution_context( ostream& os, const arguments& a )
