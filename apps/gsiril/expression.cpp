@@ -1,5 +1,5 @@
 // expression.cpp - Nodes and factory function for expressions
-// Copyright (C) 2002, 2003, 2004, 2005, 2008, 2011, 2014
+// Copyright (C) 2002, 2003, 2004, 2005, 2008, 2011, 2014, 2019
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -32,6 +32,7 @@
 #include <ringing/method.h>
 #include <ringing/music.h>
 #include <ringing/place_notation.h>
+#include <ringing/lexical_cast.h>
 
 
 RINGING_USING_NAMESPACE
@@ -53,10 +54,10 @@ void list_node::execute( proof_context &ctx, int dir ) const
   if (dir <= 0) car.execute( ctx, dir );
 }
 
-bool list_node::evaluate( proof_context &ctx ) const
+bool list_node::bool_evaluate( proof_context &ctx ) const
 {
   car.execute( ctx, +1 );
-  return cdr.evaluate( ctx );
+  return cdr.bool_evaluate( ctx );
 }
 
 expression::type_t list_node::type() const
@@ -115,20 +116,69 @@ void reverse_node::execute( proof_context &ctx, int dir ) const
 
 void string_node::execute( proof_context &ctx, int dir ) const
 {
-  ctx.output_string(str);
+  ctx.output_string(str, echo);
+}
+
+string string_node::string_evaluate( proof_context &ctx ) const
+{
+  return str;
 }
 
 void string_node::debug_print( ostream &os ) const
 {
   os << "\"" << str << "\"";
 }
+ 
+static int parse_int( string const& str ) {
+  try {
+    return lexical_cast<int>( str ); 
+  } 
+  catch (bad_lexical_cast) {
+    throw runtime_error( make_string() << "Unable to parse \"" << str
+                           << "\" as a bell expression" );
+  }
+}
 
-pn_node::pn_node( int bells, const string &pn )
+static int parse_bell_expr( int bells, string const& expr ) {
+  // At the moment, the grammar for a bell expression is as follows:
+  //   BellExpr ::= "N" ("-" INT)? | INT
+
+  string::const_iterator i(expr.begin()), e(expr.end());
+  while (i != e && isspace(*i)) ++i;
+
+  if (*i == 'N') {
+    ++i; while (i != e && isspace(*i)) ++i;
+    if ( i == e ) return bells;
+
+    if ( *i != '-' ) 
+      throw runtime_error( make_string() << "Invalid bell expression: "
+                             "expected '-' after 'N' in " << expr );
+    ++i; while (i != e && isspace(*i)) ++i;
+    return bells - parse_int( string(i,e) ); 
+  } 
+  else return parse_int( string(i,e) ); 
+}
+
+static string expand_bell_exprs( int bells, string const& pn ) {
+  make_string ret;
+  for ( string::const_iterator i=pn.begin(), e=pn.end(); i!=e; ) {
+    if (*i == '{') {
+      string::const_iterator j = read_bell_expr(i, e);
+      ret << bell( parse_bell_expr( bells, string(i+1,j-1) ) - 1 );
+      i = j;
+    }
+    else ret << *i++;
+  }
+  return ret;
+}
+
+pn_node::pn_node( int bells, const string &raw_pn )
 {
   if ( bells <= 0 )
     throw runtime_error( "Must set number of bells before using "
 			 "place notation" );
-  
+
+  string pn( expand_bell_exprs(bells, raw_pn) );
   interpret_pn( bells, pn.begin(), pn.end(), back_inserter( changes ) );
 }
 
@@ -186,6 +236,12 @@ void symbol_node::debug_print( ostream &os ) const
 void symbol_node::execute( proof_context &ctx, int dir ) const
 {
   ctx.execute_symbol(sym, dir);
+}
+
+string symbol_node::string_evaluate( proof_context &ctx ) const
+{
+   expression e( ctx.lookup_symbol(sym) );
+   return e.string_evaluate(ctx);
 }
 
 void assign_node::debug_print( ostream &os ) const
@@ -248,7 +304,7 @@ static void validate_regex( const music_details& desc, int bells )
   // TODO: Check for multiple occurances of the same bell
 }
 
-bool isrounds_node::evaluate( proof_context& ctx ) const
+bool isrounds_node::bool_evaluate( proof_context& ctx ) const
 {
   return ctx.isrounds();
 }
@@ -259,12 +315,12 @@ void isrounds_node::debug_print( ostream &os ) const
 }
 
 pattern_node::pattern_node( int bells, const string& regex )
-  : bells(bells), mus( regex )
+  : bells(bells), mus( expand_bell_exprs(bells, regex) )
 {
   validate_regex( mus, bells );
 }
 
-bool pattern_node::evaluate( proof_context &ctx ) const
+bool pattern_node::bool_evaluate( proof_context &ctx ) const
 {
   music m( bells, mus );
   m.process_row( ctx.current_row() );
@@ -276,10 +332,16 @@ void pattern_node::debug_print( ostream &os ) const
   os << mus.get();
 }
 
-bool and_node::evaluate( proof_context &ctx ) const
+void boolean_node::debug_print( ostream &os ) const
+{
+  os << ( value ? "true" : "false" );
+}
+
+
+bool and_node::bool_evaluate( proof_context &ctx ) const
 {
   // short-circuits
-  return left.evaluate(ctx) && right.evaluate(ctx);
+  return left.bool_evaluate(ctx) && right.bool_evaluate(ctx);
 }
 
 void and_node::debug_print( ostream &os ) const
@@ -289,10 +351,10 @@ void and_node::debug_print( ostream &os ) const
   right.debug_print(os);
 }
 
-bool or_node::evaluate( proof_context &ctx ) const
+bool or_node::bool_evaluate( proof_context &ctx ) const
 {
   // short-circuits
-  return left.evaluate(ctx) || right.evaluate(ctx);
+  return left.bool_evaluate(ctx) || right.bool_evaluate(ctx);
 }
 
 void or_node::debug_print( ostream &os ) const
@@ -340,7 +402,7 @@ void if_match_node::execute( proof_context& ctx, int dir ) const
   // Currently it does, and I think this is wrong.
 
   try {
-    result = test.evaluate( ctx2 );
+    result = test.bool_evaluate( ctx2 );
   } 
   catch ( script_exception const& ) {}
 

@@ -107,9 +107,10 @@ void method_libraries::init()
 {
   if ( !instance().done_init && has_libraries() )
     {
+      // Register mslib last, as various things can accidentally match it
       cclib::registerlib();
-      mslib::registerlib();
       xmllib::registerlib();
+      mslib::registerlib();
 
       if ( char const* const methlibpath = getenv("METHOD_LIBRARY_PATH") )
         library::setpath( methlibpath );

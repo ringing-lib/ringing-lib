@@ -1,6 +1,6 @@
 // parser.cpp - Tokenise and parse lines of input
-// Copyright (C) 2002, 2003, 2004, 2005, 2007, 2008, 2010, 2011, 2012, 2013
-// Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003, 2004, 2005, 2007, 2008, 2010, 2011, 2012, 2013,
+// 2019 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -44,6 +44,7 @@
 #include <cctype>
 #endif
 #include <ringing/streamutils.h>
+#include <ringing/place_notation.h>
 
 RINGING_USING_NAMESPACE
 
@@ -90,9 +91,13 @@ private:
 			      string::const_iterator e, 
 			      token& tok ) const
   {
-    string::const_iterator j = i;
+    string::const_iterator j(i);
     if ( *j != '&' && *j != '+' ) return failed; ++j;
-    while ( j < e && ( *j == '.' || *j == '-' || isalnum(*j) ) ) ++j;
+    while (j != e) {
+      if ( *j == '{' ) j = read_bell_expr(j, e);
+      else if ( *j == '.' || *j == '-' || isalnum(*j) ) ++j;
+      else break;
+    }
     tok.assign(i, j); tok.type( tok_types::pn_lit ); i = j;
     return done;
   }
@@ -511,6 +516,14 @@ msparser::make_expr( vector< token >::const_iterator first,
   iter_t split;
 
   // Assignment is the lowest precedence operator
+  //
+  // Note: this can be counter-intuitive.  The logic is that an assignment
+  // statement takes its whole argument, including commas, e.g. `p = m, +2'.
+  // It seemed logical to want `plh = "@", (p=m, +2)' to work similarly.
+  // However this means the comma operator has higher precedence than 
+  // assignment, so you need to write `b = +4, (sym="-\"), head', etc.
+  // I don't know whether this was the right decision.
+  //
   if ( find_first( first, last, tok_types::assignment, split ) )
     {
       if ( first == split )
@@ -604,6 +617,16 @@ msparser::make_expr( vector< token >::const_iterator first,
 			     make_expr( begin_arg, last ) ) );
     }
 
+  if ( first->type() == tok_types::name && *first == "echo" ) 
+    {
+      if ( first + 1 == last )
+	throw runtime_error( "The echo operator requires an argument" );
+      if ( (first + 1)->type() != tok_types::string_lit )
+	throw runtime_error( "The echo operator's argument must be a string" );
+
+      return expression( new string_node( *(first+1), true ) );
+    }
+
   // Reversals are high precedence unary prefix operators
   if ( first->type() == tok_types::reverse )
     {
@@ -628,6 +651,10 @@ msparser::make_expr( vector< token >::const_iterator first,
 	return expression( new exception_node( script_exception::do_break ) );
       else if ( *first == "rounds" )
 	return expression( new isrounds_node() );
+      else if ( *first == "true" )
+	return expression( new boolean_node(true) );
+      else if ( *first == "false" )
+	return expression( new boolean_node(false) );
       else
 	return expression( new symbol_node( *first ) );
 

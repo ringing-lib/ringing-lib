@@ -1,5 +1,5 @@
 // -*- C++ -*- expression.h - Code to execute different types of expression
-// Copyright (C) 2003, 2004, 2005, 2008, 2011 
+// Copyright (C) 2003, 2004, 2005, 2008, 2011, 2019
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -56,7 +56,7 @@ public:
 protected:
   virtual void debug_print( ostream &os ) const;
   virtual void execute( proof_context &ctx, int dir ) const;
-  virtual bool evaluate( proof_context &ctx ) const;
+  virtual bool bool_evaluate( proof_context &ctx ) const;
   virtual expression::type_t type() const;
 
 private:  
@@ -104,15 +104,17 @@ private:
 class string_node : public expression::node
 {
 public:
-  string_node( const string &str ) 
-    : str(str) {}
+  string_node( const string &str, bool echo = false ) 
+    : str(str), echo(echo) {}
 
 protected:
   virtual void debug_print( ostream &os ) const;
   virtual void execute( proof_context &ctx, int dir ) const;
+  virtual string string_evaluate( proof_context &ctx ) const;
 
 private:
   string str;
+  bool echo;
 };
 
 class pn_node : public expression::node
@@ -153,6 +155,7 @@ public:
 protected:
   virtual void debug_print( ostream &os ) const;
   virtual void execute( proof_context &ctx, int dir ) const;
+  virtual string string_evaluate( proof_context &ctx ) const;
 
 private:
   string sym;
@@ -176,7 +179,7 @@ class isrounds_node : public expression::bnode
 {
 protected:
   virtual void debug_print( ostream &os ) const;
-  virtual bool evaluate( proof_context &ctx ) const;
+  virtual bool bool_evaluate( proof_context &ctx ) const;
 };
 
 class pattern_node : public expression::bnode
@@ -186,11 +189,24 @@ public:
 
 protected:
   virtual void debug_print( ostream &os ) const;
-  virtual bool evaluate( proof_context &ctx ) const;
+  virtual bool bool_evaluate( proof_context &ctx ) const;
 
 private:
   int bells;
   music_details mus;
+};
+
+class boolean_node : public expression::bnode
+{
+public:
+  boolean_node( bool value ) : value(value) {}
+
+protected:
+  virtual void debug_print( ostream &os ) const;
+  virtual bool bool_evaluate( proof_context &ctx ) const { return value; }
+
+private:
+  bool value;
 };
 
 class and_node : public expression::bnode
@@ -201,7 +217,7 @@ public:
 
 protected:
   virtual void debug_print( ostream &os ) const;
-  virtual bool evaluate( proof_context &ctx ) const;
+  virtual bool bool_evaluate( proof_context &ctx ) const;
 
 private:
   expression left, right;
@@ -215,7 +231,7 @@ public:
 
 protected:
   virtual void debug_print( ostream &os ) const;
-  virtual bool evaluate( proof_context &ctx ) const;
+  virtual bool bool_evaluate( proof_context &ctx ) const;
 
 private:
   expression left, right;

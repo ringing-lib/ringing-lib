@@ -1,5 +1,5 @@
 // -*- C++ -*- expr_base.h - Expression and statement interfaces
-// Copyright (C) 2002, 2003, 2004, 2005, 2011, 2012
+// Copyright (C) 2002, 2003, 2004, 2005, 2011, 2012, 2019
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -75,7 +75,8 @@ public:
     virtual ~node() {}
     virtual void debug_print( ostream &os ) const = 0;
     virtual void execute( proof_context &ctx, int dir ) const = 0;
-    virtual bool evaluate( proof_context &ctx ) const; // throws
+    virtual bool bool_evaluate( proof_context &ctx ) const; // throws
+    virtual string string_evaluate( proof_context &ctx ) const; // throws
     virtual bool isnop() const { return false; }
     virtual type_t type() const { return no_type; }
   };
@@ -83,7 +84,7 @@ public:
   class bnode : public node {
   public:
     virtual void execute( proof_context &ctx, int dir ) const;
-    virtual bool evaluate( proof_context &ctx ) const = 0;
+    virtual bool bool_evaluate( proof_context &ctx ) const = 0;
     virtual type_t type() const { return boolean; }
   };
 
@@ -103,7 +104,9 @@ public:
   // Evaluate a const expression in boolean context.
   // If evaluation requires execution of an expression, a silent clone
   // of the proof_context is made and discarded at the end of the evaluation.
-  bool evaluate( proof_context& ctx ) const;
+  bool bool_evaluate( proof_context& ctx ) const;
+
+  string string_evaluate( proof_context& ctx ) const;
 
 
   RINGING_FAKE_DEFAULT_CONSTRUCTOR(expression);

@@ -1,6 +1,6 @@
 // -*- C++ -*- proof_context.h - Environment to evaluate expressions
-// Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2010, 2011, 2012, 2014
-// Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2010, 2011, 2012, 2014,
+// 2019 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -76,29 +76,32 @@ public:
 
   void execute_symbol( const string& sym, int dir = +1 );
   void define_symbol( const pair< const string, expression > &defn );
+  expression lookup_symbol( const string& sym ) const;
 
   enum proof_state { rounds, notround, isfalse };
   proof_state state() const;
-  string substitute_string( const string &str, bool &do_exit );
+  string substitute_string( const string &str, bool &do_exit ) const;
 
   void execute_everyrow();
-  void output_string( const string& str );
+  void output_string( const string& str, bool to_parent = false ) const;
 
   proof_context silent_clone() const;
 
   void increment_node_count() const;
 
 private:
-  void termination_sequence( ostream& os );
+  void termination_sequence( ostream& os ) const;
+  void do_output( string const& str ) const;
 
   const execution_context &ectx;
   symbol_table dsym_table; // dynamic symbol table
   row r;
   shared_pointer<prover> p;
+  proof_context const* parent;
 
   ostream* output;
   bool silent;
-  bool underline;
+  mutable bool underline;
 };
 
 #endif // GSIRIL_PROOF_CONTEXT_INCLUDED

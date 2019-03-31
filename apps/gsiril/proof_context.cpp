@@ -1,6 +1,6 @@
 // proof_context.cpp - Environment to evaluate expressions
-// Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2011, 2012, 2014
-// Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2011, 2012, 2014,
+// 2019 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -47,7 +47,7 @@
 RINGING_USING_NAMESPACE
 
 proof_context::proof_context( const execution_context &ectx ) 
-  : ectx(ectx), p( new prover(ectx.get_args().num_extents) ), 
+  : ectx(ectx), p( new prover(ectx.get_args().num_extents) ), parent( NULL ),
     output( &ectx.output() ),
     silent( ectx.get_args().everyrow_only || ectx.get_args().filter
             || ectx.get_args().quiet >= 2 ), 
@@ -80,7 +80,7 @@ proof_context::~proof_context()
   }
 }
 
-void proof_context::termination_sequence(ostream& os)
+void proof_context::termination_sequence(ostream& os) const
 {
   if (underline) {
     if ( char const* e = RINGING_TERMINFO_VAR( exit_underline_mode ) ) {
@@ -90,12 +90,20 @@ void proof_context::termination_sequence(ostream& os)
   }
 }
 
-void proof_context::output_string( const string& str )
+void proof_context::do_output( const string& str ) const
+{
+  if (!silent && output) 
+    *output << str;
+}
+
+void proof_context::output_string( const string& str, bool to_parent ) const
 {
   bool do_exit( false );
   std::string o( substitute_string(str, do_exit) );
-  if ( !silent && output )
-    *output << o;
+
+  if ( to_parent && parent ) parent->do_output(o);
+  else do_output(o);
+
   if (do_exit)
     throw script_exception( script_exception::do_abort );
 }
@@ -162,9 +170,15 @@ void proof_context::execute_symbol( const string& sym, int dir )
       *output << r << "\t" << sym << endl;
   }
 
+  expression e( lookup_symbol(sym) );
+  e.execute( *this, dir );
+}
+
+expression proof_context::lookup_symbol( const string& sym ) const
+{
   expression e( dsym_table.lookup(sym) );
   if ( e.isnull() ) e = ectx.lookup_symbol(sym);
-  e.execute( *this, dir );
+  return e;
 }
 
 void proof_context::define_symbol( const pair<const string, expression>& defn )
@@ -182,7 +196,8 @@ proof_context::proof_state proof_context::state() const
     return isfalse;
 }
 
-string proof_context::substitute_string( const string &str, bool &do_exit )
+string proof_context::substitute_string( const string &str, 
+                                         bool &do_exit ) const
 {
   make_string os;
   bool nl = true;
@@ -194,10 +209,21 @@ string proof_context::substitute_string( const string &str, bool &do_exit )
 	os << r;
 	break;
       case '$': 
-	if ( i+1 == e || i[1] != '$' )
-	  os << p->duplicates();
-	else
+        if ( i+1 != e && i[1] == '{' 
+             && !ectx.get_args().msiril_syntax
+             && !ectx.get_args().sirilic_syntax) {
+          string::const_iterator j = std::find(i+2, e, '}');
+          if (j == e) throw runtime_error("Incomplete variable interpolation "
+                                          "in string '" + str + "'");
+          expression e( lookup_symbol( string(i+2, j) ) );
+          proof_context ctx2( silent_clone() );
+          os << e.string_evaluate( ctx2 );
+          i = j;
+        }
+	else if ( i+1 != e && i[1] == '$' )
 	  ++i, do_exit = true;
+	else
+	  os << p->duplicates();
 	break;
       case '#':
 	os << p->size();
@@ -239,6 +265,7 @@ proof_context proof_context::silent_clone() const
   copy.p->disable_proving();
   copy.silent = true;
   copy.output = NULL;
+  copy.parent = this;
   return copy;
 }
 
