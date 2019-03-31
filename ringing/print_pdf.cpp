@@ -497,6 +497,17 @@ void printrow_pdf::grid()
       }
       pp.f << "S Q\n";
       break;
+    case 3:
+      if (lastrow.bells() % 2) {
+        pp.f << "q " << opt.grid_style.width.in_points() << " w ";
+        pp.set_colour(opt.grid_style.col);
+	pp.f << (currx + opt.xspace.in_points() * (lastrow.bells()-1)) << ' '
+	     << y1 << " m "
+	     << (currx + opt.xspace.in_points() * (lastrow.bells()-1)) << ' '
+	     << y2 << " l\n";
+        pp.f << "S Q\n";
+      }  
+      // fall through
     case 2:
       pp.f << "q ";
       pp.set_colour(opt.grid_style.col, true);
