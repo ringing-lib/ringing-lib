@@ -47,7 +47,7 @@ void printmethod::defaults()
   yoffset = (opt.yspace * (m->length() * 2 + 3)) / 2;
   number_mode = miss_lead;
   pn_mode = pn_first;
-  reverse_placebells = false;
+  reverse_placebells = placebells_at_rules = false;
 
   // Set up the lines
   change c = (*m)[m->length() - 1];
@@ -100,9 +100,7 @@ void printmethod::print(printpage& pp)
   if(!m) return;
 
   if (rounds.bells()!=m->bells())
-  {
-	  rounds=row::rounds(m->bells());
-  }
+    rounds=row::rounds(m->bells());
 
   row_block b(*m,rounds);
   int i = 0;
@@ -135,7 +133,9 @@ void printmethod::print(printpage& pp)
 	    && total_row_count < total_rows; column++) {
 	// Print the first row, which is the same as the last row of the
 	// previous column.
-	pr << b[i]; if(needrule(i % (b.size()-1))) pr.rule();
+	pr << b[i]; if(needrule(i % (b.size()-1))) {
+          pr.rule();
+        }
 	// Turn on number-missing if necessary
 	if(number_mode == miss_column) {
 	  opt.flags |= printrow::options::miss_numbers;
@@ -157,16 +157,16 @@ void printmethod::print(printpage& pp)
 	      opt.flags |= printrow::options::miss_numbers;
 	      pr.set_options(opt);
 	    }
-	    if(placebells >= 0)// Print place bell
+	    if(!placebells_at_rules && placebells >= 0)// Print place bell
 	      pr.placebell(placebells, reverse_placebells ? +1 : 0);
 	    if(!(opt.flags & printrow::options::numbers))
 	      pr.dot(-1);
 	  } else if(i == (int) (b.size() - 2)) {
-		  // print calling positions
-		  if (char pos=call(ic++)) {
-			  pr.text(string("-")+pos,opt.xspace/2,text_style::left,false,true);
-//			  pr.text(string("-")+pos,0,text_style::left,false,true);
-		  }
+	    // print calling positions
+	    if (char pos=call(ic++)) {
+	      pr.text(string("-")+pos,opt.xspace/2,text_style::left,false,true);
+//	      pr.text(string("-")+pos,0,text_style::left,false,true);
+	    }
 	  }
 	  else if(i == (int) (b.size() - 1)) {
 	    if(number_mode == miss_lead) {
@@ -174,7 +174,8 @@ void printmethod::print(printpage& pp)
 	      opt.flags &= ~printrow::options::miss_numbers;
 	      pr.set_options(opt);
 	    }
-            if (reverse_placebells && row_count != total_rows - 1) {
+            if (!placebells_at_rules && reverse_placebells && 
+	        row_count != total_rows - 1) {
               if(placebells >= 0)
  	        pr.placebell(placebells, -1);
 	      if(!(opt.flags & printrow::options::numbers))
@@ -194,7 +195,16 @@ void printmethod::print(printpage& pp)
 	  pr << b[i];
 	  if(row_count < (rows_per_column - 1)
 	     && total_row_count < (total_rows - 1)
-	     && needrule(i % (b.size()-1))) pr.rule();
+	     && needrule(i % (b.size()-1))) {
+	    pr.rule();
+	    if(placebells_at_rules && reverse_placebells && placebells >= 0)
+	      pr.placebell(placebells, -1);
+	  }
+	  if(placebells_at_rules && placebells >= 0 &&
+	     row_count < (rows_per_column - 1)
+	     && total_row_count < (total_rows - 1)
+	     && needrule((i-1) % (b.size()-1))) 
+	      pr.placebell(placebells, reverse_placebells ? +1 : 0);
 	  total_row_count++;
 	}
 	if(total_row_count < total_rows) { // Next column

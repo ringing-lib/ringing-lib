@@ -62,6 +62,7 @@ struct arguments {
   int pn_mode;
   int placebells;
   bool reverse_placebells;
+  bool placebells_at_rules;
   bool landscape;
   dimension width, height;
   bool fit;
@@ -215,15 +216,16 @@ void setup_args(arg_parser& p)
 		  "BELL[x][,COLOUR[,DIMENSION]]", true));
   p.add(new myopt('G', "guides",
     "Draw guides indicating bell positions, in style STYLE (currently"
-    " 1 or 2), with colour COLOUR and (for style 1) thickness DIMENSION.",
+    " 1, 2 or 3), with colour COLOUR and (for style 1) thickness DIMENSION.",
 		  "STYLE[,COLOUR[,DIMENSION]]", true));
   p.add(new myopt('n', "no-numbers", "Don't print numbers: print only lines"));
   p.add(new myopt('b', "place-bells", "Print place bells for"
     " BELL.  If BELL is not specified, print place bells for the first"
     " working bell which has a line drawn.  If BELL is `x' or `none', don't"
     " print place bells.  If BELL is `default', select the bell automatically."
-    " If `rev' is appended, show reverse place bells too.",
-    "BELL|x|none|default[,rev]", true));
+    " If `rev' is appended, show reverse place bells too.  If `rule' is"
+    " appended, print place bells at the rules rather than the lead ends.",
+    "{BELL|x|none|default}[,rule][,rev]", true));
   p.add(new myopt('p', "place-notation", "Print place"
     " notation for the first lead, every lead, or no leads.  The default is"
     " to print place notation for the first lead.  Append ,nox to omit `X'"
@@ -465,6 +467,8 @@ bool myopt::process(const string& arg, const arg_parser& ap) const
             args.placebells = -2;
           else if(a == "rev" || a == "reverse")
             args.reverse_placebells = true;
+          else if(a == "rules")
+            args.placebells_at_rules = true;
           else if (a.length() == 1) {
             bell b;
             try {
@@ -745,6 +749,7 @@ int main(int argc, char *argv[])
     } else
       pm.placebells = args.placebells;
     pm.reverse_placebells = args.reverse_placebells;
+    pm.placebells_at_rules = args.placebells_at_rules;
     pm.opt.flags = args.numbers ? printrow::options::numbers : 0;
     if(args.pn_mode == -1)
       pm.pn_mode = printmethod::pn_first;
