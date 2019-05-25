@@ -538,12 +538,12 @@ bool myopt::process(const string& arg, const arg_parser& ap) const
       } else
 	args.number_mode = printmethod::miss_lead;
       break;	     
-	case 'q' :
-		args.calls = arg;
-		break;
-	case 'R' :
-		args.rounds = arg;
-		break;
+    case 'q' :
+      args.calls = arg;
+      break;
+    case 'R' :
+      args.rounds = arg;
+      break;
     case 'p' :
       if(!arg.empty()) {
 	s = arg.begin();
