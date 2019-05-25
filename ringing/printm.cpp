@@ -339,10 +339,10 @@ void printmethod::get_bbox(float& blx, float& bly, float& urx, float& ury)
 }
 
 char printmethod::call(size_t l) const {
-	if (l<calls.length()&&calls[l]!=' ')
-		return calls[l];
-	else
-		return 0;
+  if (l<calls.length()&&calls[l]!=' ')
+    return calls[l];
+  else
+    return 0;
 }
 
 RINGING_END_NAMESPACE
