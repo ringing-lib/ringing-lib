@@ -157,10 +157,11 @@ void printmethod::print(printpage& pp)
 	      opt.flags |= printrow::options::miss_numbers;
 	      pr.set_options(opt);
 	    }
-	    if(!placebells_at_rules && placebells >= 0)// Print place bell
+	    if(!placebells_at_rules && placebells >= 0) {// Print place bell
 	      pr.placebell(placebells, reverse_placebells ? +1 : 0);
-	    if(!(opt.flags & printrow::options::numbers))
-	      pr.dot(-1);
+	      if(!(opt.flags & printrow::options::numbers))
+	        pr.dot(-1);
+	    }
 	  } else if(i == (int) (b.size() - 2)) {
 	    // print calling positions
 	    if (char pos=call(ic++)) {
