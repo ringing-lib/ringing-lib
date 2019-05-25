@@ -81,6 +81,7 @@ struct arguments {
   int grid;
   string calls;
   string rounds;
+  bool calls_at_rules;
 };
 
 arguments args;
@@ -223,7 +224,7 @@ void setup_args(arg_parser& p)
     " BELL.  If BELL is not specified, print place bells for the first"
     " working bell which has a line drawn.  If BELL is `x' or `none', don't"
     " print place bells.  If BELL is `default', select the bell automatically."
-    " If `rev' is appended, show reverse place bells too.  If `rule' is"
+    " If `rev' is appended, show reverse place bells too.  If `rules' is"
     " appended, print place bells at the rules rather than the lead ends.",
     "{BELL|x|none|default}[,rule][,rev]", true));
   p.add(new myopt('p', "place-notation", "Print place"
@@ -246,7 +247,8 @@ void setup_args(arg_parser& p)
   p.add(new myopt('q', "calls", 
     "Calling positions for each lead.  Use a space to suppress a call at that"
     " position.  Multicharacter calling positions should be enclosed in"
-    " {braces}." ,"CALLS"));
+    " {braces}.  Append `,rules' to print calling positions before rules"
+    " rather than before the lead ends." ,"CALLS[,rules]"));
   p.add(new myopt('R', "rounds", "Starting row.","ROUNDS"));
   p.add(new myopt("Layout options:"));
   p.add(new myopt('L', "landscape",
@@ -542,7 +544,16 @@ bool myopt::process(const string& arg, const arg_parser& ap) const
 	args.number_mode = printmethod::miss_lead;
       break;	     
     case 'q' :
-      args.calls = arg;
+      if (!arg.empty()) {
+        size_t i = arg.find(',');
+        if (i != string::npos) {
+          string a(arg, i+1);
+          if (a == "rules")
+            args.calls_at_rules = true;
+          args.calls = string(arg, 0, i);
+        }
+        else args.calls = arg;
+      }
       break;
     case 'R' :
       args.rounds = arg;
@@ -757,6 +768,7 @@ int main(int argc, char *argv[])
       pm.placebells = args.placebells;
     pm.reverse_placebells = args.reverse_placebells;
     pm.placebells_at_rules = args.placebells_at_rules;
+    pm.calls_at_rules = args.calls_at_rules;
     pm.opt.flags = args.numbers ? printrow::options::numbers : 0;
     if(args.pn_mode == -1)
       pm.pn_mode = printmethod::pn_first;

@@ -48,6 +48,7 @@ void printmethod::defaults()
   number_mode = miss_lead;
   pn_mode = pn_first;
   reverse_placebells = placebells_at_rules = false;
+  calls_at_rules = false;
 
   // Set up the lines
   change c = (*m)[m->length() - 1];
@@ -163,7 +164,7 @@ void printmethod::print(printpage& pp)
 	      if(!(opt.flags & printrow::options::numbers))
 	        pr.dot(-1);
 	    }
-	  } else if(i == (int) (b.size() - 2)) {
+	  } else if(i == (int) (b.size() - 2) && !calls_at_rules) {
 	    // print calling positions
 	    string pos = call(ic++);
             if (!pos.empty())
@@ -207,6 +208,11 @@ void printmethod::print(printpage& pp)
 	     && total_row_count < (total_rows - 1)
 	     && needrule((i-1) % (b.size()-1))) 
 	      pr.placebell(placebells, reverse_placebells ? +1 : 0);
+          if(calls_at_rules && needrule((i+1) % (b.size()-1))) {
+	    string pos = call(ic++);
+            if (!pos.empty())
+	      pr.text(pos, opt.xspace/2, text_style::left, false, true);
+          }
 	  total_row_count++;
 	}
 	if(total_row_count < total_rows) { // Next column

@@ -60,6 +60,7 @@ public:
   int placebells;
   bool reverse_placebells, placebells_at_rules;
   string calls;
+  bool calls_at_rules;
 
 public:
   void defaults(); 
