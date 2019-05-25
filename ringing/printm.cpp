@@ -149,7 +149,8 @@ void printmethod::print(printpage& pp)
 	    // Miss the first row of the lead - we've already printed it
 	    // at the end of the previous lead.
 	    i = 1;
-	    if((pn_mode & pn_mask) == pn_first) pn = false;
+	    if((pn_mode & pn_mask) == pn_first 
+               || (pn_mode & pn_mask) == pn_first_asym) pn = false;
 	  }
 	  if(i == 1) {
 	    // Turn number-missing back on
@@ -189,7 +190,8 @@ void printmethod::print(printpage& pp)
 	    pr.set_options(opt);
 	  }
 	  if(pn && ((pn_mode & pn_mask) == pn_all 
-		    || (!sym || (i <= (m->length()+1)/2) || i == m->length()))
+		    || !sym || (pn_mode & pn_mask) == pn_first_asym 
+                    || i <= (m->length()+1)/2 || i == m->length())
 	     && !((pn_mode & pn_nox) && (*m)[i-1].count_places() == 0)) 
 	    pr.text((*m)[i-1].print(), opt.xspace,text_style::right, 
 		    true, false);
@@ -240,7 +242,8 @@ void printmethod::scale_to_space(const dimension& width,
   new_xspace = width.in_points() 
     / (columns_per_set * (m->bells() + ((placebells >= 0) ? 3 : 1)
 			  + (((pn_mode & pn_mask) == pn_all) ? pnextra : 0)) 
-       + (((pn_mode & pn_mask) == pn_first) ? pnextra : 0) - 1);
+       + (((pn_mode & pn_mask) == pn_first 
+            || (pn_mode & pn_mask) == pn_first_asym ) ? pnextra : 0) - 1);
   vlimit = height.in_points() * aspect / 
     ((rows_per_column + 3) * sets_per_page - 2);
   if(vlimit < new_xspace) new_xspace = vlimit;

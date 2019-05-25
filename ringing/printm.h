@@ -54,7 +54,8 @@ public:
 
   enum number_mode_t { miss_never, miss_always, miss_column, miss_lead };
   number_mode_t number_mode;
-  enum pn_mode_t { pn_none, pn_first, pn_all, pn_mask = 0x0f, pn_nox = 0x10 };
+  enum pn_mode_t { pn_none, pn_first, pn_first_asym, pn_all, 
+                   pn_mask = 0x0f, pn_nox = 0x10 };
   pn_mode_t pn_mode;
   int placebells;
   bool reverse_placebells, placebells_at_rules;

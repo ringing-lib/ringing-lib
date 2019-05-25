@@ -228,8 +228,10 @@ void setup_args(arg_parser& p)
     "{BELL|x|none|default}[,rule][,rev]", true));
   p.add(new myopt('p', "place-notation", "Print place"
     " notation for the first lead, every lead, or no leads.  The default is"
-    " to print place notation for the first lead.  Append ,nox to omit `X'"
-    " for cross changes.", "first|all|none[,nox]",
+    " to print place notation for the first lead, supressing any mirrored"
+    " section due to palindromicity.  Use first-asym to for the whole of the"
+    " first lead, regardlessof symmetry.  Append ,nox to omit `X'"
+    " for cross changes.", "first|first-asym|all|none[,nox]",
 		  true));
   p.add(new myopt('r', "rule", "Print rule-offs"
     " (thin horizontal lines) after the Ath change in each lead, and every B"
@@ -550,6 +552,8 @@ bool myopt::process(const string& arg, const arg_parser& ap) const
 	  args.pn_mode = printmethod::pn_none;
 	else if(a == "first")
 	  args.pn_mode = printmethod::pn_first;
+	else if(a == "first-asym")
+	  args.pn_mode = printmethod::pn_first_asym;
 	else if(a == "all")
 	  args.pn_mode = printmethod::pn_all;
 	else {
