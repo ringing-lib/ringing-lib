@@ -60,7 +60,8 @@ public:
   int placebells;
   bool reverse_placebells, placebells_at_rules;
   string calls;
-    
+
+public:
   void defaults(); 
 
   printmethod() : m(0) {}
@@ -75,15 +76,12 @@ public:
   void get_bbox(float& blx, float& bly, float& urx, float& ury);
 
   void scale_to_space(const dimension &width, const dimension& height,
-		      float aspect)
-  {
+		      float aspect) {
     scale_to_space(width, height, aspect, -1);
   }
 
   void fit_to_space(const dimension& width, const dimension& height, 
 		    bool vgap_mode, float aspect);
-
-  char call(size_t l) const;
 
   void startrow(const row& r) { rounds=r; }
 
@@ -95,6 +93,11 @@ private:
     { return (a % b == 0) ? (a / b) : divd(a,b) + 1; }
   void scale_to_space(const dimension &width, const dimension& height,
 		      float aspect, int pnextra);
+
+  string call(size_t l) const;
+  void init_call_vec() const;
+
+  mutable vector<string> call_vec;
 };
 
 RINGING_END_NAMESPACE

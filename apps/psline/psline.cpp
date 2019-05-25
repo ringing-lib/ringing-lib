@@ -243,7 +243,10 @@ void setup_args(arg_parser& p)
     " except at lead heads, or except at the beginning and end of a column."
     " If no argument is given, the default is `lead'.", 
 		  "always|never|lead|column", true));
-  p.add(new myopt('q', "calls", "Calling positions for each lead.","CALLS"));
+  p.add(new myopt('q', "calls", 
+    "Calling positions for each lead.  Use a space to suppress a call at that"
+    " position.  Multicharacter calling positions should be enclosed in"
+    " {braces}." ,"CALLS"));
   p.add(new myopt('R', "rounds", "Starting row.","ROUNDS"));
   p.add(new myopt("Layout options:"));
   p.add(new myopt('L', "landscape",

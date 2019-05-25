@@ -165,10 +165,9 @@ void printmethod::print(printpage& pp)
 	    }
 	  } else if(i == (int) (b.size() - 2)) {
 	    // print calling positions
-	    if (char pos=call(ic++)) {
-	      pr.text(string("-")+pos,opt.xspace/2,text_style::left,false,true);
-//	      pr.text(string("-")+pos,0,text_style::left,false,true);
-	    }
+	    string pos = call(ic++);
+            if (!pos.empty())
+	      pr.text(pos, opt.xspace/2, text_style::left, false, true);
 	  }
 	  else if(i == (int) (b.size() - 1)) {
 	    if(number_mode == miss_lead) {
@@ -338,11 +337,29 @@ void printmethod::get_bbox(float& blx, float& bly, float& urx, float& ury)
     ury = opt.yspace.in_points() * 0.5f;
 }
 
-char printmethod::call(size_t l) const {
-  if (l<calls.length()&&calls[l]!=' ')
-    return calls[l];
+void printmethod::init_call_vec() const {
+  const string indent("-");
+  for (size_t i=0, n=calls.size(); i<n; ++i) {
+    if (calls[i] == ' ')
+      call_vec.push_back(string());
+    else if (calls[i] == '{') {
+      size_t j;
+      for (j=i+1; j<n && calls[j] != '}'; ++j)
+        ;
+      call_vec.push_back(indent + string(calls, i+1, j-i-1));
+      i=j;
+    }
+    else call_vec.push_back(indent + calls[i]);
+  }
+}
+
+string printmethod::call(size_t l) const {
+  if (calls.size() && call_vec.empty()) init_call_vec();
+
+  if (l<call_vec.size())
+    return call_vec[l];
   else
-    return 0;
+    return string();
 }
 
 RINGING_END_NAMESPACE
