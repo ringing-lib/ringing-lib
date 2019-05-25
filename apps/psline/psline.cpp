@@ -759,11 +759,9 @@ int main(int argc, char *argv[])
       pm.pn_mode = printmethod::pn_first;
     else
       pm.pn_mode = static_cast<printmethod::pn_mode_t>(args.pn_mode);
-	pm.calls = args.calls;
-	if (args.rounds.length()==m.bells())
-	{
-		pm.startrow(args.rounds);
-	}
+    pm.calls = args.calls;
+    if (args.rounds.length()==m.bells())
+      pm.startrow(args.rounds);
     
     // Set the space to fit to
     if(args.fit && args.fitwidth == 0) {
