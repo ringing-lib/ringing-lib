@@ -1,5 +1,5 @@
 // -*- C++ -*- execution_context.h - Global environment
-// Copyright (C) 2002, 2003, 2004, 2007, 2008, 2012
+// Copyright (C) 2002, 2003, 2004, 2007, 2008, 2012, 2019
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -93,6 +93,9 @@ public:
   void increment_node_count() const;
   bool done_one_proof() const { return done_proof; }
   void set_done_proof() { done_proof = true; }
+
+  int expected_length() const { return args.expected_length; }
+  int expected_length(int l);
 
 private:
   arguments args;

@@ -330,6 +330,13 @@ statement msparser::parse()
       return statement( new extents_stmt( string_to_int(cmd[0]) ) );
     }
 
+  // Rows directive
+  if ( cmd.size() == 2 && cmd[0].type() == tok_types::num_lit
+       && cmd[1].type() == tok_types::name && cmd[1] == "rows" )
+    {
+      return statement( new rows_stmt( string_to_int(cmd[0]) ) );
+    }
+
   // Rounds directive
   if ( cmd.size() == 2 && cmd[0].type() == tok_types::name 
        && cmd[0] == "rounds" && cmd[1].type() == tok_types::transp_lit )

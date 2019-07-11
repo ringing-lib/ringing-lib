@@ -1,5 +1,6 @@
 // -*- C++ -*- statement.h - Code to execute different types of statement
-// Copyright (C) 2003, 2004, 2005, 2011 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2003, 2004, 2005, 2011, 2019
+// Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -112,6 +113,19 @@ private:
   virtual void execute( execution_context& );
 
   int bells;
+};
+
+// Set the expected length
+class rows_stmt : public statement::impl
+{
+public:
+  explicit rows_stmt( int len )
+    : len(len) {}
+
+private:
+  virtual void execute( execution_context& );
+
+  int len;
 };
 
 class rounds_stmt : public statement::impl

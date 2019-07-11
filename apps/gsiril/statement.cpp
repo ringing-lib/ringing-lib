@@ -1,5 +1,5 @@
 // statement.cpp - Code to execute different types of statement
-// Copyright (C) 2002, 2003, 2004, 2005, 2010, 2011, 2012
+// Copyright (C) 2002, 2003, 2004, 2005, 2010, 2011, 2012, 2019
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -112,8 +112,7 @@ void prove_stmt::execute( execution_context& e )
       switch ( p.state() )
 	{
 	case proof_context::rounds: 
-          if ( e.get_args().expected_length 
-               && e.get_args().expected_length != p.length() ) {
+          if ( e.expected_length() && e.expected_length() != p.length() ) {
             p.execute_symbol( "__wronglen__" );
             e.set_failure();
           }
@@ -149,6 +148,14 @@ void bells_stmt::execute( execution_context& e )
 
   if ( e.verbose() )
     e.output() << "Set bells to " << bells << endl;
+}
+
+void rows_stmt::execute( execution_context& e )
+{
+  e.expected_length( len );
+
+  if ( e.verbose() )
+    e.output() << "Set expected length to " << len << endl;
 }
 
 void rounds_stmt::execute( execution_context& e )
