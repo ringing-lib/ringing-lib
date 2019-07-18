@@ -94,8 +94,8 @@ public:
   bool done_one_proof() const { return done_proof; }
   void set_done_proof() { done_proof = true; }
 
-  int expected_length() const { return args.expected_length; }
-  int expected_length(int l);
+  pair<size_t,size_t> expected_length() const { return args.expected_length; }
+  pair<size_t,size_t> expected_length(pair<size_t, size_t> l);
 
 private:
   arguments args;

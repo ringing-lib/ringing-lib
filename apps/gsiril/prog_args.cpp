@@ -1,5 +1,5 @@
 // prog_args.cpp - handle program arguments
-// Copyright (C) 2002, 2003, 2004, 2007, 2008, 2010, 2011, 2012, 2014
+// Copyright (C) 2002, 2003, 2004, 2007, 2008, 2010, 2011, 2012, 2014, 2019
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -33,7 +33,8 @@ RINGING_USING_NAMESPACE
 
 
 arguments::arguments( int argc, char** argv ) 
-  : lead_symbol( "m" ),
+  : expected_length(0u, 0u), 
+    lead_symbol( "m" ),
     lh_symbol( "lh" )
 {
   arg_parser ap( argv[0], "gsiril -- proves touches.",
@@ -123,9 +124,9 @@ void arguments::bind( arg_parser& p )
 	   "Do not give truth output; or if given twice, no output at all", 
 	   quiet ) );
 
-  p.add( new integer_opt
+  p.add( new range_opt
          ( '\0', "length", 
-           "Require the touch to be of the specified length", "NUM",
+           "Require the touch length to be in the specified range", "RANGE",
            expected_length ) ); 
 
   p.add( new boolean_opt

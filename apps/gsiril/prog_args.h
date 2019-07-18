@@ -1,5 +1,5 @@
 // -*- C++ -*- prog_args.h - program arguments for gsiril
-// Copyright (C) 2003, 2004, 2007, 2008, 2010, 2011, 2012, 2014
+// Copyright (C) 2003, 2004, 2007, 2008, 2010, 2011, 2012, 2014, 2019
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -55,7 +55,7 @@ struct arguments
   init_val<bool,false> msiril_syntax;
   init_val<bool,false> sirilic_syntax;
 
-  init_val<int, 0>     expected_length;
+  pair<size_t, size_t> expected_length;
   init_val<bool,false> everyrow_only;
 
   init_val<bool,false> filter;

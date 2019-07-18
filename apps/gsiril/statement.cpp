@@ -112,7 +112,10 @@ void prove_stmt::execute( execution_context& e )
       switch ( p.state() )
 	{
 	case proof_context::rounds: 
-          if ( e.expected_length() && e.expected_length() != p.length() ) {
+          if ( e.expected_length().first && 
+               p.length() < e.expected_length().first ||
+               e.expected_length().second &&
+               p.length() > e.expected_length().second  ) {
             p.execute_symbol( "__wronglen__" );
             e.set_failure();
           }
@@ -152,7 +155,7 @@ void bells_stmt::execute( execution_context& e )
 
 void rows_stmt::execute( execution_context& e )
 {
-  e.expected_length( len );
+  e.expected_length( pair<size_t,size_t>(len,len) );
 
   if ( e.verbose() )
     e.output() << "Set expected length to " << len << endl;

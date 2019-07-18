@@ -56,19 +56,26 @@ int execution_context::bells( int b )
   return b;
 }
   
-int execution_context::expected_length( int l )
+pair<size_t,size_t> 
+execution_context::expected_length( pair<size_t, size_t> l )
 { 
   // Define __length__ to be the expected length.  This allows __wronglen__
   // to include the expected length in the error message, e.g.
   // __wronglen__ = "${__length__} rows expected";
-  if (l) 
+  if (l.first && l.second) {
+    string len;
+    if (l.first == l.second)
+      len = make_string() << l.first;
+    else  
+      len = make_string() << l.first << '-' << l.second;
     sym_table.define
       ( pair<const string, expression>( "__length__", 
-          expression( new string_node( make_string() << l ) ) ) );
+          expression( new string_node(len) ) ) );
+  }
   else
     sym_table.undefine("__length__");
 
-  swap( l, args.expected_length.get() ); 
+  swap( l, args.expected_length ); 
   return l;
 }
 
@@ -77,6 +84,7 @@ execution_context::execution_context( ostream& os, const arguments& a )
 {
   if ( !args.rounds.bells() )
     args.rounds = row(args.bells);
+  expected_length(args.expected_length);
 }
 
 execution_context::~execution_context() 
