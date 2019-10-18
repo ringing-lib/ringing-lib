@@ -210,3 +210,7 @@ void import_stmt::execute( execution_context& e )
     e.output() << "Resource \"" << name << "\" loaded" << endl;
 }
 
+void echo_stmt::execute( execution_context& e )
+{
+  e.output() << str << "\n";
+}

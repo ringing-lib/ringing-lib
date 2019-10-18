@@ -153,5 +153,18 @@ private:
   string name;
 };
 
+// Print a message
+class echo_stmt : public statement::impl
+{
+public:
+  explicit echo_stmt( const string& str )
+    : str(str) {}
+
+private:
+  virtual void execute( execution_context& );
+
+  string str;
+};
+
 
 #endif // GSIRIL_STATEMENT_INCLUDED
