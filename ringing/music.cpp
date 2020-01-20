@@ -1,5 +1,5 @@
 // -*- C++ -*- music.cpp - Musical Analysis
-// Copyright (C) 2001, 2008, 2009, 2010, 2011, 2019
+// Copyright (C) 2001, 2008, 2009, 2010, 2011, 2019, 2020
 // Mark Banner <mark@standard8.co.uk> and
 // Richard Smith <richard@ex-parrot.com>.
 
@@ -41,30 +41,46 @@ RINGING_START_NAMESPACE
 
 RINGING_USING_STD
 
+// The music_node class is the internal representation of a collection of 
+// patterns which are to matched against a series of rows.  It is a tree-based
+// data structure.
+//
 // No need to mark this as RINGING_API as it is not visible outside of here
 class music_node
 {
 public:
-  // bell -> node map
-  typedef map<unsigned int, cloning_pointer<music_node> > BellNodeMap;
-
   // Have to know how many bells there are
-  music_node(unsigned int b);
+  music_node(unsigned int b) : bells(b) {} 
   void set_bells(unsigned int b);
 
-  void add(const music_details &md, unsigned int i, unsigned int key, unsigned int pos);
+  void add(const string &mds, unsigned int i, unsigned int key, 
+           unsigned int pos);
 
-  bool match(const row &r, unsigned int pos, vector<music_details> &results, const EStroke &stroke) const;
+  bool match(const row &r, unsigned int pos, vector<music_details> &results, 
+             const EStroke &stroke, vector<bell> const& wildcard_matches) const;
 
   // Helper function to work with cloning_pointer.
   music_node* clone() const { return new music_node(*this); }
 
 private:
+  // This subnodes map is the recursive part of this data structures.
+  // As we try to match a row against this music node, we recurse down 
+  // this tree of subnode, using the current bell as the index into the 
+  // map.  A key of 1 matches the treble, 2, the second, etc.  The 
+  // special value 0 is a wildcard, matching any one bell.
+  typedef map<unsigned int, cloning_pointer<music_node> > BellNodeMap;
   BellNodeMap subnodes;
+
+  // Every entry in the detailsmatch vector represents a pattern which has
+  // been matched if we reach this node.  The values are the keys which were 
+  // passed to add(), and which are used as offsets into the 'results' vector 
+  // during matching to record the number of successful matches of each
+  // pattern.
   vector<unsigned int>  detailsmatch;
+
   unsigned int bells;
 
-  void add_to_subtree(unsigned place, const music_details &md, unsigned i, 
+  void add_to_subtree(unsigned place, const string &mds, unsigned i, 
                       unsigned key, unsigned pos, bool process_star);
 };
 
@@ -73,26 +89,18 @@ unsigned int count_bells(const string &s)
   unsigned int total = 0;
   string::const_iterator i;
   int brackets = 0;
-  for (i = s.begin(); i != s.end(); i++)
-    {
-      if (*i == '?')
-	{
-	  total++;
-	}
-      else if (*i == '[')
-	{
-	  brackets = 1;
-	}
-      else if (*i == ']')
-	{
-	  total++; // [] = 1 bell.
-	  brackets = 0;
-	}
-      else if ((brackets == 0) && bell::is_symbol(*i))
-	{
-	  total++;
-	}
+  for (i = s.begin(); i != s.end(); i++) {
+    if (*i == '?')
+      total++;
+    else if (*i == '[')
+      brackets = 1;
+    else if (*i == ']') {
+      total++; // [...] = 1 bell.
+      brackets = 0;
     }
+    else if (brackets == 0 && bell::is_symbol(*i))
+      total++;
+  }
   return total;
 }
 
@@ -171,6 +179,11 @@ int music_details::total(const EStroke &stroke) const
   }
   return 0;
 }
+  
+vector<bell> music_details::last_wildcard_matches() const 
+{ 
+  return last_wildcards; 
+}
 
 #if RINGING_BACKWARDS_COMPATIBLE(0,3,0)
 int music_details::raw_score() const
@@ -203,14 +216,10 @@ bool music_details::check_bells( unsigned bells ) const
 }
 
 
+
 // ********************************************************
 // function definitions for MUSIC_NODE
 // ********************************************************
-
-music_node::music_node(unsigned int b)
-{
-  bells = b;
-}
 
 void music_node::set_bells(unsigned int b)
 {
@@ -222,28 +231,39 @@ void music_node::set_bells(unsigned int b)
       i->second->set_bells(b);
 }
 
-void music_node::add(const music_details &md, unsigned int i, 
+// "mds" is the pattern as a string, and "i" is the current character offset
+// into it (as we are called recursively).  "key" is used to identify which
+// pattern matched, if we have several patterns.  "pos" is the logical offset
+// in terms of bells.
+void music_node::add(const string &mds, unsigned int i, 
                      unsigned int key, unsigned int pos)
 {
-  string const& mds = md.get();
-
-  // Does this item end here?
+  // If we've reached the end of the string, add the key, which will tell
+  // match() that the pattern identified by the key has matched.
   if (i >= mds.size()) 
     detailsmatch.push_back(key);
-  
-  else if (pos <= bells) {
+
+  // If we're trying to match more bells than there are, it must fail,
+  // so we may as well stop now.
+  else if (pos > bells)
+    return;
+
+  // Look at the next token in pattern and generate a subnode for it.  
+  else {
     char const* p = mds.c_str() + i;
 
-    // Simple bell, add it and move on.
+    // Simple bell (possibly in extended form), read it, add it and move on.
     if (bell::is_symbol(*p) || *p == '{') {
       char const* endp = p;
       bell b( bell::read_extended(p, &endp) );
-      add_to_subtree(b+1, md, i + (endp-p) - 1, key,  pos, false);
+      add_to_subtree(b+1, mds, i + (endp-p) - 1, key,  pos, false);
     }
 
+    // A single bell wildcard: add it to the 0 wildcard map position
     else if (*p == '?') 
-      add_to_subtree(0, md, i, key, pos, false);
+      add_to_subtree(0, mds, i, key, pos, false);
       
+    // A set of alternatives: add each one individually
     else if (*p == '[') {
       unsigned int newpos = mds.find(']', i + 1);
       char const* q = p+1;
@@ -252,7 +272,7 @@ void music_node::add(const music_details &md, unsigned int i,
         if (bell::is_symbol(*q) || *q == '{') {
           char const* endp = q;
           bell b( bell::read_extended(q, &endp) );
-          add_to_subtree(b+1, md, newpos, key, pos, false);
+          add_to_subtree(b+1, mds, newpos, key, pos, false);
           q = endp;
         }
         else throw music_details::invalid_regex(mds, 
@@ -260,29 +280,27 @@ void music_node::add(const music_details &md, unsigned int i,
       }
     }
 
+    // An variable length wildcard
     else if (*p == '*') {
-      if (mds.size() == i + 1)
-        // no more bells to go, don't bother adding to the subtree.
-        // just add here
+      // If there's nothing more in the string, just put the instruction
+      // to match the row here.
+      if (i+1 == mds.size())
         detailsmatch.push_back(key);
 
-      // There are more to go
-      // Any of them '*'s?
-      else if (mds.find('*', i + 1) >= mds.size()) 
-        // Deal with the only * to go in the add_to_subtree
-        // function.
-        add_to_subtree(0, md, i, key, pos, true);
+      // Is this the last * in the pattern?  If so, it is handled by
+      // add_to_subtree().
+      else if (mds.find('*', i + 1) == string::npos) 
+        add_to_subtree(0, mds, i, key, pos, true);
           
       else {
         // We have something like '*456*'
-        // This functionality to be implemented.
         // First ignore the star and just move on.
-        add(md, i + 1, key, pos);
+        add(mds, i + 1, key, pos);
         // Now deal with the star
         if (mds.size() - i >= pos)
-          add_to_subtree(0, md, i, key, pos, true);
+          add_to_subtree(0, mds, i, key, pos, true);
         else
-          add_to_subtree(0, md, i, key, pos, false);
+          add_to_subtree(0, mds, i, key, pos, false);
       }
     }
     else throw music_details::invalid_regex(mds, 
@@ -290,51 +308,61 @@ void music_node::add(const music_details &md, unsigned int i,
   }
 }
 
-void music_node::add_to_subtree(unsigned int place, const music_details &md, unsigned int i, unsigned int key, unsigned int pos, bool process_star)
+void music_node::add_to_subtree(unsigned int place, const string &mds, unsigned int i, unsigned int key, unsigned int pos, bool process_star)
 {
   cloning_pointer<music_node>& j = subnodes[place];
   if (!j) j.reset( new music_node(bells) );
 
-  string const& mds = md.get();
   if (process_star)
     {
       // We are to process star data star.
       if (bells - pos == count_bells(mds.substr(i, mds.size() - i)) + 1 &&
 	  mds.find('*', i + 1) >= mds.size())
 	// There are now only numbers to go.
-	j->add(md, i + 1, key, pos + 1);
+	j->add(mds, i + 1, key, pos + 1);
       else
 	// We haven't got to the last * position yet, so carry on.
-	j->add(md, i, key, pos + 1);
+	j->add(mds, i, key, pos + 1);
     }
   else
     {
       // Not a star, so move on as normal.
-      j->add(md, i + 1, key, pos + 1);
+      j->add(mds, i + 1, key, pos + 1);
     }
 }
 
 bool music_node::match(const row &r, unsigned int pos, 
-                       vector<music_details> &results, 
-                       const EStroke &stroke) const
+                       vector<music_details> &results, const EStroke &stroke, 
+                       vector<bell> const& wilds) const
 {
   bool matched = false;
 
   for ( vector<unsigned int>::const_iterator 
           i = detailsmatch.begin(), e = detailsmatch.end();  i != e;  ++i ) {
+    // Append any bells that we haven't yet matched due to a wildcard
+    vector<bell> wilds2(wilds); 
+    for (unsigned k = pos; k < r.bells(); ++k)
+      wilds2.push_back(r[k]);
+
     results[*i].increment(stroke);
+    results[*i].last_wildcards = wilds2;
     matched = true;
   }
 
-  // Try all against ? or *
+  // Is there a wildcard subnode at index 0?
   BellNodeMap::const_iterator j = subnodes.find(0);
-  if (j != subnodes.end())
-    matched = j->second->match(r, pos + 1, results, stroke) || matched;
+  if (j != subnodes.end()) {
+    // Records the bell(s) that matched the wildcard
+    vector<bell> wilds2(wilds); 
+    wilds2.push_back(r[pos]);
+
+    matched = j->second->match(r, pos + 1, results, stroke, wilds2) || matched;
+  }
     
-  // Now try the actual number
+  // Is there a subnode matching this specific bell?
   j = subnodes.find(r[pos] + 1);
   if (j != subnodes.end())
-    matched = j->second->match(r, pos + 1, results, stroke) || matched;
+    matched = j->second->match(r, pos + 1, results, stroke, wilds) || matched;
 
   return matched;
 }
@@ -364,7 +392,7 @@ void music::push_back(const music_details &md)
     md.check_bells(b);
 
   info.push_back(md);
-  top_node->add(md, 0, info.size() - 1, 0);
+  top_node->add(md.get(), 0, info.size() - 1, 0);
 }
 
 music::iterator music::begin()
@@ -415,7 +443,11 @@ void music::reset_music(void)
 // and increments or changes the appriopriate variable.
 bool music::process_row(const row &r, bool back)
 {
-  return top_node->match(r, 0, info, back ? eBackstroke : eHandstroke);
+  for (mdvector::iterator i = info.begin(), e = info.end(); i != e; ++i)
+    i->last_wildcards.clear();
+
+  return top_node->match(r, 0, info, back ? eBackstroke : eHandstroke,
+                         vector<bell>());
 }
 
 // Return the total score for all items

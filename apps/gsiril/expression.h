@@ -1,5 +1,5 @@
 // -*- C++ -*- expression.h - Code to execute different types of expression
-// Copyright (C) 2003, 2004, 2005, 2008, 2011, 2019
+// Copyright (C) 2003, 2004, 2005, 2008, 2011, 2019, 2020
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -186,6 +186,8 @@ class pattern_node : public expression::bnode
 {
 public:
   pattern_node( int bells, const string& regex );
+
+  music_details& get_music_details() { return mus; }
 
 protected:
   virtual void debug_print( ostream &os ) const;

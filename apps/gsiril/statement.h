@@ -1,5 +1,5 @@
 // -*- C++ -*- statement.h - Code to execute different types of statement
-// Copyright (C) 2003, 2004, 2005, 2011, 2019
+// Copyright (C) 2003, 2004, 2005, 2011, 2019, 2020
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -30,6 +30,7 @@
 #include "expr_base.h"
 #include <string>
 #include <ringing/row.h>
+#include <ringing/music.h>
 
 
 // Defines a symbol
@@ -138,6 +139,18 @@ private:
   virtual void execute( execution_context& );
 
   row rounds;
+};
+
+class row_mask_stmt : public statement::impl
+{
+public:
+  explicit row_mask_stmt( const music_details& mask )
+    : mask(mask) {}
+
+private:
+  virtual void execute( execution_context& );
+
+  music_details mask;
 };
 
 // Import a resource

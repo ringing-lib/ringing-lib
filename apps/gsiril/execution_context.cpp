@@ -1,5 +1,5 @@
 // execution_context.cpp - Global environment
-// Copyright (C) 2002, 2003, 2004, 2007, 2011, 2012, 2019
+// Copyright (C) 2002, 2003, 2004, 2007, 2011, 2012, 2019, 2020
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -80,7 +80,8 @@ execution_context::expected_length( pair<size_t, size_t> l )
 }
 
 execution_context::execution_context( ostream& os, const arguments& a )
-  : args(a), os(&os), failed(false), node_count(0), done_proof(false)
+  : args(a), rmask("*"), os(&os), failed(false), node_count(0), 
+    done_proof(false)
 {
   if ( !args.rounds.bells() )
     args.rounds = row(args.bells);

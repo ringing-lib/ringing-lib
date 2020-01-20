@@ -1,6 +1,6 @@
 // parser.cpp - Tokenise and parse lines of input
 // Copyright (C) 2002, 2003, 2004, 2005, 2007, 2008, 2010, 2011, 2012, 2013,
-// 2019 Richard Smith <richard@ex-parrot.com>
+// 2019, 2020 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -342,6 +342,13 @@ statement msparser::parse()
        && cmd[0] == "rounds" && cmd[1].type() == tok_types::transp_lit )
     {
       return statement( new rounds_stmt(cmd[1]) );
+    }
+
+  // Row mask directive
+  if ( cmd.size() == 2 && cmd[0].type() == tok_types::name 
+       && cmd[0] == "row_mask" && cmd[1].type() == tok_types::regex_lit )
+    {
+      return statement( new row_mask_stmt(music_details(cmd[1])) );
     }
 
   // Import directive

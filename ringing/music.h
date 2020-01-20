@@ -1,5 +1,5 @@
 // -*- C++ -*- music.h - Musical Analysis
-// Copyright (C) 2001, 2008, 2009, 2010, 2011 
+// Copyright (C) 2001, 2008, 2009, 2010, 2011, 2020
 // Mark Banner <mark@standard8.co.uk> and
 // Richard Smith <richard@ex-parrot.com>.
 
@@ -93,6 +93,9 @@ public:
   // Return the calculated score
   int total(const EStroke& = eBoth) const;
 
+  // Get the bells that matched against a ? or * in the last pattern.
+  vector<bell> last_wildcard_matches() const;
+
 #if RINGING_BACKWARDS_COMPATIBLE(0,3,0)
   // Return the uncalculated score
   int raw_score() const;
@@ -115,6 +118,7 @@ private:
   row_wildcard pat;
   unsigned int counth, countb;
   int scoreh, scoreb;
+  vector<bell> last_wildcards;
 };
 
 // Main class definition
@@ -140,7 +144,7 @@ public:
 
   size_type size() const; // number of music_details stored
 
-  void set_bells(unsigned int b); // set the number of bells to match
+  void set_bells(unsigned int b);
 
   // Main Processing function
   template <class RowIterator>

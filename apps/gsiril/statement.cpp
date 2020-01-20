@@ -1,5 +1,5 @@
 // statement.cpp - Code to execute different types of statement
-// Copyright (C) 2002, 2003, 2004, 2005, 2010, 2011, 2012, 2019
+// Copyright (C) 2002, 2003, 2004, 2005, 2010, 2011, 2012, 2019, 2020
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -167,6 +167,15 @@ void rounds_stmt::execute( execution_context& e )
 
   if ( e.verbose() )
     e.output() << "Set rounds to " << rounds << endl;
+}
+
+void row_mask_stmt::execute( execution_context& e )
+{
+  if (!e.get_args().everyrow_only)
+    e.row_mask( mask );
+
+  if ( e.verbose() )
+    e.output() << "Set row mask" << endl;
 }
 
 void import_stmt::execute( execution_context& e )

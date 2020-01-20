@@ -1,6 +1,6 @@
 // proof_context.cpp - Environment to evaluate expressions
 // Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2011, 2012, 2014,
-// 2019 Richard Smith <richard@ex-parrot.com>
+// 2019, 2020 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -47,7 +47,8 @@
 RINGING_USING_NAMESPACE
 
 proof_context::proof_context( const execution_context &ectx ) 
-  : ectx(ectx), p( new prover(ectx.get_args().num_extents) ), parent( NULL ),
+  : ectx(ectx), row_mask(ectx.bells(), ectx.row_mask()),
+    p( new prover(ectx.get_args().num_extents) ), parent( NULL ),
     output( &ectx.output() ),
     silent( ectx.get_args().everyrow_only || ectx.get_args().filter
             || ectx.get_args().quiet >= 2 ), 
@@ -274,7 +275,13 @@ string proof_context::substitute_string( const string &str,
     switch (*i)
       {
       case '@':
-	os << r;
+        if (row_mask.process_row(r)) {
+          vector<bell> match( row_mask.begin()->last_wildcard_matches() );
+          for (vector<bell>::const_iterator i = match.begin(), e = match.end(); 
+                 i != e; ++i)
+            os << *i;
+        }
+        else return string();
 	break;
       case '$': 
         if ( i+1 != e && i[1] == '{' 
