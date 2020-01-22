@@ -175,6 +175,25 @@ private:
   pair< const string, expression > defn;
 };
 
+// TODO: Make this a generic op_assign_node
+class append_assign_node : public expression::node
+{
+public:
+  append_assign_node( const string& sym, const expression& val )
+    : sym(sym), val(val) {}
+
+protected:
+  virtual void debug_print( ostream &os ) const;
+  virtual void execute( proof_context &ctx, int dir ) const;
+
+private:
+  expression apply( expression const& lhs, expression const& rhs,
+                    proof_context& ctx ) const;
+
+  const string sym;
+  expression val;
+};
+
 class isrounds_node : public expression::bnode
 {
 protected:

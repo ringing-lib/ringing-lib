@@ -1,6 +1,6 @@
 // prog_args.cpp - handle program arguments
-// Copyright (C) 2002, 2003, 2004, 2007, 2008, 2010, 2011, 2012, 2014, 2019
-// Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003, 2004, 2007, 2008, 2010, 2011, 2012, 2014, 2019, 
+// 2020 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -189,6 +189,11 @@ void arguments::bind( arg_parser& p )
          ( '\0', "disable-import", 
            "Disable the import directive",
            disable_import ) );
+
+  p.add( new boolean_opt
+         ( '\0', "no-init-file", 
+           "Do not real the standard initialisation file",
+           no_init_file ) );
 
   p.add( new integer_opt
          ( '\0', "node-limit", 
