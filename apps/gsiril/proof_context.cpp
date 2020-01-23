@@ -283,7 +283,11 @@ string proof_context::substitute_string( const string &str,
         }
         else return string();
 	break;
-      case '$': 
+      case '$':
+        // ${..} is disabled in MicroSiril syntax because it would be 
+        // interpreted as a single $ (meaning number of duplicates) 
+        // followed by a literal brace there, and we want to avoid 
+        // changing the meaning of legal MircoSiril programs.
         if ( i+1 != e && i[1] == '{' 
              && !ectx.get_args().msiril_syntax
              && !ectx.get_args().sirilic_syntax) {

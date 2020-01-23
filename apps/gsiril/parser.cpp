@@ -143,6 +143,7 @@ public:
     // for // and /.
 
     add_qtype(&c);
+    // The pattern syntax conflicts with MicroSiril comments
     if ( !args.msiril_syntax ) add_qtype(&r);
     add_qtype(&q);      add_qtype(&qq);
     add_qtype(&defass); add_qtype(&appass); 
@@ -170,12 +171,16 @@ public:
       return;
 
     case ctrl_z:
-      // Obsolete microSIRIL features
+      // Obsolete microSIRIL features that we don't want to support
       if ( args.msiril_syntax ) return;
       break;
 
     case regex_lit: case open_brace: case close_brace: case colon:
-      // These can only work when msiril comments are disabled
+      // These can only work when msiril comments are disabled.
+      // Regexp literals are disabled because they conflict with 
+      // the MicroSiril comment; alternative blocks are disabled because
+      // they're essentially useless without regexp literals to put in 
+      // the test.
       if ( !args.msiril_syntax ) return;
       break;
     }
