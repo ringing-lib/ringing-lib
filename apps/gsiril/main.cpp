@@ -1,5 +1,5 @@
 // main.cpp - Entry point for gsiril
-// Copyright (C) 2002, 2003, 2004, 2007, 2008, 2010, 2011, 2012, 2014
+// Copyright (C) 2002, 2003, 2004, 2007, 2008, 2010, 2011, 2012, 2014, 2020
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -120,7 +120,7 @@ void initialise( execution_context& ex, const arguments& args )
   bool verbose     = ex.verbose(false);
 
   // Prepopulate symbol table
-  {
+  if (!args.no_init_file) {
     RINGING_ISTRINGSTREAM in(init_string);
 
     parse_all(ex, make_default_parser(in, args), "INIT", true);

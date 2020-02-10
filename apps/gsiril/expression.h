@@ -1,5 +1,5 @@
 // -*- C++ -*- expression.h - Code to execute different types of expression
-// Copyright (C) 2003, 2004, 2005, 2008, 2011, 2019
+// Copyright (C) 2003, 2004, 2005, 2008, 2011, 2019, 2020
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -175,6 +175,25 @@ private:
   pair< const string, expression > defn;
 };
 
+// TODO: Make this a generic op_assign_node
+class append_assign_node : public expression::node
+{
+public:
+  append_assign_node( const string& sym, const expression& val )
+    : sym(sym), val(val) {}
+
+protected:
+  virtual void debug_print( ostream &os ) const;
+  virtual void execute( proof_context &ctx, int dir ) const;
+
+private:
+  expression apply( expression const& lhs, expression const& rhs,
+                    proof_context& ctx ) const;
+
+  const string sym;
+  expression val;
+};
+
 class isrounds_node : public expression::bnode
 {
 protected:
@@ -186,6 +205,8 @@ class pattern_node : public expression::bnode
 {
 public:
   pattern_node( int bells, const string& regex );
+
+  music_details& get_music_details() { return mus; }
 
 protected:
   virtual void debug_print( ostream &os ) const;

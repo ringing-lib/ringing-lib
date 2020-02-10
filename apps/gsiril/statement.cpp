@@ -1,5 +1,5 @@
 // statement.cpp - Code to execute different types of statement
-// Copyright (C) 2002, 2003, 2004, 2005, 2010, 2011, 2012
+// Copyright (C) 2002, 2003, 2004, 2005, 2010, 2011, 2012, 2019, 2020
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -112,8 +112,10 @@ void prove_stmt::execute( execution_context& e )
       switch ( p.state() )
 	{
 	case proof_context::rounds: 
-          if ( e.get_args().expected_length 
-               && e.get_args().expected_length != p.length() ) {
+          if ( e.expected_length().first && 
+               p.length() < e.expected_length().first ||
+               e.expected_length().second &&
+               p.length() > e.expected_length().second  ) {
             p.execute_symbol( "__wronglen__" );
             e.set_failure();
           }
@@ -151,12 +153,29 @@ void bells_stmt::execute( execution_context& e )
     e.output() << "Set bells to " << bells << endl;
 }
 
+void rows_stmt::execute( execution_context& e )
+{
+  e.expected_length( pair<size_t,size_t>(len,len) );
+
+  if ( e.verbose() )
+    e.output() << "Set expected length to " << len << endl;
+}
+
 void rounds_stmt::execute( execution_context& e )
 {
   e.rounds( rounds );
 
   if ( e.verbose() )
     e.output() << "Set rounds to " << rounds << endl;
+}
+
+void row_mask_stmt::execute( execution_context& e )
+{
+  if (!e.get_args().everyrow_only)
+    e.row_mask( mask );
+
+  if ( e.verbose() )
+    e.output() << "Set row mask" << endl;
 }
 
 void import_stmt::execute( execution_context& e )
@@ -200,3 +219,7 @@ void import_stmt::execute( execution_context& e )
     e.output() << "Resource \"" << name << "\" loaded" << endl;
 }
 
+void echo_stmt::execute( execution_context& e )
+{
+  e.output() << str << "\n";
+}

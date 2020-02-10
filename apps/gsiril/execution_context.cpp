@@ -1,5 +1,5 @@
 // execution_context.cpp - Global environment
-// Copyright (C) 2002, 2003, 2004, 2007, 2011, 2012
+// Copyright (C) 2002, 2003, 2004, 2007, 2011, 2012, 2019, 2020
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -55,12 +55,37 @@ int execution_context::bells( int b )
   swap( b, args.bells.get() );
   return b;
 }
+  
+pair<size_t,size_t> 
+execution_context::expected_length( pair<size_t, size_t> l )
+{ 
+  // Define __length__ to be the expected length.  This allows __wronglen__
+  // to include the expected length in the error message, e.g.
+  // __wronglen__ = "${__length__} rows expected";
+  if (l.first && l.second) {
+    string len;
+    if (l.first == l.second)
+      len = make_string() << l.first;
+    else  
+      len = make_string() << l.first << '-' << l.second;
+    sym_table.define
+      ( pair<const string, expression>( "__length__", 
+          expression( new string_node(len) ) ) );
+  }
+  else
+    sym_table.undefine("__length__");
+
+  swap( l, args.expected_length ); 
+  return l;
+}
 
 execution_context::execution_context( ostream& os, const arguments& a )
-  : args(a), os(&os), failed(false), node_count(0), done_proof(false)
+  : args(a), rmask("*"), os(&os), failed(false), node_count(0), 
+    done_proof(false)
 {
   if ( !args.rounds.bells() )
     args.rounds = row(args.bells);
+  expected_length(args.expected_length);
 }
 
 execution_context::~execution_context() 

@@ -267,6 +267,27 @@ void assign_node::execute( proof_context& ctx, int dir ) const
   ctx.define_symbol(defn);
 }
 
+void append_assign_node::debug_print( ostream &os ) const
+{
+  os << "(" << sym << " += ";
+  val.debug_print(os);
+  os << ")";
+}
+
+void append_assign_node::execute( proof_context& ctx, int dir ) const
+{
+  if (dir < 0) throw_no_backwards_execution(*this);
+  ctx.define_symbol( make_pair(sym, apply(ctx.lookup_symbol(sym), val, ctx)) );
+}
+
+expression 
+append_assign_node::apply( expression const& lhs, expression const& rhs,
+                           proof_context& ctx ) const {
+  string res( lhs.string_evaluate(ctx) + rhs.string_evaluate(ctx) );
+  return expression( new string_node(res) );
+}
+
+
 static void validate_regex( const music_details& desc, int bells )
 {
   static string allowed;

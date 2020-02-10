@@ -1,6 +1,6 @@
 // proof_context.cpp - Environment to evaluate expressions
 // Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2011, 2012, 2014,
-// 2019 Richard Smith <richard@ex-parrot.com>
+// 2019, 2020 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -47,7 +47,8 @@
 RINGING_USING_NAMESPACE
 
 proof_context::proof_context( const execution_context &ectx ) 
-  : ectx(ectx), p( new prover(ectx.get_args().num_extents) ), parent( NULL ),
+  : ectx(ectx), row_mask(ectx.bells(), ectx.row_mask()),
+    p( new prover(ectx.get_args().num_extents) ), parent( NULL ),
     output( &ectx.output() ),
     silent( ectx.get_args().everyrow_only || ectx.get_args().filter
             || ectx.get_args().quiet >= 2 ), 
@@ -196,6 +197,74 @@ proof_context::proof_state proof_context::state() const
     return isfalse;
 }
 
+// When called, i will point to the initial \, and len will be set according
+// to i[1] (to 2 for \x, to 4 for \u or to 8 for \U).
+static string do_escape_seq(string::const_iterator& i, string::const_iterator e,
+                            size_t len) {
+  if (i+1+len >= e)
+    throw runtime_error("Incomplete \\" + string(1, i[1]) + " escape sequence");
+
+  RINGING_ULLONG val = 0;
+  for (int n=0; n<len; ++n) {
+    char c = i[2+n];
+    if (c >= '0' && c <= '9') val = (val<<4) | (c-'0');
+    else if (c >= 'A' && c <= 'F') val = (val<<4) | (c-'A'+10);
+    else if (c >= 'a' && c <= 'f') val = (val<<4) | (c-'a'+10);
+    else throw runtime_error("Invalid hexadecimal character "
+                             "'" + string(1u, c) + "' in "
+                             "\\" + string(1u, i[1]) + " escape");
+  }
+  i += 1+len;
+
+  // Convert to UTF-8
+  make_string os;
+  if (val < (RINGING_ULLONG)0x80)
+    os << char(val);
+  else if (val < (RINGING_ULLONG)0x800)
+    os << (char)(unsigned char)(0xC0|(val>>6))
+       << (char)(unsigned char)(0x80|(val&0x3F));
+  else if (val < (RINGING_ULLONG)0x10000)
+    os << (char)(unsigned char)(0xE0|(val>>12))
+       << (char)(unsigned char)(0x80|((val>>6)&0x3F))
+       << (char)(unsigned char)(0x80|(val&0x3F));
+  else if (val < (RINGING_ULLONG)0x110000)
+    os << (char)(unsigned char)(0xF0|(val>>18))
+       << (char)(unsigned char)(0x80|((val>>12)&0x3F))
+       << (char)(unsigned char)(0x80|((val>>6)&0x3F))
+       << (char)(unsigned char)(0x80|(val&0x3F));
+  else throw runtime_error(make_string() << "Character U+" << val
+                             << " out of range");
+  return os;
+}
+
+static string string_escapes( const string &str ) {
+  make_string os;
+  for ( string::const_iterator i( str.begin() ), e( str.end() ); i != e; ++i )
+    switch (*i) {
+      case '\\':
+	if (i+1 == e) 
+	  throw runtime_error("Unexpected backslash");
+	else if (i[1] == 'n') 
+	  ++i, os << '\n';
+	else if (i[1] == 't') 
+	  ++i, os << '\t';
+        else if (i[1] == 'x') 
+          os << do_escape_seq(i, e, 2);
+        else if (i[1] == 'u') 
+          os << do_escape_seq(i, e, 4);
+        else if (i[1] == 'U') 
+          os << do_escape_seq(i, e, 8);
+	else if (i[1] == '\'' )
+	  ++i, os << '"';
+	else
+	  os << *++i;
+	break;
+      default:
+        os << *i;
+    }
+  return os;
+}
+
 string proof_context::substitute_string( const string &str, 
                                          bool &do_exit ) const
 {
@@ -206,9 +275,19 @@ string proof_context::substitute_string( const string &str,
     switch (*i)
       {
       case '@':
-	os << r;
+        if (row_mask.process_row(r)) {
+          vector<bell> match( row_mask.begin()->last_wildcard_matches() );
+          for (vector<bell>::const_iterator i = match.begin(), e = match.end(); 
+                 i != e; ++i)
+            os << *i;
+        }
+        else return string();
 	break;
-      case '$': 
+      case '$':
+        // ${..} is disabled in MicroSiril syntax because it would be 
+        // interpreted as a single $ (meaning number of duplicates) 
+        // followed by a literal brace there, and we want to avoid 
+        // changing the meaning of legal MircoSiril programs.
         if ( i+1 != e && i[1] == '{' 
              && !ectx.get_args().msiril_syntax
              && !ectx.get_args().sirilic_syntax) {
@@ -217,7 +296,7 @@ string proof_context::substitute_string( const string &str,
                                           "in string '" + str + "'");
           expression e( lookup_symbol( string(i+2, j) ) );
           proof_context ctx2( silent_clone() );
-          os << e.string_evaluate( ctx2 );
+          os << e.string_evaluate(ctx2);
           i = j;
         }
 	else if ( i+1 != e && i[1] == '$' )
@@ -231,14 +310,8 @@ string proof_context::substitute_string( const string &str,
       case '\\':
 	if (i+1 == e) 
 	  nl = false;
-	else if (i[1] == 'n') 
-	  ++i, os << '\n';
-	else if (i[1] == 't') 
-	  ++i, os << '\t';
-	else if (i[1] == '\'' )
-	  ++i, os << '"';
-	else
-	  os << *++i;
+	else 
+	  os << *i;   // It will be handled by string_escapes
 	break;
       case '_':
         if (ectx.get_args().sirilic_syntax) {
@@ -255,7 +328,7 @@ string proof_context::substitute_string( const string &str,
     termination_sequence(os.out_stream());
     os << '\n';
   }
-  return os;
+  return string_escapes(os);
 }
 
 proof_context proof_context::silent_clone() const

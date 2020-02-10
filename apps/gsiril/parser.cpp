@@ -1,6 +1,6 @@
 // parser.cpp - Tokenise and parse lines of input
 // Copyright (C) 2002, 2003, 2004, 2005, 2007, 2008, 2010, 2011, 2012, 2013,
-// 2019 Richard Smith <richard@ex-parrot.com>
+// 2019, 2020 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -74,7 +74,8 @@ namespace tok_types
     string_lit,
     transp_lit,
     pn_lit,
-    def_assign, /* ?= */
+    def_assign,    /* ?= */
+    append_assign, /* .= */
     logic_and,
     logic_or,
     regex_lit
@@ -133,6 +134,7 @@ public:
       q( "'",   tok_types::transp_lit, string_token::one_line ), 
       qq( "\"", tok_types::string_lit, string_token::one_line ), 
       sym( "&" ), asym( "+" ), defass( "?=", tok_types::def_assign ),
+      appass( ".=", tok_types::append_assign ),
       land( "&&", tok_types::logic_and ), lor( "||", tok_types::logic_or )
   {
     // Note:  It is important that &sym is added after &land; and
@@ -141,10 +143,12 @@ public:
     // for // and /.
 
     add_qtype(&c);
+    // The pattern syntax conflicts with MicroSiril comments
     if ( !args.msiril_syntax ) add_qtype(&r);
-    add_qtype(&q);    add_qtype(&qq);
-    add_qtype(&defass); add_qtype(&land); add_qtype(&lor);
-    add_qtype(&sym);  add_qtype(&asym);
+    add_qtype(&q);      add_qtype(&qq);
+    add_qtype(&defass); add_qtype(&appass); 
+    add_qtype(&land);   add_qtype(&lor);
+    add_qtype(&sym);    add_qtype(&asym);
 
     if ( args.sirilic_syntax ) 
       set_id_chars( "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -162,16 +166,21 @@ public:
     case name: case num_lit: case open_paren: case close_paren:
     case comma: case times: case assignment: case new_line: case semicolon:
     case comment: case string_lit: case transp_lit: case pn_lit: 
-    case def_assign: case logic_and: case logic_or: case reverse:
+    case def_assign: case append_assign: 
+    case logic_and: case logic_or: case reverse:
       return;
 
     case ctrl_z:
-      // Obsolete microSIRIL features
+      // Obsolete microSIRIL features that we don't want to support
       if ( args.msiril_syntax ) return;
       break;
 
     case regex_lit: case open_brace: case close_brace: case colon:
-      // These can only work when msiril comments are disabled
+      // These can only work when msiril comments are disabled.
+      // Regexp literals are disabled because they conflict with 
+      // the MicroSiril comment; alternative blocks are disabled because
+      // they're essentially useless without regexp literals to put in 
+      // the test.
       if ( !args.msiril_syntax ) return;
       break;
     }
@@ -185,7 +194,7 @@ private:
   line_comment_impl c;
   string_token r, q, qq;
   pn_impl sym, asym;
-  basic_token defass, land, lor;
+  basic_token defass, appass, land, lor;
 };
 
 
@@ -216,15 +225,22 @@ private:
 		    tok_types::enum_t open, tok_types::enum_t close,
 		    string const& name ) const;
 
-  bool find_first( vector< token >::const_iterator first, 
-		   vector< token >::const_iterator last,
-		   tok_types::enum_t tt,
-		   vector< token >::const_iterator &result ) const;
+  enum first_or_last { find_first, find_last };
 
-  bool find_last( vector< token >::const_iterator first, 
-		  vector< token >::const_iterator last,
-		  tok_types::enum_t tt,
-		  vector< token >::const_iterator &result ) const;
+  bool find_one_of( vector< token >::const_iterator first, 
+                    vector< token >::const_iterator last,
+                    vector< tok_types::enum_t > const& tts,
+                    vector< token >::const_iterator &result,
+                    first_or_last = find_first ) const;
+
+  bool find( vector< token >::const_iterator first, 
+             vector< token >::const_iterator last,
+             tok_types::enum_t tt,
+             vector< token >::const_iterator &result,
+             first_or_last fl = find_first  ) const {
+    return find_one_of( first, last, vector<tok_types::enum_t>(1, tt), 
+                        result, fl );
+  }
 
   // Data members
   arguments args;
@@ -330,11 +346,25 @@ statement msparser::parse()
       return statement( new extents_stmt( string_to_int(cmd[0]) ) );
     }
 
+  // Rows directive
+  if ( cmd.size() == 2 && cmd[0].type() == tok_types::num_lit
+       && cmd[1].type() == tok_types::name && cmd[1] == "rows" )
+    {
+      return statement( new rows_stmt( string_to_int(cmd[0]) ) );
+    }
+
   // Rounds directive
   if ( cmd.size() == 2 && cmd[0].type() == tok_types::name 
        && cmd[0] == "rounds" && cmd[1].type() == tok_types::transp_lit )
     {
       return statement( new rounds_stmt(cmd[1]) );
+    }
+
+  // Row mask directive
+  if ( cmd.size() == 2 && cmd[0].type() == tok_types::name 
+       && cmd[0] == "row_mask" && cmd[1].type() == tok_types::regex_lit )
+    {
+      return statement( new row_mask_stmt(music_details(cmd[1])) );
     }
 
   // Import directive
@@ -344,7 +374,6 @@ statement msparser::parse()
 				  cmd[1].type() == tok_types::string_lit ) )
     return statement( new import_stmt(cmd[1]) );
   
-
   // Prove command
   if ( cmd.size() > 1 && cmd[0].type() == tok_types::name
        && cmd[0] == "prove" 
@@ -353,6 +382,12 @@ statement msparser::parse()
        && cmd[1].type() != tok_types::def_assign )
     return statement
       ( new prove_stmt( make_expr( cmd.begin() + 1, cmd.end() ) ) );
+
+  // Echo directive
+  if ( cmd.size() <= 2 && cmd[0].type() == tok_types::name
+       && cmd[0] == "echo" && ( cmd.size() == 1 ||
+                                cmd[1].type() == tok_types::string_lit ) )
+    return statement( new echo_stmt(cmd.size() == 1 ? string() : cmd[1]) );
 
   // Definition
   if ( cmd.size() > 1 && cmd[0].type() == tok_types::name
@@ -409,13 +444,14 @@ bool msparser::is_enclosed( vector< token >::const_iterator first,
   return true;
 }
 
-bool msparser::find_last( vector< token >::const_iterator first, 
-			  vector< token >::const_iterator const last,
-			  tok_types::enum_t tt,
-			  vector< token >::const_iterator &result ) const
+bool msparser::find_one_of( vector< token >::const_iterator first, 
+                            vector< token >::const_iterator const last,
+                            vector< tok_types::enum_t > const& tts,
+                            vector< token >::const_iterator &result,
+                            msparser::first_or_last fl ) const
 {
-  int depth( 0 );
-  bool found( false );
+  int depth = 0;
+  bool found = false;
   for ( ; first != last; ++first )
     if      ( first->type() == tok_types::open_brace ||
 	      first->type() == tok_types::open_paren )
@@ -423,38 +459,19 @@ bool msparser::find_last( vector< token >::const_iterator first,
     else if ( first->type() == tok_types::close_brace ||
 	      first->type() == tok_types::close_paren )
       --depth;
-    else if ( !depth && first->type() == tt ) 
-      result = first, found = true;
+    else if ( depth == 0 )
+      for ( vector<tok_types::enum_t>::const_iterator 
+              i=tts.begin(), e=tts.end(); i!=e; ++i )
+        if (first->type() == *i ) {
+          result = first;
+          if (fl == find_first) return true;
+          found = true;
+        }
 
   if (depth) 
     throw runtime_error( "Syntax Error (Unmatched brackets?)" );
 
   return found;
-}
-
-
-bool msparser::find_first( vector< token >::const_iterator first, 
-			   vector< token >::const_iterator const last,
-			   tok_types::enum_t tt,
-			   vector< token >::const_iterator &result ) const
-{
-  int depth( 0 );
-  for ( ; first != last; ++first )
-    if      ( first->type() == tok_types::open_brace ||
-	      first->type() == tok_types::open_paren )
-      ++depth;
-    else if ( first->type() == tok_types::close_brace ||
-	      first->type() == tok_types::close_paren )
-      --depth;
-    else if ( !depth && first->type() == tt ) {
-      result = first;
-      return true;
-    }
-
-  if (depth) 
-    throw runtime_error( "Syntax Error (Unmatched brackets?)" );
-
-  return false;
 }
 
 expression 
@@ -485,12 +502,13 @@ msparser::make_expr( vector< token >::const_iterator first,
       // not a single valid expression.
       while ( last != first ) {
 	// The last semicolon, or the opening brace (FIRST) if there is none.
-	iter_t i( first ); find_last( first+1, last, tok_types::semicolon, i );
+	iter_t i( first ); 
+        find( first+1, last, tok_types::semicolon, i, find_last );
 	iter_t j( i );
 
 	// Is there a test?
 	expression test( NULL );
-	if ( find_first( i+1, last, tok_types::colon, j ) )
+	if ( find( i+1, last, tok_types::colon, j ) )
 	  test = make_expr( i+1, j );
 	else
 	  test = expression( new pattern_node( bells(), "*" ) );
@@ -515,7 +533,8 @@ msparser::make_expr( vector< token >::const_iterator first,
 
   iter_t split;
 
-  // Assignment is the lowest precedence operator
+  // The various assignment operators (e.g. =, .=) are jointly the lowest 
+  // precedence operator
   //
   // Note: this can be counter-intuitive.  The logic is that an assignment
   // statement takes its whole argument, including commas, e.g. `p = m, +2'.
@@ -524,7 +543,10 @@ msparser::make_expr( vector< token >::const_iterator first,
   // assignment, so you need to write `b = +4, (sym="-\"), head', etc.
   // I don't know whether this was the right decision.
   //
-  if ( find_first( first, last, tok_types::assignment, split ) )
+  vector<tok_types::enum_t> assops;
+  assops.push_back( tok_types::assignment );
+  assops.push_back( tok_types::append_assign );
+  if ( find_one_of( first, last, assops, split ) )
     {
       if ( first == split )
 	throw runtime_error
@@ -535,18 +557,28 @@ msparser::make_expr( vector< token >::const_iterator first,
 	throw runtime_error
 	  ( "First argument of assignment operator must be"
 	    " a variable name" );
-      
-      if ( split+1 == last)
-	return expression
-	  ( new assign_node( *first, expression( new nop_node ) ) );
-      else
-	return expression
-	  ( new assign_node( *first, make_expr( split+1, last ) ) );
+     
+      if ( split->type() == tok_types::assignment ) {
+        if ( split+1 == last)
+          return expression
+            ( new assign_node( *first, expression( new nop_node ) ) );
+        else
+          return expression
+            ( new assign_node( *first, make_expr( split+1, last ) ) );
+      }
+      else {
+        if ( split+1 == last)
+          throw runtime_error
+            ( "Binary operator \".=\" needs second argument" );
+        else
+          return expression
+            ( new append_assign_node( *first, make_expr( split+1, last ) ) );
+      }
     }
 
   // Comma is the next lowest precedence operator
   // It is left associative
-  if ( find_first( first, last, tok_types::comma, split ) )
+  if ( find( first, last, tok_types::comma, split ) )
     {
       if ( first == split )
 	throw runtime_error
@@ -562,7 +594,7 @@ msparser::make_expr( vector< token >::const_iterator first,
     }
 
   // Logical operators -- Or (||) is lowest precedence
-  if ( find_first( first, last, tok_types::logic_or, split ) )
+  if ( find( first, last, tok_types::logic_or, split ) )
     {
       if ( first == split )
 	throw runtime_error
@@ -578,7 +610,7 @@ msparser::make_expr( vector< token >::const_iterator first,
     }
 
   // Logical operators -- And (&&) is next lowest precedence
-  if ( find_first( first, last, tok_types::logic_and, split ) )
+  if ( find( first, last, tok_types::logic_and, split ) )
     {
       if ( first == split )
 	throw runtime_error

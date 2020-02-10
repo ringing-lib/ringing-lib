@@ -1,6 +1,6 @@
 // -*- C++ -*- proof_context.h - Environment to evaluate expressions
 // Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2010, 2011, 2012, 2014,
-// 2019 Richard Smith <richard@ex-parrot.com>
+// 2019, 2020 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -35,6 +35,7 @@
 #include <string>
 #include <ringing/row.h>
 #include <ringing/proof.h>
+#include <ringing/music.h>
 #include "symbol_table.h"
 
 RINGING_USING_STD
@@ -95,6 +96,7 @@ private:
 
   const execution_context &ectx;
   symbol_table dsym_table; // dynamic symbol table
+  mutable music row_mask;
   row r;
   shared_pointer<prover> p;
   proof_context const* parent;

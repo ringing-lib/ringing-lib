@@ -1,5 +1,5 @@
 # escape.awk - Escape a file into a long C string
-# Copyright (C) 2011 Richard Smith <richard@ex-parrot.com>
+# Copyright (C) 2011, 2019 Richard Smith <richard@ex-parrot.com>
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,13 +15,13 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-# $Id$
 
 # The main reason for putting this in a separate file is to avoid
 # having to escape it from the shell and from make.
 
 ! /^[ \t]*\/\// && ! /^[ \t]*$/ {
  
+	gsub( "\\\\", "\\\\" ); 
 	gsub( "\"", "\\\"" ); 
 	print "\"" $0 "\\n\"";
 }
