@@ -386,12 +386,11 @@ void printrow_pdf::end_column()
   // Draw random bits of text
   if(!text_bits.empty()) {
     unsigned font_size = opt.style.size;
-    if (opt.label_style.size) {
+    if (opt.label_style.size)
       font_size = opt.label_style.size;
-      pp.f << "/" << pp.f.get_font(cw.font()) << ' ' 
-           << (font_size / 10.0) << " Tf\n";
-    }
-    pp.f << "0 Tc 100 Tz\n";
+    pp.f << "/" << pp.f.get_font(cw.font()) << ' ' 
+         << (font_size / 10.0) << " Tf\n"
+         << "0 Tc 100 Tz\n";
     list<text_bit>::iterator i;
     float x, y; bool squashed = false; float sq = 1.0;
     for(i = text_bits.begin(); i != text_bits.end(); ++i) {
@@ -425,16 +424,15 @@ void printrow_pdf::end_column()
     }
     text_bits.clear();
     if(squashed) pp.f << "100 Tz\n";
-    if (opt.label_style.size)
-      pp.f << "/" << pp.f.get_font(cw.font()) << ' ' 
-           << (opt.style.size / 10.0) << " Tf\n";
   }
   // Draw the rows
   if(!rows.empty()) {
     list<pair<string, int> >::iterator j;
     string::iterator k;
     int w, w1;
-    pp.f << opt.xspace.in_points() << " Tc " 
+    pp.f << "/" << pp.f.get_font(cw.font()) << ' ' 
+         << (opt.style.size / 10.0) << " Tf\n"
+         << opt.xspace.in_points() << " Tc " 
 	 << opt.yspace.in_points() << " TL\n"
 	 << currx - tx << ' ' 
 	 << curry - opt.style.size * 0.03 - ty << " Td\n";
