@@ -135,7 +135,7 @@ string change::print(int flags) const
     while (i < n) { p += i.to_char(); ++i; }
     if (p.empty()) {
       if (flags & C_LCROSS) p = "x";
-      if (flags & C_DASH) p = "-";
+      else if (flags & C_DASH) p = "-";
       else p = "X";  // For backwards compatibility we make this the default
     }
   }
