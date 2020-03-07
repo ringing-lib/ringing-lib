@@ -1,5 +1,6 @@
 // print_pdf.cpp - PDF printing stuff
-// Copyright (C) 2002 Martin Bright <martin@boojum.org.uk>
+// Copyright (C) 2002, 2019, 2020 Martin Bright <martin@boojum.org.uk> and
+// Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -274,9 +275,9 @@ void printpage_pdf::arrow(float x0, float y0, float x1, float y1,
     << "S\n"; // "h B\n";
 }
 
-void printpage_pdf::text(const string t, const dimension& x, 
-			const dimension& y, text_style::alignment al, 
-			const text_style& s)
+void printpage_pdf::text(const string t, const dimension& x,
+                         const dimension& y, text_style::alignment al,
+                         const text_style& s)
 {
   charwidths cw;
   if(!cw.font(s.font)) cw.font("Helvetica");
@@ -288,11 +289,11 @@ void printpage_pdf::text(const string t, const dimension& x,
     case text_style::centre :
       x1 -= cw(t) * s.size / 20000.0f;
       break;
-  default:
-    // I.e. left, assume we don't need to do
-    // anything here - but put in default to 
-    // stop warnings in build.
-    break;
+    default:
+      // I.e. left, assume we don't need to do
+      // anything here - but put in default to 
+      // stop warnings in build.
+      break;
   }
   
   f << "q "; set_colour(s.col, true);
@@ -381,10 +382,15 @@ void printrow_pdf::end_column()
     grid();
 
   float tx = 0, ty = 0;
-  pp.f << "BT\n/"
-       << pp.f.get_font(cw.font()) << ' ' << (opt.style.size / 10.0) << " Tf\n";
+  pp.f << "BT\n";
   // Draw random bits of text
   if(!text_bits.empty()) {
+    unsigned font_size = opt.style.size;
+    if (opt.label_style.size) {
+      font_size = opt.label_style.size;
+      pp.f << "/" << pp.f.get_font(cw.font()) << ' ' 
+           << (font_size / 10.0) << " Tf\n";
+    }
     pp.f << "0 Tc 100 Tz\n";
     list<text_bit>::iterator i;
     float x, y; bool squashed = false; float sq = 1.0;
@@ -400,10 +406,10 @@ void printrow_pdf::end_column()
       x = currx + (*i).x;
       switch((*i).al) {
 	case text_style::right :
-	  x -= cw((*i).s) * opt.style.size * sq / 10000.0f;
+	  x -= cw((*i).s) * font_size * sq / 10000.0f;
 	  break;
 	case text_style::centre :
-	  x -= cw((*i).s) * opt.style.size * sq / 20000.0f;
+	  x -= cw((*i).s) * font_size * sq / 20000.0f;
 	  break;
       default:
 	// I.e. left, assume we don't need to do
@@ -411,7 +417,7 @@ void printrow_pdf::end_column()
 	// stop warnings in build.
 	break;
       }
-      y = curry - opt.style.size * 0.03f - (*i).y;
+      y = curry - font_size * 0.03f - (*i).y;
       pp.f << x - tx << ' ' << y - ty << " Td ";
       pp.f.output_string((*i).s);
       pp.f << " Tj\n";
@@ -419,6 +425,9 @@ void printrow_pdf::end_column()
     }
     text_bits.clear();
     if(squashed) pp.f << "100 Tz\n";
+    if (opt.label_style.size)
+      pp.f << "/" << pp.f.get_font(cw.font()) << ' ' 
+           << (opt.style.size / 10.0) << " Tf\n";
   }
   // Draw the rows
   if(!rows.empty()) {
@@ -548,7 +557,8 @@ void printrow_pdf::placebell(int i, int dir)
   int j = 0;
   while(j < lastrow.bells() && lastrow[j] != i) j++;
   if(j < lastrow.bells()) {
-    float radius = opt.style.size * 0.07f;
+    float radius  
+      = (opt.label_style.size ? opt.label_style.size : opt.style.size) * 0.07f;
     float xoff = lastrow.bells() + 0.5f;
     xoff *= opt.xspace.in_points();
     if (dir < 0) xoff += 2 * radius;
@@ -574,7 +584,7 @@ void printrow_pdf::placebell(int i, int dir)
 }
 
 void printrow_pdf::text(const string& t, const dimension& x, 
-		       text_style::alignment al, bool between, bool right)
+		        text_style::alignment al, bool between, bool right)
 {
   text_bit tb;
   tb.x = right ? 

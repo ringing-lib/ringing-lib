@@ -1,5 +1,6 @@
 // print.cpp - Printing stuff
-// Copyright (C) 2001 Martin Bright <martin@boojum.org.uk>
+// Copyright (C) 2001, 2020 Martin Bright <martin@boojum.org.uk> and
+// Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -33,6 +34,9 @@ void printrow::options::defaults()
   style.size = 100;
   style.font = "Helvetica";
   style.col.grey = true; style.col.red = 0;
+  label_style.size = 0;
+  label_style.font = "Helvetica";
+  label_style.col.grey = true; label_style.col.red = 0;
   xspace.n = 12; xspace.d = 1; xspace.u = dimension::points; 
   yspace.n = 12; yspace.d = 1; yspace.u = dimension::points;
   line_style s; s.width.n = 1; s.width.d = 2; s.width.u = dimension::points;

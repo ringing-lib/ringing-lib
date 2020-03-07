@@ -1,5 +1,6 @@
 // printm.cpp - Printing whole methods
-// Copyright (C) 2001 Martin Bright <martin@boojum.org.uk>
+// Copyright (C) 2001, 2019, 2020 Martin Bright <martin@boojum.org.uk> and
+// Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -193,8 +194,8 @@ void printmethod::print(printpage& pp)
 		    || !sym || (pn_mode & pn_mask) == pn_first_asym 
                     || i <= (m->length()+1)/2 || i == m->length())
 	     && !((pn_mode & pn_nox) && (*m)[i-1].count_places() == 0)) 
-	    pr.text((*m)[i-1].print(), opt.xspace,text_style::right, 
-		    true, false);
+	    pr.text((*m)[i-1].print(pn_mode & pn_lcross ? change::C_LCROSS : 0),
+                    opt.xspace,text_style::right, true, false);
 	  pr << b[i];
 	  if(row_count < (rows_per_column - 1)
 	     && total_row_count < (total_rows - 1)

@@ -1,5 +1,6 @@
 // -*- C++ -*- printm.h - Printing of whole methods
-// Copyright (C) 2001 Martin Bright <martin@boojum.org.uk>
+// Copyright (C) 2001, 2019, 2020 Martin Bright <martin@boojum.org.uk> and
+// Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -55,7 +56,7 @@ public:
   enum number_mode_t { miss_never, miss_always, miss_column, miss_lead };
   number_mode_t number_mode;
   enum pn_mode_t { pn_none, pn_first, pn_first_asym, pn_all, 
-                   pn_mask = 0x0f, pn_nox = 0x10 };
+                   pn_mask = 0x0f, pn_nox = 0x10, pn_lcross = 0x20 };
   pn_mode_t pn_mode;
   int placebells;
   bool reverse_placebells, placebells_at_rules;

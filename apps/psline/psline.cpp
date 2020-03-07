@@ -1,5 +1,6 @@
 // -*- C++ -*- psline.cpp - print out lines for methods
-// Copyright (C) 2001-2 Martin Bright <martin@boojum.org.uk>
+// Copyright (C) 2001, 2002, 2019, 2020 Martin Bright <martin@boojum.org.uk> 
+// and Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -52,7 +53,10 @@ struct arguments {
   int bells;
   format_t format;
   string title; text_style title_style;
-  string font; int font_size; colour col;
+  string font; 
+  init_val<int, 0> font_size; 
+  init_val<int, 0> label_font_size; 
+  colour col;
   bool custom_lines;
   map<int, printrow::options::line_style> lines;
   bool custom_rules;
@@ -204,8 +208,9 @@ void setup_args(arg_parser& p)
   p.add(new myopt("Style options:"));
   p.add(new myopt('f', "font", "Use PostScript font FONT.  If this option"
     " is not specified, the font defaults to Helvetica.", "FONT"));
-  p.add(new myopt('s', "font-size", "Use font size SIZE, in points", 
-		  "SIZE"));
+  p.add(new myopt('s', "font-size", "Use font size SIZE, in points.  If"
+    " specified, LABELSIZE is used for place bells and calling positions.", 
+		  "SIZE[,LABELSIZE]"));
   p.add(new myopt('c', "colour", "Print everything except lines in COLOUR",
 		  "COLOUR"));
   p.add(new myopt('l', "line",
@@ -231,9 +236,9 @@ void setup_args(arg_parser& p)
     " notation for the first lead, every lead, or no leads.  The default is"
     " to print place notation for the first lead, supressing any mirrored"
     " section due to palindromicity.  Use first-asym to for the whole of the"
-    " first lead, regardlessof symmetry.  Append ,nox to omit `X'"
-    " for cross changes.", "first|first-asym|all|none[,nox]",
-		  true));
+    " first lead, regardlessof symmetry.  Append ,nox to omit `X' for cross"
+    " changes, or ,lcx to make the cross lower-case.", 
+                  "first|first-asym|all|none[,nox|,lcx]", true));
   p.add(new myopt('r', "rule", "Print rule-offs"
     " (thin horizontal lines) after the Ath change in each lead, and every B"
     " changes after that.  For example, use \"-r2,6\" for Stedman.  If no"
@@ -326,8 +331,17 @@ bool myopt::process(const string& arg, const arg_parser& ap) const
       args.font = arg;
       break;
     case 's' :
-      if(!parse_float(arg, f)) return false;
+      s = arg.begin();
+      if (!parse_float(next_bit(arg, s), f)) return false;
       args.font_size = static_cast<int>(f * 10);
+      if (s != arg.end()) {
+        if (!parse_float(next_bit(arg, s), f)) return false;
+        args.label_font_size = static_cast<int>(f * 10);
+      }
+      if (s != arg.end()) {
+        cerr << "Too many arguments: \"" << arg << "\"\n";
+        return false;
+      }
       break;
     case 'i' :
       args.rows_per_column = 0;
@@ -575,8 +589,10 @@ bool myopt::process(const string& arg, const arg_parser& ap) const
 	  return false;
 	}
 	if(s != arg.end()) {
-	  if(next_bit(arg, s) == "nox")
+	  if (next_bit(arg, s) == "nox")
 	    args.pn_mode |= printmethod::pn_nox;
+	  else if (next_bit(arg, s) == "lcx")
+	    args.pn_mode |= printmethod::pn_lcross;
 	  else {
 	    cerr << "Unrecognised argument: \"" << arg << "\"\n";
 	    return false;
@@ -852,6 +868,7 @@ int main(int argc, char *argv[])
     // Set up the things which override the fitting, and everything else
     if(!args.font.empty()) pm.opt.style.font = args.font;
     if(args.font_size) pm.opt.style.size = args.font_size;
+    if(args.label_font_size) pm.opt.label_style.size = args.label_font_size;
     pm.opt.style.col = args.col;
     if(args.xspace != 0) pm.opt.xspace = args.xspace;
     if(args.yspace != 0) pm.opt.yspace = args.yspace;

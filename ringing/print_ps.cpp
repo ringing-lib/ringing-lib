@@ -1,5 +1,6 @@
 // print_ps.cpp - PostScript printing stuff
-// Copyright (C) 2001 Martin Bright <martin@boojum.org.uk>
+// Copyright (C) 2001, 2020 Martin Bright <martin@boojum.org.uk> and
+// Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -77,6 +78,9 @@ const string printpage_ps::def_string =
 "  newpath 2 copy 5 -1 roll 2 mul 3 div 0 360 arc stroke\n"
 "  moveto\n"
 "} BD \n"
+
+// normalpointsize labelpointsize LS - vertically shift for a label
+"/LS {sub 2 div 0 exch rmoveto} BD\n"
 
 // bell MR - move to where that bell is in the current row
 "/MR {xspace mul xstart add ypos yspace add moveto} BD\n"
@@ -402,8 +406,18 @@ void printrow_ps::placebell(int i, int dir)
   int j = 0;
   while(j < lastrow.bells() && lastrow[j] != i) j++;
   if(j < lastrow.bells()) {
-    pp.os << lastrow.bells() << ' ' << opt.style.size << " 10 div PB (" 
-       << j+1 << ((j < 9) ? ") C\n" : ") E\n");
+    if (opt.label_style.size)
+      pp.set_text_style(opt.label_style);
+    pp.os << lastrow.bells() << ' ' 
+          << (opt.label_style.size ? opt.label_style.size : opt.style.size) 
+          << " 10 div PB ";
+    if (opt.label_style.size)
+      pp.os << opt.style.size << " 10 div " 
+            << opt.label_style.size << " 10 div LS ";
+    pp.os << "(" << j+1 << ")" 
+          << ((j < 9) ? " C\n" : " E\n");
+    if (opt.label_style.size)
+      pp.set_text_style(opt.style);
   }
 }
 
@@ -412,6 +426,8 @@ void printrow_ps::text(const string& t, const dimension& x,
 {
   if(!in_column) return;
   fill_gap();
+  if (opt.label_style.size)
+    pp.set_text_style(opt.label_style);
   if(right) pp.os << (lastrow.bells() - 1); else pp.os << '0';
   pp.os << " MR ";
   if(right) pp.os << x.in_points(); else pp.os << -(x.in_points());
@@ -423,6 +439,8 @@ void printrow_ps::text(const string& t, const dimension& x,
     case text_style::right: pp.os << " DR\n"; break;
     case text_style::centre: pp.os << " C\n"; break;
   }
+  if (opt.label_style.size)
+    pp.set_text_style(opt.style);
 }
 
 void printrow_ps::grid()

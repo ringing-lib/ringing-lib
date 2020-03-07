@@ -1,5 +1,6 @@
 // -*- C++ -*- print.h - printing stuff
-// Copyright (C) 2001 Martin Bright <martin@boojum.org.uk>
+// Copyright (C) 2001, 2019, 2020 Martin Bright <martin@boojum.org.uk> and
+// Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -64,19 +65,19 @@ public:
   // These together form a blue line `style'
   struct options {
     enum o_flags {
-      numbers = 0x01,		// Print rows
-      miss_numbers = 0x02       // Miss out numbers underneath lines
+      numbers = 0x01,		   // Print rows
+      miss_numbers = 0x02          // Miss out numbers underneath lines
     };
-    unsigned int flags;		// Flags as above
-    text_style style;           // Text style
-    dimension xspace, yspace;	// Spacing between places and rows
+    unsigned int flags;		   // Flags as above
+    text_style style, label_style; // Text style
+    dimension xspace, yspace;	   // Spacing between places and rows
 
     struct line_style {
       dimension width;
       colour col;
       bool crossing;
     };
-    map<bell, line_style> lines; // What lines draw in what styles
+    map<bell, line_style> lines;   // What lines draw in what styles
 
     line_style grid_style;
     int grid_type;
