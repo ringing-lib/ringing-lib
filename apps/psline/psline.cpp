@@ -576,22 +576,23 @@ bool myopt::process(const string& arg, const arg_parser& ap) const
       if(!arg.empty()) {
 	s = arg.begin();
         string a = next_bit(arg, s);
-	if(a == "none")
+	if (a == "none")
 	  args.pn_mode = printmethod::pn_none;
-	else if(a == "first")
+	else if (a == "first")
 	  args.pn_mode = printmethod::pn_first;
-	else if(a == "first-asym")
+	else if (a == "first-asym")
 	  args.pn_mode = printmethod::pn_first_asym;
-	else if(a == "all")
+	else if (a == "all")
 	  args.pn_mode = printmethod::pn_all;
 	else {
 	  cerr << "Unrecognised argument: \"" << arg << "\"\n";
 	  return false;
 	}
-	if(s != arg.end()) {
-	  if (next_bit(arg, s) == "nox")
+	if (s != arg.end()) {
+          string a = next_bit(arg, s);
+	  if (a == "nox")
 	    args.pn_mode |= printmethod::pn_nox;
-	  else if (next_bit(arg, s) == "lcx")
+	  else if (a == "lcx")
 	    args.pn_mode |= printmethod::pn_lcross;
 	  else {
 	    cerr << "Unrecognised argument: \"" << arg << "\"\n";
