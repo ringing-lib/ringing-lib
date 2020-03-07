@@ -194,8 +194,9 @@ void printmethod::print(printpage& pp)
 		    || !sym || (pn_mode & pn_mask) == pn_first_asym 
                     || i <= (m->length()+1)/2 || i == m->length())
 	     && !((pn_mode & pn_nox) && (*m)[i-1].count_places() == 0)) 
-	    pr.text((*m)[i-1].print(pn_mode & pn_lcross ? change::C_LCROSS : 0),
-                    opt.xspace,text_style::right, true, false);
+	    pr.text( (*m)[i-1].print( (pn_mode & pn_lcross) 
+                                        ? change::C_LCROSS : 0 ),
+                     opt.xspace,text_style::right, true, false );
 	  pr << b[i];
 	  if(row_count < (rows_per_column - 1)
 	     && total_row_count < (total_rows - 1)
