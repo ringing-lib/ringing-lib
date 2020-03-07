@@ -1,5 +1,5 @@
 // -*- C++ -*- chage.h - Class representing a change
-// Copyright (C) 2001, 2009, 2012 Martin Bright <martin@boojum.org.uk>
+// Copyright (C) 2001, 2009, 2012, 2020 Martin Bright <martin@boojum.org.uk>
 // and Richard Smith <richard@ex-parrot.com>
 
 // This library is free software; you can redistribute it and/or
@@ -79,7 +79,14 @@ public:
   friend RINGING_API row& operator*=(row& r, const change& c);
   friend RINGING_API bell& operator*=(bell& i, const change& c);
 
-  string print() const;         // Print place notation to a string
+  enum c_format {
+    // These are defined the same as M_UCROSS, etc.
+    C_UCROSS        =   04,
+    C_LCROSS        =  010,
+    C_DASH          =  020
+  };
+
+  string print( int flags = 0 ) const; // Print place notation to a string
   int bells(void) const { return n; } // Return number of bells
   int sign(void) const;         // Return whether it's odd or even
   bool findswap(bell which) const; // Check whether a particular swap is done
