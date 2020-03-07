@@ -1,5 +1,5 @@
 // change.cpp - Class representing a change
-// Copyright (C) 2001, 2009, 2012 Martin Bright <martin@boojum.org.uk>
+// Copyright (C) 2001, 2009, 2012, 2020 Martin Bright <martin@boojum.org.uk>
 // and Richard Smith <richard@ex-parrot.com>
 
 // This library is free software; you can redistribute it and/or
@@ -119,21 +119,25 @@ change change::reverse(void) const
 }
 
 // Print place notation to a string
-string change::print() const
+string change::print(int flags) const
 {
   string p;
   p.reserve( bells() );
 
-  if(n != 0) {
+  if (n != 0) {
     bell i = 0;
     vector<bell>::const_iterator s;
-    for(s = swaps.begin(); s != swaps.end(); s++) { // Find the next swap
+    for (s = swaps.begin(); s != swaps.end(); s++) { // Find the next swap
       while(i < *s) { p += i.to_char(); ++i; } // Write all the places
       i += 2;
     }
     // Write the remaining places
-    while(i < n) { p += i.to_char(); ++i; }
-    if(p.empty()) p = "X";
+    while (i < n) { p += i.to_char(); ++i; }
+    if (p.empty()) {
+      if (flags & C_LCROSS) p = "x";
+      if (flags & C_DASH) p = "-";
+      else p = "X";  // For backwards compatibility we make this the default
+    }
   }
   return p;
 }
