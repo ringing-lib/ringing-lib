@@ -69,6 +69,8 @@ namespace tok_types
     new_line    = '\n',
     semicolon   = ';',
     reverse     = '~',
+    greater     = '>',
+    less        = '<',
     ctrl_z      = '\x1A',   /* EOF marker in microSIRIL */
     comment     = tokeniser::first_token,
     string_lit,
@@ -76,9 +78,15 @@ namespace tok_types
     pn_lit,
     def_assign,    /* ?= */
     append_assign, /* .= */
-    logic_and,
-    logic_or,
-    regex_lit
+    logic_and,     /* && */
+    logic_or,      /* || */
+    equals,        /* == */
+    not_equals,    /* != */
+    greater_eq,    /* >= */
+    less_eq,       /* <= */
+    increment,     /* ++ */
+    decrement,     /* -- */
+    regex_lit      /* /.../ */
   };
 }
 
@@ -135,7 +143,10 @@ public:
       qq( "\"", tok_types::string_lit, string_token::one_line ), 
       sym( "&" ), asym( "+" ), defass( "?=", tok_types::def_assign ),
       appass( ".=", tok_types::append_assign ),
-      land( "&&", tok_types::logic_and ), lor( "||", tok_types::logic_or )
+      land( "&&", tok_types::logic_and ), lor( "||", tok_types::logic_or ),
+      cmpeq( "==", tok_types::equals ), cmpne( "!=", tok_types::not_equals ),
+      cmpge( ">=", tok_types::greater_eq ), cmple( "<=", tok_types::less_eq ),
+      inc( "++", tok_types::increment ), dec( "--", tok_types::decrement )
   {
     // Note:  It is important that &sym is added after &land; and
     // similarly, that &r is added after &c.  This is because && is a
@@ -148,6 +159,9 @@ public:
     add_qtype(&q);      add_qtype(&qq);
     add_qtype(&defass); add_qtype(&appass); 
     add_qtype(&land);   add_qtype(&lor);
+    add_qtype(&cmpeq);  add_qtype(&cmpne);
+    add_qtype(&cmpge);  add_qtype(&cmple);
+    add_qtype(&inc);    add_qtype(&dec);
     add_qtype(&sym);    add_qtype(&asym);
 
     if ( args.sirilic_syntax ) 
@@ -166,8 +180,7 @@ public:
     case name: case num_lit: case open_paren: case close_paren:
     case comma: case times: case assignment: case new_line: case semicolon:
     case comment: case string_lit: case transp_lit: case pn_lit: 
-    case def_assign: case append_assign: 
-    case logic_and: case logic_or: case reverse:
+    case def_assign: case append_assign: case reverse:
       return;
 
     case ctrl_z:
@@ -176,11 +189,15 @@ public:
       break;
 
     case regex_lit: case open_brace: case close_brace: case colon:
+    case logic_and: case logic_or: case equals: case not_equals: 
+    case less: case greater: case less_eq: case greater_eq:
+    case increment: case decrement:
       // These can only work when msiril comments are disabled.
       // Regexp literals are disabled because they conflict with 
       // the MicroSiril comment; alternative blocks are disabled because
       // they're essentially useless without regexp literals to put in 
-      // the test.
+      // the test; and logical operators and comparisons are disabled 
+      // because without alternative blocks, there's nowhere to put them. 
       if ( !args.msiril_syntax ) return;
       break;
     }
@@ -194,7 +211,7 @@ private:
   line_comment_impl c;
   string_token r, q, qq;
   pn_impl sym, asym;
-  basic_token defass, appass, land, lor;
+  basic_token defass, appass, land, lor, cmpeq, cmpne, cmpge, cmple, inc, dec;
 };
 
 
@@ -342,30 +359,22 @@ statement msparser::parse()
   // Extents directive
   if ( cmd.size() == 2 && cmd[0].type() == tok_types::num_lit
        && cmd[1].type() == tok_types::name && cmd[1] == "extents" )
-    {
-      return statement( new extents_stmt( string_to_int(cmd[0]) ) );
-    }
+    return statement( new extents_stmt( string_to_int(cmd[0]) ) );
 
   // Rows directive
   if ( cmd.size() == 2 && cmd[0].type() == tok_types::num_lit
        && cmd[1].type() == tok_types::name && cmd[1] == "rows" )
-    {
-      return statement( new rows_stmt( string_to_int(cmd[0]) ) );
-    }
+    return statement( new rows_stmt( string_to_int(cmd[0]) ) );
 
   // Rounds directive
   if ( cmd.size() == 2 && cmd[0].type() == tok_types::name 
        && cmd[0] == "rounds" && cmd[1].type() == tok_types::transp_lit )
-    {
-      return statement( new rounds_stmt(cmd[1]) );
-    }
+    return statement( new rounds_stmt(cmd[1]) );
 
   // Row mask directive
   if ( cmd.size() == 2 && cmd[0].type() == tok_types::name 
        && cmd[0] == "row_mask" && cmd[1].type() == tok_types::regex_lit )
-    {
-      return statement( new row_mask_stmt(music_details(cmd[1])) );
-    }
+    return statement( new row_mask_stmt(music_details(cmd[1])) );
 
   // Import directive
   if ( !args.disable_import
@@ -474,6 +483,38 @@ bool msparser::find_one_of( vector< token >::const_iterator first,
   return found;
 }
 
+static void 
+check_bin_op( vector< token >::const_iterator const& first,
+              vector< token >::const_iterator const& split,
+              vector< token >::const_iterator const& last,
+              const char* op ) {
+  if ( first == split )
+    throw runtime_error
+      ( make_string() << "Binary operator \"" << op 
+                      << "\" needs first argument" );
+      
+  if ( split+1 == last)
+    throw runtime_error
+      ( make_string() << "Binary operator \"" << op 
+                      << "\" needs second argument" );
+}
+
+static void 
+check_unary_op( vector< token >::const_iterator const& first,
+                vector< token >::const_iterator const& last,
+                const char* op,
+                tok_types::enum_t arg_type = (tok_types::enum_t)(-1),
+                const char* arg_type_name = NULL ) {
+  if ( first+1 == last)
+    throw runtime_error
+      ( make_string() << "Unary prefix operator \"" << op 
+                      << "\" needs an argument" );
+  if ( arg_type != (tok_types::enum_t)(-1) && (first + 1)->type() != arg_type )
+    throw runtime_error
+      ( make_string() << "The argument to the \"" << op << "\" operator "
+                         "must be " << arg_type_name );
+}
+
 expression 
 msparser::make_expr( vector< token >::const_iterator first, 
 		     vector< token >::const_iterator last ) const
@@ -578,56 +619,58 @@ msparser::make_expr( vector< token >::const_iterator first,
 
   // Comma is the next lowest precedence operator
   // It is left associative
-  if ( find( first, last, tok_types::comma, split ) )
-    {
-      if ( first == split )
-	throw runtime_error
-	  ( "Binary operator \",\" needs first argument" );
-      
-      if ( split+1 == last)
-	throw runtime_error
-	  ( "Binary operator \",\" needs second argument" );
-      
-      return expression
-	( new list_node( make_expr( first, split ),
-			 make_expr( split+1, last ) ) );
-    }
+  if ( find( first, last, tok_types::comma, split ) ) {
+    check_bin_op( first, split, last, "," );
+    return expression( new list_node( make_expr( first, split ),
+                                      make_expr( split+1, last ) ) );
+  }
 
   // Logical operators -- Or (||) is lowest precedence
-  if ( find( first, last, tok_types::logic_or, split ) )
-    {
-      if ( first == split )
-	throw runtime_error
-	  ( "Binary operator \"||\" needs first argument" );
-      
-      if ( split+1 == last)
-	throw runtime_error
-	  ( "Binary operator \"||\" needs second argument" );
-
-      return expression
-	( new or_node( make_expr( first, split ),
-		       make_expr( split+1, last ) ) );
-    }
+  if ( find( first, last, tok_types::logic_or, split ) ) {
+    check_bin_op( first, split, last, "||" );
+    return expression( new or_node( make_expr( first, split ),
+                                    make_expr( split+1, last ) ) );
+  }
 
   // Logical operators -- And (&&) is next lowest precedence
-  if ( find( first, last, tok_types::logic_and, split ) )
-    {
-      if ( first == split )
-	throw runtime_error
-	  ( "Binary operator \"&&\" needs first argument" );
-      
-      if ( split+1 == last)
-	throw runtime_error
-	  ( "Binary operator \"&&\" needs second argument" );
+  if ( find( first, last, tok_types::logic_and, split ) ) {
+    check_bin_op( first, split, last, "&&" );
+    return expression( new and_node( make_expr( first, split ),
+                                     make_expr( split+1, last ) ) );
+  }
 
-      return expression
-	( new and_node( make_expr( first, split ),
-			make_expr( split+1, last ) ) );
+  // Comparison operators.  We handle these at a single precedence level,
+  // unlike C, C++, Perl, Java, JS, etc. which all give == and != lower 
+  // precedence.  Python does the same as us and flattens its comparisons 
+  // to a single precedence level.
+  vector<tok_types::enum_t> cmpops;
+  cmpops.push_back( tok_types::equals );
+  cmpops.push_back( tok_types::not_equals );
+  cmpops.push_back( tok_types::greater );
+  cmpops.push_back( tok_types::less );
+  cmpops.push_back( tok_types::greater_eq );
+  cmpops.push_back( tok_types::less_eq );
+  if ( find_one_of( first, last, cmpops, split ) ) {
+    cmp_node::cmp_t cmp;
+    switch (split->type()) {
+      case tok_types::equals:     cmp = cmp_node::equals;     break;
+      case tok_types::not_equals: cmp = cmp_node::not_equals; break;
+      case tok_types::greater:    cmp = cmp_node::greater;    break;
+      case tok_types::less:       cmp = cmp_node::less;       break;
+      case tok_types::greater_eq: cmp = cmp_node::greater_eq; break;
+      case tok_types::less_eq:    cmp = cmp_node::less_eq;    break;
+      default: abort();
     }
+    check_bin_op( first, split, last, cmp_node::symbol(cmp) );
+    return expression( new cmp_node( make_expr( first, split ),
+                                     make_expr( split+1, last ), cmp ) );
+  }
 
-  // A number literal in a repeated block is the
-  // only remaining construct that is not a single token.
-  if ( first->type() == tok_types::num_lit ||
+  // TODO: Support a integer expression in a repeat block
+
+  // A repeated block is the only remaining construct that is not a single
+  // token.
+  if ( first->type() == tok_types::num_lit && first + 1 != last ||
        first->type() == tok_types::name && *first == "repeat" )
     {
       iter_t begin_arg = first + 1;
@@ -649,32 +692,32 @@ msparser::make_expr( vector< token >::const_iterator first,
 			     make_expr( begin_arg, last ) ) );
     }
 
-  if ( first->type() == tok_types::name && *first == "echo" ) 
-    {
-      if ( first + 1 == last )
-	throw runtime_error( "The echo operator requires an argument" );
-      if ( (first + 1)->type() != tok_types::string_lit )
-	throw runtime_error( "The echo operator's argument must be a string" );
+  // Unary opreators
 
-      return expression( new string_node( *(first+1), true ) );
-    }
+  if ( first->type() == tok_types::increment || 
+       first->type() == tok_types::decrement ) {
+    char const* sym = "++";  int val = +1;
+    if (first->type() == tok_types::decrement) sym = "--", val = -1;
+    check_unary_op(first, last, sym, tok_types::name, "a symbol name");
+    return expression( new increment_node( *(first+1), val ) );
+  }
 
-  // Reversals are high precedence unary prefix operators
-  if ( first->type() == tok_types::reverse )
-    {
-      if ( first + 1 == last )
-	throw runtime_error
-	  ( "The reverse operator requires an argument" );
+  if ( first->type() == tok_types::name && *first == "echo" ) {
+    check_unary_op(first, last, "echo",
+                   tok_types::string_lit, "a string");
+    return expression( new string_node( *(first+1), true ) );
+  }
 
-      return expression( new reverse_node( make_expr( first+1, last ) ) );
-    }
+  if ( first->type() == tok_types::reverse ) {
+    check_unary_op(first, last, "~");
+    return expression( new reverse_node( make_expr( first+1, last ) ) );
+  }
 
   // Everything left is a literal of some sort
   if ( last - first != 1 )
     throw runtime_error( make_string() << "Parse error before " << *first  );
 
-  switch ( first->type() )
-    {
+  switch ( first->type() ) {
     case tok_types::string_lit:
       return expression( new string_node( *first ) );
 
@@ -699,10 +742,13 @@ msparser::make_expr( vector< token >::const_iterator first,
     case tok_types::regex_lit:
       return expression( new pattern_node( bells(), *first ) );
 
+    case tok_types::num_lit:
+      return expression( new integer_node( string_to_int(*first) ) );
+
     default:
       throw runtime_error( "Unknown token in input" );
       return expression( NULL ); // To keep MSVC 5 happy
-    }
+  }
 }
 
 //////////////////////////////////////////////////////////
