@@ -224,6 +224,11 @@ void echo_stmt::execute( execution_context& e )
   proof_context p(e); p.set_silent(false);
   string str( expr.string_evaluate(p) );
 
-  if (substitute) p.output_string(str, false);
-  else e.output() << str << "\n";
+  try {
+    if (substitute) p.output_string(str, false);
+    else e.output() << str << "\n";
+  } 
+  catch( const script_exception& ex ) {
+    if ( ex.t == script_exception::do_abort ) e.set_failure();
+  }
 }
