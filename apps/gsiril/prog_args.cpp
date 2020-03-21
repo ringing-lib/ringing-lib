@@ -230,6 +230,11 @@ void arguments::bind( arg_parser& p )
            "Assign lead end change to SYM; default 'lh'",
            "SYM", lh_symbol ) );
 
+  p.add( new string_opt
+         ( '\0', "payload-symbol", 
+           "Assign filter payload to SYM",
+           "SYM", payload_symbol ) );
+
   p.add( new boolean_opt
          ( '\0', "show-lead-heads", 
            "List the lead heads for the specified methods",

@@ -275,6 +275,13 @@ void filter( execution_context& e, const arguments& args )
           ( make_pair( args.lead_symbol, 
                        expression( new pn_node( m ) ) ) );
 
+      // Define the payload
+      if ( args.payload_symbol.size() && i->has_facet<litelib::payload>() )
+        e.define_symbol
+          ( make_pair( args.payload_symbol, 
+                       expression( new string_node
+                                     ( i->get_facet<litelib::payload>() ) ) ) );
+
       if ( run( e, args ) ) 
          // Add M_PLUS in case our output is being fed back as a definition.
          cout << i->meth().format( method::M_DASH | method::M_SYMMETRY 

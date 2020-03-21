@@ -75,6 +75,7 @@ struct arguments
   init_val<bool,false> prove_one;
   string               lead_symbol;
   string               lh_symbol;
+  string               payload_symbol;
   init_val<bool,false> lead_includes_lh;
 
   init_val<bool,false> show_lead_heads;

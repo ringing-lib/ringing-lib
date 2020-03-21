@@ -221,5 +221,9 @@ void import_stmt::execute( execution_context& e )
 
 void echo_stmt::execute( execution_context& e )
 {
-  e.output() << str << "\n";
+  proof_context p(e); p.set_silent(false);
+  string str( expr.string_evaluate(p) );
+
+  if (substitute) p.output_string(str, false);
+  else e.output() << str << "\n";
 }

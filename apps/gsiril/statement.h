@@ -170,13 +170,14 @@ private:
 class echo_stmt : public statement::impl
 {
 public:
-  explicit echo_stmt( const string& str )
-    : str(str) {}
+  explicit echo_stmt( const expression& expr, bool substitute )
+    : expr(expr), substitute(substitute) {}
 
 private:
   virtual void execute( execution_context& );
 
-  string str;
+  expression expr;
+  bool substitute;
 };
 
 

@@ -397,10 +397,13 @@ statement msparser::parse()
       ( new prove_stmt( make_expr( cmd.begin() + 1, cmd.end() ) ) );
 
   // Echo directive
-  if ( cmd.size() <= 2 && cmd[0].type() == tok_types::name
-       && cmd[0] == "echo" && ( cmd.size() == 1 ||
-                                cmd[1].type() == tok_types::string_lit ) )
-    return statement( new echo_stmt(cmd.size() == 1 ? string() : cmd[1]) );
+  if ( cmd[0].type() == tok_types::name && cmd[0] == "echo" )
+    return statement
+      ( new echo_stmt( cmd.size() == 1 
+                         ? expression( new nop_node )
+                         : make_expr( cmd.begin() + 1, cmd.end() ),
+                       cmd.size() == 2 
+                         && cmd[1].type() == tok_types::string_lit ) );
 
   // Definition
   if ( cmd.size() > 1 && cmd[0].type() == tok_types::name
