@@ -109,12 +109,6 @@ void initialise( execution_context& ex, const arguments& args )
 #   include "init.dat"
   ;
 
-  // The 'everyrow' symbol is defined to "@" if -E is specified.
-  if ( args.everyrow_only )
-    init_string += "everyrow = \"@\"\n";
-  else
-    init_string += "everyrow = \n";
-
   // Turn off interactivity whilst it prepopulates the symbol table
   bool interactive = ex.interactive(false);
   bool verbose     = ex.verbose(false);
@@ -157,6 +151,10 @@ void initialise( execution_context& ex, const arguments& args )
         exit(3);
       }
     }
+
+  // The 'everyrow' symbol is defined to "@" if -E is specified.
+  if (args.everyrow_only)
+    ex.define_symbol(make_pair("everyrow", expression(new string_node("@"))));
 
   ex.interactive(interactive);
   ex.verbose(verbose);
