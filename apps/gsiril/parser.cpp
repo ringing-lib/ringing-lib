@@ -164,12 +164,16 @@ public:
     add_qtype(&inc);    add_qtype(&dec);
     add_qtype(&sym);    add_qtype(&asym);
 
-    if ( args.sirilic_syntax ) 
-      set_id_chars( "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-                    "abcdefghijklmnopqrstuvwxyz",
+    // Properly MicroSiril mode should disable _, but that would be unhelpful
+    if ( args.msiril_syntax ) 
+      set_id_chars( // Characters allowed at the start of an ID:
                     "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
                     "abcdefghijklmnopqrstuvwxyz"
-                    "01234567890"  "%-!" );  // Sirilic adds '%', '-', '!'
+                    "_",
+                    // Characters allowed within an ID:
+                    "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                    "abcdefghijklmnopqrstuvwxyz"
+                    "01234567890"  "_%-!" );
   }
 
   virtual void validate( const token& t ) const
