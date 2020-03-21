@@ -94,12 +94,10 @@ int parse_all( execution_context& e,
   return count;
 }
 
-void welcome()
-{
-  cout << "Ringing Class Library / gsiril " RINGING_VERSION ".\n"
-"Gsiril is free software covered by the GNU General Public License, and you\n"
-"are welcome to change it and/or distribute copies of it under certain\n"
-"conditions."  << endl;
+void welcome() {
+  cout << "Ringing Class Library / gsiril " RINGING_VERSION "\n"
+          "GSiril is licensed under the GNU General Public License, v2+" 
+       << endl;
 }
 
 
