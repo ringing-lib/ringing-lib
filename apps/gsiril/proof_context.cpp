@@ -84,7 +84,7 @@ proof_context::~proof_context()
 void proof_context::termination_sequence(ostream& os) const
 {
   if (underline) {
-    if ( char const* e = RINGING_TERMINFO_VAR( exit_underline_mode ) ) {
+    if ( char const* e = RINGING_TERMINFO_VAR(exit_underline_mode) ) {
       os << e; 
       underline = false; 
     }
@@ -289,8 +289,7 @@ string proof_context::substitute_string( const string &str,
         // followed by a literal brace there, and we want to avoid 
         // changing the meaning of legal MircoSiril programs.
         if ( i+1 != e && i[1] == '{' 
-             && !ectx.get_args().msiril_syntax
-             && !ectx.get_args().sirilic_syntax) {
+             && !ectx.get_args().msiril_syntax) {
           string::const_iterator j = std::find(i+2, e, '}');
           if (j == e) throw runtime_error("Incomplete variable interpolation "
                                           "in string '" + str + "'");
@@ -315,8 +314,14 @@ string proof_context::substitute_string( const string &str,
 	break;
       case '_':
         if (ectx.get_args().sirilic_syntax) {
-          if ( char const* e = RINGING_TERMINFO_VAR( enter_underline_mode ) ) {
-            os << e; underline = true; break; 
+          if (!underline) {
+            if ( char const* e = RINGING_TERMINFO_VAR(enter_underline_mode) ) {
+              os << e; underline = true; break; 
+            }
+          } else {
+            if ( char const* e = RINGING_TERMINFO_VAR(exit_underline_mode) ) {
+              os << e; underline = false; break; 
+            }
           }
         } // fall through
       default:
