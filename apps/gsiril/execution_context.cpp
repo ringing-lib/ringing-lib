@@ -16,8 +16,6 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-// $Id$
-
 #include <ringing/common.h>
 
 #if RINGING_HAS_PRAGMA_INTERFACE
@@ -26,7 +24,6 @@
 #include "expr_base.h" // Must be before execution_context.h because 
                        // of bug in MSVC 6.0
 #include "expression.h"
-#include "statement.h"
 #include "execution_context.h"
 
 #include <ringing/streamutils.h>
@@ -59,21 +56,20 @@ int execution_context::bells( int b )
 pair<size_t,size_t> 
 execution_context::expected_length( pair<size_t, size_t> l )
 { 
-  // Define __length__ to be the expected length.  This allows __wronglen__
-  // to include the expected length in the error message, e.g.
-  // __wronglen__ = "${__length__} rows expected";
+  // Define min_length and max_length so they can be referenced by 
+  // tooshort and toolong, respectively.
   if (l.first && l.second) {
-    string len;
-    if (l.first == l.second)
-      len = make_string() << l.first;
-    else  
-      len = make_string() << l.first << '-' << l.second;
     sym_table.define
-      ( pair<const string, expression>( "__length__", 
-          expression( new string_node(len) ) ) );
+      ( pair<const string, expression>( "min_length", 
+          expression( new string_node(make_string() << l.first) ) ) );
+    sym_table.define
+      ( pair<const string, expression>( "max_length", 
+          expression( new string_node(make_string() << l.second) ) ) );
   }
-  else
-    sym_table.undefine("__length__");
+  else {
+    sym_table.undefine("min_length");
+    sym_table.undefine("max_length");
+  }
 
   swap( l, args.expected_length ); 
   return l;
@@ -132,13 +128,6 @@ bool execution_context::define_symbol( const pair< const string, expression > &d
     sym_table.define
       ( pair<const string, expression>( "__first__", defn.second ) );
   return false;
-}
-
-void execution_context::prove_symbol( const string& sym )
-{
-  expression e( new symbol_node(sym) );
-  statement s( new prove_stmt(e) );
-  s.execute( *this );
 }
 
 void execution_context::increment_node_count() const

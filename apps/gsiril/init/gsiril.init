@@ -22,8 +22,9 @@ __summary__ = "# rows ending in @"
 true         = __summary__, "Touch is true"
 notround     = __summary__, "Is this OK?"
 false        = __summary__, "Touch is false in $ rows"
-__wronglen__ = __summary__, "Touch is of wrong length:\",
-                            " ${__length__} rows expected"
+tooshort     = __summary__, "Touch is too short: \",
+                            "at least ${min_length} rows expected"
+toolong      = "Touch exceeds maximum length of ${max_length} rows$$"
 conflict     = __summary__, "Touch not completed due to false row$$"
 
 rounds   =

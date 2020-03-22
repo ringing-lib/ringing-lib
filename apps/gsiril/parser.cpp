@@ -16,8 +16,6 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-// $Id$
-
 #include <ringing/common.h>
 
 #if RINGING_HAS_PRAGMA_INTERFACE
@@ -365,10 +363,18 @@ statement msparser::parse()
        && cmd[1].type() == tok_types::name && cmd[1] == "extents" )
     return statement( new extents_stmt( string_to_int(cmd[0]) ) );
 
-  // Rows directive
+  // Rows directive (simple form)
   if ( cmd.size() == 2 && cmd[0].type() == tok_types::num_lit
        && cmd[1].type() == tok_types::name && cmd[1] == "rows" )
     return statement( new rows_stmt( string_to_int(cmd[0]) ) );
+
+  // Rows directive (range form)
+  if ( cmd.size() == 4 && cmd[0].type() == tok_types::num_lit
+       && cmd[1].type() == tok_types::name && cmd[1] == "to" 
+       && cmd[2].type() == tok_types::num_lit
+       && cmd[3].type() == tok_types::name && cmd[3] == "rows" )
+    return statement( new rows_stmt( string_to_int(cmd[0]),
+                                     string_to_int(cmd[1]) ) );
 
   // Rounds directive
   if ( cmd.size() == 2 && cmd[0].type() == tok_types::name 

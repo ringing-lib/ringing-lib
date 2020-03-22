@@ -16,8 +16,6 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-// $Id$
-
 #include <ringing/common.h>
 
 #include <ringing/pointers.h>
@@ -30,6 +28,7 @@
 #include "execution_context.h"
 #include "args.h"
 #include "stringutils.h"
+#include "statement.h"
 #include "expr_base.h"
 #include "expression.h"
 #include "prog_args.h"
@@ -174,7 +173,9 @@ void prove_final_symbol( execution_context& e, const arguments& args )
            || !e.done_one_proof() && e.defined("__first__") ) {
         if ( e.verbose() )
           cerr << "Proving " << args.prove_symbol << std::endl;
-        e.prove_symbol( args.prove_symbol );
+        statement s( new prove_stmt( 
+          expression( new symbol_node(args.prove_symbol) ) ) );
+        s.execute(e);
       }
     } 
   catch (const exception& ex ) 

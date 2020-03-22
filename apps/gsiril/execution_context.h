@@ -16,8 +16,6 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-// $Id$
-
 #ifndef GSIRIL_EXECUTION_CONTEXT_INCLUDED
 #define GSIRIL_EXECUTION_CONTEXT_INCLUDED
 
@@ -69,7 +67,6 @@ public:
 
   void undefine_symbol( const string& sym );
   expression lookup_symbol( const string &sym ) const;
-  void prove_symbol( const string& str ); 
  
   void extents( int n ) { args.num_extents = n; }
   int  extents() const { return args.num_extents; }

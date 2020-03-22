@@ -16,8 +16,6 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-// $Id$
-
 #include <ringing/common.h>
 
 #if RINGING_HAS_PRAGMA_INTERFACE
@@ -83,58 +81,50 @@ void prove_stmt::execute( execution_context& e )
     throw runtime_error( "Already done proof" );
 
   int const quiet = e.get_args().quiet;
-  try
-    {
-      e.set_done_proof();
+
+  e.set_done_proof();
   
-      if (e.get_args().determine_bells) {
-        cout << e.bells() << " bells" << endl;
-        return;
-      }
+  if (e.get_args().determine_bells) {
+    cout << e.bells() << " bells" << endl;
+    return;
+  }
 
-      proof_context p(e);
+  proof_context p(e);
 
-      try {
-        p.execute_symbol( "start" );
-        expr.execute(p, +1);
-        p.execute_symbol( "finish" );
-      } 
-      catch( const script_exception& ex ) {
-        if ( ex.t == script_exception::do_abort ) {
-          if ( e.get_args().quiet ) p.set_silent(true);
-          p.execute_symbol( "abort" );
-          e.set_failure();
-        }
-        return;
-      }
-   
+  try {
+    p.execute_symbol( "start" );
+    expr.execute(p, +1);
+    p.execute_symbol( "finish" );
+  } 
+  catch( const script_exception& ex ) {
+    if ( ex.t == script_exception::do_abort ) {
       if ( e.get_args().quiet ) p.set_silent(true);
-      switch ( p.state() )
-	{
-	case proof_context::rounds: 
-          if ( e.expected_length().first && 
-               p.length() < e.expected_length().first ||
-               e.expected_length().second &&
-               p.length() > e.expected_length().second  ) {
-            p.execute_symbol( "__wronglen__" );
-            e.set_failure();
-          }
-          else
-	    p.execute_symbol( "true" ); 
-	  break;
-	case proof_context::notround:
-	  p.execute_symbol( "notround" );
-          e.set_failure();
-	  break;
-	case proof_context::isfalse:
-	  p.execute_symbol( "false" ); 
-          e.set_failure();
-	  break;
-	}
-    } 
-  catch ( const script_exception& ) 
-    {
+      p.execute_final_symbol( "abort" );
+      e.set_failure();
     }
+    return;
+  }
+   
+  if ( e.get_args().quiet ) p.set_silent(true);
+  switch ( p.state() ) {
+  case proof_context::rounds: 
+    if ( e.expected_length().first && 
+         p.length() < e.expected_length().first ) {
+      p.execute_final_symbol("tooshort");
+      e.set_failure();
+    }
+    else
+      p.execute_final_symbol("true"); 
+    break;
+  case proof_context::notround:
+    p.execute_final_symbol("notround");
+    e.set_failure();
+    break;
+  case proof_context::isfalse:
+    p.execute_final_symbol("false"); 
+    e.set_failure();
+    break;
+  }
 }
 
 void extents_stmt::execute( execution_context& e )
@@ -155,10 +145,14 @@ void bells_stmt::execute( execution_context& e )
 
 void rows_stmt::execute( execution_context& e )
 {
-  e.expected_length( pair<size_t,size_t>(len,len) );
+  e.expected_length(len);
 
-  if ( e.verbose() )
-    e.output() << "Set expected length to " << len << endl;
+  if ( e.verbose() ) {
+    e.output() << "Set expected length to ";
+    if (len.first == len.second) e.output() << len.first;
+    else e.output() << len.first << '-' << len.second; 
+    e.output() << endl;
+  }
 }
 
 void rounds_stmt::execute( execution_context& e )
