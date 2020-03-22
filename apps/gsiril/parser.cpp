@@ -406,7 +406,7 @@ statement msparser::parse()
   if ( cmd[0].type() == tok_types::name && cmd[0] == "echo" )
     return statement
       ( new echo_stmt( cmd.size() == 1 
-                         ? expression( new nop_node )
+                         ? expression( new string_node("") )
                          : make_expr( cmd.begin() + 1, cmd.end() ),
                        cmd.size() == 2 
                          && cmd[1].type() == tok_types::string_lit ) );
