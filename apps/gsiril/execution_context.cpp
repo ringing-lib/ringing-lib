@@ -80,8 +80,8 @@ execution_context::expected_length( pair<size_t, size_t> l )
 }
 
 execution_context::execution_context( ostream& os, const arguments& a )
-  : args(a), rmask("*"), os(&os), failed(false), node_count(0), 
-    done_proof(false)
+  : args(a), rmask(a.row_mask.length() ? a.row_mask : "*"), os(&os), 
+    failed(false), node_count(0), done_proof(false)
 {
   if ( !args.rounds.bells() )
     args.rounds = row(args.bells);

@@ -57,6 +57,7 @@ struct arguments
 
   pair<size_t, size_t> expected_length;
   init_val<bool,false> everyrow_only;
+  string               row_mask;
 
   init_val<bool,false> filter;
 
