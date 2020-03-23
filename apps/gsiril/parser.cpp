@@ -773,3 +773,31 @@ make_default_parser( istream& in, const arguments& args )
 {
   return shared_pointer<parser>( new msparser( in, args ) );
 }
+
+int parser::run( execution_context& e, const string& filename,
+                 error_policy ep  ) 
+{
+  int count(0);
+
+  while (true) {
+    try {
+      statement s( parse() );
+      if ( s.eof() ) break;
+      s.execute(e);
+      ++count;
+    }
+    catch (const exception& ex ) {
+      if (filename.empty())
+        cerr << "Error: " << ex.what() << endl;
+      else
+        cerr << filename << ':' << line() << ": " << ex.what() << endl;
+ 
+      if (ep == fatal)
+        exit(2);
+      else if (ep == propagate)
+        throw runtime_error( "Error importing module: " + filename );
+    }
+  }
+
+  return count;
+}

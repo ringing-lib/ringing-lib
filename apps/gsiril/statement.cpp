@@ -174,40 +174,46 @@ void row_mask_stmt::execute( execution_context& e )
 
 void import_stmt::execute( execution_context& e )
 {
-  bool i( e.interactive() );
-  bool v( e.verbose() );
-  int b( e.bells() );
+  class restore_values {
+    execution_context& e;
+    bool i, v;
+    int b;
+    expression first;
 
-  try
+  public:
+    restore_values( execution_context& e )
+      : e(e), i( e.interactive() ), v( e.verbose() ), b( e.bells() ),
+        first(NULL)
     {
-      shared_pointer<istream> in(( load_file(name) )); 
-      if ( !in )
-	throw runtime_error
-	  ( make_string() << "Unable to load resource: " << name );
-      
-      shared_pointer<parser> p( make_default_parser(*in, e.get_args() ) );
-      e.interactive(false);
-      e.verbose(false);
-      while (true)
-	{
-	  statement s( p->parse() );
-	  if ( s.eof() ) break;
-	  s.execute(e);
-	}
+      if (e.defined("__first__"))
+       first = e.lookup_symbol("__first__");
     }
-  catch (...)
-    {
-      // Restore bells, verbose, interactive flags
+
+   ~restore_values() {
       if (b > 0) e.bells(b);
       e.interactive(i);
       e.verbose(v);
-      throw;
-    }
 
-  // Restore bells, verbose, interactive flags
-  if (b > 0) e.bells(b);
-  e.interactive(i);
-  e.verbose(v);
+      if (first.isnull())
+        e.undefine_symbol("__first__");
+      else
+        e.define_symbol(pair<const string, expression>("__first__", first));
+   }
+  };
+
+  { // Use RAII to revert the number of bells, etc. in case we throw.
+    restore_values restore(e);
+  
+    shared_pointer<istream> in(( load_file(name) )); 
+    if ( !in )
+      throw runtime_error
+        ( make_string() << "Unable to load resource: " << name );
+        
+    shared_pointer<parser> p( make_default_parser(*in, e.get_args() ) );
+    e.interactive(false);
+    e.verbose(false);
+    p->run(e, name, parser::propagate);
+  }
 
   if ( e.verbose() )
     e.output() << "Resource \"" << name << "\" loaded" << endl;

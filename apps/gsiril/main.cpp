@@ -63,36 +63,6 @@
 
 RINGING_USING_NAMESPACE
 
-int parse_all( execution_context& e,
-	       const shared_pointer<parser>& p,
-	       const string& filename,
-	       bool errors_are_fatal )
-{
-  int count(0);
-
-  while (true)
-    {
-      try 
-	{
-	  statement s( p->parse() );
-	  if ( s.eof() ) break;
-	  s.execute(e);
-	  ++count;
-	}
-      catch (const exception& ex )
-	{
-          if (filename.empty())
-	    cerr << "Error: " << ex.what() << endl;
-          else
-	    cerr << filename << ':' << p->line() << ": " << ex.what() << endl;
- 
-	  if (errors_are_fatal) exit(2);
-	}
-    }
-
-  return count;
-}
-
 void welcome() {
   cout << "Ringing Class Library / gsiril " RINGING_VERSION "\n"
           "GSiril is licensed under the GNU General Public License, v2+" 
@@ -110,27 +80,17 @@ void initialise( execution_context& ex, const arguments& args )
   bool interactive = ex.interactive(false);
   bool verbose     = ex.verbose(false);
 
-  // Prepopulate symbol table
+  // Prepopulate symbol table, first using the init script
   if (!args.no_init_file) {
     RINGING_ISTRINGSTREAM in(init_string);
 
-    parse_all(ex, make_default_parser(in, args), "INIT", true);
+    make_default_parser(in, args)->run(ex, "INIT", parser::fatal);
   }
 
-  // Import any required modules
-  for ( vector< string >::const_iterator 
-	  i(args.import_modules.begin()), e( args.import_modules.end());
-	i != e; ++i ) 
-    {
-      shared_pointer<istream> in( load_file(*i) );
-
-      if ( !in )
-	throw runtime_error
-	  ( make_string() << "Unable to find module: " << *i );
-
-      parse_all(ex, make_default_parser(*in, args), *i, true);
-    }
-    
+  // ... and secondly using any -D options on the command line.  
+  // We want to do this before importing modules so that modules loaded
+  // with a -m option are as similar as possible to those imported with 
+  // an import statement.
   for ( vector< string >::const_iterator 
 	  i(args.definitions.begin()), e( args.definitions.end());
 	i != e; ++i ) 
@@ -149,6 +109,20 @@ void initialise( execution_context& ex, const arguments& args )
       }
     }
 
+  // Import any required modules
+  for ( vector< string >::const_iterator 
+	  i(args.import_modules.begin()), e( args.import_modules.end());
+	i != e; ++i ) 
+    {
+      shared_pointer<istream> in( load_file(*i) );
+
+      if ( !in )
+	throw runtime_error
+	  ( make_string() << "Unable to find module: " << *i );
+
+      make_default_parser(*in, args)->run(ex, *i, parser::fatal);
+    }
+    
   // The 'everyrow' symbol is defined to "@" if -E is specified.
   if (args.everyrow_only)
     ex.define_symbol(make_pair("everyrow", expression(new string_node("@"))));
@@ -193,8 +167,9 @@ bool prove_stream( execution_context& e, scoped_pointer<istream> const& in,
 
   // IN is null if -N is used without -e or -f
   bool read_anything 
-    = ( !in || parse_all( e, make_default_parser(*in, args), 
-                          filename, !args.interactive ) );
+    = ( !in || make_default_parser(*in, args)
+                ->run(e, filename, 
+                     args.interactive ? parser::warn : parser::fatal) );
 
   if ( read_anything && args.prove_symbol.size() )
     prove_first_symbol( e, args );
