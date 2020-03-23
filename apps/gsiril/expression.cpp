@@ -209,7 +209,7 @@ void pn_node::execute( proof_context &ctx, int dir ) const
 transp_node::transp_node( int bells, const string &r )
   : transp(bells)
 {
-  if ( bells == -1 )
+  if ( bells <= 0 )
     throw runtime_error( "Must set number of bells before using "
 			 "transpostions" );
   
