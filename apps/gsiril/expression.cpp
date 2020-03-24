@@ -16,8 +16,6 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-// $Id$
-
 #include <ringing/common.h>
 
 #if RINGING_HAS_PRAGMA_INTERFACE
@@ -433,6 +431,11 @@ void cmp_node::debug_print( ostream &os ) const
 void integer_node::debug_print( ostream &os ) const
 {
   os << value;
+}
+
+string integer_node::string_evaluate( proof_context &ctx ) const
+{
+  return make_string() << value;
 }
 
 RINGING_LLONG increment_node::int_evaluate( proof_context& ctx ) const

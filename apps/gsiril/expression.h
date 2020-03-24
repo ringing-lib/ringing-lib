@@ -16,8 +16,6 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-// $Id$
-
 #ifndef GSIRIL_EXPRESSION_INCLUDED
 #define GSIRIL_EXPRESSION_INCLUDED
 
@@ -273,6 +271,7 @@ protected:
   virtual void debug_print( ostream &os ) const;
   virtual RINGING_LLONG int_evaluate( proof_context &ctx ) const 
     { return value; }
+  virtual string string_evaluate( proof_context &ctx ) const;
 
 private:
   RINGING_LLONG value;
