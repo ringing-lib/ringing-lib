@@ -6,6 +6,6 @@ Makefile
 Makefile.in
 m4/
 config/
-.debs
+.deps
 .libs
 .#*
