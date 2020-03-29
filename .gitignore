@@ -4,6 +4,8 @@
 *.la
 Makefile
 Makefile.in
+m4/
+config/
 .debs
 .libs
 .#*
