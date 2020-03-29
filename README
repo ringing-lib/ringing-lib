@@ -38,7 +38,7 @@ Installation
 
   If you have a Unix-like system, you should be able to type ./configure to
 configure the package.  If you do not have a configure script, you'll need
-to run autoconfig -i, which will run aclocal, libtoolize, automake and 
+to run autoreconf -i, which will run aclocal, libtoolize, automake and 
 autoconf to create one.  The configure scrirpt will look at whether your C++
 compiler supports various language features such as namespaces and exceptions.
 The results of these tests are put into the file ringing/common-am.h as macro
