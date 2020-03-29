@@ -3,7 +3,7 @@
 MAINTAINERCLEANFILES = Makefile.in
 
 # Need both top_srcdir and top_builddir so that we can find common-am.h
-INCLUDES = -I$(top_srcdir) -I$(top_builddir)
+AM_CPPFLAGS = -I$(top_srcdir) -I$(top_builddir)
 
 noinst_PROGRAMS = testbase testprint testtouch testlibrary testproof \
 testmusic testsearch

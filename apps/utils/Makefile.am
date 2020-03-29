@@ -2,7 +2,7 @@
 
 # Process this file with automake to produce Makefile.in
 
-# Copyright (C) 2002, 2009, 2010 Martin Bright <martin@boojum.org.uk> and
+# Copyright (C) 2002, 2009, 2010, 2020 Martin Bright <martin@boojum.org.uk> and
 # Richard Smith <richard@ex-parrot.com>
 
 # This program is free software; you can redistribute it and/or modify
@@ -19,14 +19,12 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-# $Id$
-
 MAINTAINERCLEANFILES = Makefile.in
 
 noinst_LIBRARIES = libstuff.a
 
 # Need both top_srcdir and top_builddir so that we can find common-am.h
-INCLUDES = -I$(top_srcdir) -I$(top_builddir)
+AM_CPPFLAGS = -I$(top_srcdir) -I$(top_builddir)
 
 if HAVE_READLINE
 additional =  rlstream.cpp rlstream.h

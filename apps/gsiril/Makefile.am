@@ -2,7 +2,7 @@
 
 # Process this file with automake to produce Makefile.in
 
-# Copyright (C) 2002, 2003, 2004, 2005, 2007, 2008, 2009, 2010
+# Copyright (C) 2002, 2003, 2004, 2005, 2007, 2008, 2009, 2010, 2020
 # Richard Smith <richard@ex-parrot.com>
 
 # This program is free software; you can redistribute it and/or modify
@@ -19,8 +19,6 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-# $Id$
-
 AUTOMAKE_OPTIONS = dejagnu
 
 MAINTAINERCLEANFILES = Makefile.in
@@ -28,7 +26,7 @@ MAINTAINERCLEANFILES = Makefile.in
 bin_PROGRAMS = gsiril
 
 # Need both top_srcdir and top_builddir so that we can find common-am.h
-INCLUDES = -I$(top_srcdir) -I$(top_builddir) -I$(top_srcdir)/apps/utils
+AM_CPPFLAGS = -I$(top_srcdir) -I$(top_builddir) -I$(top_srcdir)/apps/utils
 
 gsiril_LDADD = $(top_builddir)/apps/utils/libstuff.a \
 $(top_builddir)/ringing/libringing.la \
