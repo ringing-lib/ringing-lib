@@ -22,11 +22,11 @@ dnl Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 dnl $Id$
 
-AC_INIT
+AC_INIT([ringing-lib], [0.4.0-pre])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_SRCDIR([ringing/method.cpp])
 AC_CONFIG_AUX_DIR(config)
-AM_INIT_AUTOMAKE(ringing-lib, 0.4.0-pre)
+AM_INIT_AUTOMAKE([foreign])
 AC_SUBST(ac_aux_dir)
 
 can_build=yes

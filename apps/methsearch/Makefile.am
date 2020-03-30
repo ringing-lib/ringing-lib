@@ -2,7 +2,7 @@
 
 # Process this file with automake to produce Makefile.in
 
-# Copyright (C) 2002, 2003, 2004, 2009, 2011 
+# Copyright (C) 2002, 2003, 2004, 2009, 2011, 2020
 # Richard Smith <richard@ex-parrot.com>
 
 # This program is free software; you can redistribute it and/or modify
@@ -26,7 +26,7 @@ MAINTAINERCLEANFILES = Makefile.in
 bin_PROGRAMS = methsearch
 
 # Need both top_srcdir and top_builddir so that we can find common-am.h
-INCLUDES = -I$(top_srcdir) -I$(top_builddir) -I$(top_srcdir)/apps/utils
+AM_CPPFLAGS = -I$(top_srcdir) -I$(top_builddir) -I$(top_srcdir)/apps/utils
 
 methsearch_LDADD = $(top_builddir)/apps/utils/libstuff.a \
 $(top_builddir)/ringing/libringing.la \

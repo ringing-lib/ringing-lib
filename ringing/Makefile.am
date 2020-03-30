@@ -4,9 +4,6 @@ EXTRA_DIST = common-am.h.in
 DISTCLEANFILES = common-am.h
 MAINTAINERCLEANFILES = Makefile.in
 
-# Need both top_srcdir and top_builddir so that we can find common-am.h
-INCLUDES = -I$(top_srcdir) -I$(top_builddir)
-
 lib_LTLIBRARIES = libringingcore.la libringing.la
 
 # These source files are released under the LGPL
@@ -29,8 +26,9 @@ libringing_la_LIBADD = $(top_builddir)/ringing/libringingcore.la
 libringingcore_la_LDFLAGS =
 libringing_la_LDFLAGS =
 
-libringingcore_la_CPPFLAGS =
-libringing_la_CPPFLAGS =
+# Need both top_srcdir and top_builddir so that we can find common-am.h
+libringingcore_la_CPPFLAGS = -I$(top_srcdir) -I$(top_builddir)
+libringing_la_CPPFLAGS = -I$(top_srcdir) -I$(top_builddir)
 
 if DLL_SUPPORT
 # -no-undefined is needed for DLLs
