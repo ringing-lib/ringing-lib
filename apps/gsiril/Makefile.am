@@ -2,7 +2,7 @@
 
 # Process this file with automake to produce Makefile.in
 
-# Copyright (C) 2002, 2003, 2004, 2005, 2007, 2008, 2009, 2010, 2020
+# Copyright (C) 2002, 2003, 2004, 2005, 2007, 2008, 2009, 2010, 2019, 2020
 # Richard Smith <richard@ex-parrot.com>
 
 # This program is free software; you can redistribute it and/or modify
@@ -66,8 +66,10 @@ uninstall-hook:
 	  cd $(DESTDIR)$(bindir) && $(RM) $$link$(EXEEXT); \
 	done
 
+EXTRA_DIST = doc/gsiril.tex
+
 # Configuration for dejagnu
-EXTRA_DIST = testsuite/config/unix.exp testsuite/gsiril/basic.exp
+EXTRA_DIST += testsuite/config/unix.exp testsuite/gsiril/basic.exp
 DEJATOOL = gsiril
 RUNTESTDEFAULTFLAGS = --tool $$tool --srcdir=$$srcdir/testsuite \
    GSIRIL=`pwd`/$$tool
@@ -82,4 +84,28 @@ gsiril.1: $(srcdir)/prog_args.cpp $(srcdir)/Makefile.am
 	$(HELP2MAN) -N --output=gsiril.1 ./gsiril$(EXEEXT)
 
 CLEANFILES += gsiril.1
+endif
+
+if HAVE_XELATEX
+EXTRA_DIST += doc/gsiril.pdf
+
+pdf:	doc/gsiril.pdf
+
+doc/gsiril.pdf:	$(srcdir)/doc/gsiril.tex
+	$(MKDIR_P) doc	# In case $(srcdir) != $(builddir)
+	$(XELATEX) --halt-on-error -output-directory doc $<
+	cd doc && $(MAKEINDEX) gsiril
+	$(XELATEX) --halt-on-error -output-directory doc $<
+
+install-pdf:	pdf
+	$(MKDIR_P) ${docdir}
+	$(INSTALL_DATA) doc/gsiril.pdf ${docdir}/gsiril.pdf
+
+CLEANFILES = doc/gsiril.aux doc/gsiril.idx doc/gsiril.ilg \
+             doc/gsiril.ind doc/gsiril.log doc/gsiril.out \
+             doc/gsiril.pdf doc/gsiril.toc
+
+install-data-hook:	install-pdf
+
+.PHONY: pdf install-pdf install
 endif
