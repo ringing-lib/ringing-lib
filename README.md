@@ -54,7 +54,7 @@ to install it.
 or any other system on which `./configure` does not work, you should copy the 
 file `ringing/common-am.h.in` to `ringing/common-am.h` and edit it to indicate
 how your C++ compiler behaves and where your standard header files are to be 
-found.  The comments in that file explain which parts need to be customised.  
+found.  The comments in that file explain which parts need to be customised. 
 After customisation, you should be able to compile all the files in the 
 `ringing/` directory into a library.  You should then install all the header 
 files in that directory to somewhere where your C++ compiler will find them 
