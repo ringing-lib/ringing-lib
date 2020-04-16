@@ -16,8 +16,6 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-// $Id$
-
 #ifndef GSIRIL_STATEMENT_INCLUDED
 #define GSIRIL_STATEMENT_INCLUDED
 
@@ -120,13 +118,13 @@ private:
 class rows_stmt : public statement::impl
 {
 public:
-  explicit rows_stmt( int len )
-    : len(len) {}
+  explicit rows_stmt( size_t len ) : len(len, len) {}
+  rows_stmt( size_t len1, size_t len2 ) : len(len1, len2) {}
 
 private:
   virtual void execute( execution_context& );
 
-  int len;
+  pair<size_t, size_t> len;
 };
 
 class rounds_stmt : public statement::impl
@@ -170,13 +168,14 @@ private:
 class echo_stmt : public statement::impl
 {
 public:
-  explicit echo_stmt( const string& str )
-    : str(str) {}
+  explicit echo_stmt( const expression& expr, bool substitute )
+    : expr(expr), substitute(substitute) {}
 
 private:
   virtual void execute( execution_context& );
 
-  string str;
+  expression expr;
+  bool substitute;
 };
 
 

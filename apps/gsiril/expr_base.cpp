@@ -1,5 +1,5 @@
 // expr_base.cpp - Base classes, nodes and factory function for expressions
-// Copyright (C) 2005, 2011, 2012, 2019
+// Copyright (C) 2005, 2011, 2012, 2019, 2020
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -45,6 +45,16 @@ bool expression::node::bool_evaluate( proof_context& ctx ) const
   throw runtime_error( os );
 }
 
+RINGING_LLONG expression::node::int_evaluate( proof_context& ctx ) const
+{
+  make_string os;
+  os << "Unable to evaluate expression as an integer: '";
+  debug_print( os.out_stream() );
+  os << "'";
+
+  throw runtime_error( os );
+}
+
 string expression::node::string_evaluate( proof_context& ctx ) const
 {
   make_string os;
@@ -69,6 +79,20 @@ void expression::bnode::execute( proof_context& ctx, int dir ) const
   bool_evaluate(ctx);
 }
 
+void expression::inode::execute( proof_context& ctx, int dir ) const
+{
+  if ( dir < 0 ) {
+    make_string os;
+    os << "Unable to execute expression backwards: '";
+    debug_print( os.out_stream() );
+    os << "'";
+
+    throw runtime_error( os );
+  }
+
+  int_evaluate(ctx);
+}
+
 void expression::execute( proof_context &ctx, int dir ) const 
 { 
   ctx.increment_node_count();
@@ -80,7 +104,13 @@ bool expression::bool_evaluate( proof_context& ctx ) const
   ctx.increment_node_count();
   return impl->bool_evaluate(ctx); 
 }
-  
+
+RINGING_LLONG expression::int_evaluate( proof_context& ctx ) const 
+{ 
+  ctx.increment_node_count();
+  return impl->int_evaluate(ctx); 
+}
+
 string expression::string_evaluate( proof_context& ctx ) const
 {
   ctx.increment_node_count();

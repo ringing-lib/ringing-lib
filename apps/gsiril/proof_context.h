@@ -16,8 +16,6 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-// $Id$
-
 #ifndef GSIRIL_PROOF_CONTEXT_INCLUDED
 #define GSIRIL_PROOF_CONTEXT_INCLUDED
 
@@ -76,6 +74,7 @@ public:
   bool set_silent( bool s ) { bool rv = silent; silent = s; return rv; }
 
   void execute_symbol( const string& sym, int dir = +1 );
+  void execute_final_symbol( const string& sym );
   void define_symbol( const pair< const string, expression > &defn );
   expression lookup_symbol( const string& sym ) const;
 
@@ -98,6 +97,7 @@ private:
   symbol_table dsym_table; // dynamic symbol table
   mutable music row_mask;
   row r;
+  size_t max_length;
   shared_pointer<prover> p;
   proof_context const* parent;
 

@@ -16,8 +16,6 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-// $Id$
-
 #include <ringing/common.h>
 
 #if RINGING_HAS_PRAGMA_INTERFACE
@@ -83,58 +81,50 @@ void prove_stmt::execute( execution_context& e )
     throw runtime_error( "Already done proof" );
 
   int const quiet = e.get_args().quiet;
-  try
-    {
-      e.set_done_proof();
+
+  e.set_done_proof();
   
-      if (e.get_args().determine_bells) {
-        cout << e.bells() << " bells" << endl;
-        return;
-      }
+  if (e.get_args().determine_bells) {
+    cout << e.bells() << " bells" << endl;
+    return;
+  }
 
-      proof_context p(e);
+  proof_context p(e);
 
-      try {
-        p.execute_symbol( "start" );
-        expr.execute(p, +1);
-        p.execute_symbol( "finish" );
-      } 
-      catch( const script_exception& ex ) {
-        if ( ex.t == script_exception::do_abort ) {
-          if ( e.get_args().quiet ) p.set_silent(true);
-          p.execute_symbol( "abort" );
-          e.set_failure();
-        }
-        return;
-      }
-   
+  try {
+    p.execute_symbol( "start" );
+    expr.execute(p, +1);
+    p.execute_symbol( "finish" );
+  } 
+  catch( const script_exception& ex ) {
+    if ( ex.t == script_exception::do_abort ) {
       if ( e.get_args().quiet ) p.set_silent(true);
-      switch ( p.state() )
-	{
-	case proof_context::rounds: 
-          if ( e.expected_length().first && 
-               p.length() < e.expected_length().first ||
-               e.expected_length().second &&
-               p.length() > e.expected_length().second  ) {
-            p.execute_symbol( "__wronglen__" );
-            e.set_failure();
-          }
-          else
-	    p.execute_symbol( "true" ); 
-	  break;
-	case proof_context::notround:
-	  p.execute_symbol( "notround" );
-          e.set_failure();
-	  break;
-	case proof_context::isfalse:
-	  p.execute_symbol( "false" ); 
-          e.set_failure();
-	  break;
-	}
-    } 
-  catch ( const script_exception& ) 
-    {
+      p.execute_final_symbol( "abort" );
+      e.set_failure();
     }
+    return;
+  }
+   
+  if ( e.get_args().quiet ) p.set_silent(true);
+  switch ( p.state() ) {
+  case proof_context::rounds: 
+    if ( e.expected_length().first && 
+         p.length() < e.expected_length().first ) {
+      p.execute_final_symbol("tooshort");
+      e.set_failure();
+    }
+    else
+      p.execute_final_symbol("true"); 
+    break;
+  case proof_context::notround:
+    p.execute_final_symbol("notround");
+    e.set_failure();
+    break;
+  case proof_context::isfalse:
+    p.execute_final_symbol("false"); 
+    e.set_failure();
+    break;
+  }
 }
 
 void extents_stmt::execute( execution_context& e )
@@ -155,10 +145,14 @@ void bells_stmt::execute( execution_context& e )
 
 void rows_stmt::execute( execution_context& e )
 {
-  e.expected_length( pair<size_t,size_t>(len,len) );
+  e.expected_length(len);
 
-  if ( e.verbose() )
-    e.output() << "Set expected length to " << len << endl;
+  if ( e.verbose() ) {
+    e.output() << "Set expected length to ";
+    if (len.first == len.second) e.output() << len.first;
+    else e.output() << len.first << '-' << len.second; 
+    e.output() << endl;
+  }
 }
 
 void rounds_stmt::execute( execution_context& e )
@@ -180,40 +174,46 @@ void row_mask_stmt::execute( execution_context& e )
 
 void import_stmt::execute( execution_context& e )
 {
-  bool i( e.interactive() );
-  bool v( e.verbose() );
-  int b( e.bells() );
+  class restore_values {
+    execution_context& e;
+    bool i, v;
+    int b;
+    expression first;
 
-  try
+  public:
+    restore_values( execution_context& e )
+      : e(e), i( e.interactive() ), v( e.verbose() ), b( e.bells() ),
+        first(NULL)
     {
-      shared_pointer<istream> in(( load_file(name) )); 
-      if ( !in )
-	throw runtime_error
-	  ( make_string() << "Unable to load resource: " << name );
-      
-      shared_pointer<parser> p( make_default_parser(*in, e.get_args() ) );
-      e.interactive(false);
-      e.verbose(false);
-      while (true)
-	{
-	  statement s( p->parse() );
-	  if ( s.eof() ) break;
-	  s.execute(e);
-	}
+      if (e.defined("__first__"))
+       first = e.lookup_symbol("__first__");
     }
-  catch (...)
-    {
-      // Restore bells, verbose, interactive flags
+
+   ~restore_values() {
       if (b > 0) e.bells(b);
       e.interactive(i);
       e.verbose(v);
-      throw;
-    }
 
-  // Restore bells, verbose, interactive flags
-  if (b > 0) e.bells(b);
-  e.interactive(i);
-  e.verbose(v);
+      if (first.isnull())
+        e.undefine_symbol("__first__");
+      else
+        e.define_symbol(pair<const string, expression>("__first__", first));
+   }
+  };
+
+  { // Use RAII to revert the number of bells, etc. in case we throw.
+    restore_values restore(e);
+  
+    shared_pointer<istream> in(( load_file(name) )); 
+    if ( !in )
+      throw runtime_error
+        ( make_string() << "Unable to load resource: " << name );
+        
+    shared_pointer<parser> p( make_default_parser(*in, e.get_args() ) );
+    e.interactive(false);
+    e.verbose(false);
+    p->run(e, name, parser::propagate);
+  }
 
   if ( e.verbose() )
     e.output() << "Resource \"" << name << "\" loaded" << endl;
@@ -221,5 +221,14 @@ void import_stmt::execute( execution_context& e )
 
 void echo_stmt::execute( execution_context& e )
 {
-  e.output() << str << "\n";
+  proof_context p(e); p.set_silent(false);
+  string str( expr.string_evaluate(p) );
+
+  try {
+    if (substitute) p.output_string(str, false);
+    else e.output() << str << "\n";
+  } 
+  catch( const script_exception& ex ) {
+    if ( ex.t == script_exception::do_abort ) e.set_failure();
+  }
 }

@@ -16,8 +16,6 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-// $Id$
-
 #include <ringing/common.h>
 
 #include <ringing/pointers.h>
@@ -30,6 +28,7 @@
 #include "execution_context.h"
 #include "args.h"
 #include "stringutils.h"
+#include "statement.h"
 #include "expr_base.h"
 #include "expression.h"
 #include "prog_args.h"
@@ -64,42 +63,10 @@
 
 RINGING_USING_NAMESPACE
 
-int parse_all( execution_context& e,
-	       const shared_pointer<parser>& p,
-	       const string& filename,
-	       bool errors_are_fatal )
-{
-  int count(0);
-
-  while (true)
-    {
-      try 
-	{
-	  statement s( p->parse() );
-	  if ( s.eof() ) break;
-	  s.execute(e);
-	  ++count;
-	}
-      catch (const exception& ex )
-	{
-          if (filename.empty())
-	    cerr << "Error: " << ex.what() << endl;
-          else
-	    cerr << filename << ':' << p->line() << ": " << ex.what() << endl;
- 
-	  if (errors_are_fatal) exit(2);
-	}
-    }
-
-  return count;
-}
-
-void welcome()
-{
-  cout << "Ringing Class Library / gsiril " RINGING_VERSION ".\n"
-"Gsiril is free software covered by the GNU General Public License, and you\n"
-"are welcome to change it and/or distribute copies of it under certain\n"
-"conditions."  << endl;
+void welcome() {
+  cout << "Ringing Class Library / gsiril " RINGING_VERSION "\n"
+          "GSiril is licensed under the GNU General Public License, v2+" 
+       << endl;
 }
 
 
@@ -109,37 +76,21 @@ void initialise( execution_context& ex, const arguments& args )
 #   include "init.dat"
   ;
 
-  // The 'everyrow' symbol is defined to "@" if -E is specified.
-  if ( args.everyrow_only )
-    init_string += "everyrow = \"@\"\n";
-  else
-    init_string += "everyrow = \n";
-
   // Turn off interactivity whilst it prepopulates the symbol table
   bool interactive = ex.interactive(false);
   bool verbose     = ex.verbose(false);
 
-  // Prepopulate symbol table
+  // Prepopulate symbol table, first using the init script
   if (!args.no_init_file) {
     RINGING_ISTRINGSTREAM in(init_string);
 
-    parse_all(ex, make_default_parser(in, args), "INIT", true);
+    make_default_parser(in, args)->run(ex, "INIT", parser::fatal);
   }
 
-  // Import any required modules
-  for ( vector< string >::const_iterator 
-	  i(args.import_modules.begin()), e( args.import_modules.end());
-	i != e; ++i ) 
-    {
-      shared_pointer<istream> in( load_file(*i) );
-
-      if ( !in )
-	throw runtime_error
-	  ( make_string() << "Unable to find module: " << *i );
-
-      parse_all(ex, make_default_parser(*in, args), *i, true);
-    }
-    
+  // ... and secondly using any -D options on the command line.  
+  // We want to do this before importing modules so that modules loaded
+  // with a -m option are as similar as possible to those imported with 
+  // an import statement.
   for ( vector< string >::const_iterator 
 	  i(args.definitions.begin()), e( args.definitions.end());
 	i != e; ++i ) 
@@ -158,6 +109,24 @@ void initialise( execution_context& ex, const arguments& args )
       }
     }
 
+  // Import any required modules
+  for ( vector< string >::const_iterator 
+	  i(args.import_modules.begin()), e( args.import_modules.end());
+	i != e; ++i ) 
+    {
+      shared_pointer<istream> in( load_file(*i) );
+
+      if ( !in )
+	throw runtime_error
+	  ( make_string() << "Unable to find module: " << *i );
+
+      make_default_parser(*in, args)->run(ex, *i, parser::fatal);
+    }
+    
+  // The 'everyrow' symbol is defined to "@" if -E is specified.
+  if (args.everyrow_only)
+    ex.define_symbol(make_pair("everyrow", expression(new string_node("@"))));
+
   ex.interactive(interactive);
   ex.verbose(verbose);
 
@@ -165,7 +134,7 @@ void initialise( execution_context& ex, const arguments& args )
   ex.undefine_symbol( "__first__" );
 }
 
-void prove_final_symbol( execution_context& e, const arguments& args )
+void prove_first_symbol( execution_context& e, const arguments& args )
 {
   try 
     {
@@ -178,7 +147,9 @@ void prove_final_symbol( execution_context& e, const arguments& args )
            || !e.done_one_proof() && e.defined("__first__") ) {
         if ( e.verbose() )
           cerr << "Proving " << args.prove_symbol << std::endl;
-        e.prove_symbol( args.prove_symbol );
+        statement s( new prove_stmt( 
+          expression( new symbol_node(args.prove_symbol) ) ) );
+        s.execute(e);
       }
     } 
   catch (const exception& ex ) 
@@ -196,11 +167,12 @@ bool prove_stream( execution_context& e, scoped_pointer<istream> const& in,
 
   // IN is null if -N is used without -e or -f
   bool read_anything 
-    = ( !in || parse_all( e, make_default_parser(*in, args), 
-                          filename, !args.interactive ) );
+    = ( !in || make_default_parser(*in, args)
+                ->run(e, filename, 
+                     args.interactive ? parser::warn : parser::fatal) );
 
   if ( read_anything && args.prove_symbol.size() )
-    prove_final_symbol( e, args );
+    prove_first_symbol( e, args );
 
   if ( args.prove_one && !e.done_one_proof() ) {
     cerr << "No touch proved";
@@ -276,6 +248,13 @@ void filter( execution_context& e, const arguments& args )
         e.define_symbol
           ( make_pair( args.lead_symbol, 
                        expression( new pn_node( m ) ) ) );
+
+      // Define the payload
+      if ( args.payload_symbol.size() && i->has_facet<litelib::payload>() )
+        e.define_symbol
+          ( make_pair( args.payload_symbol, 
+                       expression( new string_node
+                                     ( i->get_facet<litelib::payload>() ) ) ) );
 
       if ( run( e, args ) ) 
          // Add M_PLUS in case our output is being fed back as a definition.

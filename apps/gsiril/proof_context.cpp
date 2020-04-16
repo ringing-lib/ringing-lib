@@ -16,8 +16,6 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-// $Id$
-
 #include <ringing/common.h>
 
 #if RINGING_HAS_PRAGMA_INTERFACE
@@ -48,6 +46,7 @@ RINGING_USING_NAMESPACE
 
 proof_context::proof_context( const execution_context &ectx ) 
   : ectx(ectx), row_mask(ectx.bells(), ectx.row_mask()),
+    max_length( ectx.expected_length().second ),
     p( new prover(ectx.get_args().num_extents) ), parent( NULL ),
     output( &ectx.output() ),
     silent( ectx.get_args().everyrow_only || ectx.get_args().filter
@@ -84,7 +83,7 @@ proof_context::~proof_context()
 void proof_context::termination_sequence(ostream& os) const
 {
   if (underline) {
-    if ( char const* e = RINGING_TERMINFO_VAR( exit_underline_mode ) ) {
+    if ( char const* e = RINGING_TERMINFO_VAR(exit_underline_mode) ) {
       os << e; 
       underline = false; 
     }
@@ -123,6 +122,8 @@ bool proof_context::permute_and_prove_t::operator()( const change &c )
 {
   bool rv = p.add_row( r *= c ); 
   pctx.execute_everyrow();
+  if ( pctx.max_length && p.size() > pctx.max_length ) 
+    pctx.execute_symbol("toolong");
   if ( pctx.isrounds() ) pctx.execute_symbol("rounds");
   if ( !rv ) pctx.execute_symbol("conflict");
   return rv;
@@ -173,6 +174,13 @@ void proof_context::execute_symbol( const string& sym, int dir )
 
   expression e( lookup_symbol(sym) );
   e.execute( *this, dir );
+}
+
+void proof_context::execute_final_symbol( const string& sym ) {
+  try {
+    execute_symbol(sym);
+  }
+  catch( const script_exception& ex ) {}
 }
 
 expression proof_context::lookup_symbol( const string& sym ) const
@@ -289,8 +297,7 @@ string proof_context::substitute_string( const string &str,
         // followed by a literal brace there, and we want to avoid 
         // changing the meaning of legal MircoSiril programs.
         if ( i+1 != e && i[1] == '{' 
-             && !ectx.get_args().msiril_syntax
-             && !ectx.get_args().sirilic_syntax) {
+             && !ectx.get_args().msiril_syntax) {
           string::const_iterator j = std::find(i+2, e, '}');
           if (j == e) throw runtime_error("Incomplete variable interpolation "
                                           "in string '" + str + "'");
@@ -315,8 +322,14 @@ string proof_context::substitute_string( const string &str,
 	break;
       case '_':
         if (ectx.get_args().sirilic_syntax) {
-          if ( char const* e = RINGING_TERMINFO_VAR( enter_underline_mode ) ) {
-            os << e; underline = true; break; 
+          if (!underline) {
+            if ( char const* e = RINGING_TERMINFO_VAR(enter_underline_mode) ) {
+              os << e; underline = true; break; 
+            }
+          } else {
+            if ( char const* e = RINGING_TERMINFO_VAR(exit_underline_mode) ) {
+              os << e; underline = false; break; 
+            }
           }
         } // fall through
       default:
@@ -336,6 +349,7 @@ proof_context proof_context::silent_clone() const
   proof_context copy( *this );
   copy.p = prover::create_branch(copy.p);
   copy.p->disable_proving();
+  copy.max_length = 0;
   copy.silent = true;
   copy.output = NULL;
   copy.parent = this;

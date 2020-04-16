@@ -57,6 +57,7 @@ struct arguments
 
   pair<size_t, size_t> expected_length;
   init_val<bool,false> everyrow_only;
+  string               row_mask;
 
   init_val<bool,false> filter;
 
@@ -75,6 +76,7 @@ struct arguments
   init_val<bool,false> prove_one;
   string               lead_symbol;
   string               lh_symbol;
+  string               payload_symbol;
   init_val<bool,false> lead_includes_lh;
 
   init_val<bool,false> show_lead_heads;

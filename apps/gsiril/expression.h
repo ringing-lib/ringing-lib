@@ -16,8 +16,6 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-// $Id$
-
 #ifndef GSIRIL_EXPRESSION_INCLUDED
 #define GSIRIL_EXPRESSION_INCLUDED
 
@@ -47,8 +45,7 @@ RINGING_END_NAMESPACE
 RINGING_USING_NAMESPACE
 
 
-class list_node : public expression::node
-{
+class list_node : public expression::node {
 public:
   list_node( const expression& car, const expression& cdr )
     : car(car), cdr(cdr) {}
@@ -63,16 +60,14 @@ private:
   expression car, cdr;
 };
 
-class nop_node : public expression::node
-{
+class nop_node : public expression::node {
 protected:
   virtual void debug_print( ostream &os ) const;
   virtual void execute( proof_context &, int dir ) const;
   virtual bool isnop() const;
 };
 
-class repeated_node : public expression::node
-{
+class repeated_node : public expression::node {
 public:
   repeated_node( int count,
 		 const expression &child )
@@ -87,8 +82,7 @@ private:
   expression child;
 };
 
-class reverse_node : public expression::node
-{
+class reverse_node : public expression::node {
 public:
   reverse_node( const expression &child )
     : child(child) {}
@@ -101,8 +95,7 @@ private:
   expression child;
 };
 
-class string_node : public expression::node
-{
+class string_node : public expression::node {
 public:
   string_node( const string &str, bool echo = false ) 
     : str(str), echo(echo) {}
@@ -117,8 +110,7 @@ private:
   bool echo;
 };
 
-class pn_node : public expression::node
-{
+class pn_node : public expression::node {
 public:
   pn_node( int bells, const string &pn );
 
@@ -133,8 +125,7 @@ private:
   vector< change > changes;
 };
 
-class transp_node : public expression::node
-{
+class transp_node : public expression::node {
 public:
   transp_node( int bells, const string &r );
 
@@ -146,8 +137,7 @@ private:
   row transp;
 };
 
-class symbol_node : public expression::node
-{
+class symbol_node : public expression::node {
 public:
   symbol_node( const string &sym )
     : sym(sym) {}
@@ -155,14 +145,15 @@ public:
 protected:
   virtual void debug_print( ostream &os ) const;
   virtual void execute( proof_context &ctx, int dir ) const;
+  virtual bool bool_evaluate( proof_context &ctx ) const;
+  virtual RINGING_LLONG int_evaluate( proof_context &ctx ) const;
   virtual string string_evaluate( proof_context &ctx ) const;
 
 private:
   string sym;
 };
 
-class assign_node : public expression::node
-{
+class assign_node : public expression::node {
 public:
   assign_node( const string& sym, const expression& val )
     : defn( make_pair(sym, val) ) {}
@@ -176,8 +167,7 @@ private:
 };
 
 // TODO: Make this a generic op_assign_node
-class append_assign_node : public expression::node
-{
+class append_assign_node : public expression::node {
 public:
   append_assign_node( const string& sym, const expression& val )
     : sym(sym), val(val) {}
@@ -194,15 +184,13 @@ private:
   expression val;
 };
 
-class isrounds_node : public expression::bnode
-{
+class isrounds_node : public expression::bnode {
 protected:
   virtual void debug_print( ostream &os ) const;
   virtual bool bool_evaluate( proof_context &ctx ) const;
 };
 
-class pattern_node : public expression::bnode
-{
+class pattern_node : public expression::bnode {
 public:
   pattern_node( int bells, const string& regex );
 
@@ -217,8 +205,7 @@ private:
   music_details mus;
 };
 
-class boolean_node : public expression::bnode
-{
+class boolean_node : public expression::bnode {
 public:
   boolean_node( bool value ) : value(value) {}
 
@@ -230,8 +217,7 @@ private:
   bool value;
 };
 
-class and_node : public expression::bnode
-{
+class and_node : public expression::bnode {
 public:
   and_node( expression const& left, expression const& right )
     : left(left), right(right) {}
@@ -244,8 +230,7 @@ private:
   expression left, right;
 };
 
-class or_node : public expression::bnode
-{
+class or_node : public expression::bnode {
 public:
   or_node( expression const& left, expression const& right )
     : left(left), right(right) {}
@@ -258,8 +243,57 @@ private:
   expression left, right;
 };
 
-class if_match_node : public expression::node
-{
+class cmp_node : public expression::bnode {
+public:
+  enum cmp_t {
+    equals, not_equals, greater, less, greater_eq, less_eq
+  };
+
+  cmp_node( expression const& left, expression const& right, cmp_t cmp )
+    : left(left), right(right), cmp(cmp) {}
+
+  static char const* symbol( cmp_t cmp );
+
+protected:
+  virtual void debug_print( ostream &os ) const;
+  virtual bool bool_evaluate( proof_context &ctx ) const;
+
+private:
+  expression left, right;
+  cmp_t cmp;
+};
+
+class integer_node : public expression::inode {
+public:
+  integer_node( RINGING_LLONG value ) : value(value) {}
+
+protected:
+  virtual void debug_print( ostream &os ) const;
+  virtual RINGING_LLONG int_evaluate( proof_context &ctx ) const 
+    { return value; }
+  virtual string string_evaluate( proof_context &ctx ) const;
+
+private:
+  RINGING_LLONG value;
+};
+
+// TODO: Make this a generic op_assign_node
+class increment_node : public expression::inode {
+public:
+  increment_node( const string& sym, RINGING_LLONG val )
+    : sym(sym), val(val) {}
+
+protected:
+  virtual void debug_print( ostream &os ) const;
+  virtual RINGING_LLONG int_evaluate( proof_context &ctx ) const;
+
+private:
+  const string sym;
+  RINGING_LLONG val;
+};
+
+
+class if_match_node : public expression::node {
 public:
   if_match_node( const expression& test,
 		 const expression& iftrue, const expression& iffalse )
@@ -273,8 +307,7 @@ private:
   expression test, iftrue, iffalse;
 };
 
-class exception_node : public expression::node
-{
+class exception_node : public expression::node {
 public:
   exception_node( script_exception::type t ) : t(t) {}
 
@@ -286,8 +319,7 @@ private:
   script_exception::type t;
 };
 
-class load_method_node : public expression::node
-{
+class load_method_node : public expression::node {
 public:
   load_method_node( string const& name )
     : name(name), read(false) {}

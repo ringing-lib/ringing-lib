@@ -1,5 +1,5 @@
 // expression.cpp - Nodes and factory function for expressions
-// Copyright (C) 2002, 2003, 2004, 2005, 2008, 2011, 2014, 2019
+// Copyright (C) 2002, 2003, 2004, 2005, 2008, 2011, 2014, 2019, 2020
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -15,8 +15,6 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-
-// $Id$
 
 #include <ringing/common.h>
 
@@ -209,7 +207,7 @@ void pn_node::execute( proof_context &ctx, int dir ) const
 transp_node::transp_node( int bells, const string &r )
   : transp(bells)
 {
-  if ( bells == -1 )
+  if ( bells <= 0 )
     throw runtime_error( "Must set number of bells before using "
 			 "transpostions" );
   
@@ -236,6 +234,18 @@ void symbol_node::debug_print( ostream &os ) const
 void symbol_node::execute( proof_context &ctx, int dir ) const
 {
   ctx.execute_symbol(sym, dir);
+}
+
+bool symbol_node::bool_evaluate( proof_context &ctx ) const
+{
+   expression e( ctx.lookup_symbol(sym) );
+   return e.bool_evaluate(ctx);
+}
+
+RINGING_LLONG symbol_node::int_evaluate( proof_context &ctx ) const
+{
+   expression e( ctx.lookup_symbol(sym) );
+   return e.int_evaluate(ctx);
 }
 
 string symbol_node::string_evaluate( proof_context &ctx ) const
@@ -269,7 +279,7 @@ void assign_node::execute( proof_context& ctx, int dir ) const
 
 void append_assign_node::debug_print( ostream &os ) const
 {
-  os << "(" << sym << " += ";
+  os << "(" << sym << " .= ";
   val.debug_print(os);
   os << ")";
 }
@@ -385,6 +395,60 @@ void or_node::debug_print( ostream &os ) const
   right.debug_print(os);
 }
 
+bool cmp_node::bool_evaluate( proof_context &ctx ) const
+{
+  RINGING_LLONG l = left.int_evaluate(ctx), r = right.int_evaluate(ctx);
+  switch (cmp) {
+    case equals:     return l == r;
+    case not_equals: return l != r;
+    case greater:    return l > r;
+    case less:       return l < r;
+    case greater_eq: return l >= r;
+    case less_eq:    return l <= r;
+    default:         abort();
+  }
+}
+
+char const* cmp_node::symbol( cmp_t cmp ) {
+  switch (cmp) {
+    case equals:     return "==";
+    case not_equals: return "!=";
+    case greater:    return ">";
+    case less:       return "<";
+    case greater_eq: return ">=";
+    case less_eq:    return "<=";
+    default:         abort();
+  }
+}
+
+void cmp_node::debug_print( ostream &os ) const
+{
+  left.debug_print(os);
+  os << symbol(cmp);
+  right.debug_print(os);
+}
+
+void integer_node::debug_print( ostream &os ) const
+{
+  os << value;
+}
+
+string integer_node::string_evaluate( proof_context &ctx ) const
+{
+  return make_string() << value;
+}
+
+RINGING_LLONG increment_node::int_evaluate( proof_context& ctx ) const
+{
+  RINGING_LLONG res( ctx.lookup_symbol(sym).int_evaluate(ctx) + val );
+  ctx.define_symbol( make_pair( sym, expression( new integer_node(res) ) ) );
+  return res;
+}
+
+void increment_node::debug_print( ostream &os ) const
+{
+  os << "(" << sym << " += " << val << ")";
+}
 
 void if_match_node::debug_print( ostream &os ) const
 {

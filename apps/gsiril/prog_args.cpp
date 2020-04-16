@@ -134,6 +134,11 @@ void arguments::bind( arg_parser& p )
 	   "Only print output from the everyrow symbol",
 	   everyrow_only ) );
 
+  p.add( new string_opt
+	 ( '\0', "row-mask",
+	   "Applies the specified row mask when printing a row",
+	   "MASK", row_mask ) );
+
   p.add( new boolean_opt
 	 ( 'I', "case-insensitive",
 	   "Run case insensitively ", 
@@ -143,8 +148,7 @@ void arguments::bind( arg_parser& p )
   p.add( new string_opt
 	 ( 'P', "prove",
 	   "Proves a particular symbol (or the first if none specified)",
-	   "SYMBOL",
-	   prove_symbol, "__first__" ) );
+	   "SYMBOL", prove_symbol, "__first__" ) );
 
   p.add( new strings_opt
 	 ( 'D', "define",
@@ -229,6 +233,11 @@ void arguments::bind( arg_parser& p )
          ( '\0', "lh-symbol", 
            "Assign lead end change to SYM; default 'lh'",
            "SYM", lh_symbol ) );
+
+  p.add( new string_opt
+         ( '\0', "payload-symbol", 
+           "Assign filter payload to SYM",
+           "SYM", payload_symbol ) );
 
   p.add( new boolean_opt
          ( '\0', "show-lead-heads", 

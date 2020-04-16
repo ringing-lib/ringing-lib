@@ -223,9 +223,10 @@ string litelib::impl::entry_type::get_payload() const
 {
   string::size_type i = linebuf.find_first_of(" \t\r\n", linestart);
   i = linebuf.find_first_not_of(" \t\r\n", i);
+  string::size_type j = linebuf.find_last_not_of(" \t\r\n");
 
   string val;  
-  if (i < linebuf.length()) val = linebuf.substr(i);
+  if (i < linebuf.length()) val = linebuf.substr(i, j-i+1);
   return val;
 }
 
