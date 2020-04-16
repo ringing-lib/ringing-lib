@@ -293,6 +293,7 @@ void printmethod::fit_to_space(const dimension& width,
   }
 
   leads_per_column -= 2;
+  if (leads_per_column == 0) leads_per_column=1;
   if(vgap_mode) {
     rows_per_column = lead;
     sets_per_page = leads_per_column;
