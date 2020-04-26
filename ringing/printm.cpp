@@ -87,13 +87,17 @@ void printmethod::defaults()
 
 bool printmethod::needrule(int i)
 {
+  
+
   list<pair<int,int> >::const_iterator j;
-  for(j = rules.begin(); j != rules.end(); j++)
-    if((*j).second) {
-      if(((i+1) % (*j).second) == ((*j).first % (*j).second)) return true;
+  for (j = rules.begin(); j != rules.end(); j++)
+    if (j->second == -1) {
+      if ((i+2) == j->first) return true;
+    } else if (j->second) {
+      if ((i+2) % j->second == j->first % j->second) return true;
     } else {
-      if((i+1) == (*j).first) return true;
-    }
+      if ((i+2) % m->length() == j->first ) return true;
+    } 
   return false;
 }
 
@@ -105,22 +109,19 @@ void printmethod::print(printpage& pp)
     rounds=row::rounds(m->bells());
 
   row_block b(*m,rounds);
-  int i = 0;
+  int i = 0; // The number of rows of this lead printed so far.
   int total_row_count = 0;
   int ic = 0; // calling position count
-  int column, columnset, row_count;
   bool sym = m->issym();
-  bool pn;
-  int pnextra = 0;
 
   if(number_mode == miss_always) 
     opt.flags |= printrow::options::miss_numbers;
   else
     opt.flags &= ~printrow::options::miss_numbers;
-  pn = ((pn_mode & pn_mask) != pn_none);
-  if(pn) pnextra = find_pnextra();
+  bool pn = ((pn_mode & pn_mask) != pn_none);
+  int pnextra = pn ? find_pnextra() : 0;
 
-  for(columnset = 0; total_row_count < total_rows; columnset++) {
+  for(int columnset = 0; total_row_count < total_rows; columnset++) {
     if(sets_per_page && (columnset == sets_per_page)) {
       pp.new_page();
       columnset = 0;
@@ -131,11 +132,11 @@ void printmethod::print(printpage& pp)
       pr.set_position(xoffset, yoffset);
       pr.move_position(0, -opt.yspace * columnset * (rows_per_column + 1));
       pr.move_position(0, -vgap * columnset);
-      for(column = 0; column < columns_per_set 
+      for(int column = 0; column < columns_per_set 
 	    && total_row_count < total_rows; column++) {
 	// Print the first row, which is the same as the last row of the
 	// previous column.
-	pr << b[i]; if(needrule(i % (b.size()-1))) {
+	pr << b[i]; if(needrule(total_row_count)) {
           pr.rule();
         }
 	// Turn on number-missing if necessary
@@ -143,7 +144,7 @@ void printmethod::print(printpage& pp)
 	  opt.flags |= printrow::options::miss_numbers;
 	  pr.set_options(opt);
 	}
-	for(row_count = 0; row_count < rows_per_column 
+	for(int row_count = 0; row_count < rows_per_column 
 	      && total_row_count < total_rows; row_count++) {
 	  ++i;
 	  if(i == (int) b.size()) { // We've got to the end of a lead
@@ -200,7 +201,7 @@ void printmethod::print(printpage& pp)
 	  pr << b[i];
 	  if(row_count < (rows_per_column - 1)
 	     && total_row_count < (total_rows - 1)
-	     && needrule(i % (b.size()-1))) {
+	     && needrule(total_row_count)) {
 	    pr.rule();
 	    if(placebells_at_rules && reverse_placebells && placebells >= 0)
 	      pr.placebell(placebells, -1);
@@ -208,9 +209,10 @@ void printmethod::print(printpage& pp)
 	  if(placebells_at_rules && placebells >= 0 &&
 	     row_count < (rows_per_column - 1)
 	     && total_row_count < (total_rows - 1)
-	     && needrule((i-1) % (b.size()-1))) 
-	      pr.placebell(placebells, reverse_placebells ? +1 : 0);
-          if(calls_at_rules && needrule((i+1) % (b.size()-1))) {
+	     && needrule(total_row_count)) 
+            pr.placebell(placebells, reverse_placebells ? +1 : 0);
+          if(calls_at_rules 
+             && needrule(total_row_count)) {
 	    string pos = call(ic++);
             if (!pos.empty())
 	      pr.text(pos, opt.xspace/2, text_style::left, false, true);
