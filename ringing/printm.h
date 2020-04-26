@@ -51,7 +51,15 @@ public:
   int columns_per_set;
   int sets_per_page;
   dimension xoffset, yoffset;
-  list<pair<int,int> > rules;
+
+  struct rule {
+    rule();
+    rule(pair<int,int> const& p);
+
+    int offset, repeat;
+    printrow::options::line_style style;
+  };
+  list<rule> rules;
 
   enum number_mode_t { miss_never, miss_always, miss_column, miss_lead };
   number_mode_t number_mode;
@@ -88,7 +96,7 @@ public:
   void startrow(const row& r) { rounds=r; }
 
 private:
-  bool needrule(int i);
+  bool needrule(int i, printrow::options::line_style& );
   int find_pnextra();
   static int divd(int a, int b) { return (a - a % b) / b; }
   static int divu(int a, int b) 

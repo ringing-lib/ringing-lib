@@ -90,7 +90,7 @@ public:
   public:
     virtual ~base() {}
     virtual void print(const row& r) = 0; // Print a row
-    virtual void rule() = 0;
+    virtual void rule(const options::line_style& style) = 0;
     virtual void set_position(const dimension& x, const dimension& y) = 0;
     virtual void move_position(const dimension& x, const dimension& y) = 0;
     virtual void set_options(const options& o) = 0;
@@ -114,7 +114,7 @@ public:
   ~printrow() { delete pr; }
 
   printrow& operator<<(const row& r) { pr->print(r); return *this; }
-  void rule() { pr->rule(); }
+  void rule(const options::line_style& style) { pr->rule(style); }
   void set_position(const dimension& x, const dimension& y)  
     { pr->set_position(x, y); }
   void move_position(const dimension& x, const dimension& y)

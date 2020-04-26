@@ -314,11 +314,14 @@ void printrow_ps::fill_gap()
   }
 }
 
-void printrow_ps::rule()
+void printrow_ps::rule(const printrow::options::line_style& style)
 {
   if(!in_column) return;
   fill_gap();
-  pp.os << lastrow.bells() << " RO\n";
+  pp.os << "GS ";
+  pp.set_colour(opt.grid_style.col);
+  pp.os << opt.grid_style.width.in_points() << " SL "
+        << lastrow.bells() << " RO GR\n";
 }
 
 void printrow_ps::set_position(const dimension& x, const dimension& y)

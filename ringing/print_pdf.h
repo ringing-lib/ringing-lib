@@ -1,5 +1,6 @@
 // -*- c++ -*- print_pdf.h : printing things in PDF
-// Copyright (C) 2002 Martin Bright <martin@boojum.org.uk>
+// Copyright (C) 2002, 2020 Martin Bright <martin@boojum.org.uk> and
+// Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -140,10 +141,12 @@ public:
 class RINGING_API rule_pdf {
 private:
   float x, y, l;
+  printrow::options::line_style style;
 
 public:
-  rule_pdf(float _x, float _y, float _l) : x(_x), y(_y), l(_l) {}
-  void output(pdf_file& f);
+  rule_pdf(float x, float y, float l, const printrow::options::line_style &s)
+    : x(x), y(y), l(l), style(s) {}
+  void output(printpage_pdf& pp);
 
   RINGING_FAKE_DEFAULT_CONSTRUCTOR( rule_pdf )
   RINGING_FAKE_COMPARATORS( rule_pdf )
@@ -222,7 +225,7 @@ public:
     : pp(p), in_column(false), lastrow(8), opt(op) { start(); }
   ~printrow_pdf() { if(in_column) end_column(); }
   void print(const row& r);
-  void rule();
+  void rule(const printrow::options::line_style& style);
   void set_position(const dimension& x, const dimension& y);
   void move_position(const dimension& x, const dimension& y);
   void set_options(const printrow::options& o) { opt = o; }
@@ -250,6 +253,7 @@ private:
   friend class printrow;
   friend class printrow_pdf;
   friend class drawline_pdf;
+  friend class rule_pdf;
   friend class circle_pdf;
   friend class arrow_pdf;
   printrow::base* new_printrow(const printrow::options& o) 

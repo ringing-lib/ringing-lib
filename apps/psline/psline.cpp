@@ -60,7 +60,7 @@ struct arguments {
   bool custom_lines;
   map<int, printrow::options::line_style> lines;
   bool custom_rules;
-  list<pair<int,int> > rules;
+  list<printmethod::rule> rules;
   bool numbers;
   printmethod::number_mode_t number_mode;
   int pn_mode;
@@ -245,7 +245,8 @@ void setup_args(arg_parser& p)
     " rule that is not repeated every lead, use `once' as B, for example, use"
     " \"-r112,once\" for a rule at the half course in surprise major.  If no"
     " argument is given, don't draw any rule-offs."
-    "  This option may be used multiple times.", "A[,B]", true));
+    "  This option may be used multiple times.", 
+    "A[,B[,COLOUR[,DIMENSION]]]", true));
   p.add(new myopt('m', "miss-numbers", 
     "Miss out the numbers for bells which have lines drawn:  always, never,"
     " except at lead heads, or except at the beginning and end of a column."
@@ -607,21 +608,25 @@ bool myopt::process(const string& arg, const arg_parser& ap) const
     case 'r' :
       args.custom_rules = true;
       if(!arg.empty()) {
-	int a, b = 0;
 	s = arg.begin();
-	if(!parse_int(next_bit(arg, s), a)) return false;
+        printmethod::rule r;
+	if(!parse_int(next_bit(arg, s), r.offset)) return false;
 	if(s != arg.end()) {
           string n(next_bit(arg, s));
           // -1 means a one off line, e.g. at the half course, while 
           // 0 means repeat every lead.
-          if (n == "once") b=-1;
-	  else {
-            if(!parse_int(n, b)) return false;
-            if(s != arg.end())
+          if (n == "once") r.repeat=-1;
+	  else if (!parse_int(n, r.repeat)) return false;
+          if (s != arg.end()) {
+            if (!parse_colour(next_bit(arg, s), r.style.col)) return false;
+            if (s != arg.end() 
+                && !parse_dimension(next_bit(arg, s), r.style.width))
+              return false;
+            if (s != arg.end())
               cerr << "Too many arguments: \"" << arg << "\"\n";
           }
 	}
-	args.rules.push_back(pair<int,int>(a, b));
+	args.rules.push_back(r);
       } else
 	args.rules.clear();
       break;

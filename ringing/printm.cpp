@@ -30,6 +30,20 @@ RINGING_START_NAMESPACE
 
 RINGING_USING_STD
 
+printmethod::rule::rule() 
+  : offset(0), repeat(0) {
+  style.col.grey = false; 
+  style.col.red = style.col.green = style.col.blue = 0; 
+  style.crossing = false;
+}
+
+printmethod::rule::rule( pair<int,int> const& p ) 
+  : offset(p.first), repeat(p.second) {
+  style.col.grey = false; 
+  style.col.red = style.col.green = style.col.blue = 0; 
+  style.crossing = false;
+}
+
 void printmethod::defaults()
 {
   opt.defaults();
@@ -85,19 +99,22 @@ void printmethod::defaults()
       }
 }
 
-bool printmethod::needrule(int i)
+bool printmethod::needrule(int i, printrow::options::line_style& rulestyle)
 {
-  
-
-  list<pair<int,int> >::const_iterator j;
-  for (j = rules.begin(); j != rules.end(); j++)
-    if (j->second == -1) {
-      if ((i+2) == j->first) return true;
-    } else if (j->second) {
-      if ((i+2) % j->second == j->first % j->second) return true;
-    } else {
-      if ((i+2) % m->length() == j->first ) return true;
-    } 
+  list<rule>::const_iterator j;
+  for (j = rules.begin(); j != rules.end(); j++) {
+    bool matches = false;
+    if (j->repeat == -1)
+      matches = (i+2) == j->offset;
+    else if (j->repeat)
+      matches = (i+2) % j->repeat == j->offset % j->repeat;
+    else
+      matches = (i+2) % m->length() == j->offset;
+    if (matches) {
+      rulestyle = j->style;
+      return true;
+    }
+  }
   return false;
 }
 
@@ -126,103 +143,115 @@ void printmethod::print(printpage& pp)
       pp.new_page();
       columnset = 0;
     }
-    {
-      printrow pr(pp, opt);
-      // Move to the beginning of this set of columns
-      pr.set_position(xoffset, yoffset);
-      pr.move_position(0, -opt.yspace * columnset * (rows_per_column + 1));
-      pr.move_position(0, -vgap * columnset);
-      for(int column = 0; column < columns_per_set 
+    
+    printrow pr(pp, opt);
+
+    // Move to the beginning of this set of columns
+    pr.set_position(xoffset, yoffset);
+    pr.move_position(0, -opt.yspace * columnset * (rows_per_column + 1));
+    pr.move_position(0, -vgap * columnset);
+
+    for(int column = 0; column < columns_per_set 
 	    && total_row_count < total_rows; column++) {
-	// Print the first row, which is the same as the last row of the
-	// previous column.
-	pr << b[i]; if(needrule(total_row_count)) {
-          pr.rule();
+      printrow::options::line_style rulestyle;
+
+      // Print the first row, which is the same as the last row of the
+      // previous column.
+      pr << b[i]; 
+      if (needrule(total_row_count, rulestyle)) pr.rule(rulestyle);
+      // Turn on number-missing if necessary
+      if(number_mode == miss_column) {
+        opt.flags |= printrow::options::miss_numbers;
+        pr.set_options(opt);
+      }
+
+      for(int row_count = 0; row_count < rows_per_column 
+            && total_row_count < total_rows; row_count++) {
+        ++i;
+        if(i == (int) b.size()) { // We've got to the end of a lead
+          b[0] = b[b.size() - 1]; b.recalculate();
+          // Miss the first row of the lead - we've already printed it
+          // at the end of the previous lead.
+          i = 1;
+          if((pn_mode & pn_mask) == pn_first 
+             || (pn_mode & pn_mask) == pn_first_asym) pn = false;
         }
-	// Turn on number-missing if necessary
-	if(number_mode == miss_column) {
-	  opt.flags |= printrow::options::miss_numbers;
-	  pr.set_options(opt);
-	}
-	for(int row_count = 0; row_count < rows_per_column 
-	      && total_row_count < total_rows; row_count++) {
-	  ++i;
-	  if(i == (int) b.size()) { // We've got to the end of a lead
-	    b[0] = b[b.size() - 1]; b.recalculate();
-	    // Miss the first row of the lead - we've already printed it
-	    // at the end of the previous lead.
-	    i = 1;
-	    if((pn_mode & pn_mask) == pn_first 
-               || (pn_mode & pn_mask) == pn_first_asym) pn = false;
-	  }
-	  if(i == 1) {
-	    // Turn number-missing back on
-	    if(number_mode == miss_lead) {
-	      opt.flags |= printrow::options::miss_numbers;
-	      pr.set_options(opt);
-	    }
-	    if(!placebells_at_rules && placebells >= 0) {// Print place bell
-	      pr.placebell(placebells, reverse_placebells ? +1 : 0);
-	      if(!(opt.flags & printrow::options::numbers))
-	        pr.dot(-1);
-	    }
-	  } else if(i == (int) (b.size() - 2) && !calls_at_rules) {
-	    // print calling positions
-	    string pos = call(ic++);
-            if (!pos.empty())
-	      pr.text(pos, opt.xspace/2, text_style::left, false, true);
-	  }
-	  else if(i == (int) (b.size() - 1)) {
-	    if(number_mode == miss_lead) {
-	      // Lead head - print the numbers
-	      opt.flags &= ~printrow::options::miss_numbers;
-	      pr.set_options(opt);
-	    }
-            if (!placebells_at_rules && reverse_placebells && 
-	        row_count != total_rows - 1) {
-              if(placebells >= 0)
- 	        pr.placebell(placebells, -1);
-	      if(!(opt.flags & printrow::options::numbers))
-	        pr.dot(-1); 
-            }
-	  }
-	  if(number_mode == miss_column && row_count == rows_per_column - 1) {
-	    // Last row of a column - print the numbers
-	    opt.flags &= ~printrow::options::miss_numbers;
-	    pr.set_options(opt);
-	  }
-	  if(pn && ((pn_mode & pn_mask) == pn_all 
-		    || !sym || (pn_mode & pn_mask) == pn_first_asym 
-                    || i <= (m->length()+1)/2 || i == m->length())
-	     && !((pn_mode & pn_nox) && (*m)[i-1].count_places() == 0)) 
-	    pr.text( (*m)[i-1].print( (pn_mode & pn_lcross) 
-                                        ? change::C_LCROSS : 0 ),
-                     opt.xspace,text_style::right, true, false );
-	  pr << b[i];
-	  if(row_count < (rows_per_column - 1)
-	     && total_row_count < (total_rows - 1)
-	     && needrule(total_row_count)) {
-	    pr.rule();
-	    if(placebells_at_rules && reverse_placebells && placebells >= 0)
-	      pr.placebell(placebells, -1);
-	  }
-	  if(placebells_at_rules && placebells >= 0 &&
-	     row_count < (rows_per_column - 1)
-	     && total_row_count < (total_rows - 1)
-	     && needrule(total_row_count)) 
-            pr.placebell(placebells, reverse_placebells ? +1 : 0);
-          if(calls_at_rules 
-             && needrule(total_row_count)) {
-	    string pos = call(ic++);
-            if (!pos.empty())
-	      pr.text(pos, opt.xspace/2, text_style::left, false, true);
+
+        if (i == 1) {
+          // Turn number-missing back on
+          if(number_mode == miss_lead) {
+            opt.flags |= printrow::options::miss_numbers;
+            pr.set_options(opt);
           }
-	  total_row_count++;
-	}
-	if(total_row_count < total_rows) { // Next column
-	  pr.move_position(opt.xspace * m->bells(), 0);
-	  pr.move_position(hgap, 0);
-	}
+          if(!placebells_at_rules && placebells >= 0) {// Print place bell
+            pr.placebell(placebells, reverse_placebells ? +1 : 0);
+            if(!(opt.flags & printrow::options::numbers))
+              pr.dot(-1);
+          }
+        } 
+        else if (i == (int) (b.size() - 2) && !calls_at_rules) {
+          // print calling positions
+          string pos = call(ic++);
+          if (!pos.empty())
+            pr.text(pos, opt.xspace/2, text_style::left, false, true);
+        }
+        else if (i == (int) (b.size() - 1)) {
+          if(number_mode == miss_lead) {
+            // Lead head - print the numbers
+            opt.flags &= ~printrow::options::miss_numbers;
+            pr.set_options(opt);
+          }
+          if (!placebells_at_rules && reverse_placebells && 
+              row_count != total_rows - 1) {
+            if(placebells >= 0)
+ 	        pr.placebell(placebells, -1);
+            if(!(opt.flags & printrow::options::numbers))
+              pr.dot(-1); 
+          }
+        }
+
+        if(number_mode == miss_column && row_count == rows_per_column - 1) {
+          // Last row of a column - print the numbers
+          opt.flags &= ~printrow::options::miss_numbers;
+          pr.set_options(opt);
+        }
+
+        // Print place notation
+        if(pn && ((pn_mode & pn_mask) == pn_all 
+      	    || !sym || (pn_mode & pn_mask) == pn_first_asym 
+                  || i <= (m->length()+1)/2 || i == m->length())
+           && !((pn_mode & pn_nox) && (*m)[i-1].count_places() == 0)) 
+          pr.text( (*m)[i-1].print( (pn_mode & pn_lcross) 
+                                      ? change::C_LCROSS : 0 ),
+                   opt.xspace,text_style::right, true, false );
+
+        pr << b[i];
+
+        // Print rules
+        if(row_count < (rows_per_column - 1)
+           && total_row_count < (total_rows - 1)
+           && needrule(total_row_count, rulestyle)) {
+          pr.rule(rulestyle);
+          if(placebells_at_rules && reverse_placebells && placebells >= 0)
+            pr.placebell(placebells, -1);
+        }
+        if(placebells_at_rules && placebells >= 0 &&
+           row_count < (rows_per_column - 1)
+           && total_row_count < (total_rows - 1)
+           && needrule(total_row_count, rulestyle)) 
+          pr.placebell(placebells, reverse_placebells ? +1 : 0);
+        if(calls_at_rules 
+           && needrule(total_row_count, rulestyle)) {
+          string pos = call(ic++);
+          if (!pos.empty())
+            pr.text(pos, opt.xspace/2, text_style::left, false, true);
+        }
+        total_row_count++;
+      }
+
+      if (total_row_count < total_rows) { // Next column
+        pr.move_position(opt.xspace * m->bells(), 0);
+        pr.move_position(hgap, 0);
       }
     }
   }

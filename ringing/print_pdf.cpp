@@ -335,12 +335,13 @@ void printrow_pdf::print(const row& r)
     (*j).add(r);
 }
 
-void printrow_pdf::rule()
+void printrow_pdf::rule(const printrow::options::line_style& style)
 {
   if(!in_column) return;
   rules.push_back(rule_pdf(currx - opt.xspace.in_points()/2, 
 			   curry - opt.yspace.in_points() * (count - 0.5f),
-			   opt.xspace.in_points() * lastrow.bells()));
+			   opt.xspace.in_points() * lastrow.bells(),
+                           style));
 }
 
 void printrow_pdf::set_position(const dimension& x, const dimension& y)
@@ -453,36 +454,25 @@ void printrow_pdf::end_column()
   pp.f << "ET\n";
 
   // Draw rule-offs
-  {
-    list<rule_pdf>::iterator i;
-    for(i = rules.begin(); i != rules.end(); i++)
-      (*i).output(pp.f);
-    rules.clear();
-  }
+  for (list<rule_pdf>::iterator i = rules.begin(); i != rules.end(); i++)
+    i->output(pp);
+  rules.clear();
 
   // Draw circles
-  {
-    list<circle_pdf>::iterator i;
-    for(i = circles.begin(); i != circles.end(); i++)
-      (*i).output(pp);
-    circles.clear();
-  }
+  for (list<circle_pdf>::iterator i = circles.begin(); i != circles.end(); i++)
+    i->output(pp);
+  circles.clear();
 
   // Draw arrows
-  {
-    list<arrow_pdf>::iterator i;
-    for(i = arrows.begin(); i != arrows.end(); i++)
-      (*i).output(pp);
-    arrows.clear();
-  }
+  for (list<arrow_pdf>::iterator i = arrows.begin(); i != arrows.end(); i++)
+    i->output(pp);
+  arrows.clear();
 
   // Draw the lines
-  if(!drawlines.empty()) {
-    list<drawline_pdf>::iterator i;
-    for(i = drawlines.begin(); i != drawlines.end(); i++)
-      (*i).output(pp.f);
-    drawlines.erase(drawlines.begin(), drawlines.end());
-  }
+  for (list<drawline_pdf>::iterator i = drawlines.begin(); 
+       i != drawlines.end(); i++)
+    i->output(pp.f);
+  drawlines.clear();
 
   in_column = false;
 }
@@ -643,9 +633,11 @@ void drawline_pdf::output(pdf_file& f)
   f << "S\n";
 }
 
-void rule_pdf::output(pdf_file& f)
+void rule_pdf::output(printpage_pdf& pp)
 {
-  f << x << ' ' << y << " m " << x+l << ' ' << y << " l S\n";
+  pp.f << "q " << style.width.in_points() << " w ";
+  pp.set_colour(style.col);
+  pp.f << x << ' ' << y << " m " << x+l << ' ' << y << " l S Q\n";
 }
 
 void circle_pdf::output(printpage_pdf& pp)
