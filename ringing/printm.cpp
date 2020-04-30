@@ -99,7 +99,7 @@ void printmethod::defaults()
       }
 }
 
-bool printmethod::needrule(int i, printrow::options::line_style& rulestyle)
+bool printmethod::needrule(int i, rule& r)
 {
   list<rule>::const_iterator j;
   for (j = rules.begin(); j != rules.end(); j++) {
@@ -111,7 +111,7 @@ bool printmethod::needrule(int i, printrow::options::line_style& rulestyle)
     else
       matches = (i+2) % m->length() == j->offset;
     if (matches) {
-      rulestyle = j->style;
+      r = *j;
       return true;
     }
   }
@@ -153,12 +153,13 @@ void printmethod::print(printpage& pp)
 
     for(int column = 0; column < columns_per_set 
 	    && total_row_count < total_rows; column++) {
-      printrow::options::line_style rulestyle;
+      rule the_rule;
 
       // Print the first row, which is the same as the last row of the
       // previous column.
       pr << b[i]; 
-      if (needrule(total_row_count, rulestyle)) pr.rule(rulestyle);
+      if (needrule(total_row_count, the_rule))
+        pr.rule(the_rule.style, the_rule.flags);
       // Turn on number-missing if necessary
       if(number_mode == miss_column) {
         opt.flags |= printrow::options::miss_numbers;
@@ -230,18 +231,18 @@ void printmethod::print(printpage& pp)
         // Print rules
         if(row_count < (rows_per_column - 1)
            && total_row_count < (total_rows - 1)
-           && needrule(total_row_count, rulestyle)) {
-          pr.rule(rulestyle);
+           && needrule(total_row_count, the_rule)) {
+          pr.rule(the_rule.style, the_rule.flags);
           if(placebells_at_rules && reverse_placebells && placebells >= 0)
             pr.placebell(placebells, -1);
         }
         if(placebells_at_rules && placebells >= 0 &&
            row_count < (rows_per_column - 1)
            && total_row_count < (total_rows - 1)
-           && needrule(total_row_count, rulestyle)) 
+           && needrule(total_row_count, the_rule)) 
           pr.placebell(placebells, reverse_placebells ? +1 : 0);
         if(calls_at_rules 
-           && needrule(total_row_count, rulestyle)) {
+           && needrule(total_row_count, the_rule)) {
           string pos = call(ic++);
           if (!pos.empty())
             pr.text(pos, opt.xspace/2, text_style::left, false, true);

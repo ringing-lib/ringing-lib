@@ -98,7 +98,7 @@ public:
     : pp(p), in_column(false), lastrow(8), opt(op) { start(); }
   ~printrow_ps() { if(in_column) end_column(); }
   void print(const row& r);
-  void rule(const printrow::options::line_style& style);
+  void rule(const printrow::options::line_style& style, printrow::rule_flags);
   void set_position(const dimension& x, const dimension& y);
   void move_position(const dimension& x, const dimension& y);
   void set_options(const printrow::options& o) { opt = o; }

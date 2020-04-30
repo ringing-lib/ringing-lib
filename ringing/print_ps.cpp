@@ -114,6 +114,13 @@ const string printpage_ps::def_string =
 "  xspace mul 0 R S\n"
 "} BD\n"
 
+// RON - draw narrow rule-off under last row
+"/RON {\n"
+"  0 SL N\n"
+"  xstart ypos yspace 2 div add M\n"
+"  1 sub xspace mul 0 R S\n"
+"} BD\n"
+
 // n G - leave n blank rows
 "/G {yspace mul ypos exch sub /ypos exch def} BD\n"
 
@@ -314,14 +321,16 @@ void printrow_ps::fill_gap()
   }
 }
 
-void printrow_ps::rule(const printrow::options::line_style& style)
+void printrow_ps::rule(const printrow::options::line_style& style, 
+                       printrow::rule_flags flags)
 {
   if(!in_column) return;
   fill_gap();
   pp.os << "GS ";
   pp.set_colour(opt.grid_style.col);
   pp.os << opt.grid_style.width.in_points() << " SL "
-        << lastrow.bells() << " RO GR\n";
+        << lastrow.bells() << ((flags & printrow::no_hextend) ? " RON" : " RO")
+        << " GR\n";
 }
 
 void printrow_ps::set_position(const dimension& x, const dimension& y)

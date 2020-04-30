@@ -58,6 +58,7 @@ public:
 
     int offset, repeat;
     printrow::options::line_style style;
+    printrow::rule_flags flags;
   };
   list<rule> rules;
 
@@ -96,7 +97,7 @@ public:
   void startrow(const row& r) { rounds=r; }
 
 private:
-  bool needrule(int i, printrow::options::line_style& );
+  bool needrule(int i, rule& );
   int find_pnextra();
   static int divd(int a, int b) { return (a - a % b) / b; }
   static int divu(int a, int b) 

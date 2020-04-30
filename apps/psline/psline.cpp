@@ -619,11 +619,18 @@ bool myopt::process(const string& arg, const arg_parser& ap) const
 	  else if (!parse_int(n, r.repeat)) return false;
           if (s != arg.end()) {
             if (!parse_colour(next_bit(arg, s), r.style.col)) return false;
-            if (s != arg.end() 
-                && !parse_dimension(next_bit(arg, s), r.style.width))
-              return false;
-            if (s != arg.end())
-              cerr << "Too many arguments: \"" << arg << "\"\n";
+            if (s != arg.end()) {
+              if (!parse_dimension(next_bit(arg, s), r.style.width))
+                return false;
+              while (s != arg.end()) {
+                string f(next_bit(arg, s));
+                if (f == "narrow") r.flags = printrow::no_hextend; 
+                else { 
+                  cerr << "Unknown flag on rule: \"" << f << "\"\n";
+                  return false;
+                }
+              }
+            }
           }
 	}
 	args.rules.push_back(r);

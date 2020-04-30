@@ -335,13 +335,21 @@ void printrow_pdf::print(const row& r)
     (*j).add(r);
 }
 
-void printrow_pdf::rule(const printrow::options::line_style& style)
+void printrow_pdf::rule(const printrow::options::line_style& style, 
+                        printrow::rule_flags flags)
 {
   if(!in_column) return;
-  rules.push_back(rule_pdf(currx - opt.xspace.in_points()/2, 
+  float startx = currx;
+  float len = opt.xspace.in_points();
+  if (flags & printrow::no_hextend) 
+    len *= lastrow.bells() - 1;
+  else {
+    startx -= opt.xspace.in_points()/2;
+    len *= lastrow.bells();
+  }
+  rules.push_back(rule_pdf(startx, 
 			   curry - opt.yspace.in_points() * (count - 0.5f),
-			   opt.xspace.in_points() * lastrow.bells(),
-                           style));
+                           len, style));
 }
 
 void printrow_pdf::set_position(const dimension& x, const dimension& y)
