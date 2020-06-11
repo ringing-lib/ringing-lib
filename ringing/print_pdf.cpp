@@ -528,10 +528,11 @@ void printrow_pdf::grid()
 
 void printrow_pdf::dot(int i)
 {
-  if(i == -1) {
+  if (i == -1) {
     map<bell, printrow::options::line_style>::const_iterator j;
-    for(j = opt.lines.begin(); j != opt.lines.end(); j++)
-      if(!(*j).second.crossing) dot((*j).first);
+    for (j = opt.lines.begin(); j != opt.lines.end(); j++)
+      if (!j->second.crossing && !j->second.no_dots)
+        dot(j->first);
   } else {
     int j = 0;
     while(j < lastrow.bells() && lastrow[j] != i) j++;

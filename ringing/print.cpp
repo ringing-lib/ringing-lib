@@ -41,7 +41,7 @@ void printrow::options::defaults()
   yspace.n = 12; yspace.d = 1; yspace.u = dimension::points;
   line_style s; s.width.n = 1; s.width.d = 2; s.width.u = dimension::points;
   s.col.grey = false; s.col.red = 0; s.col.green = 0; s.col.blue = 1.0;
-  s.crossing = false;
+  s.crossing = false; s.no_dots = false;
   lines[1] = s;
   s.col.grey = true; s.col.red = 0.9f;
   grid_style = s;

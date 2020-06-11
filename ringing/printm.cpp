@@ -34,14 +34,14 @@ printmethod::rule::rule()
   : offset(0), repeat(0) {
   style.col.grey = false; 
   style.col.red = style.col.green = style.col.blue = 0; 
-  style.crossing = false;
+  style.crossing = style.no_dots = false;
 }
 
 printmethod::rule::rule( pair<int,int> const& p ) 
   : offset(p.first), repeat(p.second) {
   style.col.grey = false; 
   style.col.red = style.col.green = style.col.blue = 0; 
-  style.crossing = false;
+  style.crossing = style.no_dots = false;
 }
 
 void printmethod::defaults()
@@ -72,12 +72,12 @@ void printmethod::defaults()
   workstyle.width.u = dimension::points;
   workstyle.col.grey = false; workstyle.col.red = 0; 
   workstyle.col.green = 0; workstyle.col.blue = 1.0;
-  workstyle.crossing = false;
+  workstyle.crossing = workstyle.no_dots = false;
   huntstyle.width.n = 1; huntstyle.width.d = 4;
   huntstyle.width.u = dimension::points;
   huntstyle.col.grey = false; huntstyle.col.red = 1.0;
   huntstyle.col.green = 0; huntstyle.col.blue = 0;
-  huntstyle.crossing = false;
+  huntstyle.crossing = huntstyle.no_dots = false;
 
   opt.lines.clear();
   bool found_working_bell = false;

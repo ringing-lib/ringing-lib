@@ -217,8 +217,10 @@ void setup_args(arg_parser& p)
     "Draw a line for BELL"
     " with colour COLOUR and thickness DIMENSION.  If `x' is included after"
     " BELL, draw the line only when that bell is passing another bell which"
-    " has a line drawn.  If no arguments are given, don't draw any lines."
-    "  This option may be used multiple times.",
+    " has a line drawn.  If no arguments are given, don't draw any lines. "
+    " BELL may be `:a' for all bells, `:h' for all hunt bells, `:w' for all "
+    " working bells, or `:v' for one working bell.  This option may be used "
+    " multiple times.",
 		  "BELL[x][,COLOUR[,DIMENSION]]", true));
   p.add(new myopt('G', "guides",
     "Draw guides indicating bell positions, in style STYLE (currently"
@@ -431,10 +433,10 @@ bool myopt::process(const string& arg, const arg_parser& ap) const
 	  ++s;
 	  if(s == arg.end()) { cerr << "Invalid bell: ':'\n"; return false; }
 	  switch(*s) {
-	    case 'a' : bl.push_back(-1); break;
-	    case 'h' : bl.push_back(-2); break;
-            case 'w' : bl.push_back(-3); break;
-            case 'v' : bl.push_back(-4); break;
+	    case 'a' : bl.push_back(-1); break; // All bells
+	    case 'h' : bl.push_back(-2); break; // All hunts
+            case 'w' : bl.push_back(-3); break; // All working bells
+            case 'v' : bl.push_back(-4); break; // One working bell
             default : 
 	      cerr << "Invalid bell: ':" << *s << "'\n";
 	      return false;
@@ -457,7 +459,9 @@ bool myopt::process(const string& arg, const arg_parser& ap) const
 	printrow::options::line_style st;
 	st.width.n = 1; st.width.d = 2; st.width.u = dimension::points;
 	st.col.grey = false; st.col.red = st.col.green = 0; st.col.blue = 1.0;
-	st.crossing = false;
+	st.crossing = false; 
+        // 
+        st.no_dots = (bl.size() == 1 && bl.back() == -2);
 	if(s != arg.end()) {
 	  if(*s == 'x' || *s == 'X') { st.crossing = true; ++s; }
 	  if(s != arg.end()) {

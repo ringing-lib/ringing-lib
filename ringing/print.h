@@ -75,7 +75,7 @@ public:
     struct line_style {
       dimension width;
       colour col;
-      bool crossing;
+      bool crossing, no_dots;
     };
     map<bell, line_style> lines;   // What lines draw in what styles
 
