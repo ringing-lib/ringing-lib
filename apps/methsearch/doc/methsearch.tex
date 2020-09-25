@@ -1804,6 +1804,7 @@ typed in on the command line reach \methsearch\ in their intended form.
 \D\No\F{o}&The number of leads per course\\
 \D\No\F{u}&The number of hunt bells\\
 \D\No\F{B}&The number of bells\\
+\D\No\F{G}&The number of cycles of bells\\
 \D\F{d}&The lead head code (modern symbol)\\
 \D\F{D}&The lead head code (traditional symbol)
   \index{lead head!code|see{\texttt{\$d} \textit{and} \texttt{\$D}}}\\
@@ -1869,8 +1870,11 @@ Many of the method variables above are self explanatory; however a few
 bear further comment.  Options such as \verb+$b+\fspec{b} (the maximum
 consecutive blows in one place) return the maximum number actually found
 in the particular method, rather than simply returning the value passed
-to the \verb+-p+ option.  The number of hunt bells, \verb+$u+\fspec{u} 
+to the \verb+-p+ option.  The number of hunt bells, \verb+$u+\fspec{u}, 
 includes any bell that is back in its starting place at the lead head.
+The number of cycles, \verb+$G+\fspec{G}, is useful for testing for
+differential or differential hunter methods\index{differentials}: they
+match the expression \verb+$G-$u>1+.
 
 The modern lead head code, \verb+$d+\fspec{d}, is the lead head as defined
 in modern Central Council collections and enumerated in 
@@ -3282,7 +3286,7 @@ and a half-lead that is true to this group:%
 \footnote{Such methods were first catalogued by Jonathan 
 Deane\index{Deane, Jonathan} and published in the \textit{Ringing World}
 [1994, p.~407].  He recognised that it was impossible to avoid four blows
-in one place, but wanted limit this the occurence of multiple consecutive 
+in one place, but wanted to imit the occurence of multiple consecutive 
 blows in one place to just four blows at lead across the lead end.  
 \methsearch\ can duplicate his analysis by adding \verb+-p2+ 
 \verb+--long-le-place+ \verb+-Q"$19h ne '145' || $20h ne '125'"+ 

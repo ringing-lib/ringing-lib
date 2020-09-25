@@ -1,5 +1,5 @@
 // -*- C++ -*- row.h - Classes for rows and changes
-// Copyright (C) 2001, 2007, 2008, 2009, 2010, 2017
+// Copyright (C) 2001, 2007, 2008, 2009, 2010, 2017, 2020
 // Martin Bright <martin@boojum.org.uk> and
 // Richard Smith <richard@ex-parrot.com>
 
@@ -125,6 +125,7 @@ public:
   int ispblh(int h) const;	// Which plain bob lh (with h hunts) is it?
   int sign(void) const;         // Return whether it's odd or even
   string cycles() const;        // Express it as a product of disjoint cycles
+  size_t num_cycles() const;    // How many cycles are there?
   int order(void) const;	    // Return the order
   friend RINGING_API ostream& operator<<(ostream&, const row&);
   friend RINGING_API istream& operator>>(istream&, row&);

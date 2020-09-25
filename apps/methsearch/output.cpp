@@ -1,5 +1,5 @@
 // -*- C++ -*- output.cpp - generic classes to handle output of methods
-// Copyright (C) 2002, 2003, 2004, 2005, 2009, 2010, 2011
+// Copyright (C) 2002, 2003, 2004, 2005, 2009, 2010, 2011, 2020
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -208,6 +208,10 @@ string method_properties::impl2::get_property( int num_opt,
 	case 'u': 
 	  os << setw(num_opt) << m.huntbells(); 
 	  break;
+
+	case 'G':
+	  os << setw(num_opt) << m.lh().num_cycles();
+          break;
 
 	case 'B': 
 	  os << setw(num_opt) << m.bells(); 
