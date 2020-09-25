@@ -1,6 +1,6 @@
 // -*- C++ -*- prog_args.cpp - handle program arguments
-// Copyright (C) 2002, 2003, 2004, 2005, 2007, 2008, 2009, 2010, 2011, 2013
-// Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003, 2004, 2005, 2007, 2008, 2009, 2010, 2011, 2013,
+// 2020 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -15,8 +15,6 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-
-// $Id$
 
 #include <ringing/common.h>
 
@@ -498,6 +496,11 @@ void arguments::bind( arg_parser &p )
 	 ( 'M', "music",
 	   "Score the music in a plain course", "PATTERN",
 	   &musical_analysis::add_pattern ) );
+
+  p.add( new strings_opt
+         ( '\0', "row-match",
+           "Require row NUM to match PATTERN", "NUM=PATTERN",
+           row_matches_str ) );
 
   p.add( new string_opt
 	 ( '\0', "start-at",
@@ -998,6 +1001,49 @@ bool arguments::validate( arg_parser &ap )
       restrict_changes(*this);
     } catch (exception const& e) {
       ap.error(make_string() << e.what()); return false;
+    }
+  }
+
+  if (!row_matches_str.empty())
+    row_matches.resize(lead_len + 1);
+  for ( vector<string>::const_iterator 
+          i = row_matches_str.begin(), e = row_matches_str.end(); 
+          i != e; ++i ) {
+    size_t j = i->find('=');
+    if (j == string::npos) {
+      ap.error("Missing = in row match");
+      return false;
+    }
+
+    size_t n;
+    try {
+      n = lexical_cast<size_t>( i->substr(0, j) );
+    }
+    catch ( bad_lexical_cast const& ) {
+      ap.error("Unable to parse row number in row match argument" );
+      return false;
+    }
+    if (n > lead_len) {
+      ap.error("Row number out of range in row match" );
+      return false;
+    }
+
+    music& mus = row_matches[n];
+    if (mus.bells()) {
+      ap.error(make_string() << "Duplicate row match for row " << n);
+      return false;
+    }
+    mus.set_bells(bells);
+
+    try {
+      if (j+3 < i->size() && (*i)[j+1] == '<' && (*i)[i->size()-1] == '>')
+        add_named_music( mus, i->substr(j+2, i->size()-j-3) );
+      else
+        mus.push_back( music_details( i->substr(j+1) ) );
+    }
+    catch ( row_wildcard::invalid_pattern const& ) { 
+      ap.error("Unable to parse row match argument" );
+      return false;
     }
   }
       

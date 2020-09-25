@@ -189,7 +189,7 @@ musical_analysis::analyser::analyser( int bells )
         {
           music& mu = musv[*i];
           mu.set_bells(bells);
-          add_named_music( mu, "CRUs", 1 ); 
+          add_named_music( mu, "CRUs" ); 
         }
     }
 }

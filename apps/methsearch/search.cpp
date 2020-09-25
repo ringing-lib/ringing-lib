@@ -1,6 +1,6 @@
 // -*- C++ -*- search.cpp - the actual search algorithm
-// Copyright (C) 2002, 2003, 2004, 2005, 2007, 2008, 2009, 2010, 2011, 2013
-// Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003, 2004, 2005, 2007, 2008, 2009, 2010, 2011, 2013,
+// 2020 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -15,8 +15,6 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-
-// $Id$
 
 
 #include <ringing/common.h>
@@ -144,7 +142,7 @@ searcher::searcher( const arguments &args )
     search_count( 0ul ), node_count( 0ul ),
     div_start( 0 ), cur_div_len( calc_cur_div_len() ),
     r( args.pends.rcoset_label( args.start_row ) ),
-    maintain_r( args.avoid_rows.size() )
+    maintain_r( args.avoid_rows.size() || args.row_matches.size() )
 {
   reset();
 
@@ -560,7 +558,24 @@ inline bool searcher::push_change( const change& ch )
       if ( prv && !prv->add_row(r) )
         return false;
       // Is this case still necessary?
-      else if (!prv && args.avoid_rows.find(r) != args.avoid_rows.end() )
+      else if ( !prv && args.avoid_rows.find(r) != args.avoid_rows.end() )
+        return false;
+    }
+
+    if ( m.size() < args.row_matches.size() 
+         && args.row_matches[m.size()].bells() ) {
+      music& mus = const_cast<music&>( args.row_matches[m.size()] );
+
+      if (args.pends.size() > 1) {
+        bool matched = false;
+        for (group::const_iterator i(args.pends.begin()), e(args.pends.end());
+               i != e; ++i)
+          if (mus.process_row(*i * r))
+            matched = true;
+        if (!matched)
+          return false;
+      }
+      else if (!mus.process_row(r))
         return false;
     }
   }
