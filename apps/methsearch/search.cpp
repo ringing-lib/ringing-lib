@@ -1269,20 +1269,23 @@ bool searcher::is_acceptable_leadhead( const row &lh )
       }
     }
 
-  if ( args.require_pbles ) 
-    {
-      if ( lh.ispblh(args.hunt_bells) )
-        return true;
-    }
-  else if ( args.require_cyclic_les )
-    {
-      if ( is_cyclic_le(lh, args.hunt_bells) )
-        return true;
-    }
-  else
-    {
+  if ( args.require_pbles ) {
+    if ( lh.ispblh(args.hunt_bells) )
       return true;
-    } 
+  }
+  else if ( args.require_cyclic_les ) {
+    if ( is_cyclic_le(lh, args.hunt_bells) )
+      return true;
+  }
+  else if ( args.any_regular_le ) {
+    unsigned h = 0;
+    for (unsigned i=0; i < bells; ++i)
+      if (lh[i] == i) ++h;
+      else break;
+    if ( lh.ispblh(h) )
+      return true;
+  }
+  else return true;
 
   return false;
 }

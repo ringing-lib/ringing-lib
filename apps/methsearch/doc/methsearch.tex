@@ -940,7 +940,10 @@ to be made restrictions imposed by the \verb+-l+, \verb+-j+, \verb+-w+ and
 \index{lead end|(}\index{lead head|(}
 
 \begin{tabularx}{\textwidth}{llX}
-\texttt{-r}&\texttt{--regular}&Require regular (Plain Bob) lead heads\\
+\texttt{-r}&\texttt{--regular}&Require regular (Plain Bob or Grandsire) 
+  lead head\\
+&\texttt{--any-regular-lh}&Require any regular (Plain Bob or Grandsire)
+  lead head, including those with extra hunts\\
 \texttt{-c}&\texttt{--cyclic}&Require cyclic lead heads\\
 \texttt{-e}&\texttt{--restricted-le}&
   Require \texttt{12}, \texttt{1N}, \texttt{1} or \texttt{12N} 
@@ -1114,12 +1117,16 @@ Brave New World Bob Royal is an example of a method with just this symmetry.
 \textit{Glide symmetry}\index{symmetry!glide},
 specified with \verb+-d+,\oid{d}{double} means that the method is 
 invariant when reversed (i.e.\ when the frontwork move to the back and 
-vice versa) and then shifted by half a lead.  
-The Central Council refers to this form of symmetry as 
-\textit{double symmetry}\index{symmetry!double|see{glide}}, 
-although this term is sometime incorrectly
-reserved to mean the combination of glide and palindromic symmetry.  
-Methods with just glide symmetry are relatively rare;y rung; 
+vice versa) and then shifted by half a lead.%
+\footnote{Until 2019, the Central Council refers to this form of
+symmetry as \textit{double symmetry}\index{symmetry!double}.
+Since their adoption of the new Framework for Method Ringing
+(\url{https://cccbr.github.io/method_ringing_framework/}), 
+they have used \textit{double symmetry} to refer to either glide or
+mirror symmetry.  In common usage, \textit{double symmetry} is sometime
+incorrectly reserved to mean the combination of glide and palindromic
+symmetry.}
+Methods with just glide symmetry are relatively rarely rung; 
 Double Resurrection Cyclic Bob Royal is an example of one.
 
 \textit{Mirror symmetry}\index{symmetry!mirror} 
@@ -3234,9 +3241,9 @@ A cleaner way of expressing this is with the cardinality%
 % Stonebow
 
 The \verb+-FP+ option can also used with one or more \verb+--row-match+
-options (\sref{misc_opt}) to require a row matching the given pattern to
-appear in a particular place in at least one part, but without
-specifying which part.  See \sref{pendrows} for more details.
+\loi{row-match} options (\sref{misc_opt}) to require a row matching the
+given pattern to appear in a particular place in at least one part, but
+without specifying which part.  See \sref{pendrows} for more details.
 
 \subsection{Methods which produce the extent}
 
@@ -3497,9 +3504,10 @@ the front in a particular way.
 For example, one strategy for getting forwards and backwards runs off
 the front in a plain caters method is to have bells on the front four
 plain hunt around the half-lead with the bells in the right order to get
-the tenors running up forwards, then backwards four blows, then forwards
-again in another four blows.  The leads heads of a regular caters method
-are a group which can be specified on an \verb+-FP+ option as follows:
+the tenors running up forwards, then backwards four blows later, then
+forwards again in another four blows.  The leads heads of a regular
+caters method are a group which can be specified on an \verb+-FP+ option
+as follows:
 
 \begin{Verbatim}[commandchars=@~~]
 methsearch -b9 -srf -p2 -l3 -j2 -FP=35274968 @hfill\
@@ -3513,7 +3521,7 @@ undesirable.  The first \verb+-Q+ option excludes the two most common
 lead end orders for variety, while the second one requires a reasonably
 high musical score.  The aim of all of these options is to whittle the
 list down to an short list of potentially attractive methods, though the
-particular choice is quite subjective.
+particular choice of criteria used is quite subjective.
 
 This search produces just three methods, all unnamed:\footnote{All
 three are in my opinion worthwhile methods which combine an interesting
@@ -4618,6 +4626,10 @@ principles\index{principles} and differentials.\index{differentials}
   (\sref{random}); \verb+--random-count+'s functionality subsumed in
   \verb+--limit+ and \verb+--loop+, and the option removed.
 \item The current time: \verb+$T+ (\sref{variables}).
+\item The number of cycles: \verb+$G+ (\sref{variables}).
+\item Row matching: \verb+--row-match+ (\sref{misc_opt}); and its
+interaction with \verb+-FP+ (\sref{pendrows}).
+\item Any regular lead end: \verb+--any-regular-lh+ (\sref{le_lh}).
 \end{list}
 
 \clearpage

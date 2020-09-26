@@ -74,6 +74,7 @@ struct arguments
   init_val<bool,false> require_limited_le;
   init_val<bool,false> prefer_limited_le;
   init_val<bool,false> require_pbles;
+  init_val<bool,false> any_regular_le;
   init_val<bool,false> require_cyclic_les;
   init_val<bool,false> require_cyclic_hlh;
   init_val<bool,false> require_cyclic_hle;

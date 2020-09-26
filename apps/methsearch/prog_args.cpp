@@ -234,6 +234,11 @@ void arguments::bind( arg_parser &p )
 	   require_pbles ) );
 
   p.add( new boolean_opt
+	 ( '\0', "any-regular-hl",
+	   "Require any regular lead ends, including with extra hunt bells",
+	   any_regular_le ) );
+
+  p.add( new boolean_opt
 	 ( 'A', "all-methods",    
 	   "Include differentials or differential hunters",
 	   show_all_meths ) );
