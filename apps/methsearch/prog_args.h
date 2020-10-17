@@ -1,5 +1,5 @@
 // -*- C++ -*- prog_args.h - program arguments
-// Copyright (C) 2002, 2003, 2004, 2007, 2008, 2009, 2010, 2011
+// Copyright (C) 2002, 2003, 2004, 2007, 2008, 2009, 2010, 2011, 2020
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -15,8 +15,6 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-
-// $Id$
 
 #ifndef METHSEARCH_ARGS_INCLUDED
 #define METHSEARCH_ARGS_INCLUDED
@@ -46,6 +44,7 @@
 #include <ringing/libout.h>
 #include <ringing/method.h>
 #include <ringing/group.h>
+#include <ringing/music.h>
 
 class arg_parser;
 
@@ -75,6 +74,7 @@ struct arguments
   init_val<bool,false> require_limited_le;
   init_val<bool,false> prefer_limited_le;
   init_val<bool,false> require_pbles;
+  init_val<bool,false> any_regular_le;
   init_val<bool,false> require_cyclic_les;
   init_val<bool,false> require_cyclic_hlh;
   init_val<bool,false> require_cyclic_hle;
@@ -145,8 +145,10 @@ struct arguments
   init_val<bool,true> include_changes;
   set<change>         changes;
 
+  vector<string>      row_matches_str;
+  vector<music>       row_matches;
+
   vector< vector<change> > allowed_changes;
-  vector<row>    required_rows;
 
   string H_fmt_str, R_fmt_str;
   string outfile;

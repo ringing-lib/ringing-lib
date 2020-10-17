@@ -1,5 +1,5 @@
 // row.cpp - Classes for row and changes
-// Copyright (C) 2001, 2008, 2009, 2010, 2017 
+// Copyright (C) 2001, 2008, 2009, 2010, 2017, 2020
 // Martin Bright <martin@boojum.org.uk> and
 // Richard Smith <richard@ex-parrot.com>
 
@@ -382,6 +382,29 @@ int row::ispblh(void) const
   for(h = 0; h < bells() && data[h] == h; h++);
   if(h == 0) return 0;
   return ispblh(h);
+}
+
+// Express it as a product of disjoint cycles
+size_t row::num_cycles() const
+{
+  size_t num = 0;
+
+  if (data.empty()) return num;
+  vector<bool> done(bells(), false);
+
+  int i = 0;
+  for (;;) {
+    // Find the next bell we haven't got yet
+    while ( i < bells() && done[i] ) ++i;
+    if ( i == bells() ) break;
+    do {
+      done[i] = true;		// Remember that we've done it
+      i = data[i];		// Find the next one in this cycle
+    } while (!done[i]);		// until the finish the cycle
+    ++num;
+  }
+
+  return num;
 }
 
 // Express it as a product of disjoint cycles

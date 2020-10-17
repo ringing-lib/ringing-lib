@@ -940,7 +940,10 @@ to be made restrictions imposed by the \verb+-l+, \verb+-j+, \verb+-w+ and
 \index{lead end|(}\index{lead head|(}
 
 \begin{tabularx}{\textwidth}{llX}
-\texttt{-r}&\texttt{--regular}&Require regular (Plain Bob) lead heads\\
+\texttt{-r}&\texttt{--regular}&Require regular (Plain Bob or Grandsire) 
+  lead head\\
+&\texttt{--any-regular-lh}&Require any regular (Plain Bob or Grandsire)
+  lead head, including those with extra hunts\\
 \texttt{-c}&\texttt{--cyclic}&Require cyclic lead heads\\
 \texttt{-e}&\texttt{--restricted-le}&
   Require \texttt{12}, \texttt{1N}, \texttt{1} or \texttt{12N} 
@@ -1114,12 +1117,16 @@ Brave New World Bob Royal is an example of a method with just this symmetry.
 \textit{Glide symmetry}\index{symmetry!glide},
 specified with \verb+-d+,\oid{d}{double} means that the method is 
 invariant when reversed (i.e.\ when the frontwork move to the back and 
-vice versa) and then shifted by half a lead.  
-The Central Council refers to this form of symmetry as 
-\textit{double symmetry}\index{symmetry!double|see{glide}}, 
-although this term is sometime incorrectly
-reserved to mean the combination of glide and palindromic symmetry.  
-Methods with just glide symmetry are relatively rare;y rung; 
+vice versa) and then shifted by half a lead.%
+\footnote{Until 2019, the Central Council refers to this form of
+symmetry as \textit{double symmetry}\index{symmetry!double}.
+Since their adoption of the new Framework for Method Ringing
+(\url{https://cccbr.github.io/method_ringing_framework/}), 
+they have used \textit{double symmetry} to refer to either glide or
+mirror symmetry.  In common usage, \textit{double symmetry} is sometime
+incorrectly reserved to mean the combination of glide and palindromic
+symmetry.}
+Methods with just glide symmetry are relatively rarely rung; 
 Double Resurrection Cyclic Bob Royal is an example of one.
 
 \textit{Mirror symmetry}\index{symmetry!mirror} 
@@ -1284,7 +1291,7 @@ methsearch -b5 -s -m"&(34|5).1.5.1.5/*,2"
 \end{Verbatim}
 
 When searching for a method with hunt bells (i.e.\ a search other than with
-\verb+-U0+), the mask can override the requirements set by \verb+w+ and
+\verb+-U0+), the mask can override the requirements set by \verb+-w+ and
 \verb+-f+ that the method is right-place or has no penultimate places name
 above the treble.  Thus \verb+-w -m"&3*,?"+ will look for methods
 that are right place except for starting with a \verb+3+ place notation.  
@@ -1600,6 +1607,8 @@ methsearch -b8 -G1 --random --loop --timeout=1 --limit=23
                 &Invert filter so only non-matching methods are listed\\
 \texttt{-Q}&\texttt{--require} 
                 &Apply an additional requirement to the search results\\
+&\texttt{--row-match=N=PAT}
+  &Require row \texttt{N} to match pattern \texttt{PAT}\\ 
 \texttt{-M}&\texttt{--music}&Configure how \methsearch\ evaluates musicality\\
 \texttt{-F}&\texttt{--falseness}&Configure how falseness is checked\\
 \texttt{-P}&\texttt{--parity-hack}&Require an equal number of rows of each 
@@ -1666,7 +1675,16 @@ an \textit{expression} whose is described in \sref{expr}.  The expression
 is evaluated for each method found, and only if it evaluates to true 
 is the method found.  Many other options can also be rewritten as a
 \verb+-Q+ option; almost invariably this results in a loss of 
-efficiency, sometimes spectacularly so.
+efficiency, sometimes spectacularly when the equivalent option would
+prune the search space.
+
+The \verb+--row-match=+$n$\verb+=+\textit{pattern}\loid{row-match}
+option takes two arguments separated by a \verb+=+.  It requires the
+$n$th row of first lead of the method to match the specified music
+pattern (\sref{muspattern}), which may be a simple pattern or a named
+pattern (\sref{musnamed}) enclosed in \verb+<+\ldots\verb+>+.  In a
+multi-part search the match may occur in any part (see \sref{pends}).
+Rows are numbered from zero. 
 
 The \verb+-M+\oi{M} and \verb+-F+\oi{F} options 
 configure how methsearch analyses the musicality and 
@@ -1804,6 +1822,7 @@ typed in on the command line reach \methsearch\ in their intended form.
 \D\No\F{o}&The number of leads per course\\
 \D\No\F{u}&The number of hunt bells\\
 \D\No\F{B}&The number of bells\\
+\D\No\F{G}&The number of cycles of bells\\
 \D\F{d}&The lead head code (modern symbol)\\
 \D\F{D}&The lead head code (traditional symbol)
   \index{lead head!code|see{\texttt{\$d} \textit{and} \texttt{\$D}}}\\
@@ -1866,11 +1885,21 @@ format strings.
 \index{variables|)}\index{method parameters|)}
 
 Many of the method variables above are self explanatory; however a few
-bear further comment.  Options such as \verb+$b+\fspec{b} (the maximum
-consecutive blows in one place) return the maximum number actually found
-in the particular method, rather than simply returning the value passed
-to the \verb+-p+ option.  The number of hunt bells, \verb+$u+\fspec{u} 
-includes any bell that is back in its starting place at the lead head.
+bear further comment.  The \verb+$b+\fspec{b} variable gives the maximum
+number of consecutive blows in one place actually found in the
+particular method, rather than simply returning the value passed to the
+\verb+-p+ option.  The number of hunt bells, \verb+$u+\fspec{u},
+includes any bell that is back in its starting place at the lead head,
+regardless of its path.
+The number of cycles, \verb+$G+\fspec{G}, is useful for testing for
+differential or differential hunter methods\index{differentials}: they
+match the expression \verb+$G-$u>1+.\footnote{Before the \verb+$G+
+variable was added to \methsearch, the usual way of testing for this was
+with \verb/$u+$o!=$B/. This worked fine on lower numbers, but would
+fail with certain lead heads on higher numbers.  The simplest example of
+this is (2,3,3,4) differential maximus method, e.g. with the lead head
+\verb+214537860ET9+.  For a method, $\hbox{\verb+$o+}=12$,
+$\hbox{\verb+$u+}=0$, $\hbox{\verb+$B+}=12$ and $\hbox{\verb+$G+}=4$.}
 
 The modern lead head code, \verb+$d+\fspec{d}, is the lead head as defined
 in modern Central Council collections and enumerated in 
@@ -3211,13 +3240,21 @@ A cleaner way of expressing this is with the cardinality%
 \[ PsM \cup A. \]
 % Stonebow
 
+The \verb+-FP+ option can also used with one or more \verb+--row-match+
+\loi{row-match} options (\sref{misc_opt}) to require a row matching the
+given pattern to appear in a particular place in at least one part, but
+without specifying which part.  See \sref{pendrows} for more details.
+
+\subsection{Methods which produce the extent}
+
 The \verb+-FP+ option also provides a way of searching for methods that
 can produce an extent.\index{extents, viability of}
 For example, if you can find a group, $G$, and a treble path of length $m$ 
 (whether in the half-lead, lead or course) such that $\left|G\right|m = n!$
 then it might be possible to use the group as the part-end group for an extent.
 In other words, it might be possible to find a method, $M$, that satisfies
-$GM=S_n$.  
+$GM=S_n$.\footnote{Or more accurately, $\left| GM \right| = 
+\left|G\right| \times \left|M\right| = n!$.}
 
 For example, most treble dodging minor methods produce extents
 that have the {60} in-course rows of the form \verb+1.....+ as lead-ends
@@ -3262,7 +3299,7 @@ of some perceived similarity to a major method of that name.}
 The usual way to get a palindromic differential method capable of producing 
 an extent is to arrange for all of the bells in one cycle to ring in every 
 position relative to each other during half a lead.  For example, in a 
-2,3 doubles differential, the two trebles would ring in each of the 
+(2,3) doubles differential, the two trebles would ring in each of the 
 $\textrm{5}\times\textrm{4}\div\textrm{2} = \textrm{10}$ relative positions 
 during half a lead.  The two trebles swap over at the half lead or lead head
 to produce a lead head of \verb+21453+ or \verb+21534+.  During the course
@@ -3276,13 +3313,13 @@ to produce a lead head of \verb+21453+ or \verb+21534+.  During the course
 These twelve rows have every combination of the the two trebles in both 
 possible orders and the three tenors in all six orders.  It is therefore
 the group $S_2 \times S_3$.  
-To get \methsearch\ to search for 2,3 doubles differentials, you ask
+To get \methsearch\ to search for (2,3) doubles differentials, you ask
 it to look for palindromic methods with 20 rows per lead, 6 leads per course, 
 and a half-lead that is true to this group:%
 \footnote{Such methods were first catalogued by Jonathan 
-Deane\index{Deane, Jonathan} and published in the \textit{Ringing World}
+Deane\index{Deane, Jonathan} and published in \textit{The Ringing World}
 [1994, p.~407].  He recognised that it was impossible to avoid four blows
-in one place, but wanted limit this the occurence of multiple consecutive 
+in one place, but wanted to imit the occurence of multiple consecutive 
 blows in one place to just four blows at lead across the lead end.  
 \methsearch\ can duplicate his analysis by adding \verb+-p2+ 
 \verb+--long-le-place+ \verb+-Q"$19h ne '145' || $20h ne '125'"+ 
@@ -3302,11 +3339,11 @@ help check that the group produced is the intended one.  For example,
 \begin{Verbatim}
 rowcalc -b5 -c "<12435,21453>"
 \end{Verbatim}
-prints \verb+12+, the size of the group.  (Removing the \verb+-c+ causes it
-to print the whole group.)
+prints \verb+12+, the size of the group.  Removing the \verb+-c+ causes it
+to print the whole group.
 
 This extends to differentials on higher numbers.  Double Helix 
-Differential Major\index{Double Helix Differential Major} is a 3,5 major
+Differential Major\index{Double Helix Differential Major} is a (3,5) major
 differential, so it uses the part-end group $S_3 \times S_5$ which 
 is generated by $\{ \texttt{23156487}, \texttt{13287654} \}$.  This 
 is an example where the full search space may be too large to enumerate 
@@ -3319,7 +3356,7 @@ methsearch -b8 -AU -n112 -sFh -FP="{23156487,13287654}"    @hfill\
   -Q"$o==15" -dkj -p2 --random --loop --timeout=1
 \end{Verbatim}
 
-The correct choie of timeout is critical to getting such a search to
+The correct choice of timeout is critical to getting such a search to
 run efficiently.  This is because there are large regions of the search space 
 with no methods, and if a loop enters into such a region, it's highly 
 unlikely to ever leave it.  Equally, if a loop enters a region with lots 
@@ -3447,10 +3484,62 @@ equivalent on other stages).  The syntax is
 to award if the pattern matches at handstroke\index{handstroke} and 
 $b$ the score to award for a match at backstroke\index{backstroke}.%
 \footnote{\methsearch\ assumes that the method is rung with the first 
-non-rounds change being a handstroke.}
+non-rounds rows at a handstroke.}
 By setting $h=0$ and $b$ to a large negative number, it makes it easy to locate
 and reject methods with a particular row at backstroke.  E.g.
 \verb+-M0,-1000:*87+.
+
+\section{Row matching for music}\label{pendrows}
+
+The \verb+--row-match+\loi{row-match} (\sref{misc_opt}) option provides
+a means of requiring a pattern to be matched at a specific row in the
+method.  This can be much more efficient than filtering based on the
+music using \verb+-M+ options, especially when the row must occur
+significantly before the half lead, as it allows the search space to be
+pruned rather than filtering the results of the full search.
+This technique can be useful in finding methods that generate runs off
+the front in a particular way.
+
+\index{example!caters, plain with runs off front|(}
+For example, one strategy for getting forwards and backwards runs off
+the front in a plain caters method is to have bells on the front four
+plain hunt around the half-lead with the bells in the right order to get
+the tenors running up forwards, then backwards four blows later, then
+forwards again in another four blows.  The leads heads of a regular
+caters method are a group which can be specified on an \verb+-FP+ option
+as follows:
+
+\begin{Verbatim}[commandchars=@~~]
+methsearch -b9 -srf -p2 -l3 -j2 -FP=35274968 @hfill\
+  --row-match=4=9876 --row-match=8=6789 --row-match=12=9876 @hfill\
+  -Q'$d ne "p" && $d ne "q"' -Q'$M >= 30' -M'<4-runs>' -R'$q'
+\end{Verbatim}
+
+The \verb+-f -p2 -l3 -j2+ options are to exclude methods with features
+such as long places and place notations that are generally considered
+undesirable.  The first \verb+-Q+ option excludes the two most common
+lead end orders for variety, while the second one requires a reasonably
+high musical score.  The aim of all of these options is to whittle the
+list down to an short list of potentially attractive methods, though the
+particular choice of criteria used is quite subjective.
+
+This search produces just three methods, all unnamed:\footnote{All
+three are in my opinion worthwhile methods which combine an interesting
+but structured overwork with a simple, right-place, musical underwork,
+and are provide variety from the commonly rung caters methods.  If
+anyone wishes to ring these, I would like to propose the names Jura,
+Islay and Coll, respectively.  Jura is arguably the best, but Islay is
+probably simpler.}
+
+\begin{Verbatim}
+&3.4.5.1.7.45.9.47.9,2
+&3.4.5.1.9.45.9.45.9,2
+&3.4.5.67.9.45.9.45.9,2
+\end{Verbatim}
+\index{example!caters, plain with runs off front|}
+
+Many modern maximus methods have frontworks that work along similar
+lines, and a similar approach could be taken to finding them.
 
 \section{Music outside the plain course}\label{muswhere}
 
@@ -3475,9 +3564,7 @@ values of \textit{type} are as follows:
   lead end row.\\
 \texttt{rhalflead}\oidM{rhalflead}
   &The first half of the lead, ending with \textit{row} as the 
-  the half lead end row.%
-  \footnote{This option is largely included for completeness.  It is not 
-  anticipated that \texttt{rhalflead} will often be used.}\\
+  the half lead end row.\\
 \end{tabularx}
 
 Multiple \verb+-M+\textit{type}\verb+=+\textit{row} options may be provided.
@@ -3581,8 +3668,6 @@ necessary to duplicate information between \verb+-Fr+ options and
 \verb+-Mlead+ options so that both the falseness engine and the music
 analysis engine know which leads to look at.  This is something that a future
 version of \methsearch\ might address.
-
-
 
 \index{music!batches|)}
 \index{music|)}
@@ -4541,6 +4626,10 @@ principles\index{principles} and differentials.\index{differentials}
   (\sref{random}); \verb+--random-count+'s functionality subsumed in
   \verb+--limit+ and \verb+--loop+, and the option removed.
 \item The current time: \verb+$T+ (\sref{variables}).
+\item The number of cycles: \verb+$G+ (\sref{variables}).
+\item Row matching: \verb+--row-match+ (\sref{misc_opt}); and its
+interaction with \verb+-FP+ (\sref{pendrows}).
+\item Any regular lead end: \verb+--any-regular-lh+ (\sref{le_lh}).
 \end{list}
 
 \clearpage
