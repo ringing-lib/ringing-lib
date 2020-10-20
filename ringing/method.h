@@ -1,5 +1,5 @@
 // -*- C++ -*- method.h - Classes for dealing with methods
-// Copyright (C) 2001, 2009, 2010, 2011, 2014 
+// Copyright (C) 2001, 2009, 2010, 2011, 2014, 2020
 // Martin Bright <martin@boojum.org.uk> and
 // Richard Smith <richard@ex-parrot.com>
 
@@ -127,7 +127,7 @@ public:
   bool isplain(bell b=0) const;	// Does this bell plain hunt?
   bool hasdodges(bell b) const;	// Does this bell ever dodge?
   bool hasplaces(bell b) const;	// Does this bell make internal places?
-  int methclass(void) const;    // What sort of method is it?
+  int methclass(int year=9999) const;    // What sort of method is it?
   char *lhcode(void) const;	// Return the lead head code
   int symmetry_point() const;   // Point of palindromic symmetry (or -1)
   int symmetry_point(bell b) const;   // Point of palindromic symmetry (or -1)
