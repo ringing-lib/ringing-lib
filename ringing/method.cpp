@@ -279,7 +279,7 @@ bool method::hasplaces(bell b) const
 }
     
 // meth_class : What class of method is it?
-int method::methclass(void) const
+int method::methclass(int year) const
 {
   int cl = 0;
   int i;
@@ -327,8 +327,9 @@ int method::methclass(void) const
  
   // Is it plain hunting?
   if(isplain(hb)) {
-    // Check for Slow Course methods
-    if(hb == 0 && lhr[1] == 1 && issym(1))
+    // Check for Slow Course methods.  These were abolished in the 
+    // Framework for Method Ringing, v1.00, effective 1 July 2019.
+    if(year < 2019 && hb == 0 && lhr[1] == 1 && issym(1))
       return cl | M_SLOW_COURSE;
     // Now see whether any of the working bells make any dodges
     for(i = 1; i < bells(); i++)
