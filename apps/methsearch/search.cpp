@@ -95,7 +95,7 @@ private:
   bool try_quarterlead_change( const change &ch );
   bool try_offset_start_change( const change &ch);
   bool try_with_limited_le( const change& ch );
-  bool try_principle_symmetry();
+  bool try_floating_symmetry();
 
   bool is_acceptable_method();
   void output_method( method const& meth );
@@ -288,7 +288,7 @@ void searcher::output_method( method const& meth )
   }
 }
 
-bool searcher::try_principle_symmetry()
+bool searcher::try_floating_symmetry()
 {
   if ( args.skewsym || args.doubsym || args.sym )
     {
@@ -404,7 +404,7 @@ bool searcher::is_acceptable_method()
     return false;
 
   if ( args.floating_sym )
-    if ( ! try_principle_symmetry() )
+    if ( ! try_floating_symmetry() )
       return false;
 
   if ( args.hunt_bells && args.require_offset_cyclic )

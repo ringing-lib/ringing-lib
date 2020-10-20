@@ -1153,14 +1153,19 @@ more) additional hunt bells following the same path as the treble but that is
 not explicitly required by a \verb+-U+ option --- this means that this 
 possibility can only occur if \verb+-A+ is specified too.
 
-When searching for principles (that is, with \verb+-U+), the planes of 
-symmetry (for \verb+-s+) are normally fixed at the half-lead and lead-end,
-and or point of rotational symmetry (for \verb+-k+) is normally fixed at
-the quarter and three-quarter leads.  
-The \verb+--floating-sym+\loid{floating-sym} allows to be at arbitrary points;
-however, it makes the search \textit{much} slower as the requirement for
-floating symmetry point is enforced by filtering the results of the search,
-instead of pruning the search tree during the search.
+The planes of symmetry (for \verb+-s+) are normally fixed at the
+half-lead and lead-end, and or point of rotational symmetry (for
+\verb+-k+) is normally fixed at the quarter and three-quarter leads for
+principles (\verb+-U0+) or methods with an odd number of hunt bells
+(e.g. \verb+-U1+); or are one blow later for methods with an even number
+of hunt bells (e.g. \verb+-U2+).  The \verb+--floating-sym+%
+\loid{floating-sym} allows to be at arbitrary points; however, it makes
+the search \textit{much} slower as the requirement for floating symmetry
+point is enforced by filtering the results of the search, instead of
+pruning the search tree during the search.  This can be useful for
+finding single- and twin-hunt methods in a single search, or for finding
+principles with constraints on the lead head so that only certain
+rotations will match.
 
 If the principle is to have an odd 
 number of changes per lead, then the only meaningful symmetries are
