@@ -884,12 +884,6 @@ bool arguments::validate( arg_parser &ap )
       return false;
     }
 
-  if ( hunt_bells & floating_sym )
-    {
-      ap.error( "--floating-sym is not supported with hunt bells" );
-      return false;
-    }
-
   if ( lead_len && formats_max_lead_offset() > lead_len ) 
     {
       ap.error( "Format contains a $r or $h offset beyond the end of the "
