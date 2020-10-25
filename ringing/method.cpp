@@ -259,7 +259,7 @@ bool method::hasdodges(bell b) const
   bell j2 = -1; // and its position before that
   // We need to search beyond the lead end in order to find points
   // at the lead head, as in Dusty Bob Minimus.
-  for (int i = 0, n = length(); i < n + 2; i++) {
+  for (int i = 0, n = length(); i < n + 1; i++) {
     j2 = j1; j1 = j;
     j *= (*this)[i % n];
     if(j == j2 && j != j1) return true;
