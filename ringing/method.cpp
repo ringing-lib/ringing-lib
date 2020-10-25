@@ -284,39 +284,50 @@ bool method::hasplaces(bell b) const
 // meth_class : What class of method is it?
 int method::methclass(int year) const
 {
-  int cl = 0;
-  int i;
-  bell j, hb;
+  int cl = 0;  // The class flags of the methd
 
-  // Find the first hunt bell
   row lhr = lh();
-  for(hb = 0; lhr[hb] != hb && hb < bells(); ++hb);
+  const unsigned n = bells();
+
+  // Set hb to be the first hunt bell, or hb=n if there is none
+  bell hb;
+  for (hb = 0; lhr[hb] != hb && hb < n; ++hb)
+    ;
   
-  // Find the size of the first set of working bells    
-  int wb=0;
-  for(j = 0; lhr[j] == j && j < bells(); j=j+1);
-  if ( j < bells() ) {
-    i = j;
-    do {
-      i = lhr[i];
-      ++wb;
-    } while (i != j);
+  // Set wb to be the size of the first set of working bells    
+  int wb = 0;
+  { int i;
+    for (i = 0; lhr[i] == i && i < n; ++i)
+      ;
+    if (i < n) 
+      wb = lhr.cycle_size(i);
   }
 
-  if(hb == bells()) {
-    // It's a non-hunter.  Is it a principle?
-    if (wb == bells())
-      return cl | M_PRINCIPLE;
-    else      
-      return cl | M_PRINCIPLE | M_DIFFERENTIAL;
+  // Since the adoption of the Framework for Method Ringing, v1.00
+  // on 1 July 2019, methods are considered to be differentials if there
+  // are different sized cycles of working bells
+  if (year >= 2019) {
+    for (int i = 0; i < n; ++i) 
+      if (lhr[i] != i && lhr.cycle_size(i) != wb) {
+        cl |= M_DIFFERENTIAL; 
+        break;
+      }
   }
-  else if (wb < bells()-huntbells())
+
+  // Before 2019, methods where all working bells are not part of the same
+  // cycle were considered to be differentials.
+  else if (wb < n - huntbells())
     cl |= M_DIFFERENTIAL;
+
+  // If hb == bells() there are no hunt bells.
+  // Any method with no hunt bells is considered a principle.
+  if (hb == bells())
+    return cl | M_PRINCIPLE;
 
   // Find how far the treble ever gets
   bell tmin = hb, tmax = hb;
-  j = hb;
-  for(i = 0; i < length(); i++) {
+  bell j = hb;
+  for (int i = 0; i < length(); i++) {
     j *= (*this)[i];
     if(j < tmin) tmin = j;
     if(j > tmax) tmax = j;
@@ -335,7 +346,7 @@ int method::methclass(int year) const
     if(year < 2019 && hb == 0 && lhr[1] == 1 && issym(1))
       return cl | M_SLOW_COURSE;
     // Now see whether any of the working bells make any dodges
-    for(i = 1; i < bells(); i++)
+    for (int i = 1; i < bells(); i++)
       if(hasdodges(i)) return cl | M_BOB;
     return cl | M_PLACE;
   }
@@ -346,8 +357,8 @@ int method::methclass(int year) const
   bell k;
   j = hb;
   vector<char> count(tmax-tmin+1);
-  for(i = 0; i<=sym_point; ++i) j *= (*this)[i];
-  for(i = sym_point+1;i <= sym_point+length()/2-1; i++) {
+  for (int i = 0; i<=sym_point; ++i) j *= (*this)[i];
+  for(int i = sym_point+1;i <= sym_point+length()/2-1; i++) {
     count[j-tmin]++;
     k = j;
     j *= (*this)[i%length()];
@@ -359,7 +370,7 @@ int method::methclass(int year) const
   // Go through and see whether we spent the same amount of time
   // in each position
   j = 1;
-  for(i = tmin+1;i <= tmax;i++)
+  for(int i = tmin+1;i <= tmax;i++)
     if(count[i-tmin] != count[i-1-tmin]) j = 0;
 
   // Same time in each position, and places -> Treble Place
@@ -372,7 +383,7 @@ int method::methclass(int year) const
       // Look at internal places
       int y = 0, n = 0;
       int step=length() / (tmax-tmin+1);
-      for(i = step-1; i < length()/2 - 1; i += step) {
+      for(int i = step-1; i < length()/2 - 1; i += step) {
 	if((*this)[i].internal()) y = 1; else n = 1;
 	if((*this)[length()-i-2].internal()) y = 1; else n = 1;
       }

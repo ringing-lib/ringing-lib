@@ -384,6 +384,16 @@ int row::ispblh(void) const
   return ispblh(h);
 }
 
+size_t row::cycle_size(int b) const {
+  size_t n = 0;
+  int i = b;
+  do {
+    i = data[i];
+    ++n;
+  } while (i != b);
+  return n;
+}
+
 // Express it as a product of disjoint cycles
 size_t row::num_cycles() const
 {
