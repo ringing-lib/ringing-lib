@@ -126,6 +126,7 @@ public:
   int sign(void) const;         // Return whether it's odd or even
   string cycles() const;        // Express it as a product of disjoint cycles
   size_t num_cycles() const;    // How many cycles are there?
+  size_t cycle_size(int b) const;   // Size of the cylce of bell b.
   int order(void) const;	    // Return the order
   friend RINGING_API ostream& operator<<(ostream&, const row&);
   friend RINGING_API istream& operator>>(istream&, row&);

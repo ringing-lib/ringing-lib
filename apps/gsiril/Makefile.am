@@ -86,26 +86,26 @@ gsiril.1: $(srcdir)/prog_args.cpp $(srcdir)/Makefile.am
 CLEANFILES += gsiril.1
 endif
 
-if HAVE_XELATEX
-EXTRA_DIST += doc/gsiril.pdf
-
-pdf:	doc/gsiril.pdf
-
-doc/gsiril.pdf:	$(srcdir)/doc/gsiril.tex
-	$(MKDIR_P) doc	# In case $(srcdir) != $(builddir)
-	$(XELATEX) --halt-on-error -output-directory doc $<
-	cd doc && $(MAKEINDEX) gsiril
-	$(XELATEX) --halt-on-error -output-directory doc $<
-
-install-pdf:	pdf
-	$(MKDIR_P) ${docdir}
-	$(INSTALL_DATA) doc/gsiril.pdf ${docdir}/gsiril.pdf
-
-CLEANFILES = doc/gsiril.aux doc/gsiril.idx doc/gsiril.ilg \
-             doc/gsiril.ind doc/gsiril.log doc/gsiril.out \
-             doc/gsiril.pdf doc/gsiril.toc
-
-install-data-hook:	install-pdf
-
-.PHONY: pdf install-pdf install
-endif
+#if HAVE_XELATEX
+#EXTRA_DIST += doc/gsiril.pdf
+#
+#pdf:	doc/gsiril.pdf
+#
+#doc/gsiril.pdf:	$(srcdir)/doc/gsiril.tex
+#	$(MKDIR_P) doc	# In case $(srcdir) != $(builddir)
+#	$(XELATEX) --halt-on-error -output-directory doc $<
+#	cd doc && $(MAKEINDEX) gsiril
+#	$(XELATEX) --halt-on-error -output-directory doc $<
+#
+#install-pdf:	pdf
+#	$(MKDIR_P) ${docdir}
+#	$(INSTALL_DATA) doc/gsiril.pdf ${docdir}/gsiril.pdf
+#
+#CLEANFILES = doc/gsiril.aux doc/gsiril.idx doc/gsiril.ilg \
+#             doc/gsiril.ind doc/gsiril.log doc/gsiril.out \
+#             doc/gsiril.pdf doc/gsiril.toc
+#
+#install-data-hook:	install-pdf
+#
+#.PHONY: pdf install-pdf install
+#endif
