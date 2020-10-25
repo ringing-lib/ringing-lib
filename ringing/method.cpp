@@ -254,11 +254,14 @@ bool method::isplain(bell b) const
 // hasdodges : Does this bell do any dodges?
 bool method::hasdodges(bell b) const
 {
-  int i;
-  bell j = b, j1 = -1, j2 = -1;
-  for(i = 0; i < length(); i++) {
+  bell j = b;   // the current position of the bell
+  bell j1 = -1; // its previous position
+  bell j2 = -1; // and its position before that
+  // We need to search beyond the lead end in order to find points
+  // at the lead head, as in Dusty Bob Minimus.
+  for (int i = 0, n = length(); i < n + 2; i++) {
     j2 = j1; j1 = j;
-    j *= (*this)[i];
+    j *= (*this)[i % n];
     if(j == j2 && j != j1) return true;
   }
   return false;
