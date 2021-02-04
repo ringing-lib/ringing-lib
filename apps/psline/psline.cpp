@@ -859,9 +859,11 @@ int main(int argc, char *argv[])
     printpage* pp = NULL;
 
     if(args.format == svg) { // Pass the file name
-      // TODO: handle stdout
       // TODO: think about positioning on page
-      pp = new printpage_svg(args.output_file.c_str(), args.width, args.height);
+      if(!args.output_file.empty())
+        pp = new printpage_svg(args.output_file.c_str(), args.width, args.height);
+      else
+        pp = new printpage_svg(args.width, args.height); // use stdout
       // TODO: error handling
     } else { // First open a stream
       ostream* os = &cout;

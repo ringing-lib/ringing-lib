@@ -122,6 +122,7 @@ protected:
   
 public:
   printpage_svg(const string& filename, const dimension& w, const dimension& h);
+  printpage_svg(const dimension& w, const dimension& h); // stdout
   ~printpage_svg();
   void text(const string t, const dimension& x, const dimension& y,
        text_style::alignment al, const text_style& s);
@@ -135,6 +136,7 @@ private:
     { return new printrow_svg(*this, o); }
 
 protected:
+  void init(const dimension& w, const dimension& h);
   static string convert_dim(const dimension& d);
   static string format_float(float f);
   static string convert_col(const colour& c);

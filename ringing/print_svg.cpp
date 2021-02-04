@@ -82,14 +82,24 @@ void printpage_svg::convert_font(const text_style& s, dom_element e)
   e.add_attr(ns, "font-family", s.font.c_str());
 }
 
-// TODO: handle stdout as well
-printpage_svg::printpage_svg(string const& filename, const dimension& w, const dimension& h)
-: doc(filename, dom_document::out, dom_document::file), ph(static_cast<int>(h.in_points() * 4/3))
+void printpage_svg::init(const dimension& w, const dimension& h)
 {
   root = doc.create_document(ns, "svg");
   root.add_attr(ns, "version", "1.1");
   root.add_attr(ns, "width", convert_dim(w).c_str());
   root.add_attr(ns, "height", convert_dim(h).c_str());
+}
+
+printpage_svg::printpage_svg(const string& filename, const dimension& w, const dimension& h)
+: doc(filename, dom_document::out, dom_document::file), ph(static_cast<int>(h.in_points() * 4/3))
+{
+  init(w, h);
+}
+
+printpage_svg::printpage_svg(const dimension& w, const dimension& h)
+: doc("", dom_document::out, dom_document::stdio), ph(static_cast<int>(h.in_points() * 4/3))
+{
+  init(w, h);
 }
 
 printpage_svg::~printpage_svg()
@@ -219,8 +229,8 @@ void printrow_svg::rule()
   dom_element e = col.add_elt(printpage_svg::ns, "line");
   e.add_attr(printpage_svg::ns, "x1", printpage_svg::format_float(-opt.xspace.in_points() * 4/3 / 2).c_str());
   e.add_attr(printpage_svg::ns, "x2", printpage_svg::format_float((opt.xspace.in_points() * 4/3 * (2*lastrow.bells()-1))/2).c_str());
-  e.add_attr(printpage_svg::ns, "y1", printpage_svg::format_float((count + 0.5) * opt.yspace.in_points() * 4/3).c_str());
-  e.add_attr(printpage_svg::ns, "y2", printpage_svg::format_float((count + 0.5) * opt.yspace.in_points() * 4/3).c_str());
+  e.add_attr(printpage_svg::ns, "y1", printpage_svg::format_float((count - 0.5) * opt.yspace.in_points() * 4/3).c_str());
+  e.add_attr(printpage_svg::ns, "y2", printpage_svg::format_float((count - 0.5) * opt.yspace.in_points() * 4/3).c_str());
   e.add_attr(printpage_svg::ns, "stroke", printpage_svg::convert_col(opt.style.col).c_str());
 }
 
