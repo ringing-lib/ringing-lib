@@ -283,7 +283,7 @@ float printmethod::total_width() {
 				    (((pn_mode & pn_mask) != pn_none) 
 				     ? find_pnextra() : 0)))
 	  + (hgap.in_points() * (columns - 1))
-	  + ((placebells >= 0) ? opt.style.size * 0.035f : 0);
+	  + ((placebells >= 0) ? opt.style.size * 0.07f : 0);
 }
  
 float printmethod::total_height() {
@@ -294,7 +294,7 @@ float printmethod::total_height() {
     columnsets = sets_per_page;
   return (opt.yspace.in_points() * (rows_per_column + 1) * columnsets)
     + (vgap.in_points() * (columnsets - 1))
-    + ((placebells >= 0) ? opt.style.size * 0.035f : 0);
+    + ((placebells >= 0) ? opt.style.size * 0.07f : 0);
 }
 
 void printmethod::get_bbox(float& blx, float& bly, float& urx, float& ury)
@@ -304,7 +304,7 @@ void printmethod::get_bbox(float& blx, float& bly, float& urx, float& ury)
   blx = -opt.xspace.in_points() 
     * (0.5f + (((pn_mode & pn_mask) != pn_none) ? find_pnextra() : 0));
   urx = opt.xspace.in_points() * (m->bells() * columns - 0.5f
-				  + ((placebells >= 0) ? 1.9f : 0))
+				  + ((placebells >= 0) ? 2.2f : 0))
     + (hgap.in_points() * (columns - 1));
  
   int columnsets = divu(total_rows, rows_per_column * columns);

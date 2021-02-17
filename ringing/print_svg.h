@@ -117,12 +117,13 @@ class RINGING_API printpage_svg : public printpage {
 protected:
   static const char* ns;
   dom_document doc;
-  dom_element root;
-  int ph;
+  dom_element page;
+  dimension ph;
   
 public:
-  printpage_svg(const string& filename, const dimension& w, const dimension& h);
-  printpage_svg(const dimension& w, const dimension& h); // stdout
+  // w, h = width and height of canvas in points
+  printpage_svg(const string& filename, float w, float h); // to file
+  printpage_svg(float w, float h); // stdout
   ~printpage_svg();
   void text(const string t, const dimension& x, const dimension& y,
        text_style::alignment al, const text_style& s);
@@ -136,7 +137,7 @@ private:
     { return new printrow_svg(*this, o); }
 
 protected:
-  void init(const dimension& w, const dimension& h);
+  void init(float w, float h);
   static string convert_dim(const dimension& d);
   static string format_float(float f);
   static string convert_col(const colour& c);

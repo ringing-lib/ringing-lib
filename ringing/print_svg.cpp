@@ -78,26 +78,31 @@ string printpage_svg::format_float(float f)
 void printpage_svg::convert_font(const text_style& s, dom_element e)
 {
   ostringstream os;
-  e.add_attr(ns, "font-size", format_float((s.size)/10.0f * 4/3).c_str());
+  e.add_attr(ns, "font-size", format_float((s.size)/10.0f).c_str());
   e.add_attr(ns, "font-family", s.font.c_str());
 }
 
-void printpage_svg::init(const dimension& w, const dimension& h)
+void printpage_svg::init(float w, float h)
 {
-  root = doc.create_document(ns, "svg");
+  dom_element root = doc.create_document(ns, "svg");
   root.add_attr(ns, "version", "1.1");
-  root.add_attr(ns, "width", convert_dim(w).c_str());
-  root.add_attr(ns, "height", convert_dim(h).c_str());
+  root.add_attr(ns, "width", format_float(w).c_str());
+  root.add_attr(ns, "height", format_float(h).c_str());
+  page = root.add_elt(ns, "g");
+  // Translate the origin to bottom left
+  ostringstream os;
+  os << "translate(0," << fixed << setprecision(2) << h << ')';
+  page.add_attr(printpage_svg::ns, "transform", os.str().c_str());
 }
 
-printpage_svg::printpage_svg(const string& filename, const dimension& w, const dimension& h)
-: doc(filename, dom_document::out, dom_document::file), ph(static_cast<int>(h.in_points() * 4/3))
+printpage_svg::printpage_svg(const string& filename, float w, float h)
+: doc(filename, dom_document::out, dom_document::file)
 {
   init(w, h);
 }
 
-printpage_svg::printpage_svg(const dimension& w, const dimension& h)
-: doc("", dom_document::out, dom_document::stdio), ph(static_cast<int>(h.in_points() * 4/3))
+printpage_svg::printpage_svg(float w, float h)
+: doc("", dom_document::out, dom_document::stdio)
 {
   init(w, h);
 }
@@ -110,10 +115,10 @@ printpage_svg::~printpage_svg()
 void printpage_svg::text(const string t, const dimension& x, const dimension& y,
                     text_style::alignment al, const text_style& s)
 {
-  dom_element e = root.add_elt(ns, "text");
+  dom_element e = page.add_elt(ns, "text");
   e.add_content(t);
-  e.add_attr(ns, "x", format_float(x.in_points() * 4/3).c_str());
-  e.add_attr(ns, "y", format_float(ph - y.in_points() * 4/3).c_str());
+  e.add_attr(ns, "x", format_float(x.in_points()).c_str());
+  e.add_attr(ns, "y", format_float(-(y.in_points())).c_str());
   if(al != text_style::left)
     e.add_attr(ns, "text-anchor", al == text_style::right ? "end" : "middle");
   convert_font(s, e);
@@ -127,21 +132,21 @@ void printpage_svg::new_page()
 void printrow_svg::set_position(const dimension& x, const dimension& y)
 {
   if(in_column) end_column();
-  currx = x.in_points() * 4/3;
-  curry = pp.ph - y.in_points() * 4/3;
+  currx = x.in_points();
+  curry = -y.in_points();
 }
 
 void printrow_svg::move_position(const dimension& x, const dimension& y)
 {
   if(in_column) end_column();
-  currx += x.in_points() * 4/3;
-  curry -= y.in_points() * 4/3;
+  currx += x.in_points();
+  curry -= y.in_points();
 }
 
 void printrow_svg::start_column()
 {
   // Create a group for the column
-  col = pp.root.add_elt(printpage_svg::ns, "g");
+  col = pp.page.add_elt(printpage_svg::ns, "g");
   // Translate the group to the current position
   ostringstream os;
   os << "translate(" << fixed << setprecision(2) << currx << ',' << curry << ')';
@@ -189,7 +194,7 @@ void printrow_svg::print(const row& r)
          && ((i = opt.lines.find(r[j])) != opt.lines.end())
            && !((*i).second.crossing))) {
         s += r[j].to_char();
-        pos.push_back(j * opt.xspace.in_points() * 4/3);
+        pos.push_back(j * opt.xspace.in_points());
       }
     if(!s.empty()) {
       // Create a tspan element
@@ -205,14 +210,10 @@ void printrow_svg::print(const row& r)
         }
         ts.add_attr(printpage_svg::ns, "x", os.str().c_str());
       }
-      {
-        // Add a y-coordinate
-        ostringstream os;
-        os << fixed << setprecision(2) << count * opt.yspace.in_points() * 4/3;
-        ts.add_attr(printpage_svg::ns, "y", os.str().c_str());
-      }
+      // Add a y-coordinate
+      ts.add_attr(printpage_svg::ns, "y", printpage_svg::format_float(count * opt.yspace.in_points()).c_str());
       // Add the correct vertical alignment
-      ts.add_attr(printpage_svg::ns, "alignment-baseline", "middle");
+      ts.add_attr(printpage_svg::ns, "alignment-baseline", "central");
     }
   }
     // Add the various bits of lines to the end of the line
@@ -227,10 +228,10 @@ void printrow_svg::print(const row& r)
 void printrow_svg::rule()
 {
   dom_element e = col.add_elt(printpage_svg::ns, "line");
-  e.add_attr(printpage_svg::ns, "x1", printpage_svg::format_float(-opt.xspace.in_points() * 4/3 / 2).c_str());
-  e.add_attr(printpage_svg::ns, "x2", printpage_svg::format_float((opt.xspace.in_points() * 4/3 * (2*lastrow.bells()-1))/2).c_str());
-  e.add_attr(printpage_svg::ns, "y1", printpage_svg::format_float((count - 0.5) * opt.yspace.in_points() * 4/3).c_str());
-  e.add_attr(printpage_svg::ns, "y2", printpage_svg::format_float((count - 0.5) * opt.yspace.in_points() * 4/3).c_str());
+  e.add_attr(printpage_svg::ns, "x1", printpage_svg::format_float(-opt.xspace.in_points() / 2).c_str());
+  e.add_attr(printpage_svg::ns, "x2", printpage_svg::format_float((opt.xspace.in_points() * (2*lastrow.bells()-1))/2).c_str());
+  e.add_attr(printpage_svg::ns, "y1", printpage_svg::format_float((count - 0.5) * opt.yspace.in_points()).c_str());
+  e.add_attr(printpage_svg::ns, "y2", printpage_svg::format_float((count - 0.5) * opt.yspace.in_points()).c_str());
   e.add_attr(printpage_svg::ns, "stroke", printpage_svg::convert_col(opt.style.col).c_str());
 }
 
@@ -248,11 +249,11 @@ void printrow_svg::dot(int i)
       k = opt.lines.find(i); // Find the style information
       if(k != opt.lines.end()) {
         dom_element e = col.add_elt(printpage_svg::ns, "circle");
-        e.add_attr(printpage_svg::ns, "cx", printpage_svg::format_float(opt.xspace.in_points() * 4/3 * j).c_str());
-        e.add_attr(printpage_svg::ns, "cy", printpage_svg::format_float(opt.yspace.in_points() * 4/3 * (count-1)).c_str());
+        e.add_attr(printpage_svg::ns, "cx", printpage_svg::format_float(opt.xspace.in_points() * j).c_str());
+        e.add_attr(printpage_svg::ns, "cy", printpage_svg::format_float(opt.yspace.in_points() * (count-1)).c_str());
         e.add_attr(printpage_svg::ns, "fill", printpage_svg::convert_col((*k).second.col).c_str());
         e.add_attr(printpage_svg::ns, "stroke", "none");
-        e.add_attr(printpage_svg::ns, "r", printpage_svg::format_float((*k).second.width.in_points() * 2 * 4/3).c_str());
+        e.add_attr(printpage_svg::ns, "r", printpage_svg::format_float((*k).second.width.in_points() * 2).c_str());
       }
     }
   }
@@ -268,8 +269,8 @@ void printrow_svg::placebell(int i)
     { // Translate and scale if necessary
       ostringstream os;
       os << setprecision(2) << fixed;
-      os << "translate(" << (lastrow.bells() + 1) * opt.xspace.in_points() * 4/3
-         << ',' << (count - 1) * opt.yspace.in_points() * 4/3 << ')';
+      os << "translate(" << (lastrow.bells() + 1) * opt.xspace.in_points()
+         << ',' << (count - 1) * opt.yspace.in_points() << ')';
       if(j > 9)
         os << " scale(0.8,1)";
       e.add_attr(printpage_svg::ns, "transform", os.str().c_str());
@@ -282,15 +283,15 @@ void printrow_svg::placebell(int i)
     e.add_attr(printpage_svg::ns, "text-anchor", "middle");
     printpage_svg::convert_font(opt.style, e);
     e.add_attr(printpage_svg::ns, "fill", printpage_svg::convert_col(opt.style.col).c_str());
-    e.add_attr(printpage_svg::ns, "alignment-baseline", "middle");
+    e.add_attr(printpage_svg::ns, "alignment-baseline", "central");
     // Add a circle
     e = col.add_elt(printpage_svg::ns, "circle");
-    e.add_attr(printpage_svg::ns, "cx", printpage_svg::format_float((lastrow.bells() + 1) * opt.xspace.in_points() * 4/3).c_str());
-    e.add_attr(printpage_svg::ns, "cy", printpage_svg::format_float((count - 1) * opt.yspace.in_points() * 4/3).c_str());
-    e.add_attr(printpage_svg::ns, "r", printpage_svg::format_float(opt.style.size * .07f * 4/3).c_str());
+    e.add_attr(printpage_svg::ns, "cx", printpage_svg::format_float((lastrow.bells() + 1) * opt.xspace.in_points()).c_str());
+    e.add_attr(printpage_svg::ns, "cy", printpage_svg::format_float((count - 1) * opt.yspace.in_points()).c_str());
+    e.add_attr(printpage_svg::ns, "r", printpage_svg::format_float(opt.style.size * .07f).c_str());
     e.add_attr(printpage_svg::ns, "stroke", printpage_svg::convert_col(opt.style.col).c_str());
     e.add_attr(printpage_svg::ns, "fill", "none");
-    e.add_attr(printpage_svg::ns, "stroke-width", printpage_svg::format_float(opt.style.size / 200.0 * 4/3).c_str());
+    e.add_attr(printpage_svg::ns, "stroke-width", printpage_svg::format_float(opt.style.size / 200.0).c_str());
   }
 }
 
@@ -302,13 +303,13 @@ void printrow_svg::text(const string& t, const dimension& x,
   e.add_attr(printpage_svg::ns, "fill", printpage_svg::convert_col(opt.style.col).c_str());
   if(al != text_style::left)
     e.add_attr(printpage_svg::ns, "text-anchor", al == text_style::right ? "end" : "middle");
-  e.add_attr(printpage_svg::ns, "alignment-baseline", "middle");
+  e.add_attr(printpage_svg::ns, "alignment-baseline", "central");
   e.add_attr(printpage_svg::ns, "x",
              printpage_svg::format_float((right ?
                                          (x.in_points() + (lastrow.bells() - 1) * opt.xspace.in_points())
-                                          : -x.in_points()) * 4/3).c_str());
+                                          : -x.in_points())).c_str());
   e.add_attr(printpage_svg::ns, "y",
-             printpage_svg::format_float(((between ? (count - 0.5f) : (count - 1)) * opt.yspace.in_points()) * 4/3).c_str());
+             printpage_svg::format_float(((between ? (count - 0.5f) : (count - 1)) * opt.yspace.in_points())).c_str());
   e.add_content(t);
 }
 
@@ -320,21 +321,21 @@ void printrow_svg::do_grid()
   switch(opt.grid_type) {
     case 1:
       grid.add_attr(printpage_svg::ns, "stroke", printpage_svg::convert_col(opt.grid_style.col).c_str());
-      grid.add_attr(printpage_svg::ns, "stroke-width", printpage_svg::format_float(opt.grid_style.width.in_points() * 4/3).c_str());
+      grid.add_attr(printpage_svg::ns, "stroke-width", printpage_svg::format_float(opt.grid_style.width.in_points()).c_str());
       grid.add_attr(printpage_svg::ns, "fill", "none");
       for(i = 0; i < lastrow.bells(); ++i) {
-        os << 'M' << opt.xspace.in_points() * i * 4/3 << ' ' << -opt.yspace.in_points() * 0.5 * 4/3;
-        os << 'v' << opt.yspace.in_points() * count * 4/3;
+        os << 'M' << opt.xspace.in_points() * i << ' ' << -opt.yspace.in_points() * 0.5;
+        os << 'v' << opt.yspace.in_points() * count;
       }
       break;
     case 2:
       grid.add_attr(printpage_svg::ns, "fill", printpage_svg::convert_col(opt.grid_style.col).c_str());
       grid.add_attr(printpage_svg::ns, "stroke", "none");
       for(i = 0; i < lastrow.bells() - 1; i += 2) {
-        os << 'M' << opt.xspace.in_points() * i * 4/3 << ' ' << -opt.yspace.in_points() * 0.5 * 4/3;
-        os << 'h' << opt.xspace.in_points() * 4/3;
-        os << 'v' << opt.yspace.in_points() * count * 4/3;
-        os << 'h' << -opt.xspace.in_points() * 4/3;
+        os << 'M' << opt.xspace.in_points() * i << ' ' << -opt.yspace.in_points() * 0.5;
+        os << 'h' << opt.xspace.in_points();
+        os << 'v' << opt.yspace.in_points() * count;
+        os << 'h' << -opt.xspace.in_points();
         os << 'Z';
       }
       break;
@@ -359,9 +360,9 @@ void drawline_svg::add(const row& r)
     os << setprecision(2) << fixed;
     // If the bell was not in the previous row, do a moveto
     if(curr == -1)
-      os << 'M' << p.opt.xspace.in_points() * 4/3 * j << ' ' << p.opt.yspace.in_points() * 4/3 * p.count;
+      os << 'M' << p.opt.xspace.in_points() * j << ' ' << p.opt.yspace.in_points() * p.count;
     else { // Do a lineto
-      os << 'L' << p.opt.xspace.in_points() * 4/3 * j << ' ' << p.opt.yspace.in_points() * 4/3 * p.count;
+      os << 'L' << p.opt.xspace.in_points() * j << ' ' << p.opt.yspace.in_points() * p.count;
     }
     data += os.str();
   }
@@ -374,7 +375,7 @@ void drawline_svg::output(dom_element parent)
   path.add_attr(printpage_svg::ns, "d", data.c_str());
   path.add_attr(printpage_svg::ns, "fill", "none");
   path.add_attr(printpage_svg::ns, "stroke", printpage_svg::convert_col(s.col).c_str());
-  path.add_attr(printpage_svg::ns, "stroke-width", printpage_svg::convert_dim(s.width).c_str());
+  path.add_attr(printpage_svg::ns, "stroke-width", printpage_svg::format_float(s.width.in_points()).c_str());
 }
 
 RINGING_END_NAMESPACE

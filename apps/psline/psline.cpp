@@ -243,9 +243,9 @@ void setup_args(arg_parser& p)
   p.add(new myopt('R', "rounds", "Starting row.","ROUNDS"));
   p.add(new myopt("Layout options:"));
   p.add(new myopt('L', "landscape",
-    "Print in landscape orientation instead of portrait (not for EPS files)"));
+    "Print in landscape orientation instead of portrait (not for EPS or SVG)"));
   p.add(new myopt('S', "paper-size",  "Set the paper size to the"
-    " width and height given (not for EPS files).  The default is A4.",
+    " width and height given (not for EPS or SVG).  The default is A4.",
 		  "DIMENSION,DIMENSION"));
   p.add(new myopt('F', "fit", "Fit the image"
     " to the width and height specified, or to the page (less a half-inch"
@@ -837,7 +837,7 @@ int main(int argc, char *argv[])
     pm.get_bbox(blx, bly, urx, ury);
 
     // Position the output correctly
-    if(args.format == eps) {
+    if(args.format == eps || args.format == svg) {
       pm.xoffset.set_float(-blx, 1); 
       pm.yoffset.set_float(-bly, 1);
     } else {
@@ -859,11 +859,10 @@ int main(int argc, char *argv[])
     printpage* pp = NULL;
 
     if(args.format == svg) { // Pass the file name
-      // TODO: think about positioning on page
       if(!args.output_file.empty())
-        pp = new printpage_svg(args.output_file.c_str(), args.width, args.height);
+        pp = new printpage_svg(args.output_file.c_str(), urx-blx, ury-bly);
       else
-        pp = new printpage_svg(args.width, args.height); // use stdout
+        pp = new printpage_svg(urx-blx, ury-bly); // use stdout
       // TODO: error handling
     } else { // First open a stream
       ostream* os = &cout;
