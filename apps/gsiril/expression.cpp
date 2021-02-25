@@ -408,15 +408,42 @@ void not_node::debug_print( ostream &os ) const
 
 bool cmp_node::bool_evaluate( proof_context &ctx ) const
 {
-  RINGING_LLONG l = left.int_evaluate(ctx), r = right.int_evaluate(ctx);
-  switch (cmp) {
-    case equals:     return l == r;
-    case not_equals: return l != r;
-    case greater:    return l > r;
-    case less:       return l < r;
-    case greater_eq: return l >= r;
-    case less_eq:    return l <= r;
-    default:         abort();
+  expression::type_t lt = left.type(), rt = right.type();
+
+  if (lt == expression::boolean && rt == expression::boolean) {
+    bool l = left.bool_evaluate(ctx), r = right.bool_evaluate(ctx);
+    switch (cmp) {
+      case equals:     return l == r;
+      case not_equals: return l != r;
+      default: throw runtime_error("Cannot compare booleans");
+    }
+  }
+  else if (lt == expression::boolean || rt == expression::boolean) {
+    throw runtime_error("Cannot compare booleans and non-booleans");
+  }
+  else if (lt == expression::integer && rt == expression::integer) {
+    RINGING_LLONG l = left.int_evaluate(ctx), r = right.int_evaluate(ctx);
+    switch (cmp) {
+      case equals:     return l == r;
+      case not_equals: return l != r;
+      case greater:    return l > r;
+      case less:       return l < r;
+      case greater_eq: return l >= r;
+      case less_eq:    return l <= r;
+      default:         abort();
+    }
+  }
+  else {
+    string l = left.string_evaluate(ctx), r = right.string_evaluate(ctx);
+    switch (cmp) {
+      case equals:     return l == r;
+      case not_equals: return l != r;
+      case greater:    return l > r;
+      case less:       return l < r;
+      case greater_eq: return l >= r;
+      case less_eq:    return l <= r;
+      default:         abort();
+    }
   }
 }
 
@@ -442,11 +469,6 @@ void cmp_node::debug_print( ostream &os ) const
 void integer_node::debug_print( ostream &os ) const
 {
   os << value;
-}
-
-string integer_node::string_evaluate( proof_context &ctx ) const
-{
-  return make_string() << value;
 }
 
 RINGING_LLONG increment_node::int_evaluate( proof_context& ctx ) const

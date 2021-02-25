@@ -1,5 +1,5 @@
 // -*- C++ -*- expr_base.h - Expression and statement interfaces
-// Copyright (C) 2002, 2003, 2004, 2005, 2011, 2012, 2019, 2020
+// Copyright (C) 2002, 2003, 2004, 2005, 2011, 2012, 2019, 2020, 2021
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -94,6 +94,7 @@ public:
   public:
     virtual void execute( proof_context &ctx, int dir ) const;
     virtual RINGING_LLONG int_evaluate( proof_context &ctx ) const = 0;
+    virtual string string_evaluate( proof_context &ctx ) const;
     virtual type_t type() const { return integer; }
   };
 
