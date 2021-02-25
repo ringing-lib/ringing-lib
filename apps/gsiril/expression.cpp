@@ -1,5 +1,5 @@
 // expression.cpp - Nodes and factory function for expressions
-// Copyright (C) 2002, 2003, 2004, 2005, 2008, 2011, 2014, 2019, 2020
+// Copyright (C) 2002, 2003, 2004, 2005, 2008, 2011, 2014, 2019, 2020, 2021
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -393,6 +393,17 @@ void or_node::debug_print( ostream &os ) const
   left.debug_print(os);
   os << " || ";
   right.debug_print(os);
+}
+
+bool not_node::bool_evaluate( proof_context &ctx ) const
+{
+  return !arg.bool_evaluate(ctx);
+}
+
+void not_node::debug_print( ostream &os ) const
+{
+  os << "!";
+  arg.debug_print(os);
 }
 
 bool cmp_node::bool_evaluate( proof_context &ctx ) const

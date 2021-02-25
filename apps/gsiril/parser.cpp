@@ -1,6 +1,6 @@
 // parser.cpp - Tokenise and parse lines of input
 // Copyright (C) 2002, 2003, 2004, 2005, 2007, 2008, 2010, 2011, 2012, 2013,
-// 2019, 2020 Richard Smith <richard@ex-parrot.com>
+// 2019, 2020, 2021 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -69,6 +69,7 @@ namespace tok_types
     reverse     = '~',
     greater     = '>',
     less        = '<',
+    logic_not   = '!',
     ctrl_z      = '\x1A',   /* EOF marker in microSIRIL */
     comment     = tokeniser::first_token,
     string_lit,
@@ -193,7 +194,7 @@ public:
     case regex_lit: case open_brace: case close_brace: case colon:
     case logic_and: case logic_or: case equals: case not_equals: 
     case less: case greater: case less_eq: case greater_eq:
-    case increment: case decrement:
+    case increment: case decrement: case logic_not:
       // These can only work when msiril comments are disabled.
       // Regexp literals are disabled because they conflict with 
       // the MicroSiril comment; alternative blocks are disabled because
@@ -724,6 +725,11 @@ msparser::make_expr( vector< token >::const_iterator first,
   if ( first->type() == tok_types::reverse ) {
     check_unary_op(first, last, "~");
     return expression( new reverse_node( make_expr( first+1, last ) ) );
+  }
+
+  if ( first->type() == tok_types::logic_not ) {
+    check_unary_op(first, last, "!");
+    return expression( new not_node( make_expr( first+1, last ) ) );
   }
 
   // Everything left is a literal of some sort
