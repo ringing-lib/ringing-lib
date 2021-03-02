@@ -1,5 +1,5 @@
 // -*- C++ -*- expression.h - Code to execute different types of expression
-// Copyright (C) 2003, 2004, 2005, 2008, 2011, 2019, 2020
+// Copyright (C) 2003, 2004, 2005, 2008, 2011, 2019, 2020, 2021
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -243,6 +243,19 @@ private:
   expression left, right;
 };
 
+class not_node : public expression::bnode {
+public:
+  not_node( expression const& arg )
+    : arg(arg) {}
+
+protected:
+  virtual void debug_print( ostream &os ) const;
+  virtual bool bool_evaluate( proof_context &ctx ) const;
+
+private:
+  expression arg;
+};
+
 class cmp_node : public expression::bnode {
 public:
   enum cmp_t {
@@ -271,7 +284,6 @@ protected:
   virtual void debug_print( ostream &os ) const;
   virtual RINGING_LLONG int_evaluate( proof_context &ctx ) const 
     { return value; }
-  virtual string string_evaluate( proof_context &ctx ) const;
 
 private:
   RINGING_LLONG value;

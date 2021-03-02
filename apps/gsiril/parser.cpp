@@ -1,6 +1,6 @@
 // parser.cpp - Tokenise and parse lines of input
 // Copyright (C) 2002, 2003, 2004, 2005, 2007, 2008, 2010, 2011, 2012, 2013,
-// 2019, 2020 Richard Smith <richard@ex-parrot.com>
+// 2019, 2020, 2021 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -28,6 +28,7 @@
 #include "expr_base.h"
 #include "expression.h"
 #include "statement.h"
+#include "execution_context.h"
 #include "prog_args.h"
 #if RINGING_OLD_INCLUDES
 #include <stdexcept.h>
@@ -69,6 +70,7 @@ namespace tok_types
     reverse     = '~',
     greater     = '>',
     less        = '<',
+    logic_not   = '!',
     ctrl_z      = '\x1A',   /* EOF marker in microSIRIL */
     comment     = tokeniser::first_token,
     string_lit,
@@ -193,7 +195,7 @@ public:
     case regex_lit: case open_brace: case close_brace: case colon:
     case logic_and: case logic_or: case equals: case not_equals: 
     case less: case greater: case less_eq: case greater_eq:
-    case increment: case decrement:
+    case increment: case decrement: case logic_not:
       // These can only work when msiril comments are disabled.
       // Regexp literals are disabled because they conflict with 
       // the MicroSiril comment; alternative blocks are disabled because
@@ -222,8 +224,8 @@ private:
 class msparser : public parser
 {
 public:
-  msparser( istream& in, const arguments& args ) 
-    : args(args), tok(in, args),
+  msparser( istream& in, execution_context& e ) 
+    : ectx(e), args(e.get_args()), tok(in, args),
       tokiter(tok.begin()), tokend(tok.end())
   {}
 
@@ -231,8 +233,7 @@ private:
   virtual statement parse();
   virtual int line() const { return tok.line(); }
 
-  int bells() const { return args.bells; }
-  void bells(int new_b);
+  int bells() const { return ectx.bells(); }
 
   vector< token > tokenise_command();
 
@@ -262,6 +263,7 @@ private:
   }
 
   // Data members
+  execution_context& ectx;
   arguments args;
   mstokeniser tok;
   mstokeniser::const_iterator tokiter, tokend;
@@ -320,18 +322,6 @@ vector< token > msparser::tokenise_command()
   return toks;
 }
 
-void msparser::bells(int b)
-{
-  if ( b > (int) bell::MAX_BELLS )
-    throw runtime_error( make_string() 
-			 << "Number of bells must be less than "
-			 << bell::MAX_BELLS + 1 );
-  else if ( b <= 1 )
-    throw runtime_error( "Number of bells must be greater than 1" );
-
-  args.bells = b;
-}
-
 statement msparser::parse()
 {
   vector<token> cmd( tokenise_command() );
@@ -353,10 +343,7 @@ statement msparser::parse()
   // Bells directive
   if ( cmd.size() == 2 && cmd[0].type() == tok_types::num_lit
        && cmd[1].type() == tok_types::name && cmd[1] == "bells" )
-    {
-      bells( string_to_int( cmd[0] ) );
-      return statement( new bells_stmt(args.bells) );
-    }
+    return statement( new bells_stmt( string_to_int(cmd[0]) ) );
 
   // Extents directive
   if ( cmd.size() == 2 && cmd[0].type() == tok_types::num_lit
@@ -726,6 +713,11 @@ msparser::make_expr( vector< token >::const_iterator first,
     return expression( new reverse_node( make_expr( first+1, last ) ) );
   }
 
+  if ( first->type() == tok_types::logic_not ) {
+    check_unary_op(first, last, "!");
+    return expression( new not_node( make_expr( first+1, last ) ) );
+  }
+
   // Everything left is a literal of some sort
   if ( last - first != 1 )
     throw runtime_error( make_string() << "Parse error before " << *first  );
@@ -769,9 +761,9 @@ msparser::make_expr( vector< token >::const_iterator first,
 RINGING_END_ANON_NAMESPACE
 
 shared_pointer<parser> 
-make_default_parser( istream& in, const arguments& args )
+make_default_parser( istream& in, execution_context& e )
 {
-  return shared_pointer<parser>( new msparser( in, args ) );
+  return shared_pointer<parser>( new msparser( in, e ) );
 }
 
 int parser::run( execution_context& e, const string& filename,

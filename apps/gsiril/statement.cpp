@@ -1,5 +1,5 @@
 // statement.cpp - Code to execute different types of statement
-// Copyright (C) 2002, 2003, 2004, 2005, 2010, 2011, 2012, 2019, 2020
+// Copyright (C) 2002, 2003, 2004, 2005, 2010, 2011, 2012, 2019, 2020, 2021
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -137,6 +137,13 @@ void extents_stmt::execute( execution_context& e )
 
 void bells_stmt::execute( execution_context& e )
 {
+  if ( bells > (int) bell::MAX_BELLS )
+    throw runtime_error( make_string() 
+			 << "Number of bells must be less than "
+			 << bell::MAX_BELLS + 1 );
+  else if ( bells <= 1 )
+    throw runtime_error( "Number of bells must be greater than 1" );
+
   e.bells( bells );
 
   if ( e.verbose() )
@@ -198,7 +205,7 @@ void import_stmt::execute( execution_context& e )
         e.undefine_symbol("__first__");
       else
         e.define_symbol(pair<const string, expression>("__first__", first));
-   }
+    }
   };
 
   { // Use RAII to revert the number of bells, etc. in case we throw.
@@ -209,7 +216,7 @@ void import_stmt::execute( execution_context& e )
       throw runtime_error
         ( make_string() << "Unable to load resource: " << name );
         
-    shared_pointer<parser> p( make_default_parser(*in, e.get_args() ) );
+    shared_pointer<parser> p( make_default_parser(*in, e ) );
     e.interactive(false);
     e.verbose(false);
     p->run(e, name, parser::propagate);

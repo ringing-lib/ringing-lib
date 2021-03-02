@@ -1,5 +1,5 @@
 // expr_base.cpp - Base classes, nodes and factory function for expressions
-// Copyright (C) 2005, 2011, 2012, 2019, 2020
+// Copyright (C) 2005, 2011, 2012, 2019, 2020, 2021
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -91,6 +91,12 @@ void expression::inode::execute( proof_context& ctx, int dir ) const
   }
 
   int_evaluate(ctx);
+}
+
+// This deals with casting ints as strings
+string expression::inode::string_evaluate( proof_context& ctx ) const 
+{
+  return make_string() << int_evaluate(ctx);
 }
 
 void expression::execute( proof_context &ctx, int dir ) const 

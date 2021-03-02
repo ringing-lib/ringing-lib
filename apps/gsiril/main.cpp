@@ -1,6 +1,6 @@
 // main.cpp - Entry point for gsiril
-// Copyright (C) 2002, 2003, 2004, 2007, 2008, 2010, 2011, 2012, 2014, 2020
-// Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003, 2004, 2007, 2008, 2010, 2011, 2012, 2014, 2020,
+// 2021 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -84,7 +84,7 @@ void initialise( execution_context& ex, const arguments& args )
   if (!args.no_init_file) {
     RINGING_ISTRINGSTREAM in(init_string);
 
-    make_default_parser(in, args)->run(ex, "INIT", parser::fatal);
+    make_default_parser(in, ex)->run(ex, "INIT", parser::fatal);
   }
 
   // ... and secondly using any -D options on the command line.  
@@ -97,7 +97,7 @@ void initialise( execution_context& ex, const arguments& args )
     {
       RINGING_ISTRINGSTREAM in(*i);
 
-      shared_pointer<parser> p( make_default_parser(in, args) );
+      shared_pointer<parser> p( make_default_parser(in, ex) );
 
       statement s( p->parse() );
       if (s.is_definition()) s.execute(ex);
@@ -120,7 +120,7 @@ void initialise( execution_context& ex, const arguments& args )
 	throw runtime_error
 	  ( make_string() << "Unable to find module: " << *i );
 
-      make_default_parser(*in, args)->run(ex, *i, parser::fatal);
+      make_default_parser(*in, ex)->run(ex, *i, parser::fatal);
     }
     
   // The 'everyrow' symbol is defined to "@" if -E is specified.
@@ -167,7 +167,7 @@ bool prove_stream( execution_context& e, scoped_pointer<istream> const& in,
 
   // IN is null if -N is used without -e or -f
   bool read_anything 
-    = ( !in || make_default_parser(*in, args)
+    = ( !in || make_default_parser(*in, e)
                 ->run(e, filename, 
                      args.interactive ? parser::warn : parser::fatal) );
 
