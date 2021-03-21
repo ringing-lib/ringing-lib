@@ -1,5 +1,5 @@
 // -*- C++ -*- libraries.cpp - singleton containing the method libraries
-// Copyright (C) 2002, 2009, 2010 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2009, 2010, 2021 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -112,10 +112,7 @@ void method_libraries::init()
       xmllib::registerlib();
       mslib::registerlib();
 
-      if ( char const* const methlibpath = getenv("METHOD_LIBRARY_PATH") )
-        library::setpath( methlibpath );
-      else if ( char const* const methlibpath = getenv("METHLIBPATH") )
-        library::setpath( methlibpath );
+      library::setpath_from_env();
       
       instance().clear();
 

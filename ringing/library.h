@@ -1,5 +1,5 @@
 // -*- C++ -*- library.h - Things for method libraries
-// Copyright (C) 2001, 2002, 2004, 2009, 2017 
+// Copyright (C) 2001, 2002, 2004, 2009, 2017, 2021
 // Martin Bright <martin@boojum.org.uk>
 // and Richard Smith <richard@ex-parrot.com>.
 
@@ -190,6 +190,9 @@ public:
 
   // Set the path (a colon delimited string) in which we look for libraries
   static void setpath(string const& p);
+
+  // Set the path from $METHOD_LIBRARY_PATH or $METHLIBPATH
+  static void setpath_from_env();
 
 private:
   library_base* lb()
