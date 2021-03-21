@@ -37,7 +37,7 @@ struct arguments
   arguments( int argc, char const *argv[] );
 
   init_val<int,0> bells;
-
+  vector<string>  titles;
   vector<string>  libs;
 
 private:
@@ -50,8 +50,12 @@ void arguments::bind( arg_parser& p )
   p.add( new help_opt );
   p.add( new version_opt );
 
-  p.add( new integer_opt( 'b', "bells",  "The number of bells.", "BELLS", 
-                          bells ) );
+  p.add( new integer_opt
+           ( 'b', "bells",  "The number of bells.", "BELLS", bells ) );
+
+  p.add( new strings_opt
+           ( 't', "title",  "Find method with this full title.", "TITLE", 
+             titles ) );
 
   p.set_default( new strings_opt( '\0', "", "", "", libs ) );
 }
@@ -89,6 +93,13 @@ arguments::arguments( int argc, char const *argv[] )
 bool filter_method( const arguments& args, const method& meth ) {
   if ( args.bells && meth.bells() != args.bells )
     return false;
+
+  if ( args.titles.size() ) {
+    if ( find( args.titles.begin(), args.titles.end(), meth.fullname() ) 
+           == args.titles.end() )
+      return false;
+  }
+
   return true;
 }
 
