@@ -136,6 +136,7 @@ bool row_wildcard::copy_if_choices_contains( string& dest,
   if ( p_sym > p_end ) return false;
   dest += sym;
   pos = p_end;
+  return true;
 }
 
 bool row_wildcard::copy_choices_intersection( string& dest, 

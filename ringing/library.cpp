@@ -1,5 +1,5 @@
 // library.cpp : Libraryish things
-// Copyright (C) 2001, 2002, 2004, 2009, 2017 
+// Copyright (C) 2001, 2002, 2004, 2009, 2017, 2021
 // Martin Bright <martin@boojum.org.uk>
 // and Richard Smith <richard@ex-parrot.com>
 
@@ -49,6 +49,14 @@ void library::addtype(init_function lt)
 void library::setpath(string const& p)
 {
   libpath = p;
+}
+
+void library::setpath_from_env()
+{
+  if ( char const* const methlibpath = getenv("METHOD_LIBRARY_PATH") )
+    setpath( methlibpath );
+  else if ( char const* const methlibpath = getenv("METHLIBPATH") )
+    setpath( methlibpath );
 }
 
 RINGING_START_ANON_NAMESPACE
