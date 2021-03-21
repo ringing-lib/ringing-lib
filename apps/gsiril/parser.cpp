@@ -735,6 +735,8 @@ msparser::make_expr( vector< token >::const_iterator first,
 	return expression( new boolean_node(true) );
       else if ( *first == "false" )
 	return expression( new boolean_node(false) );
+      else if ( *first == "bells" )
+	return expression( new integer_node( bells() ) );
       else
 	return expression( new symbol_node( *first ) );
 
