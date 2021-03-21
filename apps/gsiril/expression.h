@@ -53,7 +53,10 @@ public:
 protected:
   virtual void debug_print( ostream &os ) const;
   virtual void execute( proof_context &ctx, int dir ) const;
+  virtual expression evaluate( proof_context &ctx ) const;
   virtual bool bool_evaluate( proof_context &ctx ) const;
+  virtual RINGING_LLONG int_evaluate( proof_context &ctx ) const;
+  virtual string string_evaluate( proof_context &ctx ) const;
   virtual expression::type_t type() const;
 
 private:  
@@ -103,6 +106,7 @@ public:
 protected:
   virtual void debug_print( ostream &os ) const;
   virtual void execute( proof_context &ctx, int dir ) const;
+  virtual expression evaluate( proof_context &ctx ) const;
   virtual string string_evaluate( proof_context &ctx ) const;
 
 private:
@@ -145,6 +149,7 @@ public:
 protected:
   virtual void debug_print( ostream &os ) const;
   virtual void execute( proof_context &ctx, int dir ) const;
+  virtual expression evaluate( proof_context &ctx ) const;
   virtual bool bool_evaluate( proof_context &ctx ) const;
   virtual RINGING_LLONG int_evaluate( proof_context &ctx ) const;
   virtual string string_evaluate( proof_context &ctx ) const;
@@ -180,6 +185,20 @@ private:
   expression apply( expression const& lhs, expression const& rhs,
                     proof_context& ctx ) const;
 
+  const string sym;
+  expression val;
+};
+
+class immediate_assign_node : public expression::node {
+public:
+  immediate_assign_node( const string& sym, const expression& val )
+    : sym(sym), val(val) {}
+
+protected:
+  virtual void debug_print( ostream &os ) const;
+  virtual void execute( proof_context &ctx, int dir ) const;
+
+private:
   const string sym;
   expression val;
 };

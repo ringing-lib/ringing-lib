@@ -32,6 +32,7 @@
 #include <ringing/streamutils.h>
 #include "expr_base.h"
 #include "proof_context.h"
+#include "expression.h"
 
 RINGING_USING_NAMESPACE
 
@@ -65,6 +66,16 @@ string expression::node::string_evaluate( proof_context& ctx ) const
   throw runtime_error( os );
 }
 
+expression expression::node::evaluate( proof_context& ctx ) const
+{
+  make_string os;
+  os << "Unable to evaluate expression: '";
+  debug_print( os.out_stream() );
+  os << "'";
+
+  throw runtime_error( os );
+}
+
 void expression::bnode::execute( proof_context& ctx, int dir ) const
 {
   if ( dir < 0 ) {
@@ -77,6 +88,11 @@ void expression::bnode::execute( proof_context& ctx, int dir ) const
   }
 
   bool_evaluate(ctx);
+}
+
+expression expression::bnode::evaluate( proof_context& ctx ) const
+{
+  return expression( new boolean_node( bool_evaluate(ctx) ) );
 }
 
 void expression::inode::execute( proof_context& ctx, int dir ) const
@@ -93,6 +109,12 @@ void expression::inode::execute( proof_context& ctx, int dir ) const
   int_evaluate(ctx);
 }
 
+expression expression::inode::evaluate( proof_context& ctx ) const
+{
+  return expression( new integer_node( int_evaluate(ctx) ) );
+}
+
+
 // This deals with casting ints as strings
 string expression::inode::string_evaluate( proof_context& ctx ) const 
 {
@@ -103,6 +125,12 @@ void expression::execute( proof_context &ctx, int dir ) const
 { 
   ctx.increment_node_count();
   impl->execute(ctx, dir); 
+}
+
+expression expression::evaluate( proof_context& ctx ) const 
+{ 
+  ctx.increment_node_count();
+  return impl->evaluate(ctx); 
 }
 
 bool expression::bool_evaluate( proof_context& ctx ) const 

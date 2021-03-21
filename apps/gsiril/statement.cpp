@@ -33,11 +33,6 @@
 #endif
 #include <ringing/streamutils.h>
 
-bool definition_stmt::is_definition() const
-{
-  return true;
-}
-
 void definition_stmt::execute( execution_context& e )
 {
   if ( e.define_symbol( defn ) )
@@ -68,6 +63,22 @@ void default_defn_stmt::execute( execution_context& e )
       }
     }
 }
+
+void immediate_defn_stmt::execute( execution_context& e )
+{
+  proof_context p(e);
+  if ( e.define_symbol( make_pair( name, val.evaluate(p) ) ) )
+    {
+      if ( e.verbose() )
+        e.output() << "Redefinition of '" << name << "'." << endl;
+    }
+  else
+    {
+      if ( e.verbose() )
+        e.output() << "Definition of '" << name << "' added." << endl;
+    }
+}
+
 
 void null_stmt::execute( execution_context& e )
 {

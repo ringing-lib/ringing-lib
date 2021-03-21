@@ -77,6 +77,7 @@ namespace tok_types
     transp_lit,
     pn_lit,
     def_assign,    /* ?= */
+    imm_assign,    /* := */
     append_assign, /* .= */
     logic_and,     /* && */
     logic_or,      /* || */
@@ -142,6 +143,7 @@ public:
       q( "'",   tok_types::transp_lit, string_token::one_line ), 
       qq( "\"", tok_types::string_lit, string_token::one_line ), 
       sym( "&" ), asym( "+" ), defass( "?=", tok_types::def_assign ),
+      immass( ":=", tok_types::imm_assign ),
       appass( ".=", tok_types::append_assign ),
       land( "&&", tok_types::logic_and ), lor( "||", tok_types::logic_or ),
       cmpeq( "==", tok_types::equals ), cmpne( "!=", tok_types::not_equals ),
@@ -157,7 +159,8 @@ public:
     // The pattern syntax conflicts with MicroSiril comments
     if ( !args.msiril_syntax ) add_qtype(&r);
     add_qtype(&q);      add_qtype(&qq);
-    add_qtype(&defass); add_qtype(&appass); 
+    add_qtype(&defass); add_qtype(&immass);
+    add_qtype(&appass); 
     add_qtype(&land);   add_qtype(&lor);
     add_qtype(&cmpeq);  add_qtype(&cmpne);
     add_qtype(&cmpge);  add_qtype(&cmple);
@@ -184,7 +187,7 @@ public:
     case name: case num_lit: case open_paren: case close_paren:
     case comma: case times: case assignment: case new_line: case semicolon:
     case comment: case string_lit: case transp_lit: case pn_lit: 
-    case def_assign: case append_assign: case reverse:
+    case def_assign: case imm_assign: case append_assign: case reverse:
       return;
 
     case ctrl_z:
@@ -215,7 +218,8 @@ private:
   line_comment_impl c;
   string_token r, q, qq;
   pn_impl sym, asym;
-  basic_token defass, appass, land, lor, cmpeq, cmpne, cmpge, cmple, inc, dec;
+  basic_token defass, immass, appass, land, lor, cmpeq, cmpne, cmpge, cmple, 
+              inc, dec;
 };
 
 
@@ -385,6 +389,7 @@ statement msparser::parse()
        && cmd[0] == "prove" 
        // Make a half-hearted attempt to support a variable called 'prove':
        && cmd[1].type() != tok_types::assignment
+       && cmd[1].type() != tok_types::imm_assign 
        && cmd[1].type() != tok_types::def_assign )
     return statement
       ( new prove_stmt( make_expr( cmd.begin() + 1, cmd.end() ) ) );
@@ -415,6 +420,13 @@ statement msparser::parse()
         ( cmd[0], cmd.size() == 2 
 	            ? expression( new nop_node )
 	            : make_expr( cmd.begin() + 2, cmd.end() ) ) );
+
+  // Default definition
+  if ( cmd.size() > 2 && cmd[0].type() == tok_types::name
+       && cmd[1].type() == tok_types::imm_assign )
+    return statement
+      ( new immediate_defn_stmt
+        ( cmd[0], make_expr( cmd.begin() + 2, cmd.end() ) ) );
 
   throw runtime_error( "Unknown command: " + cmd[0] + " ..." );
 }
@@ -587,6 +599,7 @@ msparser::make_expr( vector< token >::const_iterator first,
   vector<tok_types::enum_t> assops;
   assops.push_back( tok_types::assignment );
   assops.push_back( tok_types::append_assign );
+  assops.push_back( tok_types::imm_assign );
   if ( find_one_of( first, last, assops, split ) )
     {
       if ( first == split )
@@ -608,12 +621,13 @@ msparser::make_expr( vector< token >::const_iterator first,
             ( new assign_node( *first, make_expr( split+1, last ) ) );
       }
       else {
-        if ( split+1 == last)
-          throw runtime_error
-            ( "Binary operator \".=\" needs second argument" );
-        else
+        check_bin_op( first, split, last, ".=" );
+        if ( split->type() == tok_types::append_assign )
           return expression
             ( new append_assign_node( *first, make_expr( split+1, last ) ) );
+        else
+          return expression
+            ( new immediate_assign_node( *first, make_expr( split+1, last ) ) );
       }
     }
 

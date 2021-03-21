@@ -52,11 +52,30 @@ void list_node::execute( proof_context &ctx, int dir ) const
   if (dir <= 0) car.execute( ctx, dir );
 }
 
+expression list_node::evaluate( proof_context &ctx ) const
+{
+  car.execute( ctx, +1 );
+  return cdr.evaluate( ctx );
+}
+
 bool list_node::bool_evaluate( proof_context &ctx ) const
 {
   car.execute( ctx, +1 );
   return cdr.bool_evaluate( ctx );
 }
+
+RINGING_LLONG list_node::int_evaluate( proof_context &ctx ) const
+{
+  car.execute( ctx, +1 );
+  return cdr.int_evaluate( ctx );
+}
+
+string list_node::string_evaluate( proof_context &ctx ) const
+{
+  car.execute( ctx, +1 );
+  return cdr.string_evaluate( ctx );
+}
+
 
 expression::type_t list_node::type() const
 {
@@ -115,6 +134,11 @@ void reverse_node::execute( proof_context &ctx, int dir ) const
 void string_node::execute( proof_context &ctx, int dir ) const
 {
   ctx.output_string(str, echo);
+}
+
+expression string_node::evaluate( proof_context &ctx ) const
+{
+  return expression( new string_node(str) );
 }
 
 string string_node::string_evaluate( proof_context &ctx ) const
@@ -236,6 +260,12 @@ void symbol_node::execute( proof_context &ctx, int dir ) const
   ctx.execute_symbol(sym, dir);
 }
 
+expression symbol_node::evaluate( proof_context &ctx ) const
+{
+   expression e( ctx.lookup_symbol(sym) );
+   return e.evaluate(ctx);
+}
+
 bool symbol_node::bool_evaluate( proof_context &ctx ) const
 {
    expression e( ctx.lookup_symbol(sym) );
@@ -297,6 +327,18 @@ append_assign_node::apply( expression const& lhs, expression const& rhs,
   return expression( new string_node(res) );
 }
 
+void immediate_assign_node::debug_print( ostream &os ) const
+{
+  os << "(" << sym << " := ";
+  val.debug_print(os);
+  os << ")";
+}
+
+void immediate_assign_node::execute( proof_context& ctx, int dir ) const
+{
+  if (dir < 0) throw_no_backwards_execution(*this);
+  ctx.define_symbol( make_pair(sym, val.evaluate(ctx)) );
+}
 
 static void validate_regex( const music_details& desc, int bells )
 {

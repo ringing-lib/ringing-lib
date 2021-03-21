@@ -79,6 +79,7 @@ public:
     virtual bool bool_evaluate( proof_context &ctx ) const; // throws
     virtual RINGING_LLONG int_evaluate( proof_context &ctx ) const; // throws
     virtual string string_evaluate( proof_context &ctx ) const; // throws
+    virtual expression evaluate( proof_context &ctx ) const; // throws
     virtual bool isnop() const { return false; }
     virtual type_t type() const { return no_type; }
   };
@@ -86,6 +87,7 @@ public:
   class bnode : public node {
   public:
     virtual void execute( proof_context &ctx, int dir ) const;
+    virtual expression evaluate( proof_context &ctx ) const;
     virtual bool bool_evaluate( proof_context &ctx ) const = 0;
     virtual type_t type() const { return boolean; }
   };
@@ -93,6 +95,7 @@ public:
   class inode : public node {
   public:
     virtual void execute( proof_context &ctx, int dir ) const;
+    virtual expression evaluate( proof_context &ctx ) const;
     virtual RINGING_LLONG int_evaluate( proof_context &ctx ) const = 0;
     virtual string string_evaluate( proof_context &ctx ) const;
     virtual type_t type() const { return integer; }
@@ -111,9 +114,10 @@ public:
   // execute an expression, possibly adding to the current proof
   void execute( proof_context &ctx, int dir ) const;
 
-  // Evaluate a const expression in boolean or integer context.
+  // Evaluate a const expression in boolean, integer or stringcontext.
   // If evaluation requires execution of an expression, a silent clone
   // of the proof_context is made and discarded at the end of the evaluation.
+  expression evaluate( proof_context& ctx ) const;
   bool bool_evaluate( proof_context& ctx ) const;
   RINGING_LLONG int_evaluate( proof_context& ctx ) const;
   string string_evaluate( proof_context& ctx ) const;
