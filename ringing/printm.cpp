@@ -239,7 +239,7 @@ void printmethod::print(printpage& pp)
         if(placebells_at_rules && placebells >= 0 &&
            row_count < (rows_per_column - 1)
            && total_row_count < (total_rows - 1)
-           && needrule(total_row_count, the_rule)) 
+           && needrule(total_row_count - 1, the_rule)) 
           pr.placebell(placebells, reverse_placebells ? +1 : 0);
         if(calls_at_rules 
            && needrule(total_row_count, the_rule)) {

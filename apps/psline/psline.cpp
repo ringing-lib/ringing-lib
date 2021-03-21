@@ -233,7 +233,7 @@ void setup_args(arg_parser& p)
     " print place bells.  If BELL is `default', select the bell automatically."
     " If `rev' is appended, show reverse place bells too.  If `rules' is"
     " appended, print place bells at the rules rather than the lead ends.",
-    "{BELL|x|none|default}[,rule][,rev]", true));
+    "{BELL|x|none|default}[,rules][,rev]", true));
   p.add(new myopt('p', "place-notation", "Print place"
     " notation for the first lead, every lead, or no leads.  The default is"
     " to print place notation for the first lead, supressing any mirrored"
