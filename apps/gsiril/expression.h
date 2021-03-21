@@ -295,6 +295,15 @@ private:
   cmp_t cmp;
 };
 
+class bells_node : public expression::inode {
+public:
+  bells_node() {}
+
+protected:
+  virtual void debug_print( ostream &os ) const;
+  virtual RINGING_LLONG int_evaluate( proof_context &ctx ) const;
+};
+
 class integer_node : public expression::inode {
 public:
   integer_node( RINGING_LLONG value ) : value(value) {}

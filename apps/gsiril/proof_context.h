@@ -1,6 +1,6 @@
 // -*- C++ -*- proof_context.h - Environment to evaluate expressions
 // Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2010, 2011, 2012, 2014,
-// 2019, 2020 Richard Smith <richard@ex-parrot.com>
+// 2019, 2020, 2021 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -70,6 +70,7 @@ public:
   row current_row() const { return r; }
   bool isrounds() const;
   size_t length() const { return p->size(); }
+  int bells() const;
 
   bool set_silent( bool s ) { bool rv = silent; silent = s; return rv; }
 

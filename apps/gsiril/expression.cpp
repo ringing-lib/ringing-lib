@@ -508,6 +508,16 @@ void cmp_node::debug_print( ostream &os ) const
   right.debug_print(os);
 }
 
+void bells_node::debug_print( ostream &os ) const
+{
+  os << "bells";
+}
+
+RINGING_LLONG bells_node::int_evaluate( proof_context& ctx ) const
+{
+  return ctx.bells();
+}
+
 void integer_node::debug_print( ostream &os ) const
 {
   os << value;
