@@ -523,6 +523,20 @@ void integer_node::debug_print( ostream &os ) const
   os << value;
 }
 
+RINGING_LLONG add_node::int_evaluate( proof_context& ctx ) const
+{
+  RINGING_LLONG l = left.int_evaluate(ctx), r = right.int_evaluate(ctx);
+  return l + sign * r;
+}
+
+void add_node::debug_print( ostream &os ) const
+{
+  left.debug_print(os);
+  os << (sign >= 0 ? " + " : " - ");
+  right.debug_print(os);
+}
+
+
 RINGING_LLONG increment_node::int_evaluate( proof_context& ctx ) const
 {
   RINGING_LLONG res( ctx.lookup_symbol(sym).int_evaluate(ctx) + val );

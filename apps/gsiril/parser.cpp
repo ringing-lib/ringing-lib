@@ -63,6 +63,8 @@ namespace tok_types
     close_brace = '}',
     colon       = ':',
     comma       = ',',
+    plus        = '+',
+    minus       = '-',
     times       = '*',
     assignment  = '=',
     new_line    = '\n',
@@ -108,6 +110,7 @@ private:
       else if ( *j == '.' || *j == '-' || isalnum(*j) ) ++j;
       else break;
     }
+    if ( j - i < 2 ) return failed;
     tok.assign(i, j); tok.type( tok_types::pn_lit ); i = j;
     return done;
   }
@@ -195,6 +198,7 @@ public:
       if ( args.msiril_syntax ) return;
       break;
 
+    case plus: case minus: 
     case regex_lit: case open_brace: case close_brace: case colon:
     case logic_and: case logic_or: case equals: case not_equals: 
     case less: case greater: case less_eq: case greater_eq:
@@ -682,6 +686,23 @@ msparser::make_expr( vector< token >::const_iterator first,
     check_bin_op( first, split, last, cmp_node::symbol(cmp) );
     return expression( new cmp_node( make_expr( first, split ),
                                      make_expr( split+1, last ), cmp ) );
+  }
+
+  // Addition operators are next
+ 
+  vector<tok_types::enum_t> addops;
+  addops.push_back( tok_types::plus );
+  addops.push_back( tok_types::minus );
+  if ( find_one_of( first, last, addops, split ) ) {
+    if ( split->type() == tok_types::plus ) {
+      check_bin_op( first, split, last, "+" );
+      return expression( new add_node( make_expr( first, split ),
+                                       make_expr( split+1, last ), +1 ) );
+    } else {
+      check_bin_op( first, split, last, "-" );
+      return expression( new add_node( make_expr( first, split ),
+                                       make_expr( split+1, last ), -1 ) );
+    }
   }
 
   // TODO: Support a integer expression in a repeat block

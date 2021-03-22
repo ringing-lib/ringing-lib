@@ -318,6 +318,20 @@ private:
   RINGING_LLONG value;
 };
 
+class add_node : public expression::inode {
+public:
+  add_node( expression const& left, expression const& right, int sign = +1 )
+    : left(left), right(right), sign(sign) {}
+
+protected:
+  virtual void debug_print( ostream &os ) const;
+  virtual RINGING_LLONG int_evaluate( proof_context &ctx ) const;
+
+private:
+  expression left, right;
+  int sign;
+};
+
 // TODO: Make this a generic op_assign_node
 class increment_node : public expression::inode {
 public:
