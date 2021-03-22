@@ -607,28 +607,6 @@ void exception_node::execute( proof_context& ctx, int dir ) const
   throw script_exception( t );
 }
 
-void load_method_node::debug_print( ostream& os ) const
-{
-  os << "load(\"" << name << "\")";
-}
-
-void load_method_node::execute( proof_context& ctx, int dir ) const
-{
-  if (!read) {
-//    meth = load_method(name);
-//    read = true;
-  }
-
-  if (meth.empty())
-    throw runtime_error
-      ( make_string() << "Unable to load method \"" << name << "\"" );
-
-  if (dir > 0) 
-    for_each( meth.begin(), meth.end(), ctx.permute_and_prove() );
-  else
-    for_each( meth.rbegin(), meth.rend(), ctx.permute_and_prove() );
-}
-
 void call_node::debug_print( ostream& os ) const
 {
   os << name << '(';

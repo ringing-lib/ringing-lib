@@ -21,6 +21,7 @@
 #pragma implementation
 #endif
 
+#include <ringing/method.h>
 #include <ringing/streamutils.h>
 #include "expression.h"
 #include "functions.h"
@@ -74,11 +75,42 @@ class swap_fn_impl : public fnnode {
     { return expression::transp; }
 };
 
+class load_fn_impl : public fnnode {
+public:
+  enum type_t { full_method, lead_only, lead_head };
+  explicit load_fn_impl( type_t t ) : t(t) {}
+
+private:
+  virtual expression call( proof_context& ctx, 
+                           vector<expression> const& args ) const {
+    if ( args.size() != 1 )
+      throw runtime_error("The load function takes one argument");
+    method m( ctx.load_method( args[0].string_evaluate(ctx) ) );
+    if ( t == lead_head )
+      return expression( new pn_node( m.back() ) );
+    if ( t == lead_only )
+      m.pop_back();
+    return expression( new pn_node(m) );
+  }
+
+  virtual void debug_print( ostream &os ) const { os << "load"; }
+  virtual expression::type_t type( proof_context &ctx ) const 
+    { return expression::no_type; }
+
+  type_t t;
+};
+
 void register_functions( execution_context& ectx )
 {
   ectx.define_symbol( pair< const string, expression >
-                        ( "pos", expression( new pos_fn_impl() ) ) );
+    ( "pos", expression( new pos_fn_impl() ) ) );
   ectx.define_symbol( pair< const string, expression >
-                        ( "swap", expression( new swap_fn_impl() ) ) );
+    ( "swap", expression( new swap_fn_impl() ) ) );
+  ectx.define_symbol( pair< const string, expression >
+    ( "load", expression( new load_fn_impl( load_fn_impl::full_method ) ) ) );
+  ectx.define_symbol( pair< const string, expression >
+    ( "loadm", expression( new load_fn_impl( load_fn_impl::lead_only ) ) ) );
+  ectx.define_symbol( pair< const string, expression >
+    ( "loadlh", expression( new load_fn_impl( load_fn_impl::lead_head ) ) ) );
 }
 

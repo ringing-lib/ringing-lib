@@ -31,6 +31,9 @@
 # endif
 #endif
 
+#include <ringing/cclib.h>
+#include <ringing/mslib.h>
+#include <ringing/xmllib.h>
 #include <ringing/streamutils.h>
 #include "args.h"
 #include "stringutils.h"
@@ -221,6 +224,11 @@ void arguments::bind( arg_parser& p )
            "Prove one composition only.", 
            prove_one ) );
 
+  p.add( new strings_opt
+	 ( 'L', "library",
+	   "Look up method names in the library LIB", "LIB",
+	   libnames ) );
+
   p.add( new boolean_opt
          ( '\0', "filter",
            "Run as a filter on a method library or stream",
@@ -323,8 +331,33 @@ bool arguments::validate( arg_parser& ap )
   }
 #endif
 
+  if (libnames.size() && !load_libraries(ap))
+    return false;
+
   return true;
 }
 
 
+bool arguments::load_libraries( arg_parser& ap )
+{
+  // Register mslib last, as various things can accidentally match it
+  cclib::registerlib();
+  xmllib::registerlib();
+  mslib::registerlib();
+
+  library::setpath_from_env();
+
+  for ( vector<string>::const_iterator i=libnames.begin(), e=libnames.end();
+          i != e; ++i )
+    try {
+      methset.import_library( *i );
+    }
+    catch ( const exception &e ) {
+      ap.error( make_string() << "Unable to read library: " << *i 
+                              << ": " << e.what() );
+      return false;
+    }
+
+  return true;
+}
 

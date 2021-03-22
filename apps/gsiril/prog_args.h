@@ -27,6 +27,7 @@
 #endif
 
 #include <ringing/row.h>
+#include <ringing/methodset.h>
 #include "init_val.h"
 #include "bell_fmt.h"
 #include <string>
@@ -85,6 +86,9 @@ struct arguments
   string               rstr, gstr, bstr;
   bell_fmt             bellfmt;
 
+  vector<string>       libnames;
+  methodset            methset;
+
   arguments( int argc, char** argv );
 
 private:
@@ -93,6 +97,7 @@ private:
 
   void bind( arg_parser& p );
   bool validate( arg_parser& p );
+  bool load_libraries( arg_parser& p );
 };
 
 #endif // GSIRIL_ARGS_INCLUDED

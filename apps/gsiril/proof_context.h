@@ -36,6 +36,10 @@
 #include <ringing/music.h>
 #include "symbol_table.h"
 
+RINGING_START_NAMESPACE
+class method;
+RINGING_END_NAMESPACE
+
 RINGING_USING_STD
 RINGING_USING_NAMESPACE
 
@@ -85,6 +89,8 @@ public:
 
   void execute_everyrow();
   void output_string( const string& str, bool to_parent = false ) const;
+
+  method load_method( const string& title ) const;
 
   proof_context silent_clone() const;
 
