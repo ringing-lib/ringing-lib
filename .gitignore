@@ -5,7 +5,14 @@
 Makefile
 Makefile.in
 m4/
+autom4te.cache/
 config/
 .deps
 .libs
 .#*
+aclocal.m4
+libtool
+configure
+config.log
+config.status
+ringing/common-am.h
