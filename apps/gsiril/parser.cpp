@@ -244,6 +244,10 @@ private:
   expression make_expr( vector< token >::const_iterator first, 
 			vector< token >::const_iterator last ) const;
 
+  vector<expression> 
+  make_args( vector< token >::const_iterator first, 
+             vector< token >::const_iterator last ) const;
+
   bool is_enclosed( vector< token >::const_iterator first, 
 		    vector< token >::const_iterator last,
 		    tok_types::enum_t open, tok_types::enum_t close,
@@ -732,6 +736,12 @@ msparser::make_expr( vector< token >::const_iterator first,
     return expression( new not_node( make_expr( first+1, last ) ) );
   }
 
+  // Is it a function call?
+  if ( last - first >= 3 && first->type() == tok_types::name && 
+       is_enclosed( first+1, last, tok_types::open_paren, 
+                    tok_types::close_paren, "parentheses" ) )
+    return expression( new call_node(*first, make_args(first+2, last-1) ) );
+
   // Everything left is a literal of some sort
   if ( last - first != 1 )
     throw runtime_error( make_string() << "Parse error before " << *first  );
@@ -770,6 +780,25 @@ msparser::make_expr( vector< token >::const_iterator first,
       throw runtime_error( "Unknown token in input" );
       return expression( NULL ); // To keep MSVC 5 happy
   }
+}
+
+vector<expression>
+msparser::make_args( vector< token >::const_iterator first, 
+		     vector< token >::const_iterator last ) const
+{
+  vector<expression> args;
+  if ( first != last ) {
+    while (true) {
+      vector< token >::const_iterator split = last;
+      find( first, last, tok_types::comma, split );
+      if ( first == split )
+        throw runtime_error("Empty argument in function call");
+      args.push_back( make_expr( first, split ) );
+      if ( split == last ) break;
+      first = split + 1;
+    }
+  }
+  return args;
 }
 
 //////////////////////////////////////////////////////////

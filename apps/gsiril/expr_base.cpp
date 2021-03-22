@@ -76,6 +76,17 @@ expression expression::node::evaluate( proof_context& ctx ) const
   throw runtime_error( os );
 }
 
+expression expression::node::call( proof_context& ctx,
+                                   vector<expression> const& args ) const
+{
+  make_string os;
+  os << "Unable to call expression: '";
+  debug_print( os.out_stream() );
+  os << "'";
+
+  throw runtime_error( os );
+}
+
 void expression::bnode::execute( proof_context& ctx, int dir ) const
 {
   if ( dir < 0 ) {
@@ -149,5 +160,12 @@ string expression::string_evaluate( proof_context& ctx ) const
 {
   ctx.increment_node_count();
   return impl->string_evaluate(ctx); 
+}
+
+expression expression::call( proof_context& ctx, 
+                             vector<expression> const& args ) const
+{
+  ctx.increment_node_count();
+  return impl->call(ctx, args); 
 }
 

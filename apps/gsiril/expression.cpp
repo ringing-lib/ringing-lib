@@ -77,9 +77,9 @@ string list_node::string_evaluate( proof_context &ctx ) const
 }
 
 
-expression::type_t list_node::type() const
+expression::type_t list_node::type( proof_context &ctx ) const
 {
-  return cdr.type();
+  return cdr.type(ctx);
 }
 
 void nop_node::debug_print( ostream &os ) const
@@ -450,7 +450,7 @@ void not_node::debug_print( ostream &os ) const
 
 bool cmp_node::bool_evaluate( proof_context &ctx ) const
 {
-  expression::type_t lt = left.type(), rt = right.type();
+  expression::type_t lt = left.type(ctx), rt = right.type(ctx);
 
   if (lt == expression::boolean && rt == expression::boolean) {
     bool l = left.bool_evaluate(ctx), r = right.bool_evaluate(ctx);
@@ -614,3 +614,49 @@ void load_method_node::execute( proof_context& ctx, int dir ) const
   else
     for_each( meth.rbegin(), meth.rend(), ctx.permute_and_prove() );
 }
+
+void call_node::debug_print( ostream& os ) const
+{
+  os << name << '(';
+  bool first = true;
+  for (vector<expression>::const_iterator i=args.begin(), e=args.end();
+       i != e; ++i) {
+    if (!first) os << ", ";
+    i->debug_print(os);
+    first = false;
+  }
+  os << ')';
+}
+
+void call_node::execute( proof_context& ctx, int dir ) const
+{
+  if (dir < 0) throw_no_backwards_execution(*this);
+  evaluate(ctx).execute(ctx, dir);
+}
+
+expression call_node::evaluate( proof_context &ctx ) const
+{
+  expression e( ctx.lookup_symbol(name) );
+  return e.call(ctx, args);
+}
+
+bool call_node::bool_evaluate( proof_context &ctx ) const
+{
+  return evaluate(ctx).bool_evaluate(ctx);
+}
+
+RINGING_LLONG call_node::int_evaluate( proof_context &ctx ) const
+{
+  return evaluate(ctx).int_evaluate(ctx);
+}
+
+string call_node::string_evaluate( proof_context &ctx ) const
+{
+  return evaluate(ctx).string_evaluate(ctx);
+}
+
+expression::type_t call_node::type( proof_context &ctx ) const
+{
+  return ctx.lookup_symbol(name).type(ctx);
+}
+

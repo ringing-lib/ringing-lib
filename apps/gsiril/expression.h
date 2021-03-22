@@ -57,7 +57,7 @@ protected:
   virtual bool bool_evaluate( proof_context &ctx ) const;
   virtual RINGING_LLONG int_evaluate( proof_context &ctx ) const;
   virtual string string_evaluate( proof_context &ctx ) const;
-  virtual expression::type_t type() const;
+  virtual expression::type_t type( proof_context &ctx ) const;
 
 private:  
   expression car, cdr;
@@ -131,6 +131,7 @@ private:
 
 class transp_node : public expression::node {
 public:
+  explicit transp_node( row const& transp ) : transp(transp) {}
   transp_node( int bells, const string &r );
 
 protected:
@@ -376,6 +377,25 @@ private:
   // If meth is sill empty, we'll throw an exception.
   bool read;
   method meth;
+};
+
+class call_node : public expression::node {
+public:
+  call_node( string const& name, vector<expression> const& args )
+    : name(name), args(args) {}
+
+protected:
+  virtual void debug_print( ostream &os ) const;
+  virtual void execute( proof_context &ctx, int dir ) const;
+  virtual expression evaluate( proof_context &ctx ) const;
+  virtual bool bool_evaluate( proof_context &ctx ) const;
+  virtual RINGING_LLONG int_evaluate( proof_context &ctx ) const;
+  virtual string string_evaluate( proof_context &ctx ) const;
+  virtual expression::type_t type( proof_context &ctx ) const;
+
+private:
+  string name;
+  vector<expression> args;
 };
 
 #endif // GSIRIL_EXPRESSION_INCLUDED

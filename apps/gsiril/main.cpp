@@ -32,6 +32,7 @@
 #include "expr_base.h"
 #include "expression.h"
 #include "prog_args.h"
+#include "functions.h"
 #include <string>
 #if RINGING_OLD_INCLUDES
 #include <stdexcept.h>
@@ -79,6 +80,8 @@ void initialise( execution_context& ex, const arguments& args )
   // Turn off interactivity whilst it prepopulates the symbol table
   bool interactive = ex.interactive(false);
   bool verbose     = ex.verbose(false);
+
+  register_functions(ex);
 
   // Prepopulate symbol table, first using the init script
   if (!args.no_init_file) {
