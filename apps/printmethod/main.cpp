@@ -1,5 +1,6 @@
 // main.cpp - Entry point for printmethod
-// Copyright (C) 2008, 2009, 2010, 2011 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2008, 2009, 2010, 2011, 2021
+// Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -14,8 +15,6 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-
-// $Id$
 
 #include <ringing/common.h>
 
@@ -39,6 +38,7 @@ static inline char* tparm( char const*, ... ) { return NULL; }
 
 #include "args.h"
 #include "init_val.h"
+#include "bell_fmt.h"
 
 #include <ringing/bell.h>
 #include <ringing/row.h>
@@ -70,15 +70,11 @@ struct arguments
   
   row startrow;
 
-  string           rstr, gstr, bstr;
-
-  map< bell, bellfmt > colours;
+  string               rstr, gstr, bstr;
+  bell_fmt             bellfmt;
  
   void bind( arg_parser& p );
   bool validate( arg_parser& p );
-
-private:
-  bool handle_colour( arg_parser& ap, string const& str, int val );
 };
 
 void arguments::bind( arg_parser& p )
@@ -171,77 +167,16 @@ bool arguments::validate( arg_parser &ap )
   }
 
 #if RINGING_USE_TERMCAP
-  // The COLOR_ macros are defined in ncurses.h
-  if ( !handle_colour( ap, rstr, COLOR_RED   ) ) return false;
-  if ( !handle_colour( ap, gstr, COLOR_GREEN ) ) return false;
-  if ( !handle_colour( ap, bstr, COLOR_BLUE  ) ) return false;
+  try {
+    bellfmt.set_colours(rstr, gstr, bstr);
+  }
+  catch (bell::invalid const&) {
+    ap.error("Invalid bell in colour specification");
+    return false;
+  }
 #endif
 
   return true;
-}
-
-bool arguments::handle_colour( arg_parser& ap, string const& str, int val )
-{
-  bool bold = 0;
-  for (string::const_iterator i=str.begin(), e=str.end(); i!=e; ++i)
-    try {
-      if (*i == '*') bold = !bold;
-      else {
-        bellfmt fmt = { val, bold };
-        colours[ bell::read_char(*i) ] = fmt;
-      }
-    } catch (bell::invalid const&) {
-      ap.error( make_string()  
-                << "Invalid bell: '" << *i << "' in colour specification" );
-      return false;
-    }
-
-  return true;
-}
-
-// Print a row in colour
-void print_row( arguments const& args, row const& r )
-{
-  if (args.colours.empty()) 
-    cout << r;
-
-  else {
-    bool coloured = false, bold = false;
-    for (row::const_iterator i=r.begin(), e=r.end(); i!=e; ++i) {
-      map<bell, bellfmt>::const_iterator c = args.colours.find(*i);
-      if ( c == args.colours.end() ) {
-        if ( coloured )
-          if ( char const* seq = RINGING_TERMINFO_VAR( orig_pair ) ) {
-            cout << seq; coloured = false;
-          }
-        if ( bold ) 
-          if ( char const* seq = RINGING_TERMINFO_VAR( exit_attribute_mode ) ) {
-            cout << seq; bold = false;
-          }
-      }
-      else {
-        assert( c->first == *i );
-        if ( char const* seq 
-               = tparm( RINGING_TERMINFO_VAR( set_a_foreground ), 
-                        c->second.colour ) ) {
-          cout << seq; coloured = true;
-        }
-        if ( c->second.bold )
-          if ( char const* seq = RINGING_TERMINFO_VAR( enter_bold_mode ) ) {
-            cout << seq; bold = true;
-          }
-      }
-      cout << *i;
-    }
-    if ( coloured )
-      if ( char const* seq = RINGING_TERMINFO_VAR( orig_pair ) )
-        cout << seq;
-    if ( bold ) 
-      if ( char const* seq = RINGING_TERMINFO_VAR( exit_attribute_mode ) ) 
-        cout << seq;
-  }
-
-  cout << "\n";
 }
 
 int main(int argc, char* argv[]) 
@@ -266,29 +201,29 @@ int main(int argc, char* argv[])
   }
 
 # if RINGING_USE_TERMCAP
-  if ( !args.colours.empty() )
+  if ( !args.bellfmt.empty() )
     setupterm(NULL, 1, NULL);
 # endif
 
   row r( args.startrow );  bool first = true;
 
   for ( int i=0; i<args.init_rounds*2; ++i)
-    print_row(args, r);
+    cout << args.bellfmt << r << "\n";
 
   do for ( method::const_iterator i=args.meth.begin(), e=args.meth.end(); 
            i!=e; ++i )  
   {
     if ( !( first && (args.omit_start || args.init_rounds) ) ) 
-      print_row(args, r);
+      cout << args.bellfmt << r << "\n";
 
     r *= *i;  first = false;
   } while ( r != args.startrow && args.whole_course );
 
   if (!args.omit_final && args.meth.size())
-    print_row(args, r);
+    cout << args.bellfmt << r << "\n";
 
   for ( int i=0; i<args.final_rounds*2; ++i)
-    print_row(args, r);
+    cout << args.bellfmt << r << "\n";
 }
 
 

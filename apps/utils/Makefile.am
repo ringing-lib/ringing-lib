@@ -2,7 +2,8 @@
 
 # Process this file with automake to produce Makefile.in
 
-# Copyright (C) 2002, 2009, 2010, 2020 Martin Bright <martin@boojum.org.uk> and
+# Copyright (C) 2002, 2009, 2010, 2020, 2021 
+# Martin Bright <martin@boojum.org.uk> and
 # Richard Smith <richard@ex-parrot.com>
 
 # This program is free software; you can redistribute it and/or modify
@@ -32,7 +33,8 @@ endif
 
 libstuff_a_SOURCES = args.cpp args.h tokeniser.cpp tokeniser.h init_val.h \
 stringutils.h stringutils.cpp exec.cpp exec.h row_calc.cpp row_calc.h \
-console_stream.h console_stream.cpp argv.cpp $(additional)
+console_stream.h console_stream.cpp argv.cpp bell_fmt.cpp bell_fmt.h \
+$(additional)
 
 EXTRA_libstuff_a_SOURCES = rlstream.cpp rlstream.h
 

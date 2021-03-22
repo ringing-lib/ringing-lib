@@ -1,6 +1,6 @@
 // prog_args.cpp - handle program arguments
 // Copyright (C) 2002, 2003, 2004, 2007, 2008, 2010, 2011, 2012, 2014, 2019, 
-// 2020 Richard Smith <richard@ex-parrot.com>
+// 2020, 2021 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,12 +16,19 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-// $Id$
 
 #include <ringing/common.h>
 
 #if RINGING_HAS_PRAGMA_INTERFACE
 #pragma implementation "gsiril/prog_args.h"
+#endif
+
+#if RINGING_USE_TERMCAP
+# include <curses.h>
+# include <term.h>
+# ifdef bell
+#   undef bell
+# endif
 #endif
 
 #include <ringing/streamutils.h>
@@ -249,7 +256,16 @@ void arguments::bind( arg_parser& p )
 	   "Mark the specified symbols as methods",
 	   "SYM,SYM,...",
 	   methods ) );
- }
+
+#if RINGING_USE_TERMCAP
+  p.add( new string_opt
+         ( 'R', "red", "Colour BELLS in red", "BELLS", rstr ) );
+  p.add( new string_opt
+         ( 'G', "green", "Colour BELLS in green", "BELLS", gstr ) );
+  p.add( new string_opt
+         ( 'B', "blue", "Colour BELLS in blue", "BELLS", bstr ) );
+#endif
+}
 
 bool arguments::validate( arg_parser& ap )
 {
@@ -297,7 +313,18 @@ bool arguments::validate( arg_parser& ap )
       return false;
     }
 
+#if RINGING_USE_TERMCAP
+  try {
+    bellfmt.set_colours(rstr, gstr, bstr);
+  }
+  catch (bell::invalid const&) {
+    ap.error("Invalid bell in colour specification");
+    return false;
+  }
+#endif
+
   return true;
 }
+
 
 

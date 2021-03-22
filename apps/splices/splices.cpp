@@ -1,5 +1,5 @@
 // -*- C++ -*- splices.cpp - utility to find splices between methods
-// Copyright (C) 2010, 2011 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2010, 2011, 2020 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -32,6 +32,7 @@
 #include <set>
 #include <map>
 #include <utility>
+#include <fstream>
 
 RINGING_USING_NAMESPACE
 RINGING_USING_STD
@@ -59,6 +60,7 @@ struct arguments
   vector<string>       meth_str;
   vector<method>       meth;
 
+  string               rows_file;
   vector<row>          rows;
 
   arguments( int argc, char *argv[] );
@@ -162,6 +164,11 @@ void arguments::bind( arg_parser& p )
          ( '\0', "read-rows",
            "Read the rows of a method from standard input",
            read_rows ) );
+
+  p.add( new string_opt
+         ( '\0', "rows-file",
+           "Read the rows of a method from FILE", "FILE",
+           rows_file ) );
 }
 
 bool arguments::validate( arg_parser& ap )
@@ -179,11 +186,15 @@ bool arguments::validate( arg_parser& ap )
       return false;
     }
 
-  if ( (in_course || read_rows) && out_of_course )
-    { 
-      ap.error( "The -o option cannot be used with either -i or --read-rows" );
-      return false;
-    }
+  if ( in_course && out_of_course ) { 
+    ap.error("The -i and -o options are incompatbile");
+    return false;
+  }
+
+  if ( read_rows && (!rows_file.empty() || filter_mode) ) { 
+    ap.error("The --read-rows option is compatible with -I and --rows-file");
+    return false;
+  }
 
   unsigned int meth_num = 0;
   for ( vector<string>::const_iterator i=meth_str.begin(), e=meth_str.end();
@@ -542,8 +553,10 @@ string splices::test_splice( method const& a, vector<row> const& b,
   if ( args.only_n_leads != -1 && sg.size() != args.only_n_leads * 2 )
     return string();
 
+cerr << "Got " << sg.size() << endl;
+
   string desc( describe_splice(sg) );
-  if ( !args.group_splices && !args.filter_mode ) {
+  if ( !args.group_splices /* && !args.filter_mode */ ) {
     cout << name_or_pn(args, a);
     if ( args.meth.size() != 1 ) 
       cout << " / " << b_name;
@@ -599,7 +612,7 @@ void splices::find_splices( library const& lib )
 
     bool filter_ok = false;
 
-    if ( args.read_rows ) {
+    if ( args.read_rows || !args.rows_file.empty() ) {
       test_splice( m, args.rows );
     }
 
@@ -636,6 +649,11 @@ int main( int argc, char *argv[] )
 
   if ( args.read_rows ) 
     args.rows.assign( istream_iterator<row>(cin), istream_iterator<row>() );
+
+  else if ( !args.rows_file.empty() ) {
+    ifstream in(args.rows_file);
+    args.rows.assign( istream_iterator<row>(in), istream_iterator<row>() );
+  }
 
   if ( args.read_rows || args.meth.size() >= 2 ) {
     methodset in( args.meth.begin(), args.meth.end() );
