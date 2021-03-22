@@ -59,11 +59,16 @@ class RINGING_API library_base : public virtual libbase::interface {
 public:
   virtual ~library_base() {}		// Got to have a virtual destructor
 
-  // Reading the library.
   virtual method load(const string& s, int stage) const; // Load a method
+
+  // See also find(string) below, which looks up a method by its full name.i
+  // It is not listed here to avoid re-ordering the vtable
   virtual library_entry find(const method& pn) const; // Load by pn
+
+#if RINGING_BACKWARDS_COMPATIBLE(0,4,0)
   virtual int dir(list<string>& result) const;
   virtual int mdir(list<method>& result) const;
+#endif
 
 #if RINGING_BACKWARDS_COMPATIBLE(0,3,0)
   // Writing to the library
@@ -79,6 +84,8 @@ public:
   virtual bool good (void) const = 0;	// Is it in a usable state?
   virtual bool writeable(void) const    // Is it writeable?
     { return false; }
+
+  virtual library_entry find(const string& title) const; // Load by title
 
   // The new style library interface uses iterators
   class const_iterator;
@@ -157,11 +164,16 @@ public:
   library(library_base* i) { this->set_impl(i); }
 
   // Reading the library.
+  library_entry find(const method& pn) const { return lb()->find(pn); }
+  library_entry find(const string& title) const { return lb()->find(title); }
+
   method load(const string& name, int stage=0) const
     { return lb()->load(name, stage); }
-  library_entry find(const method& pn) const { return lb()->find(pn); }
+
+#if RINGING_BACKWARDS_COMPATIBLE(0,4,0)
   int dir(list<string>& result) const { return lb()->dir(result); }
   int mdir(list<method>& result ) const { return lb()->mdir(result); }
+#endif
 
 #if RINGING_BACKWARDS_COMPATIBLE(0,3,0)
   // Writing to the library

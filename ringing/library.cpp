@@ -112,7 +112,7 @@ library::library(const string& filename)
   }
 }
 
-
+#if RINGING_BACKWARDS_COMPATIBLE(0,4,0)
 // Return a list of items
 int library_base::dir(list<string>& result) const
 {
@@ -140,6 +140,7 @@ int library_base::mdir(list<method>& result) const
 
   return result.size() - orig_size;
 }
+#endif // RINGING_BACKWARDS_COMPATIBLE(0,4,0)
 
 // This function is for creating lower case strings.
 static void lowercase(char &c)
@@ -194,6 +195,14 @@ library_entry library_base::find( method const& pn ) const
 {
   for ( const_iterator i(begin()); i != end(); ++i )
     if ( i->meth() == pn )
+      return *i;
+  return library_entry();
+}
+
+library_entry library_base::find( string const& title ) const
+{
+  for ( const_iterator i(begin()); i != end(); ++i )
+    if ( i->fullname() == title )
       return *i;
   return library_entry();
 }

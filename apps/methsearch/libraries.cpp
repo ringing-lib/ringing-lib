@@ -76,31 +76,14 @@ void method_libraries::add_new_library( const string &filename )
 
 void method_libraries::read_library( const string &filename )
 {
-  try
-    {
-      library l( filename );
-
-      if (!l.good())
-	{
-	  cerr << "Unable to read library " << filename << "\n";
-	  exit(1);
-	}
-
-      if ( l.empty() )
-	{
-	  cerr << "The library " << filename << " appears to be empty\n";
-	  exit(1);
-	}
- 
-      copy( l.begin(), l.end(), back_inserter( instance() ) );
-    }
-  catch ( const exception &e )
-    {
-      cerr << "Unable to read library: " << filename << ": " 
-	   << e.what() << '\n';
-      exit(1);
-    }
-
+  try {
+    instance().import_library( filename );
+  }
+  catch ( const exception &e ) {
+    cerr << "Unable to read library: " << filename << ": " 
+         << e.what() << '\n';
+    exit(1);
+  }
 }
 
 void method_libraries::init()
