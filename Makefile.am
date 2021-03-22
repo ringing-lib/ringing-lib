@@ -8,7 +8,7 @@ MAINTAINERCLEANFILES = Makefile.in configure aclocal.m4 \
 
 EXTRA_DIST = mkdsp
 
-SUBDIRS = ringing apps doc examples tests 
+SUBDIRS = ringing apps doc tests 
 
 dist-hook:
 	cd $(distdir) && ./mkdsp 

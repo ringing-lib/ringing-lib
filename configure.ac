@@ -178,5 +178,5 @@ AC_CONFIG_FILES([Makefile ringing/Makefile apps/Makefile apps/gsiril/Makefile
   apps/printmethod/Makefile apps/musgrep/Makefile apps/rowcalc/Makefile
   apps/ringmethod/Makefile apps/splices/Makefile apps/spliceplan/Makefile
   apps/methodlib/Makefile
-  doc/Makefile examples/Makefile tests/Makefile ringing/common-am.h])
+  doc/Makefile tests/Makefile ringing/common-am.h])
 AC_OUTPUT

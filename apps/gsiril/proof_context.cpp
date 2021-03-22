@@ -34,6 +34,7 @@
 # define RINGING_TERMINFO_VAR( name ) NULL
 #endif
 
+#include <cassert>
 
 #include "expr_base.h" // Must be before execution_context.h because 
                        // of bug in MSVC 6.0
@@ -291,8 +292,8 @@ string proof_context::substitute_string( const string &str,
         if (row_mask.process_row(r)) {
           vector<bell> match( row_mask.begin()->last_wildcard_matches() );
           for (vector<bell>::const_iterator i = match.begin(), e = match.end(); 
-                 i != e; ++i)
-            os << *i;
+                 i != e; ++i) 
+            os.out_stream() << ectx.get_args().bellfmt << *i;
         }
         else return string();
 	break;
@@ -364,5 +365,13 @@ proof_context proof_context::silent_clone() const
 void proof_context::increment_node_count() const
 {
   return ectx.increment_node_count();
+}
+  
+method proof_context::load_method( const string& title ) const
+{
+  library_entry le = ectx.get_args().methset.find(title);
+  if (le.null())
+    throw runtime_error( "Unable to load method: " + title );
+  return le.meth();
 }
 

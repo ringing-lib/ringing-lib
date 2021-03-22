@@ -1,5 +1,5 @@
 // methodset.cpp - A set of methods with library and libout interfaces
-// Copyright (C) 2009, 2010, 2011 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2009, 2010, 2011, 2021 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -198,6 +198,16 @@ void methodset::append( method const& m )
 void methodset::store_facet( library_facet_id id )
 {
   this->libout::get_impl<impl>()->store_facet(id);
+}
+
+size_t methodset::import_library( string const& filename )
+{
+  library l( filename );
+
+  if ( !l.good() )
+    throw runtime_error( "Library format unknown" );
+
+  return append( l.begin(), l.end() );
 }
 
 RINGING_END_NAMESPACE

@@ -1,5 +1,5 @@
 // -*- C++ -*- methodset.h - A set of methods with input and output interfaces
-// Copyright (C) 2009, 2010, 2011 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2009, 2010, 2011, 2021 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -74,9 +74,14 @@ public:
   void append( method const& );
 
   template <class InputIterator>
-  void append( InputIterator first, InputIterator last ) {
-    for ( ; first != last; ++first ) this->append(*first); 
+  size_t append( InputIterator first, InputIterator last ) {
+    size_t n = 0;
+    for ( ; first != last; ++first, ++n ) this->append(*first); 
+    return n;
   }
+
+  // Load the specified file and append to this methodset
+  size_t import_library( string const& filename );
 
 private:
   void init();

@@ -374,25 +374,6 @@ private:
   script_exception::type t;
 };
 
-class load_method_node : public expression::node {
-public:
-  load_method_node( string const& name )
-    : name(name), read(false) {}
-
-protected:
-  virtual void debug_print( ostream &os ) const;
-  virtual void execute( proof_context &ctx, int dir ) const;
-
-private:
-  string name;
-
-  // Reading the method is expensive; we don't want to re-read it every
-  // time the node is evaluated.  Set read=true when it has been read.
-  // If meth is sill empty, we'll throw an exception.
-  bool read;
-  method meth;
-};
-
 class call_node : public expression::node {
 public:
   call_node( string const& name, vector<expression> const& args )

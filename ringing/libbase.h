@@ -1,5 +1,5 @@
 // -*- C++ -*- libbase.h - base class for both library and libout
-// Copyright (C) 2001, 2002, 2004, 2009, 2010 
+// Copyright (C) 2001, 2002, 2004, 2009, 2010, 2021
 // Martin Bright <martin@boojum.org.uk>
 // and Richard Smith <richard@ex-parrot.com>.
 
@@ -96,12 +96,20 @@ public:
 
     virtual shared_pointer< library_facet_base > 
       get_facet( const library_facet_id& id ) const;
-
   };
 
   // Public accessor functions
+
+  // Name is the name as it is in the method collection, which may 
+  // include some or all of the classor stage names.
   string name() const      { return pimpl->name(); }
+
+  // Base name is just name, with all class and stage names stripped.
   string base_name() const { return pimpl->base_name(); }
+
+  // Full name includes all classes and stage names.
+  string fullname() const { return meth().fullname(); }
+
   string pn() const        { return pimpl->pn(); }
   int bells() const        { return pimpl->bells(); }
   method meth() const      { return pimpl->meth(); }
