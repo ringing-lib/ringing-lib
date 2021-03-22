@@ -56,11 +56,11 @@ class pos_fn_impl : public fnnode {
 class swap_fn_impl : public fnnode {
   virtual expression call( proof_context& ctx, 
                            vector<expression> const& args ) const {
-    if (args.size() != 2)
-      throw runtime_error("The pos function takes two arguments");
+    if (args.size() < 1 || args.size() > 2)
+      throw runtime_error("The pos function takes one or two arguments");
     row r( ctx.bells() );
     int i = args[0].int_evaluate(ctx) - 1;
-    int j = args[1].int_evaluate(ctx) - 1;
+    int j = args.size() == 2 ?  args[1].int_evaluate(ctx) - 1 : i + 1;
     if (i >= r.bells() || j >= r.bells() || i < 0 ||  j < 0)
       throw runtime_error("Bell out of bounds in swap");
     else if (i == j)
