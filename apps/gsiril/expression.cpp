@@ -52,15 +52,34 @@ void list_node::execute( proof_context &ctx, int dir ) const
   if (dir <= 0) car.execute( ctx, dir );
 }
 
+expression list_node::evaluate( proof_context &ctx ) const
+{
+  car.execute( ctx, +1 );
+  return cdr.evaluate( ctx );
+}
+
 bool list_node::bool_evaluate( proof_context &ctx ) const
 {
   car.execute( ctx, +1 );
   return cdr.bool_evaluate( ctx );
 }
 
-expression::type_t list_node::type() const
+RINGING_LLONG list_node::int_evaluate( proof_context &ctx ) const
 {
-  return cdr.type();
+  car.execute( ctx, +1 );
+  return cdr.int_evaluate( ctx );
+}
+
+string list_node::string_evaluate( proof_context &ctx ) const
+{
+  car.execute( ctx, +1 );
+  return cdr.string_evaluate( ctx );
+}
+
+
+expression::type_t list_node::type( proof_context &ctx ) const
+{
+  return cdr.type(ctx);
 }
 
 void nop_node::debug_print( ostream &os ) const
@@ -115,6 +134,11 @@ void reverse_node::execute( proof_context &ctx, int dir ) const
 void string_node::execute( proof_context &ctx, int dir ) const
 {
   ctx.output_string(str, echo);
+}
+
+expression string_node::evaluate( proof_context &ctx ) const
+{
+  return expression( new string_node(str) );
 }
 
 string string_node::string_evaluate( proof_context &ctx ) const
@@ -236,6 +260,12 @@ void symbol_node::execute( proof_context &ctx, int dir ) const
   ctx.execute_symbol(sym, dir);
 }
 
+expression symbol_node::evaluate( proof_context &ctx ) const
+{
+   expression e( ctx.lookup_symbol(sym) );
+   return e.evaluate(ctx);
+}
+
 bool symbol_node::bool_evaluate( proof_context &ctx ) const
 {
    expression e( ctx.lookup_symbol(sym) );
@@ -297,6 +327,18 @@ append_assign_node::apply( expression const& lhs, expression const& rhs,
   return expression( new string_node(res) );
 }
 
+void immediate_assign_node::debug_print( ostream &os ) const
+{
+  os << "(" << sym << " := ";
+  val.debug_print(os);
+  os << ")";
+}
+
+void immediate_assign_node::execute( proof_context& ctx, int dir ) const
+{
+  if (dir < 0) throw_no_backwards_execution(*this);
+  ctx.define_symbol( make_pair(sym, val.evaluate(ctx)) );
+}
 
 static void validate_regex( const music_details& desc, int bells )
 {
@@ -408,7 +450,7 @@ void not_node::debug_print( ostream &os ) const
 
 bool cmp_node::bool_evaluate( proof_context &ctx ) const
 {
-  expression::type_t lt = left.type(), rt = right.type();
+  expression::type_t lt = left.type(ctx), rt = right.type(ctx);
 
   if (lt == expression::boolean && rt == expression::boolean) {
     bool l = left.bool_evaluate(ctx), r = right.bool_evaluate(ctx);
@@ -466,10 +508,34 @@ void cmp_node::debug_print( ostream &os ) const
   right.debug_print(os);
 }
 
+void bells_node::debug_print( ostream &os ) const
+{
+  os << "bells";
+}
+
+RINGING_LLONG bells_node::int_evaluate( proof_context& ctx ) const
+{
+  return ctx.bells();
+}
+
 void integer_node::debug_print( ostream &os ) const
 {
   os << value;
 }
+
+RINGING_LLONG add_node::int_evaluate( proof_context& ctx ) const
+{
+  RINGING_LLONG l = left.int_evaluate(ctx), r = right.int_evaluate(ctx);
+  return l + sign * r;
+}
+
+void add_node::debug_print( ostream &os ) const
+{
+  left.debug_print(os);
+  os << (sign >= 0 ? " + " : " - ");
+  right.debug_print(os);
+}
+
 
 RINGING_LLONG increment_node::int_evaluate( proof_context& ctx ) const
 {
@@ -562,3 +628,49 @@ void load_method_node::execute( proof_context& ctx, int dir ) const
   else
     for_each( meth.rbegin(), meth.rend(), ctx.permute_and_prove() );
 }
+
+void call_node::debug_print( ostream& os ) const
+{
+  os << name << '(';
+  bool first = true;
+  for (vector<expression>::const_iterator i=args.begin(), e=args.end();
+       i != e; ++i) {
+    if (!first) os << ", ";
+    i->debug_print(os);
+    first = false;
+  }
+  os << ')';
+}
+
+void call_node::execute( proof_context& ctx, int dir ) const
+{
+  if (dir < 0) throw_no_backwards_execution(*this);
+  evaluate(ctx).execute(ctx, dir);
+}
+
+expression call_node::evaluate( proof_context &ctx ) const
+{
+  expression e( ctx.lookup_symbol(name) );
+  return e.call(ctx, args);
+}
+
+bool call_node::bool_evaluate( proof_context &ctx ) const
+{
+  return evaluate(ctx).bool_evaluate(ctx);
+}
+
+RINGING_LLONG call_node::int_evaluate( proof_context &ctx ) const
+{
+  return evaluate(ctx).int_evaluate(ctx);
+}
+
+string call_node::string_evaluate( proof_context &ctx ) const
+{
+  return evaluate(ctx).string_evaluate(ctx);
+}
+
+expression::type_t call_node::type( proof_context &ctx ) const
+{
+  return ctx.lookup_symbol(name).type(ctx);
+}
+

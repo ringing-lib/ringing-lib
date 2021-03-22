@@ -1,5 +1,5 @@
 // -*- C++ -*- statement.h - Code to execute different types of statement
-// Copyright (C) 2003, 2004, 2005, 2011, 2019, 2020
+// Copyright (C) 2003, 2004, 2005, 2011, 2019, 2020, 2021
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -40,7 +40,7 @@ public:
 
 private:
   virtual void execute( execution_context& );
-  virtual bool is_definition() const;
+  virtual bool is_definition() const { return true; }
 
   pair<const string, expression> defn;
 };
@@ -55,8 +55,24 @@ public:
 
 private:
   virtual void execute( execution_context& );
+  virtual bool is_definition() const { return true; }
 
   pair<const string, expression> defn;
+};
+
+// Immediate definition of a symbol, evaluating its value
+class immediate_defn_stmt : public statement::impl
+{
+public:
+  explicit immediate_defn_stmt( const string& name, const expression& val )
+    : name(name), val(val) {}
+
+private:
+  virtual void execute( execution_context& );
+  virtual bool is_definition() const { return true; }
+
+  const string name;
+  expression val;
 };
 
 

@@ -23,6 +23,7 @@
 #include <ringing/method_stream.h>
 #include <ringing/streamutils.h>
 
+#include <map>
 #include <iostream>
 
 #include "init_val.h"
@@ -37,7 +38,7 @@ struct arguments
   arguments( int argc, char const *argv[] );
 
   init_val<int,0> bells;
-
+  vector<string>  titles;
   vector<string>  libs;
 
 private:
@@ -50,8 +51,12 @@ void arguments::bind( arg_parser& p )
   p.add( new help_opt );
   p.add( new version_opt );
 
-  p.add( new integer_opt( 'b', "bells",  "The number of bells.", "BELLS", 
-                          bells ) );
+  p.add( new integer_opt
+           ( 'b', "bells",  "The number of bells.", "BELLS", bells ) );
+
+  p.add( new strings_opt
+           ( 't', "title",  "Find method with this full title.", "TITLE", 
+             titles ) );
 
   p.set_default( new strings_opt( '\0', "", "", "", libs ) );
 }
@@ -86,13 +91,51 @@ arguments::arguments( int argc, char const *argv[] )
     exit(1);
 }
 
-bool filter_method( const arguments& args, const method& meth ) {
+class filter {
+public:
+  filter( arguments const& args ) 
+    : args(args) 
+  {
+    for ( vector< string >::const_iterator 
+            i( args.titles.begin() ), e( args.titles.end() ); i != e; ++i )
+      titles[*i] = 0u;
+  }
+
+  bool test( method const& m ) const;
+  bool check() const;
+
+private:
+  const arguments& args;
+  mutable map<string, unsigned> titles;
+};
+
+bool filter::test( const method& meth ) const {
   if ( args.bells && meth.bells() != args.bells )
     return false;
+
+  map<string, unsigned>::iterator i = titles.find( meth.fullname() );
+  if ( i != titles.end() ) ++i->second;
+  else if ( titles.size() ) return false;
+
   return true;
 }
 
-void read_library( const arguments& args, const string &filename, 
+bool filter::check() const {
+  bool ok = true;
+  for (map<string, unsigned>::const_iterator 
+         i = titles.begin(), e = titles.end(); i != e; ++i)
+    if (i->second > 1u) {
+      cerr << "Method found multiple times: " << i->first << endl;
+      ok = false;
+    }
+    else if (i->second == 0u) {
+      cerr << "Method not found: " << i->first << endl;
+      ok = false;
+    }
+  return ok;
+}
+
+void read_library( const string &filename, const filter& f,
                    libout& out ) {
   try {
    library l( filename );
@@ -108,7 +151,7 @@ void read_library( const arguments& args, const string &filename,
     }
 
     for ( library::const_iterator i(l.begin()), e(l.end()); i != e; ++i )
-      if ( filter_method(args, i->meth()) )
+      if ( f.test( i->meth() ) )
         out.append(*i);
   }
   catch ( const exception &e ) {
@@ -129,8 +172,11 @@ int main(int argc, char const** argv) {
   library::setpath_from_env();
 
   method_stream out;
+  filter f(args);
   
   for ( vector< string >::const_iterator 
           i( args.libs.begin() ), e( args.libs.end() ); i != e; ++i )
-    read_library( args, *i, out );
+    read_library( *i, f, out );
+
+  return f.check() ? 0 : 1;
 }

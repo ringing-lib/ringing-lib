@@ -16,8 +16,6 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-// $Id$
-
 #ifndef GSIRIL_EXPR_BASE_INCLUDED
 #define GSIRIL_EXPR_BASE_INCLUDED
 
@@ -27,11 +25,9 @@
 #pragma interface
 #endif
 
-#if RINGING_HAVE_OLD_IOSTREAMS
-#include <ostream.h>
-#else
+#include <vector>
 #include <iosfwd>
-#endif
+
 #include <ringing/pointers.h>
 
 RINGING_USING_NAMESPACE
@@ -68,6 +64,7 @@ public:
   enum type_t {
     boolean,
     integer,
+    transp,
     no_type
   };
 
@@ -79,23 +76,28 @@ public:
     virtual bool bool_evaluate( proof_context &ctx ) const; // throws
     virtual RINGING_LLONG int_evaluate( proof_context &ctx ) const; // throws
     virtual string string_evaluate( proof_context &ctx ) const; // throws
+    virtual expression evaluate( proof_context &ctx ) const; // throws
+    virtual expression call( proof_context& ctx, 
+                             vector<expression> const& args ) const; // throws
     virtual bool isnop() const { return false; }
-    virtual type_t type() const { return no_type; }
+    virtual type_t type( proof_context &ctx ) const { return no_type; }
   };
 
   class bnode : public node {
   public:
     virtual void execute( proof_context &ctx, int dir ) const;
+    virtual expression evaluate( proof_context &ctx ) const;
     virtual bool bool_evaluate( proof_context &ctx ) const = 0;
-    virtual type_t type() const { return boolean; }
+    virtual type_t type( proof_context &ctx ) const { return boolean; }
   };
 
   class inode : public node {
   public:
     virtual void execute( proof_context &ctx, int dir ) const;
+    virtual expression evaluate( proof_context &ctx ) const;
     virtual RINGING_LLONG int_evaluate( proof_context &ctx ) const = 0;
     virtual string string_evaluate( proof_context &ctx ) const;
-    virtual type_t type() const { return integer; }
+    virtual type_t type( proof_context &ctx ) const { return integer; }
   };
 
   // Create an expression handle
@@ -103,21 +105,23 @@ public:
 
   bool isnull() const { return !impl; }
   bool isnop() const { return !impl || impl->isnop(); }
-  type_t type() const { return impl ? impl->type() : no_type; }
-
+  type_t type( proof_context &ctx ) const 
+    { return impl ? impl->type(ctx) : no_type; }
 
   void debug_print( ostream &os ) const    { impl->debug_print(os); }
 
   // execute an expression, possibly adding to the current proof
   void execute( proof_context &ctx, int dir ) const;
 
-  // Evaluate a const expression in boolean or integer context.
+  // Evaluate a const expression in boolean, integer or stringcontext.
   // If evaluation requires execution of an expression, a silent clone
   // of the proof_context is made and discarded at the end of the evaluation.
+  expression evaluate( proof_context& ctx ) const;
   bool bool_evaluate( proof_context& ctx ) const;
   RINGING_LLONG int_evaluate( proof_context& ctx ) const;
   string string_evaluate( proof_context& ctx ) const;
 
+  expression call( proof_context& ctx, vector<expression> const& args ) const;
 
   RINGING_FAKE_DEFAULT_CONSTRUCTOR(expression);
 

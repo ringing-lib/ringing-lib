@@ -63,6 +63,8 @@ namespace tok_types
     close_brace = '}',
     colon       = ':',
     comma       = ',',
+    plus        = '+',
+    minus       = '-',
     times       = '*',
     assignment  = '=',
     new_line    = '\n',
@@ -77,6 +79,7 @@ namespace tok_types
     transp_lit,
     pn_lit,
     def_assign,    /* ?= */
+    imm_assign,    /* := */
     append_assign, /* .= */
     logic_and,     /* && */
     logic_or,      /* || */
@@ -107,6 +110,7 @@ private:
       else if ( *j == '.' || *j == '-' || isalnum(*j) ) ++j;
       else break;
     }
+    if ( j - i < 2 ) return failed;
     tok.assign(i, j); tok.type( tok_types::pn_lit ); i = j;
     return done;
   }
@@ -142,6 +146,7 @@ public:
       q( "'",   tok_types::transp_lit, string_token::one_line ), 
       qq( "\"", tok_types::string_lit, string_token::one_line ), 
       sym( "&" ), asym( "+" ), defass( "?=", tok_types::def_assign ),
+      immass( ":=", tok_types::imm_assign ),
       appass( ".=", tok_types::append_assign ),
       land( "&&", tok_types::logic_and ), lor( "||", tok_types::logic_or ),
       cmpeq( "==", tok_types::equals ), cmpne( "!=", tok_types::not_equals ),
@@ -157,7 +162,8 @@ public:
     // The pattern syntax conflicts with MicroSiril comments
     if ( !args.msiril_syntax ) add_qtype(&r);
     add_qtype(&q);      add_qtype(&qq);
-    add_qtype(&defass); add_qtype(&appass); 
+    add_qtype(&defass); add_qtype(&immass);
+    add_qtype(&appass); 
     add_qtype(&land);   add_qtype(&lor);
     add_qtype(&cmpeq);  add_qtype(&cmpne);
     add_qtype(&cmpge);  add_qtype(&cmple);
@@ -184,7 +190,7 @@ public:
     case name: case num_lit: case open_paren: case close_paren:
     case comma: case times: case assignment: case new_line: case semicolon:
     case comment: case string_lit: case transp_lit: case pn_lit: 
-    case def_assign: case append_assign: case reverse:
+    case def_assign: case imm_assign: case append_assign: case reverse:
       return;
 
     case ctrl_z:
@@ -192,6 +198,7 @@ public:
       if ( args.msiril_syntax ) return;
       break;
 
+    case plus: case minus: 
     case regex_lit: case open_brace: case close_brace: case colon:
     case logic_and: case logic_or: case equals: case not_equals: 
     case less: case greater: case less_eq: case greater_eq:
@@ -215,7 +222,8 @@ private:
   line_comment_impl c;
   string_token r, q, qq;
   pn_impl sym, asym;
-  basic_token defass, appass, land, lor, cmpeq, cmpne, cmpge, cmple, inc, dec;
+  basic_token defass, immass, appass, land, lor, cmpeq, cmpne, cmpge, cmple, 
+              inc, dec;
 };
 
 
@@ -239,6 +247,10 @@ private:
 
   expression make_expr( vector< token >::const_iterator first, 
 			vector< token >::const_iterator last ) const;
+
+  vector<expression> 
+  make_args( vector< token >::const_iterator first, 
+             vector< token >::const_iterator last ) const;
 
   bool is_enclosed( vector< token >::const_iterator first, 
 		    vector< token >::const_iterator last,
@@ -385,6 +397,7 @@ statement msparser::parse()
        && cmd[0] == "prove" 
        // Make a half-hearted attempt to support a variable called 'prove':
        && cmd[1].type() != tok_types::assignment
+       && cmd[1].type() != tok_types::imm_assign 
        && cmd[1].type() != tok_types::def_assign )
     return statement
       ( new prove_stmt( make_expr( cmd.begin() + 1, cmd.end() ) ) );
@@ -415,6 +428,13 @@ statement msparser::parse()
         ( cmd[0], cmd.size() == 2 
 	            ? expression( new nop_node )
 	            : make_expr( cmd.begin() + 2, cmd.end() ) ) );
+
+  // Default definition
+  if ( cmd.size() > 2 && cmd[0].type() == tok_types::name
+       && cmd[1].type() == tok_types::imm_assign )
+    return statement
+      ( new immediate_defn_stmt
+        ( cmd[0], make_expr( cmd.begin() + 2, cmd.end() ) ) );
 
   throw runtime_error( "Unknown command: " + cmd[0] + " ..." );
 }
@@ -587,6 +607,7 @@ msparser::make_expr( vector< token >::const_iterator first,
   vector<tok_types::enum_t> assops;
   assops.push_back( tok_types::assignment );
   assops.push_back( tok_types::append_assign );
+  assops.push_back( tok_types::imm_assign );
   if ( find_one_of( first, last, assops, split ) )
     {
       if ( first == split )
@@ -608,12 +629,13 @@ msparser::make_expr( vector< token >::const_iterator first,
             ( new assign_node( *first, make_expr( split+1, last ) ) );
       }
       else {
-        if ( split+1 == last)
-          throw runtime_error
-            ( "Binary operator \".=\" needs second argument" );
-        else
+        check_bin_op( first, split, last, ".=" );
+        if ( split->type() == tok_types::append_assign )
           return expression
             ( new append_assign_node( *first, make_expr( split+1, last ) ) );
+        else
+          return expression
+            ( new immediate_assign_node( *first, make_expr( split+1, last ) ) );
       }
     }
 
@@ -664,6 +686,23 @@ msparser::make_expr( vector< token >::const_iterator first,
     check_bin_op( first, split, last, cmp_node::symbol(cmp) );
     return expression( new cmp_node( make_expr( first, split ),
                                      make_expr( split+1, last ), cmp ) );
+  }
+
+  // Addition operators are next
+ 
+  vector<tok_types::enum_t> addops;
+  addops.push_back( tok_types::plus );
+  addops.push_back( tok_types::minus );
+  if ( find_one_of( first, last, addops, split ) ) {
+    if ( split->type() == tok_types::plus ) {
+      check_bin_op( first, split, last, "+" );
+      return expression( new add_node( make_expr( first, split ),
+                                       make_expr( split+1, last ), +1 ) );
+    } else {
+      check_bin_op( first, split, last, "-" );
+      return expression( new add_node( make_expr( first, split ),
+                                       make_expr( split+1, last ), -1 ) );
+    }
   }
 
   // TODO: Support a integer expression in a repeat block
@@ -718,6 +757,12 @@ msparser::make_expr( vector< token >::const_iterator first,
     return expression( new not_node( make_expr( first+1, last ) ) );
   }
 
+  // Is it a function call?
+  if ( last - first >= 3 && first->type() == tok_types::name && 
+       is_enclosed( first+1, last, tok_types::open_paren, 
+                    tok_types::close_paren, "parentheses" ) )
+    return expression( new call_node(*first, make_args(first+2, last-1) ) );
+
   // Everything left is a literal of some sort
   if ( last - first != 1 )
     throw runtime_error( make_string() << "Parse error before " << *first  );
@@ -735,6 +780,8 @@ msparser::make_expr( vector< token >::const_iterator first,
 	return expression( new boolean_node(true) );
       else if ( *first == "false" )
 	return expression( new boolean_node(false) );
+      else if ( *first == "bells" )
+	return expression( new bells_node() );
       else
 	return expression( new symbol_node( *first ) );
 
@@ -754,6 +801,25 @@ msparser::make_expr( vector< token >::const_iterator first,
       throw runtime_error( "Unknown token in input" );
       return expression( NULL ); // To keep MSVC 5 happy
   }
+}
+
+vector<expression>
+msparser::make_args( vector< token >::const_iterator first, 
+		     vector< token >::const_iterator last ) const
+{
+  vector<expression> args;
+  if ( first != last ) {
+    while (true) {
+      vector< token >::const_iterator split = last;
+      find( first, last, tok_types::comma, split );
+      if ( first == split )
+        throw runtime_error("Empty argument in function call");
+      args.push_back( make_expr( first, split ) );
+      if ( split == last ) break;
+      first = split + 1;
+    }
+  }
+  return args;
 }
 
 //////////////////////////////////////////////////////////

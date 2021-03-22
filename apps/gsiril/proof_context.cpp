@@ -1,6 +1,6 @@
 // proof_context.cpp - Environment to evaluate expressions
 // Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2011, 2012, 2014,
-// 2019, 2020 Richard Smith <richard@ex-parrot.com>
+// 2019, 2020, 2021 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -153,6 +153,11 @@ proof_context::permute_and_prove()
 bool proof_context::isrounds() const 
 {
   return r == ectx.rounds() && p->count_row(r) == ectx.extents(); 
+}
+
+int proof_context::bells() const 
+{
+  return ectx.bells();
 }
 
 void proof_context::execute_symbol( const string& sym, int dir )

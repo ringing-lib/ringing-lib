@@ -53,8 +53,11 @@ public:
 protected:
   virtual void debug_print( ostream &os ) const;
   virtual void execute( proof_context &ctx, int dir ) const;
+  virtual expression evaluate( proof_context &ctx ) const;
   virtual bool bool_evaluate( proof_context &ctx ) const;
-  virtual expression::type_t type() const;
+  virtual RINGING_LLONG int_evaluate( proof_context &ctx ) const;
+  virtual string string_evaluate( proof_context &ctx ) const;
+  virtual expression::type_t type( proof_context &ctx ) const;
 
 private:  
   expression car, cdr;
@@ -103,6 +106,7 @@ public:
 protected:
   virtual void debug_print( ostream &os ) const;
   virtual void execute( proof_context &ctx, int dir ) const;
+  virtual expression evaluate( proof_context &ctx ) const;
   virtual string string_evaluate( proof_context &ctx ) const;
 
 private:
@@ -127,6 +131,7 @@ private:
 
 class transp_node : public expression::node {
 public:
+  explicit transp_node( row const& transp ) : transp(transp) {}
   transp_node( int bells, const string &r );
 
 protected:
@@ -145,6 +150,7 @@ public:
 protected:
   virtual void debug_print( ostream &os ) const;
   virtual void execute( proof_context &ctx, int dir ) const;
+  virtual expression evaluate( proof_context &ctx ) const;
   virtual bool bool_evaluate( proof_context &ctx ) const;
   virtual RINGING_LLONG int_evaluate( proof_context &ctx ) const;
   virtual string string_evaluate( proof_context &ctx ) const;
@@ -180,6 +186,20 @@ private:
   expression apply( expression const& lhs, expression const& rhs,
                     proof_context& ctx ) const;
 
+  const string sym;
+  expression val;
+};
+
+class immediate_assign_node : public expression::node {
+public:
+  immediate_assign_node( const string& sym, const expression& val )
+    : sym(sym), val(val) {}
+
+protected:
+  virtual void debug_print( ostream &os ) const;
+  virtual void execute( proof_context &ctx, int dir ) const;
+
+private:
   const string sym;
   expression val;
 };
@@ -276,6 +296,15 @@ private:
   cmp_t cmp;
 };
 
+class bells_node : public expression::inode {
+public:
+  bells_node() {}
+
+protected:
+  virtual void debug_print( ostream &os ) const;
+  virtual RINGING_LLONG int_evaluate( proof_context &ctx ) const;
+};
+
 class integer_node : public expression::inode {
 public:
   integer_node( RINGING_LLONG value ) : value(value) {}
@@ -287,6 +316,20 @@ protected:
 
 private:
   RINGING_LLONG value;
+};
+
+class add_node : public expression::inode {
+public:
+  add_node( expression const& left, expression const& right, int sign = +1 )
+    : left(left), right(right), sign(sign) {}
+
+protected:
+  virtual void debug_print( ostream &os ) const;
+  virtual RINGING_LLONG int_evaluate( proof_context &ctx ) const;
+
+private:
+  expression left, right;
+  int sign;
 };
 
 // TODO: Make this a generic op_assign_node
@@ -348,6 +391,25 @@ private:
   // If meth is sill empty, we'll throw an exception.
   bool read;
   method meth;
+};
+
+class call_node : public expression::node {
+public:
+  call_node( string const& name, vector<expression> const& args )
+    : name(name), args(args) {}
+
+protected:
+  virtual void debug_print( ostream &os ) const;
+  virtual void execute( proof_context &ctx, int dir ) const;
+  virtual expression evaluate( proof_context &ctx ) const;
+  virtual bool bool_evaluate( proof_context &ctx ) const;
+  virtual RINGING_LLONG int_evaluate( proof_context &ctx ) const;
+  virtual string string_evaluate( proof_context &ctx ) const;
+  virtual expression::type_t type( proof_context &ctx ) const;
+
+private:
+  string name;
+  vector<expression> args;
 };
 
 #endif // GSIRIL_EXPRESSION_INCLUDED
