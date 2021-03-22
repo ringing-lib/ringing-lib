@@ -1,5 +1,5 @@
 // row.cpp - Classes for row and changes
-// Copyright (C) 2001, 2008, 2009, 2010, 2017, 2020
+// Copyright (C) 2001, 2008, 2009, 2010, 2017, 2020, 2021
 // Martin Bright <martin@boojum.org.uk> and
 // Richard Smith <richard@ex-parrot.com>
 
@@ -195,7 +195,7 @@ row& operator*=(row& r, const change& c)
   if (c.n != 0 && !r.data.empty())
     for ( vector<bell>::const_iterator s = c.swaps.begin(), e = c.swaps.end(); 
           s != e && *s < (r.bells() - 1); ++s )
-      RINGING_PREFIX_STD swap( r.data[*s], r.data[*s + 1] );
+      r.swap( *s, *s + 1 );
 
   return r;
 }

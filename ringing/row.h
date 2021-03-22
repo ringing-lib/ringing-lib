@@ -1,5 +1,5 @@
 // -*- C++ -*- row.h - Classes for rows and changes
-// Copyright (C) 2001, 2007, 2008, 2009, 2010, 2017, 2020
+// Copyright (C) 2001, 2007, 2008, 2009, 2010, 2017, 2020, 2021
 // Martin Bright <martin@boojum.org.uk> and
 // Richard Smith <richard@ex-parrot.com>
 
@@ -135,6 +135,7 @@ public:
   size_t hash() const;
 
   int find(bell const& b) const;// Finds the bell
+  void swap(int i, int j) { RINGING_PREFIX_STD swap( data[i], data[j] ); }
   
   struct invalid : public invalid_argument {
     invalid();
