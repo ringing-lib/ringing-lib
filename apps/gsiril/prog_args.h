@@ -87,17 +87,19 @@ struct arguments
   bell_fmt             bellfmt;
 
   vector<string>       libnames;
-  methodset            methset;
 
   arguments( int argc, char** argv );
 
+  methodset const&     methset() const;
+
 private:
+  mutable shared_pointer<methodset> the_methset;
+
   void set_msiril_compatible();
   void set_sirilic_compatible();
 
   void bind( arg_parser& p );
   bool validate( arg_parser& p );
-  bool load_libraries( arg_parser& p );
 };
 
 #endif // GSIRIL_ARGS_INCLUDED

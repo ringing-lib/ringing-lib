@@ -369,7 +369,7 @@ void proof_context::increment_node_count() const
   
 method proof_context::load_method( const string& title ) const
 {
-  library_entry le = ectx.get_args().methset.find(title);
+  library_entry le = ectx.get_args().methset().find(title);
   if (le.null())
     throw runtime_error( "Unable to load method: " + title );
   return le.meth();

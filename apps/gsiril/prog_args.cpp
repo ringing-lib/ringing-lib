@@ -331,33 +331,29 @@ bool arguments::validate( arg_parser& ap )
   }
 #endif
 
-  if (libnames.size() && !load_libraries(ap))
-    return false;
-
   return true;
 }
 
-
-bool arguments::load_libraries( arg_parser& ap )
+methodset const& arguments::methset() const
 {
-  // Register mslib last, as various things can accidentally match it
-  cclib::registerlib();
-  xmllib::registerlib();
-  mslib::registerlib();
+  if ( libnames.size() && !the_methset ) {
+    // Register mslib last, as various things can accidentally match it
+    cclib::registerlib();
+    xmllib::registerlib();
+    mslib::registerlib();
 
-  library::setpath_from_env();
+    library::setpath_from_env();
 
-  for ( vector<string>::const_iterator i=libnames.begin(), e=libnames.end();
-          i != e; ++i )
-    try {
-      methset.import_library( *i );
-    }
-    catch ( const exception &e ) {
-      ap.error( make_string() << "Unable to read library: " << *i 
-                              << ": " << e.what() );
-      return false;
-    }
+    the_methset.reset( new methodset );
 
-  return true;
+    for ( vector<string>::const_iterator 
+            i = libnames.begin(), e = libnames.end(); i != e; ++i )
+      the_methset->import_library( *i );
+  }
+
+  if ( !the_methset )
+    throw runtime_error( "No method library available" );
+
+  return *the_methset;
 }
 
