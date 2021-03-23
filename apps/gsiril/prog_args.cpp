@@ -302,9 +302,9 @@ bool arguments::validate( arg_parser& ap )
       return false;
     }
 
-  if ( !expression.empty() && !filename.empty() )
+  if ( !expression.empty() + !filename.empty() + no_read > 1 )
     {
-      ap.error( "Only one of -e and -f may be used" );
+      ap.error( "Only one of -e, -f and -N may be used" );
       return false;
     }
 
