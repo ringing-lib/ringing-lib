@@ -413,28 +413,20 @@ statement msparser::parse()
 
   // Definition
   if ( cmd.size() > 1 && cmd[0].type() == tok_types::name
-       && cmd[1].type() == tok_types::assignment )
-    return statement
-      ( new definition_stmt
-        ( cmd[0], cmd.size() == 2 
-	            ? expression( new nop_node )
-	            : make_expr( cmd.begin() + 2, cmd.end() ) ) );
-
-  // Default definition
-  if ( cmd.size() > 1 && cmd[0].type() == tok_types::name
-       && cmd[1].type() == tok_types::def_assign )
-    return statement
-      ( new default_defn_stmt
-        ( cmd[0], cmd.size() == 2 
-	            ? expression( new nop_node )
-	            : make_expr( cmd.begin() + 2, cmd.end() ) ) );
-
-  // Default definition
-  if ( cmd.size() > 2 && cmd[0].type() == tok_types::name
-       && cmd[1].type() == tok_types::imm_assign )
-    return statement
-      ( new immediate_defn_stmt
-        ( cmd[0], make_expr( cmd.begin() + 2, cmd.end() ) ) );
+       && ( cmd[1].type() == tok_types::assignment ||
+            cmd[1].type() == tok_types::def_assign ||
+            cmd[1].type() == tok_types::imm_assign ) ) {
+    expression val( cmd.size() == 2 ? expression( new nop_node )
+                    : make_expr( cmd.begin() + 2, cmd.end() ) );
+    switch ( cmd[1].type() ) {
+      case tok_types::assignment:
+        return statement( new definition_stmt( cmd[0], val ) );
+      case tok_types::def_assign:
+        return statement( new default_defn_stmt( cmd[0], val ) );
+      case tok_types::imm_assign:
+        return statement( new immediate_defn_stmt( cmd[0], val ) );
+    }
+  }
 
   throw runtime_error( "Unknown command: " + cmd[0] + " ..." );
 }
