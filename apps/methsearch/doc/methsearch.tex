@@ -1604,7 +1604,7 @@ methsearch -b8 -G1 --random --loop --timeout=1 --limit=23
 \section{Miscellaneous options}\label{misc_opt}
 
 \begin{tabularx}{\textwidth}{llX}
-\texttt{-?}&\texttt{--help}&Print an help message and exit\\
+\texttt{-?}&\texttt{--help}&Print a help message and exit\\
 \texttt{-V}&\texttt{--version}&Print version information and exit\\
 \texttt{-I}&\texttt{--filter}&Run in filter mode on standard input\\
 &\texttt{--filter-lib}&Run in filter mode on specified libraries\\
@@ -2643,7 +2643,24 @@ functionality.
 
 By default \methsearch\ only finds methods that are true within a lead.
 The \verb+-F+ option\oid{F}{falseness} provides a way of changing this 
-behaviour.  The basic options governing whether the method should have 
+behaviour.  In fact, this option is really a collection of related
+sub-options, all pertaining to falseness, with the the first character after
+the `\verb+F+' deciding which falseness option is being requested.
+
+\begin{center}
+\begin{tabular}{l@{\qquad}l@{\qquad}l}
+Sub-option&  Summary& Section\\\hline
+\verb+c+, \verb+l+, \verb+h+, \verb+n+, \verb+x+&
+  Basic falseness& \sref{basic_false}\\
+\verb+N+& Multi-extent methods& \sref{multiextent}\\
+\verb+:+, \verb+CPS+& Falseness groups& \sref{falserest}\\
+\verb+e+, \verb-e+-& Extent viability& \sref{extent}\\
+\verb+r+, \verb+s+& Avoiding specific rows& \sref{avoidrow}\\
+\verb+P+& Part end groups& \sref{pends}\\
+\end{tabular}
+\end{center}
+
+The basic options governing whether the method should have 
 a true plain course, true leads, etc., are documented in \sref{basic_false}.
 Analysis of false course heads is discussed in \sref{fch}, and ways of 
 checking that an extent is possible is covered in \sref{extent}.
@@ -2655,7 +2672,7 @@ The final two sections (\sref{avoidrow}--\ref{pends}) discuss using
 
 \methsearch\ supports five basic levels of falseness checking wich 
 can be specified by a single-letter argument to the \verb+-F+ option.  
-Longer, more descriptive, synonyms are also provided.
+Longer, more descriptive, synonyms are also provided.  
 
 \begin{tabular}{lll}
 \verb+-Fc+& \verb+-Fcourse+&      Require a true plain course\oidF{c}{course}\\
@@ -2685,9 +2702,35 @@ other is guaranteed by symmetry.)  With \verb+-Fh+, the half lead head row must
 either be distinct from all rows in the first half lead, or the same as the 
 half lead end row.
 
+Each level implies all the lower levels, and if several of these options are
+used together, later ones will override the earlier ones.  The sole exception
+is that \verb+-Fx+ may be in conjunction with any of the other, as explained
+in \sref{multiextent}.
+
 \methsearch\ contains a number of optimisations to speed up proving falseness
 in the most common cases.  For example, it knows that in a palindromic 
 plain method, there is no possibility of internal falseness.
+
+\subsection{Multi-extent methods}\label{multiextent}
+
+The \verb+-FN+ option\oidF{N}{extents} is used to say how many times a row is
+allowed to appear within the half-lead, lead or course (as specified with a
+\verb+-Fh+, \verb+-Fl+ or \verb+-Fc+ option).  By default methods are proved
+within a single extent, i.e.\ with \verb+-FN=1+.
+Treble-dodging minimus methods are an example of when \verb+-FN=2+ is useful
+in conjunction with \verb+-Fc+ to require the plain course is a true double
+extent.\footnote{In fact, \texttt{-FN=2 -Fc} is unnecessary when searching for
+methods with a palindromic three-lead course, as the symmetry guarantees the
+course is a true double extent.  However it is useful in searches like
+\texttt{-b4 -G1 -Fx -Fc -FN=2} to find non-palindromic methods whose plain
+course is a true double extent.}\index{example!minimus, treble-dodging}
+
+When rows are allowed to occur multiple times, it can make sense to use
+\verb+-Fx+ as well as another option like \verb+-Fc+, because a repeated
+change does not imply the method is false, when proved as a double extent.
+Guilsfield Treble Bob Minimus\index{Guilsfield Treble Bob Minimus}, whose
+place notation is \verb+&---14---34,12+ is an example of this.
+
 
 \section{False course heads}\label{fch}
 \subsection{A digression — the theory of falseness}%
