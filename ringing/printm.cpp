@@ -109,7 +109,7 @@ bool printmethod::needrule(int i, rule& r)
     else if (j->repeat)
       matches = (i+2) % j->repeat == j->offset % j->repeat;
     else
-      matches = (i+2) % m->length() == j->offset;
+      matches = (i+2) % m->length() == j->offset % m->length();
     if (matches) {
       r = *j;
       return true;
@@ -158,8 +158,9 @@ void printmethod::print(printpage& pp)
       // Print the first row, which is the same as the last row of the
       // previous column.
       pr << b[i]; 
-      if (needrule(total_row_count, the_rule))
-        pr.rule(the_rule.style, the_rule.flags);
+//      if (needrule(total_row_count, the_rule))
+//        pr.rule(the_rule.style, the_rule.flags);
+
       // Turn on number-missing if necessary
       if(number_mode == miss_column) {
         opt.flags |= printrow::options::miss_numbers;
