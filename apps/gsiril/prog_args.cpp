@@ -157,8 +157,9 @@ void arguments::bind( arg_parser& p )
   // NB __first__ is an alias for the first symbol
   p.add( new string_opt
 	 ( 'P', "prove",
-	   "Proves a particular symbol (or the first if none specified)",
-	   "SYMBOL", prove_symbol, "__first__" ) );
+	   "Proves a particular symbol or expression (or the first defined "
+           "symbol if no argument is given)", 
+           "EXPR", prove_symbol, "__first__" ) );
 
   p.add( new strings_opt
 	 ( 'D', "define",

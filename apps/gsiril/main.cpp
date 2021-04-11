@@ -150,8 +150,17 @@ void prove_first_symbol( execution_context& e, const arguments& args )
            || !e.done_one_proof() && e.defined("__first__") ) {
         if ( e.verbose() )
           cerr << "Proving " << args.prove_symbol << std::endl;
-        statement s( new prove_stmt( 
-          expression( new symbol_node(args.prove_symbol) ) ) );
+
+        RINGING_ISTRINGSTREAM in("prove " + args.prove_symbol);
+
+        shared_pointer<parser> p( make_default_parser(in, e) );
+        statement s( p->parse() );
+
+        if (!p->parse().eof()) { 
+          cerr << "Unexpected content at the end of -P argument\n";
+          exit(3);
+        }
+
         s.execute(e);
       }
     } 
