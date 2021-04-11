@@ -194,5 +194,23 @@ private:
   bool substitute;
 };
 
+class if_stmt : public statement::impl
+{
+public:
+  enum type_t {
+    push_if, chain_else_if, chain_else, pop_if
+  };
+
+  explicit if_stmt( type_t type, const expression& expr = expression() )
+    : type(type), expr(expr) {}
+
+private:
+  virtual void execute( execution_context& );
+  virtual void skip( execution_context& ex ) { execute(ex); }
+
+  type_t type;
+  expression expr;
+};
+
 
 #endif // GSIRIL_STATEMENT_INCLUDED

@@ -163,19 +163,22 @@ int proof_context::bells() const
 
 void proof_context::execute_symbol( const string& sym, int dir )
 {
-  if ( ectx.get_args().show_lead_heads && output && sym != "everyrow" ) {
-    if ( ectx.get_args().methods.size() ) {
-      for ( vector<string>::const_iterator i = ectx.get_args().methods.begin(), 
-                                           e = ectx.get_args().methods.end();
-            i != e; ++i )
-        if ( sym == *i ) {
-          *output << r;
-          if ( ectx.get_args().methods.size() > 1 )
-            *output << "\t" << sym;
-          *output << endl;
-        }
-    } else
-      *output << r << "\t" << sym << endl;
+  if ( output ) {
+    bool trace = ectx.get_args().trace_all_symbols && sym != "everyrow";
+    bool inc_sym = ectx.get_args().trace_all_symbols;
+
+    if ( !trace ) {
+      vector<string> const& syms = ectx.get_args().trace_symbols;
+      vector<string>::const_iterator i = syms.begin(), e = syms.end();
+      trace = find( i, e, sym ) != e;
+      inc_sym = syms.size() > 1;
+    }
+
+    if ( trace ) {
+      *output << r;
+      if ( inc_sym ) *output << "\t" << sym;
+      *output << endl;
+    }
   }
 
   expression e( lookup_symbol(sym) );

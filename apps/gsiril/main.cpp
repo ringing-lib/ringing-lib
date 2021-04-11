@@ -291,8 +291,8 @@ int main( int argc, char *argv[] )
 
       if ( args.filter )
         filter( e, args );
-      else
-        if ( !run( e, args ) )
+      else if ( !run( e, args ) )
+        if ( !args.determine_bells )
           exit(1);
     }
   catch ( const exception &ex )

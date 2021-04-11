@@ -1,5 +1,5 @@
 // execution_context.cpp - Global environment
-// Copyright (C) 2002, 2003, 2004, 2007, 2011, 2012, 2019, 2020
+// Copyright (C) 2002, 2003, 2004, 2007, 2011, 2012, 2019, 2020, 2021
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -25,6 +25,7 @@
                        // of bug in MSVC 6.0
 #include "expression.h"
 #include "execution_context.h"
+#include "proof_context.h"
 
 #include <ringing/streamutils.h>
 
@@ -136,3 +137,43 @@ void execution_context::increment_node_count() const
     throw runtime_error("Node count exceeded");
 }
 
+bool execution_context::evaluate_bool_const( expression const& cond ) const {
+  proof_context p(*this);
+  p.set_silent(true);
+  return cond.bool_evaluate(p);
+}
+
+void execution_context::push_if(expression const& cond) {
+  // The if_stack contains 1 if we're executing the current branch,
+  // 0 if we've not executed any branch yet, and 2 if we've executed a previous
+  // branch.
+  if_stack.push_back( evaluate_bool_const(cond) ? 1 : 0 );
+}
+
+void execution_context::chain_else_if(expression const& cond) {
+  if (if_stack.empty())
+    throw runtime_error("Unexpected elseif statement");
+  if (if_stack.back() == 0)
+    if_stack.back() = evaluate_bool_const(cond) ? 1 : 0;
+  else 
+    if_stack.back() = 2;
+}
+
+void execution_context::chain_else() {
+  if (if_stack.empty())
+    throw runtime_error("Unexpected else statement");
+  if (if_stack.back() == 0)
+    if_stack.back() = 1;
+  else 
+    if_stack.back() = 2;
+}
+
+void execution_context::pop_if() {
+  if (if_stack.empty())
+    throw runtime_error("Unexpected endif statement");
+  if_stack.pop_back();
+}
+
+bool execution_context::is_executing() const {
+  return if_stack.empty() || if_stack.back() == 1;
+}

@@ -44,12 +44,13 @@ public:
   public:
     virtual ~impl() {}
     virtual void execute( execution_context& ) = 0;
+    virtual void skip( execution_context& ) {}
     virtual bool is_definition() const { return false; }
   };
 
   statement( impl* pimpl = 0 ) : pimpl(pimpl) {}
 
-  void execute( execution_context& e ) { pimpl->execute(e); }
+  void execute( execution_context& e );
   bool eof() const { return !pimpl; } 
   bool is_definition() const { return pimpl && pimpl->is_definition(); }
 
@@ -101,7 +102,7 @@ public:
   };
 
   // Create an expression handle
-  explicit expression( node* impl ) : impl(impl) {}
+  explicit expression( node* impl = 0 ) : impl(impl) {}
 
   bool isnull() const { return !impl; }
   bool isnop() const { return !impl || impl->isnop(); }

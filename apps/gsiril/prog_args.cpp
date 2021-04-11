@@ -185,7 +185,7 @@ void arguments::bind( arg_parser& p )
 
   p.add( new string_opt
          ( 'e', "expression",
-           "Execute EXPR", "EXPR", 
+           "Execute the statements STMTS", "STMTS", 
            expression ) );
 
   p.add( new string_opt
@@ -256,15 +256,14 @@ void arguments::bind( arg_parser& p )
            "SYM", payload_symbol ) );
 
   p.add( new boolean_opt
-         ( '\0', "show-lead-heads", 
-           "List the lead heads for the specified methods",
-           show_lead_heads ) );
+         ( '\0', "trace-all-symbols", 
+           "Print the row when any symbol is executed",
+           trace_all_symbols ) );
 
   p.add( new strings_opt
-	 ( '\0', "methods",
-	   "Mark the specified symbols as methods",
-	   "SYM,SYM,...",
-	   methods ) );
+	 ( '\0', "trace-symbol",
+	   "Print the row when SYM is executed", "SYM",
+	   trace_symbols ) );
 
 #if RINGING_USE_TERMCAP
   p.add( new string_opt
@@ -331,6 +330,9 @@ bool arguments::validate( arg_parser& ap )
     return false;
   }
 #endif
+
+  if ( determine_bells )
+    quiet = 2;
 
   return true;
 }

@@ -91,14 +91,10 @@ void prove_stmt::execute( execution_context& e )
   if (e.get_args().prove_one && e.done_one_proof())
     throw runtime_error( "Already done proof" );
 
-  int const quiet = e.get_args().quiet;
-
   e.set_done_proof();
   
-  if (e.get_args().determine_bells) {
+  if (e.get_args().determine_bells)
     cout << e.bells() << " bells" << endl;
-    return;
-  }
 
   proof_context p(e);
 
@@ -109,14 +105,12 @@ void prove_stmt::execute( execution_context& e )
   } 
   catch( const script_exception& ex ) {
     if ( ex.t == script_exception::do_abort ) {
-      if ( e.get_args().quiet ) p.set_silent(true);
       p.execute_final_symbol( "abort" );
       e.set_failure();
     }
     return;
   }
    
-  if ( e.get_args().quiet ) p.set_silent(true);
   switch ( p.state() ) {
   case proof_context::rounds: 
     if ( e.expected_length().first && 
@@ -124,8 +118,10 @@ void prove_stmt::execute( execution_context& e )
       p.execute_final_symbol("tooshort");
       e.set_failure();
     }
-    else
+    else {
+      if ( e.get_args().quiet ) p.set_silent(true);
       p.execute_final_symbol("true"); 
+    }
     break;
   case proof_context::notround:
     p.execute_final_symbol("notround");
@@ -183,11 +179,12 @@ void rounds_stmt::execute( execution_context& e )
 
 void row_mask_stmt::execute( execution_context& e )
 {
-  if (!e.get_args().everyrow_only)
+  if (!e.get_args().everyrow_only) {
     e.row_mask( mask );
 
-  if ( e.verbose() )
-    e.output() << "Set row mask" << endl;
+    if ( e.verbose() )
+      e.output() << "Set row mask" << endl;
+  }
 }
 
 void import_stmt::execute( execution_context& e )
@@ -239,7 +236,10 @@ void import_stmt::execute( execution_context& e )
 
 void echo_stmt::execute( execution_context& e )
 {
-  proof_context p(e); p.set_silent(false);
+  proof_context p(e);
+  // The proof_context sets silent mode with -E or --filter.
+  // We only want that with -qq.
+  if ( e.get_args().quiet < 2 ) p.set_silent( false );
   string str( expr.string_evaluate(p) );
 
   try {
@@ -248,5 +248,14 @@ void echo_stmt::execute( execution_context& e )
   } 
   catch( const script_exception& ex ) {
     if ( ex.t == script_exception::do_abort ) e.set_failure();
+  }
+}
+
+void if_stmt::execute( execution_context& e ) {
+  switch (type) {
+    case push_if:       e.push_if(expr);       break;
+    case chain_else_if: e.chain_else_if(expr); break;
+    case chain_else:    e.chain_else();        break;
+    case pop_if:        e.pop_if();            break;
   }
 }

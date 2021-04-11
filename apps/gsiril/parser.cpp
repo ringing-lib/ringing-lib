@@ -411,6 +411,25 @@ statement msparser::parse()
                        cmd.size() == 2 
                          && cmd[1].type() == tok_types::string_lit ) );
 
+  // Conditional statements:  if, elseif, else, endif
+  if ( cmd.size() > 1 && cmd[0].type() == tok_types::name && cmd[0] == "if" )
+    return statement
+      ( new if_stmt( if_stmt::push_if, 
+                     make_expr(  cmd.begin() + 1, cmd.end() ) ) );
+
+  if ( cmd.size() > 1 && cmd[0].type() == tok_types::name && 
+       cmd[0] == "elseif" )
+    return statement
+      ( new if_stmt( if_stmt::chain_else_if, 
+                     make_expr(  cmd.begin() + 1, cmd.end() ) ) );
+
+  if ( cmd.size() == 1 && cmd[0].type() == tok_types::name && cmd[0] == "else" )
+    return statement( new if_stmt( if_stmt::chain_else ) );
+
+  if ( cmd.size() == 1 && cmd[0].type() == tok_types::name && 
+       cmd[0] == "endif" )
+    return statement( new if_stmt( if_stmt::pop_if ) );
+
   // Definition
   if ( cmd.size() > 1 && cmd[0].type() == tok_types::name
        && ( cmd[1].type() == tok_types::assignment ||

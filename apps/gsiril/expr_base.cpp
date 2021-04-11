@@ -32,6 +32,7 @@
 #include <ringing/streamutils.h>
 #include "expr_base.h"
 #include "proof_context.h"
+#include "execution_context.h"
 #include "expression.h"
 
 RINGING_USING_NAMESPACE
@@ -167,5 +168,12 @@ expression expression::call( proof_context& ctx,
 {
   ctx.increment_node_count();
   return impl->call(ctx, args); 
+}
+
+void statement::execute( execution_context& e ) {
+  if (e.is_executing())
+    pimpl->execute(e);
+  else 
+    pimpl->skip(e);
 }
 
