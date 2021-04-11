@@ -324,7 +324,7 @@ string proof_context::substitute_string( const string &str,
 	if (i+1 == e) 
 	  nl = false;
 	else 
-	  os << *i;   // It will be handled by string_escapes
+	  os << *i, os << *++i;   // It will be handled by string_escapes
 	break;
       case '_':
         if (ectx.get_args().sirilic_syntax) {
