@@ -62,10 +62,10 @@ execution_context::expected_length( pair<size_t, size_t> l )
   if (l.first && l.second) {
     sym_table.define
       ( pair<const string, expression>( "min_length", 
-          expression( new string_node(make_string() << l.first) ) ) );
+          expression( new integer_node(l.first) ) ) );
     sym_table.define
       ( pair<const string, expression>( "max_length", 
-          expression( new string_node(make_string() << l.second) ) ) );
+          expression( new integer_node(l.second) ) ) );
   }
   else {
     sym_table.undefine("min_length");

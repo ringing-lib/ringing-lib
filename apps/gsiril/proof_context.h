@@ -85,12 +85,12 @@ public:
 
   enum proof_state { rounds, notround, isfalse };
   proof_state state() const;
-  string substitute_string( const string &str, bool &do_exit ) const;
+  string substitute_string( const string &str, bool *do_exit = 0 ) const;
 
   void execute_everyrow();
   void output_string( const string& str, bool to_parent = false ) const;
 
-  method load_method( const string& title ) const;
+  method load_method( const string& title );
 
   proof_context silent_clone() const;
 

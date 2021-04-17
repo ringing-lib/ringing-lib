@@ -133,17 +133,20 @@ void reverse_node::execute( proof_context &ctx, int dir ) const
 
 void string_node::execute( proof_context &ctx, int dir ) const
 {
-  ctx.output_string(str, echo);
+  bool do_exit = false;
+  ctx.output_string( ctx.substitute_string(str, &do_exit), flags & to_parent );
+  if (do_exit)
+    throw script_exception( script_exception::do_abort );
 }
 
 expression string_node::evaluate( proof_context &ctx ) const
 {
-  return expression( new string_node(str) );
+  return expression( new string_node( string_evaluate(ctx) ) );
 }
 
 string string_node::string_evaluate( proof_context &ctx ) const
 {
-  return str;
+  return ctx.substitute_string(str);
 }
 
 void string_node::debug_print( ostream &os ) const

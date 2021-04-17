@@ -234,20 +234,28 @@ void import_stmt::execute( execution_context& e )
     e.output() << "Resource \"" << name << "\" loaded" << endl;
 }
 
+echo_stmt::mode_t echo_stmt::get_mode( string const& keyword ) {
+  if (keyword == "error") return error;
+  else if (keyword == "warn") return warn;
+  else return echo;
+}
+
 void echo_stmt::execute( execution_context& e )
 {
   proof_context p(e);
   // The proof_context sets silent mode with -E or --filter.
-  // We only want that with -qq.
-  if ( e.get_args().quiet < 2 ) p.set_silent( false );
+  // We only want that with -qq.  Warnings and errors should never be silenced.
+  if ( e.get_args().quiet < 2 || mode != echo ) p.set_silent( false );
   string str( expr.string_evaluate(p) );
 
-  try {
-    if (substitute) p.output_string(str, false);
-    else e.output() << str << "\n";
-  } 
-  catch( const script_exception& ex ) {
-    if ( ex.t == script_exception::do_abort ) e.set_failure();
+  if ( mode == echo )
+    e.output() << str << "\n";
+  else
+    cerr << str << "\n";
+
+  if ( mode == error ) {
+    if ( e.interactive() ) e.set_failure();
+    else exit(1);
   }
 }
 

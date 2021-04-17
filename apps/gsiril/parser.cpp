@@ -403,13 +403,13 @@ statement msparser::parse()
       ( new prove_stmt( make_expr( cmd.begin() + 1, cmd.end() ) ) );
 
   // Echo directive
-  if ( cmd[0].type() == tok_types::name && cmd[0] == "echo" )
+  if ( cmd[0].type() == tok_types::name && 
+       ( cmd[0] == "echo" || cmd[0] == "warn" || cmd[0] == "error" ) )
     return statement
       ( new echo_stmt( cmd.size() == 1 
                          ? expression( new string_node("") )
                          : make_expr( cmd.begin() + 1, cmd.end() ),
-                       cmd.size() == 2 
-                         && cmd[1].type() == tok_types::string_lit ) );
+                       cmd[0] ) );
 
   // Conditional statements:  if, elseif, else, endif
   if ( cmd.size() > 1 && cmd[0].type() == tok_types::name && cmd[0] == "if" )
@@ -755,7 +755,8 @@ msparser::make_expr( vector< token >::const_iterator first,
   if ( first->type() == tok_types::name && *first == "echo" ) {
     check_unary_op(first, last, "echo",
                    tok_types::string_lit, "a string");
-    return expression( new string_node( *(first+1), true ) );
+    return expression( new string_node( *(first+1), 
+      string_node::interpolate | string_node::to_parent ) );
   }
 
   if ( first->type() == tok_types::reverse ) {
@@ -780,7 +781,7 @@ msparser::make_expr( vector< token >::const_iterator first,
 
   switch ( first->type() ) {
     case tok_types::string_lit:
-      return expression( new string_node( *first ) );
+      return expression( new string_node( *first, string_node::interpolate ) );
 
     case tok_types::name:
       if ( *first == "break" )

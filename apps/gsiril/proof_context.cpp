@@ -99,14 +99,8 @@ void proof_context::do_output( const string& str ) const
 
 void proof_context::output_string( const string& str, bool to_parent ) const
 {
-  bool do_exit( false );
-  std::string o( substitute_string(str, do_exit) );
-
-  if ( to_parent && parent ) parent->do_output(o);
-  else do_output(o);
-
-  if (do_exit)
-    throw script_exception( script_exception::do_abort );
+  if ( to_parent && parent ) parent->do_output(str);
+  else do_output(str);
 }
 
 void proof_context::execute_everyrow()
@@ -283,10 +277,11 @@ static string string_escapes( const string &str ) {
 }
 
 string proof_context::substitute_string( const string &str, 
-                                         bool &do_exit ) const
+                                         bool *do_exit ) const
 {
   make_string os;
-  bool nl = true;
+  // Only exit if we're evaluating
+  bool nl = do_exit;
 
   for ( string::const_iterator i( str.begin() ), e( str.end() ); i != e; ++i )
     switch (*i)
@@ -315,8 +310,10 @@ string proof_context::substitute_string( const string &str,
           os << e.string_evaluate(ctx2);
           i = j;
         }
-	else if ( i+1 != e && i[1] == '$' )
-	  ++i, do_exit = true;
+	else if ( i+1 != e && i[1] == '$' ) {
+	  ++i;
+          if (do_exit) *do_exit = true;
+        }
 	else
 	  os << p->duplicates();
 	break;
@@ -369,12 +366,49 @@ void proof_context::increment_node_count() const
 {
   return ectx.increment_node_count();
 }
-  
-method proof_context::load_method( const string& title ) const
+
+// TODO: This is duplicated in ringing/library.cpp
+RINGING_START_ANON_NAMESPACE
+list<string> split_path( string const& p )
 {
-  library_entry le = ectx.get_args().methset().find(title);
+  list<string> pp;
+  string::size_type i=0;
+  while (true) {
+    string::size_type j = p.find(':', i);
+    if ( j == string::npos ) {
+      if ( p.size() ) pp.push_back( p.substr(i) );
+      break;
+    }
+    
+    pp.push_back( p.substr(i, j-i) );
+    i = j+1;
+  }
+  return pp;
+}
+
+RINGING_END_ANON_NAMESPACE
+
+ 
+method proof_context::load_method( const string& name )
+{
+  list<string> suffixes; 
+  if ( ectx.defined("method_suffixes") )
+    suffixes = split_path( lookup_symbol("method_suffixes")
+                             .string_evaluate(*this) );
+  else
+    suffixes.push_back(string());
+
+  library_entry le;
+  for ( list<string>::const_iterator i = suffixes.begin(), e = suffixes.end(); 
+        i != e; ++i ) {
+    string title(name);
+    if (i->length())
+      (title += ' ') += *i;
+    le = ectx.get_args().methset().find(title);
+    if (!le.null()) break;
+  }
   if (le.null())
-    throw runtime_error( "Unable to load method: " + title );
+    throw runtime_error( "Unable to load method: " + name );
   return le.meth();
 }
 

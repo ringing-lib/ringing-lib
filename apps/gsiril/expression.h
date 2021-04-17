@@ -100,8 +100,12 @@ private:
 
 class string_node : public expression::node {
 public:
-  string_node( const string &str, bool echo = false ) 
-    : str(str), echo(echo) {}
+  enum flags_t {
+    interpolate = 1, to_parent = 2
+  };
+
+  string_node( const string &str, int flags = 0 ) 
+    : str(str), flags(flags) {}
 
 protected:
   virtual void debug_print( ostream &os ) const;
@@ -111,7 +115,7 @@ protected:
 
 private:
   string str;
-  bool echo;
+  int flags;
 };
 
 class pn_node : public expression::node {

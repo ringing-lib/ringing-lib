@@ -128,7 +128,8 @@ void initialise( execution_context& ex, const arguments& args )
     
   // The 'everyrow' symbol is defined to "@" if -E is specified.
   if (args.everyrow_only)
-    ex.define_symbol(make_pair("everyrow", expression(new string_node("@"))));
+    ex.define_symbol(make_pair("everyrow", 
+      expression(new string_node( "@", string_node::interpolate ))));
 
   ex.interactive(interactive);
   ex.verbose(verbose);
