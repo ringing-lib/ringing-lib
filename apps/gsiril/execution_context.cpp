@@ -93,8 +93,11 @@ execution_context::execution_context( ostream& os, const arguments& a )
   : args(a), rmask(a.row_mask.length() ? a.row_mask : "*"), os(&os), 
     failed(false), node_count(0), done_proof(false)
 {
-  if ( !args.rounds.bells() )
-    args.rounds = row(args.bells);
+  if ( args.bells ) {
+    if ( !args.rounds.bells() )
+      args.rounds = row(args.bells);
+    define_line();
+  }
   expected_length(args.expected_length);
 }
 
