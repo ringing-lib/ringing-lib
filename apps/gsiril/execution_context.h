@@ -96,7 +96,7 @@ public:
   pair<size_t,size_t> expected_length(pair<size_t, size_t> l);
 
   music_details const& row_mask() const { return rmask; }
-  void row_mask(music_details const& m) { rmask = m; }
+  void row_mask(music_details const& m);
 
   void push_if(expression const& cond);
   void chain_else_if(expression const& cond);
@@ -106,6 +106,7 @@ public:
 
 private:
   bool evaluate_bool_const( expression const& ) const;
+  void define_line();
 
   arguments args;
   music_details rmask;

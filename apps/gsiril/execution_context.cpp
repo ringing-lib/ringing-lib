@@ -43,15 +43,28 @@ int execution_context::bells( int b )
       args.rounds = row(b);
     }
 
+  swap( b, args.bells.get() );
+  define_line();
+  return b;
+}
+
+void execution_context::row_mask(music_details const& m) { 
+  rmask = m; 
+  define_line();
+}
+  
+void execution_context::define_line() {
+  size_t len = args.bells.get();
+  music row_mask( bells(), rmask );
+  if ( row_mask.process_row( row( bells() ) ) )
+    len = row_mask.begin()->last_wildcard_matches().size();
+
   // Define __line__ to be a line of hyphens, one per bell, with no 
   // terminating line break.  The expectation is that users will do
   // something like:   line = __line__, "";
   sym_table.define
     ( pair<const string, expression>( "__line__", 
-        expression( new string_node( string(b, '-') + '\\' ) ) ) );
-
-  swap( b, args.bells.get() );
-  return b;
+        expression( new string_node( string(len, '-') + '\\' ) ) ) );
 }
   
 pair<size_t,size_t> 
