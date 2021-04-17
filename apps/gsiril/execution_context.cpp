@@ -160,7 +160,8 @@ void execution_context::push_if(expression const& cond) {
   // The if_stack contains 1 if we're executing the current branch,
   // 0 if we've not executed any branch yet, and 2 if we've executed a previous
   // branch.
-  if_stack.push_back( evaluate_bool_const(cond) ? 1 : 0 );
+  if_stack.push_back( if_stack.empty() || if_stack.back() == 1
+                        ? (evaluate_bool_const(cond) ? 1 : 0) : 2 );
 }
 
 void execution_context::chain_else_if(expression const& cond) {
