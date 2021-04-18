@@ -347,7 +347,10 @@ string proof_context::substitute_string( const string &str,
     termination_sequence(os.out_stream());
     os << '\n';
   }
-  return string_escapes(os);
+  if (do_exit)
+    return string_escapes(os);
+  else
+    return os;
 }
 
 proof_context proof_context::silent_clone() const
