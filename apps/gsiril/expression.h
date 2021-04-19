@@ -336,6 +336,19 @@ private:
   int sign;
 };
 
+class mod_node : public expression::inode {
+public:
+  mod_node( expression const& left, expression const& right )
+    : left(left), right(right) {}
+
+protected:
+  virtual void debug_print( ostream &os ) const;
+  virtual RINGING_LLONG int_evaluate( proof_context &ctx ) const;
+
+private:
+  expression left, right;
+};
+
 // TODO: Make this a generic op_assign_node
 class increment_node : public expression::inode {
 public:

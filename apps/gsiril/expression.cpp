@@ -532,6 +532,20 @@ RINGING_LLONG add_node::int_evaluate( proof_context& ctx ) const
   return l + sign * r;
 }
 
+
+void mod_node::debug_print( ostream &os ) const
+{
+  left.debug_print(os);
+  os << " % ";
+  right.debug_print(os);
+}
+
+RINGING_LLONG mod_node::int_evaluate( proof_context& ctx ) const
+{
+  RINGING_LLONG l = left.int_evaluate(ctx), r = right.int_evaluate(ctx);
+  return l % r;
+}
+
 void add_node::debug_print( ostream &os ) const
 {
   left.debug_print(os);

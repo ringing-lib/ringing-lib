@@ -66,6 +66,8 @@ namespace tok_types
     plus        = '+',
     minus       = '-',
     times       = '*',
+    divide      = '/',
+    modulo      = '%',
     assignment  = '=',
     new_line    = '\n',
     semicolon   = ';',
@@ -198,7 +200,7 @@ public:
       if ( args.msiril_syntax ) return;
       break;
 
-    case plus: case minus: 
+    case plus: case minus: case modulo:
     case regex_lit: case open_brace: case close_brace: case colon:
     case logic_and: case logic_or: case equals: case not_equals: 
     case less: case greater: case less_eq: case greater_eq:
@@ -700,7 +702,6 @@ msparser::make_expr( vector< token >::const_iterator first,
   }
 
   // Addition operators are next
- 
   vector<tok_types::enum_t> addops;
   addops.push_back( tok_types::plus );
   addops.push_back( tok_types::minus );
@@ -713,6 +714,17 @@ msparser::make_expr( vector< token >::const_iterator first,
       check_bin_op( first, split, last, "-" );
       return expression( new add_node( make_expr( first, split ),
                                        make_expr( split+1, last ), -1 ) );
+    }
+  }
+
+  // Now multiplication operators: currently only %
+  vector<tok_types::enum_t> multops;
+  multops.push_back( tok_types::modulo );
+  if ( find_one_of( first, last, multops, split ) ) {
+    if ( split->type() == tok_types::modulo ) {
+      check_bin_op( first, split, last, "%" );
+      return expression( new mod_node( make_expr( first, split ),
+                                       make_expr( split+1, last ) ) );
     }
   }
 
