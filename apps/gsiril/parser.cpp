@@ -734,6 +734,15 @@ msparser::make_expr( vector< token >::const_iterator first,
     }
   }
 
+  // The defined operator
+  if ( first->type() == tok_types::name && *first == "defined" &&
+       ( first + 4 == last && (first+1)->type() == tok_types::open_paren 
+                           && (first+3)->type() == tok_types::close_paren || 
+         first + 2 == last )
+       && ( first + ( first + 4 == last ? 2 : 1 ) )->type() == tok_types::name )
+    return expression( new defined_node( 
+      *( first + ( first + 4 == last ? 2 : 1 ) ) ) );
+
   // TODO: Support a integer expression in a repeat block
 
   // A repeated block is the only remaining construct that is not a single

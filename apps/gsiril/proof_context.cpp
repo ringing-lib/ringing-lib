@@ -193,6 +193,11 @@ expression proof_context::lookup_symbol( const string& sym ) const
   return e;
 }
 
+bool proof_context::defined( const string& sym ) const
+{
+  return !dsym_table.lookup(sym).isnull() || ectx.defined(sym);
+}
+
 void proof_context::define_symbol( const pair<const string, expression>& defn )
 {
   dsym_table.define(defn);

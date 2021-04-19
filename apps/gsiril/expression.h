@@ -228,6 +228,19 @@ private:
   music_details mus;
 };
 
+class defined_node : public expression::bnode {
+public:
+  defined_node( const string& sym )
+    : sym(sym) {}
+
+protected:
+  virtual void debug_print( ostream &os ) const;
+  virtual bool bool_evaluate( proof_context &ctx ) const;
+
+private:
+  string sym;
+};
+
 class boolean_node : public expression::bnode {
 public:
   boolean_node( bool value ) : value(value) {}

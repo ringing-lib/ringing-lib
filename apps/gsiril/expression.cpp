@@ -405,6 +405,16 @@ void pattern_node::debug_print( ostream &os ) const
   os << mus.get();
 }
 
+void defined_node::debug_print( ostream &os ) const
+{
+  os << "defined(" << sym << ")";
+}
+
+bool defined_node::bool_evaluate( proof_context &ctx ) const
+{
+  return ctx.defined(sym);
+}
+
 void boolean_node::debug_print( ostream &os ) const
 {
   os << ( value ? "true" : "false" );

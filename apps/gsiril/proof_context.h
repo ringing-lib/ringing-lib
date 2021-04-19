@@ -82,6 +82,7 @@ public:
   void execute_final_symbol( const string& sym );
   void define_symbol( const pair< const string, expression > &defn );
   expression lookup_symbol( const string& sym ) const;
+  bool defined( const string& sym ) const;
 
   enum proof_state { rounds, notround, isfalse };
   proof_state state() const;
