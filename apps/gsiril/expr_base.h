@@ -101,6 +101,13 @@ public:
     virtual type_t type( proof_context &ctx ) const { return integer; }
   };
 
+  class snode : public node {
+  public:
+    virtual void execute( proof_context &ctx, int dir ) const;
+    virtual expression evaluate( proof_context &ctx ) const;
+    virtual string string_evaluate( proof_context &ctx ) const = 0;
+  };
+
   // Create an expression handle
   explicit expression( node* impl = 0 ) : impl(impl) {}
 

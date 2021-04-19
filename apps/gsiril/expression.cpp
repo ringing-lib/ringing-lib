@@ -134,19 +134,16 @@ void reverse_node::execute( proof_context &ctx, int dir ) const
 void string_node::execute( proof_context &ctx, int dir ) const
 {
   bool do_exit = false;
-  ctx.output_string( ctx.substitute_string(str, &do_exit), flags & to_parent );
+  ctx.output_string( flags & interpolate
+                        ? ctx.substitute_string(str, &do_exit) : str, 
+                     flags & to_parent );
   if (do_exit)
     throw script_exception( script_exception::do_abort );
 }
 
-expression string_node::evaluate( proof_context &ctx ) const
-{
-  return expression( new string_node( string_evaluate(ctx) ) );
-}
-
 string string_node::string_evaluate( proof_context &ctx ) const
 {
-  return ctx.substitute_string(str);
+  return flags & interpolate ? ctx.substitute_string(str) : str;
 }
 
 void string_node::debug_print( ostream &os ) const
@@ -545,6 +542,21 @@ RINGING_LLONG mod_node::int_evaluate( proof_context& ctx ) const
   RINGING_LLONG l = left.int_evaluate(ctx), r = right.int_evaluate(ctx);
   return l % r;
 }
+
+void append_node::debug_print( ostream &os ) const
+{
+  left.debug_print(os);
+  os << " . ";
+  right.debug_print(os);
+}
+
+string append_node::string_evaluate( proof_context& ctx ) const
+{
+  string l = left.string_evaluate(ctx), r = right.string_evaluate(ctx);
+  return l + r;
+}
+
+
 
 void add_node::debug_print( ostream &os ) const
 {

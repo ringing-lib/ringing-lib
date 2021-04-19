@@ -68,6 +68,7 @@ namespace tok_types
     times       = '*',
     divide      = '/',
     modulo      = '%',
+    append      = '.',
     assignment  = '=',
     new_line    = '\n',
     semicolon   = ';',
@@ -200,7 +201,7 @@ public:
       if ( args.msiril_syntax ) return;
       break;
 
-    case plus: case minus: case modulo:
+    case plus: case minus: case modulo: case append:
     case regex_lit: case open_brace: case close_brace: case colon:
     case logic_and: case logic_or: case equals: case not_equals: 
     case less: case greater: case less_eq: case greater_eq:
@@ -717,14 +718,19 @@ msparser::make_expr( vector< token >::const_iterator first,
     }
   }
 
-  // Now multiplication operators: currently only %
+  // Now multiplication operators: currently only % and .
   vector<tok_types::enum_t> multops;
   multops.push_back( tok_types::modulo );
+  multops.push_back( tok_types::append );
   if ( find_one_of( first, last, multops, split ) ) {
     if ( split->type() == tok_types::modulo ) {
       check_bin_op( first, split, last, "%" );
       return expression( new mod_node( make_expr( first, split ),
                                        make_expr( split+1, last ) ) );
+    } else {
+      check_bin_op( first, split, last, "." );
+      return expression( new append_node( make_expr( first, split ),
+                                          make_expr( split+1, last ) ) );
     }
   }
 

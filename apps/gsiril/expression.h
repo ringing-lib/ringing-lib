@@ -98,7 +98,7 @@ private:
   expression child;
 };
 
-class string_node : public expression::node {
+class string_node : public expression::snode {
 public:
   enum flags_t {
     interpolate = 1, to_parent = 2
@@ -110,7 +110,6 @@ public:
 protected:
   virtual void debug_print( ostream &os ) const;
   virtual void execute( proof_context &ctx, int dir ) const;
-  virtual expression evaluate( proof_context &ctx ) const;
   virtual string string_evaluate( proof_context &ctx ) const;
 
 private:
@@ -344,6 +343,19 @@ public:
 protected:
   virtual void debug_print( ostream &os ) const;
   virtual RINGING_LLONG int_evaluate( proof_context &ctx ) const;
+
+private:
+  expression left, right;
+};
+
+class append_node : public expression::snode {
+public:
+  append_node( expression const& left, expression const& right )
+    : left(left), right(right) {}
+
+protected:
+  virtual void debug_print( ostream &os ) const;
+  virtual string string_evaluate( proof_context &ctx ) const;
 
 private:
   expression left, right;

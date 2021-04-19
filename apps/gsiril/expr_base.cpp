@@ -133,6 +133,17 @@ string expression::inode::string_evaluate( proof_context& ctx ) const
   return make_string() << int_evaluate(ctx);
 }
 
+void expression::snode::execute( proof_context &ctx, int dir ) const
+{
+  ctx.output_string( string_evaluate(ctx) );
+}
+
+expression expression::snode::evaluate( proof_context& ctx ) const
+{
+  return expression( new string_node( string_evaluate(ctx) ) );
+}
+
+
 void expression::execute( proof_context &ctx, int dir ) const 
 { 
   ctx.increment_node_count();
