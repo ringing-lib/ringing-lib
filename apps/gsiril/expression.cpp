@@ -161,18 +161,18 @@ void string_node::execute( proof_context &ctx, int dir ) const
 expression string_node::evaluate( proof_context &ctx ) const
 {
   // The result of evaluating a string node always removes the 
-  // interpolate and to_parent flags.
+  // interpolate flags.
   if ( flags & interpolate ) {
     bool do_exit = false, no_nl = false;
     string new_str = ctx.substitute_string(str, &do_exit, &no_nl);
 
-    int new_flags = 0;
+    int new_flags = flags & to_parent;
     if (no_nl) new_flags |= suppress_nl;
     if (do_exit) new_flags |= do_abort;
     return expression( new string_node(new_str, new_flags) );
   }
   else
-    return expression( new string_node(str, flags & ~to_parent) );
+    return expression( new string_node(str, flags) );
 }
 
 string string_node::string_evaluate( proof_context &ctx ) const
