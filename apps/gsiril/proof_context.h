@@ -86,10 +86,14 @@ public:
 
   enum proof_state { rounds, notround, isfalse };
   proof_state state() const;
-  string substitute_string( const string &str, bool *do_exit = 0 ) const;
+
+  string string_escapes( const string& str );
+  string substitute_string( const string &str, bool *do_exit = 0,
+                            bool *do_nl = 0 ) const;
 
   void execute_everyrow();
   void output_string( const string& str, bool to_parent = false ) const;
+  void output_newline( bool to_parent = false ) const;
 
   method load_method( const string& title );
 

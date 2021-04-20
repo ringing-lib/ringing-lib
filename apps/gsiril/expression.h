@@ -101,7 +101,7 @@ private:
 class string_node : public expression::snode {
 public:
   enum flags_t {
-    interpolate = 1, to_parent = 2
+    interpolate = 1, to_parent = 2, suppress_nl = 4, do_abort = 8
   };
 
   string_node( const string &str, int flags = 0 ) 
@@ -110,7 +110,9 @@ public:
 protected:
   virtual void debug_print( ostream &os ) const;
   virtual void execute( proof_context &ctx, int dir ) const;
+  virtual expression evaluate( proof_context &ctx ) const;
   virtual string string_evaluate( proof_context &ctx ) const;
+  virtual string string_evaluate( proof_context &ctx, bool* no_nl ) const;
 
 private:
   string str;

@@ -74,12 +74,13 @@ public:
     virtual ~node() {}
     virtual void debug_print( ostream &os ) const = 0;
     virtual void execute( proof_context &ctx, int dir ) const = 0;
-    virtual bool bool_evaluate( proof_context &ctx ) const; // throws
-    virtual RINGING_LLONG int_evaluate( proof_context &ctx ) const; // throws
-    virtual string string_evaluate( proof_context &ctx ) const; // throws
-    virtual expression evaluate( proof_context &ctx ) const; // throws
+    virtual bool bool_evaluate( proof_context &ctx ) const;
+    virtual RINGING_LLONG int_evaluate( proof_context &ctx ) const;
+    virtual string string_evaluate( proof_context &ctx ) const;
+    virtual string string_evaluate( proof_context &ctx, bool *no_nl ) const;
+    virtual expression evaluate( proof_context &ctx ) const;
     virtual expression call( proof_context& ctx, 
-                             vector<expression> const& args ) const; // throws
+                             vector<expression> const& args ) const;
     virtual bool isnop() const { return false; }
     virtual type_t type( proof_context &ctx ) const { return no_type; }
   };
@@ -128,6 +129,7 @@ public:
   bool bool_evaluate( proof_context& ctx ) const;
   RINGING_LLONG int_evaluate( proof_context& ctx ) const;
   string string_evaluate( proof_context& ctx ) const;
+  string string_evaluate( proof_context& ctx, bool* no_nl ) const;
 
   expression call( proof_context& ctx, vector<expression> const& args ) const;
 

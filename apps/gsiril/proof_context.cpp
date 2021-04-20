@@ -253,7 +253,7 @@ static string do_escape_seq(string::const_iterator& i, string::const_iterator e,
   return os;
 }
 
-static string string_escapes( const string &str ) {
+string proof_context::string_escapes( const string &str ) {
   make_string os;
   for ( string::const_iterator i( str.begin() ), e( str.end() ); i != e; ++i )
     switch (*i) {
@@ -282,11 +282,9 @@ static string string_escapes( const string &str ) {
 }
 
 string proof_context::substitute_string( const string &str, 
-                                         bool *do_exit ) const
+                                         bool *do_exit, bool *no_nl ) const
 {
   make_string os;
-  // Only exit if we're evaluating
-  bool nl = do_exit;
 
   for ( string::const_iterator i( str.begin() ), e( str.end() ); i != e; ++i )
     switch (*i)
@@ -326,8 +324,9 @@ string proof_context::substitute_string( const string &str,
 	os << p->size();
 	break;
       case '\\':
-	if (i+1 == e) 
-	  nl = false;
+	if (i+1 == e) {
+          if (no_nl) *no_nl = true;
+        }
 	else 
 	  os << *i, os << *++i;   // It will be handled by string_escapes
 	break;
@@ -348,14 +347,16 @@ string proof_context::substitute_string( const string &str,
 	break;
       }
 
-  if (nl) {
-    termination_sequence(os.out_stream());
-    os << '\n';
+  return os;
+}
+
+void proof_context::output_newline( bool to_parent ) const
+{
+  if ( to_parent && parent ) parent->output_newline();
+  else if ( !silent && output ) {
+    termination_sequence( *output );
+    *output << '\n';
   }
-  if (do_exit)
-    return string_escapes(os);
-  else
-    return os;
 }
 
 proof_context proof_context::silent_clone() const

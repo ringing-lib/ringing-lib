@@ -246,12 +246,13 @@ void echo_stmt::execute( execution_context& e )
   // The proof_context sets silent mode with -E or --filter.
   // We only want that with -qq.  Warnings and errors should never be silenced.
   if ( e.get_args().quiet < 2 || mode != echo ) p.set_silent( false );
-  string str( expr.string_evaluate(p) );
 
-  if ( mode == echo )
-    e.output() << str << "\n";
-  else
-    cerr << str << "\n";
+  bool no_nl = false;
+  string str( expr.string_evaluate(p, &no_nl) );
+
+  ostream& os = mode == echo ? e.output() : cerr;
+  os << str;
+  if (!no_nl) os << '\n';
 
   if ( mode == error ) {
     if ( e.interactive() ) e.set_failure();

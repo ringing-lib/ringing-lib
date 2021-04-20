@@ -133,17 +133,46 @@ void reverse_node::execute( proof_context &ctx, int dir ) const
 
 void string_node::execute( proof_context &ctx, int dir ) const
 {
-  bool do_exit = false;
-  ctx.output_string( flags & interpolate
-                        ? ctx.substitute_string(str, &do_exit) : str, 
-                     flags & to_parent );
-  if (do_exit)
-    throw script_exception( script_exception::do_abort );
+  if ( flags & interpolate ) 
+    evaluate(ctx).execute(ctx, dir);
+  else {
+    ctx.output_string( ctx.string_escapes(str), flags & to_parent );
+    if ( !( flags & suppress_nl ) )
+      ctx.output_newline( flags & to_parent );
+    if ( flags & do_abort )
+      throw script_exception( script_exception::do_abort );
+  }
+}
+
+expression string_node::evaluate( proof_context &ctx ) const
+{
+  // The result of evaluating a string node always removes the 
+  // interpolate and to_parent flags.
+  if ( flags & interpolate ) {
+    bool do_exit = false, no_nl = false;
+    string new_str = ctx.substitute_string(str, &do_exit, &no_nl);
+
+    int new_flags = 0;
+    if (no_nl) new_flags |= suppress_nl;
+    if (do_exit) new_flags |= do_abort;
+    return expression( new string_node(new_str, new_flags) );
+  }
+  else
+    return expression( new string_node(str, flags & ~to_parent) );
 }
 
 string string_node::string_evaluate( proof_context &ctx ) const
 {
-  return flags & interpolate ? ctx.substitute_string(str) : str;
+  return string_evaluate(ctx, NULL);
+}
+
+string string_node::string_evaluate( proof_context &ctx, bool* no_nl ) const
+{
+  if ( flags & interpolate ) 
+    return evaluate(ctx).string_evaluate(ctx, no_nl);
+  if (no_nl)
+    *no_nl = flags & suppress_nl;
+  return str;
 }
 
 void string_node::debug_print( ostream &os ) const

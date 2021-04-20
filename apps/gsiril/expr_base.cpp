@@ -67,6 +67,12 @@ string expression::node::string_evaluate( proof_context& ctx ) const
   throw runtime_error( os );
 }
 
+string 
+expression::node::string_evaluate( proof_context &ctx, bool *no_nl ) const 
+{
+  return string_evaluate(ctx);
+}
+
 expression expression::node::evaluate( proof_context& ctx ) const
 {
   make_string os;
@@ -172,6 +178,12 @@ string expression::string_evaluate( proof_context& ctx ) const
 {
   ctx.increment_node_count();
   return impl->string_evaluate(ctx); 
+}
+
+string expression::string_evaluate( proof_context& ctx, bool* no_nl ) const
+{
+  ctx.increment_node_count();
+  return impl->string_evaluate(ctx, no_nl); 
 }
 
 expression expression::call( proof_context& ctx, 
