@@ -131,6 +131,7 @@ protected:
   virtual void execute( proof_context &ctx, int dir ) const;
   virtual vector<change> pn_evaluate( proof_context &ctx ) const
     { return changes; }
+  virtual void apply_replacement( proof_context& ctx, vector<change>& m ) const;
 
 private:
   vector<change> changes;

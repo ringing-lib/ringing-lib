@@ -271,6 +271,34 @@ void pn_node::execute( proof_context &ctx, int dir ) const
     for_each( changes.rbegin(), changes.rend(), ctx.permute_and_prove() );
 }
 
+RINGING_START_ANON_NAMESPACE
+
+static  
+void do_replacement( vector<change> const& mask, RINGING_LLONG off,
+                     replacement_node::pos_t pos, vector<change>& m ) 
+{
+  const replacement_node::pos_t end   = replacement_node::end,
+                                begin = replacement_node::begin;
+
+  if (pos == end && off >= m.size() || off < 0 || off == 0 && pos == begin ||
+      // The following cases are handled in ERIL and should be handled in
+      // GSiril to support variations
+      pos == begin && off-1 + mask.size() > m.size() || 
+      pos == end && mask.size() > off+1)
+    throw runtime_error("Replacement block overruns the block its applied to");
+
+  copy( mask.begin(), mask.end(),
+        pos == begin ? m.begin() + (off-1) : m.end() - (off+1) );
+}
+
+RINGING_END_ANON_NAMESPACE
+
+void pn_node::apply_replacement( proof_context& ctx, vector<change>& m ) const
+{
+  do_replacement( changes, changes.size() ? changes.size()-1 : 0,
+                  replacement_node::end, m );
+}
+
 void replacement_node::debug_print( ostream& os ) const
 {
   pn.debug_print(os);
@@ -286,18 +314,7 @@ void replacement_node::execute( proof_context &ctx, int dir ) const
 void replacement_node::apply_replacement( proof_context& ctx, 
                                           vector<change>& m ) const
 {
-  vector<change> mask( pn.pn_evaluate(ctx) );
-  RINGING_LLONG off( shift.int_evaluate(ctx) );
-
-  if (pos == end && off >= m.size() || off < 0 || off == 0 && pos == begin ||
-      // The following cases are handled in ERIL and should be handled in
-      // GSiril to support variations
-      pos == begin && off-1 + mask.size() > m.size() || 
-      pos == end && mask.size() > off+1)
-    throw runtime_error("Replacement block overruns the block its applied to");
-
-  copy( mask.begin(), mask.end(),
-        pos == begin ? m.begin() + (off-1) : m.end() - (off+1) );
+  do_replacement( pn.pn_evaluate(ctx), shift.int_evaluate(ctx), pos, m );
 }
 
 void merge_node::debug_print( ostream& os ) const
