@@ -159,11 +159,10 @@ struct script_exception
 {
   enum type {
     do_abort,
-    do_stop,
     do_break
   };
   
-  script_exception( type t ) : t(t) {}
+  explicit script_exception( type t ) : t(t) {}
 
   type t;
 };
