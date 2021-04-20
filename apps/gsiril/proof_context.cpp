@@ -259,7 +259,7 @@ string proof_context::string_escapes( const string &str ) {
     switch (*i) {
       case '\\':
 	if (i+1 == e) 
-	  throw runtime_error("Unexpected backslash");
+	  throw runtime_error("Unexpected backslash in '" + str + "'");
 	else if (i[1] == 'n') 
 	  ++i, os << '\n';
 	else if (i[1] == 't') 
