@@ -72,7 +72,7 @@ public:
  ~proof_context();
   
   permute_and_prove_t permute_and_prove();
-  void disable_proving() { proving = false; }
+  void disable_proving();
   bool is_proving() { return proving; }
 
   row current_row() const { return r; }
@@ -112,7 +112,7 @@ private:
   const execution_context &ectx;
   symbol_table dsym_table; // dynamic symbol table
   mutable music row_mask;
-  row r;
+  row r, last_row;
   size_t max_length;
   shared_pointer<prover> p;
   bool proving;

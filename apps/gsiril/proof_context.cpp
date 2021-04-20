@@ -149,6 +149,12 @@ proof_context::permute_and_prove()
   return permute_and_prove_t( r, *p, *this );
 }
 
+void proof_context::disable_proving()
+{
+  if (proving) last_row = r;
+  proving = false;
+}
+
 bool proof_context::isrounds() const 
 {
   return r == ectx.rounds() && p->count_row(r) == ectx.extents(); 
@@ -209,12 +215,11 @@ void proof_context::define_symbol( const pair<const string, expression>& defn )
 
 proof_context::proof_state proof_context::state() const
 {
-  if ( p->truth() && isrounds() ) 
-    return rounds;
-  else if ( p->truth() )
-    return notround;
-  else
-    return isfalse;
+  if ( p->truth() ) {
+    row lr( proving ? r : last_row );
+    return lr == ectx.rounds() ? rounds : notround;
+  }
+  else return isfalse;
 }
 
 // When called, i will point to the initial \, and len will be set according
