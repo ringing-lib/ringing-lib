@@ -59,12 +59,11 @@ void execution_context::define_line() {
   if ( row_mask.process_row( row( bells() ) ) )
     len = row_mask.begin()->last_wildcard_matches().size();
 
-  // Define __line__ to be a line of hyphens, one per bell, with no 
-  // terminating line break.  The expectation is that users will do
-  // something like:   line = __line__, "";
+  // Define __line__ to be a line of hyphens, one per displayed bell.
+  // The expectation is that users will do something like: line = __line__
   sym_table.define
     ( pair<const string, expression>( "__line__", 
-        expression( new string_node( string(len, '-') + '\\' ) ) ) );
+        expression( new string_node( string(len, '-') ) ) ) );
 }
   
 pair<size_t,size_t> 
