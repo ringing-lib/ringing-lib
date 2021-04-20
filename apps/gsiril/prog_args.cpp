@@ -163,9 +163,13 @@ void arguments::bind( arg_parser& p )
 
   p.add( new strings_opt
 	 ( 'D', "define",
-	   "Define a particular symbol",
-	   "NAME=VALUE",
-	   definitions ) );
+	   "Define a particular symbol as an expression",
+	   "NAME=EXPR", definitions ) );
+
+   p.add( new strings_opt
+	 ( 'S', "string",
+	   "Define a particular symbol as a string",
+	   "NAME=VALUE", string_defs ) );
  
   p.add( new strings_opt
 	 ( 'm', "module",

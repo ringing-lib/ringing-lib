@@ -90,6 +90,21 @@ void initialise( execution_context& ex, const arguments& args )
     make_default_parser(in, ex)->run(ex, "INIT", parser::fatal);
   }
 
+  for ( vector< string >::const_iterator
+          i(args.string_defs.begin()), e( args.string_defs.end());
+        i != e; ++i ) {
+    size_t j = i->find('=');
+    if (j == string::npos) {
+      cerr << "-S'" << *i << "' not formated as NAME=VALUE" << endl;
+      exit(2);
+    }
+    pair<const string, expression>
+      defn( string(*i, 0, j), 
+            expression( new string_node( string(*i, j+1) ) ) );
+    ex.define_symbol(defn);
+  }
+
+
   // ... and secondly using any -D options on the command line.  
   // We want to do this before importing modules so that modules loaded
   // with a -m option are as similar as possible to those imported with 

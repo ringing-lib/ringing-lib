@@ -62,6 +62,7 @@ struct arguments
 
   vector<string>       import_modules;
   vector<string>       definitions;
+  vector<string>       string_defs;
 
   string               filename;
   string               expression;
