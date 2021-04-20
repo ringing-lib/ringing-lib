@@ -37,160 +37,136 @@
 
 RINGING_USING_NAMESPACE
 
-bool expression::node::bool_evaluate( proof_context& ctx ) const
-{
+void expression::node::unable_to( char const* what ) const {
   make_string os;
-  os << "Unable to evaluate expression as a boolean: '";
+  os << "Unable to " << what << ": '";
   debug_print( os.out_stream() );
   os << "'";
 
   throw runtime_error( os );
 }
 
-RINGING_LLONG expression::node::int_evaluate( proof_context& ctx ) const
-{
-  make_string os;
-  os << "Unable to evaluate expression as an integer: '";
-  debug_print( os.out_stream() );
-  os << "'";
-
-  throw runtime_error( os );
+bool expression::node::bool_evaluate( proof_context& ctx ) const {
+  unable_to("evaluate expression as a boolean");
 }
 
-string expression::node::string_evaluate( proof_context& ctx ) const
-{
-  make_string os;
-  os << "Unable to evaluate expression as a string: '";
-  debug_print( os.out_stream() );
-  os << "'";
+RINGING_LLONG expression::node::int_evaluate( proof_context& ctx ) const {
+  unable_to("evaluate expression as an integer");
+}
 
-  throw runtime_error( os );
+string expression::node::string_evaluate( proof_context& ctx ) const {
+  unable_to("evaluate expression as a string");
 }
 
 string 
-expression::node::string_evaluate( proof_context &ctx, bool *no_nl ) const 
-{
+expression::node::string_evaluate( proof_context &ctx, bool *no_nl ) const {
   return string_evaluate(ctx);
 }
 
-expression expression::node::evaluate( proof_context& ctx ) const
-{
-  make_string os;
-  os << "Unable to evaluate expression: '";
-  debug_print( os.out_stream() );
-  os << "'";
-
-  throw runtime_error( os );
+vector<change> 
+expression::node::pn_evaluate( proof_context& ctx ) const {
+  unable_to("evaluate expression as a static block of changes");
 }
 
-expression expression::node::call( proof_context& ctx,
-                                   vector<expression> const& args ) const
-{
-  make_string os;
-  os << "Unable to call expression: '";
-  debug_print( os.out_stream() );
-  os << "'";
-
-  throw runtime_error( os );
+expression expression::node::evaluate( proof_context& ctx ) const {
+  unable_to("evaluate expression");
 }
 
-void expression::bnode::execute( proof_context& ctx, int dir ) const
-{
-  if ( dir < 0 ) {
-    make_string os;
-    os << "Unable to execute expression backwards: '";
-    debug_print( os.out_stream() );
-    os << "'";
-
-    throw runtime_error( os );
-  }
-
-  bool_evaluate(ctx);
+expression 
+expression::node::call( proof_context& ctx,
+                        vector<expression> const& args ) const {
+  unable_to("call expression");
 }
 
-expression expression::bnode::evaluate( proof_context& ctx ) const
-{
+void
+expression::node::apply_replacement( proof_context& ctx, 
+                                     vector<change>& m ) const {
+  unable_to("use expression as a replacement block");
+}
+
+void expression::bnode::execute( proof_context& ctx, int dir ) const {
+  if ( dir < 0 )
+    unable_to("execute expression backwards");
+  else 
+    bool_evaluate(ctx);
+}
+
+expression expression::bnode::evaluate( proof_context& ctx ) const {
   return expression( new boolean_node( bool_evaluate(ctx) ) );
 }
 
 void expression::inode::execute( proof_context& ctx, int dir ) const
 {
-  if ( dir < 0 ) {
-    make_string os;
-    os << "Unable to execute expression backwards: '";
-    debug_print( os.out_stream() );
-    os << "'";
-
-    throw runtime_error( os );
-  }
-
-  int_evaluate(ctx);
+  if ( dir < 0 )
+    unable_to("execute expression backwards");
+  else
+    int_evaluate(ctx);
 }
 
-expression expression::inode::evaluate( proof_context& ctx ) const
-{
+expression expression::inode::evaluate( proof_context& ctx ) const {
   return expression( new integer_node( int_evaluate(ctx) ) );
 }
 
 
 // This deals with casting ints as strings
-string expression::inode::string_evaluate( proof_context& ctx ) const 
-{
+string expression::inode::string_evaluate( proof_context& ctx ) const {
   return make_string() << int_evaluate(ctx);
 }
 
-void expression::snode::execute( proof_context &ctx, int dir ) const
-{
+void expression::snode::execute( proof_context &ctx, int dir ) const {
   ctx.output_string( string_evaluate(ctx) );
 }
 
-expression expression::snode::evaluate( proof_context& ctx ) const
-{
+expression expression::snode::evaluate( proof_context& ctx ) const {
   return expression( new string_node( string_evaluate(ctx) ) );
 }
 
 
-void expression::execute( proof_context &ctx, int dir ) const 
-{ 
+void expression::execute( proof_context &ctx, int dir ) const { 
   ctx.increment_node_count();
   impl->execute(ctx, dir); 
 }
 
-expression expression::evaluate( proof_context& ctx ) const 
-{ 
+expression expression::evaluate( proof_context& ctx ) const { 
   ctx.increment_node_count();
   return impl->evaluate(ctx); 
 }
 
-bool expression::bool_evaluate( proof_context& ctx ) const 
-{ 
+bool expression::bool_evaluate( proof_context& ctx ) const { 
   ctx.increment_node_count();
   return impl->bool_evaluate(ctx); 
 }
 
-RINGING_LLONG expression::int_evaluate( proof_context& ctx ) const 
-{ 
+RINGING_LLONG expression::int_evaluate( proof_context& ctx ) const { 
   ctx.increment_node_count();
   return impl->int_evaluate(ctx); 
 }
 
-string expression::string_evaluate( proof_context& ctx ) const
-{
+string expression::string_evaluate( proof_context& ctx ) const {
   ctx.increment_node_count();
   return impl->string_evaluate(ctx); 
 }
 
-string expression::string_evaluate( proof_context& ctx, bool* no_nl ) const
-{
+string expression::string_evaluate( proof_context& ctx, bool* no_nl ) const {
   ctx.increment_node_count();
   return impl->string_evaluate(ctx, no_nl); 
 }
 
+vector<change> expression::pn_evaluate( proof_context& ctx ) const {
+  ctx.increment_node_count();
+  return impl->pn_evaluate(ctx); 
+}
+
 expression expression::call( proof_context& ctx, 
-                             vector<expression> const& args ) const
-{
+                             vector<expression> const& args ) const {
   ctx.increment_node_count();
   return impl->call(ctx, args); 
+}
+
+void 
+expression::apply_replacement( proof_context& ctx, vector<change>& m ) const {
+  ctx.increment_node_count();
+  return impl->apply_replacement(ctx, m); 
 }
 
 void statement::execute( execution_context& e ) {

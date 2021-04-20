@@ -30,6 +30,10 @@
 
 #include <ringing/pointers.h>
 
+RINGING_START_NAMESPACE
+class change;
+RINGING_END_NAMESPACE
+
 RINGING_USING_NAMESPACE
 
 class proof_context;
@@ -78,11 +82,20 @@ public:
     virtual RINGING_LLONG int_evaluate( proof_context &ctx ) const;
     virtual string string_evaluate( proof_context &ctx ) const;
     virtual string string_evaluate( proof_context &ctx, bool *no_nl ) const;
+    virtual vector<change> pn_evaluate( proof_context &ctx ) const;
     virtual expression evaluate( proof_context &ctx ) const;
     virtual expression call( proof_context& ctx, 
                              vector<expression> const& args ) const;
+    virtual void apply_replacement( proof_context& ctx, 
+                                    vector<change>& pn ) const;
     virtual bool isnop() const { return false; }
     virtual type_t type( proof_context &ctx ) const { return no_type; }
+
+  protected:
+#   if __cplusplus >= 201103L
+    [[noreturn]]
+#   endif
+    void unable_to( char const* what ) const;
   };
 
   class bnode : public node {
@@ -130,8 +143,10 @@ public:
   RINGING_LLONG int_evaluate( proof_context& ctx ) const;
   string string_evaluate( proof_context& ctx ) const;
   string string_evaluate( proof_context& ctx, bool* no_nl ) const;
+  vector<change> pn_evaluate( proof_context &ctx ) const;
 
   expression call( proof_context& ctx, vector<expression> const& args ) const;
+  void apply_replacement( proof_context& ctx, vector<change>& m ) const;
 
   RINGING_FAKE_DEFAULT_CONSTRUCTOR(expression);
 

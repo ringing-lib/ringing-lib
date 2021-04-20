@@ -76,6 +76,14 @@ string list_node::string_evaluate( proof_context &ctx ) const
   return cdr.string_evaluate( ctx );
 }
 
+vector<change> list_node::pn_evaluate( proof_context &ctx ) const 
+{
+  vector<change> ret( car.pn_evaluate(ctx) );
+  vector<change> add( cdr.pn_evaluate(ctx) );
+  ret.insert( ret.end(), add.begin(), add.end() );
+  return ret;
+}
+
 
 expression::type_t list_node::type( proof_context &ctx ) const
 {
@@ -129,6 +137,12 @@ void reverse_node::debug_print( ostream &os ) const
 void reverse_node::execute( proof_context &ctx, int dir ) const
 {
   child.execute( ctx, -dir );
+}
+
+vector<change> reverse_node::pn_evaluate( proof_context &ctx ) const 
+{
+  vector<change> fwd( child.pn_evaluate(ctx) );
+  return vector<change>( fwd.rbegin(), fwd.rend() );
 }
 
 void string_node::execute( proof_context &ctx, int dir ) const
@@ -238,7 +252,7 @@ pn_node::pn_node( const change& ch )
 {
 }
 
-pn_node::pn_node( const method& m )
+pn_node::pn_node( const vector<change>& m )
   : changes( m )
 {
 }
@@ -257,6 +271,55 @@ void pn_node::execute( proof_context &ctx, int dir ) const
     for_each( changes.rbegin(), changes.rend(), ctx.permute_and_prove() );
 }
 
+void replacement_node::debug_print( ostream& os ) const
+{
+  pn.debug_print(os);
+  os << (pos == begin ? " >> " : " << ");
+  shift.debug_print(os);
+}
+
+void replacement_node::execute( proof_context &ctx, int dir ) const 
+{
+  unable_to("execute replacement block");
+}
+
+void replacement_node::apply_replacement( proof_context& ctx, 
+                                          vector<change>& m ) const
+{
+  vector<change> mask( pn.pn_evaluate(ctx) );
+  RINGING_LLONG off( shift.int_evaluate(ctx) );
+
+  if (pos == end && off >= m.size() || off < 0 || off == 0 && pos == begin ||
+      // The following cases are handled in ERIL and should be handled in
+      // GSiril to support variations
+      pos == begin && off-1 + mask.size() > m.size() || 
+      pos == end && mask.size() > off+1)
+    throw runtime_error("Replacement block overruns the block its applied to");
+
+  copy( mask.begin(), mask.end(),
+        pos == begin ? m.begin() + (off-1) : m.end() - (off+1) );
+}
+
+void merge_node::debug_print( ostream& os ) const
+{
+  block.debug_print(os);
+  os << " & ";
+  replacement.debug_print(os);
+}
+
+vector<change> merge_node::pn_evaluate( proof_context& ctx ) const
+{
+  vector<change> pn( block.pn_evaluate(ctx) );
+  replacement.apply_replacement(ctx, pn);
+  return pn;
+}
+
+void merge_node::execute( proof_context& ctx, int dir ) const
+{
+  // TODO: This is where we should handle overflow beyond the original block
+  return expression( new pn_node( pn_evaluate(ctx) ) ).execute( ctx, dir );
+}
+  
 transp_node::transp_node( int bells, const string &r )
   : transp(bells)
 {
@@ -311,6 +374,25 @@ string symbol_node::string_evaluate( proof_context &ctx ) const
 {
    expression e( ctx.lookup_symbol(sym) );
    return e.string_evaluate(ctx);
+}
+
+string symbol_node::string_evaluate( proof_context &ctx, bool *no_nl ) const
+{
+   expression e( ctx.lookup_symbol(sym) );
+   return e.string_evaluate(ctx, no_nl);
+}
+
+vector<change> symbol_node::pn_evaluate( proof_context &ctx ) const
+{
+   expression e( ctx.lookup_symbol(sym) );
+   return e.pn_evaluate(ctx);
+}
+
+void
+symbol_node::apply_replacement( proof_context& ctx, vector<change>& m ) const
+{
+   expression e( ctx.lookup_symbol(sym) );
+   return e.apply_replacement(ctx, m);
 }
 
 void assign_node::debug_print( ostream &os ) const
@@ -713,6 +795,16 @@ RINGING_LLONG call_node::int_evaluate( proof_context &ctx ) const
 string call_node::string_evaluate( proof_context &ctx ) const
 {
   return evaluate(ctx).string_evaluate(ctx);
+}
+
+string call_node::string_evaluate( proof_context &ctx, bool* no_nl ) const
+{
+  return evaluate(ctx).string_evaluate(ctx);
+}
+
+vector<change> call_node::pn_evaluate( proof_context &ctx ) const
+{
+  return evaluate(ctx).pn_evaluate(ctx);
 }
 
 expression::type_t call_node::type( proof_context &ctx ) const

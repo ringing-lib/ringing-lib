@@ -76,6 +76,7 @@ namespace tok_types
     greater     = '>',
     less        = '<',
     logic_not   = '!',
+    merge       = '&',
     ctrl_z      = '\x1A',   /* EOF marker in microSIRIL */
     comment     = tokeniser::first_token,
     string_lit,
@@ -92,6 +93,8 @@ namespace tok_types
     less_eq,       /* <= */
     increment,     /* ++ */
     decrement,     /* -- */
+    left_shift,    /* << */
+    right_shift,   /* >> */
     regex_lit      /* /.../ */
   };
 }
@@ -154,6 +157,7 @@ public:
       land( "&&", tok_types::logic_and ), lor( "||", tok_types::logic_or ),
       cmpeq( "==", tok_types::equals ), cmpne( "!=", tok_types::not_equals ),
       cmpge( ">=", tok_types::greater_eq ), cmple( "<=", tok_types::less_eq ),
+      lsh( "<<", tok_types::left_shift ), rsh( "<<", tok_types::right_shift ),
       inc( "++", tok_types::increment ), dec( "--", tok_types::decrement )
   {
     // Note:  It is important that &sym is added after &land; and
@@ -171,6 +175,7 @@ public:
     add_qtype(&cmpeq);  add_qtype(&cmpne);
     add_qtype(&cmpge);  add_qtype(&cmple);
     add_qtype(&inc);    add_qtype(&dec);
+    add_qtype(&lsh);    add_qtype(&rsh);
     add_qtype(&sym);    add_qtype(&asym);
 
     // Properly MicroSiril mode should disable _, but that would be unhelpful
@@ -201,7 +206,8 @@ public:
       if ( args.msiril_syntax ) return;
       break;
 
-    case plus: case minus: case modulo: case append:
+    case plus: case minus: case modulo: case append: 
+    case merge: case left_shift: case right_shift:
     case regex_lit: case open_brace: case close_brace: case colon:
     case logic_and: case logic_or: case equals: case not_equals: 
     case less: case greater: case less_eq: case greater_eq:
@@ -226,7 +232,7 @@ private:
   string_token r, q, qq;
   pn_impl sym, asym;
   basic_token defass, immass, appass, land, lor, cmpeq, cmpne, cmpge, cmple, 
-              inc, dec;
+              lsh, rsh, inc, dec;
 };
 
 
@@ -700,6 +706,27 @@ msparser::make_expr( vector< token >::const_iterator first,
     check_bin_op( first, split, last, cmp_node::symbol(cmp) );
     return expression( new cmp_node( make_expr( first, split ),
                                      make_expr( split+1, last ), cmp ) );
+  }
+
+  // Replacement operators come next.  These use &, << and >> which in C-like
+  // languages would be lower precedent than comparison operators.  That's 
+  // really a bug in C due to its legacy from B, and we can fix it here.
+  if ( find( first, last, tok_types::merge, split ) ) {
+    check_bin_op( first, split, last, "&" );
+    return expression( new merge_node( make_expr( first, split ),
+                                       make_expr( split+1, last ) ) );
+  }
+  
+  vector<tok_types::enum_t> shiftops;
+  shiftops.push_back( tok_types::left_shift );
+  shiftops.push_back( tok_types::right_shift );
+  if ( find_one_of( first, last, shiftops, split ) ) {
+    check_bin_op( first, split, last, 
+                  split->type() == tok_types::left_shift ? "<<" : ">>" );
+    return expression( new replacement_node
+      ( make_expr( first, split ), make_expr( split+1, last ),
+        split->type() == tok_types::left_shift 
+          ? replacement_node::end : replacement_node::begin ) );
   }
 
   // Addition operators are next

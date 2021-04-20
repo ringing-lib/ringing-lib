@@ -34,11 +34,9 @@
 #include <string>
 #include <ringing/row.h>
 #include <ringing/music.h>
-#include <ringing/method.h>
 
-// Forward declare ringing::method and ringing::change
+// Forward declare ringing::change
 RINGING_START_NAMESPACE
-class method;
 class change;
 RINGING_END_NAMESPACE
 
@@ -57,6 +55,7 @@ protected:
   virtual bool bool_evaluate( proof_context &ctx ) const;
   virtual RINGING_LLONG int_evaluate( proof_context &ctx ) const;
   virtual string string_evaluate( proof_context &ctx ) const;
+  virtual vector<change> pn_evaluate( proof_context &ctx ) const;
   virtual expression::type_t type( proof_context &ctx ) const;
 
 private:  
@@ -93,6 +92,7 @@ public:
 protected:
   virtual void debug_print( ostream &os ) const;
   virtual void execute( proof_context &ctx, int dir ) const;
+  virtual vector<change> pn_evaluate( proof_context &ctx ) const;
 
 private:  
   expression child;
@@ -123,15 +123,46 @@ class pn_node : public expression::node {
 public:
   pn_node( int bells, const string &pn );
 
-  pn_node( method const& m );
+  pn_node( vector<change> const& m );
   pn_node( change const& ch );
 
 protected:
   virtual void debug_print( ostream &os ) const;
   virtual void execute( proof_context &ctx, int dir ) const;
+  virtual vector<change> pn_evaluate( proof_context &ctx ) const
+    { return changes; }
 
 private:
-  vector< change > changes;
+  vector<change> changes;
+};
+
+class replacement_node : public expression::node {
+public:
+  enum pos_t { begin, end };
+
+  replacement_node( expression const& pn, expression const& shift, pos_t pos )
+    : pn(pn), shift(shift), pos(pos) {}
+
+  virtual void debug_print( ostream &os ) const;
+  virtual void execute( proof_context &ctx, int dir ) const;
+  virtual void apply_replacement( proof_context& ctx, vector<change>& m ) const;
+
+private:
+  expression pn, shift;
+  pos_t pos;
+};
+
+class merge_node : public expression::node {
+public:
+  merge_node( expression const& block, expression const& replacement )
+    : block(block), replacement(replacement) {}
+
+  virtual void debug_print( ostream &os ) const;
+  virtual void execute( proof_context &ctx, int dir ) const;
+  virtual vector<change> pn_evaluate( proof_context &ctx ) const;
+
+private:
+  expression block, replacement;
 };
 
 class transp_node : public expression::node {
@@ -159,6 +190,9 @@ protected:
   virtual bool bool_evaluate( proof_context &ctx ) const;
   virtual RINGING_LLONG int_evaluate( proof_context &ctx ) const;
   virtual string string_evaluate( proof_context &ctx ) const;
+  virtual string string_evaluate( proof_context &ctx, bool *no_nl ) const;
+  virtual vector<change> pn_evaluate( proof_context &ctx ) const;
+  virtual void apply_replacement( proof_context& ctx, vector<change>& m ) const;
 
 private:
   string sym;
@@ -429,8 +463,10 @@ protected:
   virtual expression evaluate( proof_context &ctx ) const;
   virtual bool bool_evaluate( proof_context &ctx ) const;
   virtual RINGING_LLONG int_evaluate( proof_context &ctx ) const;
-  virtual string string_evaluate( proof_context &ctx ) const;
   virtual expression::type_t type( proof_context &ctx ) const;
+  virtual string string_evaluate( proof_context &ctx, bool* no_nl ) const;
+  virtual string string_evaluate( proof_context &ctx ) const;
+  virtual vector<change> pn_evaluate( proof_context &ctx ) const;
 
 private:
   string name;
