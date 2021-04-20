@@ -244,6 +244,18 @@ private:
   expression val;
 };
 
+class endproof_node : public expression::node {
+protected:
+  virtual void debug_print( ostream &os ) const;
+  virtual void execute( proof_context &ctx, int dir ) const;
+};
+
+class isproving_node : public expression::bnode {
+protected:
+  virtual void debug_print( ostream &os ) const;
+  virtual bool bool_evaluate( proof_context &ctx ) const;
+};
+
 class isrounds_node : public expression::bnode {
 protected:
   virtual void debug_print( ostream &os ) const;

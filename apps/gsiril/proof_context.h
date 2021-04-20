@@ -60,6 +60,8 @@ public:
   private:
     friend class proof_context;
     permute_and_prove_t( row &r, prover &p, proof_context &pctx );
+
+    bool prove();
   
     row &r;
     prover &p;
@@ -70,6 +72,8 @@ public:
  ~proof_context();
   
   permute_and_prove_t permute_and_prove();
+  void disable_proving() { proving = false; }
+  bool is_proving() { return proving; }
 
   row current_row() const { return r; }
   bool isrounds() const;
@@ -111,6 +115,7 @@ private:
   row r;
   size_t max_length;
   shared_pointer<prover> p;
+  bool proving;
   proof_context const* parent;
 
   ostream* output;

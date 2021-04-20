@@ -505,6 +505,27 @@ static void validate_regex( const music_details& desc, int bells )
   // TODO: Check for multiple occurances of the same bell
 }
 
+void endproof_node::debug_print( ostream &os ) const
+{
+  os << "endproof";
+}
+
+void endproof_node::execute( proof_context &ctx, int dir ) const
+{
+  ctx.disable_proving();
+}
+
+
+bool isproving_node::bool_evaluate( proof_context& ctx ) const
+{
+  return ctx.is_proving();
+}
+
+void isproving_node::debug_print( ostream &os ) const
+{
+  os << "proving";
+}
+
 bool isrounds_node::bool_evaluate( proof_context& ctx ) const
 {
   return ctx.isrounds();

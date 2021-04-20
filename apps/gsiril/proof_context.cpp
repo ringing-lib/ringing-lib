@@ -48,8 +48,8 @@ RINGING_USING_NAMESPACE
 proof_context::proof_context( const execution_context &ectx ) 
   : ectx(ectx), row_mask(ectx.bells(), ectx.row_mask()),
     max_length( ectx.expected_length().second ),
-    p( new prover(ectx.get_args().num_extents) ), parent( NULL ),
-    output( &ectx.output() ),
+    p( new prover(ectx.get_args().num_extents) ), proving(true), 
+    parent( NULL ), output( &ectx.output() ),
     silent( ectx.get_args().everyrow_only || ectx.get_args().filter
             || ectx.get_args().quiet >= 2 ), 
     underline( false )
@@ -115,19 +115,23 @@ void proof_context::execute_everyrow()
 
 bool proof_context::permute_and_prove_t::operator()( const change &c )
 {
-  bool rv = p.add_row( r *= c ); 
-  pctx.execute_everyrow();
-  if ( pctx.max_length && p.size() > pctx.max_length ) 
-    pctx.execute_symbol("toolong");
-  if ( pctx.isrounds() ) pctx.execute_symbol("rounds");
-  if ( !rv ) pctx.execute_symbol("conflict");
-  return rv;
+  r *= c;
+  return prove();
 }
 
 bool proof_context::permute_and_prove_t::operator()( const row &c )
 {
-  bool rv = p.add_row( r *= c ); 
+  r *= c;
+  return prove();
+}
+
+bool proof_context::permute_and_prove_t::prove() 
+{
+  if ( !pctx.is_proving() ) return true;
+  bool rv = p.add_row(r); 
   pctx.execute_everyrow();
+  if ( pctx.max_length && p.size() > pctx.max_length ) 
+    pctx.execute_symbol("toolong");
   if ( pctx.isrounds() ) pctx.execute_symbol("rounds");
   if ( !rv ) pctx.execute_symbol("conflict");
   return rv;
