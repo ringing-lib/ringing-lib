@@ -158,13 +158,13 @@ private:
 class row_mask_stmt : public statement::impl
 {
 public:
-  explicit row_mask_stmt( const music_details& mask )
+  explicit row_mask_stmt( const string& mask )
     : mask(mask) {}
 
 private:
   virtual void execute( execution_context& );
 
-  music_details mask;
+  string mask;
 };
 
 // Import a resource

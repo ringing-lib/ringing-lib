@@ -392,7 +392,7 @@ statement msparser::parse()
   // Row mask directive
   if ( cmd.size() == 2 && cmd[0].type() == tok_types::name 
        && cmd[0] == "row_mask" && cmd[1].type() == tok_types::regex_lit )
-    return statement( new row_mask_stmt(music_details(cmd[1])) );
+    return statement( new row_mask_stmt(cmd[1]) );
 
   // Import directive
   if ( !args.disable_import

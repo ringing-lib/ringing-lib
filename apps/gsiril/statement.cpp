@@ -24,6 +24,7 @@
 
 #include "statement.h"
 #include "parser.h"
+#include "expression.h"
 #include "execution_context.h"
 #include "proof_context.h"
 #if RINGING_OLD_IOSTREAMS
@@ -179,8 +180,13 @@ void rounds_stmt::execute( execution_context& e )
 
 void row_mask_stmt::execute( execution_context& e )
 {
+  if (!e.bells())
+    throw runtime_error
+      ( "Must specify the number of bells before setting a row mask" );
+
   if (!e.get_args().everyrow_only) {
-    e.row_mask( mask );
+    pattern_node pattern(e.bells(), mask);
+    e.row_mask( pattern.get_music_details() );
 
     if ( e.verbose() )
       e.output() << "Set row mask" << endl;

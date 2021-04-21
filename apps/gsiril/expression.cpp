@@ -470,17 +470,14 @@ void immediate_assign_node::execute( proof_context& ctx, int dir ) const
 
 static void validate_regex( const music_details& desc, int bells )
 {
-  static string allowed;
-  if ( allowed.empty() ) {
-    allowed.append( row(bells).print() );
-    allowed.append("*?[]");
-  }
+  string allowed( row(bells).print() );
+  allowed.append("*?[]");
 
   string tok( desc.get() );
 
   if ( tok.find_first_not_of( allowed ) != string::npos )
-    throw runtime_error( make_string() << "Illegal regular expression: " 
-			 << tok );
+    throw runtime_error( make_string() << "Illegal regular expression: '" 
+			 << tok << "' on " << bells << " bells" );
 
   bool inbrack(false);
   for ( string::const_iterator i(tok.begin()), e(tok.end()); i!=e; ++i ) 
