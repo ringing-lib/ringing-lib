@@ -224,6 +224,27 @@ static int parse_bell_expr( int bells, string const& expr ) {
   else return parse_int( string(i,e) ); 
 }
 
+static string expand_bell_ranges( int bells, string const& pn ) {
+  // The minimum length for a range is four characters, e.g. "1..6".
+  if ( pn.size() < 4 ) return pn;
+
+  make_string ret;
+  for ( string::const_iterator b=pn.begin(), i=b, e=pn.end(); i!=e; ) {
+    if (i > b && i < e-2 && *i == '.' && *(i+1) == '.') {
+      bell first = bell::read_char(*(i-1)), last = bell::read_char(*(i+2));
+      if (first < last)
+        for (bell b = first+1; b != last; ++b)
+          ret << b;
+      else if (first > last)
+        for (bell b = first-1; b != last; --b)
+          ret << b;
+      i += 2;
+    }
+    else ret << *i++;
+  }
+  return ret;
+}
+
 static string expand_bell_exprs( int bells, string const& pn ) {
   make_string ret;
   for ( string::const_iterator i=pn.begin(), e=pn.end(); i!=e; ) {
@@ -234,7 +255,7 @@ static string expand_bell_exprs( int bells, string const& pn ) {
     }
     else ret << *i++;
   }
-  return ret;
+  return expand_bell_ranges( bells, ret );
 }
 
 pn_node::pn_node( int bells, const string &raw_pn )
