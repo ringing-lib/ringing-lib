@@ -54,6 +54,9 @@
 % Tables with lines spanning multiple rows
 \usepackage{tabularx}
 
+% Tables spanning multiple pages
+\usepackage{xltabular}
+
 \usepackage{footnote}
 \usepackage{bigfoot}
 
@@ -1808,7 +1811,7 @@ typed in on the command line reach \methsearch\ in their intended form.
 
 {\def\D{\texttt{\$}}\def\N{$n$\/}\def\No{\textit{[$n$]}\/}
 \def\F#1{\texttt{#1}\fspecd{#1}}
-\begin{tabularx}{\textwidth}{lX}
+\begin{xltabular}{\textwidth}{lX}
 \D\F{p}&The place notation (verbose format) --- see \sref{pn}\\
 \D\F{q}&The place notation (concise format)\\
 \D\F{Q}&As \texttt{\$q} but without the lead end change%
@@ -1843,6 +1846,8 @@ typed in on the command line reach \methsearch\ in their intended form.
 \D\F{F}&The falseness groups --- see \sref{falserest}\\
 \D\N\F{P}&The path for bell \N\\
 \D\F{O}&The coursing order (defined so the tenors course)\\
+\D\F{V}&The place notation of the overwork\\
+\D\F{U}&The place notation of the underwork\\
 \D\No\F{s}&An index of the staticity of the method\\
 \D\No\F{i}&The method identifier from the CC libraries\\
 \D\No\F{a}&The filter payload --- see \sref{misc_opt}\\
@@ -1851,7 +1856,7 @@ typed in on the command line reach \methsearch\ in their intended form.
 \D\No\F{c}&The number of matching methods --- see \sref{stats}\\
 \D\No\texttt{?}&The exit status of the last command invocation --- 
              see \sref{cmdinv}\\
-\end{tabularx}}
+\end{xltabular}}
 
 In the above table, $n$ stands for an integer which must be supplied.
 For example, in a surprise major method, \verb+-R$32h+ will print the
@@ -4678,6 +4683,7 @@ principles\index{principles} and differentials.\index{differentials}
 \item Row matching: \verb+--row-match+ (\sref{misc_opt}); and its
 interaction with \verb+-FP+ (\sref{pendrows}).
 \item Any regular lead end: \verb+--any-regular-lh+ (\sref{le_lh}).
+\item Over and underworks: \verb+$V+ and \verb+U+ (\sref{variables}).
 \end{list}
 
 \clearpage

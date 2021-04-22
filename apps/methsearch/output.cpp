@@ -1,5 +1,5 @@
 // -*- C++ -*- output.cpp - generic classes to handle output of methods
-// Copyright (C) 2002, 2003, 2004, 2005, 2009, 2010, 2011, 2020
+// Copyright (C) 2002, 2003, 2004, 2005, 2009, 2010, 2011, 2020, 2021
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -16,7 +16,6 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-// $Id$
 
 #include <ringing/common.h>
 
@@ -291,6 +290,16 @@ string method_properties::impl2::get_property( int num_opt,
           os << payload;
           break;
  
+	case 'V': 
+	  os << split_over_and_split(m).first
+                  .format( method::M_DASH | method::M_FULL_SYMMETRY );
+	  break;
+
+	case 'U': 
+	  os << split_over_and_split(m).second
+                  .format( method::M_DASH | method::M_FULL_SYMMETRY );
+	  break;
+
         case '?':
           // Return it to avoid caching it
           return os << setw(num_opt) << get_last_exec_status(); 

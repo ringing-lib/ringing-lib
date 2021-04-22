@@ -1,5 +1,5 @@
 // -*- C++ -*- format.cpp - classes to handle format specifiers
-// Copyright (C) 2002, 2003, 2004, 2005, 2008, 2009, 2010, 2011
+// Copyright (C) 2002, 2003, 2004, 2005, 2008, 2009, 2010, 2011, 2021
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -16,7 +16,6 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-// $Id$
 
 #include <ringing/common.h>
 
@@ -423,7 +422,7 @@ format_string::format_string( const string &infmt,
 	    case 'o': case 'd': case 'u': case '[': case '(':
 	    case 'y': case 'O': case ')': case 'L': case 'D':
             case 'P': case 's': case 'a': case '?': case 'B':
-            case 'G':
+            case 'G': case 'V': case 'U':
 	      // Can be used in either
 	      break;
 
@@ -444,7 +443,8 @@ format_string::format_string( const string &infmt,
 
 	    case 'n': case 'N': case 'p': case 'q': case 'Q': case 'l': 
 	    case 'C': case 'S': case 'F': case 'd': case '[': case '(':
-	    case 'y': case 'O': case 'D': case 'a': case 'T':
+	    case 'y': case 'O': case 'D': case 'a': case 'T': case 'V':
+            case 'U':
 	      if ( got_num_opt )
 		throw argument_error
 		  ( make_string() << "The `$" << *iter << "' "
