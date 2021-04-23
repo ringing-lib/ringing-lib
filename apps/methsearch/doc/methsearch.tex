@@ -1510,6 +1510,32 @@ This information is displayed on
 redirection using \verb+>+.
 \index{output|)}
 
+\section{Over- and underworks}\label{overunder}
+
+\begin{tabularx}{\textwidth}{lX}
+\texttt{--overwork-map=FILE}&Use \texttt{FILE} as an overwork map 
+                             to rewrite \verb+$V+\\
+\texttt{--underwork-map=FILE}&Use \texttt{FILE} as an underwork map 
+                             to rewrite \verb+$U+\\
+\end{tabularx}
+
+These two options take the name of a file which contains a mapping from over
+or underwork place notations to names.  The format of the file is that of a
+method stream (\sref{methstream}), and each method's payload is the name to
+associate with that over- or underwork.
+
+When an overwork or underwork is printed using the \verb+$V+ or \verb+$U+
+\fspec{V}\fspec{U} method variables, the place notation for the over- or
+underwork is generated and then compared with each method in the specified map
+file in turn until one matches.  If method was found in the map file and its
+payload is present, it is printed; otherwise the place notation is printed as
+if formatted with \verb+$q+.
+
+\methsearch\ can be used to help generate the over- and underwork map files by
+running it with \verb+-qH'$V'+ to get a list of distinct overworks.  Save that
+output to a file and append the name.  Alternatively, generate a list of all
+methods using \verb+-R'$V\t$n'+ and delete all but one with each overwork.
+
 \section{Random sampling}\label{random}
 
 \begin{tabularx}{\textwidth}{lX}
@@ -1846,8 +1872,8 @@ typed in on the command line reach \methsearch\ in their intended form.
 \D\F{F}&The falseness groups --- see \sref{falserest}\\
 \D\N\F{P}&The path for bell \N\\
 \D\F{O}&The coursing order (defined so the tenors course)\\
-\D\F{V}&The place notation of the overwork\\
-\D\F{U}&The place notation of the underwork\\
+\D\F{V}&The place notation (or name) of the overwork\\
+\D\F{U}&The place notation (or name) of the underwork\\
 \D\No\F{s}&An index of the staticity of the method\\
 \D\No\F{i}&The method identifier from the CC libraries\\
 \D\No\F{a}&The filter payload --- see \sref{misc_opt}\\
@@ -4221,11 +4247,19 @@ Method streams are used to stream a list of methods between programs.
 The standard syntax is again very straightforward: methods are given,
 one per line, in any recognised form of place notation (\sref{pn}).  
 Whitespace is not permitted in the place notation, and any text after
-the first whitespace character on the line is ignored.\footnote{%
+the first whitespace character on the line is an optional \textit{payload}
+whose meaning (if any) is dependent on the context.\footnote{%
 \methsearch\ considers the space, tab, carriage return and line feed
-to be whitespace.}\index{whitespace}
+to be whitespace.  The payload begins at the first non-whitespace character
+after the first instance of whitespace on the line.}\index{whitespace}
+
 When invoked with the \verb+-I+ option (\sref{misc_opt}), 
-\methsearch\ requires a method stream on standard input.\index{standard input}
+\methsearch\ requires a method stream on standard input,\index{standard input}
+and the payload is accessible wth \verb+$a+ method variable (\sref{variables}).
+The \verb+--overwork-map+ and \verb+--underwork-map+ options (\sref{overunder}) 
+take the name of a file whose contents are a method stream, and the payloads
+are the names of the over- or underwork.
+
 Frequently, \methsearch's output is a method stream — specifically
 whenever a \verb+-R+ option starting with \verb+$p+ or \verb+$q+ is given
 (or no \verb+-R+ is given) and no statistical output or counts are requested.%
@@ -4683,7 +4717,8 @@ principles\index{principles} and differentials.\index{differentials}
 \item Row matching: \verb+--row-match+ (\sref{misc_opt}); and its
 interaction with \verb+-FP+ (\sref{pendrows}).
 \item Any regular lead end: \verb+--any-regular-lh+ (\sref{le_lh}).
-\item Over and underworks: \verb+$V+ and \verb+U+ (\sref{variables}).
+\item Over and underworks: \verb+$V+, \verb+$U+ (\sref{variables});
+  \verb+--overwork-map+, \verb+--underwork-map+ (\sref{overunder}).
 \end{list}
 
 \clearpage

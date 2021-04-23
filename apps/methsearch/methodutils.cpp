@@ -439,7 +439,7 @@ unsigned long staticity( method const& m )
   return s;
 }
 
-pair<method,method> split_over_and_split( method const& m ) {
+pair<method,method> split_over_and_under( method const& m ) {
   pair<method, method> works;
   method &over = works.first, &under = works.second;
   bell treble(0);

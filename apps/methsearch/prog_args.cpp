@@ -569,8 +569,18 @@ void arguments::bind( arg_parser &p )
 
   p.add( new string_opt
 	 ( 'O', "out-format",
-	   "Create as a FMTTYPE library ", "FMTTYPE",
+	   "Create as a FMTTYPE library", "FMTTYPE",
 	   outfmt ) );
+
+  p.add( new string_opt
+	 ( '\0', "overwork-map",
+	   "Use FILE as an overwork map to rewrite $V", "FILE",
+	   overwork_map_file ) );
+
+  p.add( new string_opt
+	 ( '\0', "underwork-map",
+	   "Use FILE as an underwork map to rewrite $U", "FILE",
+	   underwork_map_file ) );
 }
 
 bool arguments::validate( arg_parser &ap )
@@ -1127,6 +1137,22 @@ bool arguments::validate( arg_parser &ap )
     }
 
   if ( !status_freq ) status_freq = 10000;
+
+  if ( overwork_map_file.size() ) try {
+    overwork_map( bells, overwork_map_file );
+  }
+  catch ( const exception &e ) {
+    ap.error( make_string() << "Unable to read overwork map: " << e.what() );
+    return false;
+  }
+ 
+  if ( underwork_map_file.size() ) try {
+    underwork_map( bells, underwork_map_file );
+  }
+  catch ( const exception &e ) {
+    ap.error( make_string() << "Unable to read underwork map: " << e.what() );
+    return false;
+  }
  
   return true;
 }

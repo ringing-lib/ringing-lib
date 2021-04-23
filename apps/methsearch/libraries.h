@@ -56,4 +56,11 @@ private:
   vector<string> library_names;
 };
 
+// Call without arguments to fetch and with arguments to load
+library const& 
+overwork_map( int bells = 0, const string& filename = string() );
+
+library const&
+underwork_map( int bells = 0, const string& filename = string() );
+
 #endif // METHSEARCH_LIBRARIES_INCLUDED

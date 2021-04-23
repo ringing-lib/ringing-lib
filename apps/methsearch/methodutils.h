@@ -70,6 +70,6 @@ char const* old_lhcode( bool unicode, method const& m );
 
 unsigned long staticity( method const& m );
 
-pair<method,method> split_over_and_split( method const& m );
+pair<method,method> split_over_and_under( method const& m );
 
 #endif // METHSEARCH_METHODUTILS_INCLUDED

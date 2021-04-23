@@ -290,15 +290,23 @@ string method_properties::impl2::get_property( int num_opt,
           os << payload;
           break;
  
-	case 'V': 
-	  os << split_over_and_split(m).first
-                  .format( method::M_DASH | method::M_FULL_SYMMETRY );
-	  break;
+	case 'V': {
+          method work( split_over_and_under(m).first );
+          library_entry le( overwork_map().find(work) );
+          if ( le.null() || !le.has_facet<litelib::payload>() ) 
+            os << work.format( method::M_DASH | method::M_FULL_SYMMETRY );
+          else
+            os << le.get_facet<litelib::payload>();
+	} break;
 
-	case 'U': 
-	  os << split_over_and_split(m).second
-                  .format( method::M_DASH | method::M_FULL_SYMMETRY );
-	  break;
+	case 'U': {
+          method work( split_over_and_under(m).second );
+          library_entry le( underwork_map().find(work) );
+          if ( le.null() || !le.has_facet<litelib::payload>() ) 
+            os << work.format( method::M_DASH | method::M_FULL_SYMMETRY );
+          else
+            os << le.get_facet<litelib::payload>();
+	} break;
 
         case '?':
           // Return it to avoid caching it

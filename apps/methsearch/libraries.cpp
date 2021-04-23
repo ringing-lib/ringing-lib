@@ -43,6 +43,7 @@
 #endif
 #include <ringing/method.h>
 #include <ringing/library.h>
+#include <ringing/litelib.h>
 #include <ringing/cclib.h>
 #include <ringing/mslib.h>
 #include <ringing/xmllib.h>
@@ -124,6 +125,28 @@ method method_libraries::lookup_method( const method &m )
     return i.meth();
   else 
     return m;
+}
+
+library const& overwork_map( int bells, const string& filename ) {
+  static methodset out;
+  if ( bells ) {
+    litelib in( bells, filename );
+    out = methodset();
+    out.store_facet<litelib::payload>();
+    out.append( in.begin(), in.end() );
+  }
+  return out;
+}
+
+library const& underwork_map( int bells, const string& filename ) {
+  static methodset out;
+  if ( bells ) {
+    litelib in( bells, filename );
+    out = methodset();
+    out.store_facet<litelib::payload>();
+    out.append( in.begin(), in.end() );
+  }
+  return out;
 }
 
 
