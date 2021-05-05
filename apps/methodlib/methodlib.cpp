@@ -111,7 +111,7 @@ public:
       titles[*i] = 0u;
   }
 
-  bool test( method const& m ) const;
+  bool test( library_entry const& m ) const;
   bool check() const;
 
 private:
@@ -119,11 +119,11 @@ private:
   mutable map<string, unsigned> titles;
 };
 
-bool filter::test( const method& meth ) const {
-  if ( args.bells && meth.bells() != args.bells )
+bool filter::test( const library_entry& le ) const {
+  if ( args.bells && le.bells() != args.bells )
     return false;
 
-  map<string, unsigned>::iterator i = titles.find( meth.fullname() );
+  map<string, unsigned>::iterator i = titles.find( le.fullname() );
   if ( i != titles.end() ) ++i->second;
   else if ( titles.size() ) return false;
 
@@ -161,7 +161,7 @@ void read_library( const string &filename, const filter& f,
     }
 
     for ( library::const_iterator i(l.begin()), e(l.end()); i != e; ++i )
-      if ( f.test( i->meth() ) )
+      if ( f.test(*i) )
         out.append(*i);
   }
   catch ( const exception &e ) {
