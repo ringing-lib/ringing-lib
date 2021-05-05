@@ -24,6 +24,7 @@
 
 #include "statement.h"
 #include "parser.h"
+#include "expression.h"
 #include "execution_context.h"
 #include "proof_context.h"
 #if RINGING_OLD_IOSTREAMS
@@ -91,14 +92,10 @@ void prove_stmt::execute( execution_context& e )
   if (e.get_args().prove_one && e.done_one_proof())
     throw runtime_error( "Already done proof" );
 
-  int const quiet = e.get_args().quiet;
-
   e.set_done_proof();
   
-  if (e.get_args().determine_bells) {
+  if (e.get_args().determine_bells)
     cout << e.bells() << " bells" << endl;
-    return;
-  }
 
   proof_context p(e);
 
@@ -109,14 +106,12 @@ void prove_stmt::execute( execution_context& e )
   } 
   catch( const script_exception& ex ) {
     if ( ex.t == script_exception::do_abort ) {
-      if ( e.get_args().quiet ) p.set_silent(true);
       p.execute_final_symbol( "abort" );
       e.set_failure();
     }
     return;
   }
    
-  if ( e.get_args().quiet ) p.set_silent(true);
   switch ( p.state() ) {
   case proof_context::rounds: 
     if ( e.expected_length().first && 
@@ -124,8 +119,10 @@ void prove_stmt::execute( execution_context& e )
       p.execute_final_symbol("tooshort");
       e.set_failure();
     }
-    else
+    else {
+      if ( e.get_args().quiet ) p.set_silent(true);
       p.execute_final_symbol("true"); 
+    }
     break;
   case proof_context::notround:
     p.execute_final_symbol("notround");
@@ -183,11 +180,17 @@ void rounds_stmt::execute( execution_context& e )
 
 void row_mask_stmt::execute( execution_context& e )
 {
-  if (!e.get_args().everyrow_only)
-    e.row_mask( mask );
+  if (!e.bells())
+    throw runtime_error
+      ( "Must specify the number of bells before setting a row mask" );
 
-  if ( e.verbose() )
-    e.output() << "Set row mask" << endl;
+  if (!e.get_args().everyrow_only) {
+    pattern_node pattern(e.bells(), mask);
+    e.row_mask( pattern.get_music_details() );
+
+    if ( e.verbose() )
+      e.output() << "Set row mask" << endl;
+  }
 }
 
 void import_stmt::execute( execution_context& e )
@@ -237,16 +240,37 @@ void import_stmt::execute( execution_context& e )
     e.output() << "Resource \"" << name << "\" loaded" << endl;
 }
 
+echo_stmt::mode_t echo_stmt::get_mode( string const& keyword ) {
+  if (keyword == "error") return error;
+  else if (keyword == "warn") return warn;
+  else return echo;
+}
+
 void echo_stmt::execute( execution_context& e )
 {
-  proof_context p(e); p.set_silent(false);
-  string str( expr.string_evaluate(p) );
+  proof_context p(e);
+  // The proof_context sets silent mode with -E or --filter.
+  // We only want that with -qq.  Warnings and errors should never be silenced.
+  if ( e.get_args().quiet < 2 || mode != echo ) p.set_silent( false );
 
-  try {
-    if (substitute) p.output_string(str, false);
-    else e.output() << str << "\n";
-  } 
-  catch( const script_exception& ex ) {
-    if ( ex.t == script_exception::do_abort ) e.set_failure();
+  bool no_nl = false;
+  string str( expr.string_evaluate(p, &no_nl) );
+
+  ostream& os = mode == echo ? e.output() : cerr;
+  os << str;
+  if (!no_nl) os << '\n';
+
+  if ( mode == error ) {
+    if ( e.interactive() ) e.set_failure();
+    else exit(1);
+  }
+}
+
+void if_stmt::execute( execution_context& e ) {
+  switch (type) {
+    case push_if:       e.push_if(expr);       break;
+    case chain_else_if: e.chain_else_if(expr); break;
+    case chain_else:    e.chain_else();        break;
+    case pop_if:        e.pop_if();            break;
   }
 }

@@ -60,6 +60,8 @@ public:
   private:
     friend class proof_context;
     permute_and_prove_t( row &r, prover &p, proof_context &pctx );
+
+    bool prove();
   
     row &r;
     prover &p;
@@ -70,6 +72,8 @@ public:
  ~proof_context();
   
   permute_and_prove_t permute_and_prove();
+  void disable_proving();
+  bool is_proving() { return proving; }
 
   row current_row() const { return r; }
   bool isrounds() const;
@@ -82,15 +86,20 @@ public:
   void execute_final_symbol( const string& sym );
   void define_symbol( const pair< const string, expression > &defn );
   expression lookup_symbol( const string& sym ) const;
+  bool defined( const string& sym ) const;
 
   enum proof_state { rounds, notround, isfalse };
   proof_state state() const;
-  string substitute_string( const string &str, bool &do_exit ) const;
+
+  string string_escapes( const string& str );
+  string substitute_string( const string &str, bool *do_exit = 0,
+                            bool *do_nl = 0 ) const;
 
   void execute_everyrow();
   void output_string( const string& str, bool to_parent = false ) const;
+  void output_newline( bool to_parent = false ) const;
 
-  method load_method( const string& title ) const;
+  method load_method( const string& title );
 
   proof_context silent_clone() const;
 
@@ -103,9 +112,10 @@ private:
   const execution_context &ectx;
   symbol_table dsym_table; // dynamic symbol table
   mutable music row_mask;
-  row r;
+  row r, last_row;
   size_t max_length;
   shared_pointer<prover> p;
+  bool proving;
   proof_context const* parent;
 
   ostream* output;

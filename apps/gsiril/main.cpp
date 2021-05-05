@@ -90,6 +90,21 @@ void initialise( execution_context& ex, const arguments& args )
     make_default_parser(in, ex)->run(ex, "INIT", parser::fatal);
   }
 
+  for ( vector< string >::const_iterator
+          i(args.string_defs.begin()), e( args.string_defs.end());
+        i != e; ++i ) {
+    size_t j = i->find('=');
+    if (j == string::npos) {
+      cerr << "-S'" << *i << "' not formated as NAME=VALUE" << endl;
+      exit(2);
+    }
+    pair<const string, expression>
+      defn( string(*i, 0, j), 
+            expression( new string_node( string(*i, j+1) ) ) );
+    ex.define_symbol(defn);
+  }
+
+
   // ... and secondly using any -D options on the command line.  
   // We want to do this before importing modules so that modules loaded
   // with a -m option are as similar as possible to those imported with 
@@ -128,7 +143,8 @@ void initialise( execution_context& ex, const arguments& args )
     
   // The 'everyrow' symbol is defined to "@" if -E is specified.
   if (args.everyrow_only)
-    ex.define_symbol(make_pair("everyrow", expression(new string_node("@"))));
+    ex.define_symbol(make_pair("everyrow", 
+      expression(new string_node( "@", string_node::interpolate ))));
 
   ex.interactive(interactive);
   ex.verbose(verbose);
@@ -150,8 +166,17 @@ void prove_first_symbol( execution_context& e, const arguments& args )
            || !e.done_one_proof() && e.defined("__first__") ) {
         if ( e.verbose() )
           cerr << "Proving " << args.prove_symbol << std::endl;
-        statement s( new prove_stmt( 
-          expression( new symbol_node(args.prove_symbol) ) ) );
+
+        RINGING_ISTRINGSTREAM in("prove " + args.prove_symbol);
+
+        shared_pointer<parser> p( make_default_parser(in, e) );
+        statement s( p->parse() );
+
+        if (!p->parse().eof()) { 
+          cerr << "Unexpected content at the end of -P argument\n";
+          exit(3);
+        }
+
         s.execute(e);
       }
     } 
@@ -282,8 +307,8 @@ int main( int argc, char *argv[] )
 
       if ( args.filter )
         filter( e, args );
-      else
-        if ( !run( e, args ) )
+      else if ( !run( e, args ) )
+        if ( !args.determine_bells )
           exit(1);
     }
   catch ( const exception &ex )

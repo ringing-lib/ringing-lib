@@ -76,6 +76,14 @@ string list_node::string_evaluate( proof_context &ctx ) const
   return cdr.string_evaluate( ctx );
 }
 
+vector<change> list_node::pn_evaluate( proof_context &ctx ) const 
+{
+  vector<change> ret( car.pn_evaluate(ctx) );
+  vector<change> add( cdr.pn_evaluate(ctx) );
+  ret.insert( ret.end(), add.begin(), add.end() );
+  return ret;
+}
+
 
 expression::type_t list_node::type( proof_context &ctx ) const
 {
@@ -131,18 +139,53 @@ void reverse_node::execute( proof_context &ctx, int dir ) const
   child.execute( ctx, -dir );
 }
 
+vector<change> reverse_node::pn_evaluate( proof_context &ctx ) const 
+{
+  vector<change> fwd( child.pn_evaluate(ctx) );
+  return vector<change>( fwd.rbegin(), fwd.rend() );
+}
+
 void string_node::execute( proof_context &ctx, int dir ) const
 {
-  ctx.output_string(str, echo);
+  if ( flags & interpolate ) 
+    evaluate(ctx).execute(ctx, dir);
+  else {
+    ctx.output_string( ctx.string_escapes(str), flags & to_parent );
+    if ( !( flags & suppress_nl ) )
+      ctx.output_newline( flags & to_parent );
+    if ( flags & do_abort )
+      throw script_exception( script_exception::do_abort );
+  }
 }
 
 expression string_node::evaluate( proof_context &ctx ) const
 {
-  return expression( new string_node(str) );
+  // The result of evaluating a string node always removes the 
+  // interpolate flags.
+  if ( flags & interpolate ) {
+    bool do_exit = false, no_nl = false;
+    string new_str = ctx.substitute_string(str, &do_exit, &no_nl);
+
+    int new_flags = flags & to_parent;
+    if (no_nl) new_flags |= suppress_nl;
+    if (do_exit) new_flags |= do_abort;
+    return expression( new string_node(new_str, new_flags) );
+  }
+  else
+    return expression( new string_node(str, flags) );
 }
 
 string string_node::string_evaluate( proof_context &ctx ) const
 {
+  return string_evaluate(ctx, NULL);
+}
+
+string string_node::string_evaluate( proof_context &ctx, bool* no_nl ) const
+{
+  if ( flags & interpolate ) 
+    return evaluate(ctx).string_evaluate(ctx, no_nl);
+  if (no_nl)
+    *no_nl = flags & suppress_nl;
   return str;
 }
 
@@ -181,6 +224,27 @@ static int parse_bell_expr( int bells, string const& expr ) {
   else return parse_int( string(i,e) ); 
 }
 
+static string expand_bell_ranges( int bells, string const& pn ) {
+  // The minimum length for a range is four characters, e.g. "1..6".
+  if ( pn.size() < 4 ) return pn;
+
+  make_string ret;
+  for ( string::const_iterator b=pn.begin(), i=b, e=pn.end(); i!=e; ) {
+    if (i > b && i < e-2 && *i == '.' && *(i+1) == '.') {
+      bell first = bell::read_char(*(i-1)), last = bell::read_char(*(i+2));
+      if (first < last)
+        for (bell b = first+1; b != last; ++b)
+          ret << b;
+      else if (first > last)
+        for (bell b = first-1; b != last; --b)
+          ret << b;
+      i += 2;
+    }
+    else ret << *i++;
+  }
+  return ret;
+}
+
 static string expand_bell_exprs( int bells, string const& pn ) {
   make_string ret;
   for ( string::const_iterator i=pn.begin(), e=pn.end(); i!=e; ) {
@@ -191,7 +255,7 @@ static string expand_bell_exprs( int bells, string const& pn ) {
     }
     else ret << *i++;
   }
-  return ret;
+  return expand_bell_ranges( bells, ret );
 }
 
 pn_node::pn_node( int bells, const string &raw_pn )
@@ -209,7 +273,7 @@ pn_node::pn_node( const change& ch )
 {
 }
 
-pn_node::pn_node( const method& m )
+pn_node::pn_node( const vector<change>& m )
   : changes( m )
 {
 }
@@ -228,6 +292,72 @@ void pn_node::execute( proof_context &ctx, int dir ) const
     for_each( changes.rbegin(), changes.rend(), ctx.permute_and_prove() );
 }
 
+RINGING_START_ANON_NAMESPACE
+
+static  
+void do_replacement( vector<change> const& mask, RINGING_LLONG off,
+                     replacement_node::pos_t pos, vector<change>& m ) 
+{
+  const replacement_node::pos_t end   = replacement_node::end,
+                                begin = replacement_node::begin;
+
+  if (pos == end && off >= m.size() || off < 0 || off == 0 && pos == begin ||
+      // The following cases are handled in ERIL and should be handled in
+      // GSiril to support variations
+      pos == begin && off-1 + mask.size() > m.size() || 
+      pos == end && mask.size() > off+1)
+    throw runtime_error("Replacement block overruns the block its applied to");
+
+  copy( mask.begin(), mask.end(),
+        pos == begin ? m.begin() + (off-1) : m.end() - (off+1) );
+}
+
+RINGING_END_ANON_NAMESPACE
+
+void pn_node::apply_replacement( proof_context& ctx, vector<change>& m ) const
+{
+  do_replacement( changes, changes.size() ? changes.size()-1 : 0,
+                  replacement_node::end, m );
+}
+
+void replacement_node::debug_print( ostream& os ) const
+{
+  pn.debug_print(os);
+  os << (pos == begin ? " >> " : " << ");
+  shift.debug_print(os);
+}
+
+void replacement_node::execute( proof_context &ctx, int dir ) const 
+{
+  unable_to("execute replacement block");
+}
+
+void replacement_node::apply_replacement( proof_context& ctx, 
+                                          vector<change>& m ) const
+{
+  do_replacement( pn.pn_evaluate(ctx), shift.int_evaluate(ctx), pos, m );
+}
+
+void merge_node::debug_print( ostream& os ) const
+{
+  block.debug_print(os);
+  os << " & ";
+  replacement.debug_print(os);
+}
+
+vector<change> merge_node::pn_evaluate( proof_context& ctx ) const
+{
+  vector<change> pn( block.pn_evaluate(ctx) );
+  replacement.apply_replacement(ctx, pn);
+  return pn;
+}
+
+void merge_node::execute( proof_context& ctx, int dir ) const
+{
+  // TODO: This is where we should handle overflow beyond the original block
+  return expression( new pn_node( pn_evaluate(ctx) ) ).execute( ctx, dir );
+}
+  
 transp_node::transp_node( int bells, const string &r )
   : transp(bells)
 {
@@ -282,6 +412,25 @@ string symbol_node::string_evaluate( proof_context &ctx ) const
 {
    expression e( ctx.lookup_symbol(sym) );
    return e.string_evaluate(ctx);
+}
+
+string symbol_node::string_evaluate( proof_context &ctx, bool *no_nl ) const
+{
+   expression e( ctx.lookup_symbol(sym) );
+   return e.string_evaluate(ctx, no_nl);
+}
+
+vector<change> symbol_node::pn_evaluate( proof_context &ctx ) const
+{
+   expression e( ctx.lookup_symbol(sym) );
+   return e.pn_evaluate(ctx);
+}
+
+void
+symbol_node::apply_replacement( proof_context& ctx, vector<change>& m ) const
+{
+   expression e( ctx.lookup_symbol(sym) );
+   return e.apply_replacement(ctx, m);
 }
 
 void assign_node::debug_print( ostream &os ) const
@@ -342,17 +491,14 @@ void immediate_assign_node::execute( proof_context& ctx, int dir ) const
 
 static void validate_regex( const music_details& desc, int bells )
 {
-  static string allowed;
-  if ( allowed.empty() ) {
-    allowed.append( row(bells).print() );
-    allowed.append("*?[]");
-  }
+  string allowed( row(bells).print() );
+  allowed.append("*?[]");
 
   string tok( desc.get() );
 
   if ( tok.find_first_not_of( allowed ) != string::npos )
-    throw runtime_error( make_string() << "Illegal regular expression: " 
-			 << tok );
+    throw runtime_error( make_string() << "Illegal regular expression: '" 
+			 << tok << "' on " << bells << " bells" );
 
   bool inbrack(false);
   for ( string::const_iterator i(tok.begin()), e(tok.end()); i!=e; ++i ) 
@@ -375,6 +521,27 @@ static void validate_regex( const music_details& desc, int bells )
     }
 
   // TODO: Check for multiple occurances of the same bell
+}
+
+void endproof_node::debug_print( ostream &os ) const
+{
+  os << "endproof";
+}
+
+void endproof_node::execute( proof_context &ctx, int dir ) const
+{
+  ctx.disable_proving();
+}
+
+
+bool isproving_node::bool_evaluate( proof_context& ctx ) const
+{
+  return ctx.is_proving();
+}
+
+void isproving_node::debug_print( ostream &os ) const
+{
+  os << "proving";
 }
 
 bool isrounds_node::bool_evaluate( proof_context& ctx ) const
@@ -403,6 +570,16 @@ bool pattern_node::bool_evaluate( proof_context &ctx ) const
 void pattern_node::debug_print( ostream &os ) const
 {
   os << mus.get();
+}
+
+void defined_node::debug_print( ostream &os ) const
+{
+  os << "defined(" << sym << ")";
+}
+
+bool defined_node::bool_evaluate( proof_context &ctx ) const
+{
+  return ctx.defined(sym);
 }
 
 void boolean_node::debug_print( ostream &os ) const
@@ -529,6 +706,35 @@ RINGING_LLONG add_node::int_evaluate( proof_context& ctx ) const
   return l + sign * r;
 }
 
+
+void mod_node::debug_print( ostream &os ) const
+{
+  left.debug_print(os);
+  os << " % ";
+  right.debug_print(os);
+}
+
+RINGING_LLONG mod_node::int_evaluate( proof_context& ctx ) const
+{
+  RINGING_LLONG l = left.int_evaluate(ctx), r = right.int_evaluate(ctx);
+  return l % r;
+}
+
+void append_node::debug_print( ostream &os ) const
+{
+  left.debug_print(os);
+  os << " . ";
+  right.debug_print(os);
+}
+
+string append_node::string_evaluate( proof_context& ctx ) const
+{
+  string l = left.string_evaluate(ctx), r = right.string_evaluate(ctx);
+  return l + r;
+}
+
+
+
 void add_node::debug_print( ostream &os ) const
 {
   left.debug_print(os);
@@ -645,6 +851,16 @@ RINGING_LLONG call_node::int_evaluate( proof_context &ctx ) const
 string call_node::string_evaluate( proof_context &ctx ) const
 {
   return evaluate(ctx).string_evaluate(ctx);
+}
+
+string call_node::string_evaluate( proof_context &ctx, bool* no_nl ) const
+{
+  return evaluate(ctx).string_evaluate(ctx);
+}
+
+vector<change> call_node::pn_evaluate( proof_context &ctx ) const
+{
+  return evaluate(ctx).pn_evaluate(ctx);
 }
 
 expression::type_t call_node::type( proof_context &ctx ) const

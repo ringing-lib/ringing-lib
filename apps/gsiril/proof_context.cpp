@@ -48,8 +48,8 @@ RINGING_USING_NAMESPACE
 proof_context::proof_context( const execution_context &ectx ) 
   : ectx(ectx), row_mask(ectx.bells(), ectx.row_mask()),
     max_length( ectx.expected_length().second ),
-    p( new prover(ectx.get_args().num_extents) ), parent( NULL ),
-    output( &ectx.output() ),
+    p( new prover(ectx.get_args().num_extents) ), proving(true), 
+    parent( NULL ), output( &ectx.output() ),
     silent( ectx.get_args().everyrow_only || ectx.get_args().filter
             || ectx.get_args().quiet >= 2 ), 
     underline( false )
@@ -99,14 +99,8 @@ void proof_context::do_output( const string& str ) const
 
 void proof_context::output_string( const string& str, bool to_parent ) const
 {
-  bool do_exit( false );
-  std::string o( substitute_string(str, do_exit) );
-
-  if ( to_parent && parent ) parent->do_output(o);
-  else do_output(o);
-
-  if (do_exit)
-    throw script_exception( script_exception::do_abort );
+  if ( to_parent && parent ) parent->do_output(str);
+  else do_output(str);
 }
 
 void proof_context::execute_everyrow()
@@ -121,19 +115,23 @@ void proof_context::execute_everyrow()
 
 bool proof_context::permute_and_prove_t::operator()( const change &c )
 {
-  bool rv = p.add_row( r *= c ); 
-  pctx.execute_everyrow();
-  if ( pctx.max_length && p.size() > pctx.max_length ) 
-    pctx.execute_symbol("toolong");
-  if ( pctx.isrounds() ) pctx.execute_symbol("rounds");
-  if ( !rv ) pctx.execute_symbol("conflict");
-  return rv;
+  r *= c;
+  return prove();
 }
 
 bool proof_context::permute_and_prove_t::operator()( const row &c )
 {
-  bool rv = p.add_row( r *= c ); 
+  r *= c;
+  return prove();
+}
+
+bool proof_context::permute_and_prove_t::prove() 
+{
+  if ( !pctx.is_proving() ) return true;
+  bool rv = p.add_row(r); 
   pctx.execute_everyrow();
+  if ( pctx.max_length && p.size() > pctx.max_length ) 
+    pctx.execute_symbol("toolong");
   if ( pctx.isrounds() ) pctx.execute_symbol("rounds");
   if ( !rv ) pctx.execute_symbol("conflict");
   return rv;
@@ -151,6 +149,12 @@ proof_context::permute_and_prove()
   return permute_and_prove_t( r, *p, *this );
 }
 
+void proof_context::disable_proving()
+{
+  if (proving) last_row = r;
+  proving = false;
+}
+
 bool proof_context::isrounds() const 
 {
   return r == ectx.rounds() && p->count_row(r) == ectx.extents(); 
@@ -163,19 +167,22 @@ int proof_context::bells() const
 
 void proof_context::execute_symbol( const string& sym, int dir )
 {
-  if ( ectx.get_args().show_lead_heads && output && sym != "everyrow" ) {
-    if ( ectx.get_args().methods.size() ) {
-      for ( vector<string>::const_iterator i = ectx.get_args().methods.begin(), 
-                                           e = ectx.get_args().methods.end();
-            i != e; ++i )
-        if ( sym == *i ) {
-          *output << r;
-          if ( ectx.get_args().methods.size() > 1 )
-            *output << "\t" << sym;
-          *output << endl;
-        }
-    } else
-      *output << r << "\t" << sym << endl;
+  if ( output ) {
+    bool trace = ectx.get_args().trace_all_symbols && sym != "everyrow";
+    bool inc_sym = ectx.get_args().trace_all_symbols;
+
+    if ( !trace ) {
+      vector<string> const& syms = ectx.get_args().trace_symbols;
+      vector<string>::const_iterator i = syms.begin(), e = syms.end();
+      trace = find( i, e, sym ) != e;
+      inc_sym = syms.size() > 1;
+    }
+
+    if ( trace ) {
+      *output << r;
+      if ( inc_sym ) *output << "\t" << sym;
+      *output << endl;
+    }
   }
 
   expression e( lookup_symbol(sym) );
@@ -196,6 +203,11 @@ expression proof_context::lookup_symbol( const string& sym ) const
   return e;
 }
 
+bool proof_context::defined( const string& sym ) const
+{
+  return !dsym_table.lookup(sym).isnull() || ectx.defined(sym);
+}
+
 void proof_context::define_symbol( const pair<const string, expression>& defn )
 {
   dsym_table.define(defn);
@@ -203,12 +215,11 @@ void proof_context::define_symbol( const pair<const string, expression>& defn )
 
 proof_context::proof_state proof_context::state() const
 {
-  if ( p->truth() && isrounds() ) 
-    return rounds;
-  else if ( p->truth() )
-    return notround;
-  else
-    return isfalse;
+  if ( p->truth() ) {
+    row lr( proving ? r : last_row );
+    return lr == ectx.rounds() ? rounds : notround;
+  }
+  else return isfalse;
 }
 
 // When called, i will point to the initial \, and len will be set according
@@ -251,13 +262,13 @@ static string do_escape_seq(string::const_iterator& i, string::const_iterator e,
   return os;
 }
 
-static string string_escapes( const string &str ) {
+string proof_context::string_escapes( const string &str ) {
   make_string os;
   for ( string::const_iterator i( str.begin() ), e( str.end() ); i != e; ++i )
     switch (*i) {
       case '\\':
 	if (i+1 == e) 
-	  throw runtime_error("Unexpected backslash");
+	  throw runtime_error("Unexpected backslash in '" + str + "'");
 	else if (i[1] == 'n') 
 	  ++i, os << '\n';
 	else if (i[1] == 't') 
@@ -280,10 +291,9 @@ static string string_escapes( const string &str ) {
 }
 
 string proof_context::substitute_string( const string &str, 
-                                         bool &do_exit ) const
+                                         bool *do_exit, bool *no_nl ) const
 {
   make_string os;
-  bool nl = true;
 
   for ( string::const_iterator i( str.begin() ), e( str.end() ); i != e; ++i )
     switch (*i)
@@ -312,8 +322,10 @@ string proof_context::substitute_string( const string &str,
           os << e.string_evaluate(ctx2);
           i = j;
         }
-	else if ( i+1 != e && i[1] == '$' )
-	  ++i, do_exit = true;
+	else if ( i+1 != e && i[1] == '$' ) {
+	  ++i;
+          if (do_exit) *do_exit = true;
+        }
 	else
 	  os << p->duplicates();
 	break;
@@ -321,10 +333,11 @@ string proof_context::substitute_string( const string &str,
 	os << p->size();
 	break;
       case '\\':
-	if (i+1 == e) 
-	  nl = false;
+	if (i+1 == e) {
+          if (no_nl) *no_nl = true;
+        }
 	else 
-	  os << *i;   // It will be handled by string_escapes
+	  os << *i, os << *++i;   // It will be handled by string_escapes
 	break;
       case '_':
         if (ectx.get_args().sirilic_syntax) {
@@ -343,11 +356,16 @@ string proof_context::substitute_string( const string &str,
 	break;
       }
 
-  if (nl) {
-    termination_sequence(os.out_stream());
-    os << '\n';
+  return os;
+}
+
+void proof_context::output_newline( bool to_parent ) const
+{
+  if ( to_parent && parent ) parent->output_newline();
+  else if ( !silent && output ) {
+    termination_sequence( *output );
+    *output << '\n';
   }
-  return string_escapes(os);
 }
 
 proof_context proof_context::silent_clone() const
@@ -366,12 +384,49 @@ void proof_context::increment_node_count() const
 {
   return ectx.increment_node_count();
 }
-  
-method proof_context::load_method( const string& title ) const
+
+// TODO: This is duplicated in ringing/library.cpp
+RINGING_START_ANON_NAMESPACE
+list<string> split_path( string const& p )
 {
-  library_entry le = ectx.get_args().methset().find(title);
+  list<string> pp;
+  string::size_type i=0;
+  while (true) {
+    string::size_type j = p.find(':', i);
+    if ( j == string::npos ) {
+      if ( p.size() ) pp.push_back( p.substr(i) );
+      break;
+    }
+    
+    pp.push_back( p.substr(i, j-i) );
+    i = j+1;
+  }
+  return pp;
+}
+
+RINGING_END_ANON_NAMESPACE
+
+ 
+method proof_context::load_method( const string& name )
+{
+  list<string> suffixes; 
+  if ( ectx.defined("method_suffixes") )
+    suffixes = split_path( lookup_symbol("method_suffixes")
+                             .string_evaluate(*this) );
+  else
+    suffixes.push_back(string());
+
+  library_entry le;
+  for ( list<string>::const_iterator i = suffixes.begin(), e = suffixes.end(); 
+        i != e; ++i ) {
+    string title(name);
+    if (i->length())
+      (title += ' ') += *i;
+    le = ectx.get_args().methset().find(title);
+    if (!le.null()) break;
+  }
   if (le.null())
-    throw runtime_error( "Unable to load method: " + title );
+    throw runtime_error( "Unable to load method: " + name );
   return le.meth();
 }
 

@@ -1,5 +1,5 @@
 // -*- C++ -*- prog_args.h - program arguments
-// Copyright (C) 2002, 2003, 2004, 2007, 2008, 2009, 2010, 2011, 2020
+// Copyright (C) 2002, 2003, 2004, 2007, 2008, 2009, 2010, 2011, 2020, 2021
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -118,11 +118,13 @@ struct arguments
 
   init_val<bool,false> same_place_parity;
   init_val<bool,true>  true_trivial;
+  init_val<bool,false> basic_falseness_opt;
   init_val<bool,true>  true_half_lead;
   init_val<bool,true>  true_lead;
   init_val<bool,false> true_course;
   init_val<bool,false> true_extent;
   init_val<bool,false> true_positive_extent;
+  init_val<int,1>      n_extents;
   string               allowed_falseness; 
 
   row                  start_row;
@@ -149,6 +151,8 @@ struct arguments
   vector<music>       row_matches;
 
   vector< vector<change> > allowed_changes;
+
+  string overwork_map_file, underwork_map_file;
 
   string H_fmt_str, R_fmt_str;
   string outfile;

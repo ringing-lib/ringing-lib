@@ -1,6 +1,6 @@
 // -*- C++ -*- search.cpp - the actual search algorithm
 // Copyright (C) 2002, 2003, 2004, 2005, 2007, 2008, 2009, 2010, 2011, 2013,
-// 2020 Richard Smith <richard@ex-parrot.com>
+// 2020, 2021 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -165,7 +165,7 @@ void searcher::reset()
        args.true_half_lead && ( args.pends.size() > 1 ||
          args.hunt_bells == 0 || args.treble_dodges > 1 ) ) 
   {
-    prv.reset( new prover(1) ); // XXX n_extents
+    prv.reset( new prover(args.n_extents) );
     for ( set<row>::const_iterator 
             i=args.avoid_rows.begin(), e=args.avoid_rows.end(); i != e; ++i )
       prv->add_row(*i);
@@ -346,14 +346,14 @@ private:
 
 public:
   prover2( arguments const& args ) 
-   : args(args), n_extents(1), p(n_extents), r(args.start_row) { init(); }
+   : args(args), p(args.n_extents), r(args.start_row) { init(); }
 
   prover2( arguments const& args, row const& r ) 
-   : args(args), n_extents(1), p(n_extents), r(r) { init(); }
+   : args(args), p(args.n_extents), r(r) { init(); }
 
   struct raw {};
   prover2( arguments const& args, raw )
-    : args(args), n_extents(1), p(n_extents), r(args.bells)
+    : args(args), p(args.n_extents), r(args.bells)
   {}
 
   bool prove( method::const_iterator i, method::const_iterator e ) {
@@ -388,7 +388,6 @@ public:
 
 private:
   arguments const& args;
-  int const n_extents;
   prover p;
   row r;
 };
@@ -474,7 +473,7 @@ bool searcher::is_acceptable_method()
               args.true_course && !p.is_course_head() )
         ;
 
-      if ( !args.true_course )  // i.e. if -Fl
+      if ( !args.true_course && args.n_extents == 1 )  // i.e. if -Fl
         assert( p.truth() );
 
       // There doesn't seem any ideal solution as to what to do with the 

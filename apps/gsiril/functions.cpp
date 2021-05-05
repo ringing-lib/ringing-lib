@@ -100,6 +100,20 @@ private:
   type_t t;
 };
 
+class stagename_impl : public fnnode {
+  virtual expression call( proof_context& ctx, 
+                           vector<expression> const& args ) const {
+    if (args.size() != 1)
+      throw runtime_error("The stagename function takes one argument");
+    string rv( method::stagename( args[0].int_evaluate(ctx) ) );
+    return expression( new string_node(rv) );
+  }
+
+  virtual void debug_print( ostream &os ) const { os << "stagename"; }
+  virtual expression::type_t type( proof_context &ctx ) const 
+    { return expression::no_type; }
+};
+
 void register_functions( execution_context& ectx )
 {
   ectx.define_symbol( pair< const string, expression >
@@ -112,5 +126,7 @@ void register_functions( execution_context& ectx )
     ( "loadm", expression( new load_fn_impl( load_fn_impl::lead_only ) ) ) );
   ectx.define_symbol( pair< const string, expression >
     ( "loadlh", expression( new load_fn_impl( load_fn_impl::lead_head ) ) ) );
+  ectx.define_symbol( pair< const string, expression >
+    ( "stagename", expression( new stagename_impl ) ) );
 }
 

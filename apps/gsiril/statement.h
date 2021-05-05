@@ -158,13 +158,13 @@ private:
 class row_mask_stmt : public statement::impl
 {
 public:
-  explicit row_mask_stmt( const music_details& mask )
+  explicit row_mask_stmt( const string& mask )
     : mask(mask) {}
 
 private:
   virtual void execute( execution_context& );
 
-  music_details mask;
+  string mask;
 };
 
 // Import a resource
@@ -184,14 +184,35 @@ private:
 class echo_stmt : public statement::impl
 {
 public:
-  explicit echo_stmt( const expression& expr, bool substitute )
-    : expr(expr), substitute(substitute) {}
+  enum mode_t { echo, warn, error };
+
+  explicit echo_stmt( const expression& expr, string const& keyword )
+    : expr(expr), mode(get_mode(keyword)) {}
 
 private:
+  static mode_t get_mode( string const& );
   virtual void execute( execution_context& );
 
   expression expr;
-  bool substitute;
+  mode_t mode;
+};
+
+class if_stmt : public statement::impl
+{
+public:
+  enum type_t {
+    push_if, chain_else_if, chain_else, pop_if
+  };
+
+  explicit if_stmt( type_t type, const expression& expr = expression() )
+    : type(type), expr(expr) {}
+
+private:
+  virtual void execute( execution_context& );
+  virtual void skip( execution_context& ex ) { execute(ex); }
+
+  type_t type;
+  expression expr;
 };
 
 

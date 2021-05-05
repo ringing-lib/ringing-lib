@@ -30,6 +30,10 @@
 
 #include <ringing/pointers.h>
 
+RINGING_START_NAMESPACE
+class change;
+RINGING_END_NAMESPACE
+
 RINGING_USING_NAMESPACE
 
 class proof_context;
@@ -44,12 +48,13 @@ public:
   public:
     virtual ~impl() {}
     virtual void execute( execution_context& ) = 0;
+    virtual void skip( execution_context& ) {}
     virtual bool is_definition() const { return false; }
   };
 
   statement( impl* pimpl = 0 ) : pimpl(pimpl) {}
 
-  void execute( execution_context& e ) { pimpl->execute(e); }
+  void execute( execution_context& e );
   bool eof() const { return !pimpl; } 
   bool is_definition() const { return pimpl && pimpl->is_definition(); }
 
@@ -73,14 +78,24 @@ public:
     virtual ~node() {}
     virtual void debug_print( ostream &os ) const = 0;
     virtual void execute( proof_context &ctx, int dir ) const = 0;
-    virtual bool bool_evaluate( proof_context &ctx ) const; // throws
-    virtual RINGING_LLONG int_evaluate( proof_context &ctx ) const; // throws
-    virtual string string_evaluate( proof_context &ctx ) const; // throws
-    virtual expression evaluate( proof_context &ctx ) const; // throws
+    virtual bool bool_evaluate( proof_context &ctx ) const;
+    virtual RINGING_LLONG int_evaluate( proof_context &ctx ) const;
+    virtual string string_evaluate( proof_context &ctx ) const;
+    virtual string string_evaluate( proof_context &ctx, bool *no_nl ) const;
+    virtual vector<change> pn_evaluate( proof_context &ctx ) const;
+    virtual expression evaluate( proof_context &ctx ) const;
     virtual expression call( proof_context& ctx, 
-                             vector<expression> const& args ) const; // throws
+                             vector<expression> const& args ) const;
+    virtual void apply_replacement( proof_context& ctx, 
+                                    vector<change>& pn ) const;
     virtual bool isnop() const { return false; }
     virtual type_t type( proof_context &ctx ) const { return no_type; }
+
+  protected:
+#   if __cplusplus >= 201103L
+    [[noreturn]]
+#   endif
+    void unable_to( char const* what ) const;
   };
 
   class bnode : public node {
@@ -100,8 +115,15 @@ public:
     virtual type_t type( proof_context &ctx ) const { return integer; }
   };
 
+  class snode : public node {
+  public:
+    virtual void execute( proof_context &ctx, int dir ) const;
+    virtual expression evaluate( proof_context &ctx ) const;
+    virtual string string_evaluate( proof_context &ctx ) const = 0;
+  };
+
   // Create an expression handle
-  explicit expression( node* impl ) : impl(impl) {}
+  explicit expression( node* impl = 0 ) : impl(impl) {}
 
   bool isnull() const { return !impl; }
   bool isnop() const { return !impl || impl->isnop(); }
@@ -120,8 +142,11 @@ public:
   bool bool_evaluate( proof_context& ctx ) const;
   RINGING_LLONG int_evaluate( proof_context& ctx ) const;
   string string_evaluate( proof_context& ctx ) const;
+  string string_evaluate( proof_context& ctx, bool* no_nl ) const;
+  vector<change> pn_evaluate( proof_context &ctx ) const;
 
   expression call( proof_context& ctx, vector<expression> const& args ) const;
+  void apply_replacement( proof_context& ctx, vector<change>& m ) const;
 
   RINGING_FAKE_DEFAULT_CONSTRUCTOR(expression);
 
@@ -134,11 +159,10 @@ struct script_exception
 {
   enum type {
     do_abort,
-    do_stop,
     do_break
   };
   
-  script_exception( type t ) : t(t) {}
+  explicit script_exception( type t ) : t(t) {}
 
   type t;
 };

@@ -1,5 +1,5 @@
 // -*- C++ -*- execution_context.h - Global environment
-// Copyright (C) 2002, 2003, 2004, 2007, 2008, 2012, 2019, 2020
+// Copyright (C) 2002, 2003, 2004, 2007, 2008, 2012, 2019, 2020, 2021
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -96,13 +96,23 @@ public:
   pair<size_t,size_t> expected_length(pair<size_t, size_t> l);
 
   music_details const& row_mask() const { return rmask; }
-  void row_mask(music_details const& m) { rmask = m; }
+  void row_mask(music_details const& m);
+
+  void push_if(expression const& cond);
+  void chain_else_if(expression const& cond);
+  void chain_else();
+  void pop_if();
+  bool is_executing() const;
 
 private:
+  bool evaluate_bool_const( expression const& ) const;
+  void define_line();
+
   arguments args;
   music_details rmask;
   ostream* os;
   symbol_table sym_table;
+  vector<int> if_stack;
   bool failed;
   mutable int node_count;
   bool done_proof;

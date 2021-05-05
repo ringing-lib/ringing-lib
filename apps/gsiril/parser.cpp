@@ -66,6 +66,9 @@ namespace tok_types
     plus        = '+',
     minus       = '-',
     times       = '*',
+    divide      = '/',
+    modulo      = '%',
+    append      = '.',
     assignment  = '=',
     new_line    = '\n',
     semicolon   = ';',
@@ -73,6 +76,7 @@ namespace tok_types
     greater     = '>',
     less        = '<',
     logic_not   = '!',
+    merge       = '&',
     ctrl_z      = '\x1A',   /* EOF marker in microSIRIL */
     comment     = tokeniser::first_token,
     string_lit,
@@ -89,6 +93,8 @@ namespace tok_types
     less_eq,       /* <= */
     increment,     /* ++ */
     decrement,     /* -- */
+    left_shift,    /* << */
+    right_shift,   /* >> */
     regex_lit      /* /.../ */
   };
 }
@@ -151,6 +157,7 @@ public:
       land( "&&", tok_types::logic_and ), lor( "||", tok_types::logic_or ),
       cmpeq( "==", tok_types::equals ), cmpne( "!=", tok_types::not_equals ),
       cmpge( ">=", tok_types::greater_eq ), cmple( "<=", tok_types::less_eq ),
+      lsh( "<<", tok_types::left_shift ), rsh( "<<", tok_types::right_shift ),
       inc( "++", tok_types::increment ), dec( "--", tok_types::decrement )
   {
     // Note:  It is important that &sym is added after &land; and
@@ -168,6 +175,7 @@ public:
     add_qtype(&cmpeq);  add_qtype(&cmpne);
     add_qtype(&cmpge);  add_qtype(&cmple);
     add_qtype(&inc);    add_qtype(&dec);
+    add_qtype(&lsh);    add_qtype(&rsh);
     add_qtype(&sym);    add_qtype(&asym);
 
     // Properly MicroSiril mode should disable _, but that would be unhelpful
@@ -198,7 +206,8 @@ public:
       if ( args.msiril_syntax ) return;
       break;
 
-    case plus: case minus: 
+    case plus: case minus: case modulo: case append: 
+    case merge: case left_shift: case right_shift:
     case regex_lit: case open_brace: case close_brace: case colon:
     case logic_and: case logic_or: case equals: case not_equals: 
     case less: case greater: case less_eq: case greater_eq:
@@ -223,7 +232,7 @@ private:
   string_token r, q, qq;
   pn_impl sym, asym;
   basic_token defass, immass, appass, land, lor, cmpeq, cmpne, cmpge, cmple, 
-              inc, dec;
+              lsh, rsh, inc, dec;
 };
 
 
@@ -383,7 +392,7 @@ statement msparser::parse()
   // Row mask directive
   if ( cmd.size() == 2 && cmd[0].type() == tok_types::name 
        && cmd[0] == "row_mask" && cmd[1].type() == tok_types::regex_lit )
-    return statement( new row_mask_stmt(music_details(cmd[1])) );
+    return statement( new row_mask_stmt(cmd[1]) );
 
   // Import directive
   if ( !args.disable_import
@@ -403,13 +412,32 @@ statement msparser::parse()
       ( new prove_stmt( make_expr( cmd.begin() + 1, cmd.end() ) ) );
 
   // Echo directive
-  if ( cmd[0].type() == tok_types::name && cmd[0] == "echo" )
+  if ( cmd[0].type() == tok_types::name && 
+       ( cmd[0] == "echo" || cmd[0] == "warn" || cmd[0] == "error" ) )
     return statement
       ( new echo_stmt( cmd.size() == 1 
                          ? expression( new string_node("") )
                          : make_expr( cmd.begin() + 1, cmd.end() ),
-                       cmd.size() == 2 
-                         && cmd[1].type() == tok_types::string_lit ) );
+                       cmd[0] ) );
+
+  // Conditional statements:  if, elseif, else, endif
+  if ( cmd.size() > 1 && cmd[0].type() == tok_types::name && cmd[0] == "if" )
+    return statement
+      ( new if_stmt( if_stmt::push_if, 
+                     make_expr(  cmd.begin() + 1, cmd.end() ) ) );
+
+  if ( cmd.size() > 1 && cmd[0].type() == tok_types::name && 
+       cmd[0] == "elseif" )
+    return statement
+      ( new if_stmt( if_stmt::chain_else_if, 
+                     make_expr(  cmd.begin() + 1, cmd.end() ) ) );
+
+  if ( cmd.size() == 1 && cmd[0].type() == tok_types::name && cmd[0] == "else" )
+    return statement( new if_stmt( if_stmt::chain_else ) );
+
+  if ( cmd.size() == 1 && cmd[0].type() == tok_types::name && 
+       cmd[0] == "endif" )
+    return statement( new if_stmt( if_stmt::pop_if ) );
 
   // Definition
   if ( cmd.size() > 1 && cmd[0].type() == tok_types::name
@@ -680,8 +708,28 @@ msparser::make_expr( vector< token >::const_iterator first,
                                      make_expr( split+1, last ), cmp ) );
   }
 
+  // Replacement operators come next.  These use &, << and >> which in C-like
+  // languages would be lower precedent than comparison operators.  That's 
+  // really a bug in C due to its legacy from B, and we can fix it here.
+  if ( find( first, last, tok_types::merge, split ) ) {
+    check_bin_op( first, split, last, "&" );
+    return expression( new merge_node( make_expr( first, split ),
+                                       make_expr( split+1, last ) ) );
+  }
+  
+  vector<tok_types::enum_t> shiftops;
+  shiftops.push_back( tok_types::left_shift );
+  shiftops.push_back( tok_types::right_shift );
+  if ( find_one_of( first, last, shiftops, split ) ) {
+    check_bin_op( first, split, last, 
+                  split->type() == tok_types::left_shift ? "<<" : ">>" );
+    return expression( new replacement_node
+      ( make_expr( first, split ), make_expr( split+1, last ),
+        split->type() == tok_types::left_shift 
+          ? replacement_node::end : replacement_node::begin ) );
+  }
+
   // Addition operators are next
- 
   vector<tok_types::enum_t> addops;
   addops.push_back( tok_types::plus );
   addops.push_back( tok_types::minus );
@@ -696,6 +744,31 @@ msparser::make_expr( vector< token >::const_iterator first,
                                        make_expr( split+1, last ), -1 ) );
     }
   }
+
+  // Now multiplication operators: currently only % and .
+  vector<tok_types::enum_t> multops;
+  multops.push_back( tok_types::modulo );
+  multops.push_back( tok_types::append );
+  if ( find_one_of( first, last, multops, split ) ) {
+    if ( split->type() == tok_types::modulo ) {
+      check_bin_op( first, split, last, "%" );
+      return expression( new mod_node( make_expr( first, split ),
+                                       make_expr( split+1, last ) ) );
+    } else {
+      check_bin_op( first, split, last, "." );
+      return expression( new append_node( make_expr( first, split ),
+                                          make_expr( split+1, last ) ) );
+    }
+  }
+
+  // The defined operator
+  if ( first->type() == tok_types::name && *first == "defined" &&
+       ( first + 4 == last && (first+1)->type() == tok_types::open_paren 
+                           && (first+3)->type() == tok_types::close_paren || 
+         first + 2 == last )
+       && ( first + ( first + 4 == last ? 2 : 1 ) )->type() == tok_types::name )
+    return expression( new defined_node( 
+      *( first + ( first + 4 == last ? 2 : 1 ) ) ) );
 
   // TODO: Support a integer expression in a repeat block
 
@@ -736,7 +809,8 @@ msparser::make_expr( vector< token >::const_iterator first,
   if ( first->type() == tok_types::name && *first == "echo" ) {
     check_unary_op(first, last, "echo",
                    tok_types::string_lit, "a string");
-    return expression( new string_node( *(first+1), true ) );
+    return expression( new string_node( *(first+1), 
+      string_node::interpolate | string_node::to_parent ) );
   }
 
   if ( first->type() == tok_types::reverse ) {
@@ -761,7 +835,7 @@ msparser::make_expr( vector< token >::const_iterator first,
 
   switch ( first->type() ) {
     case tok_types::string_lit:
-      return expression( new string_node( *first ) );
+      return expression( new string_node( *first, string_node::interpolate ) );
 
     case tok_types::name:
       if ( *first == "break" )
@@ -774,6 +848,10 @@ msparser::make_expr( vector< token >::const_iterator first,
 	return expression( new boolean_node(false) );
       else if ( *first == "bells" )
 	return expression( new bells_node() );
+      else if ( *first == "endproof" )
+	return expression( new endproof_node() );
+      else if ( *first == "proving" )
+	return expression( new isproving_node() );
       else
 	return expression( new symbol_node( *first ) );
 

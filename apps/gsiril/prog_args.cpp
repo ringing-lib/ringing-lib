@@ -157,14 +157,19 @@ void arguments::bind( arg_parser& p )
   // NB __first__ is an alias for the first symbol
   p.add( new string_opt
 	 ( 'P', "prove",
-	   "Proves a particular symbol (or the first if none specified)",
-	   "SYMBOL", prove_symbol, "__first__" ) );
+	   "Proves a particular symbol or expression (or the first defined "
+           "symbol if no argument is given)", 
+           "EXPR", prove_symbol, "__first__" ) );
 
   p.add( new strings_opt
 	 ( 'D', "define",
-	   "Define a particular symbol",
-	   "NAME=VALUE",
-	   definitions ) );
+	   "Define a particular symbol as an expression",
+	   "NAME=EXPR", definitions ) );
+
+   p.add( new strings_opt
+	 ( 'S', "string",
+	   "Define a particular symbol as a string",
+	   "NAME=VALUE", string_defs ) );
  
   p.add( new strings_opt
 	 ( 'm', "module",
@@ -184,7 +189,7 @@ void arguments::bind( arg_parser& p )
 
   p.add( new string_opt
          ( 'e', "expression",
-           "Execute EXPR", "EXPR", 
+           "Execute the statements STMTS", "STMTS", 
            expression ) );
 
   p.add( new string_opt
@@ -255,15 +260,14 @@ void arguments::bind( arg_parser& p )
            "SYM", payload_symbol ) );
 
   p.add( new boolean_opt
-         ( '\0', "show-lead-heads", 
-           "List the lead heads for the specified methods",
-           show_lead_heads ) );
+         ( '\0', "trace-all-symbols", 
+           "Print the row when any symbol is executed",
+           trace_all_symbols ) );
 
   p.add( new strings_opt
-	 ( '\0', "methods",
-	   "Mark the specified symbols as methods",
-	   "SYM,SYM,...",
-	   methods ) );
+	 ( '\0', "trace-symbol",
+	   "Print the row when SYM is executed", "SYM",
+	   trace_symbols ) );
 
 #if RINGING_USE_TERMCAP
   p.add( new string_opt
@@ -330,6 +334,9 @@ bool arguments::validate( arg_parser& ap )
     return false;
   }
 #endif
+
+  if ( determine_bells )
+    quiet = 2;
 
   return true;
 }

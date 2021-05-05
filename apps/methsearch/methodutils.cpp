@@ -1,5 +1,5 @@
 // -*- C++ -*- methodutils.h - utility functions missing from the ringing-lib
-// Copyright (C) 2002, 2003, 2004, 2005, 2009, 2010, 2011
+// Copyright (C) 2002, 2003, 2004, 2005, 2009, 2010, 2011, 2021
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -16,7 +16,6 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-// $Id$
 
 #include <ringing/common.h>
 
@@ -439,3 +438,38 @@ unsigned long staticity( method const& m )
   }
   return s;
 }
+
+pair<method,method> split_over_and_under( method const& m ) {
+  pair<method, method> works;
+  method &over = works.first, &under = works.second;
+  bell treble(0);
+
+  int n(m.bells());
+  row r(n);
+  for ( method::const_iterator i=m.begin(), e=m.end(); i != e; ++i ) {
+    row r2( r * *i );
+    int pos1 = r.find(treble), pos2 = r2.find(treble);
+
+    make_string o, u;
+    if ( pos1 % 2 && pos2 >= pos1 || pos2 % 2 && pos1 >= pos2 )
+      o << bell(0);
+    for ( bell b(0); b < n; ++b )
+      if (i->findplace(b)) {
+        if ( b >= pos1 || b >= pos2 ) o << b;
+        if ( b <= pos1 || b <= pos2 ) u << b;
+      }
+    if ( pos1 % 2 == n % 2 && pos2 <= pos1 || 
+         pos2 % 2 == n % 2 && pos1 <= pos2 )
+      u << bell(n-1);
+    if ( o.out_stream().tellp() == 0 ) o << 'x';
+    if ( u.out_stream().tellp() == 0 ) u << 'x';
+
+    over .push_back( change(n, o) );
+    under.push_back( change(n, u) );
+
+    r = r2;
+  }
+
+  return works;
+}
+

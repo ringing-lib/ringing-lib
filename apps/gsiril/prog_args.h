@@ -62,6 +62,7 @@ struct arguments
 
   vector<string>       import_modules;
   vector<string>       definitions;
+  vector<string>       string_defs;
 
   string               filename;
   string               expression;
@@ -78,8 +79,8 @@ struct arguments
   string               payload_symbol;
   init_val<bool,false> lead_includes_lh;
 
-  init_val<bool,false> show_lead_heads;
-  vector<string>       methods;
+  init_val<bool,false> trace_all_symbols;
+  vector<string>       trace_symbols;
 
   row                  rounds;
 

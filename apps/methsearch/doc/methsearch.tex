@@ -54,6 +54,9 @@
 % Tables with lines spanning multiple rows
 \usepackage{tabularx}
 
+% Tables spanning multiple pages
+\usepackage{xltabular}
+
 \usepackage{footnote}
 \usepackage{bigfoot}
 
@@ -1507,6 +1510,32 @@ This information is displayed on
 redirection using \verb+>+.
 \index{output|)}
 
+\section{Over- and underworks}\label{overunder}
+
+\begin{tabularx}{\textwidth}{lX}
+\texttt{--overwork-map=FILE}&Use \texttt{FILE} as an overwork map 
+                             to rewrite \verb+$V+\\
+\texttt{--underwork-map=FILE}&Use \texttt{FILE} as an underwork map 
+                             to rewrite \verb+$U+\\
+\end{tabularx}
+
+These two options take the name of a file which contains a mapping from over
+or underwork place notations to names.  The format of the file is that of a
+method stream (\sref{methstream}), and each method's payload is the name to
+associate with that over- or underwork.
+
+When an overwork or underwork is printed using the \verb+$V+ or \verb+$U+
+\fspec{V}\fspec{U} method variables, the place notation for the over- or
+underwork is generated and then compared with each method in the specified map
+file in turn until one matches.  If method was found in the map file and its
+payload is present, it is printed; otherwise the place notation is printed as
+if formatted with \verb+$q+.
+
+\methsearch\ can be used to help generate the over- and underwork map files by
+running it with \verb+-qH'$V'+ to get a list of distinct overworks.  Save that
+output to a file and append the name.  Alternatively, generate a list of all
+methods using \verb+-R'$V\t$n'+ and delete all but one with each overwork.
+
 \section{Random sampling}\label{random}
 
 \begin{tabularx}{\textwidth}{lX}
@@ -1604,7 +1633,7 @@ methsearch -b8 -G1 --random --loop --timeout=1 --limit=23
 \section{Miscellaneous options}\label{misc_opt}
 
 \begin{tabularx}{\textwidth}{llX}
-\texttt{-?}&\texttt{--help}&Print an help message and exit\\
+\texttt{-?}&\texttt{--help}&Print a help message and exit\\
 \texttt{-V}&\texttt{--version}&Print version information and exit\\
 \texttt{-I}&\texttt{--filter}&Run in filter mode on standard input\\
 &\texttt{--filter-lib}&Run in filter mode on specified libraries\\
@@ -1808,7 +1837,7 @@ typed in on the command line reach \methsearch\ in their intended form.
 
 {\def\D{\texttt{\$}}\def\N{$n$\/}\def\No{\textit{[$n$]}\/}
 \def\F#1{\texttt{#1}\fspecd{#1}}
-\begin{tabularx}{\textwidth}{lX}
+\begin{xltabular}{\textwidth}{lX}
 \D\F{p}&The place notation (verbose format) --- see \sref{pn}\\
 \D\F{q}&The place notation (concise format)\\
 \D\F{Q}&As \texttt{\$q} but without the lead end change%
@@ -1843,6 +1872,8 @@ typed in on the command line reach \methsearch\ in their intended form.
 \D\F{F}&The falseness groups --- see \sref{falserest}\\
 \D\N\F{P}&The path for bell \N\\
 \D\F{O}&The coursing order (defined so the tenors course)\\
+\D\F{V}&The place notation (or name) of the overwork\\
+\D\F{U}&The place notation (or name) of the underwork\\
 \D\No\F{s}&An index of the staticity of the method\\
 \D\No\F{i}&The method identifier from the CC libraries\\
 \D\No\F{a}&The filter payload --- see \sref{misc_opt}\\
@@ -1851,7 +1882,7 @@ typed in on the command line reach \methsearch\ in their intended form.
 \D\No\F{c}&The number of matching methods --- see \sref{stats}\\
 \D\No\texttt{?}&The exit status of the last command invocation --- 
              see \sref{cmdinv}\\
-\end{tabularx}}
+\end{xltabular}}
 
 In the above table, $n$ stands for an integer which must be supplied.
 For example, in a surprise major method, \verb+-R$32h+ will print the
@@ -2643,7 +2674,24 @@ functionality.
 
 By default \methsearch\ only finds methods that are true within a lead.
 The \verb+-F+ option\oid{F}{falseness} provides a way of changing this 
-behaviour.  The basic options governing whether the method should have 
+behaviour.  In fact, this option is really a collection of related
+sub-options, all pertaining to falseness, with the the first character after
+the `\verb+F+' deciding which falseness option is being requested.
+
+\begin{center}
+\begin{tabular}{l@{\qquad}l@{\qquad}l}
+Sub-option&  Summary& Section\\\hline
+\verb+c+, \verb+l+, \verb+h+, \verb+n+, \verb+x+&
+  Basic falseness& \sref{basic_false}\\
+\verb+N+& Multi-extent methods& \sref{multiextent}\\
+\verb+:+, \verb+CPS+& Falseness groups& \sref{falserest}\\
+\verb+e+, \verb-e+-& Extent viability& \sref{extent}\\
+\verb+r+, \verb+s+& Avoiding specific rows& \sref{avoidrow}\\
+\verb+P+& Part end groups& \sref{pends}\\
+\end{tabular}
+\end{center}
+
+The basic options governing whether the method should have 
 a true plain course, true leads, etc., are documented in \sref{basic_false}.
 Analysis of false course heads is discussed in \sref{fch}, and ways of 
 checking that an extent is possible is covered in \sref{extent}.
@@ -2655,7 +2703,7 @@ The final two sections (\sref{avoidrow}--\ref{pends}) discuss using
 
 \methsearch\ supports five basic levels of falseness checking wich 
 can be specified by a single-letter argument to the \verb+-F+ option.  
-Longer, more descriptive, synonyms are also provided.
+Longer, more descriptive, synonyms are also provided.  
 
 \begin{tabular}{lll}
 \verb+-Fc+& \verb+-Fcourse+&      Require a true plain course\oidF{c}{course}\\
@@ -2685,9 +2733,35 @@ other is guaranteed by symmetry.)  With \verb+-Fh+, the half lead head row must
 either be distinct from all rows in the first half lead, or the same as the 
 half lead end row.
 
+Each level implies all the lower levels, and if several of these options are
+used together, later ones will override the earlier ones.  The sole exception
+is that \verb+-Fx+ may be in conjunction with any of the other, as explained
+in \sref{multiextent}.
+
 \methsearch\ contains a number of optimisations to speed up proving falseness
 in the most common cases.  For example, it knows that in a palindromic 
 plain method, there is no possibility of internal falseness.
+
+\subsection{Multi-extent methods}\label{multiextent}
+
+The \verb+-FN+ option\oidF{N}{extents} is used to say how many times a row is
+allowed to appear within the half-lead, lead or course (as specified with a
+\verb+-Fh+, \verb+-Fl+ or \verb+-Fc+ option).  By default methods are proved
+within a single extent, i.e.\ with \verb+-FN=1+.
+Treble-dodging minimus methods are an example of when \verb+-FN=2+ is useful
+in conjunction with \verb+-Fc+ to require the plain course is a true double
+extent.\footnote{In fact, \texttt{-FN=2 -Fc} is unnecessary when searching for
+methods with a palindromic three-lead course, as the symmetry guarantees the
+course is a true double extent.  However it is useful in searches like
+\texttt{-b4 -G1 -Fx -Fc -FN=2} to find non-palindromic methods whose plain
+course is a true double extent.}\index{example!minimus, treble-dodging}
+
+When rows are allowed to occur multiple times, it can make sense to use
+\verb+-Fx+ as well as another option like \verb+-Fc+, because a repeated
+change does not imply the method is false, when proved as a double extent.
+Guilsfield Treble Bob Minimus\index{Guilsfield Treble Bob Minimus}, whose
+place notation is \verb+&---14---34,12+ is an example of this.
+
 
 \section{False course heads}\label{fch}
 \subsection{A digression — the theory of falseness}%
@@ -4173,11 +4247,19 @@ Method streams are used to stream a list of methods between programs.
 The standard syntax is again very straightforward: methods are given,
 one per line, in any recognised form of place notation (\sref{pn}).  
 Whitespace is not permitted in the place notation, and any text after
-the first whitespace character on the line is ignored.\footnote{%
+the first whitespace character on the line is an optional \textit{payload}
+whose meaning (if any) is dependent on the context.\footnote{%
 \methsearch\ considers the space, tab, carriage return and line feed
-to be whitespace.}\index{whitespace}
+to be whitespace.  The payload begins at the first non-whitespace character
+after the first instance of whitespace on the line.}\index{whitespace}
+
 When invoked with the \verb+-I+ option (\sref{misc_opt}), 
-\methsearch\ requires a method stream on standard input.\index{standard input}
+\methsearch\ requires a method stream on standard input,\index{standard input}
+and the payload is accessible wth \verb+$a+ method variable (\sref{variables}).
+The \verb+--overwork-map+ and \verb+--underwork-map+ options (\sref{overunder}) 
+take the name of a file whose contents are a method stream, and the payloads
+are the names of the over- or underwork.
+
 Frequently, \methsearch's output is a method stream — specifically
 whenever a \verb+-R+ option starting with \verb+$p+ or \verb+$q+ is given
 (or no \verb+-R+ is given) and no statistical output or counts are requested.%
@@ -4635,6 +4717,8 @@ principles\index{principles} and differentials.\index{differentials}
 \item Row matching: \verb+--row-match+ (\sref{misc_opt}); and its
 interaction with \verb+-FP+ (\sref{pendrows}).
 \item Any regular lead end: \verb+--any-regular-lh+ (\sref{le_lh}).
+\item Over and underworks: \verb+$V+, \verb+$U+ (\sref{variables});
+  \verb+--overwork-map+, \verb+--underwork-map+ (\sref{overunder}).
 \end{list}
 
 \clearpage

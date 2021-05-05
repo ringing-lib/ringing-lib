@@ -1,6 +1,6 @@
 // -*- C++ -*- prog_args.cpp - handle program arguments
 // Copyright (C) 2002, 2003, 2004, 2005, 2007, 2008, 2009, 2010, 2011, 2013,
-// 2020 Richard Smith <richard@ex-parrot.com>
+// 2020, 2021 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -65,47 +65,48 @@ private:
 
 bool falseness_opt::process( const string &arg, const arg_parser & ) const
 {
-  // Single letter options used:  c, e, h, l, n, r, s, x, P
+  // Single letter options used:  c, e, h, l, n, r, s, x, P, N; also CPS
 
   if ( arg == "CPS" )
     {
-      args.true_trivial = args.true_half_lead 
-	= args.true_lead = args.true_course = args.require_CPS = true;
+      args.basic_falseness_opt = args.true_half_lead 
+        = args.true_lead = args.true_course = args.require_CPS = true;
     }
   else if ( arg == "e" || arg == "extent" )
     {
-      args.true_trivial = args.true_half_lead 
-	= args.true_lead = args.true_extent = true;
+      args.basic_falseness_opt = args.true_half_lead 
+        = args.true_lead = args.true_extent = true;
     }
   else if ( arg == "e+" || arg == "positive-extent" )
     {
-      args.true_trivial = args.true_half_lead 
-	= args.true_lead = args.true_positive_extent = true;
+      args.basic_falseness_opt = args.true_half_lead 
+        = args.true_lead = args.true_positive_extent = true;
     }
   else if ( arg == "c" || arg == "course" )
     {
-      args.true_trivial = args.true_half_lead 
-	= args.true_lead = args.true_course = true;
+      args.basic_falseness_opt = args.true_half_lead 
+        = args.true_lead = args.true_course = true;
     }
   else if ( arg == "l" || arg == "lead" )
     {
-      args.true_trivial = args.true_half_lead = args.true_lead = true;
+      args.basic_falseness_opt = args.true_half_lead 
+        = args.true_lead = true;
       args.true_course = false;
     }
   else if ( arg == "h" || arg == "half-lead" )
     {
-      args.true_trivial = args.true_half_lead = true;
+      args.basic_falseness_opt = args.true_half_lead = true;
       args.true_lead = args.true_course = false;
     }
   else if ( arg == "n" || arg == "none" ) 
     {
-      args.true_trivial = true;
       args.true_half_lead = args.true_lead = args.true_course = false;
     }
   else if ( arg == "x" || arg == "really-none" )
     {
-      args.true_trivial = args.true_half_lead
-	= args.true_lead = args.true_course = false;
+      // We set true_half_lead = true_lead = true_course = false in 
+      // validate() if none of -Fh, -Fl, -Fc, -Fe+, -Fe or -FCPS is given.
+      args.true_trivial = false;
     }
   else if ( arg.size() && arg[0] == ':' )
     {
@@ -181,6 +182,20 @@ bool falseness_opt::process( const string &arg, const arg_parser & ) const
       }
       catch ( row::invalid const& e ) { 
         cerr << "Invalid row produced in -FP option: " << e.what() << "\n";
+        return false;
+      }
+    }
+  else if ( arg.size() > 2 && arg[0] == 'N' && arg[1] == '=' )
+    {
+      try {
+        args.n_extents = lexical_cast<int>( arg.substr(2) );
+      }
+      catch ( bad_lexical_cast const& ) {
+        cerr << "Unable to parse argument to -FN as an integer\n";
+        return false;
+      }
+      if ( args.n_extents <= 0 ) {
+        cerr << "The argument to -FN must be positive\n";
         return false;
       }
     }
@@ -554,8 +569,18 @@ void arguments::bind( arg_parser &p )
 
   p.add( new string_opt
 	 ( 'O', "out-format",
-	   "Create as a FMTTYPE library ", "FMTTYPE",
+	   "Create as a FMTTYPE library", "FMTTYPE",
 	   outfmt ) );
+
+  p.add( new string_opt
+	 ( '\0', "overwork-map",
+	   "Use FILE as an overwork map to rewrite $V", "FILE",
+	   overwork_map_file ) );
+
+  p.add( new string_opt
+	 ( '\0', "underwork-map",
+	   "Use FILE as an underwork map to rewrite $U", "FILE",
+	   underwork_map_file ) );
 }
 
 bool arguments::validate( arg_parser &ap )
@@ -717,6 +742,9 @@ bool arguments::validate( arg_parser &ap )
       ap.error( "-Fe is only implemented for single-hunt plain methods" );
       return false;
     }
+
+  if ( !basic_falseness_opt && !true_trivial )
+    true_half_lead = true_lead = true_course = false;
 
   if ( !hunt_bells && bells % 2 && right_place )
     {
@@ -1109,6 +1137,22 @@ bool arguments::validate( arg_parser &ap )
     }
 
   if ( !status_freq ) status_freq = 10000;
+
+  if ( overwork_map_file.size() ) try {
+    overwork_map( bells, overwork_map_file );
+  }
+  catch ( const exception &e ) {
+    ap.error( make_string() << "Unable to read overwork map: " << e.what() );
+    return false;
+  }
+ 
+  if ( underwork_map_file.size() ) try {
+    underwork_map( bells, underwork_map_file );
+  }
+  catch ( const exception &e ) {
+    ap.error( make_string() << "Unable to read underwork map: " << e.what() );
+    return false;
+  }
  
   return true;
 }

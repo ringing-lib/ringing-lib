@@ -37,9 +37,10 @@ struct arguments
 {
   arguments( int argc, char const *argv[] );
 
-  init_val<int,0> bells;
-  vector<string>  titles;
-  vector<string>  libs;
+  init_val<int,0>       bells;
+  vector<string>        titles;
+  init_val<bool,false>  read_titles;
+  vector<string>        libs;
 
 private:
   void bind( arg_parser& p );
@@ -58,6 +59,10 @@ void arguments::bind( arg_parser& p )
            ( 't', "title",  "Find method with this full title.", "TITLE", 
              titles ) );
 
+  p.add( new boolean_opt
+           ( 'T', "read-titles",  "Read titles to find from standard input.",
+             read_titles ) );
+
   p.set_default( new strings_opt( '\0', "", "", "", libs ) );
 }
 
@@ -70,6 +75,11 @@ bool arguments::validate( arg_parser& ap )
 
   if ( bells == 1 || bells > int(bell::MAX_BELLS) ) {
     ap.error( make_string() << "The number of bells must be between 2 and " 	              << bell::MAX_BELLS << " (inclusive)" );
+    return false;
+  }
+
+  if ( read_titles && titles.size() ) {
+    ap.error( "The -t and -T options cannot be used together" );
     return false;
   }
 
@@ -101,7 +111,7 @@ public:
       titles[*i] = 0u;
   }
 
-  bool test( method const& m ) const;
+  bool test( library_entry const& m ) const;
   bool check() const;
 
 private:
@@ -109,11 +119,11 @@ private:
   mutable map<string, unsigned> titles;
 };
 
-bool filter::test( const method& meth ) const {
-  if ( args.bells && meth.bells() != args.bells )
+bool filter::test( const library_entry& le ) const {
+  if ( args.bells && le.bells() != args.bells )
     return false;
 
-  map<string, unsigned>::iterator i = titles.find( meth.fullname() );
+  map<string, unsigned>::iterator i = titles.find( le.fullname() );
   if ( i != titles.end() ) ++i->second;
   else if ( titles.size() ) return false;
 
@@ -151,7 +161,7 @@ void read_library( const string &filename, const filter& f,
     }
 
     for ( library::const_iterator i(l.begin()), e(l.end()); i != e; ++i )
-      if ( f.test( i->meth() ) )
+      if ( f.test(*i) )
         out.append(*i);
   }
   catch ( const exception &e ) {
@@ -161,8 +171,19 @@ void read_library( const string &filename, const filter& f,
   }
 }
 
+void read_titles( arguments& args ) {
+  string line;
+  while ( getline( cin, line ) ) {
+    size_t last = line.find_last_not_of(" \t\f\v\n\r");
+    if ( last != string::npos )
+      args.titles.push_back( line.substr(0, last+1) );
+  }
+}
+
 int main(int argc, char const** argv) {
   arguments args( argc, argv );
+
+  if (args.read_titles) read_titles(args);
 
   // Register mslib last, as various things can accidentally match it
   cclib::registerlib();
