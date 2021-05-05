@@ -158,8 +158,8 @@ void printmethod::print(printpage& pp)
       // Print the first row, which is the same as the last row of the
       // previous column.
       pr << b[i]; 
-//      if (needrule(total_row_count, the_rule))
-//        pr.rule(the_rule.style, the_rule.flags);
+      if (needrule(total_row_count-1, the_rule))
+        pr.rule(the_rule.style, the_rule.flags);
 
       // Turn on number-missing if necessary
       if(number_mode == miss_column) {
