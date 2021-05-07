@@ -266,6 +266,8 @@ private:
 		    tok_types::enum_t open, tok_types::enum_t close,
 		    string const& name ) const;
 
+  bool is_bin_only_operator( int tok_type ) const;
+
   enum first_or_last { find_first, find_last };
 
   bool find_one_of( vector< token >::const_iterator first, 
@@ -289,6 +291,10 @@ private:
   mstokeniser tok;
   mstokeniser::const_iterator tokiter, tokend;
 };
+
+bool msparser::is_bin_only_operator( int tok ) const {
+  return tok == tok_types::comma || tok == tok_types::append;
+}
 
 vector< token > msparser::tokenise_command()
 {
@@ -333,8 +339,8 @@ vector< token > msparser::tokenise_command()
 	  ++tokiter;
 	}
     }
-  while  ( !toks.empty() && ( toks.back().type() == tok_types::comma 
-			      || nesting ) && tokiter != tokend );
+  while ( !toks.empty() && ( is_bin_only_operator( toks.back().type() )
+	                       || nesting ) && tokiter != tokend );
 
   if ( !toks.empty() && ( toks.back().type() == tok_types::comma || nesting ) )
     throw runtime_error( make_string() 
