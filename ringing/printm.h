@@ -1,6 +1,6 @@
 // -*- C++ -*- printm.h - Printing of whole methods
-// Copyright (C) 2001, 2019, 2020 Martin Bright <martin@boojum.org.uk> and
-// Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2001, 2019, 2020, 2021 Martin Bright <martin@boojum.org.uk>
+// and Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -71,6 +71,7 @@ public:
   bool reverse_placebells, placebells_at_rules;
   string calls;
   bool calls_at_rules;
+  dimension calls_voffset;
 
 public:
   void defaults(); 

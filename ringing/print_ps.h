@@ -1,5 +1,5 @@
 // -*- c++ -*- print_ps.h : printing things in PostScript
-// Copyright (C) 2001, 2020 Martin Bright <martin@boojum.org.uk> and
+// Copyright (C) 2001, 2020, 2021 Martin Bright <martin@boojum.org.uk> and
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -106,7 +106,8 @@ public:
   void dot(int i); 
   void placebell(int i, int dir = 0);
   void text(const string& t, const dimension& x, 
-	    text_style::alignment al, bool between, bool right);
+	    text_style::alignment al, bool between, bool right,
+            const dimension& voff);
 };
 
 class RINGING_API printpage_ps : public printpage {

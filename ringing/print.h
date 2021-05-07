@@ -1,6 +1,6 @@
 // -*- C++ -*- print.h - printing stuff
-// Copyright (C) 2001, 2019, 2020 Martin Bright <martin@boojum.org.uk> and
-// Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2001, 2019, 2020, 2021 Martin Bright <martin@boojum.org.uk>
+// and Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -103,7 +103,8 @@ public:
     virtual void dot(int i) = 0;
     virtual void placebell(int i, int dir = 0) = 0;
     virtual void text(const string& t, const dimension& x, 
-		      text_style::alignment al, bool between, bool right) = 0;
+		      text_style::alignment al, bool between, bool right,
+                      const dimension& voff) = 0;
   };
 
 private:
@@ -134,8 +135,9 @@ public:
   void placebell(int i, int dir = 0)
     { pr->placebell(i, dir); } 
   void text(const string& t, const dimension& x, 
-	    text_style::alignment al, bool between, bool right)
-    { pr->text(t, x, al, between, right); }
+	    text_style::alignment al, bool between, bool right,
+            dimension const& voff = dimension())
+    { pr->text(t, x, al, between, right, voff); }
 };
 
 class RINGING_API printpage {

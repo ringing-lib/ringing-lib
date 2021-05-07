@@ -1,6 +1,6 @@
 // print_pdf.cpp - PDF printing stuff
-// Copyright (C) 2002, 2019, 2020 Martin Bright <martin@boojum.org.uk> and
-// Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2019, 2020, 2021 Martin Bright <martin@boojum.org.uk>
+// and Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -434,6 +434,13 @@ void printrow_pdf::end_column()
     text_bits.clear();
     if(squashed) pp.f << "100 Tz\n";
   }
+
+  // Draw rule-offs
+  // Do this before the rows to place them under the rows
+  for (list<rule_pdf>::iterator i = rules.begin(); i != rules.end(); i++)
+    i->output(pp);
+  rules.clear();
+
   // Draw the rows
   if(!rows.empty()) {
     list<pair<string, int> >::iterator j;
@@ -460,11 +467,6 @@ void printrow_pdf::end_column()
     rows.clear();
   }
   pp.f << "ET\n";
-
-  // Draw rule-offs
-  for (list<rule_pdf>::iterator i = rules.begin(); i != rules.end(); i++)
-    i->output(pp);
-  rules.clear();
 
   // Draw circles
   for (list<circle_pdf>::iterator i = circles.begin(); i != circles.end(); i++)
@@ -581,13 +583,15 @@ void printrow_pdf::placebell(int i, int dir)
 }
 
 void printrow_pdf::text(const string& t, const dimension& x, 
-		        text_style::alignment al, bool between, bool right)
+		        text_style::alignment al, bool between, bool right,
+                        const dimension& voff)
 {
   text_bit tb;
   tb.x = right ? 
     (x.in_points() + (lastrow.bells() - 1) * opt.xspace.in_points())
     : -x.in_points();
-  tb.y = (between ? (count - 0.5f) : (count - 1)) * opt.yspace.in_points();
+  tb.y = (between ? (count - 0.5f) : (count - 1)) * opt.yspace.in_points()
+       - voff.in_points();
   tb.al = al;
   tb.squash = false;
   tb.s = t;

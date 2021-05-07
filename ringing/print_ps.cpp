@@ -1,5 +1,5 @@
 // print_ps.cpp - PostScript printing stuff
-// Copyright (C) 2001, 2020 Martin Bright <martin@boojum.org.uk> and
+// Copyright (C) 2001, 2020, 2021 Martin Bright <martin@boojum.org.uk> and
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -435,8 +435,10 @@ void printrow_ps::placebell(int i, int dir)
 }
 
 void printrow_ps::text(const string& t, const dimension& x, 
-		       text_style::alignment al, bool between, bool right)
+		       text_style::alignment al, bool between, bool right,
+                       const dimension& voff)
 {
+  // TODO support voff
   if(!in_column) return;
   fill_gap();
   if (opt.label_style.size)

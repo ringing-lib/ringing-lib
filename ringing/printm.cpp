@@ -1,6 +1,6 @@
 // printm.cpp - Printing whole methods
-// Copyright (C) 2001, 2019, 2020 Martin Bright <martin@boojum.org.uk> and
-// Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2001, 2019, 2020, 2021 Martin Bright <martin@boojum.org.uk>
+// and Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -195,7 +195,8 @@ void printmethod::print(printpage& pp)
           // print calling positions
           string pos = call(ic++);
           if (!pos.empty())
-            pr.text(pos, opt.xspace/2, text_style::left, false, true);
+            pr.text(pos, opt.xspace/2, text_style::left, false, true,
+                    calls_voffset);
         }
         else if (i == (int) (b.size() - 1)) {
           if(number_mode == miss_lead) {

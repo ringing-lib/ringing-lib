@@ -1,6 +1,7 @@
 // -*- C++ -*- psline.cpp - print out lines for methods
-// Copyright (C) 2001, 2002, 2019, 2020 Martin Bright <martin@boojum.org.uk> 
-// and Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2001, 2002, 2019, 2020, 2021
+// Martin Bright <martin@boojum.org.uk> and
+// Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -86,6 +87,7 @@ struct arguments {
   string calls;
   string rounds;
   bool calls_at_rules;
+  dimension calls_voffset;
 };
 
 arguments args;
@@ -258,7 +260,8 @@ void setup_args(arg_parser& p)
     "Calling positions for each lead.  Use a space to suppress a call at that"
     " position.  Multicharacter calling positions should be enclosed in"
     " {braces}.  Append `,rules' to print calling positions before rules"
-    " rather than before the lead ends." ,"CALLS[,rules]"));
+    " rather than before the lead ends.  Append ,voffset=DIMENSION to shift"
+    " calls up by that amount" ,"CALLS[,rules]"));
   p.add(new myopt('R', "rounds", "Starting row.","ROUNDS"));
   p.add(new myopt("Layout options:"));
   p.add(new myopt('L', "landscape",
@@ -571,6 +574,14 @@ bool myopt::process(const string& arg, const arg_parser& ap) const
           string a(arg, i+1);
           if (a == "rules")
             args.calls_at_rules = true;
+          else if (a.substr(0,8) == "voffset=") {
+            string const a2(a.substr(8));
+            if (!parse_dimension(a2, args.calls_voffset)) {
+              cerr << "Unable to parse -q...voffset argument: \"" 
+                   << a2 << "\"\n";
+              return false;
+            }
+          }
           args.calls = string(arg, 0, i);
         }
         else args.calls = arg;
@@ -810,6 +821,7 @@ int main(int argc, char *argv[])
     pm.reverse_placebells = args.reverse_placebells;
     pm.placebells_at_rules = args.placebells_at_rules;
     pm.calls_at_rules = args.calls_at_rules;
+    pm.calls_voffset = args.calls_voffset;
     pm.opt.flags = args.numbers ? printrow::options::numbers : 0;
     if(args.pn_mode == -1)
       pm.pn_mode = printmethod::pn_first;
