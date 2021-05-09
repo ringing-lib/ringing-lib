@@ -194,6 +194,7 @@ protected:
   virtual string string_evaluate( proof_context &ctx, bool *no_nl ) const;
   virtual vector<change> pn_evaluate( proof_context &ctx ) const;
   virtual void apply_replacement( proof_context& ctx, vector<change>& m ) const;
+  virtual expression::type_t type( proof_context& ctx ) const;
 
 private:
   string sym;
@@ -410,6 +411,19 @@ private:
   expression left, right;
 };
 
+class div_node : public expression::inode {
+public:
+  div_node( expression const& left, expression const& right )
+    : left(left), right(right) {}
+
+protected:
+  virtual void debug_print( ostream &os ) const;
+  virtual RINGING_LLONG int_evaluate( proof_context &ctx ) const;
+
+private:
+  expression left, right;
+};
+
 class append_node : public expression::snode {
 public:
   append_node( expression const& left, expression const& right )
@@ -418,6 +432,26 @@ public:
 protected:
   virtual void debug_print( ostream &os ) const;
   virtual string string_evaluate( proof_context &ctx ) const;
+
+private:
+  expression left, right;
+};
+
+// The * operator is overloaded to handle both block repetition and integer
+// multiplication.  This means it sometimes behaves as an inode, depending 
+// on the type of its arguments.
+class mult_node : public expression::node {
+public:
+  mult_node( expression const& left, expression const& right )
+    : left(left), right(right) {}
+
+protected:
+  virtual void debug_print( ostream &os ) const;
+  virtual void execute( proof_context &ctx, int dir ) const;
+  virtual expression evaluate( proof_context &ctx ) const;
+  virtual RINGING_LLONG int_evaluate( proof_context &ctx ) const;
+  virtual string string_evaluate( proof_context &ctx ) const;
+  virtual expression::type_t type( proof_context &ctx ) const;
 
 private:
   expression left, right;

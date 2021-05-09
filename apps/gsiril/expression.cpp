@@ -392,38 +392,44 @@ void symbol_node::execute( proof_context &ctx, int dir ) const
 
 expression symbol_node::evaluate( proof_context &ctx ) const
 {
-   expression e( ctx.lookup_symbol(sym) );
-   return e.evaluate(ctx);
+  expression e( ctx.lookup_symbol(sym) );
+  return e.evaluate(ctx);
 }
 
 bool symbol_node::bool_evaluate( proof_context &ctx ) const
 {
-   expression e( ctx.lookup_symbol(sym) );
-   return e.bool_evaluate(ctx);
+  expression e( ctx.lookup_symbol(sym) );
+  return e.bool_evaluate(ctx);
 }
 
 RINGING_LLONG symbol_node::int_evaluate( proof_context &ctx ) const
 {
-   expression e( ctx.lookup_symbol(sym) );
-   return e.int_evaluate(ctx);
+  expression e( ctx.lookup_symbol(sym) );
+  return e.int_evaluate(ctx);
 }
 
 string symbol_node::string_evaluate( proof_context &ctx ) const
 {
-   expression e( ctx.lookup_symbol(sym) );
-   return e.string_evaluate(ctx);
+  expression e( ctx.lookup_symbol(sym) );
+  return e.string_evaluate(ctx);
 }
 
 string symbol_node::string_evaluate( proof_context &ctx, bool *no_nl ) const
 {
-   expression e( ctx.lookup_symbol(sym) );
-   return e.string_evaluate(ctx, no_nl);
+  expression e( ctx.lookup_symbol(sym) );
+  return e.string_evaluate(ctx, no_nl);
 }
 
 vector<change> symbol_node::pn_evaluate( proof_context &ctx ) const
 {
-   expression e( ctx.lookup_symbol(sym) );
-   return e.pn_evaluate(ctx);
+  expression e( ctx.lookup_symbol(sym) );
+  return e.pn_evaluate(ctx);
+}
+
+expression::type_t symbol_node::type( proof_context& ctx ) const
+{
+  expression e( ctx.lookup_symbol(sym) );
+  return e.type(ctx);
 }
 
 void
@@ -720,6 +726,19 @@ RINGING_LLONG mod_node::int_evaluate( proof_context& ctx ) const
   return l % r;
 }
 
+void div_node::debug_print( ostream &os ) const
+{
+  left.debug_print(os);
+  os << " / ";
+  right.debug_print(os);
+}
+
+RINGING_LLONG div_node::int_evaluate( proof_context& ctx ) const
+{
+  RINGING_LLONG l = left.int_evaluate(ctx), r = right.int_evaluate(ctx);
+  return l / r;
+}
+
 void append_node::debug_print( ostream &os ) const
 {
   left.debug_print(os);
@@ -733,6 +752,68 @@ string append_node::string_evaluate( proof_context& ctx ) const
   return l + r;
 }
 
+void mult_node::debug_print( ostream &os ) const 
+{
+  left.debug_print(os);
+  os << " * ";
+  right.debug_print(os);
+}
+
+void mult_node::execute( proof_context &ctx, int dir ) const
+{
+  if ( left.type(ctx) == expression::integer &&
+       right.type(ctx) == expression::integer ) {
+    if ( dir < 0 )
+      unable_to("execute expression backwards");
+    else
+      int_evaluate(ctx);
+  }
+  else {
+    expression rep;
+    int count;  expression expr;
+    if ( left.type(ctx) == expression::integer )
+      rep = expression( new repeated_node( left.int_evaluate(ctx), right ) );
+    else if ( right.type(ctx) == expression::integer )
+      rep = expression( new repeated_node( right.int_evaluate(ctx), left ) );
+    else unable_to("execute * operator with mismatched operands");
+    rep.execute( ctx, dir );
+  }
+}
+  
+RINGING_LLONG mult_node::int_evaluate( proof_context &ctx ) const
+{
+  if ( left.type(ctx) == expression::integer &&
+       right.type(ctx) == expression::integer ) {
+    RINGING_LLONG l = left.int_evaluate(ctx), r = right.int_evaluate(ctx);
+    return l * r;
+  }
+  else unable_to("evaluate expression as an integer");
+}
+
+expression mult_node::evaluate( proof_context& ctx ) const
+{
+  if ( left.type(ctx) == expression::integer &&
+       right.type(ctx) == expression::integer )
+    return expression( new integer_node( int_evaluate(ctx) ) );
+  else unable_to("evaluate expression");
+}
+
+string mult_node::string_evaluate( proof_context& ctx ) const
+{
+  if ( left.type(ctx) == expression::integer &&
+       right.type(ctx) == expression::integer )
+    return make_string() << int_evaluate(ctx);
+  else unable_to("evaluate expression");
+}
+  
+expression::type_t mult_node::type( proof_context &ctx ) const
+{
+  if ( left.type(ctx) == expression::integer &&
+       right.type(ctx) == expression::integer )
+    return expression::integer;
+  else
+    return expression::no_type;
+}
 
 
 void add_node::debug_print( ostream &os ) const

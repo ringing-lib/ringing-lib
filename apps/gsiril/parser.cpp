@@ -206,7 +206,7 @@ public:
       if ( args.msiril_syntax ) return;
       break;
 
-    case plus: case minus: case modulo: case append: 
+    case plus: case minus: case modulo: case append: case divide:
     case merge: case left_shift: case right_shift:
     case regex_lit: case open_brace: case close_brace: case colon:
     case logic_and: case logic_or: case equals: case not_equals: 
@@ -753,17 +753,28 @@ msparser::make_expr( vector< token >::const_iterator first,
 
   // Now multiplication operators: currently only % and .
   vector<tok_types::enum_t> multops;
-  multops.push_back( tok_types::modulo );
+  multops.push_back( tok_types::times );
   multops.push_back( tok_types::append );
+  multops.push_back( tok_types::divide );
+  multops.push_back( tok_types::modulo );
   if ( find_one_of( first, last, multops, split ) ) {
-    if ( split->type() == tok_types::modulo ) {
-      check_bin_op( first, split, last, "%" );
-      return expression( new mod_node( make_expr( first, split ),
-                                       make_expr( split+1, last ) ) );
-    } else {
-      check_bin_op( first, split, last, "." );
-      return expression( new append_node( make_expr( first, split ),
+    switch ( split->type() ) {
+      case tok_types::modulo:
+        check_bin_op( first, split, last, "%" );
+        return expression( new mod_node( make_expr( first, split ),
+                                         make_expr( split+1, last ) ) );
+      case tok_types::append:
+        check_bin_op( first, split, last, "." );
+        return expression( new append_node( make_expr( first, split ),
+                                            make_expr( split+1, last ) ) );
+      case tok_types::times:
+        check_bin_op( first, split, last, "*" );
+        return expression( new mult_node( make_expr( first, split ),
                                           make_expr( split+1, last ) ) );
+      case tok_types::divide:
+        check_bin_op( first, split, last, "/" );
+        return expression( new div_node( make_expr( first, split ),
+                                         make_expr( split+1, last ) ) );
     }
   }
 
@@ -776,17 +787,12 @@ msparser::make_expr( vector< token >::const_iterator first,
     return expression( new defined_node( 
       *( first + ( first + 4 == last ? 2 : 1 ) ) ) );
 
-  // TODO: Support a integer expression in a repeat block
-
   // A repeated block is the only remaining construct that is not a single
   // token.
   if ( first->type() == tok_types::num_lit && first + 1 != last ||
        first->type() == tok_types::name && *first == "repeat" )
     {
       iter_t begin_arg = first + 1;
-
-      if ( begin_arg != last && begin_arg->type() == tok_types::times )
-	++begin_arg;
 
       if ( begin_arg == last )
 	throw runtime_error
