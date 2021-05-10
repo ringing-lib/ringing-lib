@@ -213,6 +213,11 @@ void proof_context::define_symbol( const pair<const string, expression>& defn )
   dsym_table.define(defn);
 }
 
+void proof_context::undefine_symbol( const string& name )
+{
+  dsym_table.undefine(name);
+}
+
 proof_context::proof_state proof_context::state() const
 {
   if ( p->truth() ) {
@@ -430,3 +435,28 @@ method proof_context::load_method( const string& name )
   return le.meth();
 }
 
+proof_context::scoped_variable::scoped_variable( proof_context& ctx, 
+                                                 string const& name )
+  : ctx(ctx), name(name)
+{
+  if (ctx.defined(name)) 
+    old = ctx.lookup_symbol(name);
+}
+
+proof_context::scoped_variable::~scoped_variable()
+{
+  if (old.isnull())
+    ctx.undefine_symbol(name);
+  else
+    ctx.define_symbol( make_pair(name, old) );
+}
+
+void proof_context::scoped_variable::set( expression const& val )
+{
+  return ctx.define_symbol( make_pair(name, val) );
+}
+
+expression proof_context::scoped_variable::get() const
+{
+  return ctx.lookup_symbol(name);
+}

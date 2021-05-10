@@ -113,13 +113,13 @@ void repeated_node::debug_print( ostream &os ) const
 
 void repeated_node::execute( proof_context &ctx, int dir ) const
 {
+  proof_context::scoped_variable lc(ctx, "loop_counter");
+
   try {
-    if ( count != -1 )
-      for (int i=0; i<count; ++i) 
-        child.execute( ctx, dir );
-    else
-      while ( true )
-        child.execute( ctx, dir );
+    for (RINGING_LLONG i=1; count == -1 || i<=count; ++i) {
+      lc.set( expression( new integer_node(i) ) );
+      child.execute( ctx, dir );
+    }
   } catch ( script_exception const& ex ) {
     if ( ex.t == script_exception::do_break ) 
       return;
