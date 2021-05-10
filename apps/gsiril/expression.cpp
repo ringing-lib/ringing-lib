@@ -658,6 +658,14 @@ bool cmp_node::bool_evaluate( proof_context &ctx ) const
       default:         abort();
     }
   }
+  else if (lt == expression::integer || rt == expression::integer) {
+    string l = left.string_evaluate(ctx), r = right.string_evaluate(ctx);
+    switch (cmp) {
+      case equals:     return l == r;
+      case not_equals: return l != r;
+      default: throw runtime_error("Cannot compare integers");
+    }
+  }
   else {
     string l = left.string_evaluate(ctx), r = right.string_evaluate(ctx);
     switch (cmp) {
