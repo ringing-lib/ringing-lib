@@ -15,8 +15,6 @@
 // License along with this library; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-// $Id$
-
 #ifndef RINGING_LITELIB_H
 #define RINGING_LITELIB_H
 
@@ -57,8 +55,6 @@ public:
 
   explicit litelib( int b, const string& filename, int flags = 0 );
   explicit litelib( int b, istream& is, int flags = 0 );
-
-  //static void registerlib(void);
 
 private:
   class impl;

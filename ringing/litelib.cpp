@@ -1,5 +1,5 @@
 // -*- C++ -*- litelib.cpp - Lightweight library format
-// Copyright (C) 2007, 2009, 2010, 2011, 2017 
+// Copyright (C) 2007, 2009, 2010, 2011, 2017, 2021
 // Richard Smith <richard@ex-parrot.com>.
 
 // This library is free software; you can redistribute it and/or
@@ -16,8 +16,6 @@
 // License along with this library; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-// $Id$
-
 #include <ringing/common.h>
 
 #if RINGING_HAS_PRAGMA_INTERFACE
@@ -33,6 +31,7 @@
 #endif
 
 #include <ringing/litelib.h>
+#include <ringing/lexical_cast.h>
 #include <ringing/pointers.h>
 
 RINGING_START_NAMESPACE
@@ -51,9 +50,6 @@ public:
   impl(int b, istream& is, int flags)
     : b(b), f(is), flags(flags)
   { ok = f.good(); skip_bom(); }
-
-  // Is this file in the right format?
-  // static library_base *canread(const string& filename);
 
   // Iterators into the library
   class entry_type;
@@ -90,11 +86,6 @@ void litelib::impl::skip_bom()
   }
 }
 
-//void litelib::registerlib(void)
-//{
-//  library::addtype(&impl::canread);
-//}
-  
 litelib::litelib(int b, const string& filename, int flags)
   : library( new impl(b, filename, flags) ) {}
 
@@ -122,6 +113,7 @@ private:
   virtual shared_pointer< library_facet_base >
     get_facet( const library_facet_id& id ) const;
 
+  int read_bells();
 
   // The current line
   string linebuf;
@@ -185,19 +177,37 @@ string litelib::impl::entry_type::pn() const
 bool litelib::impl::entry_type::readentry( library_base &lb )
 {
   istream &ifs = dynamic_cast<litelib::impl&>(lb).f;
+  int req_bells = dynamic_cast<litelib::impl&>(lb).b;
   
-  while (ifs)
-    {
-      getline( ifs, linebuf );
+  while (ifs) {
+    getline( ifs, linebuf );
 
-      if (ifs) 
-      {
-        linestart = linebuf.find_first_not_of(" \t");
-        if (linestart != string::npos) break;
+    if (ifs) {
+      linestart = linebuf.find_first_not_of(" \t");
+      if (linestart != string::npos) {
+        int line_bells = read_bells();
+        if (req_bells == 0 && line_bells) {
+          b = line_bells;
+          break;
+        }
+        else if (req_bells && (line_bells == req_bells || line_bells == 0))
+          break;
       }
     }
+  }
 
   return bool(ifs);
+}
+
+int litelib::impl::entry_type::read_bells()
+{
+  string b_pn = pn();
+  string::size_type i = b_pn.find(":");
+  if (i != string::npos) {
+    linestart += i + 1;
+    return lexical_cast<int>(b_pn.substr(0, i));
+  }
+  return 0;
 }
 
 library_base::const_iterator litelib::impl::begin() const

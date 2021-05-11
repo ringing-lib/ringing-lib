@@ -4267,6 +4267,10 @@ whose meaning (if any) is dependent on the context.\footnote{%
 to be whitespace.  The payload begins at the first non-whitespace character
 after the first instance of whitespace on the line.}\index{whitespace}
 
+Optionally, the place notation may be preceded by the number of bells and a
+colon, without spaces.  This is for compatibility with tools which can parse
+method streams containing methods on varying stages.
+
 When invoked with the \verb+-I+ option (\sref{misc_opt}), 
 \methsearch\ requires a method stream on standard input,\index{standard input}
 and the payload is accessible wth \verb+$a+ method variable (\sref{variables}).
@@ -4275,11 +4279,14 @@ take the name of a file whose contents are a method stream, and the payloads
 are the names of the over- or underwork.
 
 Frequently, \methsearch's output is a method stream — specifically
-whenever a \verb+-R+ option starting with \verb+$p+ or \verb+$q+ is given
-(or no \verb+-R+ is given) and no statistical output or counts are requested.%
-\footnote{A \verb+-u+ option is permitted as the status is written 
-to standard error rather than standard output.%
-\index{standard output}\index{standard error}}
+whenever a \verb+-R+ option starting with \verb+$p+, \verb+$q+, \verb+$U+ or
+\verb+$V+ is given (which is the default when no \verb+-R+ is given), and no
+statistical output or counts are requested.%
+\footnote{This is because the \verb+-C+ and \verb+-H+ options also write to
+standard output, and their output will not conform to the method stream
+syntax, except in the case of \verb+-H"$U"+ or \verb+-H"$V"+.  A \verb+-u+
+option is okay as the status is written to standard error rather than standard
+output.\index{standard output}\index{standard error}}
 
 The \verb+touchsearch+ (\sref{touchsearch}) 
 and \verb+gsiril+ (\sref{gsirilmeth}) programs, 
