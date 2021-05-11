@@ -66,7 +66,7 @@ method_libraries::method_libraries()
 
 bool method_libraries::has_libraries()
 {
-  return !instance().library_names.empty();
+  return !instance().library_names.empty() || getenv("METHOD_LIBRARY");
 }
 
 void method_libraries::add_new_library( const string &filename )
@@ -75,14 +75,25 @@ void method_libraries::add_new_library( const string &filename )
   instance().done_init = false;
 }
 
-void method_libraries::read_library( const string &filename )
+void method_libraries::read_libraries()
 {
+  clear();
+
+  if ( formats_have_cc_ids() )
+    store_facet< cc_collection_id >();
+
   try {
-    instance().import_library( filename );
+    if ( instance().library_names.empty() )
+      import_libraries_from_env();
+
+    for ( vector< string >::const_iterator 
+            i( instance().library_names.begin() ), 
+            e( instance().library_names.end() );
+          i != e; ++i )
+      import_library( *i );
   }
   catch ( const exception &e ) {
-    cerr << "Unable to read library: " << filename << ": " 
-         << e.what() << '\n';
+    cerr << "Error reading method libraries: " << e.what() << '\n';
     exit(1);
   }
 }
@@ -98,21 +109,7 @@ void method_libraries::init()
 
       library::setpath_from_env();
       
-      instance().clear();
-
-      if ( formats_have_cc_ids() ) {
-        // Older GCCs (e.g. 3.1) can't cope with template members on bases
-        methodset &base = instance();
-        base.store_facet< cc_collection_id >();
-      }
-
-      for ( vector< string >::const_iterator 
-	      i( instance().library_names.begin() ), 
-	      e( instance().library_names.end() );
-	    i != e; ++i )
-	{
-	  instance().read_library( *i );
-	}
+      instance().read_libraries();
 
       instance().done_init = true;
     }

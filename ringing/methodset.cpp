@@ -205,9 +205,34 @@ size_t methodset::import_library( string const& filename )
   library l( filename );
 
   if ( !l.good() )
-    throw runtime_error( "Library format unknown" );
+    throw runtime_error( "Library format unknown: " + filename );
 
   return append( l.begin(), l.end() );
+}
+
+size_t methodset::import_libraries_from_env()
+{
+  size_t count = 0u;
+
+  if ( char const* const lib_env = getenv("METHOD_LIBRARY") ) {
+    string p(lib_env);
+
+    // XXX: This is basically the split_path function from ringing/library.cpp
+    string::size_type i=0;
+    while (true) {
+      string::size_type j = p.find(':', i);
+      if ( j == string::npos ) {
+        if ( p.size() ) 
+          count += import_library( p.substr(i) );
+        break;
+      }
+    
+      count += import_library( p.substr(i, j-i) );
+      i = j+1;
+    }
+  }
+
+  return count;
 }
 
 RINGING_END_NAMESPACE
