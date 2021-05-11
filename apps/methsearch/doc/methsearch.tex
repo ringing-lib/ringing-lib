@@ -1429,44 +1429,11 @@ and \verb+xml+, which tells \methsearch\ to produce an XML file containing
 the methods.\index{XML|(}%
 \footnote{The XML conforms to the \textit{schema} published by the 
 online method database project which is documented at
-\url{http://methods.ringing.org/xml.html}.  This schema is not the one 
-current used by the Central Council who are using gratuitously bastardised
-version of it.}
+\url{http://methods.ringing.org/xml.html}.}
 It is possible to produce builds of \methsearch\ without XML support,
 and, obviously, if you are using such a build, \verb+-Oxml+ will not be 
 supported.  If \verb+-Oxml+ is specified then a \verb+-o+ option must be 
 supplied (and not \verb+-o-+).
-
-It is possible to use \verb+-R+ to get \methsearch\ to print the name of
-methods it finds.  To do this it needs access to one or more method libraries
-containing the relevant methods.  These may be Central Council text 
-format collections,\index{Central Council!method collections, online}%
-\footnote{Available from \url{http://www.methods.org.uk/method-collections/}.}
-the antiquated MicroSiril library format,\index{MicroSiril libraries}%
-\footnote{MicroSiril libraries are not recommended as they have a number 
-of problems, most notably not properly supporting methods with a space in
-their name (such as Plain Bob).}
-or, if XML is supported, XML libraries.\index{XML|)}
-The \verb+-L+ option\oid{L}{library} specifies the library file to load.  
-If multiple library files are needed, for example one for surprise, one for
-delight, and a third for treble bob, multiple \verb+-L+ options can be 
-supplied.  If the filename is not an absolute path (i.e.\ if it does not
-begin with a \verb+/+ on Unix, or \verb+\+ or \verb+X:\+ for some \verb+X+ 
-on Windows), and if the 
-\verb+$METHOD_LIBRARY_PATH+\fspecd{METHOD\_LIBRARY\_PATH} or 
-\verb+$METHLIBPATH+\fspecd{METHLIBPATH} \textitidx{environment variable}%
-\footnote{The two variables are synonymous.  If both are set, 
-\verb+$METHLIBPATH+ is ignored.}
-is set to a colon-delimited list of directories, these directories are 
-search in turn for the file.  How an environment variable is set depends 
-on your system.  The three commands below are for Windows, most Unix-like 
-systems, and finally the Unix csh.\index{csh@\texttt{csh}}
-
-\begin{Verbatim}
-set METHLIBPATH=C:\Documents and Settings\Richard\methodlibs
-export METHLIBPATH=/home/richard/methodlibs
-setenv METHLIBPATH /home/richard/methodlibs
-\end{Verbatim}
 
 \textit{Statistical output}\index{statistics} 
 is for gathering basic statistics such as
@@ -1509,6 +1476,52 @@ This information is displayed on
 \textitidx{standard error} meaning that it is not captured by shell
 redirection using \verb+>+.
 \index{output|)}
+
+\subsection{Loading method libraries}
+
+It is possible to use \verb+-R+ to get \methsearch\ to print the name of
+methods it finds.  To do this it needs access to one or more method libraries
+containing the relevant methods.  These may be Central Council text 
+format collections,\index{Central Council!method collections, online}%
+\footnote{Available from \url{http://www.methods.org.uk/method-collections/}.}
+the antiquated MicroSiril library format,\index{MicroSiril libraries}%
+\footnote{MicroSiril libraries are not recommended as they have a number 
+of problems, most notably not properly supporting methods with a space in
+their name (such as Plain Bob).}
+or, if XML is supported, XML libraries.\index{XML|)}
+The \verb+-L+ option\oid{L}{library} specifies the library file to load.  
+If multiple library files are needed, for example one for surprise, one for
+delight, and a third for treble bob, multiple \verb+-L+ options can be 
+supplied.  
+
+If no \verb+-L+ option is present, the \verb+$METHOD_LIBRARY+%
+\fspecd{METHOD\_LIBRARY} \textitidx{environment variable}
+may be used to specify one or more library.  Its value is a colon-separated
+list of files to load.  How an environment variable is set depends 
+on your system.  The three commands below are for Windows, most Unix-like 
+systems, and finally the Unix csh.\index{csh@\texttt{csh}}
+
+\begin{Verbatim}
+set METHOD_LIBRARY=C:\Documents and Settings\Richard\methods.xml
+export METHOD_LIBRARY=/home/richard/methods.xml
+setenv METHOD_LIBRARY /home/richard/methods.xml
+\end{Verbatim}
+
+Regardless of whether a library is loaded explicitly using the \verb+-L+
+option or implicitly from the \verb+$METHOD_LIBRARY+ environment
+variable, if its filename is not an absolute path (i.e.\ if it does not
+begin with a \verb+/+ on Unix, or \verb+\+ or \verb+X:\+ for some \verb+X+ 
+on Windows), and if the 
+\verb+$METHOD_LIBRARY_PATH+\fspecd{METHOD\_LIBRARY\_PATH} or 
+\verb+$METHLIBPATH+\fspecd{METHLIBPATH} environment variable
+is set to a colon-separated list of directories, these directories are 
+search in turn for the file.%
+\footnote{The two environment variables are synonymous.  If both are set, 
+\verb+$METHLIBPATH+ is ignored.}
+
+Libraries are only loaded if required.  This currently happens if the
+\verb+--filter-lib+ option is given (\sref{misc_opt}), or if the \verb+$n+,
+\verb+$N+ or \verb+$i+ variables are used (\sref{variables}).
 
 \section{Over- and underworks}\label{overunder}
 
@@ -2185,7 +2198,8 @@ Kent\index{Kent Treble Bob} and Oxford\index{Oxford Treble Bob} is not
 considered a trivial variant for this purpose.)
 
 The method identifier, \verb+$i+, is read from the method libraries.  
-In the Central Council's libraries it is the column headed `CCC';  
+In the Central Council's libraries it is the column headed `CCC';%
+\footnote{It is not present in the Central Council's XML libraries.}
 it is the method's number in the printed method collections.  It is of
 most use in plain doubles where these identifiers have become the standard 
 shorthand for referring to doubles methods.  Note that the lead head code
@@ -2384,7 +2398,7 @@ right-associative\index{right-associative|see{operator, associativity}}, they
 are evaluated right-to-left.  So, for example, \verb+12/2*3+ evaluates to 18,
 and not 2.\index{operators!associativity|)}
 
-The operators \verb-+-, \verb+-+, \verb+*+ and \verb+/+ fulfil their
+The \verb-+-, \verb+-+, \verb+*+ and \verb+/+ operators fulfil their
 usual mathematical roles of addition\index{addition}, 
 subtraction\index{subtraction}, multiplication\index{multiplication}
 and division\index{division}, respectively, with the caveat that they
@@ -4670,14 +4684,7 @@ and \verb+-M2rhalflead+.
   (\sref{rowexprmulti}).
 \end{list}
 
-\section{Pending release}
-
-\methsearch\ is getting close to the point where I shall build a release
-branded version 1.0 and announce it publicly on appropriate mailing lists.
-The following new features are now implemented ready for 1.0.  The main 
-features that are still missing are support for alliance methods%
-\index{alliance methods} and improved support for 
-principles\index{principles} and differentials.\index{differentials}
+\subsection{During 2010 \& '11}
 
 \begin{list}{\labelitemi}{\leftmargin=1em\itemsep=0em}
 \item Method identifiers: \verb+$i+ (\sref{variables}).
@@ -4713,13 +4720,37 @@ principles\index{principles} and differentials.\index{differentials}
   (\sref{random}); \verb+--random-count+'s functionality subsumed in
   \verb+--limit+ and \verb+--loop+, and the option removed.
 \item The current time: \verb+$T+ (\sref{variables}).
+\end{list}
+
+\subsection{During 2020}
+
+I did little or no development on \methsearch\ between 2012 and 2019.  The
+program did most of what I wanted, and the major features I still would have
+liked to add -- namely support for alliance methods\index{alliance methods}
+and improved support for principles\index{principles} and
+differentials\index{differentials} -- all seemed larger projects than I had
+time to do.  In 2020 I returned to the code and have added several relatively
+small new features.
+
+\begin{list}{\labelitemi}{\leftmargin=1em\itemsep=0em}
 \item The number of cycles: \verb+$G+ (\sref{variables}).
 \item Row matching: \verb+--row-match+ (\sref{misc_opt}); and its
 interaction with \verb+-FP+ (\sref{pendrows}).
 \item Any regular lead end: \verb+--any-regular-lh+ (\sref{le_lh}).
+\end{list}
+
+\subsection{During 2021}
+
+\begin{list}{\labelitemi}{\leftmargin=1em\itemsep=0em}
+\item Multi-extent methods: \verb+-FN+ (\sref{multiextent}).
 \item Over and underworks: \verb+$V+, \verb+$U+ (\sref{variables});
   \verb+--overwork-map+, \verb+--underwork-map+ (\sref{overunder}).
 \end{list}
+
+\subsection{The future}
+
+\methsearch\ is getting close to the point where I shall build a release
+branded version 1.0 and announce it publicly on appropriate mailing lists.
 
 \clearpage
 \phantomsection

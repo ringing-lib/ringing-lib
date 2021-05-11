@@ -43,7 +43,8 @@ int main( int argc, char *argv[] )
   else if ( args.random_seed )
     srand( args.random_seed );
 
-  method_libraries::init();
+  if ( formats_have_names() || formats_have_cc_ids() || args.filter_lib_mode )
+    method_libraries::init();
 
   // So that errors with -M options are presented now rather than later.
   musical_analysis::force_init( args.bells );

@@ -85,6 +85,7 @@ public:
   void execute_symbol( const string& sym, int dir = +1 );
   void execute_final_symbol( const string& sym );
   void define_symbol( const pair< const string, expression > &defn );
+  void undefine_symbol( const string& name );
   expression lookup_symbol( const string& sym ) const;
   bool defined( const string& sym ) const;
 
@@ -104,6 +105,20 @@ public:
   proof_context silent_clone() const;
 
   void increment_node_count() const;
+
+  class scoped_variable {
+  public:
+    scoped_variable( proof_context& ctx, string const& name );
+   ~scoped_variable();
+
+    void set( expression const& val );
+    expression get() const;
+
+  private:
+    proof_context& ctx;
+    string const name;
+    expression old;
+  };
 
 private:
   void termination_sequence( ostream& os ) const;

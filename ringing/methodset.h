@@ -83,6 +83,9 @@ public:
   // Load the specified file and append to this methodset
   size_t import_library( string const& filename );
 
+  // Load any libraries referenced by the METHOD_LIBRARY variable
+  size_t import_libraries_from_env();
+
 private:
   void init();
 

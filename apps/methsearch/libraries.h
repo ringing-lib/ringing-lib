@@ -49,7 +49,7 @@ public:
   static method_libraries &instance();
 
 private:
-  void read_library( const string& );
+  void read_libraries();
   method_libraries();
 
   bool done_init;
