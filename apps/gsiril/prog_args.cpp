@@ -343,7 +343,7 @@ bool arguments::validate( arg_parser& ap )
 
 methodset const& arguments::methset() const
 {
-  if ( libnames.size() && !the_methset ) {
+  if ( ( libnames.size() || getenv("METHOD_LIBRARY") ) && !the_methset ) {
     // Register mslib last, as various things can accidentally match it
     cclib::registerlib();
     xmllib::registerlib();
@@ -352,6 +352,9 @@ methodset const& arguments::methset() const
     library::setpath_from_env();
 
     the_methset.reset( new methodset );
+
+    if ( libnames.empty() )
+      the_methset->import_libraries_from_env();
 
     for ( vector<string>::const_iterator 
             i = libnames.begin(), e = libnames.end(); i != e; ++i )
