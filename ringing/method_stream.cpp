@@ -31,15 +31,19 @@ RINGING_USING_STD
 
 class method_stream::impl : public libout::interface {
 public:
-  impl() {}
+  explicit impl(bool inc_bells) : inc_bells(inc_bells) {}
   
   virtual void append( library_entry const& entry ) {
+    if (inc_bells) cout << entry.bells() << ":";
     cout << entry.pn() << "\t" << entry.name() << endl;
   }
+
+private:
+  bool inc_bells;
 };
 
-method_stream::method_stream() 
-  : libout( new impl() ) 
+method_stream::method_stream(bool inc_bells) 
+  : libout( new impl(inc_bells) ) 
 {}
 
 RINGING_END_NAMESPACE

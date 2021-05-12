@@ -36,7 +36,7 @@ RINGING_USING_STD
 
 class RINGING_API method_stream : public libout {
 public:
-  method_stream();
+  explicit method_stream(bool inc_bells = false);
 
 private:
   class impl;
