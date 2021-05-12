@@ -40,6 +40,7 @@ struct arguments
   init_val<int,0>       bells;
   vector<string>        titles;
   init_val<bool,false>  read_titles;
+  init_val<bool,false>  inc_bells;
   vector<string>        libs;
 
 private:
@@ -62,6 +63,10 @@ void arguments::bind( arg_parser& p )
   p.add( new boolean_opt
            ( 'T', "read-titles",  "Read titles to find from standard input.",
              read_titles ) );
+
+  p.add( new boolean_opt
+           ( 'B', "print-bells",  "Include the number of bells in the output",
+             inc_bells ) );
 
   p.set_default( new strings_opt( '\0', "", "", "", libs ) );
 }
@@ -192,7 +197,7 @@ int main(int argc, char const** argv) {
 
   library::setpath_from_env();
 
-  method_stream out;
+  method_stream out(args.inc_bells);
   filter f(args);
   
   for ( vector< string >::const_iterator 
