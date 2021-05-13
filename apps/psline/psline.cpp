@@ -568,23 +568,24 @@ bool myopt::process(const string& arg, const arg_parser& ap) const
 	args.number_mode = printmethod::miss_lead;
       break;	     
     case 'q' :
-      if (!arg.empty()) {
-        size_t i = arg.find(',');
-        if (i != string::npos) {
-          string a(arg, i+1);
-          if (a == "rules")
-            args.calls_at_rules = true;
-          else if (a.substr(0,8) == "voffset=") {
-            string const a2(a.substr(8));
-            if (!parse_dimension(a2, args.calls_voffset)) {
-              cerr << "Unable to parse -q...voffset argument: \"" 
-                   << a2 << "\"\n";
-              return false;
-            }
+      s = arg.begin();
+      args.calls = next_bit(arg, s);
+      while (s != arg.end()) {
+        string a = next_bit(arg, s);
+        if (a == "rules")
+          args.calls_at_rules = true;
+        else if (a.substr(0,8) == "voffset=") {
+          string const a2(a.substr(8));
+          if (!parse_dimension(a2, args.calls_voffset)) {
+            cerr << "Unable to parse -q...voffset argument: \"" 
+                 << a2 << "\"\n";
+            return false;
           }
-          args.calls = string(arg, 0, i);
         }
-        else args.calls = arg;
+        else {
+	  cerr << "Unrecognised argument: \"" << arg << "\"\n";
+          return false;
+        }
       }
       break;
     case 'R' :
