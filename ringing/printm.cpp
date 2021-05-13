@@ -247,7 +247,8 @@ void printmethod::print(printpage& pp)
            && needrule(total_row_count, the_rule)) {
           string pos = call(ic++);
           if (!pos.empty())
-            pr.text(pos, opt.xspace/2, text_style::left, false, true);
+            pr.text(pos, opt.xspace/2, text_style::left, false, true,
+                    calls_voffset);
         }
         total_row_count++;
       }
