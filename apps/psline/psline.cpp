@@ -66,8 +66,9 @@ struct arguments {
   printmethod::number_mode_t number_mode;
   int pn_mode;
   int placebells;
-  bool reverse_placebells;
-  bool placebells_at_rules;
+  init_val<bool, false> reverse_placebells;
+  init_val<bool, false> placebells_at_rules;
+  init_val<bool, false> placebell_blobs_only;
   bool landscape;
   dimension width, height;
   bool fit;
@@ -234,7 +235,8 @@ void setup_args(arg_parser& p)
     " working bell which has a line drawn.  If BELL is `x' or `none', don't"
     " print place bells.  If BELL is `default', select the bell automatically."
     " If `rev' is appended, show reverse place bells too.  If `rules' is"
-    " appended, print place bells at the rules rather than the lead ends.",
+    " appended, print place bells at the rules rather than the lead ends.  If"
+    " `blobs' is appended, only draw the place bell blobs.",
     "{BELL|x|none|default}[,rules][,rev]", true));
   p.add(new myopt('p', "place-notation", "Print place"
     " notation for the first lead, every lead, or no leads.  The default is"
@@ -500,6 +502,8 @@ bool myopt::process(const string& arg, const arg_parser& ap) const
             args.reverse_placebells = true;
           else if(a == "rules")
             args.placebells_at_rules = true;
+          else if(a == "blobs")
+            args.placebell_blobs_only = true;
           else if (a.length() == 1) {
             bell b;
             try {
@@ -821,6 +825,7 @@ int main(int argc, char *argv[])
       pm.placebells = args.placebells;
     pm.reverse_placebells = args.reverse_placebells;
     pm.placebells_at_rules = args.placebells_at_rules;
+    pm.placebell_blobs_only = args.placebell_blobs_only;
     pm.calls_at_rules = args.calls_at_rules;
     pm.calls_voffset = args.calls_voffset;
     pm.opt.flags = args.numbers ? printrow::options::numbers : 0;

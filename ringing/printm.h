@@ -68,7 +68,7 @@ public:
                    pn_mask = 0x0f, pn_nox = 0x10, pn_lcross = 0x20 };
   pn_mode_t pn_mode;
   int placebells;
-  bool reverse_placebells, placebells_at_rules;
+  bool reverse_placebells, placebells_at_rules, placebell_blobs_only;
   string calls;
   bool calls_at_rules;
   dimension calls_voffset;

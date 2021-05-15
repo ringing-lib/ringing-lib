@@ -62,7 +62,7 @@ void printmethod::defaults()
   yoffset = (opt.yspace * (m->length() * 2 + 3)) / 2;
   number_mode = miss_lead;
   pn_mode = pn_first;
-  reverse_placebells = placebells_at_rules = false;
+  reverse_placebells = placebells_at_rules = placebell_blobs_only = false;
   calls_at_rules = false;
 
   // Set up the lines
@@ -186,7 +186,8 @@ void printmethod::print(printpage& pp)
             pr.set_options(opt);
           }
           if(!placebells_at_rules && placebells >= 0) {// Print place bell
-            pr.placebell(placebells, reverse_placebells ? +1 : 0);
+            if (!placebell_blobs_only)
+              pr.placebell(placebells, reverse_placebells ? +1 : 0);
             if(!(opt.flags & printrow::options::numbers))
               pr.dot(-1);
           }
@@ -206,8 +207,8 @@ void printmethod::print(printpage& pp)
           }
           if (!placebells_at_rules && reverse_placebells && 
               row_count != total_rows - 1) {
-            if(placebells >= 0)
- 	        pr.placebell(placebells, -1);
+            if(placebells >= 0 && !placebell_blobs_only)
+              pr.placebell(placebells, -1);
             if(!(opt.flags & printrow::options::numbers))
               pr.dot(-1); 
           }
@@ -235,13 +236,15 @@ void printmethod::print(printpage& pp)
            && total_row_count < (total_rows - 1)
            && needrule(total_row_count, the_rule)) {
           pr.rule(the_rule.style, the_rule.flags);
-          if(placebells_at_rules && reverse_placebells && placebells >= 0)
+          if(placebells_at_rules && reverse_placebells && placebells >= 0 &&
+             !placebell_blobs_only)
             pr.placebell(placebells, -1);
         }
         if(placebells_at_rules && placebells >= 0 &&
            row_count < (rows_per_column - 1)
            && total_row_count < (total_rows - 1)
-           && needrule(total_row_count - 1, the_rule)) 
+           && needrule(total_row_count - 1, the_rule)
+           && !placebell_blobs_only) 
           pr.placebell(placebells, reverse_placebells ? +1 : 0);
         if(calls_at_rules 
            && needrule(total_row_count, the_rule)) {
