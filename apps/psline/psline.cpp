@@ -57,7 +57,7 @@ struct arguments {
   string font; 
   init_val<int, 0> font_size; 
   init_val<int, 0> label_font_size; 
-  colour col;
+  colour col, label_col;
   bool custom_lines;
   map<int, printrow::options::line_style> lines;
   bool custom_rules;
@@ -141,6 +141,7 @@ bool parse_colour(const string& arg, colour& col)
     }
     if(j==string::npos) { col.grey = true; col.red = i/100.0f; return true; }
     col.red = i/100.0f;
+    col.null = false;
     
     string::size_type k = arg.find('-', j+1);
     if (k==string::npos) {
@@ -214,8 +215,10 @@ void setup_args(arg_parser& p)
   p.add(new myopt('s', "font-size", "Use font size SIZE, in points.  If"
     " specified, LABELSIZE is used for place bells and calling positions.", 
 		  "SIZE[,LABELSIZE]"));
-  p.add(new myopt('c', "colour", "Print everything except lines in COLOUR",
-		  "COLOUR"));
+  p.add(new myopt('c', "colour", "Print everything except lines in COLOUR. "
+    " If COLOUR2 is specified, it is used for place bells, calling positions"
+    " and place notations.",
+		  "COLOUR[,COLOUR2]"));
   p.add(new myopt('l', "line",
     "Draw a line for BELL"
     " with colour COLOUR and thickness DIMENSION.  If `x' is included after"
@@ -411,7 +414,15 @@ bool myopt::process(const string& arg, const arg_parser& ap) const
       }
       break;
     case 'c' :
-      return parse_colour(arg, args.col);
+      s = arg.begin();
+      if (!parse_colour(next_bit(arg, s), args.col)) return false;
+      if (s != arg.end()) {
+        if (!parse_colour(next_bit(arg, s), args.label_col)) return false;
+      }
+      if (s != arg.end()) {
+        cerr << "Too many arguments: \"" << arg << "\"\n";
+        return false;
+      }
     case 'G' :
       if(!arg.empty()) {
 	s = arg.begin();
@@ -671,7 +682,7 @@ int main(int argc, char *argv[])
   // Set up some default arguments
   args.width.n = 210; args.width.d = 1; args.width.u = dimension::mm;
   args.height.n = 297; args.height.d = 1; args.height.u = dimension::mm;
-  args.col.grey = true; args.col.red = 0;
+  args.col = colour(0); // black
   args.placebells = -2;
   args.numbers = true;
   args.format = ps;
@@ -913,6 +924,7 @@ int main(int argc, char *argv[])
     if(args.font_size) pm.opt.style.size = args.font_size;
     if(args.label_font_size) pm.opt.label_style.size = args.label_font_size;
     pm.opt.style.col = args.col;
+    pm.opt.label_style.col = args.label_col;
     if(args.xspace != 0) pm.opt.xspace = args.xspace;
     if(args.yspace != 0) pm.opt.yspace = args.yspace;
     if(args.hgap != 0) pm.hgap = args.hgap;

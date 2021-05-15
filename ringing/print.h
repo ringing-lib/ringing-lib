@@ -49,7 +49,18 @@ RINGING_USING_STD
 
 class printpage;
 
-struct colour { bool grey; float red, green, blue; };
+struct colour { 
+  colour() 
+    : grey(true), red(0), green(0), blue(0), null(true) {}
+  explicit colour(float g)
+    : grey(true), red(g), green(0), blue(0), null(false) {}
+  colour(float r, float g, float b) 
+    : grey(false), red(r), green(g), blue(b), null(false) {}
+
+  bool grey;
+  float red, green, blue;
+  bool null;
+};
 
 struct text_style {
   string font;
@@ -73,6 +84,8 @@ public:
     dimension xspace, yspace;	   // Spacing between places and rows
 
     struct line_style {
+      line_style() : crossing(false), no_dots(false) {}
+
       dimension width;
       colour col;
       bool crossing, no_dots;

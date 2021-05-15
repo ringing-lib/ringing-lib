@@ -33,17 +33,17 @@ void printrow::options::defaults()
   flags = numbers;
   style.size = 100;
   style.font = "Helvetica";
-  style.col.grey = true; style.col.red = 0;
+  style.col = colour(0); // black
   label_style.size = 0;
   label_style.font = "Helvetica";
-  label_style.col.grey = true; label_style.col.red = 0;
+  label_style.col = colour(); // inherit style.col
   xspace.n = 12; xspace.d = 1; xspace.u = dimension::points; 
   yspace.n = 12; yspace.d = 1; yspace.u = dimension::points;
   line_style s; s.width.n = 1; s.width.d = 2; s.width.u = dimension::points;
-  s.col.grey = false; s.col.red = 0; s.col.green = 0; s.col.blue = 1.0;
+  s.col = colour(0,0,1); // blue
   s.crossing = false; s.no_dots = false;
   lines[1] = s;
-  s.col.grey = true; s.col.red = 0.9f;
+  s.col = colour(0.9); // very pale grey
   grid_style = s;
   grid_type = 0;
 }
