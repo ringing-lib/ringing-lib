@@ -67,6 +67,10 @@
 \usepackage{multirow}
 \usepackage[small]{caption}
 
+% Use an em-dash for bulleted lists
+\usepackage{enumitem}
+\renewcommand\labelitemi{---}
+
 
 % Coloured links, etc.
 \usepackage[xetex,%
@@ -138,7 +142,7 @@
 
 \chapter{Getting started}
 
-This chapter gives a brief introduction to \methsearch\ --- what it is,
+This chapter gives a brief introduction to \methsearch\ -- what it is,
 what it can do, and who it's aimed at (\sref{what_is_it}).  
 This is followed by an introduction to the command line (\sref{cli}),
 aimed particularly at those unfamiliar with it; it can safely be
@@ -165,7 +169,7 @@ In this case, it's possible to verify this with pencil and paper, and
 indeed this was first discovered a hundred or more years ago.  But 
 \methsearch\ allows you to verify this in a fraction of a second.
 
-A comparable list of major methods runs to tens of millions of entries ---
+A comparable list of major methods runs to tens of millions of entries --
 clearly beyond the scope of manual analysis, but on a reasonably 
 fast computer, \methsearch\ can enumerate them in a few hours and provide 
 you with statistical information on them.
@@ -245,14 +249,14 @@ version of \methsearch\ that you are running.
 \subsection{The Unix philosophy}\label{unixphil}
 
 Although the command line interface originally developed through necessity
---- early computers had no facilities for graphical output --- its use
+-- early computers had no facilities for graphical output -- its use
 has continued thanks largely to the \textitidx{Unix philosophy}.  This is 
 a set of cultural norms for programs that can be summarised as follows:
 
 \begin{itemize}
-\item[---] Write programs that do one thing and do it well.
-\item[---] Write programs to work together. 
-\item[---] Write programs to handle text streams, 
+\item Write programs that do one thing and do it well.
+\item Write programs to work together. 
+\item Write programs to handle text streams, 
 because that is a universal interface.
 \end{itemize}
 
@@ -668,7 +672,8 @@ constraining the lead ends and heads (\sref{le_lh}), and half leads
 (\sref{hls}), requiring specific symmetries (\sref{symmetry}),
 partially specifying the method's place notation (\sref{pn}),
 configuring \methsearch's output (\sref{output_opt}), sampling methods
-randomly (\sref{random}), and other miscellaneous options (\sref{misc_opt}).  
+randomly (\sref{random}), filtering method streams (\sref{filtering}),
+and other miscellaneous options (\sref{misc_opt}).  
 Options can also be stored in response files (\sref{respfile}).
 
 \section{Stage and class}\label{stage_class}
@@ -1520,7 +1525,7 @@ search in turn for the file.%
 \verb+$METHLIBPATH+ is ignored.}
 
 Libraries are only loaded if required.  This currently happens if the
-\verb+--filter-lib+ option is given (\sref{misc_opt}), or if the \verb+$n+,
+\verb+--filter-lib+ option is given (\sref{filtering}), or if the \verb+$n+,
 \verb+$N+ or \verb+$i+ variables are used (\sref{variables}).
 
 \section{Over- and underworks}\label{overunder}
@@ -1642,16 +1647,62 @@ random treble dodging major methods:%
 methsearch -b8 -G1 --random --loop --timeout=1 --limit=23
 \end{Verbatim}
 
+\section{Filtering}\label{filtering}
+
+\begin{tabularx}{\textwidth}{llX}
+\texttt{-I}&\texttt{--filter}&Run in filter mode on standard input\\
+&\texttt{--filter-lib}&Run in filter mode on specified libraries\\
+&\texttt{--invert-filter}
+                &Invert filter so only non-matching methods are listed\\
+\end{tabularx}
+
+The \verb+-I+\oid{I}{filter} option is used to change \methsearch\ from
+searching for methods \textit{ab initio} to filtering 
+a list of methods supplied on \textitidx{standard input}.
+The input format is a method stream.  This is described in detail in
+\sref{methstream}, but is essentially a list of method place notations, one
+per line.
+Any text after the place notation is called the \textit{filter payload} 
+and can be accessed by the \verb+$a+ method variable (\sref{variables}).
+The output from \methsearch\ run without a \verb+-R+ option is suitable
+input.\footnote{So is output from \methsearch\ run with a \verb+-R+ option
+beginning \verb+$p+, \verb+$q+, \verb+$B:$p+ or \verb+$B:$q+.}
+This is particularly useful if you want to do a lengthy search, but are not
+entirely sure how to restrict the results initially.  Dump everything into
+one big file:
+
+\begin{Verbatim}[commandchars=\\\{\},commentchar=~]
+methsearch -b\textit{n} \textit{\rm\it[options]} > methods.txt
+~ -- a comment to get vim's syntax highlighter back in sync:  $
+\end{Verbatim}
+
+\ldots and then filter the output as many times as you want:
+
+\begin{Verbatim}[commandchars=\\\{\}]
+methsearch -b\textit{n} -I \textit{\rm\it[other options]} < methods.txt
+\end{Verbatim}
+
+Doing a search once and filtering it several times is frequently much faster
+than repeating the search once per attempt to filter it.
+
+The \verb+--filter-lib+\loid{filter-lib} option is the same, except that
+instead of reading methods from standard input, it reads methods from
+all the libraries specified with \verb+-L+\oi{L} options.  This is useful
+for finding named methods with particular properties.\index{named methods}
+
+The \verb+--invert-filter+\loid{invert-filter} option is used in conjunction
+with either of the options that enable filter mode (\verb+-I+ or 
+\verb+--filter-lib+).  It inverts the sense
+of the filtering so that \methsearch\ outputs every method that does 
+\textit{not} match the search criteria.  
+The method count (per \verb+-C+ in \sref{output_opt}) 
+and any statistical output (\sref{stats}) is similarly inverted.
 
 \section{Miscellaneous options}\label{misc_opt}
 
 \begin{tabularx}{\textwidth}{llX}
 \texttt{-?}&\texttt{--help}&Print a help message and exit\\
 \texttt{-V}&\texttt{--version}&Print version information and exit\\
-\texttt{-I}&\texttt{--filter}&Run in filter mode on standard input\\
-&\texttt{--filter-lib}&Run in filter mode on specified libraries\\
-&\texttt{--invert-filter}
-                &Invert filter so only non-matching methods are listed\\
 \texttt{-Q}&\texttt{--require} 
                 &Apply an additional requirement to the search results\\
 &\texttt{--row-match=N=PAT}
@@ -1669,52 +1720,6 @@ The \verb+--version+\oid{V}{version} option prints the version number of
 \methsearch.  (In practice, this is less useful than it might be.  Currently,
 formal releases of \methsearch\ are made very infrequently, and most copies
 in use are development snapshots.)
-
-The \verb+-I+\oid{I}{filter} option is used to change \methsearch\ from
-searching for methods \textit{ab initio} to filtering 
-a list of methods supplied on \textitidx{standard input}.
-The input format is a list of methods, one per line, with the
-place notation first on the line followed, optionally, by additional text
-that is ignored.%
-\footnote{A UTF-8\index{UTF-8} byte order mark (BOM)\index{byte order mark} 
-is permitted, though not required, at the start of the first line.  
-This has the hexadecimal encoding \texttt{EF BB BF}.  
-Other Unicode\index{Unicode} formats (such as UTF-16 or UTF-32) are not 
-permitted; nor, in general, are any 
-non-ASCII-compatible character sets.\index{character set}}
-Any text after the place notation is called the \textit{filter payload} 
-and can be accessed by the \verb+$a+ method variable (\sref{variables}).
-The output from methsearch \verb+-R"$q +\ldots\verb+"+ is a suitable input.
-This is particularly useful if you want to do a lengthy search, but are not
-entirely sure how to restrict the results initially.  Dump everything into
-one big file:
-
-\begin{Verbatim}[commandchars=\\\{\},commentchar=~]
-methsearch -b\textit{n} -R"$q" \textit{\rm\it[options]} > methods.txt
-~ -- a comment to get vim's syntax highlighter back in sync:  $
-\end{Verbatim}
-
-\ldots and then filter the output as many times as you want:
-
-\begin{Verbatim}[commandchars=\\\{\}]
-methsearch -b\textit{n} -I \textit{\rm\it[other options]} < methods.txt
-\end{Verbatim}
-
-Generally, doing a search once and filtering it several times is much faster
-than repeating the search once per attempt to filter it.
-
-The \verb+--filter-lib+\loid{filter-lib} option is the same, except that
-instead of reading methods from standard input, it reads methods from
-all the libraries specified with \verb+-L+\oi{L} options.  This is useful
-for finding named methods with particular properties.\index{named methods}
-
-The \verb+--invert-filter+\loid{invert-filter} option is used in conjunction
-with either of the options that enable filter mode (\verb+-I+ or 
-\verb+--filter-lib+).  It inverts the sense
-of the filtering so that \methsearch\ outputs every method that does 
-\textit{not} match the search criteria.  
-The method count (per \verb+-C+, below) 
-and any statistical output (\sref{stats}) is similarly inverted.
 
 The \verb+-Q+\oid{Q}{require} provides a way of imposing more complex
 requirements on the methods that \methsearch\ finds.  Its argument is 
@@ -1889,7 +1894,7 @@ typed in on the command line reach \methsearch\ in their intended form.
 \D\F{U}&The place notation (or name) of the underwork\\
 \D\No\F{s}&An index of the staticity of the method\\
 \D\No\F{i}&The method identifier from the CC libraries\\
-\D\No\F{a}&The filter payload --- see \sref{misc_opt}\\
+\D\No\F{a}&The filter payload --- see \sref{filtering}\\
 \D\No\textit{\#}&The number of that method\\
 \D\F{T}&The current time (formatted as hh\texttt{:}mm\texttt{:}ss)\\
 \D\No\F{c}&The number of matching methods --- see \sref{stats}\\
@@ -3191,7 +3196,7 @@ is \verb+-+, instead of reading from a file, \methsearch\ reads from standard
 input.  If you do this, you must ensure that nothing else is also reading
 from standard input or you will end up with bizarre undefined behaviour.
 In particular, you can only have one \verb+<(-)+ anywhere, and you cannot
-use this in conjunction with \verb+-I+\oi{I} (\sref{misc_opt}).
+use this in conjunction with \verb+-I+\oi{I} (\sref{filtering}).
 
 A \textit{command invocation} has the syntax 
 \verb+-Fr="$(+\textit{command line}\verb+)"+ and is discussed in detail 
@@ -3777,9 +3782,9 @@ the approach that \methsearch\ attempts to take.
 \methsearch\ interacts with external programs in several main ways.  First, it
 can filter input (in the form of a list of methods) from another source;
 this behaviour is activated by the \verb+-I+\oi{I} option was 
-discussed in \sref{misc_opt}.  Secondly, it can output a list of methods
+discussed in \sref{filtering}.  Secondly, it can output a list of methods
 which is parsed by another program; an example of this was also given in
-the discussion of filtering in \sref{misc_opt}.  The final ways are when 
+the discussion of filtering in \sref{filtering}.  The final ways are when 
 \methsearch\ invokes an external program via a \textit{command invocation}
 (\sref{cmdinv}).  
 
@@ -4259,19 +4264,26 @@ musgrep -b8 -i ?
 
 Method streams are used to stream a list of methods between programs.  
 The standard syntax is again very straightforward: methods are given,
-one per line, in any recognised form of place notation (\sref{pn}).  
-Whitespace is not permitted in the place notation, and any text after
-the first whitespace character on the line is an optional \textit{payload}
-whose meaning (if any) is dependent on the context.\footnote{%
-\methsearch\ considers the space, tab, carriage return and line feed
-to be whitespace.  The payload begins at the first non-whitespace character
-after the first instance of whitespace on the line.}\index{whitespace}
+one per line, with each line consisting of the following parts:%
+\footnote{A UTF-8\index{UTF-8} byte order mark (BOM)\index{byte order mark} 
+is permitted, though not required, at the start of the first line.  
+This has the hexadecimal encoding \texttt{EF BB BF}.  
+Other Unicode\index{Unicode} formats (such as UTF-16 or UTF-32) are not 
+permitted; nor, in general, are any 
+non-ASCII-compatible character sets.\index{character set}}
 
-Optionally, the place notation may be preceded by the number of bells and a
-colon, without spaces.  This is for compatibility with tools which can parse
-method streams containing methods on varying stages.
+\begin{itemize}
+\item optionally, the number of bells followed by a colon;
+\item the place notation of the method, in any recognised form (\sref{pn}),
+written without whitespace;\footnote{\methsearch\ considers the space, tab,
+carriage return and line feed to be whitespace.}\index{whitespace} and 
+\item optionally, one or more whitespace character followed by further text
+which is called the \textit{payload} and its meaning (if any) is dependent on
+the context.\footnote{The payload begins at the first non-whitespace character
+after the first instance of whitespace on the line.}
+\end{itemize}
 
-When invoked with the \verb+-I+ option (\sref{misc_opt}), 
+When invoked with the \verb+-I+ option (\sref{filtering}), 
 \methsearch\ requires a method stream on standard input,\index{standard input}
 and the payload is accessible wth \verb+$a+ method variable (\sref{variables}).
 The \verb+--overwork-map+ and \verb+--underwork-map+ options (\sref{overunder}) 
@@ -4290,7 +4302,7 @@ output.\index{standard output}\index{standard error}}
 
 The \verb+touchsearch+ (\sref{touchsearch}) 
 and \verb+gsiril+ (\sref{gsirilmeth}) programs, 
-as well as \methsearch\ itself (\sref{misc_opt}),
+as well as \methsearch\ itself when filtering (\sref{filtering}),
 can be used as a filter on methods.  
 In each case, this behaviour is activated with the program's \verb+--filter+ 
 option (which for \methsearch\ itself, can be abbreviated to \verb+-I+).\oi{I}  
@@ -4682,7 +4694,7 @@ and \verb+-M2rhalflead+.
 \item Mirror symmetry: \verb+--mirror+ (\sref{symmetry}).
 \item Improved falseness: \verb+-Fs+ (\sref{avoidrow}), 
   \verb+-FP+ (\sref{pends}).
-\item Library filtering: \verb+--filter-lib+ (\sref{misc_opt}).
+\item Library filtering: \verb+--filter-lib+ (\sref{filtering}).
 \item Random ordering: \verb+--random+, \verb+--random-count+ [removed], 
   \verb+--seed+ (\S\ref{random}).
 \item Method staticity: \verb+$s+ (\sref{fmtstr}).
@@ -4695,8 +4707,8 @@ and \verb+-M2rhalflead+.
 
 \begin{list}{\labelitemi}{\leftmargin=1em\itemsep=0em}
 \item Method identifiers: \verb+$i+ (\sref{variables}).
-\item Filter payloads: \verb+$a+ (\sref{misc_opt} and \sref{variables}). 
-\item Filter inverting: \verb+--invert-filter+ (\sref{misc_opt}).
+\item Filter payloads: \verb+$a+ (\sref{filtering} and \sref{variables}). 
+\item Filter inverting: \verb+--invert-filter+ (\sref{filtering}).
 \item Delight methods: \verb+--delight+, and (for minor)
 \verb+--3rds-place-delight+ and \verb+--4ths-place-delight+ 
 (\sref{stage_class}).
@@ -4710,7 +4722,7 @@ and \verb+-M2rhalflead+.
 \item Music pattern matching in expressions: \verb+~~+ (\sref{oper}).
 \item Comma operator (for sequencing) in expressions: \verb+,+ (\sref{oper}).
 \item Abbreviations for the \verb+--require+ and \verb+--filter+ options:
-  \verb+-Q+ and \verb+-I+, respectively (\sref{misc_opt}). 
+  \verb+-Q+ and \verb+-I+, respectively (\sref{filtering}, \sref{misc_opt}). 
 \item Command exit status: \verb+$?+ (\sref{exitstatus}).
 \item Number of bells: \verb+$B+ (\sref{variables}).
 \item Response files: \verb+@+\textit{filename} (\sref{respfile}).

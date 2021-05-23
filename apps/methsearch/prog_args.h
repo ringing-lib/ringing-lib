@@ -64,7 +64,7 @@ struct arguments
   init_val<int,0>  max_places_per_change;
   init_val<int,0>  treble_dodges;
   init_val<int,1>  hunt_bells;
-  init_val<int,0>  lead_len;
+  init_val<int,0>  orig_lead_len, lead_len;
   init_val<int,0>  max_consec_places;
 
   init_val<int,-1> treble_front;
@@ -164,13 +164,18 @@ struct arguments
   vector<string> require_strs;
   vector<size_t> require_expr_idxs;
 
+  set<row> orig_avoid_rows;
   set<row> avoid_rows;
 
   arguments( int argc, char* argv[] );
 
+  bool set_bells( int b = 0 );
+
 private:
   void bind( arg_parser &p );
   bool validate( arg_parser &p );
+  bool validate_path( arg_parser *p = 0 );
+  bool validate_bells( arg_parser *p = 0 );
 };
 
 #endif // METHSEARCH_ARGS_INCLUDED

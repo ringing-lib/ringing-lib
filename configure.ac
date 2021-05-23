@@ -66,7 +66,6 @@ AC_PATH_PROG(MAKEINDEX, makeindex)
 AM_CONDITIONAL(HAVE_XELATEX, test -n "$XELATEX" -a -n "$MAKEINDEX")
 
 AC_PATH_PROG(MAKEINFO, makeinfo)
-test -n "$MAKEINFO" || AC_MSG_ERROR([makeinfo is required])
 AM_CONDITIONAL(HAVE_MAKEINFO, test -n "$MAKEINFO")
 
 dnl --------------------------------------------------------------------------
@@ -177,6 +176,5 @@ AC_CONFIG_FILES([Makefile ringing/Makefile apps/Makefile apps/gsiril/Makefile
   apps/fextent/Makefile apps/extent/Makefile apps/touchsearch/Makefile
   apps/printmethod/Makefile apps/musgrep/Makefile apps/rowcalc/Makefile
   apps/ringmethod/Makefile apps/splices/Makefile apps/spliceplan/Makefile
-  apps/methodlib/Makefile
-  doc/Makefile tests/Makefile ringing/common-am.h])
+  apps/methodlib/Makefile tests/Makefile ringing/common-am.h])
 AC_OUTPUT

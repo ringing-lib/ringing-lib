@@ -1,5 +1,5 @@
 // -*- C++ -*- mask.cpp - handle method masks
-// Copyright (C) 2002, 2003, 2009, 2011, 2012 
+// Copyright (C) 2002, 2003, 2009, 2011, 2012, 2021
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -15,9 +15,6 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-
-// $Id$
-
 
 #include <ringing/common.h>
 
@@ -286,7 +283,7 @@ void expand_block( vector< vector< change > >& block1,
     }
 }
 
-bool read_and_expand_blocks( arguments& args, const arg_parser& ap,
+bool read_and_expand_blocks( arguments& args,
                              vector< vector<change> >& above, 
                              vector< vector<change> >& below )
 {
@@ -784,11 +781,11 @@ void restrict_changes( arguments& args )
   }
 }
 
-bool parse_mask( arguments &args, const arg_parser &ap )
+bool parse_mask( arguments &args )
 {
   vector< vector<change> > above, below;
 
-  if ( !read_and_expand_blocks( args, ap, above, below ) )
+  if ( !read_and_expand_blocks( args, above, below ) )
     return false;
 
   if ( args.lead_len && !is_mask_consistent(args, above, below) )
