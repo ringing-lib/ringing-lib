@@ -164,13 +164,6 @@ fi
 
 dnl --------------------------------------------------------------------------
 
-# mkdsp automatically sets this Automake conditional to true.  We don't just 
-# set it to false in case anyone is using Visual Studio with Autoconf.
-AC_IS_MSVC
-AM_CONDITIONAL(USING_MSVC, test "$IS_MSVC" = 1)
-
-dnl --------------------------------------------------------------------------
-
 AC_CONFIG_FILES([Makefile ringing/Makefile apps/Makefile apps/gsiril/Makefile
   apps/utils/Makefile apps/psline/Makefile apps/methsearch/Makefile
   apps/fextent/Makefile apps/extent/Makefile apps/touchsearch/Makefile
