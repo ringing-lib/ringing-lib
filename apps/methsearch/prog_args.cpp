@@ -157,7 +157,7 @@ bool falseness_opt::process( const string &arg, const arg_parser & ) const
       }
       try {
         for ( row_calc::const_iterator i=rc->begin(), e=rc->end(); i!=e; ++i ) 
-          args.avoid_rows.insert( *i );
+          args.orig_avoid_rows.insert( *i );
       }
       catch ( row::invalid const& e ) { 
         cerr << "Invalid row produced in -Fr option: " << e.what() << "\n";
@@ -276,7 +276,7 @@ void arguments::bind( arg_parser &p )
   p.add( new integer_opt
 	 ( 'n', "changes-per-lead", 
 	   "Require NUM changes per lead (0 = automatic)", "NUM",
-	   lead_len ) );
+	   orig_lead_len ) );
 
   p.add( new boolean_opt
 	 ( 'q', "quiet",  
@@ -585,18 +585,10 @@ void arguments::bind( arg_parser &p )
 
 bool arguments::validate( arg_parser &ap )
 {
-  if ( bells == 0 ) 
-    {
-      ap.error( "Must specify the number of bells" );
-      return false;
-    }
-
-  if ( bells < 2 || bells > int(bell::MAX_BELLS) ) 
-    {
-      ap.error( make_string() << "The number of bells must be between 2 and " 
-		<< bell::MAX_BELLS << " (inclusive)" );
-      return false;
-    }
+  if ( bells == 0 && !filter_mode ) {
+    ap.error( "Must specify the number of bells" );
+    return false;
+  }
 
   if ( prefer_limited_le && require_limited_le )
     {
@@ -611,13 +603,13 @@ bool arguments::validate( arg_parser &ap )
       return false;
     }
 
-  if ( !hunt_bells && !lead_len && !( filter_mode || filter_lib_mode ) )
+  if ( !hunt_bells && !orig_lead_len && !( filter_mode || filter_lib_mode ) )
     {
       ap.error( "Must specify the lead length when searching for principles" );
       return false;
     }
 
-  if ( hunt_bells && lead_len )
+  if ( hunt_bells && orig_lead_len )
     {
       ap.error( "Must not specify the lead length when searching for methods "
 		"with a hunt bell" );
@@ -627,57 +619,6 @@ bool arguments::validate( arg_parser &ap )
   if ( treble_path.size() && !hunt_bells ) 
     {
       ap.error( "Cannot specify a treble path without no hunts" );
-      return false;
-    }
-
-  {
-    treble_front = 1;
-    treble_back  = bells;
-
-    string::size_type i = treble_path.find('-');
-    if ( i == string::npos ) 
-      { 
-        if ( treble_path.size() )
-          {
-            ap.error( "Treble path must be a range: FRONT-BACK" );
-            return false;
-          }
-      }
-    else
-      {
-        try {
-          if ( i != 0u )
-            treble_front = lexical_cast<bell>( treble_path.substr(0,i) ) + 1; 
-
-          if ( i != treble_path.size()-1 )
-            treble_back  = lexical_cast<bell>( treble_path.substr(i+1) ) + 1;
-        } 
-        catch ( bad_lexical_cast const& ) {
-          ap.error( "Unable to parse arguments to -Z range as bell symbols" );
-          return false;
-        }
-
-        if ( treble_back > bells || treble_front > bells ||
-             treble_back < 0 || treble_front < 0 ) 
-          { 
-            ap.error( "Treble path out of range" );
-            return false;
-          }
-        else if ( treble_back < treble_front )
-          {
-            ap.error( "Treble path range is of negative size" );
-            return false;
-          }
-      }
-  }
-
-  if ( !lead_len && hunt_bells )
-    lead_len = (1 + treble_dodges) * (treble_back - treble_front + 1) * 2;
-
-  if ( hunt_bells >= bells ) 
-    {
-      ap.error( make_string() << "Method must have fewer than " 
-		<< bells-1 << " hunt bells" );
       return false;
     }
 
@@ -695,45 +636,12 @@ bool arguments::validate( arg_parser &ap )
       return false;
     }
 
-  if ( ( delight3 || delight4 ) && treble_back != 6 && treble_front != 1 ) 
-    {
-      ap.error( "3rds and 4ths place delight methods are specific to minor" );
-      return false;
-    }
-
   if ( !sym && ( strict_delight || exercise || strict_exercise || 
                  pas_alla_tria || pas_alla_tessera ) )
     {
       ap.error( "Historical delight, exercise, pas-alla-tria and "
                 "pas-alla-tessera classes are only well-defined for "
                 "palindromic methods" );
-      return false;
-    }
-
-  if ( surprise || treble_bob || delight || delight3 || delight4 ||   
-       strict_delight || exercise || strict_exercise || pas_alla_tria || 
-       pas_alla_tessera ) 
-    {
-      if ( ! hunt_bells )   
-        {
-          ap.error( "Surprise, treble bob or delight methods require at "
-                    "least one hunt bell"  );
-          return false;
-        }
-      if ( (treble_back-treble_front+1) % 2 == 1 ) 
-        {
-          ap.error( "Surprise, treble bob or delight methods can only be "
-		    "found when the treble hunts an even number of places "
-                    "(typically an even-bell method)"  );
-          return false;
-        }
-    }
-
-  if ( treble_dodges && (treble_back-treble_front+1) % 2 == 1 )
-    {
-      ap.error( "Treble dodging methods can only be found when "
-		"the treble hunts an even number of places (typically an "
-                "even-bell method)"  );
       return false;
     }
 
@@ -746,13 +654,7 @@ bool arguments::validate( arg_parser &ap )
   if ( !basic_falseness_opt && !true_trivial )
     true_half_lead = true_lead = true_course = false;
 
-  if ( !hunt_bells && bells % 2 && right_place )
-    {
-      ap.error( "Odd bell methods need at least one hunt bell to be "
-		"right place" );
-      return false;
-    }
-  
+ 
   if ( !hunt_bells && require_pbles )
     {
       ap.error( "Methods with no hunt bells cannot have plain bob "
@@ -766,20 +668,6 @@ bool arguments::validate( arg_parser &ap )
     {
       ap.error( "Cyclic and reverse-cyclic half-leads are only "
 		"implemented for single hunt methods" );
-      return false;
-    }
-  if ( (require_cyclic_hlh || require_cyclic_hle ||
-        require_rev_cyclic_hlh || require_rev_cyclic_hle ||
-        require_reg_hls) && (treble_front != 1 || treble_back != bells) )
-    {
-      ap.error( "Half leads cannot be restricted for little methods" );
-      return false;
-    }
-
-  if ( (require_cyclic_les || require_pbles) && treble_front != 1 )
-    {
-      ap.error( "Lead-ends cannot be restricted if the treble is not the "
-                "hunt bell" );
       return false;
     }
 
@@ -895,40 +783,8 @@ bool arguments::validate( arg_parser &ap )
 	}
     }
 
-  if ( (skewsym || sym || doubsym) && lead_len % 2 ) {
-    ap.error( "Symmetry is not supported for methods with an odd number of "
-              "rows per lead" );
-    return false;
-  }
-
   if ( skewsym + sym + doubsym >= 2 )
     skewsym = sym = doubsym = true;
-
-  if ( (skewsym || doubsym || mirrorsym) 
-       && (bells - treble_back != treble_front-1) )
-    {
-      ap.error( "Double, rotational or mirror symmetry require the treble "
-                "path to invariant under this symmetry" );
-      return false;
-    }
-
-  if ( lead_len && formats_max_lead_offset() > lead_len ) 
-    {
-      ap.error( "Format contains a $r or $h offset beyond the end of the "
-                "lead" );
-      return false;
-    }
-
-  if ( formats_have_falseness_groups() )
-    {
-      if ( bells % 2 || hunt_bells > 1 || !require_pbles
-	   || !sym || show_all_meths )
-	{
-	  ap.error( "Falseness groups are only supported for regular "
-		    "symmetric single-hunt even-bell methods" );
-	  return false;
-	}
-    }
 
   if ( ( formats_have_names() || formats_have_cc_ids() ) 
        && ! method_libraries::has_libraries() )
@@ -961,161 +817,9 @@ bool arguments::validate( arg_parser &ap )
       return false;
     }
 
-  if ( formats_have_old_lhcodes() )
-    {
-      if ( bells != 6 & bells != 5 || hunt_bells != 1)
-	{
-	  ap.error( "Old-style lead end codes are only supported for "
-		    "single-hunt doubles or minor methods" );
-	  return false;
-	}
-    }
-
-  if ( start_row.bells() == 0 )
-    start_row = row(bells);
-  else if ( start_row.bells() != bells )
-    {
-      ap.error( "Starting row is on the wrong numebr of bells" );
-      return false;
-    }
-
-  if ( avoid_rows.size() )
-  {
-    set<row> x;
-    for ( set<row>::const_iterator i=avoid_rows.begin(), e=avoid_rows.end();
-            i != e; ++i )
-      x.insert( *i * row(bells) );
-    avoid_rows = x;
-  }
-
   if ( pends_generators.size() ) 
-  {
     pends = group( pends_generators );
-    set<row> x;
-    for ( set<row>::const_iterator i=avoid_rows.begin(), e=avoid_rows.end();
-            i != e; ++i )
-      x.insert( pends.rcoset_label(*i) );
-    avoid_rows = x;
-  }
-  if ( avoid_rows.find( pends.rcoset_label(start_row) ) != avoid_rows.end() ) {
-     ap.error( "The start row conflicts with avoided row" );
-     return false;
-  }
- 
-  if (mask.empty()) mask = "*";
-  else if (!lead_len) {
-      ap.error( "Cannot use a mask for principles without also supplying a "
-                "lead length" );
-      return false;
-  }
-
-  if (!changes_str.empty()) {
-    size_t i = 0, n = changes_str.size();
-    if ( changes_str[i] == '!' ) { include_changes = false; ++i; }
-    while ( i < n ) {
-      size_t j = changes_str.find(',', i); 
-      if ( j == string::npos ) j = n;
-      try { 
-        changes.insert( change(bells, changes_str.substr(i,j-i)) );
-      } catch ( const exception& e ) {
-        ap.error(make_string() << "Unable to parse --changes: "  << e.what());
-        return false;
-      }
-      i = j+1;
-    }
-
-    try {
-      restrict_changes(*this);
-    } catch (exception const& e) {
-      ap.error(make_string() << e.what()); return false;
-    }
-  }
-
-  if (!row_matches_str.empty())
-    row_matches.resize(lead_len + 1);
-  for ( vector<string>::const_iterator 
-          i = row_matches_str.begin(), e = row_matches_str.end(); 
-          i != e; ++i ) {
-    size_t j = i->find('=');
-    if (j == string::npos) {
-      ap.error("Missing = in row match");
-      return false;
-    }
-
-    size_t n;
-    try {
-      n = lexical_cast<size_t>( i->substr(0, j) );
-    }
-    catch ( bad_lexical_cast const& ) {
-      ap.error("Unable to parse row number in row match argument" );
-      return false;
-    }
-    if (n > lead_len) {
-      ap.error("Row number out of range in row match" );
-      return false;
-    }
-
-    music& mus = row_matches[n];
-    if (mus.bells()) {
-      ap.error(make_string() << "Duplicate row match for row " << n);
-      return false;
-    }
-    mus.set_bells(bells);
-
-    try {
-      if (j+3 < i->size() && (*i)[j+1] == '<' && (*i)[i->size()-1] == '>')
-        add_named_music( mus, i->substr(j+2, i->size()-j-3) );
-      else
-        mus.push_back( music_details( i->substr(j+1) ) );
-    }
-    catch ( row_wildcard::invalid_pattern const& ) { 
-      ap.error("Unable to parse row match argument" );
-      return false;
-    }
-  }
-      
-  try
-    {
-      if ( ! parse_mask( *this, ap ) )
-	return false;
-    }
-  catch ( const exception &e )
-    {
-      ap.error( make_string() << "Unable to process mask: " << e.what() );
-      return false;
-    }
   
-  if ( lead_len && int(allowed_changes.size()) != lead_len )
-    {
-      ap.error( "The specified mask was an incorrect length" );
-      return false;
-    }
-
-  try
-    {
-      startmeth = method( startmethstr, bells );
-    }
-  catch ( const exception &e )
-    {
-      ap.error( make_string() 
-                << "Unable to parse place-notation passed to --start-at: "
-                << e.what() );
-      return false;
-    }
-
-  try
-    {
-      // TODO:  This should be folded into the -m method mask 
-      prefix = method( prefixstr, bells );
-    }
-  catch ( const exception &e )
-    {
-      ap.error( make_string()
-                << "Unable to parse place-notation passed to --prefix: "
-                << e.what() );
-      return false;
-    }
-
   if ( allowed_falseness.size() )
     {
       if ( hunt_bells != 1 ) 
@@ -1138,11 +842,284 @@ bool arguments::validate( arg_parser &ap )
 
   if ( !status_freq ) status_freq = 10000;
 
+  if (bells && !validate_bells(&ap))
+    return false;
+
+  return true;
+}
+
+bool arguments::validate_path( arg_parser *ap )
+{
+  treble_front = 1;
+  treble_back  = bells;
+
+  string::size_type i = treble_path.find('-');
+  if ( i == string::npos ) { 
+    if ( treble_path.size() ) {
+      if (ap) ap->error( "Treble path must be a range: FRONT-BACK" );
+      return false;
+    }
+  }
+  else {
+    try {
+      if ( i != 0u )
+        treble_front = lexical_cast<bell>( treble_path.substr(0,i) ) + 1; 
+
+      if ( i != treble_path.size()-1 )
+        treble_back  = lexical_cast<bell>( treble_path.substr(i+1) ) + 1;
+    } 
+    catch ( bad_lexical_cast const& ) {
+      if (ap) ap->error( "Unable to parse -Z range as bell symbols" );
+      return false;
+    }
+
+    if ( treble_back > bells || treble_front > bells ||
+         treble_back < 0 || treble_front < 0 ) { 
+      if (ap) ap->error( "Treble path out of range" );
+      return false;
+    }
+    else if ( treble_back < treble_front ) {
+      if (ap) ap->error( "Treble path range is of negative size" );
+      return false;
+    }
+  }
+
+  return true;
+}
+
+bool arguments::validate_bells( arg_parser* ap ) 
+{
+  if ( bells < 2 || bells > int(bell::MAX_BELLS) ) {
+    if (ap) ap->error( make_string() << "The number of bells must be between "
+                         "2 and " << bell::MAX_BELLS << " (inclusive)" );
+    return false;
+  }
+
+  if ( !validate_path() ) return false;
+
+  if ( hunt_bells >= bells ) {
+    if (ap) ap->error( make_string() << "Method must have fewer than " 
+                                     << bells-1 << " hunt bells" );
+    return false;
+  }
+
+  if ( !hunt_bells && bells % 2 && right_place ) {
+    if (ap) ap->error( "Odd bell methods need at least one hunt bell to be "
+                       "right place" );
+    return false;
+  }
+
+  if ( orig_lead_len )
+    lead_len = orig_lead_len;
+  else if ( hunt_bells )
+    lead_len = (1 + treble_dodges) * (treble_back - treble_front + 1) * 2;
+
+  if ( (require_cyclic_hlh || require_cyclic_hle ||
+        require_rev_cyclic_hlh || require_rev_cyclic_hle ||
+        require_reg_hls) && (treble_front != 1 || treble_back != bells) ) {
+    if (ap) ap->error( "Half leads cannot be restricted for little methods" );
+    return false;
+  }
+
+  if ( ( delight3 || delight4 ) && treble_back != 6 && treble_front != 1 ) {
+    if (ap) ap->error( "3rds and 4ths place delight methods are specific "
+                       "to minor" );
+    return false;
+  }
+
+  if ( surprise || treble_bob || delight || delight3 || delight4 ||   
+       strict_delight || exercise || strict_exercise || pas_alla_tria || 
+       pas_alla_tessera ) {
+    if ( ! hunt_bells ) {
+      if (ap) ap->error( "Surprise, treble bob or delight methods require at "
+                         "least one hunt bell"  );
+      return false;
+    }
+    if ( (treble_back-treble_front+1) % 2 == 1 ) {
+      if (ap) ap->error( "Surprise, treble bob or delight methods can only be "
+                         "found when the treble hunts an even number of places "
+                         "(typically an even-bell method)"  );
+      return false;
+    }
+  }
+
+  if ( treble_dodges && (treble_back-treble_front+1) % 2 == 1 ) {
+    if (ap) ap->error( "Treble dodging methods can only be found when "
+		       "the treble hunts an even number of places "
+                       "(typically an even-bell method)" );
+    return false;
+  }
+
+  if ( (skewsym || doubsym || mirrorsym) 
+       && (bells - treble_back != treble_front-1) ) {
+    if (ap) ap->error( "Double, rotational or mirror symmetry require the "
+                       "treble path to be invariant under this symmetry" );
+    return false;
+  }
+
+  if ( (require_cyclic_les || require_pbles) && treble_front != 1 ) {
+    if (ap) ap->error( "Lead-ends cannot be restricted if the treble is not "
+                       "the hunt bell" );
+    return false;
+  }
+
+  if ( (skewsym || sym || doubsym) && lead_len % 2 ) {
+    if (ap) ap->error( "Symmetry is not supported for methods with an odd "
+                       "number of rows per lead" );
+    return false;
+  }
+
+  if ( lead_len && formats_max_lead_offset() > lead_len ) {
+    if (ap) ap->error( "Format contains a $r or $h offset beyond the end of "
+                       "the lead" );
+    return false;
+  }
+
+  if ( formats_have_falseness_groups() && 
+       ( bells % 2 || hunt_bells > 1 || !require_pbles
+	   || !sym || show_all_meths ) ) {
+    if (ap) ap->error( "Falseness groups are only supported for regular "
+		       "symmetric single-hunt even-bell methods" );
+    return false;
+  }
+
+  if ( formats_have_old_lhcodes() &&
+       ( bells != 6 & bells != 5 || hunt_bells != 1 ) ) {
+    if (ap) ap->error( "Old-style lead end codes are only supported for "
+		       "single-hunt doubles or minor methods" );
+    return false;
+  }
+
+  if ( orig_avoid_rows.size() ) {
+    avoid_rows.clear();
+    for ( set<row>::const_iterator 
+            i=orig_avoid_rows.begin(), e=orig_avoid_rows.end(); i != e; ++i )
+      avoid_rows.insert( pends.rcoset_label( *i * row(bells) ) );
+  }
+
+  if ( avoid_rows.find( pends.rcoset_label(start_row) ) != avoid_rows.end() ) {
+    if (ap) ap->error( "The start row conflicts with avoided row" );
+    return false;
+  }
+ 
+  if (!changes_str.empty()) {
+    changes.clear();
+
+    size_t i = 0, n = changes_str.size();
+    if ( changes_str[i] == '!' ) { include_changes = false; ++i; }
+    while ( i < n ) {
+      size_t j = changes_str.find(',', i); 
+      if ( j == string::npos ) j = n;
+      try { 
+        changes.insert( change(bells, changes_str.substr(i,j-i)) );
+      } catch ( const exception& e ) {
+        if (ap) ap->error( make_string() << "Unable to parse --changes: " 
+                                         << e.what() );
+        return false;
+      }
+      i = j+1;
+    }
+
+    try {
+      restrict_changes(*this);
+    } catch (exception const& e) {
+      if (ap) ap->error( make_string() << e.what() ); 
+      return false;
+    }
+  }
+
+  if (!row_matches_str.empty()) {
+    row_matches.clear();
+    row_matches.resize(lead_len + 1);
+  }
+  for ( vector<string>::const_iterator 
+          i = row_matches_str.begin(), e = row_matches_str.end(); 
+          i != e; ++i ) {
+    size_t j = i->find('=');
+    if (j == string::npos) {
+      if (ap) ap->error("Missing = in row match");
+      return false;
+    }
+
+    size_t n;
+    try {
+      n = lexical_cast<size_t>( i->substr(0, j) );
+    }
+    catch ( bad_lexical_cast const& ) {
+      if (ap) ap->error("Unable to parse row number in row match argument" );
+      return false;
+    }
+    if (n > lead_len) {
+      if (ap) ap->error("Row number out of range in row match" );
+      return false;
+    }
+
+    music& mus = row_matches[n];
+    if (mus.bells()) {
+      if (ap) ap->error(make_string() << "Duplicate row match for row " << n);
+      return false;
+    }
+    mus.set_bells(bells);
+
+    try {
+      if (j+3 < i->size() && (*i)[j+1] == '<' && (*i)[i->size()-1] == '>')
+        add_named_music( mus, i->substr(j+2, i->size()-j-3) );
+      else
+        mus.push_back( music_details( i->substr(j+1) ) );
+    }
+    catch ( row_wildcard::invalid_pattern const& ) { 
+      if (ap) ap->error("Unable to parse row match argument" );
+      return false;
+    }
+  }
+      
+  if (mask.empty()) mask = "*";
+  if (mask != "*" && !lead_len) {
+    if (ap) ap->error( "Cannot use a mask for principles without also "
+                       "supplying a lead length" );
+    return false;
+  }
+
+  try {
+    if ( !parse_mask( *this ) )
+      return false;
+  }
+  catch ( const exception &e ) {
+    if (ap) ap->error( make_string() << "Unable to process mask: " 
+                                     << e.what() );
+    return false;
+  }
+  
+  if ( lead_len && int(allowed_changes.size()) != lead_len ) {
+    if (ap) ap->error( "The specified mask was an incorrect length" );
+    return false;
+  }
+
+  try {
+    startmeth = method( startmethstr, bells );
+  }
+  catch ( const exception &e ) {
+    if (ap) ap->error( make_string() << "Unable to parse --start-at "
+                         "place-notation: " << e.what() );
+    return false;
+  }
+
+  try {
+    // TODO:  This should be folded into the -m method mask 
+    prefix = method( prefixstr, bells );
+  }
+  catch ( const exception &e ) {
+    if (ap) ap->error( make_string() << "Unable to parse --prefix "
+                         "place-notation: " << e.what() );
+    return false;
+  }
+
   if ( overwork_map_file.size() ) try {
     overwork_map( bells, overwork_map_file );
   }
   catch ( const exception &e ) {
-    ap.error( make_string() << "Unable to read overwork map: " << e.what() );
+    if (ap) ap->error( make_string() << "Unable to read overwork map: " 
+                                     << e.what() );
     return false;
   }
  
@@ -1150,9 +1127,19 @@ bool arguments::validate( arg_parser &ap )
     underwork_map( bells, underwork_map_file );
   }
   catch ( const exception &e ) {
-    ap.error( make_string() << "Unable to read underwork map: " << e.what() );
+    if (ap) ap->error( make_string() << "Unable to read underwork map: " 
+                                     << e.what() );
     return false;
   }
- 
+
   return true;
 }
+
+bool arguments::set_bells( int b )
+{
+  bells = b;
+  if (!bells) return false;
+arg_parser ap("X", "X", "X");
+  return validate_bells(&ap);
+}
+

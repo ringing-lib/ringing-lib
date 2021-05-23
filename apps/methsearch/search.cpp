@@ -64,9 +64,10 @@ RINGING_USING_STD
 class searcher
 {
 private:
-  friend void run_search( const arguments &args );
+  friend void run_search( arguments &args );
 
-  searcher( const arguments &args );
+  searcher( arguments &args );
+  void init();
   void reset();
 
   inline void do_status( method const& m );
@@ -104,13 +105,13 @@ private:
   bool is_falseness_acceptable( const change& ch );
 
 private:
-  const arguments &args; 
-  const int bells;
+  arguments &args; 
+  int bells;
 
   size_t lead_len;
 
-  const size_t div_len;  // How long the treble stays in a dodging position
-                         // 2 for plain methods;  4 for normal TD methods
+  size_t div_len;  // How long the treble stays in a dodging position
+                   // 2 for plain methods;  4 for normal TD methods
 
   size_t sym_offset;     // Position of the symmetry point in trebles' paths
 
@@ -131,31 +132,36 @@ private:
 };
 
 
-searcher::searcher( const arguments &args )
+searcher::searcher( arguments &args )
   : args(args),
-    bells( args.bells ),
-    lead_len( args.lead_len ),
-    div_len( (1 + args.treble_dodges) * 2 ),
-    sym_offset( args.hunt_bells && args.hunt_bells % 2 == 0
-                ? (1 + args.treble_dodges) : 0 ), // XXX ALLIANCE
     search_limit( args.search_limit ),
-    search_count( 0ul ), node_count( 0ul ),
-    div_start( 0 ), cur_div_len( calc_cur_div_len() ),
-    r( args.pends.rcoset_label( args.start_row ) ),
-    maintain_r( args.avoid_rows.size() || args.row_matches.size() )
+    search_count( 0ul ), node_count( 0ul )
 {
+  init();
   reset();
 
   copy( args.startmeth.rbegin(), args.startmeth.rend(), 
         back_inserter(startmeth) );
+}
 
+void searcher::init() {
+  bells = args.bells;
+  lead_len = args.lead_len;
+  div_len = (1 + args.treble_dodges) * 2;
+  sym_offset = args.hunt_bells && args.hunt_bells % 2 == 0
+                ? (1 + args.treble_dodges) : 0;
+
+  m.clear();
+  m.reserve( lead_len );
+  div_start = 0;
+  cur_div_len = calc_cur_div_len();
+  r = args.pends.rcoset_label( args.start_row );
+  maintain_r = args.avoid_rows.size() || args.row_matches.size();
 }
 
 void searcher::reset()
 {
-  m.clear();
-  m.reserve( lead_len );
-  div_start = 0; cur_div_len = calc_cur_div_len();
+  init();
 
   if (maintain_r) 
     r = args.pends.rcoset_label( args.start_row );
@@ -188,47 +194,63 @@ inline void searcher::do_status( method const& m ) {
 
 void searcher::filter( library const& in )
 {
-  for ( library::const_iterator i=in.begin(), e=in.end(); i!=e; ++i ) 
-    {
-      try {
-        filter_method = i->meth();
-        if ( !args.lead_len )
-          lead_len = filter_method.length();
-        if ( i->has_facet<litelib::payload>() )
-          filter_payload = i->get_facet<litelib::payload>();
-        else
-          filter_payload.clear();
-      } 
-      catch ( std::exception const& ex ) {
-        std::cerr << "Error reading method from input stream: " 
-                  << ex.what() << "\n";
-        string pn;  try { pn = i->pn(); } catch (...) {}
-        if ( pn.size() ) std::cerr << "Place notation: '" << pn << "'\n";
-        std::cerr << std::flush;
+  for ( library::const_iterator i=in.begin(), e=in.end(); i!=e; ++i ) { 
+    class reset_bells {
+    public:
+      reset_bells(arguments& args) : args(args), val(args.bells) {}
+     ~reset_bells() { args.set_bells(val); }
+    private:
+      arguments& args;
+      int val;
+    } reset(args);
 
-        continue;
-      }
+    args.lead_len = args.orig_lead_len;
 
-      // Status message (when in filter mode)
-      do_status( filter_method );
+    if ( args.bells == 0 ) {
+      if ( !args.set_bells( i->bells() ) ) continue;
+      init();
+    }
+    
 
-      RINGING_ULLONG old_search_count = search_count;
-      general_recurse();
-      assert( m.length() == 0 );
-
-      if ( args.invert_filter ) {
-        assert( search_count == old_search_count ||
-                search_count == old_search_count + 1 );
-        if ( old_search_count == search_count ) {
-          ++search_count;
-          output_method( filter_method );
-        } 
-        else --search_count;
-      }
+    try {
+      filter_method = i->meth();
+      if ( !args.orig_lead_len )
+        lead_len = filter_method.length();
+      if ( i->has_facet<litelib::payload>() )
+        filter_payload = i->get_facet<litelib::payload>();
+      else
+        filter_payload.clear();
     } 
+    catch ( std::exception const& ex ) {
+      std::cerr << "Error reading method from input stream: " 
+                << ex.what() << "\n";
+      string pn;  try { pn = i->pn(); } catch (...) {}
+      if ( pn.size() ) std::cerr << "Place notation: '" << pn << "'\n";
+      std::cerr << std::flush;
+
+      continue;
+    }
+
+    // Status message (when in filter mode)
+    do_status( filter_method );
+
+    RINGING_ULLONG old_search_count = search_count;
+    general_recurse();
+    assert( m.length() == 0 );
+
+    if ( args.invert_filter ) {
+      assert( search_count == old_search_count ||
+              search_count == old_search_count + 1 );
+      if ( old_search_count == search_count ) {
+        ++search_count;
+        output_method( filter_method );
+      } 
+      else --search_count;
+    }
+  } 
 }
 
-void run_search( const arguments &args )
+void run_search( arguments &args )
 {
   searcher s( args );
 
