@@ -1,0 +1,61 @@
+# Copyright (C) 2011 Richard Smith <richard@ex-parrot.com>
+
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+# $Id: $
+
+# This test suite contains the examples in the documentation, as it's
+# particularly important that they should work!
+
+set suite "documentation"
+
+set test "$suite-version"
+spawn $METHSEARCH --version
+expect {
+  -ex "methsearch (Ringing Class Library)" { pass "$test" }
+  default { fail "$test" }
+}
+
+set test "$suite-double-minimus"
+spawn $METHSEARCH -b4 -d
+set    result "X.14.X.34.X.14.X.12\t1423\r\n"
+append result "34.14.12.14.12.14.34.14\t1423\r\n"
+append result "34.14.12.34.12.14.34.12\t1342\r\n"
+expect {
+  -ex "$result" { pass "$test" }
+  default { fail "$test" }
+}
+
+set test "$suite-double-minor"
+spawn $METHSEARCH -b6 -drj
+expect {
+  -ex "X.14.X.36.X.16.X.36.X.14.X.16\t156342\r\n" { pass "$test" }
+  default { fail "$test" }
+}
+
+set test "$suite-doubles-258"
+spawn $METHSEARCH -b5 -sAC {-Q$o>=3} {-m*(1|2|23)} -qC
+expect {
+  -ex "Found 258 methods" { pass "$test" }
+  default { fail "$test" }
+}
+
+set test "$suite-doubles-177"
+spawn $METHSEARCH -b5 -sAC -p4 {-Q$o>=3} {-m*(1|2|23)} -qC
+expect {
+  -ex "Found 177 methods" { pass "$test" }
+  default { fail "$test" }
+}
+

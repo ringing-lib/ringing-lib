@@ -54,7 +54,7 @@ set timeout 2.5
 
 
 #              b U G  opts    meths    nodes
-symmetry_test  4 1 0  A         44      107
+symmetry_test  4 1 0  A         48      113
 symmetry_test  4 1 0  As        16       41
 symmetry_test  4 1 0  Ak         6       29
 symmetry_test  4 1 0  Ad         6       23
@@ -66,10 +66,10 @@ symmetry_test  4 2 0  Ak         2       15
 symmetry_test  4 2 0  Ad         2       11
 symmetry_test  4 2 0  Asdk       2       11
 
-symmetry_test  5 1 0  A      15568    22110
+symmetry_test  5 1 0  A      16128    22810
 symmetry_test  5 1 0  As       576      922
-symmetry_test  5 1 0  Ak       104      328
-symmetry_test  5 1 0  Ad       108      310
+symmetry_test  5 1 0  Ak       112      336
+symmetry_test  5 1 0  Ad       112      314
 symmetry_test  5 1 0  Asdk      24       64
 
 symmetry_test  5 2 0  A        144      430
@@ -81,8 +81,8 @@ symmetry_test  5 2 0  Asdk       6       28
 # Drop -A to speed this batch up a bit, though still not enough for the first.
 #symmetry_test 6 1 0  -    5141325 39286245    # ~70s
 symmetry_test  6 1 0  s       3775    57861
-symmetry_test  6 1 0  k       2835    14973
-symmetry_test  6 1 0  d       1745    12857
+symmetry_test  6 1 0  k       2835    14991
+symmetry_test  6 1 0  d       1745    12905
 symmetry_test  6 1 0  sdk       63      501
 
 symmetry_test  6 2 0  A      32400    57921
@@ -94,7 +94,7 @@ symmetry_test  6 2 0  Asdk      30      141
 # Add -y -p2 to speed searches up.
 #symmetry_test 6 1 1  yp2  1821882 16794598    # ~50s
 symmetry_test  6 1 1  syp2    2435    32901
-symmetry_test  6 1 1  kyp2     817     7713
+symmetry_test  6 1 1  kyp2     817     7721
 symmetry_test  6 1 1  dyp2     632     9312
 symmetry_test  6 1 1  sdkyp2    33      333
 
