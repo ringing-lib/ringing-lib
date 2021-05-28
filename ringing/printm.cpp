@@ -31,7 +31,7 @@ RINGING_START_NAMESPACE
 RINGING_USING_STD
 
 printmethod::rule::rule() 
-  : offset(0), repeat(0) {
+  : offset(0), repeat(0), flags() {
   style.col.grey = false; 
   style.col.red = style.col.green = style.col.blue = 0; 
   style.crossing = style.no_dots = false;
