@@ -1139,7 +1139,6 @@ bool arguments::set_bells( int b )
 {
   bells = b;
   if (!bells) return false;
-arg_parser ap("X", "X", "X");
-  return validate_bells(&ap);
+  return validate_bells();
 }
 
