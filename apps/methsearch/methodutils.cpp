@@ -409,7 +409,7 @@ char const* old_lhcode( bool unicode, method const& m )
   else if ( m.bells() == 5 ) 
     return old_lhcode_5(m);
   else
-    return "?";
+    return m.lhcode();
 }
 
 unsigned long staticity( method const& m )
