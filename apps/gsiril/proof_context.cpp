@@ -35,6 +35,7 @@
 #endif
 
 #include <cassert>
+#include <cstring>
 
 #include "expr_base.h" // Must be before execution_context.h because 
                        // of bug in MSVC 6.0
@@ -57,7 +58,9 @@ proof_context::proof_context( const execution_context &ectx )
 # if RINGING_USE_TERMCAP
   static bool terminfo_initialized = false;
   if ( !terminfo_initialized ) {
-    setupterm(NULL, 1, NULL); 
+    char const *term = getenv("TERM");
+    if ( term && strlen(term) )
+      setupterm(NULL, 1, NULL); 
     terminfo_initialized = true;
   }
 # endif
