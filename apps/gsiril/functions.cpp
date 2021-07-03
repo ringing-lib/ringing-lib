@@ -40,6 +40,24 @@ void fnnode::execute( proof_context &ctx, int dir ) const
   throw runtime_error( os );
 }
 
+class at_fn_impl : public fnnode {
+  virtual expression call( proof_context& ctx, 
+                           vector<expression> const& args ) const {
+    if (args.size() != 1)
+      throw runtime_error("The at function takes one argument");
+    int idx = args[0].int_evaluate(ctx);
+    if (idx < 1 || idx >= ctx.bells())
+      throw runtime_error("Argument out of range in at function");
+    row const& r = ctx.current_row();
+    int rv = idx > r.bells() ? idx : r[idx-1]+1;
+    return expression( new integer_node(rv) );
+  }
+
+  virtual void debug_print( ostream &os ) const { os << "pos"; }
+  virtual expression::type_t type( proof_context &ctx ) const 
+    { return expression::integer; }
+};
+
 class pos_fn_impl : public fnnode {
   virtual expression call( proof_context& ctx, 
                            vector<expression> const& args ) const {
@@ -116,6 +134,8 @@ class stagename_impl : public fnnode {
 
 void register_functions( execution_context& ectx )
 {
+  ectx.define_symbol( pair< const string, expression >
+    ( "at", expression( new at_fn_impl() ) ) );
   ectx.define_symbol( pair< const string, expression >
     ( "pos", expression( new pos_fn_impl() ) ) );
   ectx.define_symbol( pair< const string, expression >
