@@ -1,5 +1,5 @@
 // -*- C++ -*- method.h - Classes for dealing with methods
-// Copyright (C) 2001, 2009, 2010, 2011, 2014, 2020
+// Copyright (C) 2001, 2009, 2010, 2011, 2014, 2020, 2021
 // Martin Bright <martin@boojum.org.uk> and
 // Richard Smith <richard@ex-parrot.com>
 
@@ -57,6 +57,8 @@ private:
   int b;                        // The number of bells
   string myname;		// The name of the method, without Major etc. 
 
+  static const char *txt_untitled;
+
   static const char *txt_classes[12];  // Bob, Place etc.
   static const char *txt_differential; // Differential
   static const char *txt_stages[20];   // Minimus, Doubles etc.
@@ -94,12 +96,15 @@ public:
   static const char *stagename(int n); // Get the name of this stage
   static string classname(int cl); // Get the name of the class
 
-  explicit method(int l = 0, int b = 0, const char *n = "Untitled") 
+  // Use txt instead of 'Untitled' for unnamed methods
+  static void set_untitled(string const& txt);
+
+  explicit method(int l = 0, int b = 0, const char *n = txt_untitled) 
     : vector<change>(l, change(b)), b(b), myname(n) {}
 
   // Make a method from place notation
-  method(const char *pn, int b, const char *n = "Untitled");
-  method(const string& pn, int b, const string& n = "Untitled");
+  method(const char *pn, int b, const char *n = txt_untitled);
+  method(const string& pn, int b, const string& n = txt_untitled);
   
   ~method() {}
   void swap( method& other ) {
