@@ -1,5 +1,5 @@
 // method.cpp - routines for methods, positions and calls
-// Copyright (C) 2001, 2004, 2008, 2010, 2011, 2014
+// Copyright (C) 2001, 2004, 2008, 2010, 2011, 2014, 2021
 // Martin Bright <martin@boojum.org.uk> and
 // Richard Smith <richard@ex-parrot.com>
 
@@ -100,9 +100,15 @@ const char *method::txt_stages[20] = {
   "Twenty-two"
 };
 
+const char *method::txt_untitled     = "Untitled";
 const char *method::txt_differential = "Differential";
 const char *method::txt_double       = "Double";
 const char *method::txt_little       = "Little";
+
+void method::set_untitled(string const& str) {
+  static string str_untitled = str;
+  txt_untitled = str_untitled.c_str();
+}
 
 method::method(const char *pn, int b, const char *n) 
   : b(b) 

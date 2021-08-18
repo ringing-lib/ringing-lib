@@ -572,6 +572,11 @@ void arguments::bind( arg_parser &p )
 	   "Create as a FMTTYPE library", "FMTTYPE",
 	   outfmt ) );
 
+  p.add( new delegate_opt
+         ( '\0', "unnamed-name",
+           "Use NAME instead of 'Untitled' for unnamed methods", "NAME",
+           &method::set_untitled ) );
+
   p.add( new string_opt
 	 ( '\0', "overwork-map",
 	   "Use FILE as an overwork map to rewrite $V", "FILE",
