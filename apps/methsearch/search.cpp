@@ -237,6 +237,7 @@ void searcher::filter( library const& in )
     RINGING_ULLONG old_search_count = search_count;
     general_recurse();
     assert( m.length() == 0 );
+    m = method();  // Reset the number of bells 
 
     if ( args.invert_filter ) {
       assert( search_count == old_search_count ||
