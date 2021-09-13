@@ -405,7 +405,9 @@ public:
     
 
   bool truth() const { return p.truth(); }
-  bool is_course_head() const { return r == args.start_row; }
+  bool is_course_head() const {
+    return r == row(args.start_row * row(args.bells));
+  }
   row const& current_row() const { return r; }
 
 private:
@@ -495,15 +497,19 @@ bool searcher::is_acceptable_method()
               args.true_course && !p.is_course_head() )
         ;
 
-      if ( !args.true_course && args.n_extents == 1 )  // i.e. if -Fl
-        assert( p.truth() );
+      // This branch handles -Fc
+      if ( !p.truth() ) {
+        if ( !args.true_course && args.n_extents == 1 )  // i.e. if -Fl
+          assert( p.truth() );
+        return false;
+      }
 
       // There doesn't seem any ideal solution as to what to do with the 
       // lead head row.  Arguably we shouldn't prove it as it's not 
       // part of the lead.  But that leads to odd things in -AU0 searches
       // where we're just looking for a block of rows.  So lets require that 
       // either it is true or it is the first row again.
-      if ( !p.prove_lh() ) return false;
+      if ( !args.true_course && !p.prove_lh() ) return false;
     }
 
   // Although treble-dodging methods with more than one dodge can run

@@ -1138,6 +1138,11 @@ bool arguments::validate_bells( arg_parser* ap )
     return false;
   }
 
+  if ( start_row.bells() > bells ) {
+    if (ap) ap->error( "The start row is on too many bells" );
+    return false;
+  }
+
   return true;
 }
 
