@@ -1,0 +1,1408 @@
+\documentclass[a4paper,11pt,oneside]{book}
+
+%\usepackage{lmodern}
+
+% We're using xelatex: configure for unicode fonts
+\usepackage{xltxtra}
+\usepackage{xunicode}
+
+% The cm-default option to fontspec is needed to render math symbols
+% in certain versions of fontspec, and breaks with xltxtra in others.
+%\usepackage[cm-default]{fontspec}
+
+% Computer Modern warps my fragile little eyes
+\usepackage{fontspec}
+\defaultfontfeatures{Ligatures=TeX,Scale=MatchLowercase}
+\setromanfont{Linux Libertine O}
+\setsansfont{Linux Biolinum O}
+%\usepackage{libertine}
+
+
+\chardef\vapost="0027
+
+% Sans-serif chapter headings
+\usepackage{sectsty}
+\allsectionsfont{\rm\sffamily} % \rm disables bold
+
+% Page header showing chapter
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhead{}\fancyfoot{} % Clear
+\renewcommand{\chaptermark}[1]{\markboth{#1}{}}
+\fancyhead[L]{\nouppercase{\leftmark}}
+\fancyhead[R]{\thepage}
+\addtolength{\headheight}{2pt} % Default is based on 10pt, not 11pt
+
+% Better verbtaim text
+\usepackage{fancyvrb}
+\RecustomVerbatimEnvironment{Verbatim}{Verbatim}
+  {xleftmargin=2em,fontsize=\small}
+\VerbatimFootnotes
+
+\usepackage{amsmath}  % for tfrac
+\usepackage{upquote}
+
+% URLs
+\usepackage{url}
+\DeclareUrlCommand\url{\def\UrlLeft{<}\def\UrlRight{>}\urlstyle{tt}}
+
+% We want an index
+\usepackage{makeidx}
+\usepackage{index}
+\makeindex
+
+% Tables with lines spanning multiple rows
+\usepackage{tabularx}
+
+%\usepackage{footnote}
+\usepackage[marginal]{footmisc}
+% Allow lists, etc. in footnotes
+\usepackage{bigfoot}
+
+% Don't use US-style dates
+\usepackage[level,nodayofweek]{datetime}
+
+\usepackage{rotating}
+\usepackage{multirow}
+\usepackage[small]{caption}
+
+\usepackage{enumitem}
+
+% Coloured links, etc.
+\usepackage[xetex,%
+            citecolor=black,filecolor=black,linkcolor=black,urlcolor=black,%
+            pdfauthor={Richard A. Smith},%
+            pdftitle={A user's guide to GSiril},%
+            bookmarks,colorlinks,hyperfootnotes,hyperindex,unicode]{hyperref}
+
+% Code to make indexes how we want them...
+\newdimen\optwidth\newdimen\loptwidth\newdimen\fspecwidth
+\setbox0=\hbox{\footnotesize\verb+-+}\optwidth=\wd0
+\setbox0=\hbox{\footnotesize\verb+--+}\loptwidth=\wd0
+\setbox0=\hbox{\footnotesize\verb+$+}\fspecwidth=\wd0
+% \textitidx -- a definition formated in italics and indexed
+\def\textitidx#1{\textit{#1}\index{#1}}
+% \oid  -- option index defintion -- the main definition of a short option 
+% \oi   -- option index -- a secondary reference to a short option
+% \loid -- long option index definition -- the main definition for a long opt
+% \loi  -- long option index -- a secondary reference to a long option
+\newcommand{\ulink}[1]{\underline{\hyperpage{#1}}}
+\newcommand{\oidx}[2]{\index{#1@{\hspace*{-\optwidth}\texttt{-}#2}|ulink}}
+\newcommand{\oid}[2]{\oidx{#1}{\texttt{#1}}%
+  \index{#2@{\hspace*{-\loptwidth}\texttt{--#2}}|see{\texttt{-#1}}}}
+\newcommand{\oi}[1]{\index{#1@{\hspace*{-\optwidth}\texttt{-}\texttt{#1}}}}
+\newcommand{\loid}[1]{\index{#1@{\hspace*{-\loptwidth}\texttt{--#1}}|ulink}}
+\newcommand{\loi}[1]{\index{#1@{\hspace*{-\loptwidth}\texttt{--#1}}}}
+\newcommand{\optdesc}[2]{\index{#2|see{\texttt{-#1}}}}
+% \fspec[d] -- format specifier [definition]
+\newcommand{\fspecd}[1]{\index{#1@{\hspace*{-\fspecwidth}\texttt{\$#1}}|ulink}}
+\newcommand{\fspec}[1]{\index{#1@{\hspace*{-\fspecwidth}\texttt{\$#1}}}}
+% symbol index
+\newcommand{\symidx}[2]{} %{\index{{#1}@{\texttt{#1}}|see{#2}}}
+\newcommand{\ttcmdidx}[1]{\texttt{#1}\index{#1@{\texttt{#1}}}}
+
+% \gsiril -- the program name, in the preferred capitalisation
+\def\gsiril{GSiril}
+% \sref -- section ref
+\newcommand{\sref}[1]{\hyperref[#1]{\S\ref{#1}}}
+
+\def\half{\tfrac{1}{2}}
+\def\quarter{\tfrac{1}{4}}
+
+\makeatletter
+\def\printidx#1{\@print@index[default][#1]}
+\makeatother
+
+% And now for something different...
+\title{A user's guide to \gsiril}
+\author{Richard A.\ Smith\\\url{richard@ex-parrot.com}}
+
+\begin{document}
+
+\frontmatter
+\maketitle
+
+\clearpage
+\phantomsection
+\addcontentsline{toc}{chapter}{Contents}
+\tableofcontents
+% General paragraph style -- this has to be after the table of contents
+\parskip=1em
+\parindent=0em
+\addtolength{\footnotesep}{4pt}
+
+\mainmatter
+
+\chapter{Getting started}
+
+This chapter gives a brief introduction to \gsiril\ -- what it is,
+what it can do, and who it's aimed at (\sref{what_is_it}).  
+This is followed by an introduction to the command line interface (\sref{cli}),
+aimed particularly at those unfamiliar with it; it can safely be
+skipped by those who are familiar with Unix-style command line interfaces 
+or who intend to use \gsiril\ via the web interface on BellBoard.
+Finally, there is a simple worked example (\sref{example}),
+details on how to run \gsiril\ interactively (\sref{interactive}),
+how to obtain \gsiril\ (\sref{obtain}), and its
+current development status (\sref{dev_status}).
+
+
+\section{What is it?}\label{what_is_it}
+
+\gsiril\ is a program for proving bell ringing compositions. 
+If you're not a bell ringer or don't know what a composition is, 
+\gsiril\ almost certainly isn't for you.
+Even if you are a ringer and do know what a composition is, this tool
+is likely only to of interest if you have an interest in composition.
+
+\gsiril\ is intended to be backwards compatible with
+MicroSiril,\index{MicroSiril} a proof engine written by Sam
+Wilmott\index{Wilmott, Sam} in 1987 which rapidly became the
+\textit{de facto} standard; it, in turn, was based on ideas and
+algorithms by Andrew Craddock\index{Craddock, Andrew} and Hamish
+McNaughton\index{McNaughton, Hamish}. 
+
+There are several reasons why I decided to write \gsiril\ rather than
+using an existing program.  The first reason was very straightforward:
+when I started work on \gsiril, all proving programs were designed to
+run on Windows or DOS, but I wanted to be able to prove compositions on
+Linux.  A second reason was that none of the other programs I tried did
+exactly what I want.  Some programs couldn't cope with multi-extent
+touches; other's were restricted to 12 or 16 bells.  Many used a syntax
+that I thought was unnatural.  Finally, there was an ideological reason.
+I am a great supporter of open source software, and back in 2002 there
+was very little open source ringing software, and no composition prover.
+
+\section{Command line interface}\label{cli}\index{command line interface}
+
+\gsiril\ is a command line utility.  This means it does not have a
+whizzy graphical user interface, and is instead run from your system's
+\textit{command prompt}\index{command prompt|see{prompt}}%
+\index{prompt} or \textitidx{terminal}.
+\gsiril\ attempts to read from standard input,\index{standard input}
+meaning it is possible to type the \gsiril\ language directly into the
+program, but it is often more convenient to get \gsiril\ to read from a file.
+This can be done via redirection,\index{shell!redirection}%
+\index{redirection|see{shell, redirection}} which means writing the name of the
+file after a \verb+<+ character, or using the `\verb+-f+' command line
+option\oi{f}.  Both of the following lines will read the `\verb+filename.sir+'
+file and try to prove the composition in it.
+
+\begin{Verbatim}
+gsiril < filename.sir
+gsiril -f filename.sir
+\end{Verbatim}
+
+For users who are not comfortable using the command line interface,
+\gsiril\ can also be used online on \textit{The Ringing World}'s
+BellBoard\index{BellBoard} website:
+
+\begin{quotation}
+\url{https://bb.ringingworld.co.uk/gsiril}
+\end{quotation}
+
+\subsection{Using \gsiril\ on Windows}\index{Windows}
+
+Most Windows users only rarely encounter programs with a command line
+interface, but Windows does provide a terminal that allows you to use
+\gsiril.  To start a terminal, you may find `Command Prompt' as an
+option on your `Start' menu; if not, hold down the Windows key and press
+`R' (for `Run'), then type in  `\ttcmdidx{cmd.exe}'.%
+\footnote{On Windows 95, 98 or ME, this will be `\texttt{command.com}'.%
+\index{command.com@\texttt{command.com}}}
+
+You should then see a new window, probably black with a white font, 
+containing something like the following.  (The exact details will 
+depend on your version of Windows.)
+
+\begin{Verbatim}
+Microsoft Windows [Version 6.0.6000]
+Copyright (c) 2006 Microsoft Corporation.  All rights reserved.
+
+C:\Users\Richard>
+\end{Verbatim}
+
+The last line is called the prompt and indicates that the terminal is
+waiting for you to type something in; the prompt should always end in a
+`\verb+>+' character. %\symidx{>}{Windows prompt}
+First you need to change into the directory that contains your copy of
+\texttt{gsiril.exe} (plus any associated tools and libraries that may have
+come with it).  For example, if you've put it in a directory called
+`\verb+C:\Users\Richard\gsiril+', you should type:
+
+\begin{Verbatim}
+cd C:\Users\Richard\gsiril
+\end{Verbatim}
+
+In some versions of Windows, you can avoid this by
+starting the command prompt in the right
+directory by right clicking on the folder and choosing 
+`Open Command Prompt Here' on the context menu.
+You can now check that \gsiril\ is accessible by typing:
+
+\begin{Verbatim}
+gsiril --version
+\end{Verbatim}
+\oi{V}
+
+After pressing enter, this should print some brief information about the 
+version of \gsiril\ that you are running.
+
+\subsection{Help!}\label{help}
+
+As with most command line utilities, you can obtain a brief summary 
+of valid options to \gsiril\ by using the \verb+--help+ option.%
+
+\begin{Verbatim}
+gsiril --help
+\end{Verbatim}
+\loi{help}
+
+This user's guide aims to provide more extensive documentation as 
+well as some worked examples of how it can be used in real world situations.
+Don't be afraid to experiment.  If you're still stuck, drop me an email:
+my email address is on the title page.
+
+\section{An example — proving Middleton's Cambridge}\label{example}
+\index{example|(}
+
+Suppose I want to prove Charles Middleton's\index{Middleton, Charles} 
+well-known 5600 of Cambridge Surprise Major.  First, I create a text file 
+called \texttt{middleton.sir} containing the following description of
+the peal. 
+
+\begin{Verbatim}
+8 bells
+
+Cambridge = &-3-4-25-36-4-5-6-7
+
+p = Cambridge, +2
+b = Cambridge, +4
+
+M  = p,p,b,p,p,p,p
+MW = p,p,b,b,p,p,p
+WH = p,p,p,b,p,p,b
+H  = p,p,p,p,p,p,b
+
+part = M, MW, WH, H, H
+
+prove 5 part
+\end{Verbatim}
+
+To run this using the web interface, simply paste this code into the
+large composition box and hit the `Prove' button; or to run it from the
+command prompt, just type\oi{f}:
+
+\begin{Verbatim}
+gsiril -f middleton.sir
+\end{Verbatim}
+
+\gsiril\ will then prove the touch and print the following message to
+confirm that it is true.
+
+\begin{Verbatim}
+5600 rows ending in 12345678
+Touch is true
+\end{Verbatim}
+
+Had there been an error in the composition which resulted in the composition
+being false, \gsiril\ would have said something like:
+
+\begin{Verbatim}
+288 rows ending in 17864523
+Touch not completed due to false row
+\end{Verbatim}
+
+
+\subsection{A closer look}
+
+The first line of this file is `\texttt{8 bells}', which tells 
+\gsiril\ that any place notation is to be interpreted as on eight bells,
+and the composition is to be proved on eight bells.
+
+The next eight non-blank lines define a series of symbols which
+represent the blocks of changes from which the peal is built.  The first
+symbol, `\texttt{Cambridge}' is defined using a piece of place notation
+for one lead of Cambridge Surprise Major, up to but excluding the lead
+end change.  The `\verb+&+' at the beginning of the place notation tells
+\gsiril\ that the block is palindromic and that only the first half has
+been given explicitly, so even though only 16 changes have been given,
+this represents a block of 31 changes.\footnote{Written out in full, this
+block represents the place notation \texttt{-38-14-1258-36-14-58-16-78
+-16-58-14-36-1258-14-38-}.}
+
+The next two symbols are `\texttt{p}' and `\texttt{b}', which have been
+defined as a plain lead and a bobbed lead of the method, respectively, by
+appending a seconds or fourths place lead end change to the method.  The
+lead end changes are written is place notation, starting with a
+`\verb!+!' which tells \gsiril\ that the place notation has been given
+in full.  All blocks of place notation in \gsiril\ must be preceded with
+either `\verb+&+' or `\verb!+!' so \gsiril\ recognises them as blocks of
+place notation.
+
+Next, the symbols `\texttt{M}', `\texttt{MW}', `\texttt{WH}' and
+`\texttt{H}' represent the four different types of course used in the
+peal, with various combinations of bobs at the middle, wrong
+and home calling positions, which in Cambridge come at the third, fourth
+and seventh lead ends, respectively.  Each is defined as a sequence of
+seven plain or bobbed leads.  Finally, `\texttt{part}' is defined as a
+sequence of five courses.
+
+The final line of the file is `\texttt{prove 5 part}'.  The
+`\texttt{prove}' keyword tells \gsiril\ that is a prove statement.  In
+this case, it proves the block represented by `\texttt{part}' rung five
+times consecutively and prints some basic output saying how long it is,
+whether it is true (meaning no row occurs more than once) and whether it
+comes round.
+
+\index{example|)}
+
+\section{Interactive mode}
+\label{interactive}
+
+Unless \gsiril\ is told not to,\footnote{The \verb+-f+,\oi{f}
+\verb+-e+\oi{e} and \verb+-N+\oi{N} tell \gsiril\ not to read source
+from standard input.  See \sref{inputopts}.} it will read input from standard
+input.\index{standard input} This means it is possible to type the \gsiril\ 
+language directly into the program.  When doing this, it can be useful to the
+\verb+-i+ and \verb+-v+ options.
+
+The \verb+-i+ option\oid{i}{interactive} puts \gsiril\ into interactive
+mode. This does two things: errors in user input do not cause
+\gsiril\ to exit immediately, and on systems that support it, it enables
+more user-friendly line editing,\footnote{Specifically, if \gsiril\ was
+compiled with support for GNU readline\index{readline}, the cursor keys
+will scroll backwards and forwards through previous lines, allowing previous
+lines to be edited and re-run, for example to correct mistakes.} and displays
+a \textitidx{prompt} of `\verb+>+' whenever it is waiting for input.
+The \verb+-v+ option\oid{v}{verbose} makes \gsiril\ more verbose, and it
+will provide confirmation of what it has done after each command.
+
+\gsiril\ will continue accepting input until it reaches the end of the
+input stream.  When typing directly into \gsiril, you can tell \gsiril\ that
+you have finished by pressing Control-D on Linux, or Control-Z on Windows.
+Alternatively, a statement containing just the single word \ttcmdidx{end},
+\ttcmdidx{quit} or \ttcmdidx{exit}, will cause \gsiril\ to stop taking
+input and exit. 
+
+The following example shows a \gsiril\ session in interactive mode,
+instigated by running \texttt{gsiril -i -v}, which is used to prove a
+plain course of Double Court Bob Minor.  The prompt (the leading
+`\verb+>+') makes it clear which lines have been entered by the user,
+and which are \gsiril's responses.
+
+\begin{Verbatim}
+Ringing Class Library / gsiril 0.4.0-pre
+GSiril is licensed under the GNU General Public License, v2+
+> 6 bells
+Set bells to 6
+> m = &-4-3-6,+6
+Definition of 'm' added.
+> prove 5m
+60 rows ending in 123456
+Touch is true
+> exit
+\end{Verbatim}
+
+
+\section{Obtaining \gsiril}\label{obtain}
+
+The recommended way of obtaining \gsiril\ is to download the source code 
+from GitHub\index{GitHub} and compile it yourself.  Such things are relatively
+easy under Linux where most distributions will provide the necessary tools as
+standard.  However Windows users will likely find this process harder.  To
+compound matters, whilst the source code should be portable to a whole 
+range of different compilers and operating systems, life is rarely that 
+straightforward, and in all likelihood if you're not using a combination
+that I've tested, you'll end up having to fix a handful of small problems.
+
+\index{compiling gsiril@compiling \gsiril}
+
+To compile from source, checkout the code from GitHub\index{git},
+generate the \verb+configure+ script using the \verb+autoreconf+
+command, and then configure, compile and install it in the
+standard way:
+\begin{Verbatim}
+git clone https://github.com/ringing-lib/ringing-lib
+cd ringing-lib
+autoreconf
+./configure --prefix=$HOME
+make
+make install
+\end{Verbatim}
+
+This should install the Ringing Class Library\index{Ringing Class Library} 
+and all of its associated programs (including \gsiril) into your home 
+directory.  Depending how your system is configured, you may need to add this
+to your \textit{path} so that the shell can find
+\gsiril.  If, when trying to run \gsiril, you see an error message
+saying `\texttt{command not found}', you 
+probably need to run the following:\footnote{Or add it to your 
+\verb+~/.bashrc+ so they are always available.}\fspec{PATH}
+\begin{Verbatim}
+export PATH=$PATH:$HOME/bin
+\end{Verbatim}
+
+\section{Development status}
+\label{dev_status}
+
+\gsiril\ is a fairly mature piece of software and has been in active
+use since 2002, since which time a great many new features have been added.
+Some features will have been tested extensively in many different 
+combinations and are likely to be bug-free; however, other features are
+still very new and there may well be bugs them, and some of the less
+commonly used features may interact with each other in odd ways.
+If you find something which you believe to be a bug,%
+\index{bugs, reporting} do please contact me, either by email or by filing an
+issue on GitHub.
+
+\gsiril\ is also a work in progress, and there is still a lot of
+functionality that I would like to add.  Generally speaking, new
+functionality gets added as and when I want it or someone requests it,
+assuming I can see a suitable way of implementing it.  If there is
+missing functionality that you would particularly like to see added,
+drop me an email and I'll see what I can do about adding it.
+
+Finally, \gsiril\ is open source software.\index{open source}
+This means that anyone 
+can download a copy of the source code and extend it.%
+\footnote{The source code for \gsiril\ is included with the 
+Ringing Class Library which can be downloaded from 
+\url{https://github.com/ringing-lib/ringing-lib}.}
+For example, I have no interest in writing a graphical user interface to
+\gsiril, besides the web interface on BellBoard, but if you're a
+programmer and want to, there is nothing to prevent you from doing so.
+All that is asked in return is that if you make any extensions publicly
+available, you also make the source code to them freely available.%
+\footnote{Specifically, \gsiril\ is covered by the GNU General Public 
+License, version 2 or above,\index{licence} which can be viewed at
+\url{https://www.gnu.org/licenses/old-licenses/gpl-2.0.html}.}
+
+\chapter{Statements}
+
+This chapter describes the general structure of a \gsiril\ file 
+(\sref{stmt_struct}), and then documents each type of statement allowed
+in the file.  
+The formal grammar for statements can be found in Appendix
+\ref{stmt_grammar}.
+
+\section{The basic structure}
+\label{stmt_struct}
+
+A \gsiril\ file consists of a sequence of \textitidx{statements}, each
+of which is an instruction to \gsiril\ to do something.
+
+\index{line breaks|(}
+Several statements may be placed on one line, in which case they must be
+separated by semicolons.  A line break may also used to mark the end of
+a statement, and a semicolon at the end of the line is optional.  For
+example, the following line contains two statements separated by a
+semicolon; the optional semicolon at the end of the line has been
+omitted here.
+
+\begin{Verbatim}
+p = m,+12; b = m,+14
+\end{Verbatim}
+
+Because a line break is used to terminate a statement, it is not
+possible to break long statements into multiple lines arbitrarily.
+However, to allow statements to be more conveniently formatted, a line
+break is ignored if it is immediately after a comma,\footnote{This is
+possible because a comma can never be the last character in a statement,
+as it is a binary operator whose second argument is mandatory.} or
+anywhere within parentheses or braces.  For instance, the
+following code contains a single statement broken across two lines.
+
+\begin{Verbatim}
+prove 3( Cm,b,Cm,Pr,Pr,Cm,
+         Cm,b,Cm,Pr,Pr,Cm,b );
+\end{Verbatim}
+
+The line break here occurs after a comma and also within parentheses,
+either of which alone would have been sufficient for \gsiril\ to ignore
+it.\index{line breaks|)}
+
+Comments\index{comments} provide a way of including a human-readable
+explanation or annotation in the machine-readable \gsiril\ code.  
+Comments start with a pair of slashes and continue to the end of the
+line.\footnote{In MicroSiril compatibility mode, a single slash is
+sufficient.  See \sref{compatibility}.}  They are allowed anywhere a
+line break is allowed, and are ignored by \gsiril.
+
+\begin{Verbatim}
+m = &-3-4-25-36-4-5-6-7  // Cambridge
+\end{Verbatim}
+
+\section{Definitions}\label{defnstmt}
+\index{definitions|(}
+
+Definitions are a way of assigning a symbolic name to an expression,
+such as a block of place notation, so that it can be used in subsequent
+statements.  The normal syntax for a definition statement is:
+
+\begin{quote}
+\textit{name} \;\verb+=+\; \textit{expression}
+\end{quote}
+
+The name must start with a letter, and may contain letters, numbers or
+underscores.\footnote{In MicroSiril compatibility mode, the name may
+also contain (but not begin with) a `\verb+!+', `\verb+-+' or
+`\verb+%+'.  See \sref{compatibility}.} Unless the \verb+-I+\oi{I}
+command line option has been used, symbol names are case sensitive. 
+
+The right-hand side is an expression and is documented in
+\sref{expr}.  The right-hand side may be omitted, in which case the
+statement defines the symbol to be the null expression.%
+\footnote{This is not the same as undefining the symbol.  A symbol
+defined to be the null expression may be used and does nothing, but
+attempting to use an undefined symbol results in an error.}
+The following example shows some simple definitions for plain and bobbed
+leads of Bristol Major.  Other than the final change, these are
+identical, so the common sequence of changes is factored out into a
+symbol called \texttt{m}.
+
+\begin{Verbatim}
+m = &-5-4.5-5.36.4-4.5-4-1;
+p = m, +8;
+b = m, +4;
+\end{Verbatim}
+
+It is not an error to define a symbol more than once: subsequent
+definitions replace earlier ones in the symbol table.  If the assignment
+operator (`\verb+=+') in a definition statement is replaced with a
+conditional assignment\index{conditional assignment} operator
+(`\verb+?=+'), this only defines the symbol if it was not already
+defined.
+\index{definitions|)}
+
+\section{Configuration statements}
+\label{configstmts}
+
+Before \gsiril\ proves a touch, it needs to know three things: the
+number of bells, the number of times each row is allowed, and which row
+to start from.  These pieces of information can be supplied using
+command line options per \sref{cmdopts}, or they can be set using
+\texttt{bells}, \texttt{extents} and \texttt{rounds} statements.  The
+\texttt{rows} and \texttt{row\_mask} statements have related roles
+and are also documented here.
+
+The \ttcmdidx{bells} statement takes the form of a number followed by
+the word `\texttt{bells}'.  It tells \gsiril\ to interpret place
+notation and row literals as having that number of bells, the same
+function as the \verb+-b+\oi{b} option.  There is no default number of
+bells, and either a \texttt{bells} statement or a \verb+-b+ option is
+required before place notation or row literals can be used.  The number
+of bells may be set multiple times in a source file.\footnote{The can be
+useful when proving variable cover touches, so that the method can be
+defined using its normal place notation without having to add the places
+made by the covering bell, and then the number of bells changed to
+define the call which change the covering bell.}
+
+The \ttcmdidx{extents} statement also takes the form of a number followed by
+the word `\texttt{extents}'.  It tells \gsiril\ how many times to allow
+a row to appear before considering the touch to be false, which is the
+same purpose as the \verb+-n+\oi{n} option.  By default rows are only
+allowed to occur once, so an \texttt{extents} statement or a \verb+-n+
+option is only needed when proving multi-extent blocks.
+
+The \ttcmdidx{rounds} statement takes the form of the word
+`\texttt{rounds}' followed by a row literal, which is simply a row
+written in single quotes.  It serves the same purpose as the \verb+-r+
+option, and tells \gsiril\ to use a different row instead of the rounds
+as the starting row.
+
+These three statements are illustrated in the following example:
+
+\begin{Verbatim}
+6 bells;          // Sets the number of bells to 6
+2 extents;        // The touch is allowed to contain rows twice
+rounds '134256';  // Start the touch from 134256
+\end{Verbatim}
+
+The \ttcmdidx{rows} statement can be used to specify the expected
+length of the touch, either as an exact value or as a range.  The
+\verb+--length+\loi{length} option serves this purpose too.  If touch is
+too long or too short, an error is generated.  This statement takes the
+form of either a single number or a pair of numbers separated by the
+word `\texttt{to}', followed by the word `\texttt{rows}'.  The former
+represents an exact length, while the latter specifies a length
+range using the minimum and maximum permitted values.  For example:
+
+\begin{Verbatim}
+720 rows;
+1250 to 1450 rows;
+\end{Verbatim}
+
+The \ttcmdidx{row\_mask} statement is used to alter how rows are printed
+by \gsiril.  It takes the form of the word `\texttt{row\_mask}' followed
+by a row pattern, which is written between slashes.  Whenever a row is
+printed using a string like `\texttt{"@"}', the row is matched against
+the row mask pattern; if it matches, only those bells which match a
+wildcard (i.e.  \verb+?+ or \verb+*+) are printed;\footnote{A range like
+`\verb+[56]+' does not count as a wildcard.} if it doesn't match,
+the string is not printed.  This statement is not supported in
+MicroSiril compatibility mode.  It is useful for suppressing fixed
+bells\index{fixed bells} when only lead heads or course heads are
+printed.  For example, the following file prints the lead heads of Plain
+Bob Major, with the treble omitted:
+
+\begin{Verbatim}
+8 bells;
+row_mask /1*/;
+p = &-8-8-8-8,+2,"@";
+prove 7p;
+\end{Verbatim}
+
+The \verb+--row-mask+ option\loi{row-mask} serves the same purpose.
+The \texttt{row\_mask} statement has no effect if the \verb+-E+ option is
+used, though the \verb+--row-mask+ option continues to work.
+
+\section{Prove statements}
+
+There are two ways to prove touches: using a \ttcmdidx{prove} statement,
+or using the \verb+-P+ option which is described in \sref{compatibility}.
+
+When entering input directly into \gsiril, or when there is more than one
+touch to prove, the \texttt{prove} statement is often more useful.  This
+statement simply consists of the word `\texttt{prove}' followed by the
+expression to prove, which may be just a symbol name, or maybe a more
+complex expression..  This example will prove the standard 720 of Plain
+Bob Minor, assuming \texttt{p} and \texttt{b} have already been defined
+appropriately.
+
+\begin{Verbatim}
+prove 3(b,3p,2b,4p);
+\end{Verbatim}
+
+\section{Miscellaneous statements}
+
+The \ttcmdidx{import} statement provides \gsiril\ with a way of
+including the contents of one file within another.  This can be useful
+for building up files containing libraries of definitions.  An
+\texttt{import} statement at the start of a file is equivalent to an
+\verb+-m+\oi{m} option.  The syntax of the import statement is as
+follows.
+
+\begin{Verbatim}
+import "filename"
+\end{Verbatim}
+
+While importing a file, whether using an \texttt{import} statement or an
+\verb+m+ option, the \verb+-i+\oi{i} and \verb+-v+\oi{v} options are
+ignored.  Amongst other things, this means an error in an imported file
+always terminates processing of that file.  An imported file may set the
+number of bells via a \texttt{bells} statement, but this setting only
+persists if the number of bells had not already been set.
+
+% TODO echo
+
+The \ttcmdidx{version} statement simply prints the version of \gsiril.
+Syntactically, it comprises just the word `\texttt{version}'.
+
+\chapter{Expressions}
+\label{expr}
+
+\section{Operators}
+
+\begin{tabularx}{\textwidth}{ll}
+\textit{fn}\verb+(+\textit{x}\verb+,+\textit{y}\verb+,+\ldots\verb+)+&
+  Function call\\
+\verb+echo+, \verb+defined+, \verb+repeat+, \textit{n}, \verb=++=, \verb=--=,
+\verb+~+, \verb+!+& Unary prefix operators\\
+\verb+*+, \verb+.+, \verb+/+, \texttt{\%}& Multiplicative operators
+(\sref{arithop})\\
+\verb=+=, \verb=-=& Additive operators (\sref{arithop})\\
+\verb+<<+, \verb+>>+& Shift operators\\
+\verb+&+& Merge replacement operator\\
+\verb+=+, \verb+!=+, \verb+<+, \verb+>+, \verb+<=+, \verb+>=+&
+  Comparison operators (\sref{cmpop})\\
+\verb+&&+& Logical `and' operator (\sref{logop})\\
+\verb+||+& Logical `or' operator (\sref{logop})\\
+\verb+,+& Comma operator\\
+\verb+=+, \verb+.=+, \verb+:=+& Assignment operators
+\end{tabularx}
+
+\subsection{Comparison operators}\label{cmpop}
+\index{comparison operator|(} 
+
+The six comparison operators,
+\verb+<+, \verb+>+, \verb+<=+, \verb+>=+, \verb+==+ and \verb+!=+ 
+can be used to compare integers or strings.  The test whether the left-hand
+side is less than, greater than, less than or equal to, greater than or equal
+to, equal to, or not equal to the right-hand side, respectively.  Integers are
+compared arithmetically\index{arithmetic comparison}, while strings are
+compared lexicographically\index{lexicographic comparison}.  This means that
+\verb+11>2+ is true, while \verb+"11" > "2"+ is false.
+
+In addition, the \verb+==+ and \verb+!=+ operators can compare booleans,%
+\footnote{On booleans, \verb+==+ and \verb+!=+ behave as exclusive nor and
+exclusive or operators, respectively.%
+\index{xor|see{exclusive or}}\index{exclusive or}} 
+or an integer with a string.  When an integer is compared with a string, the
+integer is first converted to a string with no leading zeros, and this is
+compared lexicographically with the string argument -- thus \verb+01=="1"+
+evaluates to true, but \verb+1=="01"+ evaluates to false.
+
+The result of all six operators is a boolean.
+\index{comparison operator|)} 
+
+\subsection{Logical operators}\label{logop}
+\index{logical operators|(}
+
+The \verb+&&+ and \verb+||+ operators are the logical `and' and logical `or'
+operators.\index{and operator}\index{or operator}  They are binary operators
+whose argument is evaluated as a boolean.\footnote{Note that, unlike in many
+languages, there is no conversion from an integer from a boolean.  If \verb+n+
+is an integer, you cannot write \verb+n && x+.  You must instead write
+something like \verb+n!=0 && x+.}
+The \verb+&&+ operators evaluates to true if both of its arguments evaluate to
+true; the \verb+||+ operator evaluates to true if either (or both) of its
+arguments evaluate to true.  
+
+Both of these operators evaluate their left-hand argument first and 
+\textit{short circuit}\index{operators!short circuiting} 
+based on the value of it --- this means that if
+the result of the operator does not depend on value of the second argument,
+then the second argument is not evaluated.  In practice this means that if
+the first argument to \verb+||+ is true or if the 
+the first argument to \verb+&&+ is false, then the second is not evaluated.
+This is useful if evaluating the seconds argument would produce an error or
+if it would be computationally expensive.
+
+The \verb+!+ operator is the logical `not' operator.\index{not operator}  It
+evalutes its argument and inverts it -- if the argument was true, it evaluates
+to false, and \textit{vice versa}.
+
+The result of all three operators is a boolean.
+
+\index{logaical operators|)}
+
+\subsection{Arithmetic operators}\label{arithop}
+\index{arithmetic operator|(}
+
+The \verb-+-, \verb+-+, \verb+*+ and \verb+/+ operators fulfil their
+usual mathematical roles of addition\index{addition}, 
+subtraction\index{subtraction}, multiplication\index{multiplication}
+and division\index{division}, respectively, with the caveat that they
+perform \textitidx{integer arithmetic}.  This is of particular relevance
+to division where the result is rounded to the next integer towards zero ---
+so, \verb+5/3+ evaluates to 1.
+
+The \verb+%+ operator is the modulus operator\index{modulus operator}.
+It returns the remainder left from the integer division of its arguments.
+For example, \verb+8%3+ evaluates to 2.  It can be defined more mathematically
+in terms of integer division by the equation:
+\[ a \mathop{\verb+/+} b \mathop{\verb+*+} b 
+   \;\mathop{\verb-+-}\; a \mathop{\verb+%+} b = a \]
+Because integer division rounds towards zero rather than down, this means that
+when $a$ is negative, the result of the modulus operator is also negative.%
+\footnote{To those familiar with modular arithmetic, this may be surprising.
+But this is behaviour is typical in most programming languages that use
+integer arithmetic --- for example, the C language, and languages derived
+from it, define the \verb+%+ operator in this way.}
+
+All five operators are binary operators.  They evaluate both of their
+arguments as integers and the result is an integer.
+
+The \verb+*+ operator has a second meaning, which to do repetition.  This
+behaviour is invoked if only one of its argument is an integer.
+\index{arithmetic operator|)}
+
+
+\chapter{Command line options}
+\label{cmdopts}
+
+The behaviour of \gsiril\ can be customised using \textit{command line
+options}\index{command line option|see{options}}%
+\symidx{-}{options}\index{options|(}, which are placed after the program
+name on the command line.  A full list of available options can be got
+by running \gsiril\ with the \verb+--help+ option:\loid{help} i.e.\ by
+running `\texttt{gsiril --help}'.  This chapter documents these options.
+
+\section{Using options}
+
+Some options are \textit{boolean options}: either they are present or they are
+not, and they are not parametrised in any way.  The \verb+-i+ and \verb+-v+
+options which were introduced in \sref{interactive} are examples of boolean
+options.  By contrast, the \verb+-b+ option takes a \textit{mandatory
+argument}, namely the number of bells, while the \verb+-P+ option takes an
+\textit{optional argument} to say which symbol to prove, and defaults to the
+first symbol defined in the source.
+
+By convention, command line options can sometimes be merged together.
+This can be confusing to the uninitiated as it results in a much more terse
+command invocations.  The rule is that any number of boolean options can be
+concatenated, followed, optionally, by at most one option which takes an
+argument.  For example, the following three command lines all behave the same:
+
+\begin{Verbatim}
+gsiril -i -v -b6
+gsiril -iv -b6
+gsiril -ivb6
+\end{Verbatim}
+
+Each command line option also has a \textit{long form}.  These all begin
+with two hyphens rather than one, and have long names that are intended to 
+make their meaning more obvious to a casual reader instead of the 
+normal single-character ones.  The other difference is that when they
+have arguments, the argument is preceded by an `\verb+=+'.  For example,
+`\verb+-b6+' can be written `\verb+--bells=6+'.  
+Certain rarely-used options only have a long form: for example,
+the option to disable the \texttt{import} directive is 
+\verb+--disable-import+ --- there is no equivalent short form.
+Perhaps unsurprisingly, it is not possible to merge together the long forms 
+of arguments in a way analogous to \verb+-ivb6+.
+
+When an option's argument contains spaces or punctuation marks, it is often
+necessary to enclose them in quotes.  This is not a requirement imposed by
+\gsiril, but is often necessary to prevent these characters from being
+interpreted specially by the shell.\index{quoting|see{shell, quotation}}
+\index{shell!quotation}
+On most Unix-like systems (including most Linux shells) single quotes are
+usually better, unless the argument itself contains a single quote character,
+in which case double quotes are necessary.\footnote{The disadvantage of double
+quotes is that in most Unix shells, the characters \verb+$+, \verb+`+,
+\verb+\+ and sometimes \verb+!+ will still be treated specially by the shell,
+even though they have been quoted.  This behaviour can be suppressed by
+placing a `\verb+\+' character before them, a process called escaping;
+\index{escaping|see{shell, escaping}}\index{shell!escaping} 
+a backslash can also be used to escape a double quote character, should one be
+needed in the argument.
+Using single quote characters removes the need to escape any characters to
+prevent the shell from interpreting them specially.} 
+Under the Windows command prompt, double quotes appear to be necessary.
+
+
+\section{Controlling input}
+\label{inputopts}
+
+\begin{tabularx}{\textwidth}{llX}
+\texttt{-e}&\texttt{--expression=STMTS}&
+  Execute the statements \texttt{STMTS}\\
+\texttt{-f}&\texttt{--script-file=FILENAME}&
+  Execute file \texttt{FILENAME}\\
+\texttt{-N}&\texttt{--no-read}&
+  Don't read \gsiril\ source from standard input\\
+\texttt{-D}&\texttt{--define=NAME=VALUE}&
+  Define a particular symbol\\
+\texttt{-m}&\texttt{--module=MODULE}&
+  Import the given module\\
+&\texttt{--no-init-file}&
+  Do not real the standard initialisation file
+\end{tabularx}
+
+By default \gsiril\ reads source from standard input\index{standard input}.
+The \verb+-e+, \verb+-f+ and \verb+-N+ options suppress that by making
+\gsiril\ read source from elsewhere or nowhere.  At most one of these options
+can be used on a command line.
+
+The \verb+-e+\oid{e}{expression} option instructs \gsiril\ to use the
+option's argument as the source to be proved.  Multiple statements can be
+included separated by semicolons, exactly as in the input file.  Frequently
+this option's argument will contain spaces or punctuation that will need
+quoting.
+
+The \verb+-f+\oid{f}{script-file} option provides an alternative to using 
+redirection\index{shell!redirection} to tell \gsiril\ to read source from the
+named file.  
+
+The \verb+-N+\oid{N}{no-read} option tells \gsiril\ not to read input
+from standard input in the absence of an \verb+-f+ or \verb+-e+ option.
+This can be useful when testing modules.  This option does not prevent
+\gsiril\ reading methods from standard input when filtering (see
+\sref{filtering}).
+
+The \verb+-D+\oid{D}{define} option defines a variable.  Its argument must
+be a valid definition statement per \sref{defnstmt}.  The definition may use
+the \verb+=+, \verb+:=+ or \verb+?=+ operator.  Multiple \verb+-D+ options may
+be given, and if so they are defined in the order they are given on the
+command line.  If any \verb+-D+ option includes place notation, a \verb+-b+
+option must be used to provide the number of bells.
+
+The \verb+-m+\oid{m}{module} option tells \gsiril\ to import the module named
+in option's argument, exactly as if it had been named in \ttcmdidx{import}
+statement.  If multiple \verb+-m+ options are given, each module is imported
+in the order given on the command line.
+
+The \verb+--no-init-file+\loid{no-init-file} option disables reading of the
+standard initialisation file listed in Appendix~\ref{initfile}.%
+\footnote{Strictly speaking, the initialisation file is not read, as its
+contents are hard-coded into the program.}  
+This option is generally only useful when debugging, or to provide an
+alternative initialisation file.
+
+These options all affect the input which \gsiril\ processes.  When several of
+these options are used concurrently, they are evaluated in the following
+order:
+\begin{enumerate}[itemsep=0pt,leftmargin=*,labelsep=1em,topsep=0pt]
+\item Read the initialisation file (see Appendix~\ref{initfile}), unless the
+\verb+--no-init-file+ option is used.
+\item Define any symbols which were provided in \verb+-D+ options.
+\item Import any modules which were specified in \verb+-m+ options.
+\item Define \ttcmdidx{everyrow} to \verb+"@"+ if the \verb+-E+ option\oi{E}
+is given.
+\item\label{filterloop} If filtering, define the \ttcmdidx{m} and \ttcmdidx{lh}
+symbols with the next method from the input stream per \sref{filtering}.
+\item Process the source from standard input or as given in a \verb+-e+ or
+\verb+-f+ option, unless the \verb+-N+ option is given. 
+\item If filtering, return to step \ref{filterloop} until the input stream is
+exhausted.
+\end{enumerate}
+
+\section{Configuration options}
+
+\begin{tabularx}{\textwidth}{llX}
+\texttt{-b}&\texttt{--bells=BELLS}&
+  The default number of bells\\
+\texttt{-n}&\texttt{--extents=NUM}&
+  The number of extents required\\
+\texttt{-r}&\texttt{--rounds=ROW}&
+  The starting 'rounds'\\
+&\texttt{--length=RANGE}&
+  Require the touch length to be in the specified range\\
+&\texttt{--row-mask=MASK}&
+  Applies the specified row mask when printing a row
+\end{tabularx}
+
+The \verb+-b+, \verb+-n+, \verb+-r+, \verb+--length+ and \verb+--row-mask+
+options\oid{n}{bells}\oid{n}{extents}\oid{r}{rounds}
+serve exactly the same roles as the \ttcmdidx{bells},
+\ttcmdidx{extents}, \ttcmdidx{rounds}, \ttcmdidx{rows} and \ttcmdidx{row\_mask}
+statements, respectively, which are documented in \sref{configstmts}.
+
+The argument to the \verb+--length+ option\loid{length} is either a number, or
+a pair of numbers separated by a `\verb+-+' which serves was same role as the
+word `\texttt{to}' in the \texttt{rows} statement.  For example, the
+\verb+--length=1250-1450+ option has the same effect as the statement
+`\texttt{1250 to 1450 rows}'.
+% TODO: one end point of the range may be omitted
+
+The arguments to the \verb+-r+\oid{r}{rounds} and \verb+--row-mask+
+\loid{row-mask} options are respectively a row and a row pattern.  They are
+not enclosed in quotation marks\footnote{Except for the purpose of quoting in
+the shell.} or slashes, as the corresponding statements are.
+
+None of options are required in most circumstances.  However, if either the
+\verb+-r+ or \verb+--filter+ options\loi{filter} are used, then the \verb+-b+
+option is required, and the row specified as the argument to \verb+-r+ must be
+on the number of bells specified in the \verb+-b+ option. 
+
+\section{Controlling output}
+\label{outopts}
+
+\begin{tabularx}{\textwidth}{llX}
+\texttt{-i}&\texttt{--interactive}&
+  Run in interactive mode\\
+\texttt{-v}&\texttt{--verbose}&
+  Run in verbose mode\\
+\texttt{-q}&\texttt{--quiet}&
+  Do not give truth output; or if given twice, no output at all\\
+\texttt{-E}&\texttt{--everyrow-only}&
+  Only print output from the everyrow symbol\\
+\texttt{-R}&\texttt{--red=BELLS}&
+  Colour \texttt{BELLS} in red\\
+\texttt{-G}&\texttt{--green=BELLS}&
+  Colour \texttt{BELLS} in green\\
+\texttt{-B}&\texttt{--blue=BELLS}&
+  Colour \texttt{BELLS} in blue\\
+\end{tabularx}
+
+The \verb+-i+ and \verb+-v+ options\oi{i}\oi{v} were documented in
+\sref{interactive}.  They are normally used together.
+
+\index{silent mode|(} 
+The \verb+-q+ option\oid{q}{quiet} may be used multiple times to make 
+\gsiril\ increasingly quiet.  If used once, \gsiril\ switches to silent mode
+when executing the \ttcmdidx{true} symbol, meaning no statement of the truth is
+given after a true touch.  If used twice, \gsiril\ switches to silent mode
+when executing each \ttcmdidx{prove} and \ttcmdidx{echo} statement, disabling
+all output during proof.
+
+The \verb+-E+ option\oid{E}{everyrow-only} tells \gsiril\ to print every row
+proved, while suppressing other output.  It does this by setting
+\ttcmdidx{everyrow} to \verb+"@"+, and then switching to silent mode while
+executing each \texttt{prove} statement (but not each \texttt{echo} statement:
+add \verb+-qq+ for that).  Silent mode is temporarily disabled when the
+\texttt{everyrow} symbol is automatically invoked.  The \ttcmdidx{row\_mask}
+statement has no effect if the \verb+-E+ option has been given, though the
+\verb+--row-mask+\loi{row-mask} option continues to work.\footnote{This
+difference between the \texttt{row\_mask} statement and \verb+--row-mask+
+option is because of the different ways in which they are used.  The statement
+is typically used to suppress bells from lead or course heads.  However,
+if the \verb+-E+ and \verb+--row-mask+ options are used together on the
+command line, it is assumed this is intentional, and only rows matching the
+supplied mask will be output, and with any fixed bells removed.}
+\index{silent mode|)}
+ 
+The \verb+-R+, \verb+-G+ and \verb+-B+\oid{R}{red}\oid{G}{green}\oid{B}{blue}
+options are used to colour certain bells in red, green or blue, respectively,
+when they are printed in rows using a \verb+@+ in a string.  The argument to
+the option is one of more bell symbols, for example, \verb+-BET+ would colour
+bells 11 and 12 blue.  If the argument contains a \verb+*+ then all subsequent
+bells are additionally picked out in a bold or brighter colour.  Each \verb+*+
+in the argument toggles the bold state on or off for any further bells.  Thus,
+\verb+-R*1*2+ picks out both 1 and 2 in red, but with the treble bold.
+These options are only supported if \gsiril\ was compiled with support for the
+termcap or curses libraries, and if your terminal supports coloured output.%
+\footnote{These facilities are common on Linux, but less so on Windows.}
+
+\section{Compatibility modes}
+\label{compatibility}
+
+\begin{tabularx}{\textwidth}{llX}
+\texttt{-I}&\texttt{--case-insensitive}&
+  Treat symbols case-insensitively\\
+\texttt{-P}&\texttt{--prove[=SYMBOL]}&
+  Proves the specified symbol, or the first is none is specified\\
+&\texttt{--msiril}&
+  Run in MicroSiril compatibility mode\\
+&\texttt{--sirilic}&
+  Run in Sirilic compatibility mode\\
+\end{tabularx}
+
+The \verb+--msiril+ option\loid{msiril} actives \textitidx{MicroSiril
+compatibility mode}.  MicroSiril compatibility mode is also activated
+automatically if the program has been renamed \texttt{msiril} or
+\texttt{microsiril}.\footnote{On Windows, an \verb+.exe+ extension is
+allowed and the program name is treated case-insensitively.  The
+alternatives \texttt{gmsiril} and \texttt{gmicrosiril} are also
+supported.} 
+Making a copy of \gsiril\ or symbolic link to it can be a convenient way
+to active MicroSiril compatibility mode, and if you have compiled and
+installed \gsiril\ from source, there should already be copy installed
+as \texttt{msiril}.
+
+MicroSiril compatibility changes the behaviour of \gsiril\ so that
+compositions written for MicroSiril should behave identically when
+proved with \gsiril.  It does not disable all functionality beyond what 
+MicroSiril supported, if that functionality is invoked using syntax
+that was not valid in MicroSiril.
+
+In MicroSiril mode, comments begin with a single slash rather than a
+pair of slashes,\index{comments}
+ and symbol names may contain (but not begin with) a
+`\verb+!+', `\verb+-+' or `\verb+%+'.  This conflicts with \gsiril's
+syntax for row patterns, and without row patterns, the
+\ttcmdidx{row\_mask}\ statement and alternatives blocks are of limited use:
+these are all therefore disabled in MicroSiril mode.  Variable
+interpolation in strings is also not supported, as this changes
+the meaning of certain uses of a `\verb+$+' for recording the number of
+duplicates.  MicroSiril mode also implies the \verb+-P+ option (without
+an argument) and the \verb+-I+ option.
+
+The \verb+-I+ option\oid{I}{case-insensitive} tells \gsiril\ to treat
+symbols and keywords case insensitively.  Thus, for example, you cannot
+use `\texttt{b}' to mean a bob and `\texttt{B}' to mean a course
+containing a bob before.  This option is invoked implicitly in
+MicroSiril compatibility mode.
+
+The \verb+-P+ option\oid{P}{prove}, when used without an argument,
+tells \gsiril\ to prove the first symbol defined directly in the input.%
+\footnote{This does not include symbols defined in modules included
+using \texttt{import} statement or the \verb+-m+ option, nor those defined in
+the init file or using a \verb+-D+ during option.  The way this is implemented
+is that after every definition, a symbol called \texttt{\_\_first\_\_}%
+\index{first\_\_@{\hspace*{-\loptwidth}\texttt{\_\_first\_\_}}}
+is conditionally set to the name of the symbol just defined, as if with
+a statement `\texttt{\_\_first\_\_ ?= name}'.  The value of
+\texttt{\_\_first\_\_} is saved when a module is imported and restored
+afterwards.  This behaviour is an implementation detail which is subject
+to change.}
+It allows compositions to be proved without an explicit prove statement;
+is was the behaviour of MicroSiril and is invoked in MicroSiril
+compatibility mode.  When an argument is provided to the \verb+-P+
+option, the argument is the name of a symbol to prove.  For example
+\verb+-Ppeal+ is equivalent to adding the line `\texttt{prove peal}' to
+the end of the source file. 
+
+The \verb+--sirilic+\loid{sirilic} option invokes \textitidx{Sirilic
+compatibility mode}, which aims to be compatible with the Sirilic
+program written by Stephen Noyes\index{Noyes, Stephen} in 2002.  Siliric
+compatibility mode is also invoked automatically if the program has been
+renamed \texttt{sirilic} or \texttt{gsirilic}.  This has all the effects
+of MicroSirlic mode, but also makes the underscore character toggle
+underlining in a string, assuming the terminal supports it.  Even in
+Sirilic compatibility mode, \gsiril\ does not currently support
+Sirilic's extensions for analysing music or for checking which leads of
+a method each bell rings, but this may be added in a future version.
+
+\section{Filtering methods}
+\label{filtering}
+
+\begin{tabularx}{\textwidth}{lX}
+\texttt{--filter}&
+  Run as a filter on a method library or stream\\
+\texttt{--lead-symbol=SYM}&
+  Assign one lead's place-notation (by default excluding the lead head) to
+  \texttt{SYM}; default symbol is `\texttt{m}'\\
+\texttt{--lead-includes-lh}&
+  Assign the whole lead's place notation, including the lead head, to
+  the lead symbol\\
+\texttt{--lh-symbol=SYM}&
+  Assign the lead end change to \texttt{SYM}; default symbol is
+  `\texttt{lh}'\\
+\texttt{--payload-symbol=SYM}&
+  Assign filter payload to \texttt{SYM}
+\end{tabularx}
+
+The \verb+--filter+ option\loid{filter} tells \gsiril\ to read methods
+from standard input, runs the provided \gsiril\ code on each, switching to
+silent mode\index{silent mode} for each \texttt{proof} statement.%
+\footnote{The \texttt{echo} statement is not silenced while filtering:
+use \verb+-qq+ for that.} and prints on standard output a list of those
+methods where the \gsiril\ code executes successfully.  
+
+Data is accepted on standard input as a \textitidx{method stream}, which
+is a common format used to pass lists of methods between programs.  The
+syntax is straightforward: methods are given, one per line, in place
+notation.  Leading whitespace is permitted and ignored, but whitespace
+is not permitted within the place notation.\footnote{\gsiril\ treats
+space, tab, carriage return and line feed to be whitespace.  A UTF-8
+byte order mark (BOM) is also permitted, though not required, at the
+start of the first line.} 
+% TODO: No computed bell expressions, e.g. {N-1}.  The '+' is optional.
+% Commas allowed.
+Any text after the place notation is called the \textitidx{filter payload},
+and is copied through to \gsiril's output.  The \ttcmdidx{methsearch} program,
+which is a tool for exhaustively searching for methods satisfying some
+particular criteria, is often useful for providing a method stream for
+\gsiril\ to filter.  The \ttcmdidx{methodlib} program, which is a tool for
+listing methods in a method library, can also be useful.%
+\footnote{Both \texttt{methsearch} and \texttt{methodlib} are distributed as
+part of the Ringing Class Library.}
+
+By default when filtering, \gsiril\ will remove the final change from
+the provided place notation and assign this to a symbol called
+\ttcmdidx{lh}, and assign the remainder of the place notation to a
+symbol called \ttcmdidx{m}.  The names of the symbols use can be altered
+with the \verb+--lh-symbol+\loid{lh-symbol} and \verb+--lead-symbol+%
+\loid{lead-symbol} options, respectively.  The 
+\verb+--lead-includes-lh+\loid{lead-includes-lh} option tells \gsiril\
+not to remove the lead-head change and instead assigns the entire place
+notation to the \texttt{m} symbol.  The filter payload is normally
+ignored, but the \verb+--payload-symbol+\loid{payload-symbol} option
+tells \gsiril\ to assign it to the specified symbol, after leading and
+trailing whitespace has been trimmed.
+
+Because \gsiril\ is reading methods from standard input when filtering,
+it cannot also read the code to prove the touch from \gsiril.  Either
+the \verb+-f+\oi{f} or \verb+-e+\oi{e} option is therefore required when
+filtering.  A \verb+-b+\oi{b} option is also needed to tell \gsiril\ the
+number of bells used in the place notation in the input stream.
+
+The following is a simple example \gsiril\ being used as a filter.  The
+\texttt{methsearch} command produces a list of all plain doubles methods with
+a four-lead course, including asymmetric method which are false in the plain
+course.  \gsiril\ filters this to find methods for which three fourth's place
+bobs home is a true extent.\footnote{There are 30 such methods, which are all
+palindromic second's place methods, which is a necessary and sufficient
+requirement to ensure that three fourth's place bobs home is a true extent.
+The use of the \gsiril\ filter could therefore be replaced with the 
+\texttt{-s -m*2} options to \texttt{methsearch}.}
+
+\begin{Verbatim}
+methsearch -b5 | gsiril --filter -b5 -e 'prove 3(3(m,lh),m,+4)'
+\end{Verbatim}
+
+\section{Restricting functionality}
+
+\begin{tabularx}{\textwidth}{lX}
+\texttt{--disable-import}&
+  Disable the \texttt{import} directive\\
+\texttt{--node-limit=NUM}&
+  Limit the prover to the specified number of nodes\\
+\texttt{--prove-one}&
+  Prove only one composition\\
+\end{tabularx}
+
+\gsiril\ has a number of options which restrict the functionality
+available to a \gsiril\ composition.  These are useful for security
+purposes\index{security} if the composition source comes from an
+untrusted source, for example in an online prover.
+
+The \verb+--disable-import+ option\loid{disable-import} disables the
+import directive which allows a \gsiril\ script to read an arbitrary
+file.
+
+The \verb+--node-limit+ option\loid{node-limit} can be used to limit the
+resources used by \gsiril.  During proof, the composition is parsed
+into a tree structure which is executed recursively.  This option limits
+the number of nodes in that tree which will be executed before the
+program quits.  The example file describing Middleton's Cambridge in
+\sref{example} involves about 15\,000 nodes and probably takes a few tens
+of milliseconds to run on a modern computer.  \gsiril\ files which make
+use of more complicated functionality may involve more nodes, but for
+most purposes a limit of 1\,000\,000 will catch infinite loops while not
+stopping genuine compositions from being proved.
+
+The \verb+--prove-one+ option\loid{prove-one} tells \gsiril\ only to
+execute one prove statement.  This is particularly useful with the
+\verb+-E+ option if the output is being processed further, and the
+program doing the processing wants to be sure it is only processing rows
+from a single composition.
+
+The online version of \gsiril\ on the BellBoard website runs with
+\texttt{--prove-one --disable-import --node-limit=1000000}.
+\index{BellBoard}
+
+
+\section{Miscellaneous options}
+
+\begin{tabularx}{\textwidth}{llX}
+\texttt{-?}&\texttt{--help}&
+  Print a help message and exit\\
+\texttt{-V}&\texttt{--version}&
+  Print version information and exit\\
+\texttt{-L}&\texttt{--library=LIB}&
+  Look up method names in the method library \texttt{LIB}\\
+&\texttt{--determine-bells}&
+  Determine the number of bells for each proof without actually proving them\\
+&\texttt{--trace-all-symbols}&
+  Print the row when any symbol is executed\\
+&\texttt{--trace-symbol=SYM}&
+  Print the row when \texttt{SYM} is executed\\
+\end{tabularx}
+
+The \verb+--help+\loi{help} option was mentioned in \sref{help}.  It prints a
+summary of all the command line options which \gsiril\ knows about.
+
+The \verb+--version+\oid{V}{version} option prints the version number of
+\gsiril.  (In practice, this is less useful than it might be.  Currently,
+formal releases of \gsiril\ are made very infrequently, and most copies
+in use are development snapshots.)
+
+The \verb+-L+\oid{L}{library} option provides a method library for \gsiril\ to
+use when loading methods with the \ttcmdidx{load}, \ttcmdidx{loadm} and
+\ttcmdidx{loadlh} functions.  The library is not actually loaded until the
+first time one of these functions is called.
+
+The \verb+--determine-bells+\loid{determine-bells} option makes \gsiril\ print
+the number of bells on standard output whenever a \texttt{proof} statement
+is run.  The output is in the form of a \texttt{bells} statement.  It implies
+a \verb+-qq+ option, and suppresses an unsuccessful exit status if the touch
+is false.
+
+The \verb+--trace-all-symbols+\loid{trace-all-symbols} option makes \gsiril
+print a line on standard output containing the row and symbol name separated
+by a tab every time a symbol other than \texttt{everyrow} is executed outside
+of speculative mode.  The row mask is ignored when printing rows in this
+manner.
+The \verb+--trace-symbol+\loid{trace-symbol} is similar, but only traces
+the specified symbols.  If only one symbol is being traced, the symbol name is
+not included on the trace output.
+These options are useful for debugging complex \gsiril\ programs;%
+\footnote{The use of tracing as a debugging tool is why neither trace option
+implied \verb+-qq+.}
+but they are also useful for getting a list of leads of each method when
+proving spliced, which can be useful in determining whether a composition is 
+all the work.\index{all the work}
+
+\index{options|)}
+\appendix
+\chapter{Formal grammar}
+
+This appendix contains the formal grammar for the \gsiril\ language,
+expressed in Extended Backus-Naur Form%
+\index{Backus-Naur form, extended}\footnote{This appendix specifically
+uses the form of EBNF used in §6 of the XML 1.0 standard.}  
+It is unlikely to be of interest to most readers.
+
+\section{Statements}
+\label{stmt_grammar}
+
+\begin{Verbatim}[xleftmargin=0pt]
+statement      ::=  defn_stmt | prove_stmt | bells_stmt | rows_stmt |
+                    extents_stmt | rounds_stmt | row_mask_stmt | 
+                    echo_stmt | import_stmt | version_stmt | exit_stmt
+
+defn_stmt      ::=  name assign_op expression?
+assign_op      ::=  "=" | "?=" | ":"
+
+prove_stmt     ::=  "prove" expression
+ 
+bells_stmt     ::=  integer "bells"
+rows_stmt      ::=  integer ( "to" integer )? "rows"
+extents_stmt   ::=  integer "extents"
+rounds_stmt    ::=  "rounds" row
+row_mask_stmt  ::=  row_mask" pattern
+
+echo_stmt      ::=  "echo" (string | expression)?
+import_stmt    ::=  "import" string
+version_stmt   ::=  "version"
+exit_stmt      ::=  "exit" | "quit" | "end"
+\end{Verbatim}
+
+\chapter{Initialisation file}\label{initfile}
+
+\begin{Verbatim}[xleftmargin=0pt]
+__summary__ = "# rows ending in @"
+
+true         = __summary__, "Touch is true"
+notround     = __summary__, "Is this OK?"
+false        = __summary__, "Touch is false in $ rows"
+tooshort     = __summary__, "Touch is too short: \",
+                            "at least ${min_length} rows expected"
+toolong      = "Touch exceeds maximum length of ${max_length} rows$$"
+conflict     = __summary__, "Touch not completed due to false row$$"
+
+rounds   =
+start    =
+finish   =
+abort    =
+
+// This gets overwritten by gsiril after reading the init file if the -E 
+// option has been given.
+everyrow = 
+\end{Verbatim}
+
+\clearpage
+\phantomsection
+\footnotesize
+\printindex[default][\normalsize 
+\addcontentsline{toc}{chapter}{Index}
+Underlined page references refer to the main definition of that option
+or variable.  Subjects are not generally indexed when they appear
+in the discussion of a similarly-named option.  
+]
+
+\normalsize
+\chapter*{Colophon}
+\addcontentsline{toc}{chapter}{Colophon}
+
+This manual was typeset using \XeTeX\index{Xetex@\XeTeX}, a document 
+typesetting package written by Jonathan Kew.  It is derived from 
+\LaTeX, written by Leslie Lamport, but includes support for the Unicode 
+character set and OpenType fonts.
+Both are derived from Donald Knuth's original \TeX\ typesetting engine.  
+These are all open source products and are freely available on a variety of 
+operating systems, include GNU/Linux. 
+
+The main font used is Linux Libertine, an open source OpenType font designed
+by Philipp Poll.  The sans serif font used in chapter and section headings
+is Linux Biolinum, also designed by Philipp Poll.  Despite their names,
+neither font is specific to Linux.  Equations are set using Donald Knuth's 
+Computer Modern font.  The monospaced font used for code fragments and
+row literals is the Computer Modern Teletype font, again by Donald Knuth.%
+\index{fonts}
+
+The ringing-related programs described in this document are available as
+part of the Ringing Class Library project,\index{Ringing Class Library}
+and \gsiril\ uses it for manipulation rows, changes and methods, 
+reading method libraries, analysing music, proof and much more.  
+The Ringing Class Library was started by Martin Bright\index{Bright, Martin} 
+and contains contributions from Richard Smith and Mark Banner.
+
+The source code for this manual is available from the Ringing Class Library
+GitHub\index{GitHub} repository and is itself open source.  Any additions or
+corrections to the manual will be gratefully received.\index{open source}
+
+\vfil
+\footnotesize
+Permission is granted to copy, distribute and/or modify this
+document under the terms of the GNU Free Documentation License,
+Version 1.3 or any later version published by the Free Software
+Foundation; with no Invariant Sections, no Front-Cover Texts and
+no Back-Cover Texts.\index{licence}
+
+
+\end{document}
