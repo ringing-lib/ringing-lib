@@ -20,6 +20,7 @@
 #include <ringing/cclib.h>
 #include <ringing/mslib.h>
 #include <ringing/xmllib.h>
+#include <ringing/methodset.h>
 #include <ringing/method_stream.h>
 #include <ringing/streamutils.h>
 
@@ -106,52 +107,7 @@ arguments::arguments( int argc, char const *argv[] )
     exit(1);
 }
 
-class filter {
-public:
-  filter( arguments const& args ) 
-    : args(args) 
-  {
-    for ( vector< string >::const_iterator 
-            i( args.titles.begin() ), e( args.titles.end() ); i != e; ++i )
-      titles[*i] = 0u;
-  }
-
-  bool test( library_entry const& m ) const;
-  bool check() const;
-
-private:
-  const arguments& args;
-  mutable map<string, unsigned> titles;
-};
-
-bool filter::test( const library_entry& le ) const {
-  if ( args.bells && le.bells() != args.bells )
-    return false;
-
-  map<string, unsigned>::iterator i = titles.find( le.fullname() );
-  if ( i != titles.end() ) ++i->second;
-  else if ( titles.size() ) return false;
-
-  return true;
-}
-
-bool filter::check() const {
-  bool ok = true;
-  for (map<string, unsigned>::const_iterator 
-         i = titles.begin(), e = titles.end(); i != e; ++i)
-    if (i->second > 1u) {
-      cerr << "Method found multiple times: " << i->first << endl;
-      ok = false;
-    }
-    else if (i->second == 0u) {
-      cerr << "Method not found: " << i->first << endl;
-      ok = false;
-    }
-  return ok;
-}
-
-void read_library( const string &filename, const filter& f,
-                   libout& out ) {
+void read_library( const string &filename, libout& out ) {
   try {
    library l( filename );
 
@@ -165,9 +121,7 @@ void read_library( const string &filename, const filter& f,
       exit(1);
     }
 
-    for ( library::const_iterator i(l.begin()), e(l.end()); i != e; ++i )
-      if ( f.test(*i) )
-        out.append(*i);
+    copy( l.begin(), l.end(), back_inserter(out) );
   }
   catch ( const exception &e ) {
     cerr << "Unable to read library: " << filename << ": " 
@@ -197,12 +151,24 @@ int main(int argc, char const** argv) {
 
   library::setpath_from_env();
 
-  method_stream out(args.inc_bells);
-  filter f(args);
-  
+  methodset meths;
   for ( vector< string >::const_iterator 
           i( args.libs.begin() ), e( args.libs.end() ); i != e; ++i )
-    read_library( *i, f, out );
+    read_library( *i, meths );
+  
+  method_stream out(args.inc_bells);
+  
+  bool okay = true;
+  for ( vector< string >::const_iterator 
+          i( args.titles.begin() ), e( args.titles.end() ); i != e; ++i ) {
+    library_entry le = meths.find(*i);
+    if (le.null()) {
+      cerr << "Method not found: " << *i << endl;
+      okay = false;
+    }
 
-  return f.check() ? 0 : 1;
+    out.append(le);
+  }
+ 
+  return okay ? 0 : 1;
 }
