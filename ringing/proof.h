@@ -1,5 +1,5 @@
 // -*- C++ -*- proof.h - Proving Stuff
-// Copyright (C) 2001, 2002, 2006, 2008, 2011 
+// Copyright (C) 2001, 2002, 2006, 2008, 2011, 2021
 // Mark Banner <mark@standard8.co.uk>
 // and Richard Smith <richard@ex-parrot.com>
 
@@ -93,7 +93,7 @@ public:
   size_t count_row( const row& r ) const;
 
   // The length of the touch
-  size_t size() const { return m.size(); }
+  size_t size() const;
 
   size_t duplicates() const { return dups; }
 
