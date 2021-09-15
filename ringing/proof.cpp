@@ -1,5 +1,5 @@
 // proof.cpp - Proving Stuff
-// Copyright (C) 2001, 2002, 2006, 2008, 2010, 2011
+// Copyright (C) 2001, 2002, 2006, 2008, 2010, 2011, 2021
 // Mark Banner <mark@standard8.co.uk>
 // and Richard Smith <richard@ex-parrot.com>
 
@@ -45,6 +45,13 @@ size_t prover::count_row( const row& r ) const
     n += distance( rng.first, rng.second );
   }
 
+  return n;
+}
+
+size_t prover::size() const {
+  size_t n(0);
+  for ( prover const* p = this; p; p = p->chain.get() )
+    n += p->m.size();
   return n;
 }
 

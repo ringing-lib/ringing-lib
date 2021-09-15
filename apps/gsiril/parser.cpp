@@ -860,6 +860,8 @@ msparser::make_expr( vector< token >::const_iterator first,
 	return expression( new boolean_node(false) );
       else if ( *first == "bells" )
 	return expression( new bells_node() );
+      else if ( *first == "length" )
+	return expression( new length_node() );
       else if ( *first == "endproof" )
 	return expression( new endproof_node() );
       else if ( *first == "proving" )

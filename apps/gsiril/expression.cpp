@@ -709,6 +709,16 @@ RINGING_LLONG bells_node::int_evaluate( proof_context& ctx ) const
   return ctx.bells();
 }
 
+void length_node::debug_print( ostream &os ) const
+{
+  os << "rows";
+}
+
+RINGING_LLONG length_node::int_evaluate( proof_context& ctx ) const
+{
+  return ctx.length();
+}
+
 void integer_node::debug_print( ostream &os ) const
 {
   os << value;
