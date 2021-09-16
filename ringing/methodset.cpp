@@ -51,11 +51,10 @@ public:
 
     shared_pointer< library_facet_base > 
       get_facet( const library_facet_id& id ) const;
+    void set_facet( shared_pointer< library_facet_base > const& facet ) 
+      { facets[ facet->get_id() ] = facet; }
  
   private:
-    void copy_facets( library_entry const& src, 
-                      vector<library_facet_id> const& ids );
-
     typedef map< library_facet_id, shared_pointer< library_facet_base > > 
       facet_map;
    
@@ -66,7 +65,7 @@ public:
   {
   public:
     entry_ref() : valid(false) {}
-    explicit entry_ref( set<entry>::const_iterator i ) : valid(true), i(i) {}
+    explicit entry_ref( set<entry>::iterator i ) : valid(true), i(i) {}
 
     virtual library_entry::impl *clone() const { 
       return new entry_ref(*this); 
@@ -81,10 +80,12 @@ public:
     virtual bool readentry( library_base &lb );
     virtual shared_pointer< library_facet_base > 
       get_facet( const library_facet_id& id ) const { return i->get_facet(id); }
+    virtual void set_facet( shared_pointer<library_facet_base> const& f )
+      { return const_cast<entry&>(*i).set_facet(f); }
 
  private:
     bool valid;
-    set<entry>::const_iterator i;
+    set<entry>::iterator i;
 
     friend class methodset::impl;
   };

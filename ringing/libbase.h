@@ -96,6 +96,7 @@ public:
 
     virtual shared_pointer< library_facet_base > 
       get_facet( const library_facet_id& id ) const;
+    virtual void set_facet( shared_pointer< library_facet_base > const& f );
   };
 
   // Public accessor functions
@@ -125,6 +126,13 @@ public:
   }
 
   template <class Facet>
+  void set_facet( typename Facet::type const& raw, Facet const* = NULL )
+  {
+    shared_pointer< library_facet_base > f( new Facet(raw) );
+    pimpl->set_facet(f);
+  }
+
+  template <class Facet>
   bool has_facet( Facet const* = NULL ) const 
   {
     return pimpl->has_facet( Facet::id );
@@ -134,6 +142,9 @@ public:
   shared_pointer< library_facet_base > 
       get_facet( const library_facet_id& id ) const
   { return pimpl->get_facet( id ); }
+
+  void set_facet( shared_pointer< library_facet_base > const& f )
+  { return pimpl->set_facet( f ); }
 
   bool has_facet( const library_facet_id& id ) const
   { return pimpl->has_facet( id ); }
