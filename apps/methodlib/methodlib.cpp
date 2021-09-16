@@ -22,6 +22,7 @@
 #include <ringing/xmllib.h>
 #include <ringing/methodset.h>
 #include <ringing/method_stream.h>
+#include <ringing/litelib.h>
 #include <ringing/streamutils.h>
 
 #include <map>
@@ -40,8 +41,10 @@ struct arguments
 
   init_val<int,0>       bells;
   vector<string>        titles;
+  vector<string>        payloads;
   init_val<bool,false>  read_titles;
   init_val<bool,false>  inc_bells;
+  init_val<bool,false>  copy_payload;
   vector<string>        libs;
 
 private:
@@ -68,6 +71,12 @@ void arguments::bind( arg_parser& p )
   p.add( new boolean_opt
            ( 'B', "print-bells",  "Include the number of bells in the output",
              inc_bells ) );
+
+  p.add( new boolean_opt
+           ( 'a', "copy-payload",  "Treat the input as tab-delimited with "
+                "the name in the first field, and copy the remaining fields "
+                "into the output instead of the full method title",
+             copy_payload ) );
 
   p.set_default( new strings_opt( '\0', "", "", "", libs ) );
 }
@@ -133,9 +142,21 @@ void read_library( const string &filename, libout& out ) {
 void read_titles( arguments& args ) {
   string line;
   while ( getline( cin, line ) ) {
-    size_t last = line.find_last_not_of(" \t\f\v\n\r");
-    if ( last != string::npos )
-      args.titles.push_back( line.substr(0, last+1) );
+    size_t i = line.find_last_not_of(" \t\f\v\n\r");
+    if ( i == string::npos ) continue;
+    // Trim trailing white space
+    line = line.substr(0, i+1);
+    if ( args.copy_payload ) {
+      i = line.find('\t');
+      if ( i == string::npos ) {
+        args.titles.push_back(line);
+        args.payloads.push_back(string());
+      } else {
+        args.titles.push_back(line.substr(0, i));
+        args.payloads.push_back(line.substr(i+1));
+      }
+    }
+    else args.titles.push_back(line);
   }
 }
 
@@ -159,15 +180,17 @@ int main(int argc, char const** argv) {
   method_stream out(args.inc_bells);
   
   bool okay = true;
-  for ( vector< string >::const_iterator 
-          i( args.titles.begin() ), e( args.titles.end() ); i != e; ++i ) {
-    library_entry le = meths.find(*i);
+  for ( size_t i=0, n=args.titles.size(); i != n; ++i ) {
+    library_entry le = meths.find( args.titles[i] );
     if (le.null()) {
-      cerr << "Method not found: " << *i << endl;
+      cerr << "Method not found: " << args.titles[i] << endl;
       okay = false;
     }
-
-    out.append(le);
+    else {
+      if (args.copy_payload)
+        le.set_facet<litelib::payload>( args.payloads[i] );
+      out.append(le);
+    }
   }
  
   return okay ? 0 : 1;

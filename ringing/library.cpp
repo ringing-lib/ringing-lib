@@ -218,6 +218,11 @@ library_entry::impl::get_facet( const library_facet_id& id ) const
   return shared_pointer< library_facet_base >();
 }
 
+void 
+library_entry::impl::set_facet( shared_pointer< library_facet_base > const& f )
+{
+}
+
 
 bool library_entry::impl::has_facet( const library_facet_id& id ) const
 {

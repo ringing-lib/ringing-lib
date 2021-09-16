@@ -1,5 +1,5 @@
 // -*- C++ -*- libfacet.h - Library extensibility mechanism
-// Copyright (C) 2004, 2010 Richard Smith <richard@ex-parrot.com>.
+// Copyright (C) 2004, 2010, 2021 Richard Smith <richard@ex-parrot.com>.
 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -34,11 +34,6 @@ RINGING_START_NAMESPACE
 
 RINGING_USING_STD
 
-class RINGING_API library_facet_base {
-public:
-  virtual ~library_facet_base() {}
-};
-
 class RINGING_API library_facet_id {
 public:
   library_facet_id();
@@ -51,6 +46,12 @@ private:
   friend bool operator==( const library_facet_id &, const library_facet_id & );
   friend bool operator<( const library_facet_id &, const library_facet_id & );
   mutable int id; 
+};
+
+class RINGING_API library_facet_base {
+public:
+  virtual ~library_facet_base() {}
+  virtual library_facet_id const& get_id() = 0;
 };
 
 RINGING_API
@@ -85,6 +86,7 @@ bool operator>=( const library_facet_id &a, const library_facet_id &b )
     FACET_NAME( const type &t ) : t(t) {}				\
     operator const type &() const { return t; }				\
     static const library_facet_id id;					\
+    virtual library_facet_id const& get_id() { return id; }             \
   private:								\
     static bool do_force_init();					\
     static const bool force_init;					\

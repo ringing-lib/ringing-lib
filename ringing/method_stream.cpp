@@ -24,6 +24,7 @@
 #include <iostream>
 
 #include <ringing/method_stream.h>
+#include <ringing/litelib.h>
 
 RINGING_START_NAMESPACE
 
@@ -35,7 +36,12 @@ public:
   
   virtual void append( library_entry const& entry ) {
     if (inc_bells) cout << entry.bells() << ":";
-    cout << entry.pn() << "\t" << entry.name() << endl;
+    cout << entry.pn() << "\t"; 
+    if (entry.has_facet<litelib::payload>())
+      cout << entry.get_facet<litelib::payload>();
+    else
+      cout << entry.name();
+    cout << endl;
   }
 
 private:
