@@ -394,9 +394,8 @@ void printrow_pdf::end_column()
   pp.f << "BT\n";
   // Draw random bits of text
   if(!text_bits.empty()) {
-    if (!opt.label_style.col.null) { 
-      pp.f << "q "; pp.set_colour(opt.label_style.col, true);
-    }
+    if (!opt.label_style.col.null)
+      pp.set_colour(opt.label_style.col, true);
     unsigned font_size = opt.style.size;
     if (opt.label_style.size)
       font_size = opt.label_style.size;
@@ -436,7 +435,8 @@ void printrow_pdf::end_column()
     }
     text_bits.clear();
     if(squashed) pp.f << "100 Tz\n";
-    if (!opt.label_style.col.null) pp.f << "Q\n";
+    if (!opt.label_style.col.null)
+      pp.set_colour(opt.style.col, true);
   }
 
   // Draw rule-offs
