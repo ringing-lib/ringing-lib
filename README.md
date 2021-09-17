@@ -35,6 +35,8 @@ Then in the Link tab, add Xerces's `.lib` file to "Object/library modules".
 
   Use of readline from Microsoft Visual Studio is untested.
 
+  If you are compiling on Debian Linux, we recommend having the `autoconf', 
+`libgdome2-dev' and `libreadline-dev' packages installed.
 
 Installation
 ------------
