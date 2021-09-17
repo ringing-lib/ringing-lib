@@ -139,10 +139,10 @@ bool parse_colour(const string& arg, colour& col)
       cerr << "Colour out of range: " << i << endl;
       return false;
     }
-    if(j==string::npos) { col.grey = true; col.red = i/100.0f; return true; }
-    col.red = i/100.0f;
     col.null = false;
-    
+    col.red = i/100.0f;
+    if(j==string::npos) { col.grey = true; return true; }
+   
     string::size_type k = arg.find('-', j+1);
     if (k==string::npos) {
       cerr << "Invalid colour: \"" << arg << "\"\n";
