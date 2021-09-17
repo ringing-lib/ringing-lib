@@ -53,14 +53,17 @@ void bell_fmt::set_colour(string const& str, int colour)
 
 void bell_fmt::set_colours(string const& r, string const& g, string const& b)
 {
+#if RINGING_USE_TERMCAP
   set_colour(r, COLOR_RED);
   set_colour(g, COLOR_GREEN);
   set_colour(b, COLOR_BLUE);
+#endif
 }
 
 
 ostream& bell_fmt::do_fmt::operator<<(bell b) const
 {
+#if RINGING_USE_TERMCAP
   map<bell, fmt>::const_iterator c( bf->fmts.find(b) );
 
   bool coloured = false, bold = false;
@@ -77,9 +80,11 @@ ostream& bell_fmt::do_fmt::operator<<(bell b) const
         *os << seq; bold = true;
       }
   }
+#endif
 
   *os << b;
 
+#if RINGING_USE_TERMCAP
   if ( c != bf->fmts.end() ) {
     if ( bold ) 
       if ( char const* seq = RINGING_TERMINFO_VAR( exit_attribute_mode ) ) 
@@ -88,6 +93,7 @@ ostream& bell_fmt::do_fmt::operator<<(bell b) const
       if ( char const* seq = RINGING_TERMINFO_VAR( orig_pair ) )
         *os << seq;
   }
+#endif
 
   return *os;
 }

@@ -352,6 +352,11 @@ vector<change> merge_node::pn_evaluate( proof_context& ctx ) const
   return pn;
 }
 
+expression merge_node::evaluate( proof_context& ctx ) const
+{
+  return expression( new pn_node( pn_evaluate(ctx) ) );
+}
+
 void merge_node::execute( proof_context& ctx, int dir ) const
 {
   // TODO: This is where we should handle overflow beyond the original block
