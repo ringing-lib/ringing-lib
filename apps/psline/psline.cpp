@@ -21,13 +21,9 @@
 
 #include <ringing/common.h>
 
-#if RINGING_OLD_INCLUDES
-#include <iostream.h>
-#include <fstream.h>
-#else
 #include <iostream>
 #include <fstream>
-#endif
+#include <stdexcept>
 #include <string>
 #include <ringing/row.h>
 #include <ringing/method.h>
@@ -130,42 +126,63 @@ bool parse_dimension(const string& arg, dimension& d)
   return true;
 }
 
+class colour_exception : public runtime_error { 
+ public:
+  colour_exception( string const& str ) : runtime_error(str) {}
+};
+
+float parse_colour_component(const string& arg, string::size_type start, 
+                             string::size_type end) 
+{
+  string::size_type len( end == string::npos ? string::npos : end-start );
+  string comp( arg.substr(start, len) );
+
+  int col;
+  try {
+    col = lexical_cast<int>(comp);
+  }
+  catch (bad_lexical_cast const&) {
+    throw colour_exception
+      ( make_string() << "Invalid colour compoent: \"" << comp 
+                      << "\" in \"" << arg << "\"" );
+  }
+
+  if (col < 0 || col > 100)
+    throw colour_exception
+      ( make_string() << "Colour component out of range: \"" << col
+                      << "\" in \"" << arg << "\"" );
+  return col/100.0f;
+}
+
 bool parse_colour(const string& arg, colour& col)
 {
   try {
-    string::size_type j = arg.find('-');
-    int i = lexical_cast<int>( arg.substr(0,j) );
-    if(i < 0 || i > 100) {
-      cerr << "Colour out of range: " << i << endl;
-      return false;
-    }
-    col.null = false;
-    col.red = i/100.0f;
-    if(j==string::npos) { col.grey = true; return true; }
-   
-    string::size_type k = arg.find('-', j+1);
-    if (k==string::npos) {
-      cerr << "Invalid colour: \"" << arg << "\"\n";
-      return false;
-    }
-    i = lexical_cast<int>( arg.substr(j+1, k-j-1) );
-    if(i < 0 || i > 100) {
-      cerr << "Colour out of range: " << i << endl;
-      return false;
-    }
-    col.green = i/100.0f;
+    string::size_type i = arg.find('-');
 
-    i = lexical_cast<int>( arg.substr(k+1, string::npos) );
-    if(i < 0 || i > 100) {
-      cerr << "Colour out of range: " << i << endl;
-      return false;
-    }
-    col.blue = i/100.0f;
-    col.grey = false;
-    return true;
+    float c1 = parse_colour_component(arg, 0, i);
+    if (i==string::npos) { col = colour(c1); return true; }
+
+    ++i;
+    string::size_type j = arg.find('-', i);
+    if (j==string::npos)
+      throw colour_exception
+        ( make_string() << "Invalid colour: \"" << arg << "\"" );
+
+    float c2 = parse_colour_component(arg, i, j);
+
+    i = j+1;
+    j = arg.find('-', i);
+
+    float c3 = parse_colour_component(arg, i, j);
+    if (j==string::npos) { col = colour(c1, c2, c3); return true; }
+
+    i = j+1;
+
+    float c4 = parse_colour_component(arg, i, string::npos);
+    col = colour(c1, c2, c3, c4); return true;
   } 
-  catch (bad_lexical_cast const&) {
-    cerr << "Invalid colour: \"" << arg << "\"\n";
+  catch (colour_exception const& e) {
+    cerr << e.what() << endl;
     return false;
   }
 }
@@ -474,7 +491,7 @@ bool myopt::process(const string& arg, const arg_parser& ap) const
 	}
 	printrow::options::line_style st;
 	st.width.n = 1; st.width.d = 2; st.width.u = dimension::points;
-	st.col.grey = false; st.col.red = st.col.green = 0; st.col.blue = 1.0;
+	st.col = colour(0, 0, 1.0);
 	st.crossing = false; 
         // 
         st.no_dots = (bl.size() == 1 && bl.back() == -2);
@@ -690,8 +707,7 @@ int main(int argc, char *argv[])
   args.vgap_mode = false;
   args.title_style.font = "Helvetica";
   args.title_style.size = 180;
-  args.title_style.col.grey = true;
-  args.title_style.col.red = 0;
+  args.title_style.col = colour(0);
   args.number_mode = printmethod::miss_lead;
   args.pn_mode = -1;
   args.rows_per_column = 0;
@@ -706,7 +722,7 @@ int main(int argc, char *argv[])
   args.grid = 0;
   args.grid_style.width.n = 1; args.grid_style.width.d = 4; 
   args.grid_style.width.u = dimension::points;
-  args.grid_style.col.grey = true; args.grid_style.col.red = 0.9f;
+  args.grid_style.col = colour(0.9f);
 
   // Parse the arguments
   {
@@ -719,7 +735,8 @@ int main(int argc, char *argv[])
 " as for example \"1 3/8 in\", \"1/2pt\" or \"1.3cm\".  Options requiring"
 " a COLOUR may be specified as either an integer between 0 and 100,"
 " signifying a grey level; or as three integers between 0 and 100, separated"
-" by minus signs (`-'), specifying red, green and blue levels.",
+" by minus signs (`-'), specifying red, green and blue levels; or as four"
+" integers specifying cyan, magenta, yellow and black levels.",
 			   "LIBRARY METHOD\nBELLS:PLACE-NOTATION");
     setup_args(p);
 

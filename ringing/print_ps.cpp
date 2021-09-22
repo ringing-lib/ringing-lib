@@ -92,6 +92,7 @@ const string printpage_ps::def_string =
 "/N {newpath} BD\n"
 "/SL {setlinewidth} BD\n"
 "/SC {setrgbcolor} BD\n"
+"/SM {setcmykcolor} BD\n"
 "/SG {setgray} BD\n"
 "/GS {gsave} BD\n"
 "/GR {grestore} BD\n"
@@ -236,10 +237,18 @@ void printpage_ps::set_text_style(const text_style& s)
 
 void printpage_ps::set_colour(const colour& c)
 {
-  if(c.grey) 
-    os << c.red << " SG\n";
-  else
-    os << c.red << ' ' << c.green << ' ' << c.blue << " SC\n";
+  switch (c.mode) {
+    case colour::grey:
+      os << c.white << " SG\n";
+      break;
+    case colour::rgb:
+      os << c.red << ' ' << c.green << ' ' << c.blue << " SC\n";
+      break;
+    case colour::cmyk:
+      os << c.cyan << ' ' << c.magenta << ' ' << c.yellow << ' ' 
+         << c.black << " SM\n";
+      break;
+  }
 }
 
 void printpage_ps::write_string(const string& s)

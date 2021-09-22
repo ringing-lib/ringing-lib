@@ -236,11 +236,19 @@ void printpage_pdf::landscape_mode()
 
 void printpage_pdf::set_colour(const colour& c, bool nonstroke)
 {
-  if(c.grey) 
-    f << c.red << ' ' << (nonstroke ? 'g' : 'G') << '\n';
-  else
-    f << c.red << ' ' << c.green << ' ' << c.blue << ' '
-      << (nonstroke ? "rg\n" : "RG\n");
+  switch (c.mode) {
+    case colour::grey:
+      f << c.red << ' ' << (nonstroke ? 'g' : 'G') << '\n';
+      break;
+    case colour::rgb:
+      f << c.red << ' ' << c.green << ' ' << c.blue << ' '
+        << (nonstroke ? "rg\n" : "RG\n");
+      break;
+    case colour::cmyk:
+      f << c.cyan << ' ' << c.magenta << ' ' << c.yellow << ' ' 
+        << c.black << (nonstroke ? " k\n" : " K\n");
+      break;
+  }
 }
 
 void printpage_pdf::circle(float x, float y, float r, char op)

@@ -32,15 +32,11 @@ RINGING_USING_STD
 
 printmethod::rule::rule() 
   : offset(0), repeat(0), flags() {
-  style.col.grey = false; 
-  style.col.red = style.col.green = style.col.blue = 0; 
   style.crossing = style.no_dots = false;
 }
 
 printmethod::rule::rule( pair<int,int> const& p ) 
   : offset(p.first), repeat(p.second) {
-  style.col.grey = false; 
-  style.col.red = style.col.green = style.col.blue = 0; 
   style.crossing = style.no_dots = false;
 }
 
@@ -70,13 +66,11 @@ void printmethod::defaults()
   printrow::options::line_style huntstyle, workstyle;
   workstyle.width.n = 1; workstyle.width.d = 2; 
   workstyle.width.u = dimension::points;
-  workstyle.col.grey = false; workstyle.col.red = 0; 
-  workstyle.col.green = 0; workstyle.col.blue = 1.0;
+  workstyle.col = colour(0, 0, 1.0);
   workstyle.crossing = workstyle.no_dots = false;
   huntstyle.width.n = 1; huntstyle.width.d = 4;
   huntstyle.width.u = dimension::points;
-  huntstyle.col.grey = false; huntstyle.col.red = 1.0;
-  huntstyle.col.green = 0; huntstyle.col.blue = 0;
+  huntstyle.col = colour(1.0, 0, 0);
   huntstyle.crossing = huntstyle.no_dots = false;
 
   opt.lines.clear();

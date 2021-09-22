@@ -51,15 +51,20 @@ class printpage;
 
 struct colour { 
   colour() 
-    : grey(true), red(0), green(0), blue(0), null(true) {}
-  explicit colour(float g)
-    : grey(true), red(g), green(0), blue(0), null(false) {}
+    : mode(null) {}
+  explicit colour(float w)
+    : mode(grey), white(w) {}
   colour(float r, float g, float b) 
-    : grey(false), red(r), green(g), blue(b), null(false) {}
+    : mode(rgb), red(r), green(g), blue(b) {}
+  colour(float c, float m, float y, float k) 
+    : mode(cmyk), cyan(c), magenta(m), yellow(y), black(k) {}
 
-  bool grey;
-  float red, green, blue;
-  bool null;
+  enum mode_t { null, grey, rgb, cmyk } mode;
+  union {
+    struct { float white; };
+    struct { float red, green, blue; };
+    struct { float cyan, magenta, yellow, black; };
+  };
 };
 
 struct text_style {
