@@ -110,18 +110,20 @@ void method::set_untitled(string const& str) {
   txt_untitled = str_untitled.c_str();
 }
 
+method::method(vector<change> const& ch, const string& n)
+  : vector<change>(ch), b( ch.size() ? ch.front().bells() : 0 ), myname(n)
+{}
+
 method::method(const char *pn, int b, const char *n) 
-  : b(b) 
+  : b(b), myname(n)
 {
-  name(n);
   interpret_pn(b, pn, pn + strlen(pn),
                back_insert_iterator<vector<change> >(*this));
 }
 
 method::method(const string& pn, int b, const string& n) 
-  : b(b) 
+  : b(b), myname(n)
 {
-  name(n);
   interpret_pn(b, pn.begin(), pn.end(),
                back_insert_iterator<vector<change> >(*this));
 }

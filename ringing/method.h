@@ -53,18 +53,7 @@ class row;
 
 // method - A method.
 class RINGING_API method : public vector<change> {
-private:
-  int b;                        // The number of bells
-  string myname;		// The name of the method, without Major etc. 
-
-  static const char *txt_untitled;
-
-  static const char *txt_classes[12];  // Bob, Place etc.
-  static const char *txt_differential; // Differential
-  static const char *txt_stages[20];   // Minimus, Doubles etc.
-
-public: 
-
+ public: 
   enum m_class {
     M_UNKNOWN,
     M_PRINCIPLE,
@@ -85,12 +74,8 @@ public:
   static const char *txt_double; // Double
   static const char *txt_little; // Little
 
-  const char *name(void) const	// Get name
-    { return myname.c_str(); }
-  void name(const char *n)	// Set name
-    { myname = n; }
-  void name(const string& n)
-    { myname = n; }
+  const char *name() const      { return myname.c_str(); }
+  void name(const string& n)    { myname = n; }
   string fullname() const;
 
   static const char *stagename(int n); // Get the name of this stage
@@ -105,7 +90,9 @@ public:
   // Make a method from place notation
   method(const char *pn, int b, const char *n = txt_untitled);
   method(const string& pn, int b, const string& n = txt_untitled);
-  
+
+  explicit method(vector<change> const& ch, const string& n = txt_untitled);
+
   ~method() {}
   void swap( method& other ) {
     vector<change>::swap(other); 
@@ -158,6 +145,16 @@ public:
 #if RINGING_BACKWARDS_COMPATIBLE(0,3,0)
   char *fullname(char *c) const; // Return the full name
 #endif
+
+ private:
+  int b;                        // The number of bells
+  string myname;		// The name of the method, without Major etc. 
+
+  static const char *txt_untitled;
+
+  static const char *txt_classes[12];  // Bob, Place etc.
+  static const char *txt_differential; // Differential
+  static const char *txt_stages[20];   // Minimus, Doubles etc.
 };
 
 RINGING_END_NAMESPACE
