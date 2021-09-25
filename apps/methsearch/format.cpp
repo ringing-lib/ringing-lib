@@ -455,26 +455,11 @@ format_string::format_string( const string &infmt,
         }
 
       switch ( *iter ) {
-        case 'n': case 'N':
-          have_names = true;
-          break;
-
-        case 'i':
-          have_cc_ids = true;
-          break;
-
-        case 'a':
-          have_payloads = true;
-          break;
-
-        case 'F':
-          have_falseness_groups = true;
-          break;
-
-        case 'D':
-          have_old_lhcodes = true;
-          break;
-
+        case 'n': case 'N': have_names = true; break;
+        case 'i': have_cc_ids = true; break;
+        case 'a': have_payloads = true; break;
+        case 'F': have_falseness_groups = true; break;
+        case 'D': have_old_lhcodes = true; break;
         case 'h': case 'r':
           max_lead_offset = max( max_lead_offset, num_opt );
         }
