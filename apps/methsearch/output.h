@@ -1,5 +1,5 @@
 // -*- C++ -*- output.h - generic classes to handle output of methods
-// Copyright (C) 2002, 2003, 2004, 2010, 2011 
+// Copyright (C) 2002, 2003, 2004, 2010, 2011, 2021 
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -41,7 +41,8 @@ public:
   explicit method_properties( const method& m, const string& payload );
   explicit method_properties( const library_entry& e );
 
-  string get_property( int num_opt, const string& name ) const;
+  string get_property( pair<int, int> const& num_opts, 
+                       const string& name ) const;
 
 private:
   class impl2;

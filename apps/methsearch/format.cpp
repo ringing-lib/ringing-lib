@@ -194,7 +194,7 @@ bool histogram_entry::cmp::operator()( const histogram_entry &x,
 {
   assert( &x.f == &y.f );
 
-  for ( vector< pair<int, string> >::const_iterator 
+  for ( vector< pair< pair<int,int>, string> >::const_iterator 
           i( x.f.vars.begin() ), e( x.f.vars.end() );  i != e;  ++i )
     {
       // These are not taken into account when comparing strings
@@ -209,8 +209,8 @@ bool histogram_entry::cmp::operator()( const histogram_entry &x,
       if ( i->second == "*" ) {
         // TODO: We should cache these in case they contain lengthy 
         // command invocations and/or non-deterministic output
-        xval = expression_cache::evaluate(i->first, x.props);
-        yval = expression_cache::evaluate(i->first, y.props);
+        xval = expression_cache::evaluate(i->first.first, x.props);
+        yval = expression_cache::evaluate(i->first.first, y.props);
       }
       else {
         xval = x.props.get_property( i->first, i->second );
@@ -247,14 +247,21 @@ void histogram_entry::print( ostream &os2, RINGING_ULLONG count ) const
           if ( *iter == '$' ) 
             {
               string::const_iterator iter2(++iter);
-
-              while ( iter != end && isdigit(*iter) )
-                ++iter;
+              while ( iter != end && isdigit(*iter) ) ++iter;
               
               int num_opt = 0;
               if ( iter2 != iter )
                 num_opt = atoi( string( &*iter2, &*iter ).c_str() );
               
+              int num2_opt = 0;
+              if ( *iter == ',' ) {
+                ++iter; iter2 = iter;
+                while ( iter != end && isdigit(*iter) ) ++iter;
+
+                if ( iter2 != iter )
+                  num2_opt = atoi( string( &*iter2, &*iter ).c_str() );
+              }
+             
               switch ( *iter )
                 {
                 case '%': case '$': case ')':
@@ -270,7 +277,8 @@ void histogram_entry::print( ostream &os2, RINGING_ULLONG count ) const
                   break;
 
                 default:
-                  os << props.get_property( num_opt, string(1, *iter) );
+                  os << props.get_property( make_pair(num_opt, num2_opt), 
+                                            string(1, *iter) );
                 }
             }
           else
@@ -378,7 +386,6 @@ format_string::format_string( const string &infmt,
       bool got_num_opt = false;
       {
         string::const_iterator iter2(iter);
-        
         while ( iter != end && isdigit(*iter) ) ++iter;
 
         if ( iter == end ) 
@@ -387,6 +394,23 @@ format_string::format_string( const string &infmt,
         if ( iter != iter2 ) {
           got_num_opt = true;
           num_opt = atoi( string( &*iter2, &*iter ).c_str() );
+        }
+      }
+
+      int num2_opt = 0;
+      bool got_num2_opt = false;
+      if ( *iter == ',' ) {
+        ++iter;
+        string::const_iterator iter2(iter);
+        while ( iter != end && isdigit(*iter) ) ++iter;
+
+        if ( iter == end ) 
+          throw argument_error( "End of format reached whilst processing "
+                                "numeric argument to `$'" );
+ 
+        if ( iter != iter2 ) {
+          got_num2_opt = true;
+          num2_opt = atoi( string( &*iter2, &*iter ).c_str() );
         }
       }
 
@@ -432,10 +456,11 @@ format_string::format_string( const string &infmt,
         case '%': case '$': case 'c': case 'b': case 'M': 
         case 'o': case 'u': case ')': case 'L': case 's':
         case 'i': case '#': case '?': case 'B': case 'G':
+        case 'p': case 'q':
           // Option may but needn't have a number
           break;
 
-        case 'n': case 'N': case 'p': case 'q': case 'Q': case 'l': 
+        case 'n': case 'N': case 'Q': case 'l': 
         case 'C': case 'S': case 'F': case 'd': case '[': case '(':
         case 'y': case 'O': case 'D': case 'a': case 'T': case 'V':
         case 'U':
@@ -452,7 +477,16 @@ format_string::format_string( const string &infmt,
               ( make_string() << "The `$" << *iter << "' "
                 "format specifier must be preceeded by a number" );
           break;
-        }
+      }
+
+      if ( got_num2_opt ) switch ( *iter ) {
+        case 'p': case 'q': break;
+
+        default:
+          throw argument_error
+            ( make_string() << "The `$" << *iter << "' "
+              "format specifier must not be preceeded by two numbers" );
+      }
 
       switch ( *iter ) {
         case 'n': case 'N': have_names = true; break;
@@ -462,7 +496,7 @@ format_string::format_string( const string &infmt,
         case 'D': have_old_lhcodes = true; break;
         case 'h': case 'r':
           max_lead_offset = max( max_lead_offset, num_opt );
-        }
+      }
 
       // $[ options are converted into $N* options by the ']' 
       // handling code. 
@@ -473,12 +507,14 @@ format_string::format_string( const string &infmt,
           
         // Pass numeric arg through
         if (got_num_opt) *outfmts.top() << num_opt;
+        if (got_num2_opt) *outfmts.top() << ',' << num2_opt;
         
         *outfmts.top() << *iter;
 
         // Mark the option as used
         if ( !in_expr && !in_exec_expr ) 
-          vars.push_back( make_pair( num_opt, string(1, *iter) ) );
+          vars.push_back( make_pair( make_pair(num_opt, num2_opt),
+                                     string(1, *iter) ) );
       }
     }
     else if ( *iter == '\\' ) {
@@ -527,7 +563,7 @@ format_string::format_string( const string &infmt,
         // $[N]* is magic.  It means look up pre-parsed expression N.
         *outfmts.top() << '$' << n << '*';
         if ( !in_expr && !in_exec_expr )
-          vars.push_back( make_pair( n, "*" ) );
+          vars.push_back( make_pair( make_pair(n,0), "*" ) );
       } 
       catch ( const argument_error& e ) {
         // Add more context to the error
@@ -565,7 +601,7 @@ format_string::format_string( const string &infmt,
         // $[N]* is magic.  It means look up pre-parsed expression N.
         *outfmts.top() << '$' << n << '*';
         if ( !in_expr && !in_exec_expr )
-           vars.push_back( make_pair( n, "*" ) );
+           vars.push_back( make_pair( make_pair(n,0), "*" ) );
       } 
       catch ( const argument_error& e ) {
         // Add more context to the error

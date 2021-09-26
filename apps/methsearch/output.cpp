@@ -76,7 +76,8 @@ public:
   explicit impl2( const method& m, const string& payload )
     : m(m), payload(payload), named(false) {}
 
-  string get_property( int num_opt, const string& name ) const;
+  string get_property( pair<int,int> const& num_opts, 
+                       const string& name ) const;
 
 private:
   // library_entry::impl interface:
@@ -97,7 +98,7 @@ private:
   mutable method m;
   const string payload;
   mutable bool named; // Have we looked up the name; not whether it is named
-  mutable map< pair< int, string >, string > cache;
+  mutable map< pair< pair<int,int>, string >, string > cache;
 };
 
 string method_properties::impl2::pn() const
@@ -132,14 +133,36 @@ string method_properties::impl2::base_name() const
   return m.name();
 }
 
-string method_properties::impl2::get_property( int num_opt, 
+static string format_pn( const method& m, pair<int,int> const& nums, 
+                         int fmt_opts ) {
+  if (nums.first) {
+    if ( nums.first > m.size() || nums.first <= 0 ) 
+      throw runtime_error( "Place notation offset out of range" );
+    method::const_iterator i( m.begin() + nums.first - 1 );
+
+    vector<change> ch;
+    if (nums.second) {
+      if ( nums.second > m.size() || nums.second < nums.first ) 
+        throw runtime_error( "Place notation offset out of range" );
+      method::const_iterator e( m.begin() + nums.second );
+
+      ch.assign(i, e);
+    }
+    else ch.assign(i, i+1);
+
+    return method(ch).format( fmt_opts );
+  }
+  else return m.format( fmt_opts );
+}
+
+string method_properties::impl2::get_property( pair<int,int> const& num_opts,
 					       const string& prop_name ) const
 {
-  pair< int, string > cache_key( num_opt, prop_name );
+  pair< pair<int,int>, string > cache_key( num_opts, prop_name );
 
   {
     // Is it in the cache?
-    map< pair< int, string >, string >::const_iterator cacheval
+    map< pair< pair<int,int>, string >, string >::const_iterator cacheval
       = cache.find( cache_key );
     if ( cacheval != cache.end() )
       return cacheval->second;
@@ -153,7 +176,7 @@ string method_properties::impl2::get_property( int num_opt,
       switch ( prop_name[0] ) 
 	{
 	case 'L':
-	  os << setw(num_opt) << m.size();
+	  os << setw(num_opts.first) << m.size();
 	  break;
 	  
 	case 'l': 
@@ -161,12 +184,13 @@ string method_properties::impl2::get_property( int num_opt,
 	  break;
 
 	case 'p': 
-	  os << m.format( method::M_UCROSS | method::M_DOTS | 
-			  method::M_EXTERNAL );
+	  os << format_pn( m, num_opts, method::M_UCROSS | method::M_DOTS | 
+			                method::M_EXTERNAL );
 	  break;
 
 	case 'q': 
-	  os << m.format( method::M_DASH | method::M_FULL_SYMMETRY );
+	  os << format_pn( m, num_opts, method::M_DASH | 
+                                        method::M_FULL_SYMMETRY );
 	  break;
 
 	case 'Q': 
@@ -177,9 +201,9 @@ string method_properties::impl2::get_property( int num_opt,
 	case 'r': {
 	  // TODO:  Should we cache all rows at same time?
 	  row r( m.bells() );
-	  int n( num_opt );
+	  int n( num_opts.first );
 	  for ( method::const_iterator 
-		  i( m.begin() ), e( m.begin() + num_opt );
+		  i( m.begin() ), e( m.begin() + num_opts.first );
 		n && i != e; ++i, --n ) 
 	    r *= *i;
 	  if ( n )
@@ -189,7 +213,7 @@ string method_properties::impl2::get_property( int num_opt,
 
 	case 'h': 
 	  try { 
-            os << m.at( num_opt-1 ); 
+            os << m.at( num_opts.first-1 ); 
           } catch ( out_of_range const& ) {
             // This should only happen if we're filtering with -U0 and no -n.
             os << expr_error_string;
@@ -197,23 +221,23 @@ string method_properties::impl2::get_property( int num_opt,
 	  break;
 
 	case 'b': 
-	  os << setw(num_opt) << m.maxblows();
+	  os << setw(num_opts.first) << m.maxblows();
 	  break;
 
 	case 'o': 
-	  os << setw(num_opt) << m.leads();
+	  os << setw(num_opts.first) << m.leads();
 	  break;
 
 	case 'u': 
-	  os << setw(num_opt) << m.huntbells(); 
+	  os << setw(num_opts.first) << m.huntbells(); 
 	  break;
 
 	case 'G':
-	  os << setw(num_opt) << m.lh().num_cycles();
+	  os << setw(num_opts.first) << m.lh().num_cycles();
           break;
 
 	case 'B': 
-	  os << setw(num_opt) << m.bells(); 
+	  os << setw(num_opts.first) << m.bells(); 
 	  break;
 
 	case 'd': 
@@ -245,7 +269,7 @@ string method_properties::impl2::get_property( int num_opt,
 	  break;
 
 	case 'M': 
-	  os << setw(num_opt) << musical_analysis::analyse(m);
+	  os << setw(num_opts.first) << musical_analysis::analyse(m);
 	  break;
 
 	case 'F': 
@@ -253,7 +277,7 @@ string method_properties::impl2::get_property( int num_opt,
 	  break;
 
 	case 'P': {
-	  bell b(num_opt-1); os << b;
+	  bell b(num_opts.first-1); os << b;
 	  for ( method::const_iterator i( m.begin() ), e( m.end() ); 
 		i != e; ++i ) os << (b *= *i);
 	} break;
@@ -263,20 +287,20 @@ string method_properties::impl2::get_property( int num_opt,
 	  break;
 
         case 's':
-          os << setw(num_opt) << staticity(m);
+          os << setw(num_opts.first) << staticity(m);
           break;
 
 	case '#': {
 	  static RINGING_ULLONG n=0;
-	  os << setw(num_opt) << ++n;
+	  os << setw(num_opts.first) << ++n;
 	} break;
  
         case 'i': {
           library_entry const& e = method_libraries::instance().find(m);
           if ( !e.null() && e.has_facet<cc_collection_id>() )
-            os << setw(num_opt) << e.get_facet<cc_collection_id>();
+            os << setw(num_opts.first) << e.get_facet<cc_collection_id>();
           else 
-            os << string( num_opt, ' ' );
+            os << string( num_opts.first, ' ' );
         } break;
 
         case 'T': {
@@ -310,7 +334,7 @@ string method_properties::impl2::get_property( int num_opt,
 
         case '?':
           // Return it to avoid caching it
-          return os << setw(num_opt) << get_last_exec_status(); 
+          return os << setw(num_opts.first) << get_last_exec_status(); 
 
 	default:
 	  throw logic_error( "Unknown variable requested" );
@@ -355,10 +379,11 @@ method_properties::method_properties( const library_entry& le )
   }
 }
 
-string method_properties::get_property( int num_opt, const string& name ) const
+string method_properties::get_property( pair<int,int> const& num_opts,
+                                        const string& name ) const
 {
   // MSVC 6.0 has issues with the get_impl<impl>() syntax  
-  return get_impl( (impl2*)NULL )->get_property( num_opt, name );
+  return get_impl( (impl2*)NULL )->get_property( num_opts, name );
 }
 
 method_properties::~method_properties()
