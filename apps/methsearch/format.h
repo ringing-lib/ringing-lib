@@ -1,5 +1,5 @@
 // -*- C++ -*- format.h - classes to handle format specifiers
-// Copyright (C) 2002, 2003, 2004, 2010, 2011 
+// Copyright (C) 2002, 2003, 2004, 2010, 2011, 2021
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -109,7 +109,7 @@ struct format_string
   // List of variables in use.  This is solely used for statistics,
   // and does not include variables used inside expressions (this 
   // is because the expression itself, via $N*, is also included).
-  vector< pair< int, string > > vars;
+  vector< pair< pair<int,int>, string > > vars;
 
   bool has_name;
   bool has_falseness_group;

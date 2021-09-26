@@ -1,5 +1,5 @@
 // -*- C++ -*- expression.cpp - classes to handle expressions
-// Copyright (C) 2002, 2003, 2004, 2005, 2008, 2009, 2010, 2011
+// Copyright (C) 2002, 2003, 2004, 2005, 2008, 2009, 2010, 2011, 2021
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -322,7 +322,7 @@ private:
 class variable_node : public expression::s_node {
 public:
   explicit variable_node( const string& str )
-    : num_opt(0)
+    : num_opt(0), num2_opt(0)
   {
     // Skip the leading dollar
     string::const_iterator begin( str.begin() ), end( str.end() );
@@ -334,6 +334,13 @@ public:
     if ( iter != begin )
       num_opt = atoi( string( begin, iter ).c_str() );
 
+    if ( *iter == ',' ) {
+      string::const_iterator iter2(iter);
+      while ( iter != end && isdigit(*iter) ) ++iter;
+      if ( iter != iter2 )
+        num2_opt = atoi( string( iter2, iter ).c_str() );
+    }
+
     // What's left must be the name
     name.assign( iter, end );
   }
@@ -343,10 +350,10 @@ private:
     if ( name == "*" )
       return expression_cache::evaluate( num_opt, m );
     else
-      return m.get_property( num_opt, name );
+      return m.get_property( make_pair(num_opt, num2_opt), name );
   }
 
-  int num_opt;
+  int num_opt, num2_opt;
   string name;
 };
 
