@@ -1854,10 +1854,11 @@ seen by \methsearch\ --- they exist solely to make sure that the options
 typed in on the command line reach \methsearch\ in their intended form.
 
 {\def\D{\texttt{\$}}\def\N{$n$\/}\def\No{\textit{[$n$]}\/}
+\def\Nno{\textit{[$m$[\verb+,+$n$]]}\/}
 \def\F#1{\texttt{#1}\fspecd{#1}}
 \begin{xltabular}{\textwidth}{lX}
-\D\F{p}&The place notation (verbose format) --- see \sref{pn}\\
-\D\F{q}&The place notation (concise format)\\
+\D\Nno\F{p}&The place notation (verbose format) --- see \sref{pn}\\
+\D\Nno\F{q}&The place notation (concise format)\\
 \D\F{Q}&As \texttt{\$q} but without the lead end change%
   \index{place notation!printing|see{\texttt{\$p}, %
     \texttt{\$q} \textit{and} \texttt{\$Q}}}\\
@@ -1926,6 +1927,13 @@ methods with each type of symmetry.   The \verb+5+ tells \methsearch\
 to pad each count to five digits.\footnote{C programmers may recognise
 that this is inspired by the \verb+printf+ format specifiers, 
 for example \verb+%d+ versus \verb+%5d+.}
+
+The \verb+$q+ and \verb+$p+ variables may be prefixed by one or two integers.
+If one number is given, then just the place notation of that one change is
+printed, and if two integers are given, then the subsection of place notation
+between the two specified changes is printed.\footnote{Thus
+\verb+$+$n$\verb+p+ and \verb+$+$n$\verb+h+ are identical, but the $n$ may
+only be omitted in the former.}
 
 A small number of variables can only be used in specific 
 contexts.  The place notation, name and identifier variables, 
