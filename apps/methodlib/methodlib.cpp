@@ -43,6 +43,7 @@ struct arguments
   vector<string>        titles;
   vector<string>        payloads;
   init_val<bool,false>  read_titles;
+  string                starts_with;
   init_val<bool,false>  inc_bells;
   init_val<bool,false>  copy_payload;
   vector<string>        libs;
@@ -64,6 +65,10 @@ void arguments::bind( arg_parser& p )
            ( 't', "title",  "Find method with this full title.", "TITLE", 
              titles ) );
 
+  p.add( new string_opt
+           ( '\0', "starts-with",  "Find method whose name start with STR.", 
+             "STR", starts_with ) );
+
   p.add( new boolean_opt
            ( 'T', "read-titles",  "Read titles to find from standard input.",
              read_titles ) );
@@ -83,6 +88,11 @@ void arguments::bind( arg_parser& p )
 
 bool arguments::validate( arg_parser& ap )
 {
+  // Do this here so that it has lower priority than any libraries given
+  // explicitly on the command line
+  if ( char const* const lib_env = getenv("METHOD_LIBRARY") )
+    libs.push_back(lib_env);
+
   if ( libs.empty() ) {
     ap.error( "Please provide at least one library" );
     return false;
@@ -93,8 +103,8 @@ bool arguments::validate( arg_parser& ap )
     return false;
   }
 
-  if ( read_titles && titles.size() ) {
-    ap.error( "The -t and -T options cannot be used together" );
+  if ( read_titles + !titles.empty() + !starts_with.empty() != 1 ) {
+    ap.error( "Exactly one of -t, -T and --starts-with must be used");
     return false;
   }
 
@@ -104,7 +114,7 @@ bool arguments::validate( arg_parser& ap )
 arguments::arguments( int argc, char const *argv[] )
 {
   arg_parser ap( argv[0], "methodlib -- extract methods from a method library",
-                 "OPTIONS" );
+                 "[OPTIONS] [LIBRARY]" );
   bind( ap );
 
   if ( !ap.parse(argc, argv) ) {
@@ -160,6 +170,33 @@ void read_titles( arguments& args ) {
   }
 }
 
+bool filter_by_titles( library const& meths, arguments& args, libout& out ) {
+  bool okay = true;
+  for ( size_t i=0, n=args.titles.size(); i != n; ++i ) {
+    library_entry le = meths.find( args.titles[i] );
+    if (le.null()) {
+      cerr << "Method not found: " << args.titles[i] << endl;
+      okay = false;
+    }
+    else {
+      if (args.copy_payload)
+        le.set_facet<litelib::payload>( args.payloads[i] );
+      out.append(le);
+    }
+  }
+  return okay;
+}
+
+bool filter_by_start( library const& meths, arguments& args, libout& out ) {
+  for ( library::const_iterator i(meths.begin()), e(meths.end()); i != e; ++i )
+    if ( (!args.bells
+            || i->bells() == args.bells) &&
+         (args.starts_with.empty() 
+            || i->meth().fullname().rfind(args.starts_with, 0) == 0) )
+      out.append(*i);
+  return true;
+}
+
 int main(int argc, char const** argv) {
   arguments args( argc, argv );
 
@@ -179,19 +216,10 @@ int main(int argc, char const** argv) {
   
   method_stream out(args.inc_bells);
   
-  bool okay = true;
-  for ( size_t i=0, n=args.titles.size(); i != n; ++i ) {
-    library_entry le = meths.find( args.titles[i] );
-    if (le.null()) {
-      cerr << "Method not found: " << args.titles[i] << endl;
-      okay = false;
-    }
-    else {
-      if (args.copy_payload)
-        le.set_facet<litelib::payload>( args.payloads[i] );
-      out.append(le);
-    }
-  }
- 
+  bool okay = false;
+  if (args.titles.size())
+    okay = filter_by_titles(meths, args, out);
+  else
+    okay = filter_by_start(meths, args, out);
   return okay ? 0 : 1;
 }
