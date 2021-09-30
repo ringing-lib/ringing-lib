@@ -1122,7 +1122,7 @@ void searcher::new_midlead_change()
   // When we're automatically determining the lead length, we only have 
   // two change lists: one for h'stroke and one for b'stroke.
   vector< change > changes_to_try 
-    = args.allowed_changes[args.lead_len ? depth : depth % 2];
+    = args.allowed_changes[lead_len ? depth : depth % 2];
   assert( changes_to_try.size() );
 
   // We explicitly use random_int_generator as we know how to seed that.
