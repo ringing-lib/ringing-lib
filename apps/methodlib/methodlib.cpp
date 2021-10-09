@@ -202,11 +202,13 @@ bool filter_by_titles( library const& meths, arguments& args, libout& out ) {
 }
 
 bool filter_by_start( library const& meths, arguments& args, libout& out ) {
+  bool okay = false;
   for ( library::const_iterator i(meths.begin()), e(meths.end()); i != e; ++i )
     if ( args.starts_with.empty() 
            || i->meth().fullname().rfind(args.starts_with, 0) == 0 )
-      return apply_filters( args, *i, out );
-  return true;
+      if ( apply_filters( args, *i, out ) )
+        okay = true;
+  return okay;
 }
 
 int main(int argc, char const** argv) {
