@@ -535,7 +535,7 @@ char *method::lhcode(void) const
 int method::symmetry_point() const
 {
   const int n( size() );
-  assert( n%2 == 0 );
+  if ( n%2 ) return -1;
   for ( int i=0; i < (n%2==0 ? n/2 : n); ++i )
     // Try m[i] as the sym point
     if (is_palindromic_about(i))
