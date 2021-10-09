@@ -103,8 +103,8 @@ bool arguments::validate( arg_parser& ap )
     return false;
   }
 
-  if ( read_titles + !titles.empty() + !starts_with.empty() != 1 ) {
-    ap.error( "Exactly one of -t, -T and --starts-with must be used");
+  if ( read_titles + !titles.empty() + !starts_with.empty() > 1 ) {
+    ap.error( "At most one of -t, -T and --starts-with must be used");
     return false;
   }
 
