@@ -40,6 +40,7 @@ struct arguments
   arguments( int argc, char const *argv[] );
 
   init_val<int,0>       bells;
+  init_val<int,0>       length;
   vector<string>        titles;
   vector<string>        payloads;
   init_val<bool,false>  read_titles;
@@ -60,6 +61,9 @@ void arguments::bind( arg_parser& p )
 
   p.add( new integer_opt
            ( 'b', "bells",  "The number of bells.", "BELLS", bells ) );
+
+  p.add( new integer_opt
+           ( 'l', "length", "Require N changes per lead.", "N", length ) );
 
   p.add( new strings_opt
            ( 't', "title",  "Find method with this full title.", "TITLE", 
@@ -170,6 +174,15 @@ void read_titles( arguments& args ) {
   }
 }
 
+bool apply_filters( arguments& args, library_entry const& le, libout& out ) {
+  if ( (!args.bells || le.bells() == args.bells) &&
+       (!args.length || le.meth().length() == args.length) ) {
+    out.append(le);
+    return true;
+  }
+  else return false;
+}
+
 bool filter_by_titles( library const& meths, arguments& args, libout& out ) {
   bool okay = true;
   for ( size_t i=0, n=args.titles.size(); i != n; ++i ) {
@@ -181,7 +194,8 @@ bool filter_by_titles( library const& meths, arguments& args, libout& out ) {
     else {
       if (args.copy_payload)
         le.set_facet<litelib::payload>( args.payloads[i] );
-      out.append(le);
+      if (!apply_filters( args, le, out ))
+        okay = false;
     }
   }
   return okay;
@@ -189,11 +203,9 @@ bool filter_by_titles( library const& meths, arguments& args, libout& out ) {
 
 bool filter_by_start( library const& meths, arguments& args, libout& out ) {
   for ( library::const_iterator i(meths.begin()), e(meths.end()); i != e; ++i )
-    if ( (!args.bells
-            || i->bells() == args.bells) &&
-         (args.starts_with.empty() 
-            || i->meth().fullname().rfind(args.starts_with, 0) == 0) )
-      out.append(*i);
+    if ( args.starts_with.empty() 
+           || i->meth().fullname().rfind(args.starts_with, 0) == 0 )
+      return apply_filters( args, *i, out );
   return true;
 }
 
