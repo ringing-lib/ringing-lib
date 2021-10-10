@@ -153,25 +153,31 @@ void read_library( const string &filename, libout& out ) {
   }
 }
 
-void read_titles( arguments& args ) {
+bool read_one_title( arguments& args ) {
+  args.titles.clear();
+  args.payloads.clear();
+
   string line;
-  while ( getline( cin, line ) ) {
-    size_t i = line.find_last_not_of(" \t\f\v\n\r");
-    if ( i == string::npos ) continue;
-    // Trim trailing white space
-    line = line.substr(0, i+1);
-    if ( args.copy_payload ) {
-      i = line.find('\t');
-      if ( i == string::npos ) {
-        args.titles.push_back(line);
-        args.payloads.push_back(string());
-      } else {
-        args.titles.push_back(line.substr(0, i));
-        args.payloads.push_back(line.substr(i+1));
-      }
+  size_t i;
+  do {
+    if ( !getline( cin, line ) ) return false;
+    i = line.find_last_not_of(" \t\f\v\n\r");
+  } while ( i == string::npos );
+
+  // Trim trailing white space
+  line = line.substr(0, i+1);
+  if ( args.copy_payload ) {
+    i = line.find('\t');
+    if ( i == string::npos ) {
+      args.titles.push_back(line);
+      args.payloads.push_back(string());
+    } else {
+      args.titles.push_back(line.substr(0, i));
+      args.payloads.push_back(line.substr(i+1));
     }
-    else args.titles.push_back(line);
   }
+  else args.titles.push_back(line);
+  return true;
 }
 
 bool apply_filters( arguments& args, library_entry const& le, libout& out ) {
@@ -212,16 +218,14 @@ bool filter_by_start( library const& meths, arguments& args, libout& out ) {
 }
 
 int main(int argc, char const** argv) {
-  arguments args( argc, argv );
-
-  if (args.read_titles) read_titles(args);
-
   // Register mslib last, as various things can accidentally match it
   cclib::registerlib();
   xmllib::registerlib();
   mslib::registerlib();
 
   library::setpath_from_env();
+
+  arguments args( argc, argv );
 
   methodset meths;
   for ( vector< string >::const_iterator 
@@ -231,7 +235,13 @@ int main(int argc, char const** argv) {
   method_stream out(args.inc_bells);
   
   bool okay = false;
-  if (args.titles.size())
+  if (args.read_titles) {
+    okay = true;
+    while ( read_one_title(args) )
+      if (!filter_by_titles(meths, args, out))
+        okay = false;
+  }
+  else if (args.titles.size())
     okay = filter_by_titles(meths, args, out);
   else
     okay = filter_by_start(meths, args, out);
