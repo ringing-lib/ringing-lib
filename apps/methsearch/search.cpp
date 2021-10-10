@@ -31,13 +31,10 @@
 #include "format.h" // for clear_status
 #include "output.h"
 #include "libraries.h" // for filter_lib code
-#if RINGING_OLD_INCLUDES
-#include <vector.h>
-#include <algo.h>
-#else
+#include "mask.h"
+
 #include <vector>
 #include <algorithm>
-#endif
 #if RINGING_OLD_C_INCLUDES
 #include <assert.h>
 #include <math.h>
@@ -214,8 +211,11 @@ void searcher::filter( library const& in )
 
     try {
       filter_method = i->meth();
-      if ( !args.orig_lead_len )
-        lead_len = filter_method.length();
+      if ( !args.orig_lead_len ) {
+        lead_len = args.lead_len = filter_method.length();
+        if ( !parse_mask(args) ) 
+          continue;
+      }
       if ( i->has_facet<litelib::payload>() )
         filter_payload = i->get_facet<litelib::payload>();
       else
