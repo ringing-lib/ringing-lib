@@ -146,7 +146,7 @@ bool method::isregular(void) const
   return lh().ispblh(); 
 }
 
-string method::classname(int cl)
+string method::classname(int cl, int year)
 {
   string s;      //  12345678901234567890123456789012
   s.reserve(35); // "Differential Little Treble Place" is the longest class
@@ -157,6 +157,11 @@ string method::classname(int cl)
     if (s.size()) s += " ";
     s += txt_little;
   }
+  // Since the adoption of the Framework for Method Ringing, v1.00
+  // on 1 July 2019, the Hybrid class has not formed part of the method 
+  // name.
+  if ( year >= 2019 && (cl & M_MASK) == M_HYBRID ) cl &= ~M_MASK;
+
   if ( txt_classes[cl & M_MASK][0] ) {
     if (s.size()) s += " ";
     s += txt_classes[cl & M_MASK];
@@ -343,6 +348,8 @@ int method::methclass(int year) const
   if(tmax < bells()-1 || tmin > 0) cl |= M_LITTLE;
 
   // Is the treble path palindromic about two changes?
+  // Note the Hybrid class does still exist in the Framework for Method
+  // Ringing, v1.00, but does not form part of the method title.
   if (length() % 2) return cl | M_HYBRID;  
   int sym_point = symmetry_point(hb);
   if(sym_point == -1) return cl | M_HYBRID;
@@ -426,10 +433,10 @@ char *method::fullname(char *c) const
 }
 #endif
 
-string method::fullname() const
+string method::fullname(int year) const
 {
   string result = myname;
-  int cl = methclass();
+  int cl = methclass(year);
   if (!myname.empty()) result += ' ';
 
   if (myname == "Grandsire" || myname == "Reverse Grandsire"
@@ -441,7 +448,7 @@ string method::fullname() const
     ; // Nor does Union ...
   else
     {
-      const string cn( classname(cl) );
+      const string cn( classname(cl, year) );
       result += cn;
       if (cn.size()) result += ' ';
     }
