@@ -76,10 +76,10 @@ class RINGING_API method : public vector<change> {
 
   const char *name() const      { return myname.c_str(); }
   void name(const string& n)    { myname = n; }
-  string fullname() const;
+  string fullname(int year=9999) const;
 
   static const char *stagename(int n); // Get the name of this stage
-  static string classname(int cl); // Get the name of the class
+  static string classname(int cl, int year=9999); // Get the name of the class
 
   // Use txt instead of 'Untitled' for unnamed methods
   static void set_untitled(string const& txt);
