@@ -107,6 +107,7 @@
 % symbol index
 \newcommand{\symidx}[2]{} %{\index{{#1}@{\texttt{#1}}|see{#2}}}
 \newcommand{\ttcmdidx}[1]{\texttt{#1}\index{#1@{\texttt{#1}}}}
+\newcommand{\ttcmdsee}[2]{\texttt{#1}\index{#1@{\texttt{#1}}|see{\texttt{#2}}}}
 
 % \methsearch -- the program name
 \def\methsearch{\texttt{meth\-search}}
@@ -1451,26 +1452,28 @@ The \verb+--pn-format+ option\loid{fn-format} affects how place notation
 comma-separated list of strings which modify the format of the place notation
 as follows:
 \begin{itemize}
-\item \verb+dots+ (which may be abbreviated as `\verb+.+') instructs
+\item \ttcmdidx{dots} (which may be abbreviated as `\verb+.+') instructs
   \methsearch\ to always print a dot next to cross changes;
-\item \verb+external+ (which may be abbreviated `\verb+ext+') instructs
-  \methsearch\ to include all extenal places;
-\item \verb+lower-case+ (which may be written `\verb+lcross+' or
-  `\verb+x+') instructs \methsearch\ to write the cross change as \verb+x+ 
-  instead of \verb+-+;
-\item \verb+upper-case+ (which may be written `\verb+ucross+' or
-  `\verb+X+') instructs \methsearch\ to write the cross change as \verb+X+ 
-  instead of \verb+-+;
-\item \verb+std-symmetry+ (which may be abbreviated `\verb+std-sym+')
-  instructs \methsearch\ to only use the ampersand notation for palindromic
-  place notations\index{symmetry!palindromic} when the symmetry point is the
-  final change as in Plain Bob;
-\item \verb+no-symmetry+ (which may be abbreviated `\verb+no-sym+')
-  instructs \methsearch\ to never use the ampersand notation for palindromic
-  place notations; and 
-\item \verb+plus-prefix+ (which may be abbreviated `\verb+plus+' or
-  `\verb-+-') instructs \methsearch\ to add a \verb-+- prefix to any block
-  which does not have an \verb+&+ prefix.
+\item \ttcmdidx{external} (which may be abbreviated `\ttcmdsee{ext}{external}')
+  instructs \methsearch\ to include all extenal places;
+\item \ttcmdidx{lower-case} (or `\ttcmdsee{lcross}{lower-case}' or
+  `\ttcmdsee{x}{lower-case}') instructs \methsearch\ to write the cross change
+  as \verb+x+ instead of \verb+-+;
+\item \ttcmdidx{upper-case} (or `\ttcmdsee{ucross}{upper-case}' or
+  `\ttcmdsee{X}{upper-case}') instructs \methsearch\ to write the cross change
+  as \verb+X+ instead of \verb+-+;
+\item \ttcmdidx{std-symmetry} (or `\ttcmdsee{std-sym}{std-symmetry}') instructs
+  \methsearch\ to only use the ampersand notation for palindromic place
+  notations\index{symmetry!palindromic} when the symmetry point is the final
+  change as in Plain Bob;
+\item \ttcmdidx{no-symmetry} (or `\ttcmdsee{no-sym}{no-symmetry}') instructs
+  \methsearch\ to never use the ampersand notation for palindromic place
+  notations; and 
+\item \ttcmdidx{plus-prefix} (or `\ttcmdsee{plus}{plus-prefix}' or `\verb-+-')
+  instructs \methsearch\ to add a \verb-+- prefix to any block which does not
+  have an \verb+&+ prefix.\footnote{This is useful if the result is going to be
+  read by \texttt{gsiril} which requires all blocks of place notation to have
+  one of these prefixes in order to distinguish them from integers.}
 \end{itemize}
 
 \textit{Statistical output}\index{statistics} 
