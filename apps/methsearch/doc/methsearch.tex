@@ -697,7 +697,8 @@ Options can also be stored in response files (\sref{respfile}).
 \texttt{-n}&\texttt{--changes-per-lead=N}&The lead length\\
 \end{tabularx}
 
-The \verb+-b+ option is the only option that is always required.%
+The \verb+-b+ option is required except when filtering with a \verb+-I+ option
+(\sref{filtering}) in which case it is optional.%
 \oid{b}{bells}\index{bells!number of}
 Its argument is the number of bells and must be an integer between 2 and 33, 
 inclusive.  
@@ -1406,7 +1407,8 @@ by the \verb+-R+\oi{R} option which is discussed in \sref{variables}.
 By default, \methsearch\ prints just the methods' place notation and lead head
 --- i.e.\ omitting the \verb+-R+ option is equivalent to 
 specifying \verb+-R$p\t$l+ (unless \verb+-I+ is supplied in which
-case \verb+-R$p\t$a+ is assumed).
+case \verb+-R$p\t$a+ is assumed, or unless \verb+--pn-format+ option is given,
+in which case \verb+$q+ is used in place of \verb+$p+).
 
 The \verb+-o+ option\oid{o}{out-file} tells \methsearch\ to write all 
 method output (but not other types of output) into a file.  
@@ -1715,6 +1717,14 @@ methsearch -b\textit{n} -I \textit{\rm\it[other options]} < methods.txt
 
 Doing a search once and filtering it several times is frequently much faster
 than repeating the search once per attempt to filter it.
+
+The \verb+-b+ option\oi{b} is optional when filtering using \verb+-I+.  If it
+is omitted, methods in the input stream should include the number of bells 
+(e.g. by using a \verb+-R$B:$p+ option to \methsearch\ when creating the
+stream).  In the absence of a \verb+-b+ option, any lines in the input stream
+which do not specify the number of bells will be silently ignored.%
+\footnote{This means they are also not found when \verb+--invert-filter+ is
+used.}
 
 The \verb+--filter-lib+\loid{filter-lib} option is the same, except that
 instead of reading methods from standard input, it reads methods from
@@ -4330,10 +4340,10 @@ The \verb+--overwork-map+ and \verb+--underwork-map+ options (\sref{overunder})
 take the name of a file whose contents are a method stream, and the payloads
 are the names of the over- or underwork.
 
-Frequently, \methsearch's output is a method stream — specifically
-whenever a \verb+-R+ option starting with \verb+$p+, \verb+$q+, \verb+$U+ or
-\verb+$V+ is given (which is the default when no \verb+-R+ is given), and no
-statistical output or counts are requested.%
+Frequently, \methsearch's output is a method stream — specifically whenever a
+\verb+-R+ option starting with \verb+$p+, \verb+$q+, \verb+$U+ or \verb+$V+ is
+given (which is the default when no \verb+-R+ is given), optionally prefixed
+with a \verb+$B:+, and no statistical output or counts are requested.%
 \footnote{This is because the \verb+-C+ and \verb+-H+ options also write to
 standard output, and their output will not conform to the method stream
 syntax, except in the case of \verb+-H"$U"+ or \verb+-H"$V"+.  A \verb+-u+
