@@ -32,6 +32,7 @@
 #include "format.h"
 #include "music.h"
 #include "methodutils.h"
+#include "output.h"
 #include "row_calc.h"
 #if RINGING_OLD_INCLUDES
 #include <algorithm.h>
@@ -572,6 +573,11 @@ void arguments::bind( arg_parser &p )
 	   "Create as a FMTTYPE library", "FMTTYPE",
 	   outfmt ) );
 
+  p.add( new string_opt
+	 ( '\0', "pn-format",
+	   "Format place notation as specified", "FMT",
+	   pn_fmt ) );
+
   p.add( new delegate_opt
          ( '\0', "unnamed-name",
            "Use NAME instead of 'Untitled' for unnamed methods", "NAME",
@@ -710,6 +716,35 @@ bool arguments::validate( arg_parser &ap )
       return false;
     }
 
+  if ( pn_fmt.size() ) {
+    size_t i = 0, j;
+    do { 
+      j = pn_fmt.find(',', i);
+      string s( pn_fmt, i, j-i );
+      if (s == "dots" || s == ".")
+        method_properties::pn_fmt_flags |= method::M_DOTS;
+      else if (s == "external" || s == "ext")
+        method_properties::pn_fmt_flags |= method::M_EXTERNAL;
+      else if (s == "lower-case" || s == "lcross" || s == "x") 
+        method_properties::pn_fmt_flags |= method::M_LCROSS;
+      else if (s == "upper-case" || s == "ucross" || s == "X") 
+        method_properties::pn_fmt_flags |= method::M_UCROSS;
+      else if (s == "std-symmetry" || s == "std-sym") {
+        method_properties::pn_fmt_flags &= ~method::M_FULL_SYMMETRY;
+        method_properties::pn_fmt_flags |= method::M_SYMMETRY;
+      }
+      else if (s == "no-symmetry" || s == "no-sym") 
+        method_properties::pn_fmt_flags &= ~method::M_FULL_SYMMETRY;
+      else if (s == "plus-prefix" || s == "plus" || s == "+") 
+        method_properties::pn_fmt_flags |= method::M_PLUS;
+      else {
+        ap.error( "Unknown place notation format: " + s );
+        return false;
+      }
+      i = j+1;
+    } while ( j != string::npos );
+  }
+
   if ( random_count > 0 && !random_order ) {
     ap.error( "--loop is only supported with --random" );
     return false;
@@ -731,7 +766,8 @@ bool arguments::validate( arg_parser &ap )
       if ( outfmt.empty() || outfmt == "fmt" || outfmt == "utf8" ) {
 	outfmt.erase();
 	if ( R_fmt_str.empty() )
-          R_fmt_str = filter_mode ? "$p\t$a" : "$p\t$l";
+          R_fmt_str = string(pn_fmt.size() ? "$q" : "$p") + "\t"
+                    + string(filter_mode ? "$a" : "$l");
 	outputs.add( new fmtout( R_fmt_str, outfile ) );
       } 
       else if ( outfmt == "xml" ) {

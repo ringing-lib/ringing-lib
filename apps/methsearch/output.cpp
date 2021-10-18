@@ -61,6 +61,8 @@
 RINGING_USING_NAMESPACE
 RINGING_USING_STD
 
+int method_properties::pn_fmt_flags = method::M_DASH | method::M_FULL_SYMMETRY;
+
 char const* expr_error_string = "<ERROR>";
 
 static bool formats_in_unicode = false;
@@ -189,13 +191,11 @@ string method_properties::impl2::get_property( pair<int,int> const& num_opts,
 	  break;
 
 	case 'q': 
-	  os << format_pn( m, num_opts, method::M_DASH | 
-                                        method::M_FULL_SYMMETRY );
+	  os << format_pn( m, num_opts, pn_fmt_flags );
 	  break;
 
 	case 'Q': 
-	  os << m.format( method::M_DASH | method::M_SYMMETRY |
-                          method::M_OMIT_LH );
+	  os << m.format( pn_fmt_flags | method::M_OMIT_LH );
 	  break;
 
 	case 'r': {
@@ -318,7 +318,7 @@ string method_properties::impl2::get_property( pair<int,int> const& num_opts,
           method work( split_over_and_under(m).first );
           library_entry le( overwork_map().find(work) );
           if ( le.null() || !le.has_facet<litelib::payload>() ) 
-            os << work.format( method::M_DASH | method::M_FULL_SYMMETRY );
+            os << work.format( pn_fmt_flags );
           else
             os << le.get_facet<litelib::payload>();
 	} break;
@@ -327,7 +327,7 @@ string method_properties::impl2::get_property( pair<int,int> const& num_opts,
           method work( split_over_and_under(m).second );
           library_entry le( underwork_map().find(work) );
           if ( le.null() || !le.has_facet<litelib::payload>() ) 
-            os << work.format( method::M_DASH | method::M_FULL_SYMMETRY );
+            os << work.format( pn_fmt_flags );
           else
             os << le.get_facet<litelib::payload>();
 	} break;

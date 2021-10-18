@@ -44,6 +44,8 @@ public:
   string get_property( pair<int, int> const& num_opts, 
                        const string& name ) const;
 
+  static int pn_fmt_flags;
+
 private:
   class impl2;
 };
