@@ -617,7 +617,7 @@ string method::format( int flags ) const
 
   int sym = size() / 2 - 1;
   if ( (flags & M_SYMMETRY) && size() > 2 
-       && ( issym() || (flags & M_FULL_SYMMETRY) 
+       && ( issym() || (flags & M_FULL_SYMMETRY) == M_FULL_SYMMETRY 
                        && !(flags & M_OMIT_LH)
                        && (sym = symmetry_point()) != -1 ) ) {
     if (sym != 0) out += '&';

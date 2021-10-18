@@ -154,6 +154,7 @@ struct arguments
 
   string overwork_map_file, underwork_map_file;
 
+  string pn_fmt;
   string H_fmt_str, R_fmt_str;
   string outfile;
   string outfmt;

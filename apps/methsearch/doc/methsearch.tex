@@ -1380,7 +1380,10 @@ what \methsearch\ does when it has found a method.
 \texttt{-o}&\texttt{--out-file=FILE}&Write methods to the given file\\
 \texttt{-O}&\texttt{--out-format=TYPE}&
   In conjunction with \texttt{-o} to specify the file format of \texttt{FILE}\\
+&\texttt{--pn-format=FMT}&Modify the format used to print place notations\\
 \texttt{-L}&\texttt{--library=LIB}&Use method library to look up method names\\
+&\texttt{--unnamed-name=NAME}&Use \texttt{NAME} instead of
+  `Untitled' for unnamed methods\loid{unnamed-name}\\
 \texttt{-H}&\texttt{--frequencies=FMT}&Count frequencies of method properties\\
 \texttt{-C}&\texttt{--count}&Count the methods found\\
 &\texttt{--raw-count}&A more concise version of \texttt{--count}\\
@@ -1440,6 +1443,34 @@ and, obviously, if you are using such a build, \verb+-Oxml+ will not be
 supported.  If \verb+-Oxml+ is specified then a \verb+-o+ option must be 
 supplied (and not \verb+-o-+).
 
+The \verb+--pn-format+ option\loid{fn-format} affects how place notation
+\index{place notation} is printed by the \verb+$q+, \verb+$Q+, \verb+$U+ and
+\verb+$V+ method variables (\sref{variables}).  Its argument is a
+comma-separated list of strings which modify the format of the place notation
+as follows:
+\begin{itemize}
+\item \verb+dots+ (which may be abbreviated as `\verb+.+') instructs
+  \methsearch\ to always print a dot next to cross changes;
+\item \verb+external+ (which may be abbreviated `\verb+ext+') instructs
+  \methsearch\ to include all extenal places;
+\item \verb+lower-case+ (which may be written `\verb+lcross+' or
+  `\verb+x+') instructs \methsearch\ to write the cross change as \verb+x+ 
+  instead of \verb+-+;
+\item \verb+upper-case+ (which may be written `\verb+ucross+' or
+  `\verb+X+') instructs \methsearch\ to write the cross change as \verb+X+ 
+  instead of \verb+-+;
+\item \verb+std-symmetry+ (which may be abbreviated `\verb+std-sym+')
+  instructs \methsearch\ to only use the ampersand notation for palindromic
+  place notations\index{symmetry!palindromic} when the symmetry point is the
+  final change as in Plain Bob;
+\item \verb+no-symmetry+ (which may be abbreviated `\verb+no-sym+')
+  instructs \methsearch\ to never use the ampersand notation for palindromic
+  place notations; and 
+\item \verb+plus-prefix+ (which may be abbreviated `\verb+plus+' or
+  `\verb-+-') instructs \methsearch\ to add a \verb-+- prefix to any block
+  which does not have an \verb+&+ prefix.
+\end{itemize}
+
 \textit{Statistical output}\index{statistics} 
 is for gathering basic statistics such as
 the number of methods with each lead head.  It is controlled by the 
@@ -1482,7 +1513,7 @@ This information is displayed on
 redirection using \verb+>+.
 \index{output|)}
 
-\subsection{Loading method libraries}
+\subsection{Loading method libraries}\label{libload}
 
 It is possible to use \verb+-R+ to get \methsearch\ to print the name of
 methods it finds.  To do this it needs access to one or more method libraries
@@ -2163,8 +2194,9 @@ decisions\index{Central Council!decisions},
 and \verb+$n+ contains its \textit{name}\index{name, method}.
 The title, \verb+$N+\fspec{N}, includes all classes that should be 
 included in the method name, even when the method is unnamed.  Unnamed methods
-are assigned the name `Untitled'.  In the case of Little Bob (and only that 
-case), the name, \verb+$n+, is the empty string; for all other methods,
+are assigned the name `Untitled'.\footnote{Unless this has been overridden 
+with the \verb+--unnamed-name+ option.} In the case of Little Bob (and only
+that case), the name, \verb+$n+, is the empty string; for all other methods,
 \verb+"$N"+ is equivalent to \verb+"$n $C $S"+.
 
 The path, \verb+$+$n$\verb+P+,\index{path}\fspec{P} contains the symbol for
@@ -4764,6 +4796,7 @@ small new features.
 \item Row matching: \verb+--row-match+ (\sref{misc_opt}); and its
 interaction with \verb+-FP+ (\sref{pendrows}).
 \item Any regular lead end: \verb+--any-regular-lh+ (\sref{le_lh}).
+\item Loading libraries implicitly: \verb+METHOD_LIBRARY+ (\sref{libload}).
 \end{list}
 
 \subsection{During 2021}
@@ -4772,6 +4805,10 @@ interaction with \verb+-FP+ (\sref{pendrows}).
 \item Multi-extent methods: \verb+-FN+ (\sref{multiextent}).
 \item Over and underworks: \verb+$V+, \verb+$U+ (\sref{variables});
   \verb+--overwork-map+, \verb+--underwork-map+ (\sref{overunder}).
+\item Changing name used for unnamed methods: \verb+--unnamed-name+ 
+  (\sref{output_opt}).
+\item Customised formatting of place notation: \verb+--pn-format+ 
+  (\sref{output_opt}).
 \end{list}
 
 \subsection{The future}
