@@ -241,9 +241,10 @@ void setup_args(arg_parser& p)
     " with colour COLOUR and thickness DIMENSION.  If `x' is included after"
     " BELL, draw the line only when that bell is passing another bell which"
     " has a line drawn.  If no arguments are given, don't draw any lines. "
-    " BELL may be `:a' for all bells, `:h' for all hunt bells, `:w' for all "
-    " working bells, or `:v' for one working bell.  This option may be used "
-    " multiple times.",
+    " BELL may be `:a' for all bells, `:h' for all hunt bells, `:t` for the"
+    " treble if it is a hunt bell, `:u` for all hunt bells except the treble,"
+    " `:w' for all working bells, or `:v' for one working bell.  This option"
+    " may be used multiple times.",
 		  "BELL[x][,COLOUR[,DIMENSION]]", true));
   p.add(new myopt('G', "guides",
     "Draw guides indicating bell positions, in style STYLE (currently"
@@ -470,6 +471,8 @@ bool myopt::process(const string& arg, const arg_parser& ap) const
 	    case 'h' : bl.push_back(-2); break; // All hunts
             case 'w' : bl.push_back(-3); break; // All working bells
             case 'v' : bl.push_back(-4); break; // One working bell
+	    case 'u' : bl.push_back(-5); break; // All hunts except treble
+	    case 't' : bl.push_back(-6); break; // The treble if a hunt
             default : 
 	      cerr << "Invalid bell: ':" << *s << "'\n";
 	      return false;
@@ -799,8 +802,11 @@ int main(int argc, char *argv[])
       for(b = 0; b < m.bells(); b = b + 1) {
 	j = args.lines.find(b);
 	if(j == args.lines.end()) {
-	  if(lh[b] == b) 
-	    j = args.lines.find(-2);
+	  if(lh[b] == b) {
+            if (b == 0) j = args.lines.find(-6);
+            else j = args.lines.find(-5);
+	    if (j == args.lines.end()) j = args.lines.find(-2);
+          }
 	  else {
 	    if(!found_working_bell && c.findplace(b)) { 
 	      j = args.lines.find(-4);
