@@ -73,6 +73,17 @@ public:
   bool calls_at_rules;
   dimension calls_voffset;
 
+  struct label {
+    explicit label( size_t row_number, string const& text = string(), 
+                    text_style::alignment align = text_style::left )
+      : row_number(row_number), text(text), align(align) {}
+
+    size_t row_number;
+    string text;
+    text_style::alignment align;
+  };
+  list<label> labels;
+
 public:
   void defaults(); 
 

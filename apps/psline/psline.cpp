@@ -58,6 +58,7 @@ struct arguments {
   map<int, printrow::options::line_style> lines;
   bool custom_rules;
   list<printmethod::rule> rules;
+  list<printmethod::label> labels;
   bool numbers;
   printmethod::number_mode_t number_mode;
   int pn_mode;
@@ -285,6 +286,9 @@ void setup_args(arg_parser& p)
     " {braces}.  Append `,rules' to print calling positions before rules"
     " rather than before the lead ends.  Append ,voffset=DIMENSION to shift"
     " calls up by that amount" ,"CALLS[,rules]"));
+  p.add(new myopt('T', "text", 
+    "Additional text to print next to row number NUM.  This option may be"
+    " used multiple times.", "NUM,TEXT"));
   p.add(new myopt('R', "rounds", "Starting row.","ROUNDS"));
   p.add(new myopt("Layout options:"));
   p.add(new myopt('L', "landscape",
@@ -576,6 +580,13 @@ bool myopt::process(const string& arg, const arg_parser& ap) const
       } else
 	args.title = "$";
       break;
+    case 'T': {
+      s = arg.begin();
+      int row_number = -1;
+      if (!parse_int(next_bit(arg, s), row_number)) return false;
+      printmethod::label l(row_number, string(s, arg.end()));
+      args.labels.push_back(l);
+      } break;
     case '\001' :
       args.title_style.font = arg;
       break;
@@ -843,6 +854,7 @@ int main(int argc, char *argv[])
 	  pm.rules.push_back(pair<int,int>(m.length(),0));
       }
     }
+    pm.labels = args.labels;
     if(args.placebells == -2) {
       bell b;
       pm.placebells = -1;

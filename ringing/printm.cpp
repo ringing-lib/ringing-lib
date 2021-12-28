@@ -247,7 +247,15 @@ void printmethod::print(printpage& pp)
             pr.text(pos, opt.xspace/2, text_style::left, false, true,
                     calls_voffset);
         }
+
         total_row_count++;
+
+        // Print labels
+        for (list<label>::const_iterator li = labels.begin(), le = labels.end();
+               li != le; ++li)
+          if (li->row_number == total_row_count)
+            pr.text(li->text, opt.xspace*3/2, li->align, false, 
+              li->align == text_style::left);
       }
 
       if (total_row_count < total_rows) { // Next column
