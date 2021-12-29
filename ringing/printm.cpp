@@ -152,8 +152,17 @@ void printmethod::print(printpage& pp)
       // Print the first row, which is the same as the last row of the
       // previous column.
       pr << b[i]; 
+
+      // Print a rule (if required) after the first row
       if (needrule(total_row_count-1, the_rule))
         pr.rule(the_rule.style, the_rule.flags);
+
+      // Print a label (if required) after the first row
+      for (list<label>::const_iterator li = labels.begin(), le = labels.end();
+             li != le; ++li)
+        if (li->row_number == total_row_count)
+          pr.text(li->text, opt.xspace*3/2, li->align, false, 
+            li->align == text_style::left);
 
       // Turn on number-missing if necessary
       if(number_mode == miss_column) {
