@@ -121,6 +121,51 @@ class mask_error : public invalid_argument {
 public:
   mask_error( const string& s ) : invalid_argument(s) {}
 };
+
+static int parse_int( string const& str ) {
+  try {
+    return lexical_cast<int>( str ); 
+  } 
+  catch (bad_lexical_cast) {
+    throw mask_error( make_string() << "Unable to parse \"" << str
+                           << "\" as a bell expression" );
+  }
+}
+
+
+static int parse_bell_expr( int bells, string const& expr ) {
+  // At the moment, the grammar for a bell expression is as follows:
+  //   BellExpr ::= "N" ("-" INT)? | INT
+
+  string::const_iterator i(expr.begin()), e(expr.end());
+  while (i != e && isspace(*i)) ++i;
+
+  if (*i == 'N') {
+    ++i; while (i != e && isspace(*i)) ++i;
+    if ( i == e ) return bells;
+
+    if ( *i != '-' ) 
+      throw mask_error( make_string() << "Invalid bell expression: "
+                          "expected '-' after 'N' in " << expr );
+    ++i; while (i != e && isspace(*i)) ++i;
+    return bells - parse_int( string(i,e) ); 
+  } 
+  else return parse_int( string(i,e) ); 
+}
+
+static string expand_bell_exprs( int bells, string const& pn ) {
+  make_string ret;
+  for ( string::const_iterator i=pn.begin(), e=pn.end(); i!=e; ) {
+    if (*i == '{') {
+      string::const_iterator j = read_bell_expr(i, e);
+      ret << bell( parse_bell_expr( bells, string(i+1,j-1) ) - 1 );
+      i = j;
+    }
+    else ret << *i++;
+  }
+  return ret;
+}
+
   
 shared_pointer<block> read_block( const int num,
                                   std::string::const_iterator &i, 
@@ -142,7 +187,7 @@ shared_pointer<block> read_block( const int num,
     while ( i != e && isspace( *i ) ) ++i; // Skip whitespace
   }
 
-  while ( i != e && ( bell::is_symbol(*i) || strchr("Xx-?*(", *i) ) ) {
+  while ( i != e && ( bell::is_symbol(*i) || strchr("Xx-?*({", *i) ) ) {
     switch (*i) {
       case '(':
         rv->data.push_back( vector<change>() );
@@ -188,11 +233,17 @@ shared_pointer<block> read_block( const int num,
 
       default: {
         std::string::const_iterator j( i );
-        while ( j!=e && ( bell::is_symbol(*j) && *j != 'X' && *j != 'x' ) ) 
-          ++j; // Pass over one change.
-        if ( i != j ) 
-          rv->data.push_back
-            ( vector<change>( 1u, change( num, string( i, j ) ) ) );
+        int depth = 0;
+        // Pass over one change.
+        while ( j != e && ( depth || (bell::is_symbol(*j) || *j == '{') ) ) {
+          if (*j == '{') ++depth;
+          else if (*j == '}') --depth;
+          ++j;
+        }
+        if ( i != j ) {
+          string pn = expand_bell_exprs( num, string(i, j) );
+          rv->data.push_back( vector<change>( 1u, change( num, pn ) ) );
+        }
         i = j;
       }
       break;
