@@ -1,5 +1,5 @@
 // -*- C++ -*- method_stream.h - lightweight output of methods
-// Copyright (C) 2021 Richard Smith <richard@ex-parrot.com>.
+// Copyright (C) 2021, 2022 Richard Smith <richard@ex-parrot.com>.
 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -36,7 +36,9 @@ RINGING_USING_STD
 
 class RINGING_API method_stream : public libout {
 public:
-  explicit method_stream(bool inc_bells = false);
+  enum name_form { payload_or_name, payload, name, full_title, none };
+
+  explicit method_stream(bool inc_bells = false, name_form = payload_or_name );
 
 private:
   class impl;
