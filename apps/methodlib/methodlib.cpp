@@ -1,5 +1,5 @@
 // -*- C++ -*- psline.cpp - print out lines for methods
-// Copyright (C) 2021 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2021, 2022 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -47,6 +47,7 @@ struct arguments
   string                starts_with;
   init_val<bool,false>  inc_bells;
   init_val<bool,false>  copy_payload;
+  init_val<bool,false>  full_title;
   vector<string>        libs;
 
 private:
@@ -86,6 +87,11 @@ void arguments::bind( arg_parser& p )
                 "the name in the first field, and copy the remaining fields "
                 "into the output instead of the full method title",
              copy_payload ) );
+
+  p.add( new boolean_opt
+           ( 'f', "full-title",  "Print the full method title, including "
+                "class and stage names",
+             full_title ) );
 
   p.set_default( new strings_opt( '\0', "", "", "", libs ) );
 }
@@ -231,8 +237,10 @@ int main(int argc, char const** argv) {
   for ( vector< string >::const_iterator 
           i( args.libs.begin() ), e( args.libs.end() ); i != e; ++i )
     read_library( *i, meths );
-  
-  method_stream out(args.inc_bells);
+ 
+  method_stream::name_form form = args.full_title ?
+    method_stream::full_title : method_stream::payload_or_name; 
+  method_stream out(args.inc_bells, form);
   
   bool okay = false;
   if (args.read_titles) {
