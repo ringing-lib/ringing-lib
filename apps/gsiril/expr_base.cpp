@@ -1,5 +1,5 @@
 // expr_base.cpp - Base classes, nodes and factory function for expressions
-// Copyright (C) 2005, 2011, 2012, 2019, 2020, 2021
+// Copyright (C) 2005, 2011, 2012, 2019, 2020, 2021, 2022
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -170,9 +170,6 @@ expression::apply_replacement( proof_context& ctx, vector<change>& m ) const {
 }
 
 void statement::execute( execution_context& e ) {
-  if (e.is_executing())
-    pimpl->execute(e);
-  else 
-    pimpl->skip(e);
+  pimpl->execute(e);
 }
 

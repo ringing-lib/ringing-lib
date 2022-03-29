@@ -1,5 +1,5 @@
 // -*- C++ -*- expr_base.h - Expression and statement interfaces
-// Copyright (C) 2002, 2003, 2004, 2005, 2011, 2012, 2019, 2020, 2021
+// Copyright (C) 2002, 2003, 2004, 2005, 2011, 2012, 2019, 2020, 2021, 2022
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -48,7 +48,6 @@ public:
   public:
     virtual ~impl() {}
     virtual void execute( execution_context& ) = 0;
-    virtual void skip( execution_context& ) {}
     virtual bool is_definition() const { return false; }
   };
 

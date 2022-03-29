@@ -1,6 +1,6 @@
 // statement.cpp - Code to execute different types of statement
-// Copyright (C) 2002, 2003, 2004, 2005, 2010, 2011, 2012, 2019, 2020, 2021
-// Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003, 2004, 2005, 2010, 2011, 2012, 2019, 2020, 2021,
+// 2022 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -266,11 +266,21 @@ void echo_stmt::execute( execution_context& e )
   }
 }
 
-void if_stmt::execute( execution_context& e ) {
-  switch (type) {
-    case push_if:       e.push_if(expr);       break;
-    case chain_else_if: e.chain_else_if(expr); break;
-    case chain_else:    e.chain_else();        break;
-    case pop_if:        e.pop_if();            break;
-  }
+void compound_stmt::execute( execution_context& ex ) {
+  for ( vector<statement>::iterator i=stmts.begin(), e=stmts.end(); 
+          i != e; ++i )
+    i->execute(ex);
+}
+
+void if_stmt::push( expression const& cond, statement const& stmt ) {
+  alts.push_back( make_pair(cond, stmt) );
+}
+
+void if_stmt::execute( execution_context& ex ) {
+  for ( vector< pair< expression, statement > >::iterator 
+          i = alts.begin(), e = alts. end(); i != e; ++i )
+    if ( ex.evaluate_bool_const(i->first) ) {
+      i->second.execute(ex);
+      return;
+    }
 }

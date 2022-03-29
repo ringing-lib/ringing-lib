@@ -1,5 +1,5 @@
 // -*- C++ -*- statement.h - Code to execute different types of statement
-// Copyright (C) 2003, 2004, 2005, 2011, 2019, 2020, 2021
+// Copyright (C) 2003, 2004, 2005, 2011, 2019, 2020, 2021, 2022
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -32,8 +32,7 @@
 
 
 // Defines a symbol
-class definition_stmt : public statement::impl
-{
+class definition_stmt : public statement::impl {
 public:
   explicit definition_stmt( const string& name, const expression& val )
     : defn(name, val) {}
@@ -47,8 +46,7 @@ private:
 
 // Default definition of a symbol 
 // (defines only if not already defined)
-class default_defn_stmt : public statement::impl
-{
+class default_defn_stmt : public statement::impl {
 public:
   explicit default_defn_stmt( const string& name, const expression& val )
     : defn(name, val) {}
@@ -61,8 +59,7 @@ private:
 };
 
 // Immediate definition of a symbol, evaluating its value
-class immediate_defn_stmt : public statement::impl
-{
+class immediate_defn_stmt : public statement::impl {
 public:
   explicit immediate_defn_stmt( const string& name, const expression& val )
     : name(name), val(val) {}
@@ -79,8 +76,7 @@ private:
 // These can be emited by directives that are handled
 // entirely within the parser.  The diagnostic allows the parser
 // to notify the user anything necessary.  It is only used if interactive.
-class null_stmt : public statement::impl
-{
+class null_stmt : public statement::impl {
 public:
   explicit null_stmt( const string& diagnostic = string() )
     : diagnostic(diagnostic) {}
@@ -92,8 +88,7 @@ private:
 };
 
 // Prove a touch
-class prove_stmt : public statement::impl
-{
+class prove_stmt : public statement::impl {
 public:
   explicit prove_stmt( const expression& expr )
     : expr(expr) {}
@@ -105,8 +100,7 @@ private:
 };
 
 // Set the number of extents
-class extents_stmt : public statement::impl
-{
+class extents_stmt : public statement::impl {
 public:
   explicit extents_stmt( int n )
     : n(n) {}
@@ -118,8 +112,7 @@ private:
 };
 
 // Set the default number of bells
-class bells_stmt : public statement::impl
-{
+class bells_stmt : public statement::impl {
 public:
   explicit bells_stmt( int bells )
     : bells(bells) {}
@@ -131,8 +124,7 @@ private:
 };
 
 // Set the expected length
-class rows_stmt : public statement::impl
-{
+class rows_stmt : public statement::impl {
 public:
   explicit rows_stmt( size_t len ) : len(len, len) {}
   rows_stmt( size_t len1, size_t len2 ) : len(len1, len2) {}
@@ -143,8 +135,7 @@ private:
   pair<size_t, size_t> len;
 };
 
-class rounds_stmt : public statement::impl
-{
+class rounds_stmt : public statement::impl {
 public:
   explicit rounds_stmt( const row& rounds )
     : rounds(rounds) {}
@@ -155,8 +146,7 @@ private:
   row rounds;
 };
 
-class row_mask_stmt : public statement::impl
-{
+class row_mask_stmt : public statement::impl {
 public:
   explicit row_mask_stmt( const string& mask )
     : mask(mask) {}
@@ -168,8 +158,7 @@ private:
 };
 
 // Import a resource
-class import_stmt : public statement::impl
-{
+class import_stmt : public statement::impl {
 public:
   explicit import_stmt( const string& name )
     : name(name) {}
@@ -181,8 +170,7 @@ private:
 };
 
 // Print a message
-class echo_stmt : public statement::impl
-{
+class echo_stmt : public statement::impl {
 public:
   enum mode_t { echo, warn, error };
 
@@ -197,22 +185,24 @@ private:
   mode_t mode;
 };
 
-class if_stmt : public statement::impl
-{
+class compound_stmt : public statement::impl {
 public:
-  enum type_t {
-    push_if, chain_else_if, chain_else, pop_if
-  };
-
-  explicit if_stmt( type_t type, const expression& expr = expression() )
-    : type(type), expr(expr) {}
+  void push( statement const& stmt ) { stmts.push_back(stmt); }
 
 private:
   virtual void execute( execution_context& );
-  virtual void skip( execution_context& ex ) { execute(ex); }
 
-  type_t type;
-  expression expr;
+  vector<statement> stmts;
+};
+
+class if_stmt : public statement::impl {
+public:
+  void push( expression const& cond, statement const& stmt );
+
+private:
+  virtual void execute( execution_context& );
+
+  vector< pair< expression, statement > > alts;
 };
 
 
