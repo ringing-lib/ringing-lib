@@ -284,3 +284,15 @@ void if_stmt::execute( execution_context& ex ) {
       return;
     }
 }
+
+void foreach_stmt::execute( execution_context& ex ) {
+  for ( vector<expression>::const_iterator i=opts.begin(), e=opts.end();
+          i != e; ++i ) {
+    ex.define_symbol( make_pair(name, *i) );
+    if ( ex.verbose() )
+      ex.output() << "Setting '" << name << "' in foreach loop." << endl;
+
+    stmt.execute(ex);
+  }
+}
+

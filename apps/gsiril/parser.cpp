@@ -61,6 +61,8 @@ namespace tok_types
     close_paren = ')',
     open_brace  = '{',
     close_brace = '}',
+    open_brack  = '[',
+    close_brack = ']',
     colon       = ':',
     comma       = ',',
     plus        = '+',
@@ -212,6 +214,7 @@ public:
     case logic_and: case logic_or: case equals: case not_equals: 
     case less: case greater: case less_eq: case greater_eq:
     case increment: case decrement: case logic_not:
+    case open_brack: case close_brack:
       // These can only work when msiril comments are disabled.
       // Regexp literals are disabled because they conflict with 
       // the MicroSiril comment; alternative blocks are disabled because
@@ -256,6 +259,7 @@ private:
 
   statement parse_command( vector<token> const& cmd );
   statement parse_if( expression const& cond );
+  statement parse_foreach( vector<token> const& cmd );
 
   expression make_expr( vector< token >::const_iterator first, 
 			vector< token >::const_iterator last ) const;
@@ -332,10 +336,12 @@ vector< token > msparser::tokenise_command()
 
 	  // Keep track of nesting
 	  if ( tokiter->type() == tok_types::open_paren || 
-	       tokiter->type() == tok_types::open_brace ) 
+	       tokiter->type() == tok_types::open_brace ||
+	       tokiter->type() == tok_types::open_brack ) 
 	    ++nesting;
 	  if ( tokiter->type() == tok_types::close_paren || 
-	       tokiter->type() == tok_types::close_brace ) 
+	       tokiter->type() == tok_types::close_brace ||
+	       tokiter->type() == tok_types::close_brack ) 
 	    if ( nesting > 0 )
 	      --nesting;
 
@@ -433,6 +439,10 @@ statement msparser::parse_command( vector<token> const& cmd ) {
   if ( cmd.size() > 1 && cmd[0].type() == tok_types::name && cmd[0] == "if" )
     return parse_if( make_expr(  cmd.begin() + 1, cmd.end() ) );
 
+  // Foreach statement blocks
+  if ( cmd[0].type() == tok_types::name && cmd[0] == "foreach" )
+    return parse_foreach(cmd);
+
   // Definition
   if ( cmd.size() > 1 && cmd[0].type() == tok_types::name
        && ( cmd[1].type() == tok_types::assignment ||
@@ -496,6 +506,45 @@ statement msparser::parse_if( expression const& cond1 ) {
   }
 }
 
+statement msparser::parse_foreach( vector<token> const& cmd ) {
+  // Syntax: foreach [ a, b, c ] as x
+  if ( cmd.size() < 5 || cmd[1].type() != tok_types::open_brack
+       || cmd[cmd.size()-3].type() != tok_types::close_brack
+       || cmd[cmd.size()-2].type() != tok_types::name
+       || cmd[cmd.size()-2] != "as" 
+       || cmd[cmd.size()-1].type() != tok_types::name )
+    throw runtime_error
+      ( "Malformed foreach statement" );
+
+  string const name( cmd[cmd.size()-1] );
+  vector<expression> vals;
+
+  typedef vector< token >::const_iterator iter_t;
+  iter_t first = cmd.begin()+2, last = cmd.end()-3, split;
+  while ( find( first, last, tok_types::comma, split ) ) {
+    vals.push_back( make_expr( first, split ) );
+    first = split+1;   
+  }
+  if ( first != last ) 
+    vals.push_back( make_expr( first, last ) );
+    
+  scoped_pointer<compound_stmt> block( new compound_stmt );
+  while (true) {
+    vector<token> cmd2( tokenise_command() );
+
+    if (cmd2.size() == 0) 
+      throw runtime_error
+        ( "Unexpected end of file while parsing foreach statement body" );
+
+    else if ( cmd2.size() == 1 && cmd2[0].type() == tok_types::name 
+              && cmd2[0] == "endfor" )
+      return statement
+        ( new foreach_stmt(name, vals, statement(block.release()) ) );
+
+    else block->push( parse_command(cmd2) );
+  }
+}
+
 //////////////////////////////////////////////////////////
 
 // Is the range [first, last) enclosed in a correctly-matched (open, close)
@@ -538,10 +587,12 @@ bool msparser::find_one_of( vector< token >::const_iterator first,
   bool found = false;
   for ( ; first != last; ++first )
     if      ( first->type() == tok_types::open_brace ||
-	      first->type() == tok_types::open_paren )
+	      first->type() == tok_types::open_paren ||
+	      first->type() == tok_types::open_brack )
       ++depth;
     else if ( first->type() == tok_types::close_brace ||
-	      first->type() == tok_types::close_paren )
+	      first->type() == tok_types::close_paren ||
+	      first->type() == tok_types::close_brack )
       --depth;
     else if ( depth == 0 )
       for ( vector<tok_types::enum_t>::const_iterator 

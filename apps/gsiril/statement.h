@@ -205,5 +205,18 @@ private:
   vector< pair< expression, statement > > alts;
 };
 
+class foreach_stmt : public statement::impl {
+public:
+  foreach_stmt( string const& name, vector<expression> const& opts,
+                statement const& stmt )
+    : name(name), opts(opts), stmt(stmt) {}
+
+private:
+  virtual void execute( execution_context& );
+
+  const string name;
+  vector<expression> opts;
+  statement stmt;
+};
 
 #endif // GSIRIL_STATEMENT_INCLUDED
