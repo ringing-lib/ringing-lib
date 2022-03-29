@@ -191,6 +191,7 @@ string string_node::string_evaluate( proof_context &ctx, bool* no_nl ) const
 
 void string_node::debug_print( ostream &os ) const
 {
+  if (flags & to_parent) os << "echo ";
   os << "\"" << str << "\"";
 }
  
@@ -262,7 +263,7 @@ pn_node::pn_node( int bells, const string &raw_pn )
 {
   if ( bells <= 0 )
     throw runtime_error( "Must set number of bells before using "
-			 "place notation" );
+                         "place notation" );
 
   string pn( expand_bell_exprs(bells, raw_pn) );
   interpret_pn( bells, pn.begin(), pn.end(), back_inserter( changes ) );
@@ -281,7 +282,7 @@ pn_node::pn_node( const vector<change>& m )
 void pn_node::debug_print( ostream &os ) const
 {
   copy( changes.begin(), changes.end(),
-	ostream_iterator< change >( os, "." ) );
+        ostream_iterator< change >( os, "." ) );
 }
 
 void pn_node::execute( proof_context &ctx, int dir ) const
@@ -368,7 +369,7 @@ transp_node::transp_node( int bells, const string &r )
 {
   if ( bells <= 0 )
     throw runtime_error( "Must set number of bells before using "
-			 "transpostions" );
+                         "transpostions" );
   
   transp *= r;
   if ( transp.bells() != bells )
@@ -509,25 +510,25 @@ static void validate_regex( const music_details& desc, int bells )
 
   if ( tok.find_first_not_of( allowed ) != string::npos )
     throw runtime_error( make_string() << "Illegal regular expression: '" 
-			 << tok << "' on " << bells << " bells" );
+                         << tok << "' on " << bells << " bells" );
 
   bool inbrack(false);
   for ( string::const_iterator i(tok.begin()), e(tok.end()); i!=e; ++i ) 
     switch (*i) {
     case '[':
       if ( inbrack ) 
-	throw runtime_error( "Unexpected '[' in regular expressions" );
+        throw runtime_error( "Unexpected '[' in regular expressions" );
       inbrack = true;
       break;
     case ']':
       if ( !inbrack )
-	throw runtime_error( "Unexpected ']' in regular expressions" );
+        throw runtime_error( "Unexpected ']' in regular expressions" );
       inbrack = false;
       break;
     case '*': case '?':
       if ( inbrack )
-	throw runtime_error( "Cannot use '*' or '?' in a [] block "
-			     "of a regular expression" );
+        throw runtime_error( "Cannot use '*' or '?' in a [] block "
+                             "of a regular expression" );
       break;
     }
 
@@ -972,3 +973,12 @@ expression::type_t call_node::type( proof_context &ctx ) const
   return ctx.lookup_symbol(name).type(ctx);
 }
 
+void save_node::execute( proof_context& ctx, int dir ) const
+{
+  ctx.save_symbol(name);
+}
+
+void save_node::debug_print( ostream& os ) const
+{
+  os << "save " << name;
+}

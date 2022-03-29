@@ -121,10 +121,55 @@ class mask_error : public invalid_argument {
 public:
   mask_error( const string& s ) : invalid_argument(s) {}
 };
+
+static int parse_int( string const& str ) {
+  try {
+    return lexical_cast<int>( str ); 
+  } 
+  catch (bad_lexical_cast) {
+    throw mask_error( make_string() << "Unable to parse \"" << str
+                           << "\" as a bell expression" );
+  }
+}
+
+
+static int parse_bell_expr( int bells, string const& expr ) {
+  // At the moment, the grammar for a bell expression is as follows:
+  //   BellExpr ::= "N" ("-" INT)? | INT
+
+  string::const_iterator i(expr.begin()), e(expr.end());
+  while (i != e && isspace(*i)) ++i;
+
+  if (*i == 'N') {
+    ++i; while (i != e && isspace(*i)) ++i;
+    if ( i == e ) return bells;
+
+    if ( *i != '-' ) 
+      throw mask_error( make_string() << "Invalid bell expression: "
+                          "expected '-' after 'N' in " << expr );
+    ++i; while (i != e && isspace(*i)) ++i;
+    return bells - parse_int( string(i,e) ); 
+  } 
+  else return parse_int( string(i,e) ); 
+}
+
+static string expand_bell_exprs( int bells, string const& pn ) {
+  make_string ret;
+  for ( string::const_iterator i=pn.begin(), e=pn.end(); i!=e; ) {
+    if (*i == '{') {
+      string::const_iterator j = read_bell_expr(i, e);
+      ret << bell( parse_bell_expr( bells, string(i+1,j-1) ) - 1 );
+      i = j;
+    }
+    else ret << *i++;
+  }
+  return ret;
+}
+
   
 shared_pointer<block> read_block( const int num,
-				  std::string::const_iterator &i, 
-				  const std::string::const_iterator &e )
+                                  std::string::const_iterator &i, 
+                                  const std::string::const_iterator &e )
 {
   const change cross(num,"X"), dummy;
 
@@ -135,152 +180,147 @@ shared_pointer<block> read_block( const int num,
 
   shared_pointer<block> rv( new block );
   rv->is_sym = (*i == '&');
-  if ( *i == '&' || *i == '+' )
-    {
-      ++i;
-      while ( i != e && isspace( *i ) ) ++i; // Skip whitespace
-      if ( i != e && *i == '.' ) ++i;	 // Skip a "." separator
-      while ( i != e && isspace( *i ) ) ++i; // Skip whitespace
+  if ( *i == '&' || *i == '+' ) {
+    ++i;
+    while ( i != e && isspace( *i ) ) ++i; // Skip whitespace
+    if ( i != e && *i == '.' ) ++i;    // Skip a "." separator
+    while ( i != e && isspace( *i ) ) ++i; // Skip whitespace
+  }
+
+  while ( i != e && ( bell::is_symbol(*i) || strchr("Xx-?*({", *i) ) ) {
+    switch (*i) {
+      case '(':
+        rv->data.push_back( vector<change>() );
+        while ( i != e && *i != ')' ) {
+          ++i; // Skip over '|' or '('
+          std::string::const_iterator j( i );
+          while ( j != e && *j != ')' && *j != '|' )
+            ++j; // Pass over one change.
+          if ( i != j ) 
+            rv->data.back().push_back( change( num, string( i, j ) ) );
+          i = j;
+          if ( i == e )
+            throw mask_error( "Unterminated '(' in mask" );
+          else if ( *i != '|' && *i != ')' )
+            throw mask_error( "Malformed list of alternatives in mask" );
+        }
+        ++i;
+        if ( rv->data.back().empty() )
+          throw mask_error( "Mask contains empty alternative list" );
+        break;
+
+      case 'X': case 'x': case '-':
+        ++i;
+        rv->data.push_back( vector<change>(1u,cross) );
+        break;
+
+      case '*':
+        ++i;
+        rv->data.push_back( vector<change>() ); // a dummy entry
+        // this will be expanded to the correct size later
+
+        if ( rv->got_star )
+          throw mask_error( "Mask must contain at most one '*'" );
+
+        rv->got_star = true;
+        rv->star_idx = rv->data.size()-1;
+        break;
+          
+      case '?':
+        ++i;
+        rv->data.push_back( vector<change>() );
+        break;
+
+      default: {
+        std::string::const_iterator j( i );
+        int depth = 0;
+        // Pass over one change.
+        while ( j != e && ( depth || (bell::is_symbol(*j) || *j == '{') ) ) {
+          if (*j == '{') ++depth;
+          else if (*j == '}') --depth;
+          ++j;
+        }
+        if ( i != j ) {
+          string pn = expand_bell_exprs( num, string(i, j) );
+          rv->data.push_back( vector<change>( 1u, change( num, pn ) ) );
+        }
+        i = j;
+      }
+      break;
     }
-
-  while ( i != e && ( bell::is_symbol(*i) || strchr("Xx-?*(", *i) ) )
-    {
-      switch (*i)
-	{
-	case '(':
-	  rv->data.push_back( vector<change>() );
-	  while ( i != e && *i != ')' )
-	    {
-	      ++i; // Skip over '|' or '('
-	      std::string::const_iterator j( i );
-	      while ( j != e && *j != ')' && *j != '|' )
-		++j; // Pass over one change.
-	      if ( i != j ) 
-		rv->data.back().push_back( change( num, string( i, j ) ) );
-	      i = j;
-	      if ( i == e )
-		throw mask_error( "Unterminated '(' in mask" );
-	      else if ( *i != '|' && *i != ')' )
-		throw mask_error( "Malformed list of alternatives in mask" );
-	    }
-	  ++i;
-	  if ( rv->data.back().empty() )
-	    throw mask_error( "Mask contains empty alternative list" );
-	  break;
-
-	case 'X': case 'x': case '-':
-	  ++i;
-	  rv->data.push_back( vector<change>(1u,cross) );
-	  break;
-
-	case '*':
-	  ++i;
-	  rv->data.push_back( vector<change>() ); // a dummy entry
-	  // this will be expanded to the correct size later
-
-	  if ( rv->got_star )
-	    throw mask_error( "Mask must contain at most one '*'" );
-
-	  rv->got_star = true;
-	  rv->star_idx = rv->data.size()-1;
-	  break;
-	    
-	case '?':
-	  ++i;
-	  rv->data.push_back( vector<change>() );
-	  break;
-
-	default:
-	  {
-	    std::string::const_iterator j( i );
-	    while ( j!=e && ( bell::is_symbol(*j) && *j != 'X' && *j != 'x' ) ) 
-	      ++j; // Pass over one change.
-	    if ( i != j ) 
-	      rv->data.push_back
-		( vector<change>( 1u, change( num, string( i, j ) ) ) );
-	    i = j;
-	  }
-	  break;
-	}
-	
-      while ( i != e && isspace( *i ) ) ++i; // Skip whitespace
-      if ( i != e && *i == '.' ) ++i;	     // Skip a "." separator
-      while ( i != e && isspace( *i ) ) ++i; // Skip whitespace
-    }
+    
+    while ( i != e && isspace( *i ) ) ++i; // Skip whitespace
+    if ( i != e && *i == '.' ) ++i;        // Skip a "." separator
+    while ( i != e && isspace( *i ) ) ++i; // Skip whitespace
+  }
    
-  if ( rv->is_sym )
-    {
-      rv->data.reserve( 2*rv->data.size() );
-      copy( rv->data.rbegin() + 1, rv->data.rend(),
-	    back_inserter( rv->data ) );
-    }
+  if ( rv->is_sym ) {
+    rv->data.reserve( 2*rv->data.size() );
+    copy( rv->data.rbegin() + 1, rv->data.rend(),
+          back_inserter( rv->data ) );
+  }
 
   return rv;
 }
 
 // Convert a '*' to a sequences of '?'s
 void expand_block( vector< vector< change > >& block1, 
-		   bool star_sym, size_t star_index, size_t expand_by )
+                   bool star_sym, size_t star_index, size_t expand_by )
 {
   if ( star_sym ) 
     assert( block1.size() % 2 );
 
   // A block like &-8-8-*
-  if ( star_sym && star_index == (block1.size() + 1) / 2 - 1 )
-    {
-      expand_by += 1;
-	
-      if ( expand_by < 0 )
-	throw mask_error( "The specified mask was too long" );
-	
-      else if ( expand_by % 2 == 0)
-	throw mask_error( "A symmetry-point '*' cannot be used to fill an "
-			  "even number of chanmes" );
-	
-      else if ( expand_by > 1 )
-	block1.insert( block1.begin() + star_index, 
-		       expand_by - 1, vector<change>() );
-    }
+  if ( star_sym && star_index == (block1.size() + 1) / 2 - 1 ) {
+    expand_by += 1;
+      
+    if ( expand_by < 0 )
+      throw mask_error( "The specified mask was too long" );
+      
+    else if ( expand_by % 2 == 0)
+      throw mask_error( "A symmetry-point '*' cannot be used to fill an "
+                        "even number of chanmes" );
+      
+    else if ( expand_by > 1 )
+      block1.insert( block1.begin() + star_index, 
+                     expand_by - 1, vector<change>() );
+  }
   // A block like &3.*.5.1.5
-  else if ( star_sym )
-    {
-      expand_by += 2;
-	
-      if ( expand_by < 0 )
-	throw mask_error( "The specified mask was too long" );
-	
-      else if ( expand_by % 2 == 1 )
-	throw mask_error( "A symmetric '*' cannot be used to fill an "
-			  "odd number of chanmes" );
-	
-      else if ( expand_by == 0 )
-	{
-	  block1.erase( block1.begin() + block1.size() - 1 - star_index );
-	  block1.erase( block1.begin() + star_index );
-	}
-      else if ( expand_by > 3 )
-	{
-	  block1.insert( block1.begin() + block1.size() - 1 - star_index,
-			 expand_by / 2 - 1, vector<change>() );
-	  block1.insert( block1.begin() + star_index,
-			 expand_by / 2 - 1, vector<change>() );
-	}
+  else if ( star_sym ) {
+    expand_by += 2;
+      
+    if ( expand_by < 0 )
+      throw mask_error( "The specified mask was too long" );
+      
+    else if ( expand_by % 2 == 1 )
+      throw mask_error( "A symmetric '*' cannot be used to fill an "
+                        "odd number of chanmes" );
+      
+    else if ( expand_by == 0 ) {
+      block1.erase( block1.begin() + block1.size() - 1 - star_index );
+      block1.erase( block1.begin() + star_index );
     }
+    else if ( expand_by > 3 ) {
+      block1.insert( block1.begin() + block1.size() - 1 - star_index,
+                     expand_by / 2 - 1, vector<change>() );
+      block1.insert( block1.begin() + star_index,
+                     expand_by / 2 - 1, vector<change>() );
+    }
+  }
   // An asymmetric block
-  else 
-    {
-      expand_by += 1;
-	
-      if ( expand_by < 0 )
-	throw mask_error( "The specified mask was too long" );
+  else {
+    expand_by += 1;
+      
+    if ( expand_by < 0 )
+      throw mask_error( "The specified mask was too long" );
 
-      else if ( expand_by == 0 )
-	block1.erase( block1.begin() + star_index );
+    else if ( expand_by == 0 )
+      block1.erase( block1.begin() + star_index );
 
-      else if ( expand_by > 1 )
-	block1.insert( block1.begin() + star_index,
-		       expand_by - 1, vector<change>() );
-    }
+    else if ( expand_by > 1 )
+      block1.insert( block1.begin() + star_index,
+                     expand_by - 1, vector<change>() );
+  }
 }
 
 bool read_and_expand_blocks( arguments& args,
@@ -309,97 +349,88 @@ bool read_and_expand_blocks( arguments& args,
     
     while ( i != e && isspace( *i ) ) ++i; // Skip whitespace
     
-    while ( i != e ) // iterate over each block in turn
-      {
-	// block is the current block being parsed.
-	// if currently parsing a below section, blocka contains 
-	// the above section
+    while ( i != e ) { // iterate over each block in turn
+      // block is the current block being parsed.
+      // if currently parsing a below section, blocka contains 
+      // the above section
 
-	shared_pointer<block> blka( read_block(args.bells, i, e) ), blkb;
-	
-	bool got_star(false); // Is block of unknown length?
-	
-	// Is block an above section?
-	if ( i != e && *i == '/' )
-	  {
-	    if ( !args.hunt_bells )
-	      throw mask_error( "Masks for principles may not contain "
-				"above and below sections" );
+      shared_pointer<block> blka( read_block(args.bells, i, e) ), blkb;
+      
+      bool got_star(false); // Is block of unknown length?
+      
+      // Is block an above section?
+      if ( i != e && *i == '/' ) {
+        if ( !args.hunt_bells )
+          throw mask_error( "Masks for principles may not contain "
+                            "above and below sections" );
 
-	    ++i; // skip '/'
-	    blkb = read_block(args.bells, i, e);
-	    
-	    if ( i != e && *i == '/' )
-	      throw mask_error( "Block may contain at most one '/'" );
-	    
-	    if ( !blka->got_star && !blkb->got_star )
-	      {
-		if ( blka->data.size() != blkb->data.size() ) 
-		  throw mask_error
-		    ("Above and below blocks are of different sizes" );
-	      }
-	    else if ( blka->got_star && blkb->got_star )
-	      {
-		if ( block1a.size() )
-		  throw mask_error( "Mask must contain at most one section of "
-				    "unknown length" );
-		
-		star_index_a = blka->star_idx;  star_sym_a = blka->is_sym;
-		star_index_b = blkb->star_idx;  star_sym_b = blkb->is_sym;
-		got_star = true;
-	      }
-	    else if ( blka->got_star )
-	      {
-		expand_block( blka->data, blka->is_sym, blka->star_idx,
-			      blkb->data.size() - blka->data.size() );
-		assert( blka->data.size() == blkb->data.size() );
-	      }
-	    else if ( blkb->got_star )
-	      {
-		expand_block( blkb->data, blkb->is_sym, blkb->star_idx,
-			      blka->data.size() - blkb->data.size() );
-		assert( blka->data.size() == blkb->data.size() );
-	      }
-	  }
-	else
-	  {
-	    if ( blka->got_star )
-	      {
-		if ( block1a.size() )
-		  throw mask_error( "Mask must contain at most one section of "
-				    "unknown length" );
-		
-		star_index_a = star_index_b = blka->star_idx;  
-		star_sym_a   = star_sym_b   = blka->is_sym;
-		got_star = true;
-	      }
-	    
-	    blkb = blka;
-	  }
-	
-	// Now append the blocks to the collections of blocks
-	{
-	  vector< vector<change> > &blockxa
-	    = got_star ? block1a : block1a.empty() ? block0a : block2a;
-	  
-	  copy( blka->data.begin(), blka->data.end(), 
-		back_inserter( blockxa ) );
-	}
-	{
-	  vector< vector<change> > &blockxb
-	    = got_star ? block1b : block1b.empty() ? block0b : block2b;
-	  
-	  copy( blkb->data.begin(), blkb->data.end(), 
-		back_inserter( blockxb ) );
-	}
-	
-	if ( i != e ) 
-	  {
-	    if ( *i != ',' ) throw place_notation::invalid(); 
-	    ++i; // Skip a "," separator
-	    while ( i != e && isspace(*i) ) ++i; // Skip whitespace
-	  }
+        ++i; // skip '/'
+        blkb = read_block(args.bells, i, e);
+        
+        if ( i != e && *i == '/' )
+          throw mask_error( "Block may contain at most one '/'" );
+        
+        if ( !blka->got_star && !blkb->got_star ) {
+          if ( blka->data.size() != blkb->data.size() ) 
+            throw mask_error
+              ("Above and below blocks are of different sizes" );
+        }
+        else if ( blka->got_star && blkb->got_star ) {
+          if ( block1a.size() )
+            throw mask_error( "Mask must contain at most one section of "
+                              "unknown length" );
+          
+          star_index_a = blka->star_idx;  star_sym_a = blka->is_sym;
+          star_index_b = blkb->star_idx;  star_sym_b = blkb->is_sym;
+          got_star = true;
+        }
+        else if ( blka->got_star ) {
+          expand_block( blka->data, blka->is_sym, blka->star_idx,
+                        blkb->data.size() - blka->data.size() );
+          assert( blka->data.size() == blkb->data.size() );
+        }
+        else if ( blkb->got_star ) {
+          expand_block( blkb->data, blkb->is_sym, blkb->star_idx,
+                        blka->data.size() - blkb->data.size() );
+          assert( blka->data.size() == blkb->data.size() );
+        }
       }
+      else {
+        if ( blka->got_star ) {
+          if ( block1a.size() )
+            throw mask_error( "Mask must contain at most one section of "
+                              "unknown length" );
+          
+          star_index_a = star_index_b = blka->star_idx;  
+          star_sym_a   = star_sym_b   = blka->is_sym;
+          got_star = true;
+        }
+        
+        blkb = blka;
+      }
+      
+      // Now append the blocks to the collections of blocks
+      {
+        vector< vector<change> > &blockxa
+          = got_star ? block1a : block1a.empty() ? block0a : block2a;
+        
+        copy( blka->data.begin(), blka->data.end(), 
+              back_inserter( blockxa ) );
+      }
+      {
+        vector< vector<change> > &blockxb
+          = got_star ? block1b : block1b.empty() ? block0b : block2b;
+        
+        copy( blkb->data.begin(), blkb->data.end(), 
+              back_inserter( blockxb ) );
+      }
+      
+      if ( i != e ) {
+        if ( *i != ',' ) throw place_notation::invalid(); 
+        ++i; // Skip a "," separator
+        while ( i != e && isspace(*i) ) ++i; // Skip whitespace
+      }
+    }
   }
 
   // ----------------------------------
@@ -409,30 +440,27 @@ bool read_and_expand_blocks( arguments& args,
   assert( block1a.empty() == block1b.empty() );
   assert( block2a.size()  == block2b.size()  );
 
-  if ( block1a.size() && block1b.size() )
-    {
-      // We have a section of unknown length
+  if ( block1a.size() && block1b.size() ) {
+    // We have a section of unknown length
 
-      expand_block( block1a, star_sym_a, star_index_a, lead_len -
-		    block0a.size() - block1a.size() - block2a.size() );
+    expand_block( block1a, star_sym_a, star_index_a, lead_len -
+                  block0a.size() - block1a.size() - block2a.size() );
 
-      expand_block( block1b, star_sym_b, star_index_b, lead_len -
-		    block0b.size() - block1b.size() - block2b.size() );
+    expand_block( block1b, star_sym_b, star_index_b, lead_len -
+                  block0b.size() - block1b.size() - block2b.size() );
 
-      assert( block0a.size() + block1a.size() + block2a.size()
-	      == size_t(lead_len) );
+    assert( block0a.size() + block1a.size() + block2a.size()
+            == size_t(lead_len) );
 
-      assert( block0b.size() + block1b.size() + block2b.size()
-	      == size_t(lead_len) );
-    }
-  else 
-    {
-      if ( block0a.size() + block2a.size() != size_t(lead_len) )
-	throw mask_error( make_string() << "The mask was of the wrong "
-			  "length: found " << (block0a.size() + block2a.size())
-			  << " changes; expected " << lead_len );
-    }
-  
+    assert( block0b.size() + block1b.size() + block2b.size()
+            == size_t(lead_len) );
+  }
+  else {
+    if ( block0a.size() + block2a.size() != size_t(lead_len) )
+      throw mask_error( make_string() << "The mask was of the wrong "
+                        "length: found " << (block0a.size() + block2a.size())
+                        << " changes; expected " << lead_len );
+  }
 
   args.allowed_changes.clear();
   copy( block1a.begin(), block1a.end(), back_inserter( block0a ) );
@@ -462,21 +490,20 @@ void select_changes_above( const arguments& args, vector<change>& changesa,
   // Choose the work above the treble
   for ( changes_iterator 
           j(active_above, args.bells-active_above, args.bells), e; 
-        j != e; ++j )
-    {
-      change a(*j); 
+        j != e; ++j ) {
+    change a(*j); 
 
-      // Handle -w
-      if ( args.right_place && i % 2 == args.bells % 2
-           && args.bells - a.count_places() != active_above )
-        continue;
-      
-      // Handle -f
-      if ( args.no_78_pns && active_above > 1 && a.findplace(args.bells-2) )
-        continue;
+    // Handle -w
+    if ( args.right_place && i % 2 == args.bells % 2
+         && args.bells - a.count_places() != active_above )
+      continue;
+    
+    // Handle -f
+    if ( args.no_78_pns && active_above > 1 && a.findplace(args.bells-2) )
+      continue;
 
-      changesa.push_back(a);
-    }
+    changesa.push_back(a);
+  }
 }
 
 void select_changes_below( const arguments& args, vector<change>& changesb,
@@ -491,82 +518,78 @@ void select_changes_below( const arguments& args, vector<change>& changesb,
 
   changesb.reserve( fibonacci(active_below) );
     
-  for ( changes_iterator j(active_below, 0, args.bells), e; j != e; ++j )
-    {
-      change b(*j); 
-      
-      // Handle -w
-      if ( args.right_place && i % 2 == 0
-           && args.bells - b.count_places() != active_below )
-        continue;
+  for ( changes_iterator j(active_below, 0, args.bells), e; j != e; ++j ) {
+    change b(*j); 
+    
+    // Handle -w
+    if ( args.right_place && i % 2 == 0
+         && args.bells - b.count_places() != active_below )
+      continue;
 
-      // Handle -kf or -df
-      if ( (args.skewsym || args.doubsym || args.mirrorsym) 
-           && args.no_78_pns 
-           && active_below > 1 && b.findplace(1) )
-        continue;
-      
-      changesb.push_back(b);
-    }
+    // Handle -kf or -df
+    if ( (args.skewsym || args.doubsym || args.mirrorsym) 
+         && args.no_78_pns 
+         && active_below > 1 && b.findplace(1) )
+      continue;
+    
+    changesb.push_back(b);
+  }
 }
 
 void select_changes_prin( const arguments& args, vector<change>& changes, 
                           int i )
 {
-  if ( args.right_place && args.bells % 2 == 0 && i % 2 == 0 )
-    {
-      // Handle -w
-      changes.push_back( change( args.bells, "-" ) );
+  if ( args.right_place && args.bells % 2 == 0 && i % 2 == 0 ) {
+    // Handle -w
+    changes.push_back( change( args.bells, "-" ) );
+  }
+
+  else {
+    changes.reserve( fibonacci( args.bells ) );
+  
+    for ( changes_iterator j(args.bells), e; j != e; ++j ) {
+      change ch(*j);
+ 
+      // Handle -Fx
+      if ( args.true_trivial && ch.count_places() == args.bells )
+        continue;
+
+      // Handle --changes
+      if ( args.changes.size() && args.include_changes
+           != ( args.changes.find(ch) != args.changes.end() ) )
+        continue;
+
+      // Handle -f
+      if ( args.no_78_pns && ch.findplace(args.bells-2) )
+        continue;
+
+      // Handle -kf or -df
+      if ( (args.skewsym || args.doubsym) && args.no_78_pns 
+           && ch.findplace(1) )
+        continue;
+
+      // Handle -l
+      if ( args.max_places_per_change 
+           && ch.count_places() > args.max_places_per_change )
+        continue;
+
+      // Handle -j
+      if ( args.max_consec_places
+           && has_consec_places( ch, args.max_consec_places ) )
+        continue;
+
+      // Handle --mirror
+      if ( args.mirrorsym && ch != ch.reverse() )
+        continue;
+
+      changes.push_back(ch);
     }
-
-  else 
-    {
-      changes.reserve( fibonacci( args.bells ) );
-    
-      for ( changes_iterator j(args.bells), e; j != e; ++j )
-        {
-          change ch(*j);
-   
-          // Handle -Fx
-          if ( args.true_trivial && ch.count_places() == args.bells )
-            continue;
-
-          // Handle --changes
-          if ( args.changes.size() && args.include_changes
-               != ( args.changes.find(ch) != args.changes.end() ) )
-            continue;
-    
-          // Handle -f
-          if ( args.no_78_pns && ch.findplace(args.bells-2) )
-            continue;
-    
-          // Handle -kf or -df
-          if ( (args.skewsym || args.doubsym) && args.no_78_pns 
-               && ch.findplace(1) )
-            continue;
-    
-          // Handle -l
-          if ( args.max_places_per_change 
-               && ch.count_places() > args.max_places_per_change )
-            continue;
-    
-          // Handle -j
-          if ( args.max_consec_places
-               && has_consec_places( ch, args.max_consec_places ) )
-            continue;
-    
-          // Handle --mirror
-          if ( args.mirrorsym && ch != ch.reverse() )
-            continue;
-    
-          changes.push_back(ch);
-        }
-   }
+  }
 }
 
 change merge_changes( const arguments& args,
                       const change& a, const change& b, 
-		      const pair<int, int>& posn ) 
+                      const pair<int, int>& posn ) 
 {
   change c( a.bells() );
 
@@ -617,37 +640,36 @@ void merge_changes( const arguments& args, vector<change>& result,
            << posn.first << "-" << posn.second );
 
   for ( int ia=0, na=above.size(); ia < na; ++ia )
-    for ( int ib=0, nb=below.size(); ib < nb; ++ib )
-      {
-	const change ch( merge_changes( args, above[ia], below[ib], posn ) );
-        DEBUG( "Merging " << below[ib] << " and " << above[ia] << " gives "
-                 << ch );
+    for ( int ib=0, nb=below.size(); ib < nb; ++ib ) {
+      const change ch( merge_changes( args, above[ia], below[ib], posn ) );
+      DEBUG( "Merging " << below[ib] << " and " << above[ia] << " gives "
+               << ch );
 
-        // Handle -Fx
-        if ( args.true_trivial && ch.count_places() == args.bells )
-          continue;
+      // Handle -Fx
+      if ( args.true_trivial && ch.count_places() == args.bells )
+        continue;
 
-        // Handle --changes
-        if ( args.changes.size() && args.include_changes
-             != ( args.changes.find(ch) != args.changes.end() ) )
-          continue;
-	
-	// Handle -l
-	if ( args.max_places_per_change 
-	     && ch.count_places() > args.max_places_per_change )
-	  continue;
+      // Handle --changes
+      if ( args.changes.size() && args.include_changes
+           != ( args.changes.find(ch) != args.changes.end() ) )
+        continue;
+      
+      // Handle -l
+      if ( args.max_places_per_change 
+           && ch.count_places() > args.max_places_per_change )
+        continue;
 
-	// Handle -j
-	if ( args.max_consec_places
-	     && has_consec_places( ch, args.max_consec_places ) )
-	  continue;
+      // Handle -j
+      if ( args.max_consec_places
+           && has_consec_places( ch, args.max_consec_places ) )
+        continue;
 
-        // Handle --mirror
-        if ( args.mirrorsym && ch != ch.reverse() )
-          continue;
-	
-	result.push_back(ch);
-      }
+      // Handle --mirror
+      if ( args.mirrorsym && ch != ch.reverse() )
+        continue;
+      
+      result.push_back(ch);
+    }
 }
                          
 
@@ -655,7 +677,7 @@ vector<change> reverse_allowed( const vector<change>& ch )
 {
   vector<change> rv; rv.reserve(ch.size());
   for ( vector<change>::const_iterator i(ch.begin()), e(ch.end());
-	i != e;  ++i )
+        i != e;  ++i )
     rv.push_back( i->reverse() );
   sort( rv.begin(), rv.end() );
   return rv;
@@ -664,90 +686,86 @@ vector<change> reverse_allowed( const vector<change>& ch )
 bool unordered_equal( const vector<change>& a, const vector<change>& b )
 {
   for ( vector<change>::const_iterator i(a.begin()), e(a.end());
-	i != e;  ++i )
+        i != e;  ++i )
     if ( find( b.begin(), b.end(), *i ) == b.end() )
       return false;
   return true;
 }
 
 bool is_mask_consistent( arguments &args, 
-			 const vector<vector<change> > &above,
-			 const vector<vector<change> > &below )
+                         const vector<vector<change> > &above,
+                         const vector<vector<change> > &below )
 {
   assert( args.lead_len );
   const int hl_len = args.lead_len / 2;
 
-  for ( int depth=0; depth < 2*hl_len; ++depth )
-    {
-      if ( args.skewsym )
-	{
-	  const int depth2( ( depth > hl_len ? 3 : 1 ) * hl_len
-			    - args.hunt_bells % 2 * 2 - depth );
+  for ( int depth=0; depth < 2*hl_len; ++depth ) {
+    if ( args.skewsym ) {
+      const int depth2( ( depth > hl_len ? 3 : 1 ) * hl_len
+                        - args.hunt_bells % 2 * 2 - depth );
 
-	  if ( depth2 < 0 || depth2 >= hl_len*2 || depth2 == depth )
-	      continue;
+      if ( depth2 < 0 || depth2 >= hl_len*2 || depth2 == depth )
+          continue;
 
-	  // FIXME Quarter-lead change
+      // FIXME Quarter-lead change
 
-	  int other_index( ( depth > hl_len ? 3 : 1 ) * hl_len 
-			   - args.hunt_bells % 2 * 2 - depth );
+      int other_index( ( depth > hl_len ? 3 : 1 ) * hl_len 
+                       - args.hunt_bells % 2 * 2 - depth );
 
-	  const vector<change> &ch1a = above[depth];
-	  const vector<change> &ch1b = below[depth];
-	  const vector<change> &ch2a = above[other_index];
-	  const vector<change> &ch2b = below[other_index];
+      const vector<change> &ch1a = above[depth];
+      const vector<change> &ch1b = below[depth];
+      const vector<change> &ch2a = above[other_index];
+      const vector<change> &ch2b = below[other_index];
 
-	  if ( ch1a.size() && ch2b.size() &&
-	       !unordered_equal( ch1a, reverse_allowed(ch2b) ) )
-	    return false;
+      if ( ch1a.size() && ch2b.size() &&
+           !unordered_equal( ch1a, reverse_allowed(ch2b) ) )
+        return false;
 
-	  if ( ch1b.size() && ch2a.size() &&
-	       !unordered_equal( ch1b, reverse_allowed(ch2a) ) )
-	    return false;
-	}
-
-      if ( args.doubsym )
-	{
-	  int other_index( (depth + hl_len) % (2 * hl_len) );
-
-	  const vector<change> &ch1a = above[depth];
-	  const vector<change> &ch1b = below[depth];
-	  const vector<change> &ch2a = above[other_index];
-	  const vector<change> &ch2b = below[other_index];
-
-	  if ( ch1a.size() && ch2b.size() &&
-	       !unordered_equal( ch1a, reverse_allowed(ch2b) ) )
-	    return false;
-
-	  if ( ch1b.size() && ch2a.size() &&
-	       !unordered_equal( ch1b, reverse_allowed(ch2a) ) )
-	    return false;
-	}
-
-      if ( args.sym )
-	{
-          size_t offset = (args.hunt_bells && args.hunt_bells % 2 == 0) ? 1 : 0;
-	  if ( 2 * (hl_len - 1 + offset) - depth < 0 || 
-	       2 * (hl_len - 1 + offset) - depth >= 2 * hl_len )
-	    continue;
-
-	  int other_index( 2 * (hl_len - 1 + offset) - depth );
-          assert( other_index >= 0 ); assert( other_index <= above.size() );
-
-	  const vector<change> &ch1a = above[depth];
-	  const vector<change> &ch1b = below[depth];
-	  const vector<change> &ch2a = above[other_index];
-	  const vector<change> &ch2b = below[other_index];
-
-	  if ( ch1a.size() && ch2a.size() &&
-	       !unordered_equal( ch1a, ch2a ) )
-	    return false;
-
-	  if ( ch1b.size() && ch2b.size() &&
-	       !unordered_equal( ch1b, ch2b ) )
-	    return false;
-	}
+      if ( ch1b.size() && ch2a.size() &&
+           !unordered_equal( ch1b, reverse_allowed(ch2a) ) )
+        return false;
     }
+
+    if ( args.doubsym ) {
+      int other_index( (depth + hl_len) % (2 * hl_len) );
+
+      const vector<change> &ch1a = above[depth];
+      const vector<change> &ch1b = below[depth];
+      const vector<change> &ch2a = above[other_index];
+      const vector<change> &ch2b = below[other_index];
+
+      if ( ch1a.size() && ch2b.size() &&
+           !unordered_equal( ch1a, reverse_allowed(ch2b) ) )
+        return false;
+
+      if ( ch1b.size() && ch2a.size() &&
+           !unordered_equal( ch1b, reverse_allowed(ch2a) ) )
+        return false;
+    }
+
+    if ( args.sym ) {
+      size_t offset = (args.hunt_bells && args.hunt_bells % 2 == 0) ? 1 : 0;
+      if ( 2 * (hl_len - 1 + offset) - depth < 0 || 
+           2 * (hl_len - 1 + offset) - depth >= 2 * hl_len )
+        continue;
+
+      int other_index( 2 * (hl_len - 1 + offset) - depth );
+      assert( other_index >= 0 ); assert( other_index <= above.size() );
+
+      const vector<change> &ch1a = above[depth];
+      const vector<change> &ch1b = below[depth];
+      const vector<change> &ch2a = above[other_index];
+      const vector<change> &ch2b = below[other_index];
+
+      if ( ch1a.size() && ch2a.size() &&
+           !unordered_equal( ch1a, ch2a ) )
+        return false;
+
+      if ( ch1b.size() && ch2b.size() &&
+           !unordered_equal( ch1b, ch2b ) )
+        return false;
+    }
+  }
 
   return true;
 }
@@ -791,7 +809,7 @@ bool parse_mask( arguments &args )
   if ( args.lead_len && !is_mask_consistent(args, above, below) )
     throw mask_error
       ( "Some of the required changes specified are inconsistent "
-	"with the specified symmetries" );
+        "with the specified symmetries" );
 
   // ----------------------------------
   // Expand ? to appropriate alternative lists
@@ -800,42 +818,39 @@ bool parse_mask( arguments &args )
   assert( below.size() == size_t(lead_len) );
 
 
-  for ( int i=0; i<lead_len; ++i )
-    {
-      args.allowed_changes.push_back( vector<change>() );
-      vector<change>& changes_to_try = args.allowed_changes.back();
+  for ( int i=0; i<lead_len; ++i ) {
+    args.allowed_changes.push_back( vector<change>() );
+    vector<change>& changes_to_try = args.allowed_changes.back();
 
-      if ( args.hunt_bells )
-	{
-	  vector<change>& changesa = above[i];
-	  vector<change>& changesb = below[i];
+    if ( args.hunt_bells ) {
+      vector<change>& changesa = above[i];
+      vector<change>& changesb = below[i];
  
-          // A ? above or below the treble
-          if ( changesa.empty() ) 
-            select_changes_above( args, changesa, i );
-          if ( changesb.empty() ) 
-            select_changes_below( args, changesb, i );
+      // A ? above or below the treble
+      if ( changesa.empty() ) 
+        select_changes_above( args, changesa, i );
+      if ( changesb.empty() ) 
+        select_changes_below( args, changesb, i );
  
-          merge_changes( args, changes_to_try, changesa, changesb, i );
-	}
-      else // principles
-	{
-	  if ( above[i].empty() )
-	    select_changes_prin( args, changes_to_try, i );
-	  else
-	    copy( above[i].begin(), above[i].end(), 
-	          back_inserter( changes_to_try ) ); 
-	}
-
-      sort( changes_to_try.begin(), changes_to_try.end(), &compare_changes );
-      changes_to_try.erase
-	( unique( changes_to_try.begin(), changes_to_try.end() ),
-	  changes_to_try.end() );
-
-      if ( changes_to_try.empty() )
-	throw mask_error( make_string() << "No such method can exist: "
-			  "There no possible changes at position " << i );
+      merge_changes( args, changes_to_try, changesa, changesb, i );
     }
+    else { // principles
+      if ( above[i].empty() )
+        select_changes_prin( args, changes_to_try, i );
+      else
+        copy( above[i].begin(), above[i].end(), 
+              back_inserter( changes_to_try ) ); 
+    }
+
+    sort( changes_to_try.begin(), changes_to_try.end(), &compare_changes );
+    changes_to_try.erase
+      ( unique( changes_to_try.begin(), changes_to_try.end() ),
+        changes_to_try.end() );
+
+    if ( changes_to_try.empty() )
+      throw mask_error( make_string() << "No such method can exist: "
+                        "There no possible changes at position " << i );
+  }
 
   return true;
 }

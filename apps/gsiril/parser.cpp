@@ -1,6 +1,6 @@
 // parser.cpp - Tokenise and parse lines of input
 // Copyright (C) 2002, 2003, 2004, 2005, 2007, 2008, 2010, 2011, 2012, 2013,
-// 2019, 2020, 2021 Richard Smith <richard@ex-parrot.com>
+// 2019, 2020, 2021, 2022 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -61,6 +61,8 @@ namespace tok_types
     close_paren = ')',
     open_brace  = '{',
     close_brace = '}',
+    open_brack  = '[',
+    close_brack = ']',
     colon       = ':',
     comma       = ',',
     plus        = '+',
@@ -212,6 +214,7 @@ public:
     case logic_and: case logic_or: case equals: case not_equals: 
     case less: case greater: case less_eq: case greater_eq:
     case increment: case decrement: case logic_not:
+    case open_brack: case close_brack:
       // These can only work when msiril comments are disabled.
       // Regexp literals are disabled because they conflict with 
       // the MicroSiril comment; alternative blocks are disabled because
@@ -253,6 +256,10 @@ private:
   int bells() const { return ectx.bells(); }
 
   vector< token > tokenise_command();
+
+  statement parse_command( vector<token> const& cmd );
+  statement parse_if( expression const& cond );
+  statement parse_foreach( vector<token> const& cmd );
 
   expression make_expr( vector< token >::const_iterator first, 
 			vector< token >::const_iterator last ) const;
@@ -329,10 +336,12 @@ vector< token > msparser::tokenise_command()
 
 	  // Keep track of nesting
 	  if ( tokiter->type() == tok_types::open_paren || 
-	       tokiter->type() == tok_types::open_brace ) 
+	       tokiter->type() == tok_types::open_brace ||
+	       tokiter->type() == tok_types::open_brack ) 
 	    ++nesting;
 	  if ( tokiter->type() == tok_types::close_paren || 
-	       tokiter->type() == tok_types::close_brace ) 
+	       tokiter->type() == tok_types::close_brace ||
+	       tokiter->type() == tok_types::close_brack ) 
 	    if ( nesting > 0 )
 	      --nesting;
 
@@ -349,10 +358,11 @@ vector< token > msparser::tokenise_command()
   return toks;
 }
 
-statement msparser::parse()
-{
-  vector<token> cmd( tokenise_command() );
+statement msparser::parse() {
+  return parse_command( tokenise_command() );
+}
 
+statement msparser::parse_command( vector<token> const& cmd ) {
   // EOF
   if ( cmd.size() == 0 || cmd.size() == 1 && 
        ( cmd[0] == "end" || cmd[0] == "quit" || cmd[0] == "exit" 
@@ -361,11 +371,10 @@ statement msparser::parse()
 
   // Version directive
   if ( cmd.size() == 1 && cmd[0].type() == tok_types::name
-       && cmd[0] == "version" )
-    {
-      cout << "Version: " RINGING_VERSION "\n";
-      return statement( new null_stmt );
-    }
+       && cmd[0] == "version" ) {
+    cout << "Version: " RINGING_VERSION "\n";
+    return statement( new null_stmt );
+  }
 
   // Bells directive
   if ( cmd.size() == 2 && cmd[0].type() == tok_types::num_lit
@@ -426,24 +435,13 @@ statement msparser::parse()
                          : make_expr( cmd.begin() + 1, cmd.end() ),
                        cmd[0] ) );
 
-  // Conditional statements:  if, elseif, else, endif
+  // If statement blocks
   if ( cmd.size() > 1 && cmd[0].type() == tok_types::name && cmd[0] == "if" )
-    return statement
-      ( new if_stmt( if_stmt::push_if, 
-                     make_expr(  cmd.begin() + 1, cmd.end() ) ) );
+    return parse_if( make_expr(  cmd.begin() + 1, cmd.end() ) );
 
-  if ( cmd.size() > 1 && cmd[0].type() == tok_types::name && 
-       cmd[0] == "elseif" )
-    return statement
-      ( new if_stmt( if_stmt::chain_else_if, 
-                     make_expr(  cmd.begin() + 1, cmd.end() ) ) );
-
-  if ( cmd.size() == 1 && cmd[0].type() == tok_types::name && cmd[0] == "else" )
-    return statement( new if_stmt( if_stmt::chain_else ) );
-
-  if ( cmd.size() == 1 && cmd[0].type() == tok_types::name && 
-       cmd[0] == "endif" )
-    return statement( new if_stmt( if_stmt::pop_if ) );
+  // Foreach statement blocks
+  if ( cmd[0].type() == tok_types::name && cmd[0] == "foreach" )
+    return parse_foreach(cmd);
 
   // Definition
   if ( cmd.size() > 1 && cmd[0].type() == tok_types::name
@@ -465,7 +463,87 @@ statement msparser::parse()
   throw runtime_error( "Unknown command: " + cmd[0] + " ..." );
 }
 
+statement msparser::parse_if( expression const& cond1 ) {
+  scoped_pointer<if_stmt> stmt( new if_stmt );
+  expression cond(cond1);
+  scoped_pointer<compound_stmt> block( new compound_stmt );
+  bool had_else = false;
+ 
+  while (true) {
+    vector<token> cmd( tokenise_command() );
 
+    if (cmd.size() == 0) 
+      throw runtime_error
+        ( "Unexpected end of file while parsing if statement body" );
+
+    else if ( cmd.size() == 1 && cmd[0].type() == tok_types::name 
+              && cmd[0] == "endif" ) {
+      stmt->push( cond, statement(block.release()) );
+      return statement(stmt.release());
+    }
+
+    else if ( cmd.size() > 1 && cmd[0].type() == tok_types::name 
+              && cmd[0] == "elseif" ) {
+      if (had_else)
+        throw runtime_error
+          ( "If statement has elseif statement after else statement" );
+      stmt->push( cond, statement(block.release()) );
+      cond = make_expr(  cmd.begin() + 1, cmd.end() );
+      block.reset( new compound_stmt );
+    }
+
+    else if ( cmd.size() == 1 && cmd[0].type() == tok_types::name 
+              && cmd[0] == "else" ) {
+      if (had_else)
+        throw runtime_error( "If statement has multiple else statements" );
+      stmt->push( cond, statement(block.release()) );
+      cond = expression( new boolean_node(true) );
+      block.reset( new compound_stmt );
+      had_else = true;
+    }
+
+    else block->push( parse_command(cmd) );
+  }
+}
+
+statement msparser::parse_foreach( vector<token> const& cmd ) {
+  // Syntax: foreach [ a, b, c ] as x
+  if ( cmd.size() < 5 || cmd[1].type() != tok_types::open_brack
+       || cmd[cmd.size()-3].type() != tok_types::close_brack
+       || cmd[cmd.size()-2].type() != tok_types::name
+       || cmd[cmd.size()-2] != "as" 
+       || cmd[cmd.size()-1].type() != tok_types::name )
+    throw runtime_error
+      ( "Malformed foreach statement" );
+
+  string const name( cmd[cmd.size()-1] );
+  vector<expression> vals;
+
+  typedef vector< token >::const_iterator iter_t;
+  iter_t first = cmd.begin()+2, last = cmd.end()-3, split;
+  while ( find( first, last, tok_types::comma, split ) ) {
+    vals.push_back( make_expr( first, split ) );
+    first = split+1;   
+  }
+  if ( first != last ) 
+    vals.push_back( make_expr( first, last ) );
+    
+  scoped_pointer<compound_stmt> block( new compound_stmt );
+  while (true) {
+    vector<token> cmd2( tokenise_command() );
+
+    if (cmd2.size() == 0) 
+      throw runtime_error
+        ( "Unexpected end of file while parsing foreach statement body" );
+
+    else if ( cmd2.size() == 1 && cmd2[0].type() == tok_types::name 
+              && cmd2[0] == "endfor" )
+      return statement
+        ( new foreach_stmt(name, vals, statement(block.release()) ) );
+
+    else block->push( parse_command(cmd2) );
+  }
+}
 
 //////////////////////////////////////////////////////////
 
@@ -509,10 +587,12 @@ bool msparser::find_one_of( vector< token >::const_iterator first,
   bool found = false;
   for ( ; first != last; ++first )
     if      ( first->type() == tok_types::open_brace ||
-	      first->type() == tok_types::open_paren )
+	      first->type() == tok_types::open_paren ||
+	      first->type() == tok_types::open_brack )
       ++depth;
     else if ( first->type() == tok_types::close_brace ||
-	      first->type() == tok_types::close_paren )
+	      first->type() == tok_types::close_paren ||
+	      first->type() == tok_types::close_brack )
       --depth;
     else if ( depth == 0 )
       for ( vector<tok_types::enum_t>::const_iterator 
@@ -819,10 +899,14 @@ msparser::make_expr( vector< token >::const_iterator first,
   }
 
   if ( first->type() == tok_types::name && *first == "echo" ) {
-    check_unary_op(first, last, "echo",
-                   tok_types::string_lit, "a string");
+    check_unary_op(first, last, "echo", tok_types::string_lit, "a string");
     return expression( new string_node( *(first+1), 
       string_node::interpolate | string_node::to_parent ) );
+  }
+
+  if ( first->type() == tok_types::name && *first == "save" ) {
+    check_unary_op(first, last, "save", tok_types::name, "a symbol name");
+    return expression( new save_node( *(first+1) ) );
   }
 
   if ( first->type() == tok_types::reverse ) {
