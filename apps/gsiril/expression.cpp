@@ -191,6 +191,7 @@ string string_node::string_evaluate( proof_context &ctx, bool* no_nl ) const
 
 void string_node::debug_print( ostream &os ) const
 {
+  if (flags & to_parent) os << "echo ";
   os << "\"" << str << "\"";
 }
  
@@ -972,3 +973,12 @@ expression::type_t call_node::type( proof_context &ctx ) const
   return ctx.lookup_symbol(name).type(ctx);
 }
 
+void save_node::execute( proof_context& ctx, int dir ) const
+{
+  ctx.save_symbol(name);
+}
+
+void save_node::debug_print( ostream& os ) const
+{
+  os << "save " << name;
+}

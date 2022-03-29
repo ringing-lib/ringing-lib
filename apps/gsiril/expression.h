@@ -530,4 +530,17 @@ private:
   vector<expression> args;
 };
 
+class save_node : public expression::node {
+public:
+  explicit save_node( string const& name )
+    : name(name) {}
+
+protected:
+  virtual void debug_print( ostream &os ) const;
+  virtual void execute( proof_context &ctx, int dir ) const;
+
+private:
+  string name;
+};
+
 #endif // GSIRIL_EXPRESSION_INCLUDED

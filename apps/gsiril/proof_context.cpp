@@ -208,6 +208,13 @@ bool proof_context::defined( const string& sym ) const
   return !dsym_table.lookup(sym).isnull() || ectx.defined(sym);
 }
 
+void proof_context::save_symbol( const string& sym )
+{
+  if (!parent)
+    const_cast<execution_context&>(ectx)
+      .define_symbol( make_pair(sym, lookup_symbol(sym)) );
+}
+
 void proof_context::define_symbol( const pair<const string, expression>& defn )
 {
   dsym_table.define(defn);

@@ -1,6 +1,6 @@
 // -*- C++ -*- proof_context.h - Environment to evaluate expressions
 // Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2010, 2011, 2012, 2014,
-// 2019, 2020, 2021 Richard Smith <richard@ex-parrot.com>
+// 2019, 2020, 2021, 2022 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -68,7 +68,7 @@ public:
     proof_context &pctx;
   };
 
-  explicit proof_context( const execution_context & );
+  explicit proof_context( execution_context const& );
  ~proof_context();
   
   permute_and_prove_t permute_and_prove();
@@ -88,6 +88,7 @@ public:
   void undefine_symbol( const string& name );
   expression lookup_symbol( const string& sym ) const;
   bool defined( const string& sym ) const;
+  void save_symbol( const string& sym );
 
   enum proof_state { rounds, notround, isfalse };
   proof_state state() const;

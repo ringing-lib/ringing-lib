@@ -899,10 +899,14 @@ msparser::make_expr( vector< token >::const_iterator first,
   }
 
   if ( first->type() == tok_types::name && *first == "echo" ) {
-    check_unary_op(first, last, "echo",
-                   tok_types::string_lit, "a string");
+    check_unary_op(first, last, "echo", tok_types::string_lit, "a string");
     return expression( new string_node( *(first+1), 
       string_node::interpolate | string_node::to_parent ) );
+  }
+
+  if ( first->type() == tok_types::name && *first == "save" ) {
+    check_unary_op(first, last, "save", tok_types::name, "a symbol name");
+    return expression( new save_node( *(first+1) ) );
   }
 
   if ( first->type() == tok_types::reverse ) {
