@@ -1,5 +1,5 @@
 // -*- C++ -*- psline.cpp - print out lines for methods
-// Copyright (C) 2001, 2002, 2019, 2020, 2021
+// Copyright (C) 2001, 2002, 2019, 2020, 2021, 2022
 // Martin Bright <martin@boojum.org.uk> and
 // Richard Smith <richard@ex-parrot.com>
 
@@ -246,7 +246,7 @@ void setup_args(arg_parser& p)
     " treble if it is a hunt bell, `:u` for all hunt bells except the treble,"
     " `:w' for all working bells, or `:v' for one working bell.  This option"
     " may be used multiple times.",
-		  "BELL[x][,COLOUR[,DIMENSION]]", true));
+		  "[BELL[x]][,COLOUR[,DIMENSION]]", true));
   p.add(new myopt('G', "guides",
     "Draw guides indicating bell positions, in style STYLE (currently"
     " 1, 2 or 3), with colour COLOUR and (for style 1) thickness DIMENSION.",
@@ -482,7 +482,7 @@ bool myopt::process(const string& arg, const arg_parser& ap) const
 	      return false;
 	  }
 	  ++s;
-	} else {
+	} else if (*s != ',') {
 	  bell b;
 	  do {
 	    try {
