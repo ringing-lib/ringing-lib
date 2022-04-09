@@ -1,5 +1,5 @@
 // -*- C++ -*- args.cpp - argument-parsing things
-// Copyright (C) 2001, 2002, 2003, 2004, 2005, 2008, 2010, 2011
+// Copyright (C) 2001, 2002, 2003, 2004, 2005, 2008, 2010, 2011, 2022
 // Martin Bright <martin@boojum.org.uk>
 // and Richard Smith <richard@ex-parrot.com>
 
@@ -17,8 +17,6 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-// $Id$
-
 #include <ringing/common.h>
 
 #if RINGING_HAS_PRAGMA_INTERFACE
@@ -29,18 +27,12 @@
 #include "stringutils.h"
 
 #include <ringing/row.h>
+#include <ringing/method.h>
+#include <ringing/place_notation.h>
 #include <ringing/streamutils.h>
 
-#if RINGING_OLD_C_INCLUDES
-#include <ctype.h>
-#else
 #include <cctype>
-#endif
-#if RINGING_OLD_INCLUDES
-#include <iostream.h>
-#else
 #include <iostream>
-#endif
 
 RINGING_USING_NAMESPACE
 RINGING_USING_STD
@@ -48,6 +40,12 @@ RINGING_USING_STD
 bool option::process(const string& a, const arg_parser& ap) const {
   ap.error( "Unprocessed argument.  This is a bug in the program." );
   return false;
+}
+
+bool option::validate(const arg_parser& ap) const {
+  // Argument validation is new (April 2022), and we want to preserve the 
+  // default behaviour of doing none.
+  return true;
 }
 
 arg_parser::arg_parser(const string& n, const string& d,
@@ -190,6 +188,15 @@ bool arg_parser::do_parse(int argc, char const* const* argv) const
   return true;
 }
 
+bool arg_parser::validate() const {
+  for (const option* opt : args)
+    if (!opt->validate(*this))
+      return false;
+  if (default_opt && !default_opt->validate(*this))
+    return false;
+  return true;
+}
+
 void arg_parser::wrap(const string& s, int l, int r, int c) const
 {
   string::const_iterator j = s.begin(), k = j;
@@ -300,7 +307,18 @@ void arg_parser::error(const string &msg) const
   cerr << progname << ": " << msg << "\n";
 }
 
+void arg_parser::process( arguments_base& args, int argc, 
+                          char const* const* argv ) {
+  args.bind(*this);
+    
+  if ( !parse(argc, argv) ) {
+    usage();
+    exit(1);
+  }
 
+  if ( !validate() || !args.validate(*this) ) 
+    exit(1);
+}
 
 boolean_opt::boolean_opt( char c, const string &l, const string &d,
 			  bool &opt, bool val ) 
@@ -486,6 +504,19 @@ bool version_opt::process( const string &, const arg_parser &ap ) const
   return true; // To keep MSVC 5 happy
 }
 
+bells_opt::bells_opt( init_val_base<int>& opt )
+  : integer_opt('b', "bells", "The number of bells.  "
+                "This option is required", "BELLS", opt)
+{}
+
+bool bells_opt::validate( const arg_parser& ap ) const {
+  if ( get_value() == 0 ) {
+    ap.error( "Must specify the number of bells" );
+    return false;
+  }
+  return true; 
+}
+
 row_opt::row_opt( char c, const string &l, const string &d, const string& a,
 	          row& opt )
   : option(c, l, d, a), opt(opt)
@@ -507,3 +538,43 @@ bool row_opt::process( const string& arg, const arg_parser& ap ) const
   return true;
 }
 
+method_opt::method_opt( char c, const string &l, const string &d, 
+                        const string& a, string& methstr, 
+                        const init_val_base<int>& bells, 
+                        RINGING_PREFIX method& meth, bool required )
+  : option(c, l, d, a), methstr(methstr), bells(bells), meth(meth), 
+    required(required)
+{}
+
+bool method_opt::process( const string& arg, const arg_parser& ap ) const {
+  methstr = arg;
+  return true;
+}
+
+bool method_opt::validate( const arg_parser& ap ) const {
+  try {
+    meth = method( methstr, bells );
+  } 
+  catch ( bell::invalid const& ) {
+    ap.error( make_string()
+              << "Error: '" << methstr << "' contains an invalid bell" );
+    return false;
+  }
+  catch ( change::invalid const& ) {
+    ap.error( make_string()
+              << "Error: '" << methstr << "' contains an invalid change" );
+    return false;
+  }
+  catch ( place_notation::invalid const& ) {
+    ap.error( make_string()
+              << "Error: '" << methstr << "' is not a place notation" );
+    return false;
+  }
+
+  if ( required && meth.empty() ) {
+    ap.error( "Please provide a method" );
+    return false;
+  }
+
+  return true;
+}

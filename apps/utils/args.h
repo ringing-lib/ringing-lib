@@ -1,5 +1,5 @@
 // -*- C++ -*- args.h - argument-parsing things
-// Copyright (C) 2001, 2002, 2003, 2008, 2010, 2011
+// Copyright (C) 2001, 2002, 2003, 2008, 2010, 2011, 2022
 // Martin Bright <martin@boojum.org.uk>
 // and Richard Smith <richard@ex-parrot.com>
 
@@ -17,8 +17,6 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-// $Id$
-
 #ifndef RINGING_ARGS_INCLUDED
 #define RINGING_ARGS_INCLUDED
 
@@ -28,20 +26,15 @@
 #pragma interface
 #endif
 
-#if RINGING_OLD_INCLUDES
-#include <map.h>
-#include <list.h>
-#include <vector.h>
-#else
 #include <map>
 #include <list>
 #include <vector>
-#endif
 #include <string>
 #include "init_val.h"
 
 RINGING_START_NAMESPACE
 class row;
+class method;
 RINGING_END_NAMESPACE
 
 
@@ -68,6 +61,15 @@ public:
   virtual ~option() {}
 
   virtual bool process(const string& a, const arg_parser& ap) const;
+  virtual bool validate(const arg_parser& ap) const;
+};
+
+class arguments_base {
+public:
+  void init();
+
+  virtual void bind( arg_parser& p ) = 0;
+  virtual bool validate( arg_parser& p ) = 0;
 };
 
 class arg_parser {
@@ -92,7 +94,11 @@ public:
   // that is not an option (i.e. not prefixed with a dash).
   void set_default(const option* o);
 
+  void process( arguments_base& args, int argc, char const* const* argv );
+
   bool parse(int argc, char const* const* argv) const;
+  bool validate() const;
+
   void help() const;
   void usage() const;
   void version() const;
@@ -163,6 +169,9 @@ public:
 
   integer_opt( char c, const string& l, const string& d, const string& a,
 	       init_val_base<int>& opt, int default_val );
+
+protected:
+  int get_value() const { return opt; }
 
 private:
   // If an argument is given, sets opt to the integer value of that string
@@ -261,6 +270,14 @@ private:
   virtual bool process( const string &, const arg_parser & ) const;
 };
 
+class bells_opt : public integer_opt {
+public:
+  bells_opt( init_val_base<int>& opt );
+
+private:
+  virtual bool validate( const arg_parser& ap ) const;
+};
+
 class row_opt : public option {
 public:
   row_opt( char c, const string &l, const string &d, const string& a,
@@ -270,6 +287,24 @@ private:
   // Sets opt = val
   virtual bool process( const string& val, const arg_parser& ap ) const;
   RINGING_PREFIX row &opt;
+};
+
+class method_opt : public option {
+public:
+  method_opt( char c, const string &l, const string &d, const string& a,
+	      string& methstr, const init_val_base<int>& bells, 
+              RINGING_PREFIX method& meth, bool required = true );
+
+private:
+  // Process sets methstr = val
+  virtual bool process( const string& val, const arg_parser& ap ) const;
+  // Validate set meth = method(methstr, bells);
+  virtual bool validate( const arg_parser& ap ) const;
+
+  string &methstr;
+  const init_val_base<int>& bells;
+  RINGING_PREFIX method& meth;
+  bool required;
 };
 
 #endif

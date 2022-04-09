@@ -54,8 +54,8 @@ struct bellfmt {
   bool bold;
 };
 
-struct arguments
-{
+class arguments : public arguments_base {
+public:
   init_val<int,0>      bells;
 
   init_val<bool,false> whole_course;
@@ -77,15 +77,11 @@ struct arguments
   bool validate( arg_parser& p );
 };
 
-void arguments::bind( arg_parser& p )
-{
+void arguments::bind( arg_parser& p ) {
   p.add( new help_opt );
   p.add( new version_opt );
     
-  p.add( new integer_opt
-         ( 'b', "bells",
-           "The number of bells.  This option is required", "BELLS",
-           bells ) );
+  p.add( new bells_opt( bells ) );
 
   p.add( new boolean_opt
          ( 'c', "course",
@@ -128,36 +124,10 @@ void arguments::bind( arg_parser& p )
          ( 'B', "blue", "Colour BELLS in blue", "BELLS", bstr ) );
 #endif
 
-  p.set_default( new string_opt( '\0', "", "", "", methstr ) );
+  p.set_default( new method_opt( '\0', "", "", "", methstr, bells, meth ) );
 }
 
-bool arguments::validate( arg_parser &ap )
-{
-  if ( bells == 0 ) 
-    {
-      ap.error( "Must specify the number of bells" );
-      return false;
-    }
-
-  try {
-    meth = method( methstr, bells );
-  } 
-  catch ( bell::invalid const& ) {
-    ap.error( make_string()
-              << "Error: '" << methstr << "' contains an invalid bell" );
-    return false;
-  }
-  catch ( change::invalid const& ) {
-    ap.error( make_string()
-              << "Error: '" << methstr << "' contains an invalid change" );
-    return false;
-  }
-  catch ( place_notation::invalid const& ) {
-    ap.error( make_string()
-              << "Error: '" << methstr << "' is not a place notation" );
-    return false;
-  }
-
+bool arguments::validate( arg_parser &ap ) {
   if ( startrow.bells() == 0 ) {
     startrow = row(bells);
   }
@@ -179,26 +149,12 @@ bool arguments::validate( arg_parser &ap )
   return true;
 }
 
-int main(int argc, char* argv[]) 
-{
+int main(int argc, char* argv[]) {
   bell::set_symbols_from_env();
 
   arguments args;
-
-  {
-    arg_parser ap(argv[0], "printmethod -- print a method.", "OPTIONS" );
-    
-    args.bind( ap );
-    
-    if ( !ap.parse(argc, argv) ) 
-      {
-	ap.usage();
-	return 1;
-      }
-
-    if ( !args.validate( ap ) ) 
-      return 1;
-  }
+  arg_parser( argv[0], "printmethod -- print a method.", "OPTIONS" )
+    .process( args, argc, argv );
 
 # if RINGING_USE_TERMCAP
   if ( !args.bellfmt.empty() )
@@ -210,13 +166,11 @@ int main(int argc, char* argv[])
   for ( int i=0; i<args.init_rounds*2; ++i)
     cout << args.bellfmt << r << "\n";
 
-  do for ( method::const_iterator i=args.meth.begin(), e=args.meth.end(); 
-           i!=e; ++i )  
-  {
+  do for ( const change& c : args.meth ) {
     if ( !( first && (args.omit_start || args.init_rounds) ) ) 
       cout << args.bellfmt << r << "\n";
 
-    r *= *i;  first = false;
+    r *= c;  first = false;
   } while ( r != args.startrow && args.whole_course );
 
   if (!args.omit_final && args.meth.size())
@@ -225,5 +179,3 @@ int main(int argc, char* argv[])
   for ( int i=0; i<args.final_rounds*2; ++i)
     cout << args.bellfmt << r << "\n";
 }
-
-

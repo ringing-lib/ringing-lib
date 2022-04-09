@@ -16,3 +16,4 @@ configure
 config.log
 config.status
 ringing/common-am.h
+*.swp
