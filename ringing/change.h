@@ -1,5 +1,6 @@
 // -*- C++ -*- chage.h - Class representing a change
-// Copyright (C) 2001, 2009, 2012, 2020 Martin Bright <martin@boojum.org.uk>
+// Copyright (C) 2001, 2009, 2012, 2020, 2022 
+// Martin Bright <martin@boojum.org.uk>
 // and Richard Smith <richard@ex-parrot.com>
 
 // This library is free software; you can redistribute it and/or
@@ -16,8 +17,6 @@
 // License along with this library; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-// $Id$
-
 
 #ifndef RINGING_CHANGE_H
 #define RINGING_CHANGE_H
@@ -32,17 +31,10 @@
 #pragma interface
 #endif
 
-#if RINGING_OLD_INCLUDES
-#include <iostream.h>
-#include <vector.h>
-#include <algo.h>
-#include <stdexcept.h>
-#else
 #include <ostream>
 #include <vector>
 #include <algorithm>
 #include <stdexcept>
-#endif
 #include <string>
 
 #include <ringing/bell.h>
@@ -58,9 +50,9 @@ class RINGING_API change {
 public:
   change() : n(0) {}            //
   explicit change(int num) : n(num) {}   // Construct an empty change
-  change(int num, const char *pn);
-  change(int num, const string& s);
-  // Use default copy constructor and assignment
+
+  change(int bells, const string& pn);
+  change(int bells, vector<bell> const& places);
 
   change& set(int num, const char *pn) // Assign from place notation
     { change(num, pn).swap(*this); return *this; }
@@ -87,13 +79,14 @@ public:
   };
 
   string print( int flags = 0 ) const; // Print place notation to a string
-  int bells(void) const { return n; } // Return number of bells
-  int sign(void) const;         // Return whether it's odd or even
-  bool findswap(bell which) const; // Check whether a particular swap is done
-  bool findplace(bell which) const; // Check whether a particular place is made
-  bool swappair(bell which);            // Swap or unswap a pair
-  bool internal(void) const;    // Does it contain internal places?
-  int count_places(void) const; // Count the number of places made
+  int bells(void) const { return n; }  // Return number of bells
+  int sign(void) const;                // Return whether it's odd or even
+  bool findswap(bell which) const;     // Check if a particular swap is done
+  bool findplace(bell which) const;    // Check if a particular place is made
+  bool swappair(bell which);           // Swap or unswap a pair
+  bool internal() const;               // Does it contain internal places?
+  int count_places() const;            // Count the number of places made
+  vector<bell> places() const;         // Return the places made
 
   // So that we can put changes into containers
   bool operator<(const change& c) const {
@@ -121,8 +114,6 @@ public:
 #endif
 
 private:
-  void init( char const* p, size_t sz );
-
   int n;                        // Number of bells
   vector<bell> swaps;           // List of pairs to swap
 };

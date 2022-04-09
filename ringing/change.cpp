@@ -1,5 +1,6 @@
 // change.cpp - Class representing a change
-// Copyright (C) 2001, 2009, 2012, 2020 Martin Bright <martin@boojum.org.uk>
+// Copyright (C) 2001, 2009, 2012, 2020, 2022
+// Martin Bright <martin@boojum.org.uk>
 // and Richard Smith <richard@ex-parrot.com>
 
 // This library is free software; you can redistribute it and/or
@@ -52,51 +53,57 @@ RINGING_USING_STD
 
 RINGING_START_NAMESPACE
 
-void change::init( char const* p, size_t sz )
+RINGING_START_ANON_NAMESPACE
+
+static inline 
+void append_swaps_between(vector<bell>& swaps, bell& from, bell to) {
+  for (bell s = from; s < to-1; s += 2) swaps.push_back(s);
+  from = to + 1;
+}
+
+RINGING_END_ANON_NAMESPACE
+
+// Construct from place notation to a change
+change::change(int n, const string& pn)
+  : n(n)
 {
-  swaps.erase(swaps.begin(), swaps.end());
-  if (sz == 0) {
+  if (pn.empty()) {
 #if RINGING_USE_EXCEPTIONS
     if (n != 0) throw invalid();
 #endif
     return;
   }
-  bell c;
-  if ( sz == 1 && (*p == 'X' || *p == 'x' || *p == '-') )
-    c = 0;
-  else {
-    bell b( bell::read_extended(p) );
-    if(b > 0 && b & 1) c = 1; else c = 0;
-    for (char const* q = p; *q; ) {
-      b = bell::read_extended(q, &q);
+
+  bell b = 0;
+  if ( pn != "X" && pn != "x" && pn != "-" ) {
+    bool first = true;
+    for (char const* q = pn.c_str(); *q; ) {
+      bell p = bell::read_extended(q, &q);
 #if RINGING_USE_EXCEPTIONS
-      if(b >= n || b <= c-1) throw invalid(p);
+      if (p >= n || p < b || !first && (p-b) % 2) throw invalid(pn);
 #endif
-      if(b >= c) {
-        bell d;
-        for(d = c; d < b-1; d += 2) swaps.push_back(d);
-#if RINGING_USE_EXCEPTIONS
-        if ( d == b-1 ) throw invalid(p);
-#endif
-        c = b + 1;
-      }
+      if (first && (p-b) % 2) b = 1;  // Implicit place at lead
+      append_swaps_between(swaps, b, p);
+      first = false;
     }
   }
-  for(bell d = c; d < n-1; d += 2) swaps.push_back(d);
+  append_swaps_between(swaps, b, n);
 }
 
-// Construct from place notation to a change
-change::change(int num, const char *pn)
-  : n( num )
+change::change(int n, vector<bell> const& places)
+  : n(n)
 {
-  init( pn, strlen(pn) );
-}
-
-// Construct from place notation to a change
-change::change(int num, const string& pn)
-  : n( num )
-{
-  init( pn.c_str(), pn.size() );
+  bell b = 0;
+  for ( bell p : places ) {
+#if RINGING_USE_EXCEPTIONS
+    if (p >= n || p < b || (p-b) % 2) throw invalid();
+#endif
+    append_swaps_between(swaps, b, p);
+  }
+#if RINGING_USE_EXCEPTIONS
+  if ((n-b) % 2) throw invalid();
+#endif
+  append_swaps_between(swaps, b, n);
 }
 
 change::invalid::invalid()
@@ -122,17 +129,16 @@ change change::reverse(void) const
 string change::print(int flags) const
 {
   string p;
-  p.reserve( bells() );
+  p.reserve(n);
 
   if (n != 0) {
-    bell i = 0;
-    vector<bell>::const_iterator s;
-    for (s = swaps.begin(); s != swaps.end(); s++) { // Find the next swap
-      while(i < *s) { p += i.to_char(); ++i; } // Write all the places
-      i += 2;
+    bell b = 0;
+    for ( bell s : swaps ) {
+      while (b < s) { p += b.to_char(); ++b; }
+      b += 2;
     }
-    // Write the remaining places
-    while (i < n) { p += i.to_char(); ++i; }
+    while (b < n) { p += b.to_char(); ++b; }
+
     if (p.empty()) {
       if (flags & C_LCROSS) p = "x";
       else if (flags & C_DASH) p = "-";
@@ -224,23 +230,30 @@ bool change::internal(void) const
 
 // Count the places made
 // Useful for finding out how long the place notation is
-int change::count_places(void) const
-{
-  if(n == 0) return 0;
-  vector<bell>::const_iterator s;
+int change::count_places() const {
   int count = 0;
   bell b = 0;
-  for(s = swaps.begin(); s != swaps.end() && *s < n; ++s) {
-    count += (*s - b);
-    b = *s + 2;
+  for ( bell s : swaps ) {
+    count += s-b;
+    b = s + 2;
   }
-  count += (n - b);
+  count += n-b;
   return count;
 }
 
+vector<bell> change::places() const {
+  vector<bell> pl; pl.reserve(n);
+  bell b = 0;
+  for ( bell s : swaps ) {
+    while (b < s) pl.push_back(b++);
+    b = s + 2;
+  }
+  while (b < n) pl.push_back(b++);
+  return pl;
+} 
+
 // Return whether it's odd or even
-int change::sign(void) const
-{
+int change::sign(void) const {
   if(n == 0) return 1;
   return (swaps.size() & 1) ? -1 : 1;
 }
