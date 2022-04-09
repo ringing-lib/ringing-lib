@@ -1,6 +1,6 @@
 // -*- C++ -*- search.cpp - the actual search algorithm
 // Copyright (C) 2002, 2003, 2004, 2005, 2007, 2008, 2009, 2010, 2011, 2013,
-// 2020, 2021 Richard Smith <richard@ex-parrot.com>
+// 2020, 2021, 2022 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -480,6 +480,10 @@ bool searcher::is_acceptable_method()
 
       if (!ok) return false;
     }
+
+  if ( args.only_named && !method_libraries::has_method(m) ||
+       args.only_unnamed && method_libraries::has_method(m) )
+    return false;
 
   // --- Falseness requirements ---
   // Plain methods cannot be false in the half-lead, and if symmetric

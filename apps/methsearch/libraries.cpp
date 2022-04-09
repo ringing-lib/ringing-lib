@@ -1,5 +1,6 @@
 // -*- C++ -*- libraries.cpp - singleton containing the method libraries
-// Copyright (C) 2002, 2009, 2010, 2021 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2009, 2010, 2021, 2022 
+// Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -115,13 +116,16 @@ void method_libraries::init()
     }
 }
 
-method method_libraries::lookup_method( const method &m )
-{
+method method_libraries::lookup_method( const method &m ) {
   library_entry i( instance().find( m ) );
   if ( ! i.null() )
     return i.meth();
   else 
     return m;
+}
+
+bool method_libraries::has_method( const method &m ) {
+  return !instance().find( m ).null();
 }
 
 library const& overwork_map( int bells, const string& filename ) {
