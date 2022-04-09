@@ -30,13 +30,12 @@ RINGING_USING_STD
 // Expand all places from PLACE inclusive by BY.  Because the numeric 
 // value of the bell class is zero-based, to effect a mode N extension
 // (below the treble), simply pass N as PLACE.
-change expand_change(change const& c, bell place, int by) {
+change expand_change(size_t bells, vector<bell> places, bell split, int by) {
   if (by <= 0 || by % 2) throw change::out_of_range();
-  vector<bell> places(c.places());
   for (bell& i : places)
-    if ( i >= place ) 
+    if ( i >= split ) 
       i += by;
-  return change(c.bells() + by, places);
+  return change(bells + by, places);
 }
 
 // The treble is hunting between places P1 and P2.  Return the section.
@@ -162,17 +161,22 @@ method extend_below_work(method const& m, extension_description const &e) {
   method m2;
   vector<change> x;
   if ( e.sect == 0 )
-    x.push_back(expand_change(m.back(), 1, e.by));
+    x.push_back(expand_change(n, m.back().places(), 1, e.by));
   
   bool first_half = true;
   for (change const& c : m) {
     bell b2( b*c );
     int s = calc_sect( b, b2 );
 
+    vector<bell> places;
+    for ( bell p : c.places() )
+      if ( p <= s )
+        places.push_back(p);
+
     // This is the place above which we expand the change
     int pl = s+1 < e.mode ? s+1 : e.mode;
-    change const c1(expand_change(c, n-1, e.by));
-    change const c2(expand_change(c, pl, e.by));
+    change const c1(expand_change(n, places, n-1, e.by));
+    change const c2(expand_change(n, places, pl, e.by));
 
     if (s < e.sect) {
       copy_method_frag(m2, x);
@@ -264,19 +268,28 @@ bool valid_extension_above(method const& meth, extension_description const& e) {
 
 method extend_above_work(method const& m, extension_description const &e) {
   bell b(0);
+  int const n( m.bells() );
   method m2;
   vector<change> x;
   if ( e.sect == 0 )
-    x.push_back(expand_change(m.back(), 1, e.by));
+    x.push_back(expand_change(n, m.back().places(), 1, e.by));
+
   bool first_half = true;
   for (change const& c : m) {
-    int const n( m.bells() );
     bell b2( b*c );
     int s = calc_sect( b, b2 );
 
+    vector<bell> places;
+    if (s && s % 2 == 0)
+      places.push_back(0); // A place at lead 
+    for ( bell p : c.places() )
+      if ( p >= s )
+        places.push_back(p);
+
+    // This is the place above which we expand the change
     int pl = s-1 > n-e.mode ? s-1 : n-e.mode;
-    change const c1(expand_change(c, 1, e.by));
-    change const c2(expand_change(c, pl, e.by));
+    change const c1(expand_change(n, places, 1, e.by));
+    change const c2(expand_change(n, places, pl, e.by));
     if (s < e.sect) {
       copy_method_frag(m2, x);
       m2.push_back(c2);
@@ -562,11 +575,16 @@ int main( int argc, char* argv[] )
           }
     
           if (m1.size()) {
+            if (!args.required_bells)
+               cout << m1.bells() << ':';
             cout << m1.format( method::M_DASH | method::M_SYMMETRY ) << "\t"
                  << a << "/" << b;
-            cout << "  (";
-            for ( auto i : stages ) cout << ' ' << i; 
-            cout << " )\n";
+            if (args.show_stages) {
+              cout << "  (";
+              for ( auto i : stages ) cout << ' ' << i; 
+              cout << " )";
+            }
+            cout << "\n";
           }
         }
   
