@@ -1,5 +1,5 @@
 // -*- C++ -*- libraries.h - singleton containing the method libraries
-// Copyright (C) 2002, 2009 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2009, 2022 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -45,6 +45,7 @@ public:
   static void init();
   static bool has_libraries();
   static method lookup_method( const method &m );
+  static bool has_method( const method &m );
 
   static method_libraries &instance();
 

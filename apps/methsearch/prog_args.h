@@ -1,6 +1,6 @@
 // -*- C++ -*- prog_args.h - program arguments
-// Copyright (C) 2002, 2003, 2004, 2007, 2008, 2009, 2010, 2011, 2020, 2021
-// Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003, 2004, 2007, 2008, 2009, 2010, 2011, 2020, 2021,
+// 2022 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -96,6 +96,8 @@ struct arguments
   init_val<bool,false> filter_lib_mode;
   init_val<bool,false> invert_filter;
   init_val<int, 0>     timeout;
+  init_val<bool,false> only_named;
+  init_val<bool,false> only_unnamed;
 
   init_val<bool,false> no_78_pns;
   init_val<bool,false> sym_sects;

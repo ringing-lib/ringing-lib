@@ -1,6 +1,6 @@
 // -*- C++ -*- prog_args.cpp - handle program arguments
 // Copyright (C) 2002, 2003, 2004, 2005, 2007, 2008, 2009, 2010, 2011, 2013,
-// 2020, 2021 Richard Smith <richard@ex-parrot.com>
+// 2020, 2021, 2022 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -488,6 +488,16 @@ void arguments::bind( arg_parser &p )
            timeout ) );
 
   p.add( new boolean_opt
+         ( '\0', "named",
+           "Only find named methods",
+           only_named ) );
+
+  p.add( new boolean_opt
+         ( '\0', "unnamed",
+           "Only find unnamed methods",
+           only_unnamed ) );
+
+  p.add( new boolean_opt
 	 ( 'P', "parity-hack",
 	   "Require an equal number of rows of each parity for each place "
 	   "in the treble's path",
@@ -828,11 +838,20 @@ bool arguments::validate( arg_parser &ap )
     skewsym = sym = doubsym = true;
 
   if ( ( formats_have_names() || formats_have_cc_ids() ) 
-       && ! method_libraries::has_libraries() )
-    {
-      ap.error( "The -L option must be used if $n, $N or $i is used" );
-      return false;
-    }
+       && ! method_libraries::has_libraries() ) {
+    ap.error( "A method library must be provided if $n, $N or $i is used" );
+    return false;
+  }
+
+  if ( ( only_named || only_unnamed ) && ! method_libraries::has_libraries() ) {
+    ap.error( "A method library must be provided to use --named or --unnamed" );
+    return false;
+  }
+
+  if ( only_named && only_unnamed ) {
+    ap.error( "Cannot use --named and --unnamed together" );
+    return false;
+  }
 
   if ( formats_have_payloads() && !filter_mode ) 
     {
