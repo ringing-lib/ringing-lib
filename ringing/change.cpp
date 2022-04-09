@@ -25,23 +25,14 @@
 #pragma implementation
 #endif
 
-#if RINGING_OLD_C_INCLUDES
-#include <string.h>
-#else
 #include <cstring>
-#endif
-
-#if RINGING_OLD_INCLUDES
-#include <vector.h>
-#include <stdexcept.h>
-#else
 #include <vector>
 #include <stdexcept>
-#endif
 #include <string>
 
 #include <ringing/bell.h>
 #include <ringing/change.h>
+#include <ringing/lexical_cast.h>
 
 #if RINGING_BACKWARDS_COMPATIBLE(0,3,0) && defined(_MSC_VER)
 // Microsoft have deprecated strcpy in favour of a non-standard
@@ -76,15 +67,13 @@ change::change(int n, const string& pn)
 
   bell b = 0;
   if ( pn != "X" && pn != "x" && pn != "-" ) {
-    bool first = true;
     for (char const* q = pn.c_str(); *q; ) {
       bell p = bell::read_extended(q, &q);
 #if RINGING_USE_EXCEPTIONS
-      if (p >= n || p < b || !first && (p-b) % 2) throw invalid(pn);
+      if (p >= n || p < b || b && (p-b) % 2) throw invalid(pn);
 #endif
-      if (first && (p-b) % 2) b = 1;  // Implicit place at lead
+      if (b == 0 && (p-b) % 2) b = 1;  // Implicit place at lead
       append_swaps_between(swaps, b, p);
-      first = false;
     }
   }
   append_swaps_between(swaps, b, n);
@@ -96,13 +85,11 @@ change::change(int n, vector<bell> const& places)
   bell b = 0;
   for ( bell p : places ) {
 #if RINGING_USE_EXCEPTIONS
-    if (p >= n || p < b || (p-b) % 2) throw invalid();
+    if (p >= n || p < b || b && (p-b) % 2) throw invalid();
 #endif
+    if (b == 0 && (p-b) % 2) b = 1;  // Implicit place at lead
     append_swaps_between(swaps, b, p);
   }
-#if RINGING_USE_EXCEPTIONS
-  if ((n-b) % 2) throw invalid();
-#endif
   append_swaps_between(swaps, b, n);
 }
 
@@ -128,24 +115,19 @@ change change::reverse(void) const
 // Print place notation to a string
 string change::print(int flags) const
 {
-  string p;
-  p.reserve(n);
+  // Use bell::operator<<() rather than bell::to_char() so it handles
+  // extended bell symbols
+  make_string os;
+  for ( bell p : places() )
+    os << p;
 
-  if (n != 0) {
-    bell b = 0;
-    for ( bell s : swaps ) {
-      while (b < s) { p += b.to_char(); ++b; }
-      b += 2;
-    }
-    while (b < n) { p += b.to_char(); ++b; }
-
-    if (p.empty()) {
-      if (flags & C_LCROSS) p = "x";
-      else if (flags & C_DASH) p = "-";
-      else p = "X";  // For backwards compatibility we make this the default
-    }
+  string ret(os);
+  if (n && ret.empty()) {
+    if (flags & C_LCROSS) ret = "x";
+    else if (flags & C_DASH) ret = "-";
+    else ret = "X";  // For backwards compatibility we make 'X' the default
   }
-  return p;
+  return ret;
 }
 
 #if RINGING_BACKWARDS_COMPATIBLE(0,3,0) 
@@ -231,14 +213,7 @@ bool change::internal(void) const
 // Count the places made
 // Useful for finding out how long the place notation is
 int change::count_places() const {
-  int count = 0;
-  bell b = 0;
-  for ( bell s : swaps ) {
-    count += s-b;
-    b = s + 2;
-  }
-  count += n-b;
-  return count;
+  return places().size();
 }
 
 vector<bell> change::places() const {
