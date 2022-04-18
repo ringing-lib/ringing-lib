@@ -855,6 +855,14 @@ can be used to find these types of methods.
   At most \texttt{N} mutually adjacent places in any change\\
 \texttt{-w}&\texttt{--right-place}&
   Require right place methods\\
+&\texttt{--no-points}&
+  Require a method with no points, fish-tails, etc.\\
+&\texttt{--has-points}&
+  Require a method with points, fish-tails, etc.\\
+&\texttt{--no-unpaired-points}&
+  Require a method with no unpaired points, fish-tails, etc.\\
+&\texttt{--has-unpaired-points}&
+  Require a method with unpaired points, fish-tails, etc.\\
 \texttt{-f}&\texttt{--no-78s}&
   Disallow penultimate places above the treble\\
 \texttt{-y}&\texttt{--symmetric-sections}&
@@ -910,6 +918,16 @@ with the first, and no places above the treble in every other change starting
 with the second.  That might sound counter-intuitive when written down,
 but it yields the expected results.  (For example, it makes Plain Bob Doubles
 right place but not Reverse Canterbury.)
+
+The \verb+--no-points+ and \verb+--has-points+ options\loid{no-points}
+\loid{has-points} restrict the search to methods which do not or do have
+points, fishtails and other such pieces of work where a pair of bells swap
+consecutively an even number of times.  Methods like Thelwall Bob Minor or
+Allendale Surprise Minor do have points even though the bells remain together
+and later make a second pair of points, having the overall effect of a long
+dodge.  The \verb+--no-unpaired-points+ and \verb+--has-unpaired-points+
+\loid{no-unpaired-points}\loid{has-unpaired-points} options ignore paired sets
+of points like these.
 
 The \verb+-f+ option\oid{f}{no-78s}\index{places!penultimate}
 is used to exclude any methods with penultimate places
@@ -1256,9 +1274,21 @@ changes.  Symmetric blocks of place notation are prefixed with a
 may (though needn't) be prefixed with a \verb-+-,\symidx{+}{place notation} 
 and blocks are separated by a \verb+,+.\symidx{,}{place notation}  For example,
 the place notation for Plain Bob Minor can be written most concisely
-as \verb+&-1-1-1,2+ or in full as \verb-X.16.X.16.X.16.X.16.X.16.X.12-.%
+as \verb+&-1-1-1,2+ or in full as:%
 \footnote{These are the two variants produced by the \verb+$q+ and
 \verb+$p+ variables described in \sref{variables}.}
+\begin{quote}
+ \verb-X.16.X.16.X.16.X.16.X.16.X.12-.
+\end{quote}
+
+Instead of using single-character bell symbols, a \textit{bell expression}% 
+\index{bells!expression} can be used.  This is when the bell number is written
+in decimal an enclosed in braces.  For example, the place notation for
+Original Maximus can be written \verb+x1{12}+, where \verb+{12}+ is used
+instead of the symbol \verb+T+.  A bell expression can also be written 
+\verb+{N}+ or \verb+{N-+$n$\verb+}+, where $n$ is any integer.  In this case,
+\verb+N+ denotes the number of bells, so \verb+x1{N}+ is the place notation
+for Original on any stage.
 
 In a method mask, a specific change can be left unspecified by writing 
 \verb+?+\symidx{?}{method mask} in its place; 
@@ -1386,6 +1416,8 @@ what \methsearch\ does when it has found a method.
 \texttt{-L}&\texttt{--library=LIB}&Use method library to look up method names\\
 &\texttt{--unnamed-name=NAME}&Use \texttt{NAME} instead of
   `Untitled' for unnamed methods\loid{unnamed-name}\\
+&\texttt{--named}&Only find methods in a provided library\\
+&\texttt{--unnamed}&Only find methods not in a provided library\\
 \texttt{-H}&\texttt{--frequencies=FMT}&Count frequencies of method properties\\
 \texttt{-C}&\texttt{--count}&Count the methods found\\
 &\texttt{--raw-count}&A more concise version of \texttt{--count}\\
@@ -1560,9 +1592,16 @@ search in turn for the file.%
 \footnote{The two environment variables are synonymous.  If both are set, 
 \verb+$METHLIBPATH+ is ignored.}
 
-Libraries are only loaded if required.  This currently happens if the
-\verb+--filter-lib+ option is given (\sref{filtering}), or if the \verb+$n+,
-\verb+$N+ or \verb+$i+ variables are used (\sref{variables}).
+The \loid{named} and \loid{unnamed} options will restrict the search to
+methods are either are or are not present one of the supplied method
+libraries.\footnote{If the library includes unnamed methods, e.g. if it is a
+complete list of all methods matching certain requirements, then
+\verb+--named+ will find unnamed methods that are present in the library}
+
+Libraries are only loaded if required.  This currently happens if one of the
+\verb+--filter-lib+ ((\sref{filtering}), \verb+--named+ or \verb+--unnamed+
+options are given, or if the \verb+$n+, \verb+$N+ or \verb+$i+ variables are
+used (\sref{variables}).
 
 \section{Over- and underworks}\label{overunder}
 
@@ -4822,6 +4861,17 @@ interaction with \verb+-FP+ (\sref{pendrows}).
   (\sref{output_opt}).
 \item Customised formatting of place notation: \verb+--pn-format+ 
   (\sref{output_opt}).
+\end{list}
+
+\subsection{During 2022}
+
+\begin{list}{\labelitemi}{\leftmargin=1em\itemsep=0em}
+\item Named and unnamed methods: \verb+--named+, \verb+--unnamed+ 
+  (\sref{output_opt}).
+\item Bell expressions in \verb+-m+ (\sref{pn}).
+\item Requiring and excluding points: \verb+--no-points+, \verb+--has-points+,
+  \verb+--no-unpaired-points+, \verb+--has-unpaired-points+
+  (\sref{int_struct}).
 \end{list}
 
 \subsection{The future}

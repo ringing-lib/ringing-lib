@@ -481,6 +481,13 @@ bool searcher::is_acceptable_method()
       if (!ok) return false;
     }
 
+  // TODO: We should be able to prune the search space as well
+  if ( args.no_points && has_points(m) ||
+       args.has_points && !has_points(m) ||
+       args.no_unpaired_points && has_unpaired_points(m) ||
+       args.has_unpaired_points && !has_unpaired_points(m) )
+    return false;
+
   if ( args.only_named && !method_libraries::has_method(m) ||
        args.only_unnamed && method_libraries::has_method(m) )
     return false;

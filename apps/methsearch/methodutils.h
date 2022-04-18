@@ -1,5 +1,5 @@
 // -*- C++ -*- methodutils.h - utility functions missing from the ringing-lib
-// Copyright (C) 2002, 2003, 2004, 2010, 2011, 2021
+// Copyright (C) 2002, 2003, 2004, 2010, 2011, 2021, 2022
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -69,6 +69,8 @@ bool compare_changes( change const& a, change const& b );
 char const* old_lhcode( bool unicode, method const& m );
 
 unsigned long staticity( method const& m );
+bool has_points( method const& m );
+bool has_unpaired_points( method const& m );
 
 pair<method,method> split_over_and_under( method const& m );
 
