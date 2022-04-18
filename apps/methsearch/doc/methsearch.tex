@@ -855,6 +855,14 @@ can be used to find these types of methods.
   At most \texttt{N} mutually adjacent places in any change\\
 \texttt{-w}&\texttt{--right-place}&
   Require right place methods\\
+&\texttt{--no-points}&
+  Require a method with no points, fish-tails, etc.\\
+&\texttt{--has-points}&
+  Require a method with points, fish-tails, etc.\\
+&\texttt{--no-unpaired-points}&
+  Require a method with no unpaired points, fish-tails, etc.\\
+&\texttt{--has-unpaired-points}&
+  Require a method with unpaired points, fish-tails, etc.\\
 \texttt{-f}&\texttt{--no-78s}&
   Disallow penultimate places above the treble\\
 \texttt{-y}&\texttt{--symmetric-sections}&
@@ -910,6 +918,16 @@ with the first, and no places above the treble in every other change starting
 with the second.  That might sound counter-intuitive when written down,
 but it yields the expected results.  (For example, it makes Plain Bob Doubles
 right place but not Reverse Canterbury.)
+
+The \verb+--no-points+ and \verb+--has-points+ options\loid{no-points}
+\loid{has-points} restrict the search to methods which do not or do have
+points, fishtails and other such pieces of work where a pair of bells swap
+consecutively an even number of times.  Methods like Thelwall Bob Minor or
+Allendale Surprise Minor do have points even though the bells remain together
+and later make a second pair of points, having the overall effect of a long
+dodge.  The \verb+--no-unpaired-points+ and \verb+--has-unpaired-points+
+\loid{no-unpaired-points}\loid{has-unpaired-points} options ignore paired sets
+of points like these.
 
 The \verb+-f+ option\oid{f}{no-78s}\index{places!penultimate}
 is used to exclude any methods with penultimate places
@@ -4851,6 +4869,9 @@ interaction with \verb+-FP+ (\sref{pendrows}).
 \item Named and unnamed methods: \verb+--named+, \verb+--unnamed+ 
   (\sref{output_opt}).
 \item Bell expressions in \verb+-m+ (\sref{pn}).
+\item Requiring and excluding points: \verb+--no-points+, \verb+--has-points+,
+  \verb+--no-unpaired-points+, \verb+--has-unpaired-points+
+  (\sref{int_struct}).
 \end{list}
 
 \subsection{The future}

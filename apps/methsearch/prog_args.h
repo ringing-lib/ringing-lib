@@ -83,6 +83,10 @@ struct arguments
   init_val<bool,false> require_offset_cyclic;
   init_val<bool,false> require_reg_hls;
   init_val<bool,false> right_place;
+  init_val<bool,false> no_points;
+  init_val<bool,false> has_points;
+  init_val<bool,false> no_unpaired_points;
+  init_val<bool,false> has_unpaired_points;
   init_val<bool,false> show_all_meths;
 
   init_val<bool,false> quiet;

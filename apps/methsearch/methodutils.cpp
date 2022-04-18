@@ -1,5 +1,5 @@
 // -*- C++ -*- methodutils.h - utility functions missing from the ringing-lib
-// Copyright (C) 2002, 2003, 2004, 2005, 2009, 2010, 2011, 2021
+// Copyright (C) 2002, 2003, 2004, 2005, 2009, 2010, 2011, 2021, 2022
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -302,8 +302,9 @@ bool compare_changes( change const& a, change const& b )
   return pa < pb;
 }
 
-namespace {
-char const* old_lhcode_6( bool unicode, method const& m )
+RINGING_START_ANON_NAMESPACE
+
+static char const* old_lhcode_6( bool unicode, method const& m )
 {
   row const lh( m.lh() );
   change const c12( m.bells(), "12" );
@@ -357,7 +358,7 @@ char const* old_lhcode_6( bool unicode, method const& m )
   return "?";
 }
 
-char const* old_lhcode_5( method const& m )
+static char const* old_lhcode_5( method const& m )
 {
   row const lh( m.lh() );
   change const c1(m.bells(), "1"),   c2(m.bells(), "12"), 
@@ -400,7 +401,8 @@ char const* old_lhcode_5( method const& m )
 
   return "?";
 }
-}
+
+RINGING_END_ANON_NAMESPACE
 
 char const* old_lhcode( bool unicode, method const& m ) 
 {
@@ -412,31 +414,62 @@ char const* old_lhcode( bool unicode, method const& m )
     return "?";
 }
 
-unsigned long staticity( method const& m )
-{
-  unsigned long s = 0ul; //1ul;
-  for ( int i=0, b=m.bells(); i!=b-1; ++i)
-  {
-    int j=0, l=m.size();
-    while ( j!=l && ( m[j].findswap(i) || 
-                      m[j].findplace(i) && m[j].findplace(i+1) ) ) 
-      ++j;
-    if (j==l) 
-      return static_cast<unsigned long>(-1);
+RINGING_START_ANON_NAMESPACE
 
-    for ( int k=j; k<j+l; ++k )
-    {
+static vector<int> find_dodges( method const& m, bool inc_places ) 
+{
+  vector<int> dodges;
+
+  // Look at each possible dodging position in turn
+  for ( int i=0, b=m.bells(); i<b-1; ++i) {
+    int j=0, l=m.size();
+    // Skip over a crossing in this position at the start of the lead as 
+    // it may have continued from the previous lead
+    while ( j<l && ( m[j].findswap(i) || inc_places && 
+                     m[j].findplace(i) && m[j].findplace(i+1) ) ) 
+      ++j;
+    // Is there dodging throughout the lead?
+    if (j==l)
+      dodges.push_back(-1);
+
+    for ( int k=j; k<j+l; ++k ) {
       int k0=k;
-      while ( k!=j+l && ( m[k%l].findswap(i) || 
-                          m[k%l].findplace(i) && m[k%l].findplace(i+1) ) )
+      while ( k<j+l && ( m[k%l].findswap(i) || inc_places && 
+                         m[k%l].findplace(i) && m[k%l].findplace(i+1) ) )
         ++k;
-      if (k!=k0) {
-        // s *= ipower( 2, k-k0-1 );
-        s += k-k0-1;
-      }
+      if (k>k0+1)
+        dodges.push_back( k-k0-1 );
     }
   }
+
+  return dodges;
+}
+
+RINGING_END_ANON_NAMESPACE
+
+unsigned long staticity( method const& m )
+{
+  unsigned long s = 0ul;
+  for ( int d : find_dodges(m, true) )
+    if ( d == -1 )
+      return static_cast<unsigned long>(-1);
+    else 
+      s += d;
   return s;
+}
+
+bool has_points( method const& m ) {
+  for ( int d : find_dodges(m, false) )
+    if ( d > 0 && d % 2 ) 
+      return true;
+  return false;
+}
+
+bool has_unpaired_points( method const& m ) {
+  for ( int d : find_dodges(m, true) )
+    if ( d > 0 && d % 2 ) 
+      return true;
+  return false;
 }
 
 pair<method,method> split_over_and_under( method const& m ) {

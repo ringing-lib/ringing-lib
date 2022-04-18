@@ -315,6 +315,26 @@ void arguments::bind( arg_parser &p )
 	   right_place ) );
 
   p.add( new boolean_opt
+	 ( '\0', "no-points", 
+	   "Require a method with no points, fish-tails, etc",
+	   no_points ) );
+
+  p.add( new boolean_opt
+	 ( '\0', "has-points", 
+	   "Require a method with points, fish-tails, etc",
+	   has_points ) );
+
+  p.add( new boolean_opt
+	 ( '\0', "no-unpaired-points", 
+	   "Require a method with no unpaired points, fish-tails, etc",
+	   no_unpaired_points ) );
+
+  p.add( new boolean_opt
+	 ( '\0', "has-unpaired-points", 
+	   "Require a method with unpaired points, fish-tails, etc",
+	   has_unpaired_points ) );
+
+  p.add( new boolean_opt
 	 ( 'f', "no-78s", 
 	   "Prohibit 78s (on 8 bells) in the place notation",
 	   no_78_pns ) );
