@@ -135,6 +135,9 @@ searcher::searcher( arguments &args )
     search_count( 0ul ), node_count( 0ul )
 {
   init();
+  if (args.bells)
+    args.orig_lead_len = args.lead_len;
+
   reset();
 
   copy( args.startmeth.rbegin(), args.startmeth.rend(), 
