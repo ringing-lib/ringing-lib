@@ -43,7 +43,8 @@ int main( int argc, char *argv[] )
   else if ( args.random_seed )
     srand( args.random_seed );
 
-  if ( formats_have_names() || formats_have_cc_ids() || args.filter_lib_mode )
+  if ( formats_have_names() || formats_have_cc_ids() || args.filter_lib_mode 
+         || args.only_named || args.only_unnamed )
     method_libraries::init();
 
   // So that errors with -M options are presented now rather than later.
