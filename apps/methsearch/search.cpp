@@ -143,6 +143,9 @@ searcher::searcher( arguments &args )
 
 void searcher::init() {
   bells = args.bells;
+  if (!args.lead_len && args.hunt_bells)
+    args.lead_len = (args.treble_back-args.treble_front + 1) 
+                      * 2 * (1 + args.treble_dodges);
   lead_len = args.lead_len;
   div_len = (1 + args.treble_dodges) * 2;
   sym_offset = args.hunt_bells && args.hunt_bells % 2 == 0
@@ -211,6 +214,8 @@ void searcher::filter( library const& in )
 
     try {
       filter_method = i->meth();
+      if (args.lead_len && filter_method.size() != args.lead_len)
+        continue;
       if ( !args.orig_lead_len ) {
         lead_len = args.lead_len = filter_method.length();
         if ( !parse_mask(args) ) 
