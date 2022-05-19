@@ -50,6 +50,8 @@ struct arguments
   init_val<bool,false>  full_title;
   init_val<bool,false>  pn_only;
   vector<string>        libs;
+  string                suffixstr;
+  vector<string>        suffixes;
 
 private:
   void bind( arg_parser& p );
@@ -98,8 +100,35 @@ void arguments::bind( arg_parser& p )
            ( 'P', "pn-only",  "Print only the place notation",
              pn_only ) );
 
+  p.add( new string_opt
+           ( 'S', "method-suffixes",  
+             "Try suffixes when searching for methods by name.", 
+             "STRS", suffixstr ) );
+
   p.set_default( new strings_opt( '\0', "", "", "", libs ) );
 }
+
+// TODO: This is duplicated in ringing/library.cpp
+RINGING_START_ANON_NAMESPACE
+vector<string> split_path( string const& p )
+{
+  vector<string> pp;
+  string::size_type i=0;
+  while (true) {
+    string::size_type j = p.find(':', i);
+    if ( j == string::npos ) {
+      if ( p.size() ) pp.push_back( p.substr(i) );
+      break;
+    }
+    
+    pp.push_back( p.substr(i, j-i) );
+    i = j+1;
+  }
+  return pp;
+}
+
+RINGING_END_ANON_NAMESPACE
+
 
 bool arguments::validate( arg_parser& ap )
 {
@@ -127,6 +156,8 @@ bool arguments::validate( arg_parser& ap )
     ap.error( "At most one of -a, -f and -P may be used");
     return false;
   }
+
+  suffixes = split_path(suffixstr);
 
   return true;
 }
@@ -208,7 +239,15 @@ bool apply_filters( arguments& args, library_entry const& le, libout& out ) {
 bool filter_by_titles( library const& meths, arguments& args, libout& out ) {
   bool okay = true;
   for ( size_t i=0, n=args.titles.size(); i != n; ++i ) {
-    library_entry le = meths.find( args.titles[i] );
+    library_entry le;
+    for ( string suffix : args.suffixes ) {
+      string title( args.titles[i] );
+      if (suffix.length())
+        (title += ' ') += suffix;
+      le = meths.find(title);
+      if (!le.null()) break;
+    }
+
     if (le.null()) {
       cerr << "Method not found: " << args.titles[i] << endl;
       okay = false;
