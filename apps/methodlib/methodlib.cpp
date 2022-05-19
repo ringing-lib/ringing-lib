@@ -158,6 +158,8 @@ bool arguments::validate( arg_parser& ap )
   }
 
   suffixes = split_path(suffixstr);
+  if (suffixes.empty())
+    suffixes.push_back(string());
 
   return true;
 }
