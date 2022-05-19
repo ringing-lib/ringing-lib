@@ -161,6 +161,9 @@ bool arguments::validate( arg_parser& ap )
   if (suffixes.empty())
     suffixes.push_back(string());
 
+  if ( suffixstr.size() && titles.size() )
+    payloads = titles;
+
   return true;
 }
 
@@ -225,7 +228,11 @@ bool read_one_title( arguments& args ) {
       args.payloads.push_back(line.substr(i+1));
     }
   }
-  else args.titles.push_back(line);
+  else {
+    args.titles.push_back(line);
+    if (args.suffixstr.size())
+      args.payloads.push_back(line);
+  }
   return true;
 }
 
@@ -257,6 +264,8 @@ bool filter_by_titles( library const& meths, arguments& args, libout& out ) {
     else {
       if (args.copy_payload)
         le.set_facet<litelib::payload>( args.payloads[i] );
+      else if (args.suffixstr.size())
+        le.set_facet<litelib::payload>( args.titles[i] );
       if (!apply_filters( args, le, out ))
         okay = false;
     }
