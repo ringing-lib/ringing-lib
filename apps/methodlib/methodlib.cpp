@@ -48,6 +48,7 @@ struct arguments
   init_val<bool,false>  inc_bells;
   init_val<bool,false>  copy_payload;
   init_val<bool,false>  full_title;
+  init_val<bool,false>  pn_only;
   vector<string>        libs;
 
 private:
@@ -93,6 +94,10 @@ void arguments::bind( arg_parser& p )
                 "class and stage names",
              full_title ) );
 
+  p.add( new boolean_opt
+           ( 'P', "pn-only",  "Print only the place notation",
+             pn_only ) );
+
   p.set_default( new strings_opt( '\0', "", "", "", libs ) );
 }
 
@@ -114,7 +119,12 @@ bool arguments::validate( arg_parser& ap )
   }
 
   if ( read_titles + !titles.empty() + !starts_with.empty() > 1 ) {
-    ap.error( "At most one of -t, -T and --starts-with must be used");
+    ap.error( "At most one of -t, -T and --starts-with may be used");
+    return false;
+  }
+
+  if ( copy_payload + full_title + pn_only > 1 ) {
+    ap.error( "At most one of -a, -f and -P may be used");
     return false;
   }
 
@@ -238,8 +248,10 @@ int main(int argc, char const** argv) {
           i( args.libs.begin() ), e( args.libs.end() ); i != e; ++i )
     read_library( *i, meths );
  
-  method_stream::name_form form = args.full_title ?
-    method_stream::full_title : method_stream::payload_or_name; 
+  method_stream::name_form form 
+    = args.pn_only    ? method_stream::none
+    : args.full_title ? method_stream::full_title  
+    :                   method_stream::payload_or_name; 
   method_stream out(args.inc_bells, form);
   
   bool okay = false;
