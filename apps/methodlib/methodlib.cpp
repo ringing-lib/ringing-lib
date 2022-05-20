@@ -213,6 +213,8 @@ bool read_one_title( arguments& args ) {
   size_t i;
   do {
     if ( !getline( cin, line ) ) return false;
+    if ( (i = line.find('#')) != string::npos )
+      line.erase(i);
     i = line.find_last_not_of(" \t\f\v\n\r");
   } while ( i == string::npos );
 
