@@ -1063,12 +1063,12 @@ bool arguments::validate_bells( arg_parser* ap )
     return false;
   }
 
-  if ( formats_have_old_lhcodes() &&
-       ( bells != 6 & bells != 5 || hunt_bells != 1 ) ) {
-    if (ap) ap->error( "Old-style lead end codes are only supported for "
-		       "single-hunt doubles or minor methods" );
-    return false;
-  }
+//  if ( formats_have_old_lhcodes() &&
+//       ( bells != 6 & bells != 5 || hunt_bells != 1 ) ) {
+//    if (ap) ap->error( "Old-style lead end codes are only supported for "
+//		       "single-hunt doubles or minor methods" );
+//    return false;
+//  }
 
   if ( orig_avoid_rows.size() ) {
     avoid_rows.clear();
