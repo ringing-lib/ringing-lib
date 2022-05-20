@@ -25,20 +25,10 @@
 
 #include "methodutils.h"
 #include <string>
-#if RINGING_OLD_INCLUDES
-#include <stdexcept.h>
-#include <iostream.h>
-#else
 #include <stdexcept>
 #include <iostream>
-#endif
-#if RINGING_OLD_C_INCLUDES
-#include <stddef.h>
-#include <assert.h>
-#else
 #include <cstddef>
 #include <cassert>
-#endif
 #include <ringing/row.h>
 #include <ringing/method.h>
 #include <ringing/streamutils.h>
@@ -56,17 +46,13 @@ bool is_cyclic_le( const row &lh, int hunts )
   if ( lh[hunts] == hunts ) 
     return false;
 
-  {
-    for ( int i=0; i<hunts; ++i )
-      if ( lh[i] != i )
-	return false;
-  }
+  for ( int i=0; i<hunts; ++i )
+    if ( lh[i] != i )
+      return false;
 
-  {
-    for ( int i=hunts+1; i<lh.bells(); ++i )
-      if ( (lh[i] - hunts) % n != (lh[i-1] + 1 - hunts) % n )
-	return false;
-  }
+  for ( int i=hunts+1; i<lh.bells(); ++i )
+    if ( (lh[i] - hunts) % n != (lh[i-1] + 1 - hunts) % n )
+      return false;
 
   return true;
 }
@@ -83,11 +69,10 @@ bool is_division_false( const method &m, const change &c,
   vector< row > rows( 1, r );
   rows.reserve( cur_div_len );
 
-  for ( int i = div_start; i < len; ++i )
-    {
-      r *= m[i];
-      rows.push_back( r );
-    }
+  for ( int i = div_start; i < len; ++i ) {
+    r *= m[i];
+    rows.push_back( r );
+  }
 
   if ( find( rows.begin(), rows.end(), r * c ) != rows.end() )
     return true;
@@ -99,19 +84,18 @@ bool is_too_many_places( const method &m, const change &c, size_t max,
                          size_t stopoff )
 {
   for ( int i=0; i<c.bells(); ++i )
-    if ( c.findplace(i) )
-      {
-	size_t count(2u);
+    if ( c.findplace(i) ) {
+      size_t count(2u);
 
-	for ( ; count <= size_t(m.length())+1; ++count ) {
-          size_t o = m.length() - count + 1;
-          if ( o == stopoff || !m[o].findplace(i) )
-	    break;
-        }
-
-	if ( count > max )
-	  return true;
+      for ( ; count <= size_t(m.length())+1; ++count ) {
+        size_t o = m.length() - count + 1;
+        if ( o == stopoff || !m[o].findplace(i) )
+        break;
       }
+
+      if ( count > max )
+        return true;
+    }
 
   return false;
 }
@@ -138,8 +122,7 @@ bool division_bad_parity_hack( const method &m, const change &c,
   vector< row > rows( 1, r );
   rows.reserve( cur_div_len );
 
-  for ( int i = div_start; i < m.length(); ++i )
-  {
+  for ( int i = div_start; i < m.length(); ++i ) {
     r *= m[i];
     rows.push_back( r );
   }
@@ -150,13 +133,12 @@ bool division_bad_parity_hack( const method &m, const change &c,
 
   size_t even[2] = { 0u, 0u }, odd[2] = { 0u, 0u };
   
-  for ( unsigned int i = 0; i < rows.size(); ++i )
-    {
-      if ( rows[i].sign() == +1 )
-	++even[i%2];
-      else
-	++odd[i%2];
-    } 
+  for ( unsigned int i = 0; i < rows.size(); ++i ) {
+    if ( rows[i].sign() == +1 )
+      ++even[i%2];
+    else
+      ++odd[i%2];
+  } 
 
   if ( even[0] != odd[0] || even[1] != odd[1] )
     return true; // Bad
@@ -168,35 +150,30 @@ bool has_rotational_symmetry( const method &m )
 {
   const int n( m.size() );
 
-  {
-    // Rotational symmetry about a change
-    for ( int i=0; i<n/2+1; ++i )
-      {
-	// Try m[i] as the rotational symmetry point
-	bool ok = true;
+  // Rotational symmetry about a change
+  for ( int i=0; i<n/2+1; ++i ) {
+    // Try m[i] as the rotational symmetry point
+    bool ok = true;
 
-	for ( int j=0; j<n/2+1 && ok; ++j )
-	  if ( m[ (i+j)%n ] != m[ (n+i-j)%n ].reverse() )
-	    ok = false;
+    for ( int j=0; j<n/2+1 && ok; ++j )
+      if ( m[ (i+j)%n ] != m[ (n+i-j)%n ].reverse() )
+        ok = false;
 
-	if (ok)
-	  return true;
-      }
+    if (ok)
+      return true;
   }
-  {
-    // Rotational symmetry about a row
-    for ( int i=0; i<n/2+1; ++i )
-      {
-	// Try m[i] / m[(i+1)%n] as the rotational symmetry point
-	bool ok = true;
 
-	for ( int j=0; j<n/2 && ok; ++j )
-	  if ( m[ (i+j+1)%n ] != m[ (n+i-j)%n ].reverse() )
-	    ok = false;
+  // Rotational symmetry about a row
+  for ( int i=0; i<n/2+1; ++i ) {
+    // Try m[i] / m[(i+1)%n] as the rotational symmetry point
+    bool ok = true;
 
-	if (ok)
-	  return true;
-      }
+    for ( int j=0; j<n/2 && ok; ++j )
+      if ( m[ (i+j+1)%n ] != m[ (n+i-j)%n ].reverse() )
+        ok = false;
+
+    if (ok)
+      return true;
   }
   return false;
 }
@@ -204,17 +181,16 @@ bool has_rotational_symmetry( const method &m )
 bool has_conventional_symmetry( const method& m )
 {
   const int n( m.size() );
-  for ( int i=0; i < (n%2==0 ? n/2 : n); ++i )
-    {
-      // try m[i] as the sym point
-      bool ok(true);
+  for ( int i=0; i < (n%2==0 ? n/2 : n); ++i ) {
+    // try m[i] as the sym point
+    bool ok(true);
 
-      for ( int j=1; ok && j<(n%2==0 ? n/2 : n/2+1); ++j ) 
-	if ( m[(i+j) % n] != m[(i-j+n) % n] )
-	  ok = false;
+    for ( int j=1; ok && j<(n%2==0 ? n/2 : n/2+1); ++j ) 
+      if ( m[(i+j) % n] != m[(i-j+n) % n] )
+        ok = false;
 
-      if (ok) return true;
-    }
+    if (ok) return true;
+  }
 
   return false;
 }
@@ -328,8 +304,7 @@ static char const* old_lhcode_6( bool unicode, method const& m )
     return "?";
   }
 
-  switch (lh[1])
-    {
+  switch (lh[1]) {
     case 2:
       if ( lh == "135264" ) return seconds ? "G" : "L";
       if ( lh == "136245" ) return seconds ? "Q" : "?";
@@ -370,8 +345,7 @@ static char const* old_lhcode_5( method const& m )
   if ( !b1 && !b2 && !b3 && !b4 ) 
     return "?";
 
-  switch (lh[1])
-    {
+  switch (lh[1]) {
     case 1:
       if ( lh == "12534" ) return b2 ? "G" : b3 ? "T" : "?";
       if ( lh == "12453" ) return b2 ? "K" : b3 ? "S" : "?";
