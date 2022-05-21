@@ -1,5 +1,5 @@
 // method.cpp - routines for methods, positions and calls
-// Copyright (C) 2001, 2004, 2008, 2010, 2011, 2014, 2021
+// Copyright (C) 2001, 2004, 2008, 2010, 2011, 2014, 2021, 2022
 // Martin Bright <martin@boojum.org.uk> and
 // Richard Smith <richard@ex-parrot.com>
 
@@ -443,9 +443,9 @@ string method::fullname(int year) const
       || myname == "Double Grandsire" || myname == "Little Grandsire" )
     ; // Grandsire and its related methods do not contain either a class
       // or a Little modifier.
-  else if ( bells()%2 && ( myname == "Union" || myname == "Double Union" 
+  else if ( bells()>5 && ( myname == "Union" || myname == "Double Union" 
 			   || myname == "Reverse Union" ) )
-    ; // Nor does Union ...
+    ; // Nor does Union ..., though Union Bob Doubles is unrelated
   else
     {
       const string cn( classname(cl, year) );
