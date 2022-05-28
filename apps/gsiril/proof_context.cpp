@@ -49,7 +49,7 @@ proof_context::proof_context( const execution_context &ectx )
   : ectx(ectx), row_mask(ectx.bells(), ectx.row_mask()),
     max_length( ectx.expected_length().second ),
     p( new prover(ectx.get_args().num_extents) ), proving(true), 
-    parent( NULL ), output( &ectx.output() ),
+    parent( NULL ), mus(ectx.get_music()), output( &ectx.output() ),
     silent( ectx.get_args().everyrow_only || ectx.get_args().filter
             || ectx.get_args().quiet >= 2 ), 
     underline( false )
@@ -129,6 +129,8 @@ bool proof_context::permute_and_prove_t::prove()
 {
   if ( !pctx.is_proving() ) return true;
   bool rv = p.add_row(r); 
+  mus.process_row(r, backstroke);
+  backstroke = !backstroke;
   pctx.execute_everyrow();
   if ( pctx.max_length && p.size() > pctx.max_length ) 
     pctx.execute_symbol("toolong");
@@ -138,15 +140,15 @@ bool proof_context::permute_and_prove_t::prove()
 }
 
 proof_context::permute_and_prove_t::
-permute_and_prove_t( row &r, prover &p, proof_context &pctx ) 
-  : r(r), p(p), pctx(pctx)
+permute_and_prove_t( row &r, prover &p, music& mus, proof_context &pctx ) 
+  : r(r), p(p), mus(mus), pctx(pctx), backstroke(false)
 {
 }
 
 proof_context::permute_and_prove_t 
 proof_context::permute_and_prove()
 {
-  return permute_and_prove_t( r, *p, *this );
+  return permute_and_prove_t( r, *p, mus, *this );
 }
 
 void proof_context::disable_proving()

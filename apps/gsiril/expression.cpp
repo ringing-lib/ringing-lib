@@ -571,10 +571,15 @@ pattern_node::pattern_node( int bells, const string& regex )
 {
   validate_regex( mus, bells );
 }
+  
+music pattern_node::music_evaluate( proof_context &ctx ) const
+{
+  return music( bells, mus );
+}
 
 bool pattern_node::bool_evaluate( proof_context &ctx ) const
 {
-  music m( bells, mus );
+  music m( music_evaluate(ctx) );
   m.process_row( ctx.current_row() );
   return m.get_score();
 }
@@ -582,6 +587,27 @@ bool pattern_node::bool_evaluate( proof_context &ctx ) const
 void pattern_node::debug_print( ostream &os ) const
 {
   os << mus.get();
+}
+
+opaque_music_node::opaque_music_node( const music& mus )
+  : mus(mus)
+{}
+  
+music opaque_music_node::music_evaluate( proof_context &ctx ) const
+{
+  return mus;
+}
+
+bool opaque_music_node::bool_evaluate( proof_context &ctx ) const
+{
+  music m( mus );  // Take a copy to the score is not retained
+  m.process_row( ctx.current_row() );
+  return m.get_score();
+}
+
+void opaque_music_node::debug_print( ostream &os ) const
+{
+  os << "music()";
 }
 
 void defined_node::debug_print( ostream &os ) const
@@ -966,6 +992,11 @@ string call_node::string_evaluate( proof_context &ctx, bool* no_nl ) const
 vector<change> call_node::pn_evaluate( proof_context &ctx ) const
 {
   return evaluate(ctx).pn_evaluate(ctx);
+}
+
+music call_node::music_evaluate( proof_context &ctx ) const
+{
+  return evaluate(ctx).music_evaluate(ctx);
 }
 
 expression::type_t call_node::type( proof_context &ctx ) const

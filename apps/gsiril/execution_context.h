@@ -98,6 +98,10 @@ public:
   music_details const& row_mask() const { return rmask; }
   void row_mask(music_details const& m);
 
+  void clear_music() { mus.clear(bells()); }
+  void add_music(music const& m) { mus.append(m); }
+  music const& get_music() const { return mus; }
+
   bool evaluate_bool_const( expression const& ) const;
 
 private:
@@ -105,6 +109,7 @@ private:
 
   arguments args;
   music_details rmask;
+  music mus;
   ostream* os;
   symbol_table sym_table;
   bool failed;

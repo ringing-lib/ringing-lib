@@ -17,9 +17,12 @@
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
-__summary__ = "# rows ending in @"
+__summary__  = "# rows ending in @"
 
-true         = __summary__, "Touch is true"
+__music__    = (__score__=music()), 
+               {__score__ > 0: "Music score: ${__score__}"}
+
+true         = __summary__, "Touch is true", __music__
 notround     = __summary__, "Is this OK?"
 false        = __summary__, "Touch is false in $ rows"
 tooshort     = __summary__, "Touch is too short: \",

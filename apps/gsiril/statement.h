@@ -185,6 +185,18 @@ private:
   mode_t mode;
 };
 
+// Music directive
+class music_stmt : public statement::impl {
+public:
+  explicit music_stmt( const vector<expression>& pats )
+    : pats(pats) {}
+
+private:
+  virtual void execute( execution_context& );
+
+  vector<expression> pats;
+};
+
 class compound_stmt : public statement::impl {
 public:
   void push( statement const& stmt ) { stmts.push_back(stmt); }

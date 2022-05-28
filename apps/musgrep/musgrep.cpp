@@ -156,7 +156,7 @@ bool arguments::validate( arg_parser& ap )
     try 
     {
       size_t first = distance(mus.begin(), mus.end());
-      add_scored_music_string( mus, *i );
+      mus.add_scored_music_string( *i );
       size_t last = distance(mus.begin(), mus.end());
       musdets.push_back( make_pair( first, last ) );
     }

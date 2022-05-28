@@ -261,6 +261,9 @@ private:
   statement parse_if( expression const& cond );
   statement parse_foreach( vector<token> const& cmd );
 
+  vector<expression> parse_list( vector<token>::const_iterator first,
+                                 vector<token>::const_iterator last ) const;
+
   expression make_expr( vector< token >::const_iterator first, 
 			vector< token >::const_iterator last ) const;
 
@@ -435,6 +438,11 @@ statement msparser::parse_command( vector<token> const& cmd ) {
                          : make_expr( cmd.begin() + 1, cmd.end() ),
                        cmd[0] ) );
 
+  // Music directive
+  if ( cmd[0].type() == tok_types::name && cmd[0] == "music" )
+    return statement
+      ( new music_stmt( parse_list( cmd.begin()+1, cmd.end() ) ) );
+
   // If statement blocks
   if ( cmd.size() > 1 && cmd[0].type() == tok_types::name && cmd[0] == "if" )
     return parse_if( make_expr(  cmd.begin() + 1, cmd.end() ) );
@@ -506,6 +514,23 @@ statement msparser::parse_if( expression const& cond1 ) {
   }
 }
 
+vector<expression> 
+msparser::parse_list( vector<token>::const_iterator first,
+                      vector<token>::const_iterator last ) const {
+  vector<expression> vals;
+
+  vector<token>::const_iterator split;
+  while ( find( first, last, tok_types::comma, split ) ) {
+    vals.push_back( make_expr( first, split ) );
+    first = split+1;   
+  }
+  if ( first != last ) 
+    vals.push_back( make_expr( first, last ) );
+
+  return vals; 
+}
+
+
 statement msparser::parse_foreach( vector<token> const& cmd ) {
   // Syntax: foreach [ a, b, c ] as x
   if ( cmd.size() < 5 || cmd[1].type() != tok_types::open_brack
@@ -516,18 +541,9 @@ statement msparser::parse_foreach( vector<token> const& cmd ) {
     throw runtime_error
       ( "Malformed foreach statement" );
 
+  vector<expression> vals( parse_list( cmd.begin()+2, cmd.end()-3 ) );
   string const name( cmd[cmd.size()-1] );
-  vector<expression> vals;
 
-  typedef vector< token >::const_iterator iter_t;
-  iter_t first = cmd.begin()+2, last = cmd.end()-3, split;
-  while ( find( first, last, tok_types::comma, split ) ) {
-    vals.push_back( make_expr( first, split ) );
-    first = split+1;   
-  }
-  if ( first != last ) 
-    vals.push_back( make_expr( first, last ) );
-    
   scoped_pointer<compound_stmt> block( new compound_stmt );
   while (true) {
     vector<token> cmd2( tokenise_command() );
@@ -975,6 +991,7 @@ vector<expression>
 msparser::make_args( vector< token >::const_iterator first, 
 		     vector< token >::const_iterator last ) const
 {
+  // TODO:  Change this to use parse_list()
   vector<expression> args;
   if ( first != last ) {
     while (true) {

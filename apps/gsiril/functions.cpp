@@ -132,6 +132,57 @@ class stagename_impl : public fnnode {
     { return expression::no_type; }
 };
 
+class music_impl : public fnnode {
+  virtual expression call( proof_context& ctx, 
+                           vector<expression> const& args ) const {
+    if (args.size())
+      throw runtime_error("The music function takes no arguments");
+    return expression( new integer_node( ctx.music_score() ) );
+  }
+
+  virtual void debug_print( ostream &os ) const { os << "music"; }
+  virtual expression::type_t type( proof_context &ctx ) const 
+    { return expression::integer; }
+};
+
+class runs_impl : public fnnode {
+public:
+  explicit runs_impl( music::match_pos pos = music::anywhere ) : pos(pos) {}
+
+private:
+  virtual expression call( proof_context& ctx, 
+                           vector<expression> const& args ) const {
+    if (args.size() > 2)
+      throw runtime_error("The runs function takes up to two arguments");
+    int len( args.size() > 0 ? args[0].int_evaluate(ctx) : 4 );
+    int dir( args.size() > 1 ? args[1].int_evaluate(ctx) : 0 );
+    return expression( new opaque_music_node( 
+      music::make_runs_match( ctx.bells(), len, pos, dir, 1, 1 ) ) );
+  }
+
+  virtual void debug_print( ostream &os ) const { os << "runs"; }
+  virtual expression::type_t type( proof_context &ctx ) const 
+    { return expression::no_type; }
+
+  music::match_pos pos;
+};
+
+class crus_impl : public fnnode {
+  virtual expression call( proof_context& ctx, 
+                           vector<expression> const& args ) const {
+    if (args.size())
+      throw runtime_error("The crus function takes no arguments");
+    return expression( new opaque_music_node( 
+      music::make_cru_match( ctx.bells(), 1,1 ) ) );
+  }
+
+  virtual void debug_print( ostream &os ) const { os << "crus"; }
+  virtual expression::type_t type( proof_context &ctx ) const 
+    { return expression::no_type; }
+
+  music::match_pos pos;
+};
+
 void register_functions( execution_context& ectx )
 {
   ectx.define_symbol( pair< const string, expression >
@@ -148,5 +199,15 @@ void register_functions( execution_context& ectx )
     ( "loadlh", expression( new load_fn_impl( load_fn_impl::lead_head ) ) ) );
   ectx.define_symbol( pair< const string, expression >
     ( "stagename", expression( new stagename_impl ) ) );
+  ectx.define_symbol( pair< const string, expression >
+    ( "music", expression( new music_impl ) ) );
+  ectx.define_symbol( pair< const string, expression >
+    ( "runs", expression( new runs_impl ) ) );
+  ectx.define_symbol( pair< const string, expression >
+    ( "frontruns", expression( new runs_impl( music::at_front ) ) ) );
+  ectx.define_symbol( pair< const string, expression >
+    ( "backruns", expression( new runs_impl( music::at_back ) ) ) );
+  ectx.define_symbol( pair< const string, expression >
+    ( "crus", expression( new runs_impl ) ) );
 }
 

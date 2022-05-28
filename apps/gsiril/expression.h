@@ -273,10 +273,24 @@ public:
 protected:
   virtual void debug_print( ostream &os ) const;
   virtual bool bool_evaluate( proof_context &ctx ) const;
+  virtual music music_evaluate( proof_context &ctx ) const;
 
 private:
   int bells;
   music_details mus;
+};
+
+class opaque_music_node : public expression::bnode {
+public:
+  explicit opaque_music_node( const music& mus );
+
+protected:
+  virtual void debug_print( ostream &os ) const;
+  virtual bool bool_evaluate( proof_context &ctx ) const;
+  virtual music music_evaluate( proof_context &ctx ) const;
+
+private:
+  music mus;
 };
 
 class defined_node : public expression::bnode {
@@ -524,6 +538,7 @@ protected:
   virtual string string_evaluate( proof_context &ctx, bool* no_nl ) const;
   virtual string string_evaluate( proof_context &ctx ) const;
   virtual vector<change> pn_evaluate( proof_context &ctx ) const;
+  virtual music music_evaluate( proof_context &ctx ) const;
 
 private:
   string name;
