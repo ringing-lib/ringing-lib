@@ -83,6 +83,11 @@ expression::node::apply_replacement( proof_context& ctx,
   unable_to("use expression as a replacement block");
 }
 
+string expression::node::name( proof_context& ctx ) const {
+  unable_to("get method name from expression");
+}
+
+
 void expression::bnode::execute( proof_context& ctx, int dir ) const {
   if ( dir < 0 )
     unable_to("execute expression backwards");

@@ -27,6 +27,7 @@
 
 #include <vector>
 #include <iosfwd>
+#include <string>
 
 #include <ringing/pointers.h>
 
@@ -91,6 +92,7 @@ public:
                                     vector<change>& pn ) const;
     virtual bool isnop() const { return false; }
     virtual type_t type( proof_context &ctx ) const { return no_type; }
+    virtual string name( proof_context &ctx ) const;
 
   protected:
 #   if __cplusplus >= 201103L
@@ -130,6 +132,8 @@ public:
   bool isnop() const { return !impl || impl->isnop(); }
   type_t type( proof_context &ctx ) const 
     { return impl ? impl->type(ctx) : no_type; }
+  string name( proof_context &ctx ) const 
+    { return impl ? impl->name(ctx) : string(); }
 
   void debug_print( ostream &os ) const    { impl->debug_print(os); }
 

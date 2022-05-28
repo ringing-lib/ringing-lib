@@ -1,5 +1,5 @@
 // functions.cpp - Built-in functions
-// Copyright (C) 2021 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2021, 2022 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -183,6 +183,22 @@ class crus_impl : public fnnode {
   music::match_pos pos;
 };
 
+class methname_impl : public fnnode {
+  virtual expression call( proof_context& ctx, 
+                           vector<expression> const& args ) const {
+    if (args.size() != 1)
+      throw runtime_error("The crus function takes one argument");
+    string rv( args[0].name(ctx) );
+    return expression( new string_node(rv) );
+  }
+
+  virtual void debug_print( ostream &os ) const { os << "methname"; }
+  virtual expression::type_t type( proof_context &ctx ) const 
+    { return expression::no_type; }
+
+  music::match_pos pos;
+};
+
 void register_functions( execution_context& ectx )
 {
   ectx.define_symbol( pair< const string, expression >
@@ -209,5 +225,7 @@ void register_functions( execution_context& ectx )
     ( "backruns", expression( new runs_impl( music::at_back ) ) ) );
   ectx.define_symbol( pair< const string, expression >
     ( "crus", expression( new runs_impl ) ) );
+  ectx.define_symbol( pair< const string, expression >
+    ( "methname", expression( new methname_impl ) ) );
 }
 

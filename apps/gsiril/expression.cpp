@@ -279,6 +279,11 @@ pn_node::pn_node( const vector<change>& m )
 {
 }
 
+pn_node::pn_node( const method& m )
+  : changes( m ), meth_name( m.name() )
+{
+}
+
 void pn_node::debug_print( ostream &os ) const
 {
   copy( changes.begin(), changes.end(),
@@ -291,6 +296,10 @@ void pn_node::execute( proof_context &ctx, int dir ) const
     for_each( changes.begin(), changes.end(), ctx.permute_and_prove() );
   else
     for_each( changes.rbegin(), changes.rend(), ctx.permute_and_prove() );
+}
+
+string pn_node::name( proof_context &ctx ) const { 
+  return meth_name;
 }
 
 RINGING_START_ANON_NAMESPACE
@@ -432,10 +441,22 @@ vector<change> symbol_node::pn_evaluate( proof_context &ctx ) const
   return e.pn_evaluate(ctx);
 }
 
+music symbol_node::music_evaluate( proof_context &ctx ) const
+{
+  expression e( ctx.lookup_symbol(sym) );
+  return e.music_evaluate(ctx);
+}
+
 expression::type_t symbol_node::type( proof_context& ctx ) const
 {
   expression e( ctx.lookup_symbol(sym) );
   return e.type(ctx);
+}
+
+string symbol_node::name( proof_context& ctx ) const
+{
+  expression e( ctx.lookup_symbol(sym) );
+  return e.name(ctx);
 }
 
 void
