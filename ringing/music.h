@@ -1,5 +1,5 @@
 // -*- C++ -*- music.h - Musical Analysis
-// Copyright (C) 2001, 2008, 2009, 2010, 2011, 2020
+// Copyright (C) 2001, 2008, 2009, 2010, 2011, 2020, 2022
 // Mark Banner <mark@standard8.co.uk> and
 // Richard Smith <richard@ex-parrot.com>.
 
@@ -16,8 +16,6 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-
-// $Id$
 
 /********************************************************************
  * Description:
@@ -41,15 +39,9 @@
 #pragma interface
 #endif
 
-#if RINGING_OLD_INCLUDES
-#include <iostream.h>
-#include <map.h>
-#include <stdexcept.h>
-#else
 #include <iostream>
 #include <map>
 #include <stdexcept>
-#endif
 #include <string>
 #include <ringing/row.h>
 #include <ringing/row_wildcard.h>
@@ -107,7 +99,7 @@ public:
   typedef row_wildcard::invalid_pattern invalid_regex;
 
   RINGING_FAKE_COMPARATORS(music_details)
-  
+
 private:
   // Clear the current counts
   void clear();
@@ -126,34 +118,44 @@ class RINGING_API music
 {
 public:
   // Various defintions for accessing the music_details structure.
-  typedef vector<music_details> mdvector;
   typedef vector<music_details>::iterator iterator;
   typedef vector<music_details>::const_iterator const_iterator;
   typedef vector<music_details>::size_type size_type;
 
-  music(unsigned int b = 0);         // Default Constructor
+  music(unsigned int b = 0);
   music(unsigned int b, music_details const& md);
 
-  void push_back(const music_details&); // "Specify items" to end of vector
-  //  void pop_back(); // Remove items from end of vector
+  // Removes all music details, and sets back to initial state.  
+  // If new_b = 0, then the current number of bells is preserved.
+  void clear(unsigned int new_b = 0);  
 
-  iterator begin(); // begining of the music_details vector
-  const_iterator begin() const;
-  iterator end(); // end of the music_details vector
-  const_iterator end() const;
+  void push_back(const music_details& md);
+  template <class Iterator>
+  void append(Iterator first, Iterator last) {
+    for ( ; first != last; ++first )
+      push_back(*first);
+  }
+  void append(const music& mus) { append(mus.begin(), mus.end()); }
+  void append(const music_details& md) { push_back(md); }
 
-  size_type size() const; // number of music_details stored
+  // Iterate over the music_details vector
+  iterator begin() { return info.begin(); }
+  const_iterator begin() const { return info.begin(); }
+  iterator end() { return info.end(); }
+  const_iterator end() const { return info.end(); }
+
+  // number of music_details stored
+  size_type size() const { return info.size(); }
 
   void set_bells(unsigned int b);
 
   // Main Processing function
   template <class RowIterator>
   void process_rows(RowIterator first, RowIterator last, 
-                    bool backstroke = false)
-  {
+                    bool backstroke = false) {
     reset_music();
     
-    for ( ; first != last; first++, backstroke = !backstroke) 
+    for ( ; first != last; ++first, backstroke = !backstroke) 
 	process_row(*first, backstroke);
   }
 
@@ -163,21 +165,45 @@ public:
 
   // Get the total score - individual scores now obtained from accessing
   // the items within the music_details vector.
-  int get_score(const EStroke& = eBoth);
+  int get_score(const EStroke& = eBoth) const;
   // Get the total number of matching rows.
-  unsigned int get_count(const EStroke& = eBoth);
+  unsigned int get_count(const EStroke& = eBoth) const;
 
-  // Total Possible Score
+  // Total possible score
   int get_possible_score();
 
   // Reset the music information
-  void reset_music(void);
+  void reset_music();
 
   unsigned int bells() const { return b; }
+
+  static music make_cru_match(int b, int sh, int sb);
+
+  enum match_pos { anywhere = 0, at_front, at_back };
+  static music make_runs_match(int b, int n, match_pos pos, int dir, 
+                               int sh, int sb);
+
+  // These take a string such as "rounds" or "4-runs" and convert it to
+  // one or more pattern which is added to the music class.
+  void add_named_music( string const& n, int sh, int sb );
+  void add_named_music( string const& n, int score = 1 ) {
+    return add_named_music(n, score, score); 
+  }
+  
+  // Take a string of the form 
+  //
+  //   [ scoreh ["," scoreb ] ":" ] { "<" name ">" | pattern }
+  //
+  // and adds it to the music class.  If scoreb is omitted, it defaults
+  // to scoreh; if scoreh is omitted, it defaults to 1.  Scores must be 
+  // integers (base 10) with an optional +/- sign.  Named music is parsed
+  // using add_named_music.  Patterns are parsed using the music_details
+  // class.
+  void add_scored_music_string( string const& n );
   
 private:
   // The music specification details
-  mdvector info;
+  vector<music_details> info;
   // The tree containing the structure for matching rows
   cloning_pointer<music_node> top_node;
 
@@ -189,22 +215,6 @@ struct invalid_named_music : public invalid_argument {
   invalid_named_music( string const& n, string const& msg );
 };
 #endif
-
-// These take a string such as "rounds" or "4-runs" and convert it to
-// one or more pattern which is added to the music class.
-RINGING_API void add_named_music( music& m, string const& n, int score = 1 );
-RINGING_API void add_named_music( music& m, string const& n, int sh, int sb );
-
-// Take a string of the form 
-//
-//   [ scoreh ["," scoreb ] ":" ] { "<" name ">" | pattern }
-//
-// and adds it to the music class.  If scoreb is omitted, it defaults
-// to scoreh; if scoreh is omitted, it defaults to 1.  Scores must be 
-// integers (base 10) with an optional +/- sign.  Named music is parsed
-// using add_named_music.  Patterns are parsed using the music_details
-// class.
-RINGING_API void add_scored_music_string( music& m, string const& n );
 
 RINGING_END_NAMESPACE
 

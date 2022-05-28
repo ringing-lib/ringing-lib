@@ -25,11 +25,7 @@
 #pragma interface
 #endif
 
-#if RINGING_HAVE_OLD_IOSTREAM
-#include <ostream.h>
-#else
 #include <iosfwd>
-#endif
 #include <string>
 #include <ringing/row.h>
 #include <ringing/proof.h>
@@ -59,13 +55,15 @@ public:
 
   private:
     friend class proof_context;
-    permute_and_prove_t( row &r, prover &p, proof_context &pctx );
+    permute_and_prove_t( row &r, prover &p, music& mus, proof_context &pctx );
 
     bool prove();
   
     row &r;
     prover &p;
+    music &mus;
     proof_context &pctx;
+    bool backstroke;
   };
 
   explicit proof_context( execution_context const& );
@@ -107,6 +105,8 @@ public:
 
   void increment_node_count() const;
 
+  int music_score() const { return mus.get_score(); }
+
   class scoped_variable {
   public:
     scoped_variable( proof_context& ctx, string const& name );
@@ -133,6 +133,7 @@ private:
   shared_pointer<prover> p;
   bool proving;
   proof_context const* parent;
+  music mus;
 
   ostream* output;
   bool silent;

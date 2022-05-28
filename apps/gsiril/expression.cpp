@@ -279,6 +279,11 @@ pn_node::pn_node( const vector<change>& m )
 {
 }
 
+pn_node::pn_node( const method& m )
+  : changes( m ), meth_name( m.name() )
+{
+}
+
 void pn_node::debug_print( ostream &os ) const
 {
   copy( changes.begin(), changes.end(),
@@ -291,6 +296,10 @@ void pn_node::execute( proof_context &ctx, int dir ) const
     for_each( changes.begin(), changes.end(), ctx.permute_and_prove() );
   else
     for_each( changes.rbegin(), changes.rend(), ctx.permute_and_prove() );
+}
+
+string pn_node::name( proof_context &ctx ) const { 
+  return meth_name;
 }
 
 RINGING_START_ANON_NAMESPACE
@@ -432,10 +441,22 @@ vector<change> symbol_node::pn_evaluate( proof_context &ctx ) const
   return e.pn_evaluate(ctx);
 }
 
+music symbol_node::music_evaluate( proof_context &ctx ) const
+{
+  expression e( ctx.lookup_symbol(sym) );
+  return e.music_evaluate(ctx);
+}
+
 expression::type_t symbol_node::type( proof_context& ctx ) const
 {
   expression e( ctx.lookup_symbol(sym) );
   return e.type(ctx);
+}
+
+string symbol_node::name( proof_context& ctx ) const
+{
+  expression e( ctx.lookup_symbol(sym) );
+  return e.name(ctx);
 }
 
 void
@@ -571,10 +592,15 @@ pattern_node::pattern_node( int bells, const string& regex )
 {
   validate_regex( mus, bells );
 }
+  
+music pattern_node::music_evaluate( proof_context &ctx ) const
+{
+  return music( bells, mus );
+}
 
 bool pattern_node::bool_evaluate( proof_context &ctx ) const
 {
-  music m( bells, mus );
+  music m( music_evaluate(ctx) );
   m.process_row( ctx.current_row() );
   return m.get_score();
 }
@@ -582,6 +608,27 @@ bool pattern_node::bool_evaluate( proof_context &ctx ) const
 void pattern_node::debug_print( ostream &os ) const
 {
   os << mus.get();
+}
+
+opaque_music_node::opaque_music_node( const music& mus )
+  : mus(mus)
+{}
+  
+music opaque_music_node::music_evaluate( proof_context &ctx ) const
+{
+  return mus;
+}
+
+bool opaque_music_node::bool_evaluate( proof_context &ctx ) const
+{
+  music m( mus );  // Take a copy to the score is not retained
+  m.process_row( ctx.current_row() );
+  return m.get_score();
+}
+
+void opaque_music_node::debug_print( ostream &os ) const
+{
+  os << "music()";
 }
 
 void defined_node::debug_print( ostream &os ) const
@@ -966,6 +1013,11 @@ string call_node::string_evaluate( proof_context &ctx, bool* no_nl ) const
 vector<change> call_node::pn_evaluate( proof_context &ctx ) const
 {
   return evaluate(ctx).pn_evaluate(ctx);
+}
+
+music call_node::music_evaluate( proof_context &ctx ) const
+{
+  return evaluate(ctx).music_evaluate(ctx);
 }
 
 expression::type_t call_node::type( proof_context &ctx ) const

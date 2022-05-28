@@ -16,19 +16,13 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-// $Id$
-
 #include <ringing/common.h>
 
 #if RINGING_HAS_PRAGMA_INTERFACE
 #pragma implementation
 #endif
 
-#if RINGING_OLD_INCLUDES
-#include <stdexcept.h>
-#else
 #include <stdexcept>
-#endif
 #include <ringing/streamutils.h>
 #include "expr_base.h"
 #include "proof_context.h"
@@ -68,6 +62,11 @@ expression::node::pn_evaluate( proof_context& ctx ) const {
   unable_to("evaluate expression as a static block of changes");
 }
 
+music expression::node::music_evaluate( proof_context& ctx ) const {
+  unable_to("evaluate expression as a music pattern");
+}
+
+
 expression expression::node::evaluate( proof_context& ctx ) const {
   unable_to("evaluate expression");
 }
@@ -83,6 +82,11 @@ expression::node::apply_replacement( proof_context& ctx,
                                      vector<change>& m ) const {
   unable_to("use expression as a replacement block");
 }
+
+string expression::node::name( proof_context& ctx ) const {
+  unable_to("get method name from expression");
+}
+
 
 void expression::bnode::execute( proof_context& ctx, int dir ) const {
   if ( dir < 0 )
@@ -155,6 +159,11 @@ string expression::string_evaluate( proof_context& ctx, bool* no_nl ) const {
 vector<change> expression::pn_evaluate( proof_context& ctx ) const {
   ctx.increment_node_count();
   return impl->pn_evaluate(ctx); 
+}
+
+music expression::music_evaluate( proof_context& ctx ) const {
+  ctx.increment_node_count();
+  return impl->music_evaluate(ctx); 
 }
 
 expression expression::call( proof_context& ctx, 

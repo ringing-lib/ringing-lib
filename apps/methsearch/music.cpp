@@ -1,5 +1,5 @@
 // -*- C++ -*- music.cpp - things to analyse music
-// Copyright (C) 2002, 2003, 2008, 2009, 2010
+// Copyright (C) 2002, 2003, 2008, 2009, 2010, 2022
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -16,8 +16,6 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-// $Id$
-
 #include <ringing/common.h>
 
 #if RINGING_HAS_PRAGMA_INTERFACE
@@ -26,20 +24,10 @@
 
 #include "music.h"
 #include "row_calc.h"
-#if RINGING_OLD_C_INCLUDES
-#include <string.h>
-#include <assert.h>
-#else
 #include <cstring>
 #include <cassert>
-#endif
-#if RINGING_OLD_INCLUDES
-#include <vector.h>
-#include <map.h>
-#else
 #include <vector>
 #include <map>
-#endif
 #include <ringing/row.h>
 #include <ringing/method.h>
 #include <ringing/music.h>
@@ -172,7 +160,7 @@ musical_analysis::analyser::analyser( int bells )
           mu.set_bells(bells);
     
           try {
-            add_scored_music_string( mu, pattern );
+            mu.add_scored_music_string( pattern );
           } 
           catch ( exception const& e ) {
             cerr << "Error parsing music pattern: " << e.what() << endl;
@@ -189,7 +177,7 @@ musical_analysis::analyser::analyser( int bells )
         {
           music& mu = musv[*i];
           mu.set_bells(bells);
-          add_named_music( mu, "CRUs" ); 
+          mu.add_named_music( "CRUs" ); 
         }
     }
 }

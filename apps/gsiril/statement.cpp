@@ -27,11 +27,7 @@
 #include "expression.h"
 #include "execution_context.h"
 #include "proof_context.h"
-#if RINGING_OLD_IOSTREAMS
-#include <fstream.h>
-#else
 #include <fstream>
-#endif
 #include <ringing/streamutils.h>
 
 void definition_stmt::execute( execution_context& e )
@@ -263,6 +259,14 @@ void echo_stmt::execute( execution_context& e )
   if ( mode == error ) {
     if ( e.interactive() ) e.set_failure();
     else exit(1);
+  }
+}
+
+void music_stmt::execute( execution_context& e ) {
+  e.clear_music();
+  for ( expression const& pat : pats ) {
+    proof_context p(e);
+    e.add_music( pat.music_evaluate(p) );
   }
 }
 

@@ -34,18 +34,9 @@
 #include "methodutils.h"
 #include "output.h"
 #include "row_calc.h"
-#if RINGING_OLD_INCLUDES
-#include <algorithm.h>
-#include <iterator.h>
-#else
 #include <algorithm>
 #include <iterator>
-#endif
-#if RINGING_OLD_C_INCLUDES
-#include <assert.h>
-#else
 #include <cassert>
-#endif
 #include <iostream>
 
 RINGING_USING_NAMESPACE
@@ -1143,7 +1134,7 @@ bool arguments::validate_bells( arg_parser* ap )
 
     try {
       if (j+3 < i->size() && (*i)[j+1] == '<' && (*i)[i->size()-1] == '>')
-        add_named_music( mus, i->substr(j+2, i->size()-j-3) );
+        mus.add_named_music( i->substr(j+2, i->size()-j-3) );
       else
         mus.push_back( music_details( i->substr(j+1) ) );
     }

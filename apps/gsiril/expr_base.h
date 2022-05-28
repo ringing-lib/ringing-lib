@@ -27,11 +27,13 @@
 
 #include <vector>
 #include <iosfwd>
+#include <string>
 
 #include <ringing/pointers.h>
 
 RINGING_START_NAMESPACE
 class change;
+class music;
 RINGING_END_NAMESPACE
 
 RINGING_USING_NAMESPACE
@@ -82,6 +84,7 @@ public:
     virtual string string_evaluate( proof_context &ctx ) const;
     virtual string string_evaluate( proof_context &ctx, bool *no_nl ) const;
     virtual vector<change> pn_evaluate( proof_context &ctx ) const;
+    virtual music music_evaluate( proof_context &ctx ) const;
     virtual expression evaluate( proof_context &ctx ) const;
     virtual expression call( proof_context& ctx, 
                              vector<expression> const& args ) const;
@@ -89,6 +92,7 @@ public:
                                     vector<change>& pn ) const;
     virtual bool isnop() const { return false; }
     virtual type_t type( proof_context &ctx ) const { return no_type; }
+    virtual string name( proof_context &ctx ) const;
 
   protected:
 #   if __cplusplus >= 201103L
@@ -128,6 +132,8 @@ public:
   bool isnop() const { return !impl || impl->isnop(); }
   type_t type( proof_context &ctx ) const 
     { return impl ? impl->type(ctx) : no_type; }
+  string name( proof_context &ctx ) const 
+    { return impl ? impl->name(ctx) : string(); }
 
   void debug_print( ostream &os ) const    { impl->debug_print(os); }
 
@@ -143,6 +149,7 @@ public:
   string string_evaluate( proof_context& ctx ) const;
   string string_evaluate( proof_context& ctx, bool* no_nl ) const;
   vector<change> pn_evaluate( proof_context &ctx ) const;
+  music music_evaluate( proof_context &ctx ) const;
 
   expression call( proof_context& ctx, vector<expression> const& args ) const;
   void apply_replacement( proof_context& ctx, vector<change>& m ) const;

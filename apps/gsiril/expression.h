@@ -26,11 +26,7 @@
 #endif
 
 #include "expr_base.h"
-#if RINGING_OLD_INCLUDES
-#include <utility.h>
-#else
 #include <utility>
-#endif
 #include <string>
 #include <ringing/row.h>
 #include <ringing/music.h>
@@ -38,6 +34,7 @@
 // Forward declare ringing::change
 RINGING_START_NAMESPACE
 class change;
+class method;
 RINGING_END_NAMESPACE
 
 RINGING_USING_NAMESPACE
@@ -123,6 +120,7 @@ class pn_node : public expression::node {
 public:
   pn_node( int bells, const string &pn );
 
+  pn_node( method const& m );
   pn_node( vector<change> const& m );
   pn_node( change const& ch );
 
@@ -132,9 +130,11 @@ protected:
   virtual vector<change> pn_evaluate( proof_context &ctx ) const
     { return changes; }
   virtual void apply_replacement( proof_context& ctx, vector<change>& m ) const;
+  virtual string name( proof_context &ctx ) const; // { return meth_name; }
 
 private:
   vector<change> changes;
+  string meth_name;
 };
 
 class replacement_node : public expression::node {
@@ -147,6 +147,7 @@ public:
   virtual void debug_print( ostream &os ) const;
   virtual void execute( proof_context &ctx, int dir ) const;
   virtual void apply_replacement( proof_context& ctx, vector<change>& m ) const;
+  virtual string name( proof_context &ctx ) const { return pn.name(ctx); }
 
 private:
   expression pn, shift;
@@ -194,8 +195,10 @@ protected:
   virtual string string_evaluate( proof_context &ctx ) const;
   virtual string string_evaluate( proof_context &ctx, bool *no_nl ) const;
   virtual vector<change> pn_evaluate( proof_context &ctx ) const;
+  virtual music music_evaluate( proof_context &ctx ) const;
   virtual void apply_replacement( proof_context& ctx, vector<change>& m ) const;
   virtual expression::type_t type( proof_context& ctx ) const;
+  virtual string name( proof_context &ctx ) const;
 
 private:
   string sym;
@@ -273,10 +276,24 @@ public:
 protected:
   virtual void debug_print( ostream &os ) const;
   virtual bool bool_evaluate( proof_context &ctx ) const;
+  virtual music music_evaluate( proof_context &ctx ) const;
 
 private:
   int bells;
   music_details mus;
+};
+
+class opaque_music_node : public expression::bnode {
+public:
+  explicit opaque_music_node( const music& mus );
+
+protected:
+  virtual void debug_print( ostream &os ) const;
+  virtual bool bool_evaluate( proof_context &ctx ) const;
+  virtual music music_evaluate( proof_context &ctx ) const;
+
+private:
+  music mus;
 };
 
 class defined_node : public expression::bnode {
@@ -524,6 +541,7 @@ protected:
   virtual string string_evaluate( proof_context &ctx, bool* no_nl ) const;
   virtual string string_evaluate( proof_context &ctx ) const;
   virtual vector<change> pn_evaluate( proof_context &ctx ) const;
+  virtual music music_evaluate( proof_context &ctx ) const;
 
 private:
   string name;
