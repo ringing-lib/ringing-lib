@@ -1,5 +1,5 @@
 // main.cpp - Entry point for printmethod
-// Copyright (C) 2008, 2009, 2010, 2011, 2021
+// Copyright (C) 2008, 2009, 2010, 2011, 2021, 2022
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -133,11 +133,21 @@ void arguments::bind( arg_parser& p )
 
 bool arguments::validate( arg_parser &ap )
 {
-  if ( bells == 0 ) 
-    {
-      ap.error( "Must specify the number of bells" );
+  size_t i = methstr.find(':');
+  if ( i != string::npos ) {
+    unsigned b = lexical_cast<unsigned>( methstr.substr(0,i) );
+    if (bells && b != bells) {
+      ap.error("Mismatch between number of bells specified");
       return false;
     }
+    bells = b;
+    methstr = methstr.substr(i+1);
+  }
+
+  if ( bells == 0 ) {
+    ap.error( "Must specify the number of bells" );
+    return false;
+  }
 
   try {
     meth = method( methstr, bells );
