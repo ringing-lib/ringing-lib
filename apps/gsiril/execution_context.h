@@ -105,6 +105,7 @@ public:
   music const& get_music() const { return mus; }
 
   bool evaluate_bool_const( expression const& ) const;
+  string evaluate_string_var( string const& ) const;
 
 private:
   void define_line();
