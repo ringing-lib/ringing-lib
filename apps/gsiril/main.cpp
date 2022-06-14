@@ -1,6 +1,6 @@
 // main.cpp - Entry point for gsiril
 // Copyright (C) 2002, 2003, 2004, 2007, 2008, 2010, 2011, 2012, 2014, 2020,
-// 2021 Richard Smith <richard@ex-parrot.com>
+// 2021, 2022 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -295,33 +295,35 @@ void filter( execution_context& e, const arguments& args )
 
 int main( int argc, char *argv[] )
 {
-  try
-    {
-      arguments args( argc, argv );
+  int ret = 0;
 
-      if ( args.case_insensitive ) 
-	args.prove_symbol = lower_case( args.prove_symbol );
+  try {
+    arguments args( argc, argv );
 
-      execution_context e( cout, args );
-      initialise(e, args);
+    if ( args.case_insensitive ) 
+      args.prove_symbol = lower_case( args.prove_symbol );
 
-      if ( args.filter )
-        filter( e, args );
-      else if ( !run( e, args ) )
-        if ( !args.determine_bells )
-          exit(1);
-    }
-  catch ( const exception &ex )
-    {
-      cerr << "Unexpected error: " << ex.what() << endl;
-      exit(2);
-    }
-  catch ( ... )
-    {
-      cerr << "An unknown error occured" << endl;
-      exit(2);
-    }
+    execution_context e( cout, args );
+    initialise(e, args);
 
-  return 0;
+    if ( args.filter )
+      filter( e, args );
+    else if ( !run( e, args ) )
+      if ( !args.determine_bells )
+        ret = 1;
+
+    if (args.print_node_count)
+      cerr << "Executed " << e.get_node_count() << " nodes" << endl;
+  }
+  catch ( const exception &ex ) {
+    cerr << "Unexpected error: " << ex.what() << endl;
+    ret = 2;
+  }
+  catch ( ... ) {
+    cerr << "An unknown error occured" << endl;
+    ret = 2;
+  }
+
+  return ret;
 }
 

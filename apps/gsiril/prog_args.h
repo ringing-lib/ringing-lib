@@ -1,6 +1,6 @@
 // -*- C++ -*- prog_args.h - program arguments for gsiril
 // Copyright (C) 2003, 2004, 2007, 2008, 2010, 2011, 2012, 2014, 2019, 2020,
-// 2021 Richard Smith <richard@ex-parrot.com>
+// 2021, 2022 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -70,6 +70,7 @@ struct arguments
   init_val<bool,false> disable_import;
   init_val<bool,false> no_init_file;
   init_val<int,0>      node_limit;
+  init_val<bool,false> print_node_count;
   init_val<bool,false> determine_bells;
 
   string               prove_symbol;
