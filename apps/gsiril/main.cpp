@@ -243,54 +243,55 @@ bool run( execution_context& e, const arguments& args )
 void filter( execution_context& e, const arguments& args )
 {
   litelib in( args.bells, cin );
-  for ( library::const_iterator i=in.begin(), ei=in.end(); i!=ei; ++i )
-    {
-      method m;
-      try {
-        m = i->meth();
-      }
-      catch ( exception const& ex ) {
-        cerr << "Error reading method from input stream: "
-             << ex.what() << "\n";
-        string pn;  try { pn = i->pn(); } catch (...) {}
-        if ( pn.size() ) cerr << "Place notation: '" << pn << "'\n";
-        cerr << flush;
-
-        continue;
-      }
-
-      if ( m.size() == 0 ) {
-        cerr << "Error: empty method found\n";
-        continue;
-      }
-
-      // Define the lead head and lead
-      if ( args.lh_symbol.size() )
-        e.define_symbol
-          ( make_pair( args.lh_symbol, 
-                       expression( new pn_node( m.back() ) ) ) );
-
-      if ( ! args.lead_includes_lh )
-        m.pop_back();
-      if ( args.lead_symbol.size() )
-        e.define_symbol
-          ( make_pair( args.lead_symbol, 
-                       expression( new pn_node( m ) ) ) );
-
-      // Define the payload
-      if ( args.payload_symbol.size() && i->has_facet<litelib::payload>() )
-        e.define_symbol
-          ( make_pair( args.payload_symbol, 
-                       expression( new string_node
-                                     ( i->get_facet<litelib::payload>() ) ) ) );
-
-      if ( run( e, args ) ) 
-         // Add M_PLUS in case our output is being fed back as a definition.
-         cout << i->meth().format( method::M_DASH | method::M_SYMMETRY 
-                                     | method::M_PLUS )
-             << '\t' << i->get_facet<litelib::payload>()
-             << endl;
+  for ( library::const_iterator i=in.begin(), ei=in.end(); i!=ei; ++i ) {
+    method m;
+    try {
+      m = i->meth();
     }
+    catch ( exception const& ex ) {
+      cerr << "Error reading method from input stream: "
+           << ex.what() << "\n";
+      string pn;  try { pn = i->pn(); } catch (...) {}
+      if ( pn.size() ) cerr << "Place notation: '" << pn << "'\n";
+      cerr << flush;
+
+      continue;
+    }
+
+    if ( m.size() == 0 ) {
+      cerr << "Error: empty method found\n";
+      continue;
+    }
+
+    // Define the lead head and lead
+    if ( args.lh_symbol.size() )
+      e.define_symbol
+        ( make_pair( args.lh_symbol, 
+                     expression( new pn_node( m.back() ) ) ) );
+
+    if ( ! args.lead_includes_lh )
+      m.pop_back();
+    if ( args.lead_symbol.size() )
+      e.define_symbol
+        ( make_pair( args.lead_symbol, 
+                     expression( new pn_node( m ) ) ) );
+
+    // Define the payload
+    if ( args.payload_symbol.size() && i->has_facet<litelib::payload>() )
+      e.define_symbol
+        ( make_pair( args.payload_symbol, 
+                     expression( new string_node
+                                   ( i->get_facet<litelib::payload>() ) ) ) );
+
+    if ( run( e, args ) )
+       // Add M_PLUS in case our output is being fed back as a definition.
+       cout << i->meth().format( method::M_DASH | method::M_SYMMETRY 
+                                   | method::M_PLUS )
+           << '\t' << ( args.payload_symbol.length()
+                          ? e.evaluate_string_var(args.payload_symbol)
+                          : i->get_facet<litelib::payload>() )
+           << endl;
+  }
 }
 
 int main( int argc, char *argv[] )

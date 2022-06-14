@@ -158,3 +158,9 @@ bool execution_context::evaluate_bool_const( expression const& cond ) const {
   p.set_silent(true);
   return cond.bool_evaluate(p);
 }
+
+string execution_context::evaluate_string_var( string const& name ) const {
+  proof_context p(*this);
+  p.set_silent(true);
+  return lookup_symbol(name).string_evaluate(p);
+}

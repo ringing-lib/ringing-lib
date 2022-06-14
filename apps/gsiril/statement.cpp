@@ -139,7 +139,9 @@ void prove_stmt::execute( execution_context& e )
     if ( e.verbose() )
       e.output() << "Proof failed" << endl;
   }
-  else e.output() << "Proof succeeded" << endl;
+  else 
+    if ( e.verbose() )
+      e.output() << "Proof succeeded" << endl;
 }
 
 void extents_stmt::execute( execution_context& e )
