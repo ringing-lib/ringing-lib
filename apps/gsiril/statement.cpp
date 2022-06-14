@@ -93,6 +93,10 @@ void prove_stmt::execute( execution_context& e )
   if (e.get_args().determine_bells)
     cout << e.bells() << " bells" << endl;
 
+  if ( e.verbose() ) {
+    e.output() << "Proving "; expr.debug_print(e.output()); e.output() << endl;
+  }
+
   proof_context p(e);
 
   try {
@@ -105,30 +109,37 @@ void prove_stmt::execute( execution_context& e )
       p.execute_final_symbol( "abort" );
       e.set_failure();
     }
+    if ( e.verbose() )
+      e.output() << "Proof terminated" << endl;
     return;
   }
-   
+
+  bool failed = true;   
   switch ( p.state() ) {
   case proof_context::rounds: 
     if ( e.expected_length().first && 
-         p.length() < e.expected_length().first ) {
+         p.length() < e.expected_length().first )
       p.execute_final_symbol("tooshort");
-      e.set_failure();
-    }
     else {
       if ( e.get_args().quiet ) p.set_silent(true);
       p.execute_final_symbol("true"); 
+      failed = false;
     }
     break;
   case proof_context::notround:
     p.execute_final_symbol("notround");
-    e.set_failure();
     break;
   case proof_context::isfalse:
     p.execute_final_symbol("false"); 
-    e.set_failure();
     break;
   }
+
+  if (failed) {
+    e.set_failure();
+    if ( e.verbose() )
+      e.output() << "Proof failed" << endl;
+  }
+  else e.output() << "Proof succeeded" << endl;
 }
 
 void extents_stmt::execute( execution_context& e )
