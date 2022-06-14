@@ -219,15 +219,15 @@ private:
 
 class foreach_stmt : public statement::impl {
 public:
-  foreach_stmt( string const& name, vector<expression> const& opts,
+  foreach_stmt( string const& name, expression const& array,
                 statement const& stmt )
-    : name(name), opts(opts), stmt(stmt) {}
+    : name(name), array(array), stmt(stmt) {}
 
 private:
   virtual void execute( execution_context& );
 
   const string name;
-  vector<expression> opts;
+  expression array;
   statement stmt;
 };
 
