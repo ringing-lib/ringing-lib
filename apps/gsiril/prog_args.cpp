@@ -1,6 +1,6 @@
 // prog_args.cpp - handle program arguments
 // Copyright (C) 2002, 2003, 2004, 2007, 2008, 2010, 2011, 2012, 2014, 2019, 
-// 2020, 2021 Richard Smith <richard@ex-parrot.com>
+// 2020, 2021, 2022 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -218,6 +218,11 @@ void arguments::bind( arg_parser& p )
          ( '\0', "node-limit", 
            "Limit prover to some number of nodes.", "NUM",
            node_limit ) );
+
+  p.add( new boolean_opt
+         ( '\0', "print-node-count", 
+           "Print the number of nodes processed.",
+           print_node_count ) );
 
   p.add( new boolean_opt
          ( '\0', "determine-bells", 

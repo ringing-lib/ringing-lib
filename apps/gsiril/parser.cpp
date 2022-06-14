@@ -532,16 +532,15 @@ msparser::parse_list( vector<token>::const_iterator first,
 
 
 statement msparser::parse_foreach( vector<token> const& cmd ) {
-  // Syntax: foreach [ a, b, c ] as x
-  if ( cmd.size() < 5 || cmd[1].type() != tok_types::open_brack
-       || cmd[cmd.size()-3].type() != tok_types::close_brack
+  // Syntax: foreach array as y
+  if ( cmd.size() < 3 
        || cmd[cmd.size()-2].type() != tok_types::name
        || cmd[cmd.size()-2] != "as" 
        || cmd[cmd.size()-1].type() != tok_types::name )
     throw runtime_error
       ( "Malformed foreach statement" );
 
-  vector<expression> vals( parse_list( cmd.begin()+2, cmd.end()-3 ) );
+  expression array( make_expr( cmd.begin()+1, cmd.end()-2 ) );
   string const name( cmd[cmd.size()-1] );
 
   scoped_pointer<compound_stmt> block( new compound_stmt );
@@ -555,7 +554,7 @@ statement msparser::parse_foreach( vector<token> const& cmd ) {
     else if ( cmd2.size() == 1 && cmd2[0].type() == tok_types::name 
               && cmd2[0] == "endfor" )
       return statement
-        ( new foreach_stmt(name, vals, statement(block.release()) ) );
+        ( new foreach_stmt(name, array, statement(block.release()) ) );
 
     else block->push( parse_command(cmd2) );
   }
@@ -674,19 +673,18 @@ msparser::make_expr( vector< token >::const_iterator first,
 
   // Alternative blocks are enclosed in braces
   if ( is_enclosed( first, last, tok_types::open_brace, 
-		    tok_types::close_brace, "braces" ) )
-    {
-      expression chain( NULL );
-      --last;
-      while ( last != first && (last-1)->type() == tok_types::semicolon ) 
+		    tok_types::close_brace, "braces" ) ) {
+    expression chain( NULL );
+    --last;
+    while ( last != first && (last-1)->type() == tok_types::semicolon ) 
 	--last;
 
-      // Doesn't use recursion because the contents of the braces is 
-      // not a single valid expression.
-      while ( last != first ) {
+    // Doesn't use recursion because the contents of the braces is 
+    // not a single valid expression.
+    while ( last != first ) {
 	// The last semicolon, or the opening brace (FIRST) if there is none.
 	iter_t i( first ); 
-        find( first+1, last, tok_types::semicolon, i, find_last );
+      find( first+1, last, tok_types::semicolon, i, find_last );
 	iter_t j( i );
 
 	// Is there a test?
@@ -708,11 +706,16 @@ msparser::make_expr( vector< token >::const_iterator first,
 	last = i;
 	while ( last != first && (last-1)->type() == tok_types::semicolon ) 
 	  --last;
-      }
-      if ( chain.isnull() )
-	throw runtime_error( "Empty braces" );
-      return chain;
     }
+    if ( chain.isnull() )
+	throw runtime_error( "Empty braces" );
+    return chain;
+  }
+
+  // Arrays are enclosed in square brackets
+  if ( is_enclosed( first, last, tok_types::open_brack, 
+		    tok_types::close_brack, "brackets" ) )
+    return expression( new array_node( parse_list( first+1, last-1 ) ) );
 
   iter_t split;
 

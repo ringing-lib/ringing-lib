@@ -66,6 +66,11 @@ music expression::node::music_evaluate( proof_context& ctx ) const {
   unable_to("evaluate expression as a music pattern");
 }
 
+vector<expression> 
+expression::node::array_evaluate( proof_context& ctx ) const {
+  unable_to("evaluate expression as an array");
+}
+
 
 expression expression::node::evaluate( proof_context& ctx ) const {
   unable_to("evaluate expression");
@@ -164,6 +169,11 @@ vector<change> expression::pn_evaluate( proof_context& ctx ) const {
 music expression::music_evaluate( proof_context& ctx ) const {
   ctx.increment_node_count();
   return impl->music_evaluate(ctx); 
+}
+
+vector<expression> expression::array_evaluate( proof_context& ctx ) const {
+  ctx.increment_node_count();
+  return impl->array_evaluate(ctx); 
 }
 
 expression expression::call( proof_context& ctx, 

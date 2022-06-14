@@ -1,6 +1,6 @@
 // expression.cpp - Nodes and factory function for expressions
-// Copyright (C) 2002, 2003, 2004, 2005, 2008, 2011, 2014, 2019, 2020, 2021
-// Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003, 2004, 2005, 2008, 2011, 2014, 2019, 2020, 2021,
+// 2022 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -447,6 +447,12 @@ music symbol_node::music_evaluate( proof_context &ctx ) const
   return e.music_evaluate(ctx);
 }
 
+vector<expression> symbol_node::array_evaluate( proof_context &ctx ) const
+{
+  expression e( ctx.lookup_symbol(sym) );
+  return e.array_evaluate(ctx);
+}
+
 expression::type_t symbol_node::type( proof_context& ctx ) const
 {
   expression e( ctx.lookup_symbol(sym) );
@@ -822,6 +828,14 @@ string append_node::string_evaluate( proof_context& ctx ) const
   string l = left.string_evaluate(ctx), r = right.string_evaluate(ctx);
   return l + r;
 }
+  
+vector<expression> append_node::array_evaluate( proof_context &ctx ) const
+{
+  vector<expression> res( left.array_evaluate(ctx) );
+  vector<expression> r( right.array_evaluate(ctx) );
+  res.insert( res.end(), r.begin(), r.end() );
+  return res;
+}
 
 void mult_node::debug_print( ostream &os ) const 
 {
@@ -920,10 +934,8 @@ void if_match_node::debug_print( ostream &os ) const
   os << " }";
 }
 
-void if_match_node::execute( proof_context& ctx, int dir ) const
+bool if_match_node::evaluate_condition( proof_context &ctx ) const
 {
-  if (dir < 0) throw_no_backwards_execution(*this);
-
   proof_context ctx2( ctx.silent_clone() );
   bool result = false;
 
@@ -948,10 +960,26 @@ void if_match_node::execute( proof_context& ctx, int dir ) const
   } 
   catch ( script_exception const& ) {}
 
-  if ( result )
+  return result;
+}
+
+void if_match_node::execute( proof_context& ctx, int dir ) const
+{
+  if (dir < 0) throw_no_backwards_execution(*this);
+
+  if ( evaluate_condition(ctx) )
     iftrue.execute( ctx, dir );
   else if ( !iffalse.isnull() )
     iffalse.execute( ctx, dir );
+}
+
+expression if_match_node::evaluate( proof_context &ctx ) const
+{
+  if ( evaluate_condition(ctx) )
+    return iftrue.evaluate( ctx );
+  else if ( !iffalse.isnull() )
+    return iffalse.evaluate( ctx );
+  else throw runtime_error("Reached end of alternatives while evaluating");
 }
 
 void exception_node::debug_print( ostream &os ) const
@@ -1020,6 +1048,11 @@ music call_node::music_evaluate( proof_context &ctx ) const
   return evaluate(ctx).music_evaluate(ctx);
 }
 
+vector<expression> call_node::array_evaluate( proof_context &ctx ) const
+{
+  return evaluate(ctx).array_evaluate(ctx);
+}
+
 expression::type_t call_node::type( proof_context &ctx ) const
 {
   return ctx.lookup_symbol(name).type(ctx);
@@ -1034,3 +1067,26 @@ void save_node::debug_print( ostream& os ) const
 {
   os << "save " << name;
 }
+
+void array_node::execute( proof_context& ctx, int dir ) const
+{
+  throw runtime_error( "Unable to execute array" );
+}
+
+void array_node::debug_print( ostream& os ) const
+{
+  os << "[";
+  bool first = true;
+  for ( expression const& val : vals ) {
+    if (!first) os << ", ";
+    val.debug_print(os);
+    first = false;
+  }
+  os << "]";
+}
+  
+vector<expression> array_node::array_evaluate( proof_context &ctx ) const
+{
+  return vals;
+}
+

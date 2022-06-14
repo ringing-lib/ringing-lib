@@ -72,6 +72,19 @@ class pos_fn_impl : public fnnode {
     { return expression::integer; }
 };
 
+class rowno_fn_impl : public fnnode {
+  virtual expression call( proof_context& ctx, 
+                           vector<expression> const& args ) const {
+    if (args.size())
+      throw runtime_error("The rowno function takes no arguments");
+    return expression( new integer_node(ctx.length()) );
+  }
+
+  virtual void debug_print( ostream &os ) const { os << "rowno"; }
+  virtual expression::type_t type( proof_context &ctx ) const 
+    { return expression::integer; }
+};
+
 class swap_fn_impl : public fnnode {
   virtual expression call( proof_context& ctx, 
                            vector<expression> const& args ) const {
@@ -205,6 +218,8 @@ void register_functions( execution_context& ectx )
     ( "at", expression( new at_fn_impl() ) ) );
   ectx.define_symbol( pair< const string, expression >
     ( "pos", expression( new pos_fn_impl() ) ) );
+  ectx.define_symbol( pair< const string, expression >
+    ( "rowno", expression( new rowno_fn_impl() ) ) );
   ectx.define_symbol( pair< const string, expression >
     ( "swap", expression( new swap_fn_impl() ) ) );
   ectx.define_symbol( pair< const string, expression >

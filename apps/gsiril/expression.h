@@ -1,5 +1,5 @@
 // -*- C++ -*- expression.h - Code to execute different types of expression
-// Copyright (C) 2003, 2004, 2005, 2008, 2011, 2019, 2020, 2021
+// Copyright (C) 2003, 2004, 2005, 2008, 2011, 2019, 2020, 2021, 2022
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -196,6 +196,7 @@ protected:
   virtual string string_evaluate( proof_context &ctx, bool *no_nl ) const;
   virtual vector<change> pn_evaluate( proof_context &ctx ) const;
   virtual music music_evaluate( proof_context &ctx ) const;
+  virtual vector<expression> array_evaluate( proof_context &ctx ) const;
   virtual void apply_replacement( proof_context& ctx, vector<change>& m ) const;
   virtual expression::type_t type( proof_context& ctx ) const;
   virtual string name( proof_context &ctx ) const;
@@ -459,6 +460,7 @@ public:
 protected:
   virtual void debug_print( ostream &os ) const;
   virtual string string_evaluate( proof_context &ctx ) const;
+  virtual vector<expression> array_evaluate( proof_context &ctx ) const;
 
 private:
   expression left, right;
@@ -509,8 +511,11 @@ public:
 protected:
   virtual void debug_print( ostream &os ) const;
   virtual void execute( proof_context &ctx, int dir ) const;
+  virtual expression evaluate( proof_context &ctx ) const;
 
 private:
+  bool evaluate_condition( proof_context &ctx ) const;
+
   expression test, iftrue, iffalse;
 };
 
@@ -542,6 +547,7 @@ protected:
   virtual string string_evaluate( proof_context &ctx ) const;
   virtual vector<change> pn_evaluate( proof_context &ctx ) const;
   virtual music music_evaluate( proof_context &ctx ) const;
+  virtual vector<expression> array_evaluate( proof_context &ctx ) const;
 
 private:
   string name;
@@ -559,6 +565,21 @@ protected:
 
 private:
   string name;
+};
+
+class array_node : public expression::node {
+public:
+  array_node() {}
+  explicit array_node( vector<expression> const& vals ) : vals(vals) {}
+  void push_back( expression const& val ) { vals.push_back(val); }
+
+protected:
+  virtual void debug_print( ostream &os ) const;
+  virtual void execute( proof_context &ctx, int dir ) const;
+  virtual vector<expression> array_evaluate( proof_context &ctx ) const;
+
+private:
+  vector<expression> vals;
 };
 
 #endif // GSIRIL_EXPRESSION_INCLUDED

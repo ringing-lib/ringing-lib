@@ -85,6 +85,7 @@ public:
     virtual string string_evaluate( proof_context &ctx, bool *no_nl ) const;
     virtual vector<change> pn_evaluate( proof_context &ctx ) const;
     virtual music music_evaluate( proof_context &ctx ) const;
+    virtual vector<expression> array_evaluate( proof_context &ctx ) const;
     virtual expression evaluate( proof_context &ctx ) const;
     virtual expression call( proof_context& ctx, 
                              vector<expression> const& args ) const;
@@ -150,6 +151,7 @@ public:
   string string_evaluate( proof_context& ctx, bool* no_nl ) const;
   vector<change> pn_evaluate( proof_context &ctx ) const;
   music music_evaluate( proof_context &ctx ) const;
+  vector<expression> array_evaluate( proof_context &ctx ) const;
 
   expression call( proof_context& ctx, vector<expression> const& args ) const;
   void apply_replacement( proof_context& ctx, vector<change>& m ) const;

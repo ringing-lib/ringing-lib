@@ -290,9 +290,9 @@ void if_stmt::execute( execution_context& ex ) {
 }
 
 void foreach_stmt::execute( execution_context& ex ) {
-  for ( vector<expression>::const_iterator i=opts.begin(), e=opts.end();
-          i != e; ++i ) {
-    ex.define_symbol( make_pair(name, *i) );
+  proof_context pctx(ex);
+  for ( expression const& opt : array.array_evaluate(pctx) ) {
+    ex.define_symbol( make_pair(name, opt) );
     if ( ex.verbose() )
       ex.output() << "Setting '" << name << "' in foreach loop." << endl;
 

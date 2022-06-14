@@ -148,7 +148,8 @@ bool execution_context::define_symbol( const pair< const string, expression > &d
 
 void execution_context::increment_node_count() const
 {
-  if (args.node_limit && ++node_count == args.node_limit)
+  ++node_count;
+  if (++node_count == args.node_limit)
     throw runtime_error("Node count exceeded");
 }
 

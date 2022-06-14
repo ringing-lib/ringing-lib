@@ -89,6 +89,8 @@ public:
   bool failure() const { return failed; }
 
   void increment_node_count() const;
+  RINGING_ULLONG get_node_count() const { return node_count; }
+  
   bool done_one_proof() const { return done_proof; }
   void set_done_proof() { done_proof = true; }
 
@@ -113,7 +115,7 @@ private:
   ostream* os;
   symbol_table sym_table;
   bool failed;
-  mutable int node_count;
+  mutable RINGING_ULLONG node_count;
   bool done_proof;
 };
 
