@@ -511,8 +511,11 @@ public:
 protected:
   virtual void debug_print( ostream &os ) const;
   virtual void execute( proof_context &ctx, int dir ) const;
+  virtual expression evaluate( proof_context &ctx ) const;
 
 private:
+  bool evaluate_condition( proof_context &ctx ) const;
+
   expression test, iftrue, iffalse;
 };
 

@@ -934,10 +934,8 @@ void if_match_node::debug_print( ostream &os ) const
   os << " }";
 }
 
-void if_match_node::execute( proof_context& ctx, int dir ) const
+bool if_match_node::evaluate_condition( proof_context &ctx ) const
 {
-  if (dir < 0) throw_no_backwards_execution(*this);
-
   proof_context ctx2( ctx.silent_clone() );
   bool result = false;
 
@@ -962,10 +960,26 @@ void if_match_node::execute( proof_context& ctx, int dir ) const
   } 
   catch ( script_exception const& ) {}
 
-  if ( result )
+  return result;
+}
+
+void if_match_node::execute( proof_context& ctx, int dir ) const
+{
+  if (dir < 0) throw_no_backwards_execution(*this);
+
+  if ( evaluate_condition(ctx) )
     iftrue.execute( ctx, dir );
   else if ( !iffalse.isnull() )
     iffalse.execute( ctx, dir );
+}
+
+expression if_match_node::evaluate( proof_context &ctx ) const
+{
+  if ( evaluate_condition(ctx) )
+    return iftrue.evaluate( ctx );
+  else if ( !iffalse.isnull() )
+    return iffalse.evaluate( ctx );
+  else throw runtime_error("Reached end of alternatives while evaluating");
 }
 
 void exception_node::debug_print( ostream &os ) const
