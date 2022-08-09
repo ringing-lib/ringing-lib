@@ -1,5 +1,5 @@
 // -*- C++ -*- args.h - argument-parsing things
-// Copyright (C) 2001, 2002, 2003, 2008, 2010, 2011
+// Copyright (C) 2001, 2002, 2003, 2008, 2010, 2011, 2022
 // Martin Bright <martin@boojum.org.uk>
 // and Richard Smith <richard@ex-parrot.com>
 
@@ -17,8 +17,6 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-// $Id$
-
 #ifndef RINGING_ARGS_INCLUDED
 #define RINGING_ARGS_INCLUDED
 
@@ -28,15 +26,11 @@
 #pragma interface
 #endif
 
-#if RINGING_OLD_INCLUDES
-#include <map.h>
-#include <list.h>
-#include <vector.h>
-#else
+#include <ringing/pointers.h>
+
 #include <map>
 #include <list>
 #include <vector>
-#endif
 #include <string>
 #include "init_val.h"
 
@@ -45,6 +39,7 @@ class row;
 RINGING_END_NAMESPACE
 
 
+RINGING_USING_NAMESPACE
 RINGING_USING_STD
 
 class arg_parser;
@@ -120,17 +115,38 @@ private:
 // 
 
 class boolean_opt : public option {
-public:
-  boolean_opt( char c, const string &l, const string &d,
-	       bool &opt, bool val=true );
+  class set_base { 
+  public:
+    virtual ~set_base() {}
+    virtual void set() = 0;
+  };
 
+  template <class T>
+  class do_set : public set_base {
+  public:
+    do_set( T &opt, T val ) : opt(opt), val(val) {}
+    virtual void set() { opt = val; }
+
+  private:
+    T &opt, val;
+  };
+
+public:
+  template <class T, class T2 = bool>
   boolean_opt( char c, const string &l, const string &d,
-	       init_val_base<bool> &opt, bool val=true );
+	       T &opt, T2 val=true )
+    : option(c, l, d), setter( new do_set<T>(opt, val) ) {}
+
+  template <class T, class T2 = bool>
+  boolean_opt( char c, const string &l, const string &d,
+	       init_val_base<T> &opt, T2 val=true )
+    : option(c, l, d), setter( new do_set<T>(opt.get(), val) ) {}
   
 private:
+
   // Sets opt = val.
   virtual bool process( const string &, const arg_parser & ) const;
-  bool &opt, val;
+  scoped_pointer<set_base> setter;
 };
 
 // -x sets opt=1, -xx sets opt=2, -xxx sets opt=3, etc.
@@ -174,7 +190,7 @@ private:
 
 class string_opt : public option {
 public:
-  // Use these constructor if the argument is not optional
+  // Use this constructor if the argument is not optional
   string_opt( char c, const string& l, const string& d, const string& a,
 	      string& opt );
 
@@ -190,14 +206,17 @@ private:
 
 class strings_opt : public option {
 public:
-  // Use these constructor if the argument is not optional
   strings_opt( char c, const string& l, const string& d, const string& a,
 	       vector<string>& opt );
+  // Use this constructor if the argument is optional
+  strings_opt( char c, const string& l, const string& d, const string& a,
+	       vector<string>& opt, const string& default_val );
 
 private:
   // Sets opt to the given argument.
   virtual bool process( const string&, const arg_parser& ) const;
   vector<string>& opt;
+  string default_val;
 };
 
 class delegate_opt : public option {

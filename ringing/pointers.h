@@ -1,5 +1,6 @@
 // -*- C++ -*- pointers.h - A few smart pointer classes
-// Copyright (C) 2001, 2002, 2008, 2009 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2001, 2002, 2008, 2009, 2022
+// Richard Smith <richard@ex-parrot.com>
 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -26,8 +27,6 @@
 //  This software is provided "as is" without express or implied
 //  warranty, and with no claim as to its suitability for any purpose.
 
-// $Id$
-
 #ifndef RINGING_POINTERS_H
 #define RINGING_POINTERS_H
 
@@ -37,11 +36,7 @@
 #pragma once
 #endif
 
-#if RINGING_OLD_INCLUDES
-#include <algo.h>
-#else
 #include <algorithm>
-#endif
 
 RINGING_START_NAMESPACE
 
@@ -82,6 +77,11 @@ RINGING_END_DETAILS_NAMESPACE
 template <class T> 
 struct delete_helper {
   static void fn( T *&ptr ) { delete ptr; ptr = NULL; }
+};
+
+template <class T> 
+struct no_delete_helper {
+  static void fn( T *&ptr ) { ptr = NULL; }
 };
 
 template <class T> 

@@ -1,5 +1,5 @@
 // -*- C++ -*- args.cpp - argument-parsing things
-// Copyright (C) 2001, 2002, 2003, 2004, 2005, 2008, 2010, 2011
+// Copyright (C) 2001, 2002, 2003, 2004, 2005, 2008, 2010, 2011, 2022
 // Martin Bright <martin@boojum.org.uk>
 // and Richard Smith <richard@ex-parrot.com>
 
@@ -17,8 +17,6 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-// $Id$
-
 #include <ringing/common.h>
 
 #if RINGING_HAS_PRAGMA_INTERFACE
@@ -31,16 +29,8 @@
 #include <ringing/row.h>
 #include <ringing/streamutils.h>
 
-#if RINGING_OLD_C_INCLUDES
-#include <ctype.h>
-#else
 #include <cctype>
-#endif
-#if RINGING_OLD_INCLUDES
-#include <iostream.h>
-#else
 #include <iostream>
-#endif
 
 RINGING_USING_NAMESPACE
 RINGING_USING_STD
@@ -300,21 +290,9 @@ void arg_parser::error(const string &msg) const
   cerr << progname << ": " << msg << "\n";
 }
 
-
-
-boolean_opt::boolean_opt( char c, const string &l, const string &d,
-			  bool &opt, bool val ) 
-  : option(c, l, d), opt(opt), val(val)
-{}
-
-boolean_opt::boolean_opt( char c, const string &l, const string &d,
-			  init_val_base<bool> &opt, bool val ) 
-  : option(c, l, d), opt(opt.get()), val(val)
-{}
-
 bool boolean_opt::process( const string &, const arg_parser & ) const
 {
-  opt = val;
+  setter->set();
   return true;
 }
 
@@ -396,6 +374,12 @@ bool string_opt::process( const string &arg, const arg_parser & ) const
 strings_opt::strings_opt( char c, const string& l, const string& d, 
 			  const string& a, vector<string>& opt ) 
   : option(c, l, d, a), opt(opt)
+{}
+
+strings_opt::strings_opt( char c, const string& l, const string& d, 
+			  const string& a, vector<string>& opt,
+                          const string& default_val ) 
+  : option(c, l, d, a, true), opt(opt), default_val(default_val)
 {}
 
 bool strings_opt::process( const string &arg, const arg_parser & ) const

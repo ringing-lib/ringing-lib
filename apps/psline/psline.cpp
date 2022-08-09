@@ -66,7 +66,7 @@ struct arguments {
   init_val<bool, false> reverse_placebells;
   init_val<bool, false> placebells_at_rules;
   init_val<bool, false> placebell_blobs_only;
-  bool landscape;
+  init_val<bool, false> landscape;
   dimension width, height;
   bool fit;
   bool vgap_mode;
