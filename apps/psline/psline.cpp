@@ -688,7 +688,7 @@ bool myopt::process(const string& arg, const arg_parser& ap) const
               while (s != arg.end()) {
                 string f(next_bit(arg, s));
                 if (f == "narrow") r.flags = printrow::no_hextend; 
-                if (f == "overstrike") r.flags = printrow::overstrike; 
+                else if (f == "overstrike") r.flags = printrow::overstrike; 
                 else { 
                   cerr << "Unknown flag on rule: \"" << f << "\"\n";
                   return false;
