@@ -264,16 +264,17 @@ void setup_args(arg_parser& p)
     " notation for the first lead, every lead, or no leads.  The default is"
     " to print place notation for the first lead, supressing any mirrored"
     " section due to palindromicity.  Use first-asym to for the whole of the"
-    " first lead, regardlessof symmetry.  Append ,nox to omit `X' for cross"
-    " changes, or ,lcx to make the cross lower-case.", 
+    " first lead, regardlessof symmetry.  Append `,nox' to omit `X' for cross"
+    " changes, or `,lcx' to make the cross lower-case.", 
                   "first|first-asym|all|none[,nox|,lcx]", true));
   p.add(new myopt('r', "rule", "Print rule-offs"
     " (thin horizontal lines) after the Ath change in each lead, and every B"
     " changes after that.  For example, use \"-r2,6\" for Stedman.  For a"
     " rule that is not repeated every lead, use `once' as B, for example, use"
     " \"-r112,once\" for a rule at the half course in surprise major.  If no"
-    " argument is given, don't draw any rule-offs."
-    "  This option may be used multiple times.", 
+    " argument is given, don't draw any rule-offs.  Append `,narrow' to avoid"
+    " overhanging the column.  Append `,overstrike' to overstrike the"
+    " following row.  This option may be used multiple times.", 
     "A[,B[,COLOUR[,DIMENSION]]]", true));
   p.add(new myopt('m', "miss-numbers", 
     "Miss out the numbers for bells which have lines drawn:  always, never,"
@@ -284,7 +285,7 @@ void setup_args(arg_parser& p)
     "Calling positions for each lead.  Use a space to suppress a call at that"
     " position.  Multicharacter calling positions should be enclosed in"
     " {braces}.  Append `,rules' to print calling positions before rules"
-    " rather than before the lead ends.  Append ,voffset=DIMENSION to shift"
+    " rather than before the lead ends.  Append `,voffset=DIMENSION' to shift"
     " calls up by that amount" ,"CALLS[,rules]"));
   p.add(new myopt('T', "text", 
     "Additional text to print next to row number NUM.  This option may be"
@@ -687,6 +688,7 @@ bool myopt::process(const string& arg, const arg_parser& ap) const
               while (s != arg.end()) {
                 string f(next_bit(arg, s));
                 if (f == "narrow") r.flags = printrow::no_hextend; 
+                if (f == "overstrike") r.flags = printrow::overstrike; 
                 else { 
                   cerr << "Unknown flag on rule: \"" << f << "\"\n";
                   return false;

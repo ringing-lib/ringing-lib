@@ -1,5 +1,6 @@
 // print_pdf.cpp - PDF printing stuff
-// Copyright (C) 2002, 2019, 2020, 2021 Martin Bright <martin@boojum.org.uk>
+// Copyright (C) 2002, 2019, 2020, 2021, 2022
+// Martin Bright <martin@boojum.org.uk>
 // and Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -347,7 +348,7 @@ void printrow_pdf::rule(const printrow::options::line_style& style,
                         printrow::rule_flags flags)
 {
   if(!in_column) return;
-  float startx = currx;
+  float startx = currx, starty = curry;
   float len = opt.xspace.in_points();
   if (flags & printrow::no_hextend) 
     len *= lastrow.bells() - 1;
@@ -355,9 +356,11 @@ void printrow_pdf::rule(const printrow::options::line_style& style,
     startx -= opt.xspace.in_points()/2;
     len *= lastrow.bells();
   }
-  rules.push_back(rule_pdf(startx, 
-			   curry - opt.yspace.in_points() * (count - 0.5f),
-                           len, style));
+  starty -= opt.yspace.in_points() * count;
+  if (!(flags & printrow::overstrike))
+    starty += opt.yspace.in_points() * 0.5f;
+
+  rules.push_back(rule_pdf(startx, starty, len, style));
 }
 
 void printrow_pdf::set_position(const dimension& x, const dimension& y)

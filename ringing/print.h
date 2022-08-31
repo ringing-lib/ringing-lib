@@ -1,5 +1,6 @@
 // -*- C++ -*- print.h - printing stuff
-// Copyright (C) 2001, 2019, 2020, 2021 Martin Bright <martin@boojum.org.uk>
+// Copyright (C) 2001, 2019, 2020, 2021, 2022
+// Martin Bright <martin@boojum.org.uk>
 // and Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -15,8 +16,6 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-
-// $Id$
 
 #ifndef RINGING_PRINT_H
 #define RINGING_PRINT_H
@@ -104,8 +103,9 @@ public:
   };
 
   enum rule_flags {
-    no_hextend = 1 // Don't extend rules horizontally beyond the middle of
-                   // the 1st and last place columns
+    no_hextend = 1, // Don't extend rules horizontally beyond the middle of
+                    // the 1st and last place columns
+    overstrike = 2  // Overstrike the row below
   };
 
   // This is the class from which all implementations are derived

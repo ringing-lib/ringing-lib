@@ -1,5 +1,6 @@
 // -*- C++ -*- printm.h - Printing of whole methods
-// Copyright (C) 2001, 2019, 2020, 2021 Martin Bright <martin@boojum.org.uk>
+// Copyright (C) 2001, 2019, 2020, 2021, 2022
+// Martin Bright <martin@boojum.org.uk>
 // and Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -16,8 +17,6 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-// $Id$
-
 #ifndef RINGING_PRINTM_H
 #define RINGING_PRINTM_H
 
@@ -32,6 +31,7 @@
 #endif
 
 #include <list>
+#include <vector>
 
 #include <ringing/print.h>
 #include <ringing/method.h>
@@ -109,7 +109,9 @@ public:
   void startrow(const row& r) { rounds=r; }
 
 private:
-  bool needrule(int i, rule& );
+  vector<rule> rules_at_posn(int i) const;
+  bool needrule(int i) const;
+  void dorules(printrow& pr, int i) const;
   int find_pnextra();
   static int divd(int a, int b) { return (a - a % b) / b; }
   static int divu(int a, int b) 

@@ -1,5 +1,6 @@
 // printm.cpp - Printing whole methods
-// Copyright (C) 2001, 2019, 2020, 2021 Martin Bright <martin@boojum.org.uk>
+// Copyright (C) 2001, 2019, 2020, 2021, 2022
+// Martin Bright <martin@boojum.org.uk>
 // and Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -15,8 +16,6 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-
-// $Id$
 
 #include <ringing/common.h>
 
@@ -93,23 +92,29 @@ void printmethod::defaults()
       }
 }
 
-bool printmethod::needrule(int i, rule& r)
-{
-  list<rule>::const_iterator j;
-  for (j = rules.begin(); j != rules.end(); j++) {
+vector<printmethod::rule> printmethod::rules_at_posn(int i) const {
+  vector<rule> ret;
+  for (auto r : rules) {
     bool matches = false;
-    if (j->repeat == -1)
-      matches = (i+2) == j->offset;
-    else if (j->repeat)
-      matches = (i+2) % j->repeat == j->offset % j->repeat;
+    if (r.repeat == -1)
+      matches = (i+2) == r.offset;
+    else if (r.repeat)
+      matches = (i+2) % r.repeat == r.offset % r.repeat;
     else
-      matches = (i+2) % m->length() == j->offset % m->length();
-    if (matches) {
-      r = *j;
-      return true;
-    }
+      matches = (i+2) % m->length() == r.offset % m->length();
+    if (matches)
+      ret.push_back(r);
   }
-  return false;
+  return ret;
+}
+  
+bool printmethod::needrule(int i) const {
+  return rules_at_posn(i).size();
+}
+
+void printmethod::dorules(printrow& pr, int i) const {
+  for (auto r : rules_at_posn(i))
+    pr.rule(r.style, r.flags);
 }
 
 void printmethod::print(printpage& pp)
@@ -147,15 +152,12 @@ void printmethod::print(printpage& pp)
 
     for(int column = 0; column < columns_per_set 
 	    && total_row_count < total_rows; column++) {
-      rule the_rule;
-
       // Print the first row, which is the same as the last row of the
       // previous column.
       pr << b[i]; 
 
       // Print a rule (if required) after the first row
-      if (needrule(total_row_count-1, the_rule))
-        pr.rule(the_rule.style, the_rule.flags);
+      dorules(pr, total_row_count-1);
 
       // Print a label (if required) after the first row
       for (list<label>::const_iterator li = labels.begin(), le = labels.end();
@@ -236,21 +238,20 @@ void printmethod::print(printpage& pp)
 
         // Print rules
         if(row_count < (rows_per_column - 1)
-           && total_row_count < (total_rows - 1)
-           && needrule(total_row_count, the_rule)) {
-          pr.rule(the_rule.style, the_rule.flags);
+           && total_row_count < (total_rows - 1)) {
+          dorules(pr, total_row_count);
           if(placebells_at_rules && reverse_placebells && placebells >= 0 &&
-             !placebell_blobs_only)
+             !placebell_blobs_only && needrule(total_row_count))
             pr.placebell(placebells, -1);
         }
         if(placebells_at_rules && placebells >= 0 &&
            row_count < (rows_per_column - 1)
            && total_row_count < (total_rows - 1)
-           && needrule(total_row_count - 1, the_rule)
+           && needrule(total_row_count - 1)
            && !placebell_blobs_only) 
           pr.placebell(placebells, reverse_placebells ? +1 : 0);
         if(calls_at_rules 
-           && needrule(total_row_count, the_rule)) {
+           && needrule(total_row_count)) {
           string pos = call(ic++);
           if (!pos.empty())
             pr.text(pos, opt.xspace/2, text_style::left, false, true,
