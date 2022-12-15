@@ -121,11 +121,30 @@ void repeated_node::execute( proof_context &ctx, int dir ) const
       child.execute( ctx, dir );
     }
   } catch ( script_exception const& ex ) {
-    if ( ex.t == script_exception::do_break ) 
-      return;
-    else
+    if ( ex.t != script_exception::do_break ) 
       throw;
   }
+}
+
+vector<change> repeated_node::pn_evaluate( proof_context &ctx ) const {
+  if (count == -1)
+    unable_to("evaluate repeat expression as a static block of changes");
+
+  proof_context::scoped_variable lc(ctx, "loop_counter");
+  vector<change> ret;
+
+  try {
+    for (RINGING_LLONG i=1; count == -1 || i<=count; ++i) {
+      lc.set( expression( new integer_node(i) ) );
+      for (change const& ch : child.pn_evaluate(ctx))
+        ret.push_back(ch);
+    }
+  } catch ( script_exception const& ex ) {
+    if ( ex.t != script_exception::do_break ) 
+      throw;
+  }
+
+  return ret;
 }
 
 void reverse_node::debug_print( ostream &os ) const
