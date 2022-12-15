@@ -212,6 +212,25 @@ class methname_impl : public fnnode {
   music::match_pos pos;
 };
 
+class pnstr_impl : public fnnode {
+  virtual expression call( proof_context& ctx, 
+                           vector<expression> const& args ) const {
+    if (args.size() == 0)
+      throw runtime_error("The pnstr function takes an argument");
+
+    proof_context ctx2( ctx.silent_clone() );
+    method m;
+    for (expression const& arg : args)
+      for (change const& ch : arg.pn_evaluate(ctx2))
+        m.push_back(ch);
+    return expression( new string_node(m.format(method::M_EXTERNAL)) );
+  }
+
+  virtual void debug_print( ostream &os ) const { os << "pnstr"; }
+  virtual expression::type_t type( proof_context &ctx ) const 
+    { return expression::no_type; }
+};
+
 void register_functions( execution_context& ectx )
 {
   ectx.define_symbol( pair< const string, expression >
@@ -242,5 +261,7 @@ void register_functions( execution_context& ectx )
     ( "crus", expression( new runs_impl ) ) );
   ectx.define_symbol( pair< const string, expression >
     ( "methname", expression( new methname_impl ) ) );
+  ectx.define_symbol( pair< const string, expression >
+    ( "pnstr", expression( new pnstr_impl ) ) );
 }
 

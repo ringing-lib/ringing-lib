@@ -75,6 +75,7 @@ public:
 protected:
   virtual void debug_print( ostream &os ) const;
   virtual void execute( proof_context &ctx, int dir ) const;
+  virtual vector<change> pn_evaluate( proof_context &ctx ) const;
 
 private:  
   int count;
