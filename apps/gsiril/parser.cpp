@@ -159,7 +159,7 @@ public:
       land( "&&", tok_types::logic_and ), lor( "||", tok_types::logic_or ),
       cmpeq( "==", tok_types::equals ), cmpne( "!=", tok_types::not_equals ),
       cmpge( ">=", tok_types::greater_eq ), cmple( "<=", tok_types::less_eq ),
-      lsh( "<<", tok_types::left_shift ), rsh( "<<", tok_types::right_shift ),
+      lsh( "<<", tok_types::left_shift ), rsh( ">>", tok_types::right_shift ),
       inc( "++", tok_types::increment ), dec( "--", tok_types::decrement )
   {
     // Note:  It is important that &sym is added after &land; and
