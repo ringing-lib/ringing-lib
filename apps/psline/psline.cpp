@@ -810,7 +810,13 @@ int main(int argc, char *argv[])
       pm.opt.lines.clear();
       map<int, printrow::options::line_style>::const_iterator j;
       bell b;
-      change c = m[m.length() - 1];
+      int sym = m.symmetry_point();
+      if (sym == -1)
+        sym = m.length() - 1;
+      else if (sym >= m.length()/4 && sym < m.length()/2
+               && m.length() % 2 == 0)
+        sym += m.length()/2;
+      change c = m[sym];
       bool found_working_bell = false;
       for(b = 0; b < m.bells(); b = b + 1) {
 	j = args.lines.find(b);
