@@ -76,11 +76,11 @@ void test_method_fullname(void)
 
   RINGING_TEST( method( "-", 8, 
 			"Cross" ).fullname()
-		== "Cross Differential Major" );
+		== "Cross Major" );
 
   RINGING_TEST( method( "-4-6-6-4-6-6-2", 6, 
 			"Tetley's Smoothflow" ).fullname()
-		== "Tetley's Smoothflow Differential Hybrid Minor" );
+		== "Tetley's Smoothflow Differential Minor" );
 }
 
 void test_method_fullname_grandsire(void)
@@ -156,8 +156,11 @@ void test_method_classname(void)
 		== string("Treble Place") );
   RINGING_TEST( method::classname( method::M_ALLIANCE     ) 
 		== string("Alliance") );
+  // Since the adoption of the Framework for Method Ringing, v1.00
+  // on 1 July 2019, the Hybrid class has not formed part of the method 
+  // name.
   RINGING_TEST( method::classname( method::M_HYBRID       )
-		== string("Hybrid") );
+		== string("") );
   RINGING_TEST( method::classname( method::M_SLOW_COURSE  )
 		== string("Slow Course") );
   RINGING_TEST( method::classname( method::M_DIFFERENTIAL )
@@ -168,7 +171,7 @@ void test_method_classname(void)
 		== string("Little Bob") );
   RINGING_TEST( method::classname( method::M_HYBRID       | 
 				   method::M_LITTLE       )
-		== string("Little Hybrid") );
+		== string("Little") );
   RINGING_TEST( method::classname( method::M_SURPRISE     | 
 				   method::M_DIFFERENTIAL )
 		== string("Differential Surprise") );
