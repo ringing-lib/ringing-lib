@@ -1,5 +1,5 @@
 // -*- C++ -*- mask.cpp - handle method masks
-// Copyright (C) 2002, 2003, 2009, 2011, 2012, 2021
+// Copyright (C) 2002, 2003, 2009, 2011, 2012, 2021, 2024
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -817,40 +817,48 @@ bool parse_mask( arguments &args )
   assert( above.size() == size_t(lead_len) );
   assert( below.size() == size_t(lead_len) );
 
-
   for ( int i=0; i<lead_len; ++i ) {
-    args.allowed_changes.push_back( vector<change>() );
+    // Don't recalculate for every place in a principle: this is very 
+    // inefficient when doing -IAU0 -Fx type filters.
+    if (args.hunt_bells 
+         || args.allowed_changes.size() < (args.right_place ? 2 : 1)) 
+      args.allowed_changes.push_back( vector<change>() );
+    else 
+      args.allowed_changes.push_back( 
+        args.allowed_changes[args.right_place ? i%2 : 0] );
+
     vector<change>& changes_to_try = args.allowed_changes.back();
 
-    if ( args.hunt_bells ) {
-      vector<change>& changesa = above[i];
-      vector<change>& changesb = below[i];
- 
-      // A ? above or below the treble
-      if ( changesa.empty() ) 
-        select_changes_above( args, changesa, i );
-      if ( changesb.empty() ) 
-        select_changes_below( args, changesb, i );
- 
-      merge_changes( args, changes_to_try, changesa, changesb, i );
+    if (changes_to_try.empty()) {
+      if ( args.hunt_bells ) {
+        vector<change>& changesa = above[i];
+        vector<change>& changesb = below[i];
+   
+        // A ? above or below the treble
+        if ( changesa.empty() ) 
+          select_changes_above( args, changesa, i );
+        if ( changesb.empty() ) 
+          select_changes_below( args, changesb, i );
+   
+        merge_changes( args, changes_to_try, changesa, changesb, i );
+      }
+      else if (changes_to_try.empty()) { // principles
+        if ( above[i].empty() )
+          select_changes_prin( args, changes_to_try, i );
+        else
+          copy( above[i].begin(), above[i].end(), 
+                back_inserter( changes_to_try ) ); 
+      }
+  
+      sort( changes_to_try.begin(), changes_to_try.end(), &compare_changes );
+      changes_to_try.erase
+        ( unique( changes_to_try.begin(), changes_to_try.end() ),
+          changes_to_try.end() );
+  
+      if ( changes_to_try.empty() )
+        throw mask_error( make_string() << "No such method can exist: "
+                          "There no possible changes at position " << i );
     }
-    else { // principles
-      if ( above[i].empty() )
-        select_changes_prin( args, changes_to_try, i );
-      else
-        copy( above[i].begin(), above[i].end(), 
-              back_inserter( changes_to_try ) ); 
-    }
-
-    sort( changes_to_try.begin(), changes_to_try.end(), &compare_changes );
-    changes_to_try.erase
-      ( unique( changes_to_try.begin(), changes_to_try.end() ),
-        changes_to_try.end() );
-
-    if ( changes_to_try.empty() )
-      throw mask_error( make_string() << "No such method can exist: "
-                        "There no possible changes at position " << i );
   }
-
   return true;
 }
