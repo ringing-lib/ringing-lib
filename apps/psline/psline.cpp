@@ -1,5 +1,5 @@
 // -*- C++ -*- psline.cpp - print out lines for methods
-// Copyright (C) 2001, 2002, 2019, 2020, 2021, 2022
+// Copyright (C) 2001, 2002, 2019, 2020, 2021, 2022, 2024
 // Martin Bright <martin@boojum.org.uk> and
 // Richard Smith <richard@ex-parrot.com>
 
@@ -16,8 +16,6 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-
-// $Id$
 
 #include <ringing/common.h>
 
@@ -72,7 +70,7 @@ struct arguments {
   bool vgap_mode;
   dimension fitwidth, fitheight;
   dimension xspace, yspace;
-  dimension hgap, vgap;
+  dimension hgap, vgap, pngap;
   int rows_per_column;
   int leads_per_column;
   int columns_per_set;
@@ -312,6 +310,8 @@ void setup_args(arg_parser& p)
 		  " columns to DIMENSION", "DIMENSION"));
   p.add(new myopt('v', "vgap", "Set the vertical gap between successive"
 		  " sets of columns to DIMENSION", "DIMENSION"));
+  p.add(new myopt('\004', "pngap", "Set the horizontal gap between the place"
+                  " notation and row to DIMENSION", "DIMENSION"));
   p.add(new myopt('i', "leads-per-column", "Print NUMBER leads per column",
 		  "NUMBER"));
   p.add(new myopt('I', "rows-per-column", "Print NUMBER rows per column",
@@ -407,6 +407,8 @@ bool myopt::process(const string& arg, const arg_parser& ap) const
       return parse_dimension(arg, args.hgap);
     case 'v' :
       return parse_dimension(arg, args.vgap);
+    case '\004':
+      return parse_dimension(arg, args.pngap);
     case 'F' :
       args.fit = true;
       if(!arg.empty()) {
@@ -588,16 +590,16 @@ bool myopt::process(const string& arg, const arg_parser& ap) const
       printmethod::label l(row_number, string(s, arg.end()));
       args.labels.push_back(l);
       } break;
-    case '\001' :
+    case '\001':
       args.title_style.font = arg;
       break;
-    case '\002' :
+    case '\002':
       if(!parse_float(arg, f)) return false;
       args.title_style.size = static_cast<int>(f * 10);
       break;
-    case '\003' :
+    case '\003':
       return parse_colour(arg, args.title_style.col);
-    case 'm' :
+    case 'm':
       if(!arg.empty()) {
 	if(arg == "always") 
 	  args.number_mode = printmethod::miss_always;
@@ -972,6 +974,7 @@ int main(int argc, char *argv[])
     if(args.yspace != 0) pm.opt.yspace = args.yspace;
     if(args.hgap != 0) pm.hgap = args.hgap;
     if(args.vgap != 0) pm.vgap = args.vgap;
+    if(args.pngap != 0) pm.pngap = args.pngap;
     pm.number_mode = args.number_mode;
     if(args.grid > 0) { 
       pm.opt.grid_type = args.grid;

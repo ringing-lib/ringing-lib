@@ -1,5 +1,5 @@
 // printm.cpp - Printing whole methods
-// Copyright (C) 2001, 2019, 2020, 2021, 2022
+// Copyright (C) 2001, 2019, 2020, 2021, 2022, 2024
 // Martin Bright <martin@boojum.org.uk>
 // and Richard Smith <richard@ex-parrot.com>
 
@@ -226,14 +226,17 @@ void printmethod::print(printpage& pp)
         }
 
         // Print place notation
-        if(pn && ((pn_mode & pn_mask) == pn_all 
-      	    || !sym || (pn_mode & pn_mask) == pn_first_asym 
-                  || i <= (m->length()+1)/2 || i == m->length())
-           && !((pn_mode & pn_nox) && (*m)[i-1].count_places() == 0)) 
-          pr.text( (*m)[i-1].print( (pn_mode & pn_lcross) 
-                                      ? change::C_LCROSS : 0 ),
-                   opt.xspace,text_style::right, true, false );
+        if (pn && ((pn_mode & pn_mask) == pn_all 
+                     || !sym || (pn_mode & pn_mask) == pn_first_asym 
+                     || i <= (m->length()+1)/2 || i == m->length())
+             && !((pn_mode & pn_nox) && (*m)[i-1].count_places() == 0)) {
+          string pntext = (*m)[i-1].print( (pn_mode & pn_lcross) 
+                                              ? change::C_LCROSS : 0 );
+          pr.text(pntext, pngap ? pngap : opt.xspace, text_style::right, 
+                  true, false);
+        }
 
+        // Print the row
         pr << b[i];
 
         // Print rules
@@ -289,21 +292,23 @@ int printmethod::find_pnextra()
 
 void printmethod::scale_to_space(const dimension& width,
                                  const dimension& height,
-                                 float aspect,
-                                 int pnextra)
+                                 float aspect)
 {
-  float new_xspace, vlimit;
-
-  if((pn_mode & pn_mask) != pn_none && pnextra == -1) 
+  // Work out how many bells' worth of space to leave for place notation
+  int pnextra = -1;
+  if ((pn_mode & pn_mask) != pn_none) 
     pnextra = find_pnextra();
-  new_xspace = width.in_points() 
+
+  float new_xspace = width.in_points() 
     / (columns_per_set * (m->bells() + ((placebells >= 0) ? 3 : 1)
 			  + (((pn_mode & pn_mask) == pn_all) ? pnextra : 0)) 
        + (((pn_mode & pn_mask) == pn_first 
             || (pn_mode & pn_mask) == pn_first_asym ) ? pnextra : 0) - 1);
-  vlimit = height.in_points() * aspect / 
+  float vlimit = height.in_points() * aspect / 
     ((rows_per_column + 3) * sets_per_page - 2);
-  if(vlimit < new_xspace) new_xspace = vlimit;
+
+  if (vlimit < new_xspace) new_xspace = vlimit;
+
   opt.xspace.set_float(new_xspace, 100);
   opt.yspace.set_float(new_xspace / aspect, 100);
   hgap = opt.xspace * (((placebells >= 0) ? 3 : 1) + 
@@ -312,19 +317,14 @@ void printmethod::scale_to_space(const dimension& width,
   opt.style.size = static_cast<int>(opt.yspace.in_points() * 9);
 }  
 
-void printmethod::fit_to_space(const dimension& width, 
-				const dimension& height, bool vgap_mode, 
-				float aspect)
+void printmethod::fit_to_space(const dimension& width, const dimension& height,
+                               bool vgap_mode, float aspect)
 {
   if(!m) return;
 
   float curr_xspace = -1, new_xspace = 0;
   int leads_per_column;
  
-  // Work out how many bells' worth of space to leave for place notation
-  int pnextra = -1;
-  if((pn_mode & pn_mask) != pn_none) pnextra = find_pnextra();
-
   int lead = m->length();
   // We try each possible number of leads per column until
   // the required size starts going down rather than up.
@@ -338,7 +338,7 @@ void printmethod::fit_to_space(const dimension& width,
       sets_per_page = 1;
     }
     columns_per_set = divu(total_rows, rows_per_column * sets_per_page);
-    scale_to_space(width, height, aspect, pnextra);
+    scale_to_space(width, height, aspect);
     new_xspace = opt.xspace.in_points();
   }
 
@@ -352,7 +352,7 @@ void printmethod::fit_to_space(const dimension& width,
     sets_per_page = 1;
   }
   columns_per_set = divu(total_rows, rows_per_column * sets_per_page);
-  scale_to_space(width, height, aspect, pnextra);
+  scale_to_space(width, height, aspect);
 }
 
 float printmethod::total_width() {

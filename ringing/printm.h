@@ -1,5 +1,5 @@
 // -*- C++ -*- printm.h - Printing of whole methods
-// Copyright (C) 2001, 2019, 2020, 2021, 2022
+// Copyright (C) 2001, 2019, 2020, 2021, 2022, 2024
 // Martin Bright <martin@boojum.org.uk>
 // and Richard Smith <richard@ex-parrot.com>
 
@@ -45,7 +45,7 @@ private:
 
 public:
   printrow::options opt;
-  dimension hgap, vgap;
+  dimension hgap, vgap, pngap;
   int total_rows;
   int rows_per_column;
   int columns_per_set;
@@ -99,9 +99,7 @@ public:
   void get_bbox(float& blx, float& bly, float& urx, float& ury);
 
   void scale_to_space(const dimension &width, const dimension& height,
-		      float aspect) {
-    scale_to_space(width, height, aspect, -1);
-  }
+		      float aspect);
 
   void fit_to_space(const dimension& width, const dimension& height, 
 		    bool vgap_mode, float aspect);
@@ -116,8 +114,6 @@ private:
   static int divd(int a, int b) { return (a - a % b) / b; }
   static int divu(int a, int b) 
     { return (a % b == 0) ? (a / b) : divd(a,b) + 1; }
-  void scale_to_space(const dimension &width, const dimension& height,
-		      float aspect, int pnextra);
 
   string call(size_t l) const;
   void init_call_vec() const;
