@@ -201,6 +201,8 @@ public:
     case comma: case times: case assignment: case new_line: case semicolon:
     case comment: case string_lit: case transp_lit: case pn_lit: 
     case def_assign: case imm_assign: case append_assign: case reverse:
+    case open_brace: case close_brace: case colon: case logic_not:
+    case less: case greater: case less_eq: case greater_eq:
       return;
 
     case ctrl_z:
@@ -210,10 +212,9 @@ public:
 
     case plus: case minus: case modulo: case append: case divide:
     case merge: case left_shift: case right_shift:
-    case regex_lit: case open_brace: case close_brace: case colon:
+    case regex_lit:
     case logic_and: case logic_or: case equals: case not_equals: 
-    case less: case greater: case less_eq: case greater_eq:
-    case increment: case decrement: case logic_not:
+    case increment: case decrement: 
     case open_brack: case close_brack:
       // These can only work when msiril comments are disabled.
       // Regexp literals are disabled because they conflict with 
