@@ -1,7 +1,8 @@
 // -*- C++ -*- common-msvc.h.in - Common #defines for the MSVC compiler.
 //
-// Copyright (C) 2001, 2002, 2003, 2008 Martin Bright <martin@boojum.org.uk> 
-// and Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2001, 2002, 2003, 2008, 2025
+// Martin Bright <martin@boojum.org.uk> and 
+// Richard Smith <richard@ex-parrot.com>
 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -72,14 +73,6 @@
 #define RINGING_USE_STRINGSTREAM 1
 
 #define RINGING_AS_DLL 0
-
-// *** Define this to be 1 if want to include termcap support
-// or to 0 otherwise.
-#define RINGING_USE_TERMCAP 0
-
-// *** Define this to be 1 if want to include GNU readline support
-// or to 0 otherwise.
-#define RINGING_USE_READLINE 0
 
 // *** Define this to be 1 if your copy of GNU readline has broken
 // headers requiring <stdio.h> to be included before <readline/readline.h>

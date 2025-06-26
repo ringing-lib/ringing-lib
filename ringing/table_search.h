@@ -1,5 +1,5 @@
 // -*- C++ -*- table_search.h - A search class using a multiplication table
-// Copyright (C) 2002, 2010 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2010, 2025 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -15,8 +15,6 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-// $Id$
-
 #ifndef RINGING_TABLE_SEARCH_H
 #define RINGING_TABLE_SEARCH_H
 
@@ -30,11 +28,8 @@
 #pragma interface
 #endif
 
-#if RINGING_OLD_INCLUDES
-#include <vector.h>
-#else
 #include <vector>
-#endif
+
 #include <ringing/row.h>
 #include <ringing/method.h>
 #include <ringing/search_base.h>
@@ -72,11 +67,11 @@ public:
 
   // Constructors
   table_search( const method &meth, const vector<change> &calls,
-                const group& partends, flags = no_flags);
+                const group& partends, flags = no_flags, size_t extents = 1);
 
   table_search( const method &meth, const vector<change> &calls,
                 const group& partends, pair< size_t, size_t > lenrange, 
-		flags = no_flags );
+		flags = no_flags, size_t extents = 1 );
 
   // Older constructors, partly left for backwards compatibility
   table_search( const method &meth, const vector<change> &calls,
@@ -98,6 +93,7 @@ private:
   group partends;
   pair< size_t, size_t > lenrange; // The minimum and maximum number of leads
   flags f;
+  size_t extents;
 };
 
 

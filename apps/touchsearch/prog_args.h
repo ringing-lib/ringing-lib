@@ -1,5 +1,5 @@
 // -*- C++ -*- prog_args.h - program arguments for touchsearch
-// Copyright (C) 2007, 2009, 2010 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2007, 2009, 2010, 2025 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -15,8 +15,6 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-// $Id$
-  
 #ifndef TOUCHSEARCH_PROG_ARGS_INCLUDED
 #define TOUCHSEARCH_PROG_ARGS_INCLUDED
 
@@ -31,11 +29,7 @@
 #include <ringing/group.h>
 #include "init_val.h"
 #include <string>
-#if RINGING_OLD_INCLUDES
-#include <vector.h>
-#else
 #include <vector>      
-#endif
 
 class arg_parser;
 
@@ -47,6 +41,7 @@ struct arguments
   init_val<int,0>      bells; // the default number of bells
 
   pair<size_t,size_t>  length;
+  init_val<int,1>      extents;
   init_val<bool,false> ignore_rotations;
   init_val<bool,false> mutually_true_parts;
   

@@ -1,5 +1,5 @@
 // -*- C -*- argv.c - code to handle @files on the command line
-// Copyright (C) 2011 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2011, 2025 Richard Smith <richard@ex-parrot.com>
   
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -124,7 +124,7 @@ itself.
 
 void freeargv (arg_parser const& ap, char **vector)
 {
-  register char **scan;
+  char **scan;
 
   if (vector != NULL)
     {

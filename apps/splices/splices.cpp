@@ -553,8 +553,6 @@ string splices::test_splice( method const& a, vector<row> const& b,
   if ( args.only_n_leads != -1 && sg.size() != args.only_n_leads * 2 )
     return string();
 
-cerr << "Got " << sg.size() << endl;
-
   string desc( describe_splice(sg) );
   if ( !args.group_splices /* && !args.filter_mode */ ) {
     cout << name_or_pn(args, a);

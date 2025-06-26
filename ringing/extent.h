@@ -1,5 +1,5 @@
 // -*- C++ -*- extent.h - Classes for iterating through an extent
-// Copyright (C) 2001, 2002, 2005, 2007, 2008, 2010, 2011
+// Copyright (C) 2001, 2002, 2005, 2007, 2008, 2010, 2011, 2025
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -15,8 +15,6 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-
-// $Id$
 
 #ifndef RINGING_EXTENT_H
 #define RINGING_EXTENT_H
@@ -52,9 +50,7 @@ RINGING_START_NAMESPACE
 RINGING_USING_STD
 
 // Generate the extent in lexicographical order
-class RINGING_API extent_iterator
-  : public RINGING_STD_CONST_ITERATOR( bidirectional_iterator_tag, row )
-{
+class RINGING_API extent_iterator {
 public:
   // Standard iterator typedefs
   typedef bidirectional_iterator_tag iterator_category;
@@ -178,9 +174,7 @@ private:
 
 
 // Generate the in-course half-extent in lexicographical order
-class RINGING_API incourse_extent_iterator
-  : public RINGING_STD_CONST_ITERATOR( forward_iterator_tag, row )
-{
+class RINGING_API incourse_extent_iterator {
 public:
   // Standard iterator typedefs
   typedef forward_iterator_tag iterator_category;
@@ -251,9 +245,7 @@ nth_row_of_incourse_extent( size_t n, unsigned nw, unsigned nh = 0 ) {
 }
 
 
-class RINGING_API changes_iterator
-  : public RINGING_STD_CONST_ITERATOR( forward_iterator_tag, change )
-{
+class RINGING_API changes_iterator {
 public:
   // Standard iterator typedefs
   typedef forward_iterator_tag iterator_category;

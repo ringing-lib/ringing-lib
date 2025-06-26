@@ -1,5 +1,5 @@
 // -*- C++ -*- library.h - Things for method libraries
-// Copyright (C) 2001, 2002, 2004, 2009, 2017, 2021
+// Copyright (C) 2001, 2002, 2004, 2009, 2017, 2021, 2025
 // Martin Bright <martin@boojum.org.uk>
 // and Richard Smith <richard@ex-parrot.com>.
 
@@ -16,8 +16,6 @@
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-
-// $Id$
 
 #ifndef RINGING_LIBRARY_H
 #define RINGING_LIBRARY_H
@@ -112,9 +110,7 @@ struct call_readentry {
 RINGING_END_DETAILS_NAMESPACE
  
 
-class RINGING_API library_base::const_iterator 
-  : public RINGING_STD_CONST_ITERATOR( input_iterator_tag, library_entry )
-{
+class RINGING_API library_base::const_iterator {
 public:
   // Standard iterator typedefs
   typedef library_entry value_type;

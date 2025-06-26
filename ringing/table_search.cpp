@@ -1,5 +1,5 @@
 // -*- C++ -*- table_search.cpp - A search class using a multiplication table
-// Copyright (C) 2001, 2002, 2007, 2009, 2010 
+// Copyright (C) 2001, 2002, 2007, 2009, 2010, 2025
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -16,20 +16,14 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-// $Id$
-
 #include <ringing/common.h>
 
 #if RINGING_HAS_PRAGMA_INTERFACE
 #pragma implementation
 #endif
 
-#if RINGING_OLD_INCLUDES
-#include <vector.h>
-#include <bvector.h>
-#else
 #include <vector>
-#endif
+
 #include <ringing/search_base.h>
 #include <ringing/table_search.h>
 #include <ringing/falseness.h>
@@ -70,18 +64,19 @@ static pair<size_t, size_t>
 }
 
 table_search::table_search( const method &meth, const vector<change> &calls,
-			    const group& partends, flags f )
-  : meth( meth ), calls( calls ), partends( partends ),
-    lenrange( make_pair( size_t(0), size_t(-1) ) ),  f(f)
+			    const group& partends, flags f, size_t extents )
+  : meth(meth), calls(calls), partends(partends),
+    lenrange( make_pair( size_t(0), size_t(-1) ) ),  f(f), extents(extents)
 {}
 
 table_search::table_search( const method &meth, const vector<change> &calls,
 			    const group& partends, 
-                            pair< size_t, size_t > lenrange,  flags f )
-  : meth( meth ), calls( calls ), partends( partends ),
+                            pair<size_t, size_t> lenrange, flags f, 
+                            size_t extents )
+  : meth(meth), calls(calls), partends(partends),
     lenrange( range_div( lenrange, f & length_in_changes
                                      ? partends.size() * meth.length() : 1) ),
-    f( f )
+    f(f), extents(extents)
 {
   DEBUG( "Length range set to " << lenrange.first << "-" << lenrange.second 
          << " leads" );
@@ -89,8 +84,8 @@ table_search::table_search( const method &meth, const vector<change> &calls,
 
 table_search::table_search( const method &meth, const vector<change> &calls,
                             bool set_nr )
-  : meth( meth ), calls( calls ),
-    f( set_nr ? ignore_rotations : no_flags )
+  : meth(meth), calls(calls),
+    f(set_nr ? ignore_rotations : no_flags), extents(1u)
 {}
 
 table_search::table_search( const method &meth, const vector<change> &calls,
@@ -98,7 +93,7 @@ table_search::table_search( const method &meth, const vector<change> &calls,
   : meth( meth ), calls( calls ),
     lenrange( range_div( lenrange, f & length_in_changes
                                      ? partends.size() * meth.length() : 1) ),
-    f( set_nr ? ignore_rotations : no_flags )
+    f(set_nr ? ignore_rotations : no_flags), extents(1u)
 {
   DEBUG( "Length range set to " << lenrange.first << "-" << lenrange.second 
          << " leads" );
@@ -108,9 +103,8 @@ class table_search::context : public search_base::context_base
 {
 public:
   context( const table_search *s ) 
-    : lenrange( s->lenrange ),  impossible( false ),
-      table( make_table( s ) ),
-      f( s->f )
+    : lenrange(s->lenrange), extents(s->extents), impossible(false),
+      table(make_table(s)), f(s->f)
   {
     DEBUG( "Constructing context: table size " << table.size() );
 
@@ -229,7 +223,7 @@ private:
     if ( !impossible ) {
       force_halt = false;
       nodes = 0ul;
-      lead_vector_t( table.size(), false ).swap( leads );
+      lead_vector_t( table.size(), 0u ).swap( leads );
       run_recursive( output, row_t(), 0, 0 );
       DEBUG( "Searched " << nodes << " nodes" );
     }
@@ -240,7 +234,7 @@ private:
   {
     for ( vector< post_col_t >::const_iterator i( falsenesses.begin() ); 
 	  i != falsenesses.end(); ++i )
-      if ( leads[ (r * *i).index() ] )
+      if ( leads[ (r * *i).index() ] >= extents )
 	return true;
 
     return false;
@@ -330,33 +324,29 @@ private:
       return;
 
     // Is the going to repeat?
-    else if ( is_row_false( r ) )
-      {
-	// Has it come round, and is it in it's canonical form?
-	if ( depth >= lenrange.first 
-             && ( (f & non_round_blocks) || r.isrounds() ) 
-             && is_really_canonical() )
-	  output_touch( output, cur );
-      }
-    else if ( depth < lenrange.second )
-      {
-	leads[r.index()] = true;
-	calls.push_back( 0 );
-	
-	for ( ; !force_halt && calls.back() < call_lhs.size(); ++calls.back() )
-	  {
-	    run_recursive( output, r * call_lhs[ calls.back() ], 
-			   depth + 1, cur );
-	  }
-	
-	calls.pop_back();
-	leads[r.index()] = false;
-      }
+    else if (is_row_false(r)) {
+      // Has it come round, and is it in it's canonical form?
+      if ( depth >= lenrange.first 
+           && ( (f & non_round_blocks) || r.isrounds() ) 
+           && is_really_canonical() )
+        output_touch( output, cur );
+    }
+    else if ( depth < lenrange.second ) {
+      leads[r.index()]++;
+      calls.push_back( 0 );
+      
+      for ( ; !force_halt && calls.back() < call_lhs.size(); ++calls.back() )
+        run_recursive(output, r * call_lhs[calls.back()], depth + 1, cur);
+      
+      calls.pop_back();
+      leads[r.index()]--;
+    }
   }
  
 private:
   // Data members
   pair< size_t, size_t > lenrange;	// The min & max lengths (in leads)
+  size_t extents;                       // How many extents are there?
   bool force_halt;			// Are we terminating the search?
   bool impossible;                      // Whether the search cannot succeed
   vector< size_t > calls;		// The calls we've had so far
@@ -366,10 +356,9 @@ private:
   flags f;	                        // Are we to ignore rotations, etc.
   RINGING_ULLONG nodes;                 // Node count
 
-  // Logically this is a vector<bool>, but the C++ standard mandates 
-  // that that should be a packed structure.  Changing to vector<char>
-  // makes a small but significant speed improvement.
-  typedef vector<char> lead_vector_t; 
+  // The value type needs to be big enough to accommodate the maximum number
+  // of extents we can handle.
+  typedef vector<uint_least8_t> lead_vector_t; 
 
   lead_vector_t leads;			// The leads had so far
   vector< post_col_t > call_lhs;	// The effect of each call (inc. Pl.)

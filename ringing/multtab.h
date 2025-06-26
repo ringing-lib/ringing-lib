@@ -1,5 +1,5 @@
 // -*- C++ -*- multtab.h - A precomputed multiplication table of rows
-// Copyright (C) 2002, 2003, 2004, 2008, 2010, 2017 
+// Copyright (C) 2002, 2003, 2004, 2008, 2010, 2017, 2025
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -15,8 +15,6 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-
-// $Id$
 
 #ifndef RINGING_MULTTAB_H
 #define RINGING_MULTTAB_H
@@ -74,8 +72,11 @@ public:
 
   RINGING_FAKE_COMPARATORS( multtab_row_t )
 
-  struct cmp : binary_function<multtab_row_t, multtab_row_t, bool> 
-  {
+  struct cmp {
+    typedef multtab_row_t first_argument_type;
+    typedef multtab_row_t second_argument_type;
+    typedef bool result_type;
+
     bool operator()( multtab_row_t const& x, 
                      multtab_row_t const& y ) const
     { return x.n < y.n; }
@@ -94,12 +95,9 @@ private:
 
 
 // Iterate through the rows in the table
-class RINGING_API multtab_row_iterator 
-  : public RINGING_STD_CONST_ITERATOR( forward_iterator_tag, multtab_row_t )
-{
+class RINGING_API multtab_row_iterator {
  public:
-  // These typedefs are needed to compile get the code to 
-  // compile in gcc-2.95.x.
+  // Standard typedefs
   typedef forward_iterator_tag iterator_category;
   typedef multtab_row_t value_type;
   typedef ptrdiff_t difference_type;
@@ -157,8 +155,11 @@ public:
 
   RINGING_FAKE_COMPARATORS( multtab_post_col_t )
 
-  struct cmp : binary_function<multtab_post_col_t, multtab_post_col_t, bool>  
-  {
+  struct cmp {
+    typedef multtab_post_col_t first_argument_type;
+    typedef multtab_post_col_t second_argument_type;
+    typedef bool result_type;
+
     bool operator()( multtab_post_col_t const& x, 
                      multtab_post_col_t const& y ) const
     { return x.n < y.n; }
@@ -195,8 +196,11 @@ public:
   RINGING_FAKE_COMPARATORS( multtab_pre_col_t )
 
 
-  struct cmp : binary_function<multtab_pre_col_t, multtab_pre_col_t, bool>
-  {
+  struct cmp {
+    typedef multtab_pre_col_t first_argument_type;
+    typedef multtab_pre_col_t second_argument_type;
+    typedef bool result_type;
+
     bool operator()( multtab_pre_col_t const& x, 
                      multtab_pre_col_t const& y ) const
     { return x.n < y.n; }

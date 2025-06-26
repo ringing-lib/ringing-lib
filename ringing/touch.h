@@ -1,5 +1,6 @@
 // -*- C++ -*- touch.h - Classes for touches
-// Copyright (C) 2001 Martin Bright <martin@boojum.org.uk>
+// Copyright (C) 2001, 2025 Martin Bright <martin@boojum.org.uk>
+// and Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -14,8 +15,6 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-
-// $Id$
 
 #ifndef RINGING_TOUCH_H
 #define RINGING_TOUCH_H
@@ -66,9 +65,7 @@ RINGING_PROTECTED_IMPL:
   typedef touch_node_iterator_base iterator_base;
 
 public:
-  class RINGING_API const_iterator
-    : public RINGING_STD_CONST_ITERATOR( forward_iterator_tag, change )
-  {
+  class RINGING_API const_iterator {
   private:
     cloning_pointer<iterator_base> bp;
 

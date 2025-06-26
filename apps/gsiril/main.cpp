@@ -1,6 +1,6 @@
 // main.cpp - Entry point for gsiril
 // Copyright (C) 2002, 2003, 2004, 2007, 2008, 2010, 2011, 2012, 2014, 2020,
-// 2021, 2022 Richard Smith <richard@ex-parrot.com>
+// 2021, 2022, 2024 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -82,6 +82,9 @@ void initialise( execution_context& ex, const arguments& args )
   bool verbose     = ex.verbose(false);
 
   register_functions(ex);
+
+  ex.define_symbol(make_pair("__msiril__", 
+    expression(new boolean_node(args.msiril_syntax))));
 
   // Prepopulate symbol table, first using the init script
   if (!args.no_init_file) {

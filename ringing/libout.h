@@ -1,5 +1,6 @@
 // -*- C++ -*- libout.h - general classes for output of a method library
-// Copyright (C) 2004, 2009, 2010, 2021 Richard Smith <richard@ex-parrot.com>.
+// Copyright (C) 2004, 2009, 2010, 2021, 2025
+// Richard Smith <richard@ex-parrot.com>.
 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -14,8 +15,6 @@
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-
-// $Id$
 
 #ifndef RINGING_LIBOUT_H
 #define RINGING_LIBOUT_H
@@ -68,9 +67,7 @@ RINGING_PROTECTED_IMPL:
   explicit libout( interface* p ) { this->set_impl(p); }
 };
 
-class libout::iterator 
-  : public RINGING_STD_OUTPUT_ITERATOR( library_entry )
-{
+class libout::iterator {
 public:
   iterator() : pimpl(NULL) {}
   

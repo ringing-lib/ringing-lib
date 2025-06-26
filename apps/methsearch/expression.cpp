@@ -1,5 +1,5 @@
 // -*- C++ -*- expression.cpp - classes to handle expressions
-// Copyright (C) 2002, 2003, 2004, 2005, 2008, 2009, 2010, 2011, 2021
+// Copyright (C) 2002, 2003, 2004, 2005, 2008, 2009, 2010, 2011, 2021, 2025
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -515,7 +515,7 @@ expression::parser::parser()
 RINGING_START_ANON_NAMESPACE
 
 template <class T> 
-struct safe_divides : binary_function<T,T,T> {
+struct safe_divides {
   T operator() (const T& x, const T& y) const {
     if (y == T()) throw division_by_zero();
     return x/y;

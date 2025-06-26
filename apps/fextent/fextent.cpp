@@ -1,5 +1,5 @@
 // -*- C++ -*- fexent.cpp - search of maximal sets of mutually true leads
-// Copyright (C) 2004, 2005, 2011 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2004, 2005, 2011, 2025 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -493,10 +493,15 @@ private:
   };
 
 public:
-  class const_iterator
-    : public RINGING_STD_CONST_ITERATOR( forward_iterator_tag, row )
-  {
+  class const_iterator {
   public:
+    // Standard iterator typedefs
+    typedef forward_iterator_tag iterator_category;
+    typedef row value_type;
+    typedef ptrdiff_t difference_type;
+    typedef const row *pointer;
+    typedef const row &reference;
+
     const_iterator& operator++() {
       ++idx; fixup(); return *this;
     }

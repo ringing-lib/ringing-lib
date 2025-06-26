@@ -1,5 +1,5 @@
 // main.cpp - Entry point for touchsearch
-// Copyright (C) 2002, 2003, 2007, 2009, 2010, 2011
+// Copyright (C) 2002, 2003, 2007, 2009, 2010, 2011, 2025
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -190,8 +190,8 @@ void search( arguments const& args, method const& meth,
       (args.round_blocks ? 0 : table_search::non_round_blocks ) |
       (args.mutually_true_parts ? table_search::mutually_true_parts : 0) );
 
-    searcher.reset
-      ( new table_search( meth, args.calls, args.pends, args.length, f ) );
+    searcher.reset( new table_search(meth, args.calls, args.pends, args.length, 
+                                     f, args.extents) );
   }
 
   touch_search_until( *searcher, iter_from_fun(printer), have_finished(args) );
@@ -200,61 +200,57 @@ void search( arguments const& args, method const& meth,
 void filter( arguments const& args )
 {
   litelib in( args.bells, std::cin );
-  for ( library::const_iterator i=in.begin(), e=in.end(); i!=e; ++i )
-    {
-      method filter_method;
-      try {
-        filter_method = i->meth();
-      } 
-      catch ( std::exception const& ex ) {
-        std::cerr << "Error reading method from input stream: "
-                  << ex.what() << "\n";
-        string pn;  try { pn = i->pn(); } catch (...) {}
-        if ( pn.size() ) std::cerr << "Place notation: '" << pn << "'\n";
-        std::cerr << std::flush;
+  for ( library::const_iterator i=in.begin(), e=in.end(); i!=e; ++i ) {
+    method filter_method;
+    try {
+      filter_method = i->meth();
+    } 
+    catch ( std::exception const& ex ) {
+      std::cerr << "Error reading method from input stream: "
+                << ex.what() << "\n";
+      string pn;  try { pn = i->pn(); } catch (...) {}
+      if ( pn.size() ) std::cerr << "Place notation: '" << pn << "'\n";
+      std::cerr << std::flush;
 
-        continue;
-      }
-
-      string filter_line = i->pn();
-      filter_line += "\t";
-      filter_line += i->get_facet<litelib::payload>();
-
-      search( args, filter_method, filter_line );
+      continue;
     }
+
+    string filter_line = i->pn();
+    filter_line += "\t";
+    filter_line += i->get_facet<litelib::payload>();
+
+    search( args, filter_method, filter_line );
+  }
 }
 
 int main( int argc, char *argv[] )
 {
-  try
-    {
-      bell::set_symbols_from_env();
+  try {
+    bell::set_symbols_from_env();
 
-      arguments args( argc, argv );
+    arguments args( argc, argv );
 
-      if ( args.filter_mode )
-        filter( args );
-      else
-        search( args, args.meth, string() );
+    if ( args.filter_mode )
+      filter( args );
+    else
+      search( args, args.meth, string() );
 
-      if (!args.quiet && (args.count || args.raw_count))
-        cout << "\n";
-      if (args.raw_count)
-        cout << touch_count << "\n";
-      else if (args.count)
-        cout << "Found " << touch_count 
-             << (args.filter_mode ? " methods\n" : " touches\n");
-    }
-  catch ( const exception &ex )
-    {
-      cerr << "Unexpected error: " << ex.what() << endl;
-      exit(1);
-    }
-  catch ( ... )
-    {
-      cerr << "An unknown error occured" << endl;
-      exit(1);
-    }
+    if (!args.quiet && (args.count || args.raw_count))
+      cout << "\n";
+    if (args.raw_count)
+      cout << touch_count << "\n";
+    else if (args.count)
+      cout << "Found " << touch_count 
+           << (args.filter_mode ? " methods\n" : " touches\n");
+  }
+  catch ( const exception &ex ) {
+    cerr << "Unexpected error: " << ex.what() << endl;
+    exit(1);
+  }
+  catch ( ... ) {
+    cerr << "An unknown error occured" << endl;
+    exit(1);
+  }
 
   return 0;
 }

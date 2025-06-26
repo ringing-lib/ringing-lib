@@ -1,5 +1,5 @@
 // main.cpp - Entry point for printmethod
-// Copyright (C) 2008, 2009, 2010, 2011, 2021, 2022
+// Copyright (C) 2008, 2009, 2010, 2011, 2021, 2022, 2025
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -29,11 +29,6 @@
 # ifdef bell
 #   undef bell
 # endif
-# define RINGING_TERMINFO_VAR( name ) \
-    ( cur_term && (name) != (char const*)-1 ? (name) : NULL )
-#else
-# define RINGING_TERMINFO_VAR( name ) NULL
-static inline char* tparm( char const*, ... ) { return NULL; }
 #endif
 
 #include "args.h"
@@ -48,11 +43,6 @@ static inline char* tparm( char const*, ... ) { return NULL; }
 
 RINGING_USING_NAMESPACE
 RINGING_USING_STD
-
-struct bellfmt { 
-  int colour;
-  bool bold;
-};
 
 struct arguments
 {

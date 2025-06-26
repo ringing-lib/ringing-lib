@@ -1,5 +1,5 @@
 // prog_args.cpp - Program argument parsing
-// Copyright (C) 2002, 2003, 2007, 2009, 2010 
+// Copyright (C) 2002, 2003, 2007, 2009, 2010, 2025
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -15,8 +15,6 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-
-// $Id$
 
 #include <ringing/common.h>
 
@@ -34,11 +32,7 @@
 #include <ringing/streamutils.h>
 
 #include <string>
-#if RINGING_OLD_INCLUDES 
-#include <vector.h>
-#else
 #include <vector>
-#endif
 
 RINGING_USING_NAMESPACE
 
@@ -85,6 +79,11 @@ void arguments::bind( arg_parser& p )
          ( 'l', "length",
            "Length or range of lengths required",  "MIN-MAX",
            length ) );
+
+  p.add( new integer_opt
+         ( 'n', "extents",
+           "The number of extents required",  "NUM",
+           extents ) );
 
   p.add( new strings_opt
          ( 'P', "part-end",
