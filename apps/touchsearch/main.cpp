@@ -84,36 +84,41 @@ public:
     touch_child_list const* tl 
       = dynamic_cast<touch_child_list const*>( t.get_head() );
     assert( tl );
+
+    make_string touch;
      
     size_t len = 0;   row r(args.bells);
-    do for ( list<touch_child_list::entry>::const_iterator
-               i = tl->children().begin(), e = tl->children().end();  
-               i != e;  ++i ) 
-    {    
-      for ( int n = 0; n < i->first; ++n ) {
+    do for (touch_child_list::entry node : tl->children()) {    
+      for ( int n = 0; n < node.first; ++n ) {
         change c;
         for ( touch_node::const_iterator 
-                li = i->second->begin(), le = i->second->end(); 
+                li = node.second->begin(), le = node.second->end(); 
                 li != le; ++li, ++len )
           r *= c = *li;
 
         size_t cn = find( args.calls.begin(), args.calls.end(), c ) 
             - args.calls.begin();
 
-        if ( (flags & comma_separate) && len != 0 ) cout << ',';
-        if ( cn < args.calls.size() ) cout << args.call_strs[cn];
-        else cout << args.plain_name;
+        if ( (flags & comma_separate) && len != 0 ) touch << ',';
+        if ( cn < args.calls.size() ) touch << args.call_strs[cn];
+        else touch << args.plain_name;
       }
     }
     while ( (flags & write_out_repeat) && r.order() > 1 );
 
-    if ( r.order() > 1 ) 
-      cout << " x" << r.order();
+    if ( r.order() > 1 ) {
+      touch << " x" << r.order();
+      len *= r.order();
+    }
+    
+    if ( flags & print_length ) {
+      string lenstr = make_string() << len;
+      if (lenstr.size() < 4) 
+        lenstr.append(4-lenstr.size(), ' ');
+      cout << lenstr << ' ';
+    }
 
-    if ( flags & print_length )
-      cout << "  (" << (len*r.order()) << " changes)";
-
-    cout << endl;
+    cout << string(touch) << endl;
   } 
 
 private:
@@ -165,10 +170,12 @@ void read_plan( int bells, istream& in, map<row, method>& plan )
 void search( arguments const& args, method const& meth, 
              string const& filter_line )
 {
-  print_touch::format_options fmt = static_cast<print_touch::format_options>( 
-    args.comma_separate ? 
-      ( print_touch::comma_separate | print_touch::write_out_repeat ) 
-    : print_touch::print_length );
+  print_touch::format_options fmt = print_touch::format_options();
+  if (args.comma_separate)
+    fmt = print_touch::format_options( 
+            print_touch::comma_separate | print_touch::write_out_repeat );
+  else if (args.length.first != args.length.second)
+    fmt = print_touch::print_length;
 
   scoped_pointer<search_base> searcher;
   

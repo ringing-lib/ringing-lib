@@ -1,7 +1,7 @@
 CPPFLAGS += -I$(TOPDIR)
 CXXFLAGS += -fPIC
 
-include $(TOPDIR)/buildrules.mk
+include $(TOPDIR)/build/compile.mk
 
 all::	$(LIBRARY).so
 

@@ -14,4 +14,4 @@ SOURCES := mslib.cpp cclib.cpp methodset.cpp extent.cpp group.cpp \
   multtab.cpp table_search.cpp streamutils.cpp 
 
 MAKEFILE=main.mk
-include $(TOPDIR)/buildlib.mk
+include $(TOPDIR)/build/lib.mk

@@ -3,4 +3,4 @@ include $(TOPDIR)/defaults.mk
 
 DOCUMENT := methsearch
 
-include $(TOPDIR)/buildpdf.mk
+include $(TOPDIR)/build/pdf.mk

@@ -5,17 +5,18 @@
 CXXFLAGS ?= -g -O2
 PREFIX ?= /usr/local
 
-# Set these to 1 to enable optional functionality.
-HAVE_GDOME ?= 0
-HAVE_XERCES ?= 0
-HAVE_READLINE ?= 0
-HAVE_TERMCAP ?= 0
+# Each of these libraries has an XXX_INCLUDES variable (for setting -I
+# options to find headers or -D options to add custom definitions), an
+# XXX_LDFLAGS variable (for passing -L options to locate libraries), and
+# an XXX_LIBS option (for -l options linking to the library and any 
+# other dependent libraries).
 
-# It is very likely that libgdome will depend on glib.h which may want
+# Some builds of libgdome depend on glib.h which may want
 # -I/usr/include/glib-2.0 or -I/usr/lib/x86_64-linux-gnu/glib-2.0/include/
 GDOME_INCLUDES ?= -I/usr/include/libgdome -I/usr/include/libxml2/
 GDOME_LIBS ?= -lgdome
-XERCES_INCLUDES ?=
-XERCES_LIBS ?=
+XERCES_LIBS ?= -lxerces-c
+READLINE_LIBS ?= -lreadline
+TERMCAP_LIBS ?= -ltermcap -lncurses
 
 -include $(TOPDIR)/local.mk

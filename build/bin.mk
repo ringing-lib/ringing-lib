@@ -2,14 +2,18 @@ CPPFLAGS += -I$(TOPDIR) -I$(TOPDIR)/utils
 LDFLAGS += -L$(TOPDIR)/ringing -L$(TOPDIR)/utils
 LDLIBS += -lringingcore -lringing -lringingutils
 
-include $(TOPDIR)/buildrules.mk
+include $(TOPDIR)/build/compile.mk
 
 all::	$(BINARY)
 
-$(BINARY):	$(SOURCES:%.cpp=.objs/%.o)
+$(BINARY):	.objs/$(BINARY)
+	sed 's!@TOPDIR@!$(TOPDIR)!g' $(TOPDIR)/build/run.sh > $@
+	chmod a+x $@
+
+.objs/$(BINARY):	$(SOURCES:%.cpp=.objs/%.o)
 	$(CXX) $(LDFLAGS) -o $@ $^ $(LDLIBS)
 
-install::	$(BINARY)
+install::	.objs/$(BINARY)
 	install $^ $(PREFIX)/bin/
 
 clean::

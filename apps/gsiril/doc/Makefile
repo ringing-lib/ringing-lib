@@ -3,4 +3,4 @@ include $(TOPDIR)/defaults.mk
 
 DOCUMENT := gsiril
 
-include $(TOPDIR)/buildpdf.mk
+include $(TOPDIR)/build/pdf.mk
