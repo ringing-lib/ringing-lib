@@ -9,6 +9,7 @@ $(LIBRARY).so:	$(SOURCES:%.cpp=.objs/%.o)
 	$(CXX) -shared $(LDFLAGS) -o $@ $^ $(LDLIBS)
 
 install::	$(LIBRARY).so
+	mkdir -p $(PREFIX)/lib/
 	install $^ $(PREFIX)/lib/
 
 clean::

@@ -21,4 +21,5 @@ change.h place_notation.h litelib.h dom.h libbase.h methodset.h \
 lexical_cast.h istream_impl.h row_wildcard.h iteratorutils.h method_stream.h
 
 install::
+	mkdir -p $(PREFIX)/include/ringing/
 	install -m644 $(HEADERS) $(PREFIX)/include/ringing/

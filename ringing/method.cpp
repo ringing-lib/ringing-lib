@@ -440,6 +440,7 @@ string method::fullname(int year) const
   if (!myname.empty()) result += ' ';
 
   if (myname == "Grandsire" || myname == "Reverse Grandsire"
+      || myname == "New Grandsire" || myname == "Reverse New Grandsire"
       || myname == "Double Grandsire" || myname == "Little Grandsire" )
     ; // Grandsire and its related methods do not contain either a class
       // or a Little modifier.

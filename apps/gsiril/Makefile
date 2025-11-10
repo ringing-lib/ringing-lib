@@ -23,6 +23,7 @@ clean::
 	rm -f init.dat
 
 install::	gsiril
+	mkdir -p $(PREFIX)/bin/
 	for link in msiril gsirilic; do \
 	  ln -sf gsiril $(PREFIX)/bin/$$link; \
 	done

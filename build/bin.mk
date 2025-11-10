@@ -14,6 +14,7 @@ $(BINARY):	.objs/$(BINARY)
 	$(CXX) $(LDFLAGS) -o $@ $^ $(LDLIBS)
 
 install::	.objs/$(BINARY)
+	mkdir -p $(PREFIX)/bin/
 	install $^ $(PREFIX)/bin/
 
 clean::
