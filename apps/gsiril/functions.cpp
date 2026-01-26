@@ -40,79 +40,73 @@ void fnnode::execute( proof_context &ctx, int dir ) const
   throw runtime_error( os );
 }
 
-class at_fn_impl : public fnnode {
-  virtual expression call( proof_context& ctx, 
-                           vector<expression> const& args ) const {
-    if (args.size() != 1)
-      throw runtime_error("The at function takes one argument");
-    int idx = args[0].int_evaluate(ctx);
-    if (idx < 1 || idx >= ctx.bells())
-      throw runtime_error("Argument out of range in at function");
-    row const& r = ctx.current_row();
-    int rv = idx > r.bells() ? idx : r[idx-1]+1;
-    return expression( new integer_node(rv) );
-  }
+class std_fn_impl : public fnnode {
+public:
+  std_fn_impl( string const& name, expression::type_t expr_type,
+               expression (*call_fn)( proof_context& ctx,
+                                      vector<expression> const& args ) )
+    : name(name), expr_type(expr_type), call_fn(call_fn) {}
 
-  virtual void debug_print( ostream &os ) const { os << "pos"; }
+
+private:
+  virtual expression call( proof_context& ctx, 
+                           vector<expression> const& args ) const
+    { return call_fn(ctx, args); }
+  virtual void debug_print( ostream &os ) const
+    { os << name; }
   virtual expression::type_t type( proof_context &ctx ) const 
-    { return expression::integer; }
+    { return expr_type; }
   virtual expression clone() const
-    { return expression(new at_fn_impl); }
+    { return expression(new std_fn_impl(name, expr_type, call_fn)); }
+
+
+  string name;
+  expression::type_t expr_type;
+  expression (*call_fn)( proof_context& ctx,
+                         vector<expression> const& args );
 };
 
-class pos_fn_impl : public fnnode {
-  virtual expression call( proof_context& ctx, 
-                           vector<expression> const& args ) const {
-    if (args.size() != 1)
-      throw runtime_error("The pos function takes one argument");
-    int rv = ctx.current_row().find(args[0].int_evaluate(ctx) - 1) + 1;
-    return expression( new integer_node(rv) );
-  }
+static expression at_fn_impl( proof_context& ctx, 
+                              vector<expression> const& args ) {
+  if (args.size() != 1)
+    throw runtime_error("The at function takes one argument");
+  int idx = args[0].int_evaluate(ctx);
+  if (idx < 1 || idx >= ctx.bells())
+    throw runtime_error("Argument out of range in at function");
+  row const& r = ctx.current_row();
+  int rv = idx > r.bells() ? idx : r[idx-1]+1;
+  return expression( new integer_node(rv) );
+}
 
-  virtual void debug_print( ostream &os ) const { os << "pos"; }
-  virtual expression::type_t type( proof_context &ctx ) const 
-    { return expression::integer; }
-  virtual expression clone() const
-    { return expression(new pos_fn_impl); }
-};
+static expression pos_fn_impl( proof_context& ctx, 
+                               vector<expression> const& args ) {
+  if (args.size() != 1)
+    throw runtime_error("The pos function takes one argument");
+  int rv = ctx.current_row().find(args[0].int_evaluate(ctx) - 1) + 1;
+  return expression( new integer_node(rv) );
+}
 
-class rowno_fn_impl : public fnnode {
-  virtual expression call( proof_context& ctx, 
-                           vector<expression> const& args ) const {
-    if (args.size())
-      throw runtime_error("The rowno function takes no arguments");
-    return expression( new integer_node(ctx.length()) );
-  }
+static expression rowno_fn_impl( proof_context& ctx, 
+                                 vector<expression> const& args ) {
+  if (args.size())
+    throw runtime_error("The rowno function takes no arguments");
+  return expression( new integer_node(ctx.length()) );
+}
 
-  virtual void debug_print( ostream &os ) const { os << "rowno"; }
-  virtual expression::type_t type( proof_context &ctx ) const 
-    { return expression::integer; }
-  virtual expression clone() const
-    { return expression(new rowno_fn_impl); }
-};
-
-class swap_fn_impl : public fnnode {
-  virtual expression call( proof_context& ctx, 
-                           vector<expression> const& args ) const {
-    if (args.size() < 1 || args.size() > 2)
-      throw runtime_error("The pos function takes one or two arguments");
-    row r( ctx.bells() );
-    int i = args[0].int_evaluate(ctx) - 1;
-    int j = args.size() == 2 ?  args[1].int_evaluate(ctx) - 1 : i + 1;
-    if (i >= r.bells() || j >= r.bells() || i < 0 ||  j < 0)
-      throw runtime_error("Bell out of bounds in swap");
-    else if (i == j)
-      throw runtime_error("Bell swapping with self");
-    r.swap(i, j);
-    return expression( new transp_node(r) );
-  }
-
-  virtual void debug_print( ostream &os ) const { os << "swap"; }
-  virtual expression::type_t type( proof_context &ctx ) const 
-    { return expression::transp; }
-  virtual expression clone() const
-    { return expression(new swap_fn_impl); }
-};
+static expression swap_fn_impl( proof_context& ctx, 
+                                vector<expression> const& args ) {
+  if (args.size() < 1 || args.size() > 2)
+    throw runtime_error("The swap function takes one or two arguments");
+  row r( ctx.bells() );
+  int i = args[0].int_evaluate(ctx) - 1;
+  int j = args.size() == 2 ?  args[1].int_evaluate(ctx) - 1 : i + 1;
+  if (i >= r.bells() || j >= r.bells() || i < 0 ||  j < 0)
+    throw runtime_error("Bell out of bounds in swap");
+  else if (i == j)
+    throw runtime_error("Bell swapping with self");
+  r.swap(i, j);
+  return expression( new transp_node(r) );
+}
 
 class load_fn_impl : public fnnode {
 public:
@@ -141,36 +135,20 @@ private:
     { return expression(new load_fn_impl(t)); }
 };
 
-class stagename_impl : public fnnode {
-  virtual expression call( proof_context& ctx, 
-                           vector<expression> const& args ) const {
-    if (args.size() != 1)
-      throw runtime_error("The stagename function takes one argument");
-    string rv( method::stagename( args[0].int_evaluate(ctx) ) );
-    return expression( new string_node(rv) );
-  }
+static expression stagename_impl( proof_context& ctx, 
+                                  vector<expression> const& args ) {
+  if (args.size() != 1)
+    throw runtime_error("The stagename function takes one argument");
+  string rv( method::stagename( args[0].int_evaluate(ctx) ) );
+  return expression( new string_node(rv) );
+}
 
-  virtual void debug_print( ostream &os ) const { os << "stagename"; }
-  virtual expression::type_t type( proof_context &ctx ) const 
-    { return expression::no_type; }
-  virtual expression clone() const
-    { return expression(new stagename_impl); }
-};
-
-class music_impl : public fnnode {
-  virtual expression call( proof_context& ctx, 
-                           vector<expression> const& args ) const {
-    if (args.size())
-      throw runtime_error("The music function takes no arguments");
-    return expression( new integer_node( ctx.music_score() ) );
-  }
-
-  virtual void debug_print( ostream &os ) const { os << "music"; }
-  virtual expression::type_t type( proof_context &ctx ) const 
-    { return expression::integer; }
-  virtual expression clone() const
-    { return expression(new music_impl); }
-};
+static expression music_impl( proof_context& ctx, 
+                              vector<expression> const& args ) {
+  if (args.size())
+    throw runtime_error("The music function takes no arguments");
+  return expression( new integer_node( ctx.music_score() ) );
+}
 
 class runs_impl : public fnnode {
 public:
@@ -196,90 +174,57 @@ private:
   music::match_pos pos;
 };
 
-class crus_impl : public fnnode {
-  virtual expression call( proof_context& ctx, 
-                           vector<expression> const& args ) const {
-    if (args.size())
-      throw runtime_error("The crus function takes no arguments");
-    return expression( new opaque_music_node( 
-      music::make_cru_match( ctx.bells(), 1,1 ) ) );
+static expression crus_impl( proof_context& ctx, 
+                             vector<expression> const& args ) {
+  if (args.size())
+    throw runtime_error("The crus function takes no arguments");
+  return expression( new opaque_music_node( 
+    music::make_cru_match( ctx.bells(), 1,1 ) ) );
+}
+
+static expression methname_impl( proof_context& ctx, 
+                                 vector<expression> const& args )  {
+  if (args.size() != 1)
+    throw runtime_error("The methname function takes one argument");
+  string rv( args[0].name(ctx) );
+  return expression( new string_node(rv) );
+}
+
+static expression pnstr_impl( proof_context& ctx, 
+                              vector<expression> const& args ) {
+  if (args.size() == 0)
+    throw runtime_error("The pnstr function takes an argument");
+
+  proof_context ctx2( ctx.silent_clone() );
+  method m;
+  for (expression const& arg : args)
+    for (change const& ch : arg.pn_evaluate(ctx2))
+      m.push_back(ch);
+  return expression( new string_node(m.format(method::M_EXTERNAL)) );
+}
+
+static expression join_impl( proof_context& ctx, 
+                             vector<expression> const& args ) {
+  if (args.size() < 2)
+    throw runtime_error("The join function takes two or more arguments");
+
+  string sep( args[0].string_evaluate(ctx) );
+
+  vector<expression> strings;
+  if (args.size() == 2)
+    strings = args[1].array_evaluate(ctx);
+  else 
+    strings.assign(args.begin() + 1, args.end());
+
+  make_string str;  bool first = true;
+  for (const expression& e : strings) {
+    if (!first) str << sep;
+    str << e.string_evaluate(ctx);
+    first = false;
   }
 
-  virtual void debug_print( ostream &os ) const { os << "crus"; }
-  virtual expression::type_t type( proof_context &ctx ) const 
-    { return expression::no_type; }
-  virtual expression clone() const
-    { return expression(new crus_impl); }
-};
-
-class methname_impl : public fnnode {
-  virtual expression call( proof_context& ctx, 
-                           vector<expression> const& args ) const {
-    if (args.size() != 1)
-      throw runtime_error("The crus function takes one argument");
-    string rv( args[0].name(ctx) );
-    return expression( new string_node(rv) );
-  }
-
-  virtual void debug_print( ostream &os ) const { os << "methname"; }
-  virtual expression::type_t type( proof_context &ctx ) const 
-    { return expression::no_type; }
-  virtual expression clone() const
-    { return expression(new methname_impl); }
-};
-
-class pnstr_impl : public fnnode {
-  virtual expression call( proof_context& ctx, 
-                           vector<expression> const& args ) const {
-    if (args.size() == 0)
-      throw runtime_error("The pnstr function takes an argument");
-
-    proof_context ctx2( ctx.silent_clone() );
-    method m;
-    for (expression const& arg : args)
-      for (change const& ch : arg.pn_evaluate(ctx2))
-        m.push_back(ch);
-    return expression( new string_node(m.format(method::M_EXTERNAL)) );
-  }
-
-  virtual void debug_print( ostream &os ) const { os << "pnstr"; }
-  virtual expression::type_t type( proof_context &ctx ) const 
-    { return expression::no_type; }
-  virtual expression clone() const
-    { return expression(new pnstr_impl); }
-};
-
-class join_impl : public fnnode {
-  virtual expression call( proof_context& ctx, 
-                           vector<expression> const& args ) const {
-    if (args.size() < 2)
-      throw runtime_error("The join function takes two or more arguments");
-
-    string sep( args[0].string_evaluate(ctx) );
-
-    vector<expression> strings;
-    if (args.size() == 2)
-      strings = args[1].array_evaluate(ctx);
-    else 
-      strings.assign(args.begin() + 1, args.end());
-
-    make_string str;  bool first = true;
-    for (const expression& e : strings) {
-      if (!first) str << sep;
-      str << e.string_evaluate(ctx);
-      first = false;
-    }
-
-    return expression( new string_node(str) );
-  }
-
-  virtual void debug_print( ostream &os ) const { os << "join"; }
-  virtual expression::type_t type( proof_context &ctx ) const 
-    { return expression::no_type; }
-  virtual expression clone() const
-    { return expression(new join_impl); }
-};
-
+  return expression( new string_node(str) );
+}
 
 expression var_impl::call( proof_context& ctx, 
                            vector<expression> const& args ) const {
@@ -298,16 +243,37 @@ expression var_impl::clone() const {
   return expression(new var_impl);
 }
 
+static expression arraylen_impl( proof_context& ctx, 
+                                 vector<expression> const& args ) {
+  if (args.size() != 1)
+    throw runtime_error("The arraylen function takes one argument");
+
+  return expression( new integer_node( args[0].array_evaluate(ctx).size() ) );
+}
+
+static expression arrayof_impl( proof_context& ctx, 
+                                vector<expression> const& args ) {
+  if (args.size() != 2)
+    throw runtime_error("The arrayof function takes two arguments");
+
+  return expression( new array_node( 
+    vector<expression>( args[0].int_evaluate(ctx), args[1] ) ) );
+}
+
 void register_functions( execution_context& ectx )
 {
   ectx.define_symbol( pair< const string, expression >
-    ( "at", expression( new at_fn_impl() ) ) );
+    ( "at", expression( new std_fn_impl("at", expression::integer, 
+    at_fn_impl) ) ) );
   ectx.define_symbol( pair< const string, expression >
-    ( "pos", expression( new pos_fn_impl() ) ) );
+    ( "pos", expression( new std_fn_impl("pos", expression::integer, 
+    pos_fn_impl) ) ) );
   ectx.define_symbol( pair< const string, expression >
-    ( "rowno", expression( new rowno_fn_impl() ) ) );
+    ( "rowno", expression( new std_fn_impl("rowno", expression::integer, 
+    rowno_fn_impl) ) ) );
   ectx.define_symbol( pair< const string, expression >
-    ( "swap", expression( new swap_fn_impl() ) ) );
+    ( "swap", expression( new std_fn_impl("swap", expression::transp,
+    swap_fn_impl) ) ) );
   ectx.define_symbol( pair< const string, expression >
     ( "load", expression( new load_fn_impl( load_fn_impl::full_method ) ) ) );
   ectx.define_symbol( pair< const string, expression >
@@ -315,9 +281,11 @@ void register_functions( execution_context& ectx )
   ectx.define_symbol( pair< const string, expression >
     ( "loadlh", expression( new load_fn_impl( load_fn_impl::lead_head ) ) ) );
   ectx.define_symbol( pair< const string, expression >
-    ( "stagename", expression( new stagename_impl ) ) );
+    ( "stagename", expression( new std_fn_impl("stagename", expression::no_type,
+    stagename_impl ) ) ) );
   ectx.define_symbol( pair< const string, expression >
-    ( "music", expression( new music_impl ) ) );
+    ( "music", expression( new std_fn_impl("music", expression::integer,
+    music_impl ) ) ) );
   ectx.define_symbol( pair< const string, expression >
     ( "runs", expression( new runs_impl ) ) );
   ectx.define_symbol( pair< const string, expression >
@@ -325,14 +293,24 @@ void register_functions( execution_context& ectx )
   ectx.define_symbol( pair< const string, expression >
     ( "backruns", expression( new runs_impl( music::at_back ) ) ) );
   ectx.define_symbol( pair< const string, expression >
-    ( "crus", expression( new runs_impl ) ) );
+    ( "crus", expression( new std_fn_impl("crus", expression::no_type, 
+    crus_impl ) ) ) );
   ectx.define_symbol( pair< const string, expression >
-    ( "methname", expression( new methname_impl ) ) );
+    ( "methname", expression( new std_fn_impl("methname", expression::no_type,
+    methname_impl ) ) ) );
   ectx.define_symbol( pair< const string, expression >
-    ( "pnstr", expression( new pnstr_impl ) ) );
+    ( "pnstr", expression( new std_fn_impl("pnstr", expression::no_type,
+    pnstr_impl ) ) ) );
   ectx.define_symbol( pair< const string, expression >
     ( "var", expression( new var_impl ) ) );
   ectx.define_symbol( pair< const string, expression >
-    ( "join", expression( new join_impl ) ) );
+    ( "join", expression( new std_fn_impl("join", expression::no_type,
+    join_impl ) ) ) );
+  ectx.define_symbol( pair< const string, expression >
+    ( "arraylen", expression( new std_fn_impl("arraylen", expression::integer,
+    arraylen_impl ) ) ) );
+  ectx.define_symbol( pair< const string, expression >
+    ( "arrayof", expression( new std_fn_impl("arrayof", expression::no_type,
+    arrayof_impl ) ) ) );
 }
 
