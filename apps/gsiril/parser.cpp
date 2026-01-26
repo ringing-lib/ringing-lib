@@ -469,14 +469,19 @@ statement msparser::parse_command( vector<token> const& cmd ) {
 
   // Computed variable definition
   if ( cmd.size() >= 5 && cmd[0].type() == tok_types::name
-       && cmd[0] == "var" && cmd[1].type() == tok_types::open_paren
-       && (cmd[2].type() == tok_types::name || 
-           cmd[2].type() == tok_types::string_lit)
-       && cmd[3].type() == tok_types::close_paren
-       && tok_types::is_assign(cmd[4].type()) )
-    return parse_assignment( make_expr(cmd.begin(), cmd.begin()+4), 
-                             cmd[4].type(), cmd.begin()+5, cmd.end() );
+       && cmd[0] == "var" && cmd[1].type() == tok_types::open_paren ) {
 
+    vector<tok_types::enum_t> assigns;
+    assigns.push_back(tok_types::assignment);
+    assigns.push_back(tok_types::def_assign);
+    assigns.push_back(tok_types::imm_assign);
+
+    vector<token>::const_iterator split;
+    if (find_one_of(cmd.begin(), cmd.end(), assigns, split))
+      return parse_assignment( make_expr(cmd.begin(), split), 
+                               split->type(), split+1, cmd.end() );
+  }
+  
   throw runtime_error( "Unknown command: " + cmd[0] + " ..." );
 }
 
