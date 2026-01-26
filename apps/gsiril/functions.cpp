@@ -249,6 +249,38 @@ class pnstr_impl : public fnnode {
     { return expression(new pnstr_impl); }
 };
 
+class join_impl : public fnnode {
+  virtual expression call( proof_context& ctx, 
+                           vector<expression> const& args ) const {
+    if (args.size() < 2)
+      throw runtime_error("The join function takes two or more arguments");
+
+    string sep( args[0].string_evaluate(ctx) );
+
+    vector<expression> strings;
+    if (args.size() == 2)
+      strings = args[1].array_evaluate(ctx);
+    else 
+      strings.assign(args.begin() + 1, args.end());
+
+    make_string str;  bool first = true;
+    for (const expression& e : strings) {
+      if (!first) str << sep;
+      str << e.string_evaluate(ctx);
+      first = false;
+    }
+
+    return expression( new string_node(str) );
+  }
+
+  virtual void debug_print( ostream &os ) const { os << "join"; }
+  virtual expression::type_t type( proof_context &ctx ) const 
+    { return expression::no_type; }
+  virtual expression clone() const
+    { return expression(new join_impl); }
+};
+
+
 expression var_impl::call( proof_context& ctx, 
                            vector<expression> const& args ) const {
   if (args.size() != 1)
@@ -300,5 +332,7 @@ void register_functions( execution_context& ectx )
     ( "pnstr", expression( new pnstr_impl ) ) );
   ectx.define_symbol( pair< const string, expression >
     ( "var", expression( new var_impl ) ) );
+  ectx.define_symbol( pair< const string, expression >
+    ( "join", expression( new join_impl ) ) );
 }
 
