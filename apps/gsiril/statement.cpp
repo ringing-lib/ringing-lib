@@ -1,6 +1,6 @@
 // statement.cpp - Code to execute different types of statement
 // Copyright (C) 2002, 2003, 2004, 2005, 2010, 2011, 2012, 2019, 2020, 2021,
-// 2022 Richard Smith <richard@ex-parrot.com>
+// 2022, 2026 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -32,6 +32,8 @@
 
 void definition_stmt::execute( execution_context& e )
 {
+  proof_context p(e);
+  pair<const string, expression> defn(name.symbol_name(p), value);
   if ( e.define_symbol( defn ) )
     {
       if ( e.verbose() ) {
@@ -52,6 +54,8 @@ void definition_stmt::execute( execution_context& e )
 
 void default_defn_stmt::execute( execution_context& e )
 {
+  proof_context p(e);
+  pair<const string, expression> defn(name.symbol_name(p), value);
   if ( e.default_define_symbol( defn ) )
     {
       if ( e.verbose() ) {
@@ -64,15 +68,16 @@ void default_defn_stmt::execute( execution_context& e )
 void immediate_defn_stmt::execute( execution_context& e )
 {
   proof_context p(e);
-  if ( e.define_symbol( make_pair( name, val.evaluate(p) ) ) )
+  pair<const string, expression> defn(name.symbol_name(p), value.evaluate(p));
+  if ( e.define_symbol( defn ) )
     {
       if ( e.verbose() )
-        e.output() << "Redefinition of '" << name << "'." << endl;
+        e.output() << "Redefinition of '" << defn.first << "'." << endl;
     }
   else
     {
       if ( e.verbose() )
-        e.output() << "Definition of '" << name << "' added." << endl;
+        e.output() << "Definition of '" << defn.first << "' added." << endl;
     }
 }
 
@@ -92,10 +97,6 @@ void prove_stmt::execute( execution_context& e )
   
   if (e.get_args().determine_bells)
     cout << e.bells() << " bells" << endl;
-
-  if ( e.verbose() ) {
-    e.output() << "Proving "; expr.debug_print(e.output()); e.output() << endl;
-  }
 
   proof_context p(e);
 
@@ -305,11 +306,13 @@ void if_stmt::execute( execution_context& ex ) {
 void foreach_stmt::execute( execution_context& ex ) {
   proof_context pctx(ex);
   for ( expression const& opt : array.array_evaluate(pctx) ) {
-    ex.define_symbol( make_pair(name, opt) );
+    ex.define_local_symbol( make_pair(name, opt) );
     if ( ex.verbose() )
       ex.output() << "Setting '" << name << "' in foreach loop." << endl;
 
     stmt.execute(ex);
   }
+
+  ex.undefine_symbol(name);
 }
 

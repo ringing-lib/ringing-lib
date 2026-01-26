@@ -1,6 +1,6 @@
 // execution_context.cpp - Global environment
-// Copyright (C) 2002, 2003, 2004, 2007, 2011, 2012, 2019, 2020, 2021, 2022
-// Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003, 2004, 2007, 2011, 2012, 2019, 2020, 2021, 2022, 
+// 2026 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -120,30 +120,51 @@ expression execution_context::lookup_symbol( const string& sym ) const
 void execution_context::undefine_symbol( const string& sym )
 {
   sym_table.undefine(sym);
+  local_syms.erase(sym);
 }
 
-bool execution_context::default_define_symbol( const pair< const string, expression > &defn )
+bool execution_context::is_local_symbol( const string& sym ) const
 {
+  return local_syms.count(sym);
+}
+
+
+bool execution_context
+       ::default_define_symbol( const pair<const string, expression> &defn ) {
   if ( ! sym_table.lookup(defn.first).isnop() ) 
     return false;
 
-  sym_table.define(defn);
+  proof_context ctx(*this);
+  const pair<const string, expression> defn2(defn.first, defn.second.clone());
+  defn2.second.fix_local_variables(ctx);
+
+  sym_table.define(defn2);
 
   if ( sym_table.lookup( "__first__" ).isnull() )
     sym_table.define
-      ( pair<const string, expression>( "__first__", defn.second ) );
+      ( pair<const string, expression>( "__first__", defn2.second ) );
   return true;
 }
 
-bool execution_context::define_symbol( const pair< const string, expression > &defn )
-{
-  if ( sym_table.define(defn) )
+bool 
+execution_context::define_symbol( const pair<const string, expression> &defn ) {
+  proof_context ctx(*this);
+  const pair<const string, expression> defn2(defn.first, defn.second.clone());
+  defn2.second.fix_local_variables(ctx);
+
+  if ( sym_table.define(defn2) )
     return true;  // redefinition can't be first
 
   if ( sym_table.lookup( "__first__" ).isnull() )
     sym_table.define
-      ( pair<const string, expression>( "__first__", defn.second ) );
+      ( pair<const string, expression>( "__first__", defn2.second ) );
   return false;
+}
+
+void execution_context::define_local_symbol( const pair<const string, 
+                                                        expression> &defn ) {
+  define_symbol(defn);
+  local_syms.insert(defn.first);
 }
 
 void execution_context::increment_node_count() const

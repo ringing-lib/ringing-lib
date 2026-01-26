@@ -1,5 +1,5 @@
 // -*- C++ -*- functions.h - Built-in functions
-// Copyright (C) 2021 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2021, 2026 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -33,6 +33,17 @@ public:
                            vector<expression> const& args ) const = 0;
   virtual expression::type_t type( proof_context &ctx ) const = 0;
 };
+
+class var_impl : public fnnode {
+  virtual expression call( proof_context& ctx, 
+                           vector<expression> const& args ) const;
+  virtual void debug_print( ostream &os ) const;
+  virtual expression::type_t type( proof_context &ctx ) const
+    { return expression::no_type; }
+  virtual expression clone() const;
+};
+
+
 
 class execution_context;
 void register_functions( execution_context& ectx );

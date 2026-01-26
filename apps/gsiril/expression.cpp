@@ -1,6 +1,6 @@
 // expression.cpp - Nodes and factory function for expressions
 // Copyright (C) 2002, 2003, 2004, 2005, 2008, 2011, 2014, 2019, 2020, 2021,
-// 2022 Richard Smith <richard@ex-parrot.com>
+// 2022, 2026 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -35,6 +35,10 @@
 
 RINGING_USING_NAMESPACE
 
+expression list_node::clone() const
+{
+  return expression(new list_node(car.clone(), cdr.clone()));
+}
 
 void list_node::debug_print( ostream &os ) const
 {
@@ -84,10 +88,21 @@ vector<change> list_node::pn_evaluate( proof_context &ctx ) const
   return ret;
 }
 
+void list_node::recurse( expr_recursor& rec ) {
+  if (rec.handle(*this)) {
+    car.recurse(rec);
+    cdr.recurse(rec);
+  }
+}
 
 expression::type_t list_node::type( proof_context &ctx ) const
 {
   return cdr.type(ctx);
+}
+
+expression nop_node::clone() const
+{
+  return expression(new nop_node);
 }
 
 void nop_node::debug_print( ostream &os ) const
@@ -102,6 +117,11 @@ void nop_node::execute( proof_context &, int dir ) const
 bool nop_node::isnop() const
 {
   return true;
+}
+
+expression repeated_node::clone() const
+{
+  return expression(new repeated_node(count, child.clone()));
 }
 
 void repeated_node::debug_print( ostream &os ) const
@@ -147,6 +167,16 @@ vector<change> repeated_node::pn_evaluate( proof_context &ctx ) const {
   return ret;
 }
 
+void repeated_node::recurse( expr_recursor& rec ) {
+  if (rec.handle(*this))
+    child.recurse(rec);
+}
+
+expression reverse_node::clone() const
+{
+  return expression(new reverse_node(child.clone()));
+}
+
 void reverse_node::debug_print( ostream &os ) const
 {
   os << "~";
@@ -162,6 +192,16 @@ vector<change> reverse_node::pn_evaluate( proof_context &ctx ) const
 {
   vector<change> fwd( child.pn_evaluate(ctx) );
   return vector<change>( fwd.rbegin(), fwd.rend() );
+}
+
+void reverse_node::recurse( expr_recursor& rec ) {
+  if (rec.handle(*this))
+    child.recurse(rec);
+}
+
+expression string_node::clone() const
+{
+  return expression(new string_node(str, flags));
 }
 
 void string_node::execute( proof_context &ctx, int dir ) const
@@ -212,6 +252,11 @@ void string_node::debug_print( ostream &os ) const
 {
   if (flags & to_parent) os << "echo ";
   os << "\"" << str << "\"";
+}
+
+expression pn_node::clone() const
+{
+  return expression(new pn_node(changes, meth_name));
 }
  
 static int parse_int( string const& str ) {
@@ -293,15 +338,13 @@ pn_node::pn_node( const change& ch )
 {
 }
 
-pn_node::pn_node( const vector<change>& m )
-  : changes( m )
-{
-}
+pn_node::pn_node( const vector<change>& changes, const string& meth_name )
+  : changes(changes), meth_name(meth_name)
+{}
 
 pn_node::pn_node( const method& m )
   : changes( m ), meth_name( m.name() )
-{
-}
+{}
 
 void pn_node::debug_print( ostream &os ) const
 {
@@ -349,6 +392,11 @@ void pn_node::apply_replacement( proof_context& ctx, vector<change>& m ) const
                   replacement_node::end, m );
 }
 
+expression replacement_node::clone() const
+{
+  return expression(new replacement_node(pn.clone(), shift.clone(), pos));
+}
+ 
 void replacement_node::debug_print( ostream& os ) const
 {
   pn.debug_print(os);
@@ -367,6 +415,11 @@ void replacement_node::apply_replacement( proof_context& ctx,
   do_replacement( pn.pn_evaluate(ctx), shift.int_evaluate(ctx), pos, m );
 }
 
+expression merge_node::clone() const
+{
+  return expression(new merge_node(block.clone(), replacement.clone()));
+}
+ 
 void merge_node::debug_print( ostream& os ) const
 {
   block.debug_print(os);
@@ -391,7 +444,15 @@ void merge_node::execute( proof_context& ctx, int dir ) const
   // TODO: This is where we should handle overflow beyond the original block
   return expression( new pn_node( pn_evaluate(ctx) ) ).execute( ctx, dir );
 }
-  
+
+void merge_node::recurse( expr_recursor& rec ) {
+  if (rec.handle(*this)) {
+    block.recurse(rec);
+    replacement.recurse(rec);
+  }
+}
+
+ 
 transp_node::transp_node( int bells, const string &r )
   : transp(bells)
 {
@@ -404,6 +465,11 @@ transp_node::transp_node( int bells, const string &r )
     throw runtime_error( "Transposition is on the wrong number of bells" );
 }
 
+expression transp_node::clone() const
+{
+  return expression(new transp_node(transp));
+}
+ 
 void transp_node::debug_print( ostream &os ) const
 {
   os << "'" << transp << "'";
@@ -414,83 +480,98 @@ void transp_node::execute( proof_context &ctx, int dir ) const
   ctx.permute_and_prove()( transp );
 }
 
+expression symbol_node::clone() const
+{
+  scoped_pointer<symbol_node> copy(new symbol_node(sym));
+  if (!expansion.isnull())
+    copy->expansion = expansion.clone();
+  return expression(copy.release());
+}
+ 
 void symbol_node::debug_print( ostream &os ) const
 {
   os << sym;
 }
 
+expression symbol_node::expand( proof_context const& ctx ) const
+{
+  if (!expansion.isnull()) return expansion;
+  else return ctx.lookup_symbol(sym);
+}
+
+void symbol_node::expand_local_variables( proof_context const& ctx )
+{
+  if (expansion.isnull() && ctx.is_local_symbol(sym))
+    expansion = expand(ctx);
+}
+
 void symbol_node::execute( proof_context &ctx, int dir ) const
 {
-  ctx.execute_symbol(sym, dir);
+  if (!expansion.isnull()) expansion.execute(ctx, dir);
+  else ctx.execute_symbol(sym, dir);
 }
 
 expression symbol_node::evaluate( proof_context &ctx ) const
 {
-  expression e( ctx.lookup_symbol(sym) );
-  return e.evaluate(ctx);
+  return expand(ctx).evaluate(ctx);
 }
 
 bool symbol_node::bool_evaluate( proof_context &ctx ) const
 {
-  expression e( ctx.lookup_symbol(sym) );
-  return e.bool_evaluate(ctx);
+  return expand(ctx).bool_evaluate(ctx);
 }
 
 RINGING_LLONG symbol_node::int_evaluate( proof_context &ctx ) const
 {
-  expression e( ctx.lookup_symbol(sym) );
-  return e.int_evaluate(ctx);
+  return expand(ctx).int_evaluate(ctx);
 }
 
 string symbol_node::string_evaluate( proof_context &ctx ) const
 {
-  expression e( ctx.lookup_symbol(sym) );
-  return e.string_evaluate(ctx);
+  return expand(ctx).string_evaluate(ctx);
 }
 
 string symbol_node::string_evaluate( proof_context &ctx, bool *no_nl ) const
 {
-  expression e( ctx.lookup_symbol(sym) );
-  return e.string_evaluate(ctx, no_nl);
+  return expand(ctx).string_evaluate(ctx, no_nl);
 }
 
 vector<change> symbol_node::pn_evaluate( proof_context &ctx ) const
 {
-  expression e( ctx.lookup_symbol(sym) );
-  return e.pn_evaluate(ctx);
+  return expand(ctx).pn_evaluate(ctx);
 }
 
 music symbol_node::music_evaluate( proof_context &ctx ) const
 {
-  expression e( ctx.lookup_symbol(sym) );
-  return e.music_evaluate(ctx);
+  return expand(ctx).music_evaluate(ctx);
 }
 
 vector<expression> symbol_node::array_evaluate( proof_context &ctx ) const
 {
-  expression e( ctx.lookup_symbol(sym) );
-  return e.array_evaluate(ctx);
+  return expand(ctx).array_evaluate(ctx);
 }
 
 expression::type_t symbol_node::type( proof_context& ctx ) const
 {
-  expression e( ctx.lookup_symbol(sym) );
-  return e.type(ctx);
+  return expand(ctx).type(ctx);
 }
 
 string symbol_node::name( proof_context& ctx ) const
 {
-  expression e( ctx.lookup_symbol(sym) );
-  return e.name(ctx);
+  return expand(ctx).name(ctx);
 }
 
 void
 symbol_node::apply_replacement( proof_context& ctx, vector<change>& m ) const
 {
-   expression e( ctx.lookup_symbol(sym) );
-   return e.apply_replacement(ctx, m);
+   return expand(ctx).apply_replacement(ctx, m);
 }
 
+expression assign_node::clone() const
+{
+  return expression(new assign_node(defn.first, defn.second.clone()));
+}
+ 
 void assign_node::debug_print( ostream &os ) const
 {
   os << "(" << defn.first << " = ";
@@ -514,6 +595,16 @@ void assign_node::execute( proof_context& ctx, int dir ) const
   ctx.define_symbol(defn);
 }
 
+void assign_node::recurse( expr_recursor& rec ) {
+  if (rec.handle(*this))
+    defn.second.recurse(rec);
+}
+
+expression append_assign_node::clone() const
+{
+  return expression(new append_assign_node(sym, val.clone()));
+}
+
 void append_assign_node::debug_print( ostream &os ) const
 {
   os << "(" << sym << " .= ";
@@ -534,6 +625,17 @@ append_assign_node::apply( expression const& lhs, expression const& rhs,
   return expression( new string_node(res) );
 }
 
+void append_assign_node::recurse( expr_recursor& rec ) {
+  if (rec.handle(*this))
+    val.recurse(rec);
+}
+
+expression immediate_assign_node::clone() const
+{
+  return expression(new immediate_assign_node(sym, val.clone()));
+}
+
+
 void immediate_assign_node::debug_print( ostream &os ) const
 {
   os << "(" << sym << " := ";
@@ -546,6 +648,12 @@ void immediate_assign_node::execute( proof_context& ctx, int dir ) const
   if (dir < 0) throw_no_backwards_execution(*this);
   ctx.define_symbol( make_pair(sym, val.evaluate(ctx)) );
 }
+
+void immediate_assign_node::recurse( expr_recursor& rec ) {
+  if (rec.handle(*this))
+    val.recurse(rec);
+}
+
 
 static void validate_regex( const music_details& desc, int bells )
 {
@@ -581,6 +689,11 @@ static void validate_regex( const music_details& desc, int bells )
   // TODO: Check for multiple occurances of the same bell
 }
 
+expression endproof_node::clone() const
+{
+  return expression(new endproof_node);
+}
+
 void endproof_node::debug_print( ostream &os ) const
 {
   os << "endproof";
@@ -591,6 +704,10 @@ void endproof_node::execute( proof_context &ctx, int dir ) const
   ctx.disable_proving();
 }
 
+expression isproving_node::clone() const
+{
+  return expression(new isproving_node);
+}
 
 bool isproving_node::bool_evaluate( proof_context& ctx ) const
 {
@@ -602,6 +719,11 @@ void isproving_node::debug_print( ostream &os ) const
   os << "proving";
 }
 
+expression isrounds_node::clone() const
+{
+  return expression(new isrounds_node);
+}
+
 bool isrounds_node::bool_evaluate( proof_context& ctx ) const
 {
   return ctx.isrounds();
@@ -610,6 +732,11 @@ bool isrounds_node::bool_evaluate( proof_context& ctx ) const
 void isrounds_node::debug_print( ostream &os ) const
 {
   os << "rounds";
+}
+
+expression pattern_node::clone() const
+{
+  return expression(new pattern_node(bells, mus));
 }
 
 pattern_node::pattern_node( int bells, const string& regex )
@@ -635,6 +762,11 @@ void pattern_node::debug_print( ostream &os ) const
   os << mus.get();
 }
 
+expression opaque_music_node::clone() const
+{
+  return expression(new opaque_music_node(mus));
+}
+
 opaque_music_node::opaque_music_node( const music& mus )
   : mus(mus)
 {}
@@ -656,9 +788,19 @@ void opaque_music_node::debug_print( ostream &os ) const
   os << "music()";
 }
 
+expression defined_node::clone() const
+{
+  return expression(new defined_node(sym));
+}
+
 void defined_node::debug_print( ostream &os ) const
 {
   os << "defined(" << sym << ")";
+}
+
+expression boolean_node::clone() const
+{
+  return expression(new boolean_node(value));
 }
 
 bool defined_node::bool_evaluate( proof_context &ctx ) const
@@ -671,6 +813,10 @@ void boolean_node::debug_print( ostream &os ) const
   os << ( value ? "true" : "false" );
 }
 
+expression and_node::clone() const
+{
+  return expression(new and_node(left.clone(), right.clone()));
+}
 
 bool and_node::bool_evaluate( proof_context &ctx ) const
 {
@@ -683,6 +829,18 @@ void and_node::debug_print( ostream &os ) const
   left.debug_print(os);
   os << " && ";
   right.debug_print(os);
+}
+
+void and_node::recurse( expr_recursor& rec ) {
+  if (rec.handle(*this)) {
+    left.recurse(rec);
+    right.recurse(rec);
+  }
+}
+
+expression or_node::clone() const
+{
+  return expression(new or_node(left.clone(), right.clone()));
 }
 
 bool or_node::bool_evaluate( proof_context &ctx ) const
@@ -698,6 +856,18 @@ void or_node::debug_print( ostream &os ) const
   right.debug_print(os);
 }
 
+void or_node::recurse( expr_recursor& rec ) {
+  if (rec.handle(*this)) {
+    left.recurse(rec);
+    right.recurse(rec);
+  }
+}
+
+expression not_node::clone() const
+{
+  return expression(new not_node(arg.clone()));
+}
+
 bool not_node::bool_evaluate( proof_context &ctx ) const
 {
   return !arg.bool_evaluate(ctx);
@@ -707,6 +877,16 @@ void not_node::debug_print( ostream &os ) const
 {
   os << "!";
   arg.debug_print(os);
+}
+
+void not_node::recurse( expr_recursor& rec ) {
+  if (rec.handle(*this))
+    arg.recurse(rec);
+}
+
+expression cmp_node::clone() const
+{
+  return expression(new cmp_node(left.clone(), right.clone(), cmp));
 }
 
 bool cmp_node::bool_evaluate( proof_context &ctx ) const
@@ -777,6 +957,18 @@ void cmp_node::debug_print( ostream &os ) const
   right.debug_print(os);
 }
 
+void cmp_node::recurse( expr_recursor& rec ) {
+  if (rec.handle(*this)) {
+    left.recurse(rec);
+    right.recurse(rec);
+  }
+}
+
+expression bells_node::clone() const
+{
+  return expression(new bells_node);
+}
+
 void bells_node::debug_print( ostream &os ) const
 {
   os << "bells";
@@ -792,14 +984,29 @@ void length_node::debug_print( ostream &os ) const
   os << "rows";
 }
 
+expression length_node::clone() const
+{
+  return expression(new length_node);
+}
+
 RINGING_LLONG length_node::int_evaluate( proof_context& ctx ) const
 {
   return ctx.length();
 }
 
+expression integer_node::clone() const
+{
+  return expression(new integer_node(value));
+}
+
 void integer_node::debug_print( ostream &os ) const
 {
   os << value;
+}
+
+expression add_node::clone() const
+{
+  return expression(new add_node(left.clone(), right.clone(), sign));
 }
 
 RINGING_LLONG add_node::int_evaluate( proof_context& ctx ) const
@@ -808,6 +1015,10 @@ RINGING_LLONG add_node::int_evaluate( proof_context& ctx ) const
   return l + sign * r;
 }
 
+expression mod_node::clone() const
+{
+  return expression(new mod_node(left.clone(), right.clone()));
+}
 
 void mod_node::debug_print( ostream &os ) const
 {
@@ -822,6 +1033,18 @@ RINGING_LLONG mod_node::int_evaluate( proof_context& ctx ) const
   return l % r;
 }
 
+void mod_node::recurse( expr_recursor& rec ) {
+  if (rec.handle(*this)) {
+    left.recurse(rec);
+    right.recurse(rec);
+  }
+}
+
+expression div_node::clone() const
+{
+  return expression(new div_node(left.clone(), right.clone()));
+}
+
 void div_node::debug_print( ostream &os ) const
 {
   left.debug_print(os);
@@ -833,6 +1056,18 @@ RINGING_LLONG div_node::int_evaluate( proof_context& ctx ) const
 {
   RINGING_LLONG l = left.int_evaluate(ctx), r = right.int_evaluate(ctx);
   return l / r;
+}
+
+void div_node::recurse( expr_recursor& rec ) {
+  if (rec.handle(*this)) {
+    left.recurse(rec);
+    right.recurse(rec);
+  }
+}
+
+expression append_node::clone() const
+{
+  return expression(new append_node(left.clone(), right.clone()));
 }
 
 void append_node::debug_print( ostream &os ) const
@@ -854,6 +1089,18 @@ vector<expression> append_node::array_evaluate( proof_context &ctx ) const
   vector<expression> r( right.array_evaluate(ctx) );
   res.insert( res.end(), r.begin(), r.end() );
   return res;
+}
+
+void append_node::recurse( expr_recursor& rec ) {
+  if (rec.handle(*this)) {
+    left.recurse(rec);
+    right.recurse(rec);
+  }
+}
+
+expression mult_node::clone() const
+{
+  return expression(new mult_node(left.clone(), right.clone()));
 }
 
 void mult_node::debug_print( ostream &os ) const 
@@ -919,6 +1166,13 @@ expression::type_t mult_node::type( proof_context &ctx ) const
     return expression::no_type;
 }
 
+void mult_node::recurse( expr_recursor& rec ) {
+  if (rec.handle(*this)) {
+    left.recurse(rec);
+    right.recurse(rec);
+  }
+}
+
 
 void add_node::debug_print( ostream &os ) const
 {
@@ -927,6 +1181,17 @@ void add_node::debug_print( ostream &os ) const
   right.debug_print(os);
 }
 
+void add_node::recurse( expr_recursor& rec ) {
+  if (rec.handle(*this)) {
+    left.recurse(rec);
+    right.recurse(rec);
+  }
+}
+
+expression increment_node::clone() const
+{
+  return expression(new increment_node(sym, val));
+}
 
 RINGING_LLONG increment_node::int_evaluate( proof_context& ctx ) const
 {
@@ -938,6 +1203,12 @@ RINGING_LLONG increment_node::int_evaluate( proof_context& ctx ) const
 void increment_node::debug_print( ostream &os ) const
 {
   os << "(" << sym << " += " << val << ")";
+}
+
+expression if_match_node::clone() const
+{
+  return expression(new if_match_node(test.clone(), 
+                                      iftrue.clone(), iffalse.clone()));
 }
 
 void if_match_node::debug_print( ostream &os ) const
@@ -999,6 +1270,19 @@ expression if_match_node::evaluate( proof_context &ctx ) const
   else if ( !iffalse.isnull() )
     return iffalse.evaluate( ctx );
   else throw runtime_error("Reached end of alternatives while evaluating");
+}
+
+void if_match_node::recurse( expr_recursor& rec ) {
+  if (rec.handle(*this)) {
+    test.recurse(rec);
+    iftrue.recurse(rec);
+    iffalse.recurse(rec);
+  }
+}
+
+expression exception_node::clone() const
+{
+  return expression(new exception_node(t));
 }
 
 void exception_node::debug_print( ostream &os ) const
@@ -1077,6 +1361,30 @@ expression::type_t call_node::type( proof_context &ctx ) const
   return ctx.lookup_symbol(name).type(ctx);
 }
 
+string call_node::symbol_name( proof_context &ctx ) const
+{
+  return evaluate(ctx).symbol_name(ctx);
+}
+
+expression call_node::clone() const
+{
+  vector<expression> copy_args;
+  for ( expression const& e : args )
+    copy_args.push_back(e.clone());
+  return expression(new call_node(name, copy_args));
+}
+
+void call_node::recurse( expr_recursor& rec ) {
+  if (rec.handle(*this))
+    for ( expression const& e : args )
+      e.recurse(rec);
+}
+
+expression save_node::clone() const
+{
+  return expression(new save_node(name));
+}
+
 void save_node::execute( proof_context& ctx, int dir ) const
 {
   ctx.save_symbol(name);
@@ -1085,6 +1393,14 @@ void save_node::execute( proof_context& ctx, int dir ) const
 void save_node::debug_print( ostream& os ) const
 {
   os << "save " << name;
+}
+
+expression array_node::clone() const
+{
+  vector<expression> copy_vals;
+  for ( expression const& e : vals )
+    copy_vals.push_back(e.clone());
+  return expression(new array_node(copy_vals));
 }
 
 void array_node::execute( proof_context& ctx, int dir ) const
@@ -1108,4 +1424,11 @@ vector<expression> array_node::array_evaluate( proof_context &ctx ) const
 {
   return vals;
 }
+
+void array_node::recurse( expr_recursor& rec ) {
+  if (rec.handle(*this))
+    for ( expression const& e : vals )
+      e.recurse(rec);
+}
+
 

@@ -1,5 +1,5 @@
 // expr_base.cpp - Base classes, nodes and factory function for expressions
-// Copyright (C) 2005, 2011, 2012, 2019, 2020, 2021, 2022
+// Copyright (C) 2005, 2011, 2012, 2019, 2020, 2021, 2022, 2026
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -30,6 +30,11 @@
 #include "expression.h"
 
 RINGING_USING_NAMESPACE
+
+expression expression::clone() const {
+  if (impl) return impl->clone();
+  else return expression();
+}
 
 void expression::node::unable_to( char const* what ) const {
   make_string os;
@@ -92,6 +97,14 @@ string expression::node::name( proof_context& ctx ) const {
   unable_to("get method name from expression");
 }
 
+string expression::node::symbol_name( proof_context& ctx ) const {
+  unable_to("evaluate expression as a symbol name");
+}
+
+void expression::node::recurse( expr_recursor& rec ) {
+  rec.handle(*this);
+}
+
 
 void expression::bnode::execute( proof_context& ctx, int dir ) const {
   if ( dir < 0 )
@@ -134,6 +147,11 @@ expression expression::snode::evaluate( proof_context& ctx ) const {
 void expression::execute( proof_context &ctx, int dir ) const { 
   ctx.increment_node_count();
   impl->execute(ctx, dir); 
+}
+
+void expression::recurse( expr_recursor& rec ) const {
+  if (impl)
+    impl->recurse(rec); 
 }
 
 expression expression::evaluate( proof_context& ctx ) const { 
@@ -186,6 +204,30 @@ void
 expression::apply_replacement( proof_context& ctx, vector<change>& m ) const {
   ctx.increment_node_count();
   return impl->apply_replacement(ctx, m); 
+}
+
+string expression::symbol_name( proof_context &ctx ) const {
+  return impl->symbol_name(ctx);
+}
+
+class fix_local_variables_recursor : public expr_recursor {
+public:
+  fix_local_variables_recursor( proof_context const& ctx )
+    : ctx(ctx) {}
+
+  virtual bool handle( expression::node& node ) {
+    if (symbol_node* sym = dynamic_cast<symbol_node*>(&node))
+      sym->expand_local_variables(ctx);
+    return true;
+  }
+
+private:
+  proof_context const& ctx;
+};
+
+void expression::fix_local_variables( proof_context const& ctx ) const {
+  fix_local_variables_recursor rec(ctx);
+  impl->recurse(rec);
 }
 
 void statement::execute( execution_context& e ) {

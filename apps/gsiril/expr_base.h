@@ -1,6 +1,6 @@
 // -*- C++ -*- expr_base.h - Expression and statement interfaces
-// Copyright (C) 2002, 2003, 2004, 2005, 2011, 2012, 2019, 2020, 2021, 2022
-// Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003, 2004, 2005, 2011, 2012, 2019, 2020, 2021, 2022,
+// 2026 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -62,10 +62,11 @@ public:
 private:
   shared_pointer< impl > pimpl;
 };
+ 
+class expr_recursor;
 
 // A node in of an expression
-class expression
-{
+class expression {
 public:
   enum type_t {
     boolean,
@@ -77,8 +78,10 @@ public:
   class node {
   public:
     virtual ~node() {}
+    virtual expression clone() const = 0;
     virtual void debug_print( ostream &os ) const = 0;
     virtual void execute( proof_context &ctx, int dir ) const = 0;
+    virtual void recurse( expr_recursor& rec );
     virtual bool bool_evaluate( proof_context &ctx ) const;
     virtual RINGING_LLONG int_evaluate( proof_context &ctx ) const;
     virtual string string_evaluate( proof_context &ctx ) const;
@@ -94,6 +97,7 @@ public:
     virtual bool isnop() const { return false; }
     virtual type_t type( proof_context &ctx ) const { return no_type; }
     virtual string name( proof_context &ctx ) const;
+    virtual string symbol_name( proof_context &ctx ) const;
 
   protected:
 #   if __cplusplus >= 201103L
@@ -128,6 +132,7 @@ public:
 
   // Create an expression handle
   explicit expression( node* impl = 0 ) : impl(impl) {}
+  expression clone() const;
 
   bool isnull() const { return !impl; }
   bool isnop() const { return !impl || impl->isnop(); }
@@ -140,6 +145,7 @@ public:
 
   // execute an expression, possibly adding to the current proof
   void execute( proof_context &ctx, int dir ) const;
+  void recurse( expr_recursor& rec ) const;
 
   // Evaluate a const expression in boolean, integer or stringcontext.
   // If evaluation requires execution of an expression, a silent clone
@@ -155,11 +161,19 @@ public:
 
   expression call( proof_context& ctx, vector<expression> const& args ) const;
   void apply_replacement( proof_context& ctx, vector<change>& m ) const;
+  string symbol_name( proof_context &ctx ) const;
+  void fix_local_variables( proof_context const& ectx ) const;
 
   RINGING_FAKE_DEFAULT_CONSTRUCTOR(expression);
 
 private:
   shared_pointer< node > impl;
+};
+
+class expr_recursor {
+public:
+  // Return false to suppress handling
+  virtual bool handle( expression::node& node ) = 0;
 };
 
 // An exception thrown when executing a string literal containing a $$.

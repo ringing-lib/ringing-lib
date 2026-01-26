@@ -1,6 +1,6 @@
 // -*- C++ -*- execution_context.h - Global environment
-// Copyright (C) 2002, 2003, 2004, 2007, 2008, 2012, 2019, 2020, 2021, 2022
-// Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2002, 2003, 2004, 2007, 2008, 2012, 2019, 2020, 2021, 2022,
+// 2026 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -25,16 +25,9 @@
 #pragma interface
 #endif
 
-#if RINGING_OLD_INCLUDES
-#include <map.h>
-#else
 #include <map>
-#endif
-#if RINGING_HAVE_OLD_IOSTREAM
-#include <ostream.h>
-#else
+#include <set>
 #include <iosfwd>
-#endif
 #include <string>
 #include <ringing/row.h>
 #include <ringing/proof.h>
@@ -64,6 +57,8 @@ public:
 
   // Returns true if used and false otherwise
   bool default_define_symbol( const pair< const string, expression > &defn );
+
+  void define_local_symbol( const pair< const string, expression > &defn );
 
   void undefine_symbol( const string& sym );
   expression lookup_symbol( const string &sym ) const;
@@ -107,6 +102,8 @@ public:
   bool evaluate_bool_const( expression const& ) const;
   string evaluate_string_var( string const& ) const;
 
+  bool is_local_symbol( const string& sym ) const;
+
 private:
   void define_line();
 
@@ -118,6 +115,7 @@ private:
   bool failed;
   mutable RINGING_ULLONG node_count;
   bool done_proof;
+  set<string> local_syms;
 };
 
 #endif // GSIRIL_EXECUTION_CONTEXT_INCLUDED

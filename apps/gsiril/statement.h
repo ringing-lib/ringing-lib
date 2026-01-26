@@ -1,5 +1,5 @@
 // -*- C++ -*- statement.h - Code to execute different types of statement
-// Copyright (C) 2003, 2004, 2005, 2011, 2019, 2020, 2021, 2022
+// Copyright (C) 2003, 2004, 2005, 2011, 2019, 2020, 2021, 2022, 2026
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -34,42 +34,41 @@
 // Defines a symbol
 class definition_stmt : public statement::impl {
 public:
-  explicit definition_stmt( const string& name, const expression& val )
-    : defn(name, val) {}
+  explicit definition_stmt( const expression& name, const expression& val )
+    : name(name), value(val) {}
 
 private:
   virtual void execute( execution_context& );
   virtual bool is_definition() const { return true; }
 
-  pair<const string, expression> defn;
+  expression name, value;
 };
 
 // Default definition of a symbol 
 // (defines only if not already defined)
 class default_defn_stmt : public statement::impl {
 public:
-  explicit default_defn_stmt( const string& name, const expression& val )
-    : defn(name, val) {}
+  explicit default_defn_stmt( const expression& name, const expression& val )
+    : name(name), value(val) {}
 
 private:
   virtual void execute( execution_context& );
   virtual bool is_definition() const { return true; }
 
-  pair<const string, expression> defn;
+  expression name, value;
 };
 
 // Immediate definition of a symbol, evaluating its value
 class immediate_defn_stmt : public statement::impl {
 public:
-  explicit immediate_defn_stmt( const string& name, const expression& val )
-    : name(name), val(val) {}
+  explicit immediate_defn_stmt( const expression& name, const expression& val )
+    : name(name), value(val) {}
 
 private:
   virtual void execute( execution_context& );
   virtual bool is_definition() const { return true; }
 
-  const string name;
-  expression val;
+  expression name, value;
 };
 
 

@@ -1,5 +1,5 @@
 // functions.cpp - Built-in functions
-// Copyright (C) 2021, 2022 Richard Smith <richard@ex-parrot.com>
+// Copyright (C) 2021, 2022, 2026 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -56,6 +56,8 @@ class at_fn_impl : public fnnode {
   virtual void debug_print( ostream &os ) const { os << "pos"; }
   virtual expression::type_t type( proof_context &ctx ) const 
     { return expression::integer; }
+  virtual expression clone() const
+    { return expression(new at_fn_impl); }
 };
 
 class pos_fn_impl : public fnnode {
@@ -70,6 +72,8 @@ class pos_fn_impl : public fnnode {
   virtual void debug_print( ostream &os ) const { os << "pos"; }
   virtual expression::type_t type( proof_context &ctx ) const 
     { return expression::integer; }
+  virtual expression clone() const
+    { return expression(new pos_fn_impl); }
 };
 
 class rowno_fn_impl : public fnnode {
@@ -83,6 +87,8 @@ class rowno_fn_impl : public fnnode {
   virtual void debug_print( ostream &os ) const { os << "rowno"; }
   virtual expression::type_t type( proof_context &ctx ) const 
     { return expression::integer; }
+  virtual expression clone() const
+    { return expression(new rowno_fn_impl); }
 };
 
 class swap_fn_impl : public fnnode {
@@ -104,6 +110,8 @@ class swap_fn_impl : public fnnode {
   virtual void debug_print( ostream &os ) const { os << "swap"; }
   virtual expression::type_t type( proof_context &ctx ) const 
     { return expression::transp; }
+  virtual expression clone() const
+    { return expression(new swap_fn_impl); }
 };
 
 class load_fn_impl : public fnnode {
@@ -129,6 +137,8 @@ private:
     { return expression::no_type; }
 
   type_t t;
+  virtual expression clone() const
+    { return expression(new load_fn_impl(t)); }
 };
 
 class stagename_impl : public fnnode {
@@ -143,6 +153,8 @@ class stagename_impl : public fnnode {
   virtual void debug_print( ostream &os ) const { os << "stagename"; }
   virtual expression::type_t type( proof_context &ctx ) const 
     { return expression::no_type; }
+  virtual expression clone() const
+    { return expression(new stagename_impl); }
 };
 
 class music_impl : public fnnode {
@@ -156,6 +168,8 @@ class music_impl : public fnnode {
   virtual void debug_print( ostream &os ) const { os << "music"; }
   virtual expression::type_t type( proof_context &ctx ) const 
     { return expression::integer; }
+  virtual expression clone() const
+    { return expression(new music_impl); }
 };
 
 class runs_impl : public fnnode {
@@ -176,6 +190,8 @@ private:
   virtual void debug_print( ostream &os ) const { os << "runs"; }
   virtual expression::type_t type( proof_context &ctx ) const 
     { return expression::no_type; }
+  virtual expression clone() const
+    { return expression(new runs_impl(pos)); }
 
   music::match_pos pos;
 };
@@ -192,8 +208,8 @@ class crus_impl : public fnnode {
   virtual void debug_print( ostream &os ) const { os << "crus"; }
   virtual expression::type_t type( proof_context &ctx ) const 
     { return expression::no_type; }
-
-  music::match_pos pos;
+  virtual expression clone() const
+    { return expression(new crus_impl); }
 };
 
 class methname_impl : public fnnode {
@@ -208,8 +224,8 @@ class methname_impl : public fnnode {
   virtual void debug_print( ostream &os ) const { os << "methname"; }
   virtual expression::type_t type( proof_context &ctx ) const 
     { return expression::no_type; }
-
-  music::match_pos pos;
+  virtual expression clone() const
+    { return expression(new methname_impl); }
 };
 
 class pnstr_impl : public fnnode {
@@ -229,7 +245,26 @@ class pnstr_impl : public fnnode {
   virtual void debug_print( ostream &os ) const { os << "pnstr"; }
   virtual expression::type_t type( proof_context &ctx ) const 
     { return expression::no_type; }
+  virtual expression clone() const
+    { return expression(new pnstr_impl); }
 };
+
+expression var_impl::call( proof_context& ctx, 
+                           vector<expression> const& args ) const {
+  if (args.size() != 1)
+    throw runtime_error("The var function takes one argument");
+
+  return expression( new symbol_node(args[0].string_evaluate(ctx)) );
+}
+
+void var_impl::debug_print( ostream &os ) const
+{
+  os << "var";
+}
+
+expression var_impl::clone() const {
+  return expression(new var_impl);
+}
 
 void register_functions( execution_context& ectx )
 {
@@ -263,5 +298,7 @@ void register_functions( execution_context& ectx )
     ( "methname", expression( new methname_impl ) ) );
   ectx.define_symbol( pair< const string, expression >
     ( "pnstr", expression( new pnstr_impl ) ) );
+  ectx.define_symbol( pair< const string, expression >
+    ( "var", expression( new var_impl ) ) );
 }
 

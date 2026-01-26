@@ -1,6 +1,6 @@
 // -*- C++ -*- proof_context.h - Environment to evaluate expressions
 // Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2010, 2011, 2012, 2014,
-// 2019, 2020, 2021, 2022 Richard Smith <richard@ex-parrot.com>
+// 2019, 2020, 2021, 2022, 2026 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -87,6 +87,7 @@ public:
   expression lookup_symbol( const string& sym ) const;
   bool defined( const string& sym ) const;
   void save_symbol( const string& sym );
+  bool is_local_symbol( const string& sym ) const;
 
   enum proof_state { rounds, notround, isfalse };
   proof_state state() const;

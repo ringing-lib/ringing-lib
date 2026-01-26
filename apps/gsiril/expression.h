@@ -1,5 +1,5 @@
 // -*- C++ -*- expression.h - Code to execute different types of expression
-// Copyright (C) 2003, 2004, 2005, 2008, 2011, 2019, 2020, 2021, 2022
+// Copyright (C) 2003, 2004, 2005, 2008, 2011, 2019, 2020, 2021, 2022, 2026
 // Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
@@ -46,6 +46,7 @@ public:
     : car(car), cdr(cdr) {}
 
 protected:
+  virtual expression clone() const;
   virtual void debug_print( ostream &os ) const;
   virtual void execute( proof_context &ctx, int dir ) const;
   virtual expression evaluate( proof_context &ctx ) const;
@@ -54,6 +55,7 @@ protected:
   virtual string string_evaluate( proof_context &ctx ) const;
   virtual vector<change> pn_evaluate( proof_context &ctx ) const;
   virtual expression::type_t type( proof_context &ctx ) const;
+  virtual void recurse( expr_recursor& rec );
 
 private:  
   expression car, cdr;
@@ -61,6 +63,7 @@ private:
 
 class nop_node : public expression::node {
 protected:
+  virtual expression clone() const;
   virtual void debug_print( ostream &os ) const;
   virtual void execute( proof_context &, int dir ) const;
   virtual bool isnop() const;
@@ -73,9 +76,11 @@ public:
     : count(count), child(child) {}
 
 protected:
+  virtual expression clone() const;
   virtual void debug_print( ostream &os ) const;
   virtual void execute( proof_context &ctx, int dir ) const;
   virtual vector<change> pn_evaluate( proof_context &ctx ) const;
+  virtual void recurse( expr_recursor& rec );
 
 private:  
   int count;
@@ -88,9 +93,11 @@ public:
     : child(child) {}
 
 protected:
+  virtual expression clone() const;
   virtual void debug_print( ostream &os ) const;
   virtual void execute( proof_context &ctx, int dir ) const;
   virtual vector<change> pn_evaluate( proof_context &ctx ) const;
+  virtual void recurse( expr_recursor& rec );
 
 private:  
   expression child;
@@ -106,6 +113,7 @@ public:
     : str(str), flags(flags) {}
 
 protected:
+  virtual expression clone() const;
   virtual void debug_print( ostream &os ) const;
   virtual void execute( proof_context &ctx, int dir ) const;
   virtual expression evaluate( proof_context &ctx ) const;
@@ -122,10 +130,11 @@ public:
   pn_node( int bells, const string &pn );
 
   pn_node( method const& m );
-  pn_node( vector<change> const& m );
+  pn_node( vector<change> const& changes, const string &meth_name = string() );
   pn_node( change const& ch );
 
 protected:
+  virtual expression clone() const;
   virtual void debug_print( ostream &os ) const;
   virtual void execute( proof_context &ctx, int dir ) const;
   virtual vector<change> pn_evaluate( proof_context &ctx ) const
@@ -145,6 +154,7 @@ public:
   replacement_node( expression const& pn, expression const& shift, pos_t pos )
     : pn(pn), shift(shift), pos(pos) {}
 
+  virtual expression clone() const;
   virtual void debug_print( ostream &os ) const;
   virtual void execute( proof_context &ctx, int dir ) const;
   virtual void apply_replacement( proof_context& ctx, vector<change>& m ) const;
@@ -160,10 +170,12 @@ public:
   merge_node( expression const& block, expression const& replacement )
     : block(block), replacement(replacement) {}
 
+  virtual expression clone() const;
   virtual void debug_print( ostream &os ) const;
   virtual void execute( proof_context &ctx, int dir ) const;
   virtual vector<change> pn_evaluate( proof_context &ctx ) const;
   virtual expression evaluate( proof_context &ctx ) const;
+  virtual void recurse( expr_recursor& rec );
 
 private:
   expression block, replacement;
@@ -175,6 +187,7 @@ public:
   transp_node( int bells, const string &r );
 
 protected:
+  virtual expression clone() const;
   virtual void debug_print( ostream &os ) const;
   virtual void execute( proof_context &ctx, int dir ) const;
 
@@ -188,6 +201,7 @@ public:
     : sym(sym) {}
 
 protected:
+  virtual expression clone() const;
   virtual void debug_print( ostream &os ) const;
   virtual void execute( proof_context &ctx, int dir ) const;
   virtual expression evaluate( proof_context &ctx ) const;
@@ -201,9 +215,17 @@ protected:
   virtual void apply_replacement( proof_context& ctx, vector<change>& m ) const;
   virtual expression::type_t type( proof_context& ctx ) const;
   virtual string name( proof_context &ctx ) const;
+  virtual string symbol_name( proof_context &ctx ) const { return sym; }
+  void expand_symbol( execution_context& ectx );
 
 private:
+  friend class fix_local_variables_recursor;
+
+  expression expand( proof_context const &ctx ) const;
+  void expand_local_variables( proof_context const& ctx );
+
   string sym;
+  expression expansion;
 };
 
 class assign_node : public expression::node {
@@ -212,8 +234,10 @@ public:
     : defn( make_pair(sym, val) ) {}
 
 protected:
+  virtual expression clone() const;
   virtual void debug_print( ostream &os ) const;
   virtual void execute( proof_context &ctx, int dir ) const;
+  virtual void recurse( expr_recursor& rec );
 
 private:
   pair< const string, expression > defn;
@@ -226,8 +250,10 @@ public:
     : sym(sym), val(val) {}
 
 protected:
+  virtual expression clone() const;
   virtual void debug_print( ostream &os ) const;
   virtual void execute( proof_context &ctx, int dir ) const;
+  virtual void recurse( expr_recursor& rec );
 
 private:
   expression apply( expression const& lhs, expression const& rhs,
@@ -243,8 +269,10 @@ public:
     : sym(sym), val(val) {}
 
 protected:
+  virtual expression clone() const;
   virtual void debug_print( ostream &os ) const;
   virtual void execute( proof_context &ctx, int dir ) const;
+  virtual void recurse( expr_recursor& rec );
 
 private:
   const string sym;
@@ -253,18 +281,21 @@ private:
 
 class endproof_node : public expression::node {
 protected:
+  virtual expression clone() const;
   virtual void debug_print( ostream &os ) const;
   virtual void execute( proof_context &ctx, int dir ) const;
 };
 
 class isproving_node : public expression::bnode {
 protected:
+  virtual expression clone() const;
   virtual void debug_print( ostream &os ) const;
   virtual bool bool_evaluate( proof_context &ctx ) const;
 };
 
 class isrounds_node : public expression::bnode {
 protected:
+  virtual expression clone() const;
   virtual void debug_print( ostream &os ) const;
   virtual bool bool_evaluate( proof_context &ctx ) const;
 };
@@ -272,10 +303,13 @@ protected:
 class pattern_node : public expression::bnode {
 public:
   pattern_node( int bells, const string& regex );
+  pattern_node( int bells, const music_details& mus )
+    : bells(bells), mus(mus) {}
 
   music_details& get_music_details() { return mus; }
 
 protected:
+  virtual expression clone() const;
   virtual void debug_print( ostream &os ) const;
   virtual bool bool_evaluate( proof_context &ctx ) const;
   virtual music music_evaluate( proof_context &ctx ) const;
@@ -290,6 +324,7 @@ public:
   explicit opaque_music_node( const music& mus );
 
 protected:
+  virtual expression clone() const;
   virtual void debug_print( ostream &os ) const;
   virtual bool bool_evaluate( proof_context &ctx ) const;
   virtual music music_evaluate( proof_context &ctx ) const;
@@ -304,6 +339,7 @@ public:
     : sym(sym) {}
 
 protected:
+  virtual expression clone() const;
   virtual void debug_print( ostream &os ) const;
   virtual bool bool_evaluate( proof_context &ctx ) const;
 
@@ -316,6 +352,7 @@ public:
   boolean_node( bool value ) : value(value) {}
 
 protected:
+  virtual expression clone() const;
   virtual void debug_print( ostream &os ) const;
   virtual bool bool_evaluate( proof_context &ctx ) const { return value; }
 
@@ -329,8 +366,10 @@ public:
     : left(left), right(right) {}
 
 protected:
+  virtual expression clone() const;
   virtual void debug_print( ostream &os ) const;
   virtual bool bool_evaluate( proof_context &ctx ) const;
+  virtual void recurse( expr_recursor& rec );
 
 private:
   expression left, right;
@@ -342,8 +381,10 @@ public:
     : left(left), right(right) {}
 
 protected:
+  virtual expression clone() const;
   virtual void debug_print( ostream &os ) const;
   virtual bool bool_evaluate( proof_context &ctx ) const;
+  virtual void recurse( expr_recursor& rec );
 
 private:
   expression left, right;
@@ -355,8 +396,10 @@ public:
     : arg(arg) {}
 
 protected:
+  virtual expression clone() const;
   virtual void debug_print( ostream &os ) const;
   virtual bool bool_evaluate( proof_context &ctx ) const;
+  virtual void recurse( expr_recursor& rec );
 
 private:
   expression arg;
@@ -374,8 +417,10 @@ public:
   static char const* symbol( cmp_t cmp );
 
 protected:
+  virtual expression clone() const;
   virtual void debug_print( ostream &os ) const;
   virtual bool bool_evaluate( proof_context &ctx ) const;
+  virtual void recurse( expr_recursor& rec );
 
 private:
   expression left, right;
@@ -387,6 +432,7 @@ public:
   bells_node() {}
 
 protected:
+  virtual expression clone() const;
   virtual void debug_print( ostream &os ) const;
   virtual RINGING_LLONG int_evaluate( proof_context &ctx ) const;
 };
@@ -396,6 +442,7 @@ public:
   length_node() {}
 
 protected:
+  virtual expression clone() const;
   virtual void debug_print( ostream &os ) const;
   virtual RINGING_LLONG int_evaluate( proof_context &ctx ) const;
 };
@@ -405,6 +452,7 @@ public:
   integer_node( RINGING_LLONG value ) : value(value) {}
 
 protected:
+  virtual expression clone() const;
   virtual void debug_print( ostream &os ) const;
   virtual RINGING_LLONG int_evaluate( proof_context &ctx ) const 
     { return value; }
@@ -419,8 +467,10 @@ public:
     : left(left), right(right), sign(sign) {}
 
 protected:
+  virtual expression clone() const;
   virtual void debug_print( ostream &os ) const;
   virtual RINGING_LLONG int_evaluate( proof_context &ctx ) const;
+  virtual void recurse( expr_recursor& rec );
 
 private:
   expression left, right;
@@ -433,8 +483,10 @@ public:
     : left(left), right(right) {}
 
 protected:
+  virtual expression clone() const;
   virtual void debug_print( ostream &os ) const;
   virtual RINGING_LLONG int_evaluate( proof_context &ctx ) const;
+  virtual void recurse( expr_recursor& rec );
 
 private:
   expression left, right;
@@ -446,8 +498,10 @@ public:
     : left(left), right(right) {}
 
 protected:
+  virtual expression clone() const;
   virtual void debug_print( ostream &os ) const;
   virtual RINGING_LLONG int_evaluate( proof_context &ctx ) const;
+  virtual void recurse( expr_recursor& rec );
 
 private:
   expression left, right;
@@ -459,9 +513,11 @@ public:
     : left(left), right(right) {}
 
 protected:
+  virtual expression clone() const;
   virtual void debug_print( ostream &os ) const;
   virtual string string_evaluate( proof_context &ctx ) const;
   virtual vector<expression> array_evaluate( proof_context &ctx ) const;
+  virtual void recurse( expr_recursor& rec );
 
 private:
   expression left, right;
@@ -476,12 +532,14 @@ public:
     : left(left), right(right) {}
 
 protected:
+  virtual expression clone() const;
   virtual void debug_print( ostream &os ) const;
   virtual void execute( proof_context &ctx, int dir ) const;
   virtual expression evaluate( proof_context &ctx ) const;
   virtual RINGING_LLONG int_evaluate( proof_context &ctx ) const;
   virtual string string_evaluate( proof_context &ctx ) const;
   virtual expression::type_t type( proof_context &ctx ) const;
+  virtual void recurse( expr_recursor& rec );
 
 private:
   expression left, right;
@@ -494,6 +552,7 @@ public:
     : sym(sym), val(val) {}
 
 protected:
+  virtual expression clone() const;
   virtual void debug_print( ostream &os ) const;
   virtual RINGING_LLONG int_evaluate( proof_context &ctx ) const;
 
@@ -510,9 +569,11 @@ public:
     : test(test), iftrue(iftrue), iffalse(iffalse) {}
 
 protected:
+  virtual expression clone() const;
   virtual void debug_print( ostream &os ) const;
   virtual void execute( proof_context &ctx, int dir ) const;
   virtual expression evaluate( proof_context &ctx ) const;
+  virtual void recurse( expr_recursor& rec );
 
 private:
   bool evaluate_condition( proof_context &ctx ) const;
@@ -525,6 +586,7 @@ public:
   exception_node( script_exception::type t ) : t(t) {}
 
 protected:
+  virtual expression clone() const;
   virtual void debug_print( ostream &os ) const;
   virtual void execute( proof_context &ctx, int dir ) const;
 
@@ -538,6 +600,7 @@ public:
     : name(name), args(args) {}
 
 protected:
+  virtual expression clone() const;
   virtual void debug_print( ostream &os ) const;
   virtual void execute( proof_context &ctx, int dir ) const;
   virtual expression evaluate( proof_context &ctx ) const;
@@ -549,6 +612,8 @@ protected:
   virtual vector<change> pn_evaluate( proof_context &ctx ) const;
   virtual music music_evaluate( proof_context &ctx ) const;
   virtual vector<expression> array_evaluate( proof_context &ctx ) const;
+  virtual string symbol_name( proof_context &ctx ) const;
+  virtual void recurse( expr_recursor& rec );
 
 private:
   string name;
@@ -561,6 +626,7 @@ public:
     : name(name) {}
 
 protected:
+  virtual expression clone() const;
   virtual void debug_print( ostream &os ) const;
   virtual void execute( proof_context &ctx, int dir ) const;
 
@@ -575,9 +641,11 @@ public:
   void push_back( expression const& val ) { vals.push_back(val); }
 
 protected:
+  virtual expression clone() const;
   virtual void debug_print( ostream &os ) const;
   virtual void execute( proof_context &ctx, int dir ) const;
   virtual vector<expression> array_evaluate( proof_context &ctx ) const;
+  virtual void recurse( expr_recursor& rec );
 
 private:
   vector<expression> vals;
