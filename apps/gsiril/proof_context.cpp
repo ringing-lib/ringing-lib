@@ -1,6 +1,6 @@
 // proof_context.cpp - Environment to evaluate expressions
 // Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2011, 2012, 2014,
-// 2019, 2020, 2021, 2026 Richard Smith <richard@ex-parrot.com>
+// 2019, 2020, 2021, 2025, 2026 Richard Smith <richard@ex-parrot.com>
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -435,15 +435,17 @@ method proof_context::load_method( const string& name )
   if ( ectx.defined("method_suffixes") )
     suffixes = split_path( lookup_symbol("method_suffixes")
                              .string_evaluate(*this) );
-  else
+  else {
     suffixes.push_back(string());
+    if (const size_t b = bells())
+      suffixes.push_back(method::stagename(b));
+  }
 
   library_entry le;
-  for ( list<string>::const_iterator i = suffixes.begin(), e = suffixes.end(); 
-        i != e; ++i ) {
+  for (string const& suffix : suffixes) {
     string title(name);
-    if (i->length())
-      (title += ' ') += *i;
+    if (suffix.length())
+      (title += ' ') += suffix;
     le = ectx.get_args().methset().find(title);
     if (!le.null()) break;
   }
