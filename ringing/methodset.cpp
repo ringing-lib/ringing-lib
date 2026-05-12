@@ -191,6 +191,11 @@ size_t methodset::size() const
   return this->libout::get_impl<impl>()->size();
 }
 
+void methodset::append( library_entry const& entry )
+{
+  this->libout::append(entry);
+}
+
 void methodset::append( method const& m )
 {
   this->libout::get_impl<impl>()->append( m );

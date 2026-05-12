@@ -70,7 +70,7 @@ public:
   size_t size() const;
 
   // Currently libout doesn't have an append that takes a single method
-  using libout::append;
+  void append( library_entry const& entry );
   void append( method const& );
 
   template <class InputIterator>
