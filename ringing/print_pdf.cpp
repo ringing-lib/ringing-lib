@@ -347,7 +347,9 @@ void printrow_pdf::print(const row& r)
 void printrow_pdf::rule(const printrow::options::line_style& style, 
                         printrow::rule_flags flags)
 {
-  if(!in_column) return;
+  if (!in_column) return;
+  if (style.width.in_points() < 0) return;
+
   float startx = currx, starty = curry;
   float len = opt.xspace.in_points();
   if (flags & printrow::no_hextend) 
