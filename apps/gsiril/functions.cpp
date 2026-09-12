@@ -190,6 +190,14 @@ static expression methname_impl( proof_context& ctx,
   return expression( new string_node(rv) );
 }
 
+static expression defmeth_impl( proof_context& ctx, 
+                                vector<expression> const& args )  {
+  if (args.size() != 2)
+    throw runtime_error("The defmeth function takes one argument");
+  return expression( new pn_node( args[0].pn_evaluate(ctx), 
+                                  args[1].string_evaluate(ctx) ) );
+}
+
 static expression pnstr_impl( proof_context& ctx, 
                               vector<expression> const& args ) {
   if (args.size() == 0)
@@ -312,5 +320,8 @@ void register_functions( execution_context& ectx )
   ectx.define_symbol( pair< const string, expression >
     ( "arrayof", expression( new std_fn_impl("arrayof", expression::no_type,
     arrayof_impl ) ) ) );
+  ectx.define_symbol( pair< const string, expression >
+    ( "defmeth", expression( new std_fn_impl("defmeth", expression::no_type,
+    defmeth_impl ) ) ) );
 }
 
