@@ -116,7 +116,7 @@ private:
   scoped_libxml2_err& operator=( const scoped_libxml2_err& ); // Unimplemented 
  
   // Function prototype matches libxml's xmlStructuredErrorFunc
-  static void flag_xml_error( void* userData, xmlErrorPtr error )
+  static void flag_xml_error( void* userData, const xmlError* )
   {
     *(bool*)userData = true;
   }
